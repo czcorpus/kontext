@@ -23,8 +23,8 @@ from typing import List, Tuple
 
 import plugins
 from action.argmapping.action import IntOpt, ListStrOpt, StrOpt
-from action.argmapping.analytics import (CollFormArgs, CTFreqFormArgs,
-                                         FreqFormArgs)
+from action.argmapping.analytics import (
+    CollFormArgs, CTFreqFormArgs, FreqFormArgs)
 from action.control import http_action
 from action.errors import UserReadableException
 from action.krequest import KRequest
@@ -450,23 +450,23 @@ async def freqct(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 
 @bp.route('/export_freqct', methods=['POST'])
 @http_action(action_model=UserActionModel, access_level=1, return_type='plain')
-def export_freqct(self, request):
+async def export_freqct(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.EXPORT_FREQ2D as plg:
-        data = request.json
-        exporter = plg.load_plugin(request.args.get('saveformat'))
-        if request.args.get('savemode') == 'table':
+        data = req.json
+        exporter = plg.load_plugin(req.args.get('saveformat'))
+        if req.args.get('savemode') == 'table':
             exporter.set_content(attr1=data['attr1'], attr2=data['attr2'],
                                  labels1=data.get('labels1', []), labels2=data.get('labels2', []),
                                  alpha_level=data['alphaLevel'], min_freq=data['minFreq'],
                                  min_freq_type=data['minFreqType'], data=data['data'])
-        elif request.args.get('savemode') == 'flat':
+        elif req.args.get('savemode') == 'flat':
             exporter.set_content_flat(headings=data.get('headings', []), alpha_level=data['alphaLevel'],
                                       min_freq=data['minFreq'], min_freq_type=data['minFreqType'],
                                       data=data['data'])
-        self._response.set_header('Content-Type', exporter.content_type())
-        self._response.set_header(
+        resp.set_header('Content-Type', exporter.content_type())
+        resp.set_header(
             'Content-Disposition',
-            f'attachment; filename="{self.args.corpname}-2dfreq-distrib.xlsx"')
+            f'attachment; filename="{amodel.args.corpname}-2dfreq-distrib.xlsx"')
     return exporter.raw_content()
 
 

@@ -18,10 +18,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
-import imp
-import logging
-import os
-
 from action.errors import UserReadableException
 
 
@@ -34,10 +30,12 @@ class AbstractExportFreq2d(object):
         raise NotImplementedError()
 
     def set_content(self, attr1, attr2, labels1, labels2, alpha_level, min_freq, min_freq_type, data):
-        raise UserReadableException(message='Table mode method for ExportFreq2d not implemented', code=500)
+        raise UserReadableException(
+            message='Table mode method for ExportFreq2d not implemented', code=500)
 
     def set_content_flat(self, headings, alpha_level, min_freq, min_freq_type, data):
-        raise UserReadableException(message='Flat mode method for ExportFreq2d not implemented', code=500)
+        raise UserReadableException(
+            message='Flat mode method for ExportFreq2d not implemented', code=500)
 
     def raw_content(self):
         raise NotImplementedError()
@@ -59,14 +57,8 @@ class Loader(object):
         returns:
         required module or nothing if module is not found
         """
-        srch_dirs = [os.path.dirname(os.path.realpath(__file__))]
-        try:
-            tpl_file, pathname, description = imp.find_module(self._module_map[name], srch_dirs)
-        except ImportError as ex:
-            logging.getLogger(__name__).error(
-                'Failed to import template {0} in {1}'.format(name, ', '.join(srch_dirs)))
-            raise ex
-        module = imp.load_module(name, tpl_file, pathname, description)
+        module_name = self._module_map[name]
+        module = __import__(f'plugins.export_freq2d.{module_name}', fromlist=[module_name])
         return module.create_instance()
 
 
