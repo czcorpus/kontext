@@ -19,6 +19,7 @@
  */
 
 import styled from 'styled-components';
+import { keyframes } from 'styled-components';
 import * as theme from '../..//theme/default';
 
 
@@ -36,6 +37,7 @@ export const CollResultView = styled.div`
     #processbar {
         background-color: ${theme.colorLogoBlueOpaque};
         height: 100%;
+        transition: width 0.2s;
     }
 
     .progress-info {
@@ -45,6 +47,15 @@ export const CollResultView = styled.div`
 `;
 
 // ---------------- <CalcStatusBar /> --------------------------------------
+
+const bgBlink = keyframes`
+    0% {
+        background-position: right bottom;
+    }
+    100% {
+        background-position: left bottom;
+    }
+`;
 
 export const CalcStatusBar = styled.div`
 
@@ -56,9 +67,9 @@ export const CalcStatusBar = styled.div`
     }
 
     #progress_scale {
-        background: linear-gradient(-45deg, ${theme.colorLogoGreen} 0%, ${theme.colorDefaultGreen} 50%, ${theme.colorLightGreen} 100%) repeat;
-        background-size: 50% 100%;
-        animation-name: bg-blink;
+        background: linear-gradient(-90deg, ${theme.colorLogoGreen} 0%, ${theme.colorDefaultGreen} 25%, ${theme.colorLightGreen} 50%, ${theme.colorLogoGreen} 50%, ${theme.colorDefaultGreen} 75%, ${theme.colorLightGreen} 100%) repeat;
+        background-size: 200% 100%;
+        animation-name: ${bgBlink};
         animation-duration: 1s;
         animation-iteration-count: infinite;
         animation-timing-function: linear;
