@@ -339,7 +339,7 @@ class Deployer(object):
         conf (Configuration): deployment configuration
     """
 
-    def __init__(self, conf):
+    def __init__(self, conf: Configuration):
         self._conf = conf
 
     def shell_cmd(self, *args, **kw):
@@ -406,6 +406,10 @@ class Deployer(object):
         result_xml = etree.tostring(doc, encoding='utf-8', pretty_print=True)
         with open(source_conf, 'wb') as fw:
             fw.write(result_xml)
+
+        # config.xml is required in building process
+        working_conf = os.path.join(self._conf.working_dir, 'conf', 'config.xml')
+        shutil.copy(source_conf, working_conf)
 
     @description('Copying configuration to the archive')
     def copy_configuration(self, arch_path):
