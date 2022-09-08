@@ -8,6 +8,7 @@ ENV MYSQL_PASSWORD="kontext-secret"
 COPY scripts/install/conf/docker/mariadb-init.sql /tmp/mariadb-init.sql
 COPY lib/plugins/mysql_auth/scripts/schema.sql /tmp/schema_auth.sql
 COPY lib/plugins/mysql_corparch/scripts/schema.sql /tmp/schema_corparch.sql
+COPY lib/plugins/mysql_subc_storage/scripts/schema.sql /tmp/subc_storage.sql
 COPY lib/plugins/mysql_query_persistence/scripts/schema.sql /tmp/schema_query_persistence.sql
 COPY lib/plugins/mysql_user_items/scripts/schema.sql /tmp/user_items.sql
 COPY lib/plugins/mysql_query_history/scripts/schema.sql /tmp/query_history.sql
