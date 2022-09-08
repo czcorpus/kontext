@@ -19,8 +19,9 @@
 from dataclasses import dataclass, field
 from typing import Callable, List, Optional
 
-from .model import (AbstractMenuItem, ConcMenuItem, EventTriggeringItem,
-                    HideOnCustomCondItem, MainMenu, MenuItemInternal, OutData)
+from .model import (
+    AbstractMenuItem, ConcMenuItem, EventTriggeringItem, MainMenu,
+    MenuItemInternal, OutData)
 
 
 def _create_archive_conc_item(args):
@@ -101,8 +102,8 @@ class NewQuery:
         ).mark_indirect()
     )
 
-    word_list: HideOnCustomCondItem = field(
-        default_factory=lambda: lambda args: HideOnCustomCondItem(
+    word_list: MenuItemInternal = field(
+        default_factory=lambda: lambda args: MenuItemInternal(
             MainMenu.NEW_QUERY('wordlist'), 'Word List', 'wordlist/form'
         ).add_args(
             ('corpname', args['corpname']),
