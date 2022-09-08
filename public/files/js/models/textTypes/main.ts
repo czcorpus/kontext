@@ -671,6 +671,11 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                             );
                             state.autoCompleteSupport = action.payload.liveAttrsEnabled;
                             state.selectionHistory = [attributes];
+                            state.minimizedBoxes = pipe(
+                                attributes,
+                                List.map(v => tuple(v.name, false)),
+                                Dict.fromEntries()
+                            )
                         });
                     }
                 }
