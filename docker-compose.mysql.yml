@@ -4,7 +4,7 @@ services:
   mariadb:
     build:
       context: .
-      dockerfile: dockerfiles/Dockerfile.kontext-mariadb
+      dockerfile: dockerfiles/Dockerfile.mariadb
     environment:
       - MYSQL_PASSWORD
       - MYSQL_USER
