@@ -30,7 +30,7 @@ from plugins.default_user_items import (import_legacy_record,
 
 
 def create_corpus_obj(name='korpus syn 2010'):
-    return FavoriteItem(dict(name=name, corpora=[dict(id='syn2010', name='Korpus SYN2010')]))
+    return FavoriteItem(name=name, corpora=[dict(id='syn2010', name='Korpus SYN2010')])
 
 
 class TestActions(unittest.TestCase):
@@ -90,8 +90,8 @@ class TestPlugin(unittest.TestCase):
 
     def test_serialize(self):
         corpus = dict(name='intercorp_en', id='intercorp_en')
-        f = FavoriteItem(data=dict(name='xxx', corpora=[
-                         corpus], size=100, size_info='0.1k', subcorpus_id='foo'))
+        f = FavoriteItem(
+            name='xxx', corpora=[corpus], size=100, size_info='0.1k', subcorpus_id='foo')
         ans = self.plugin.serialize(f)
         data = json.loads(ans)
         self.assertDictEqual(data['corpora'][0], corpus)

@@ -25,7 +25,8 @@ Expected factory method signature: create_instance(config, db)
 """
 
 import abc
-import hashlib
+from dataclasses import dataclass, field, InitVar
+from typing import Dict, Any, Optional, List, TypedDict
 
 import l10n
 from action.errors import UserReadableException
@@ -39,21 +40,31 @@ class UserItemException(UserReadableException):
     pass
 
 
-class FavoriteItem(object):
-    """
-    A reference to a corpus in user's list
-    """
+class CorpusItem(TypedDict):
+    id: str
+    name: str
 
-    def __init__(self, data=None):
-        if data is None:
-            data = {}
-        self.name = data.get('name', 'New item')
-        self.corpora = data.get('corpora', [])
-        self.size = data.get('size', None)
+
+@dataclass
+class FavoriteItem:
+
+    name: Optional[str] = None
+    ident: Optional[str] = None
+    id: InitVar[str] = None
+    data: Optional[Dict[str, Any]] = field(default_factory=dict)
+    corpora: Optional[List[CorpusItem]] = field(default_factory=list)
+    size: Optional[int] = None
+    sizes: InitVar[List[Any]] = None
+    size_info: Optional[str] = None
+    subcorpus_id: Optional[str] = None
+    subcorpus_orig_id: Optional[str] = None
+
+    def __post_init__(self, id, sizes):
+        if self.ident is None:
+            self.ident = id
+        if self.size is None:
+            self.size = sizes
         self.size_info = l10n.simplify_num(self.size) if self.size else None
-        self.subcorpus_id = data.get('subcorpus_id', None)
-        self.subcorpus_orig_id = data.get('subcorpus_orig_id', self.subcorpus_id)
-        self.ident = data.get('id', hashlib.md5(self.sort_key.encode()).hexdigest())
 
     @property
     def is_single_corpus(self):

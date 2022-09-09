@@ -63,7 +63,7 @@ def import_record(obj):
     if 'type' in obj:
         return import_legacy_record(obj)
     else:
-        return FavoriteItem(data=obj)
+        return FavoriteItem(**obj)
 
 
 @bp.route('/user/set_favorite_item', methods=['POST'])
@@ -85,14 +85,14 @@ async def set_favorite_item(amodel: CorpusActionModel, req: KRequest, resp: KRes
         corpora.append(dict(id=c_id, name=corp.get_conf('NAME')))
     subcorpus_id = req.form.get('subcorpus_id')
     subcorpus_orig_id = req.form.get('subcorpus_orig_id')
-    item = FavoriteItem(dict(
+    item = FavoriteItem(
         name=' || '.join(c['name'] for c in corpora) +
         (' / ' + subcorpus_orig_id if subcorpus_orig_id else ''),
         corpora=corpora,
         subcorpus_id=subcorpus_id,
         subcorpus_orig_id=subcorpus_orig_id,
         size=main_size
-    ))
+    )
     with plugins.runtime.USER_ITEMS as uit:
         await uit.add_user_item(amodel.plugin_ctx, item)
         return item.to_dict()

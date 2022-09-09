@@ -19,6 +19,7 @@ import os
 import time
 from dataclasses import fields
 from typing import Any, Dict, Iterable, List, Optional, Tuple
+from sanic import Sanic
 
 import corplib
 import plugins
@@ -38,7 +39,7 @@ from main_menu import MainMenu, generate_main_menu
 from plugin_types import CorpusDependentPlugin
 from plugin_types.auth import AbstractInternalAuth, UserInfo
 from plugin_types.subc_storage import SubcListFilterArgs
-from sanic import Sanic
+from corplib import CorpusFactory
 
 
 class UserActionModel(BaseActionModel, AbstractUserModel):
@@ -521,3 +522,7 @@ class UserPluginCtx(BasePluginCtx, AbstractUserPluginCtx):
     @property
     def user_dict(self) -> UserInfo:
         return self._request.ctx.session.get('user', {'id': None})
+
+    @property
+    def corpus_factory(self) -> CorpusFactory:
+        return self._action_model.cf
