@@ -1,9 +1,17 @@
 FROM czcorpus/kontext-manatee:2.208-jammy
 
-RUN mkdir /var/log/rq
 WORKDIR /opt/kontext
 COPY . .
-RUN pip3 install --upgrade pip && pip3 install -r requirements.txt
-RUN python3 scripts/install/steps.py SetupKontext
+RUN apt-get update \
+    && apt-get install -y sox libsox-fmt-mp3 nodejs npm python3-pip python3-icu \
+    && npm install \
+    && pip3 install --upgrade pip \
+    && sed '/PyICU/d' ./requirements.txt | pip3 install -r /dev/stdin  \
+    && python3 scripts/install/steps.py SetupKontext \
+    && mkdir /var/log/rq  \
+    && mkdir /var/local/corpora/query_persistence \
+    && apt-get -y autoremove \
+    && rm -rf /usr/local/src/manatee-open-2.167.10 \
+    && rm -rf /var/lib/apt/lists/*
 
 CMD [ "python3",  "worker/rqworker.py" ]
