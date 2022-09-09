@@ -123,6 +123,11 @@ class AbstractUserPluginCtx(AbstractBasePluginCtx, abc.ABC):
     def user_dict(self) -> UserInfo:
         pass
 
+    @property
+    @abc.abstractmethod
+    def corpus_factory(self) -> CorpusFactory:
+        pass
+
 
 class AbstractCorpusPluginCtx(AbstractUserPluginCtx, abc.ABC):
 
@@ -141,10 +146,7 @@ class AbstractCorpusPluginCtx(AbstractUserPluginCtx, abc.ABC):
     def available_aligned_corpora(self):
         pass
 
-    @property
-    @abc.abstractmethod
-    def corpus_factory(self) -> CorpusFactory:
-        pass
+
 
 
 class AbstractPqueryPluginCtx(AbstractCorpusPluginCtx, abc.ABC):
