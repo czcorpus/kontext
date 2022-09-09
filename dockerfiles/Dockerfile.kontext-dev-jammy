@@ -12,6 +12,7 @@ RUN apt-get update \
     && npm install \
     && pip3 install --upgrade pip \
     && sed '/PyICU/d' ./requirements.txt | pip3 install -r /dev/stdin  \
+    && pip3 install debugpy \
     && python3 scripts/install/steps.py SetupKontext \
     && mkdir /var/log/rq  \
     && mkdir /var/local/corpora/query_persistence \
