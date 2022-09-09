@@ -70,7 +70,7 @@ class Backend:
                 item['corpora'] = [{'name': corp, 'id': corp}
                                    for corp in item['corpora'].split(',')]
                 item['size'] = int(item['sizes'].split(',')[0])
-                ans.append(FavoriteItem(item))
+                ans.append(FavoriteItem(**item))
 
         return ans
 

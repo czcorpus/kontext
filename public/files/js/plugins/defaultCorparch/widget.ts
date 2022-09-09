@@ -419,21 +419,21 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 (action.payload.status ?
                     this.setFavItem(state) :
                     this.unsetFavItem(action.payload.itemId)
-                ).subscribe(
-                    (data) => {
+                ).subscribe({
+                    next: data => {
                         dispatch<typeof Actions.StarIconClickDone>({
                             name: Actions.StarIconClickDone.name,
                             payload: {data}
                         });
                     },
-                    (err) => {
-                        this.pluginApi.showMessage('error', err);
+                    error: error => {
+                        this.pluginApi.showMessage('error', error);
                         dispatch<typeof Actions.StarIconClickDone>({
                             name: Actions.StarIconClickDone.name,
-                            error: err
+                            error
                         });
                     }
-                );
+                });
             }
         );
 
@@ -669,9 +669,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
     getFullCorpusSelection(state:CorplistWidgetModelState):common.GeneratedFavListItem {
         return {
             subcorpus_id: state.corpusIdent.usesubcorp,
-            subcorpus_orig_id: state.corpusIdent.origSubcorpName ?
-                    `#${state.corpusIdent.origSubcorpName}` :
-                    state.corpusIdent.usesubcorp,
+            subcorpus_orig_id: state.corpusIdent.origSubcorpName,
             corpora: [state.corpusIdent.id, ...state.alignedCorpora]
         };
     };

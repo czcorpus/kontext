@@ -64,7 +64,7 @@ def import_record(obj):
     if 'type' in obj:
         return import_legacy_record(obj)
     else:
-        return FavoriteItem(data=obj)
+        return FavoriteItem(**obj)
 
 
 @bp.route('/user/set_favorite_item', methods=['POST'])
@@ -73,15 +73,14 @@ async def set_favorite_item(amodel: UserActionModel, req: KRequest, resp: KRespo
     """
     """
     corpora = []
-    main_size = None
     req_corpora = req.form_getlist('corpora')
     subc = req.form.get('subcorpus_id')
     if subc:
         with plugins.runtime.SUBC_STORAGE as sa:
             ident = await sa.get_info(subc)
             maincorp = await amodel.cf.get_corpus(ident)
-            subcorpus_orig_id = ident.id
-            subcorpus_id = ident.name
+            subcorpus_orig_id = ident.name
+            subcorpus_id = ident.id
     else:
         maincorp = await amodel.cf.get_corpus(req_corpora[0])
         subcorpus_orig_id = None
@@ -94,15 +93,15 @@ async def set_favorite_item(amodel: UserActionModel, req: KRequest, resp: KRespo
         else:
             corp = await amodel.cf.get_corpus(c_id)
         corpora.append(dict(id=c_id, name=corp.get_conf('NAME')))
-    item = FavoriteItem(dict(
-        id=None,  # will be updated after database insert (autoincrement)
+    item = FavoriteItem(
+        ident=None,  # will be updated after database insert (autoincrement)
         name=' || '.join(c['name'] for c in corpora) +
         (' / ' + subcorpus_orig_id if subcorpus_orig_id else ''),
         corpora=corpora,
         subcorpus_id=subcorpus_id,
         subcorpus_orig_id=subcorpus_orig_id,
         size=main_size
-    ))
+    )
     with plugins.runtime.USER_ITEMS as uit:
         await uit.add_user_item(amodel.plugin_ctx, item)
         return item.to_dict()
