@@ -19,7 +19,7 @@ import re
 import time
 from dataclasses import asdict
 from datetime import datetime
-from typing import List, Optional, Union, Dict, Iterable
+from typing import Dict, Iterable, List, Optional, Union
 
 import aiofiles
 import aiofiles.os
@@ -29,13 +29,13 @@ import manatee
 import settings
 from action.errors import UserReadableException
 from bgcalc.errors import BgCalcError, UnfinishedConcordanceError
-from bgcalc.freqs.storage import stored_to_fs, find_cached_result
+from bgcalc.freqs.storage import find_cached_result, stored_to_fs
 from bgcalc.freqs.types import Freq2DCalcArgs, FreqCalcArgs, FreqCalcResult
 from bgcalc.task import AsyncTaskStatus
 from conclib.calc import require_existing_conc
 from conclib.pyconc import PyConc
-from corplib.corpus import KCorpus, AbstractKCorpus
 from corplib.abstract import SubcorpusIdent
+from corplib.corpus import AbstractKCorpus, KCorpus
 
 from ..errors import CalcArgsAssertionError
 
@@ -205,7 +205,7 @@ async def calculate_freqs(args: FreqCalcArgs):
         if tmp_result is None:
             raise BgCalcError('Failed to get result')
         elif isinstance(tmp_result, Exception):
-            raise calc_result
+            raise tmp_result
         calc_result = tmp_result
     lastpage = None
     fstart = (args.fpage - 1) * args.fmaxitems
