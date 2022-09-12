@@ -7,7 +7,7 @@ describe('Word List', () => {
         cy.actionLogin();
 
         cy.hoverNthMenuItem(1);
-        cy.clickMenuItem(1, 4);
+        cy.clickMenuItem(1, 3);
     });
 
     afterEach(() => {
