@@ -4,7 +4,7 @@ services:
   kontext-test:
     build:
       context: .
-      dockerfile: dockerfiles/Dockerfile.kontext
+      dockerfile: dockerfiles/Dockerfile.kontext-jammy
 
     command: bash -c "pip3 install pulp piwikapi && python3 tests/runtests.py"
     environment:

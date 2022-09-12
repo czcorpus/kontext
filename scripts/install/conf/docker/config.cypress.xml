@@ -176,7 +176,9 @@
             <ttl>14400</ttl>
         </sessions>
         <subcmixer/>
-        <subc_storage/>
+        <subc_storage>
+            <module>mysql_subc_storage</module>
+        </subc_storage>
         <syntax_viewer/>
         <taghelper/>
         <user_items>
