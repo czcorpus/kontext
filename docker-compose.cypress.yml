@@ -19,7 +19,7 @@ services:
 
   kontext:
     build:
-      dockerfile: dockerfiles/Dockerfile.kontext-cypress
+      dockerfile: dockerfiles/Dockerfile.kontext-cypress-jammy
     volumes:
       - ./scripts/install/conf/docker/config.cypress.xml:/opt/kontext/conf/config.xml
     depends_on:
@@ -28,6 +28,7 @@ services:
   rq-scheduler:
     depends_on:
       - mariadb-test
+    restart: always
 
   rq-worker:
     depends_on:
