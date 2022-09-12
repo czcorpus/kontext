@@ -20,6 +20,8 @@ describe('Initial testing experiments', () => {
         cy.clickMenuItem(6, 1);
 
         cy.url().should('include', '/freqs');
+        // switch to chart view
+        cy.get('.FreqViewSelector button').first().click();
         const svgCharts = cy.get('#result-mount svg');
         svgCharts.should('be.visible');
         svgCharts.should('have.length', 1);
