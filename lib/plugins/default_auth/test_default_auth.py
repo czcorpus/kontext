@@ -27,6 +27,11 @@ from plugins.default_auth import DefaultAuthHandler
 from plugins.default_auth.mock_redis import MockRedisCommon, MockRedisPlugin
 
 
+class DummyPluginCtx:
+    def translate(self, text):
+        return text
+
+
 class AuthTest(unittest.IsolatedAsyncioTestCase):
     def __init__(self, *args, **kwargs):
         super(AuthTest, self).__init__(*args, **kwargs)
@@ -36,12 +41,10 @@ class AuthTest(unittest.IsolatedAsyncioTestCase):
                                                login_url=None, logout_url=None, smtp_server=None, mail_sender=None,
                                                confirmation_token_ttl=None, on_register_get_corpora=None,
                                                case_sensitive_corpora_names=False)
+        self.dummy_plugin_ctx = DummyPluginCtx()
 
     def setUp(self):
         self.mock_redis_plugin.clear()
-        # these are needed to return anonymous user w/o errors:
-        # load_translations(('en-US',))
-        # activate('en-US')
 
     async def load_users(self):
         """
@@ -136,11 +139,11 @@ class AuthTest(unittest.IsolatedAsyncioTestCase):
         await self.load_users()
         msg = "failed to authenticate as sample user your_user"
         self.assertEqual('your_user', (await self.auth_handler.validate_user(
-            None, 'your_user', 'yourpwd')).get('user'), msg)
+            self.dummy_plugin_ctx, 'your_user', 'yourpwd')).get('user'), msg)
 
         msg = "validation failed to return anonymous user for a non-existing user"
         self.assertEqual(0, (await self.auth_handler.validate_user(
-            None, 'jimmy', 'doesNotExist')).get('id'), msg)
+            self.dummy_plugin_ctx, 'jimmy', 'doesNotExist')).get('id'), msg)
 
     async def test_validate_user_old_hashing_and_update_password(self):
         """
@@ -155,9 +158,9 @@ class AuthTest(unittest.IsolatedAsyncioTestCase):
 
         msg = "failed to authenticate using the old hashing method"
         self.assertEqual('mary', (await self.auth_handler.validate_user(
-            None, 'mary', 'maryspassword')).get('user'), msg)
+            self.dummy_plugin_ctx, 'mary', 'maryspassword')).get('user'), msg)
 
-        await self.auth_handler.update_user_password(None, 2, 'marysnewpassword')
+        await self.auth_handler.update_user_password(self.dummy_plugin_ctx, 2, 'marysnewpassword')
         split_new = split_pwd_hash((await self.auth_handler._find_user('mary')).get('pwd_hash'))
         msg = "the password update method failed"
         self.assertTrue(len(split_new['salt']) > 0)
@@ -165,7 +168,7 @@ class AuthTest(unittest.IsolatedAsyncioTestCase):
 
         msg = "failed to authenticate using the new hashing method"
         self.assertEqual('mary', (await self.auth_handler.validate_user(
-            None, 'mary', 'marysnewpassword')).get('user'), msg)
+            self.dummy_plugin_ctx, 'mary', 'marysnewpassword')).get('user'), msg)
 
 
 if __name__ == '__main__':

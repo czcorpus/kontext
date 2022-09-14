@@ -17,7 +17,7 @@ import unittest
 
 import plugins
 from mocks import mplugins
-from mocks.request import Controller, PluginCtx, Request
+from mocks.request import PluginCtx
 from mocks.storage import TestingKeyValueStorage
 from plugin_types.user_items import FavoriteItem
 from plugins.default_user_items import UserItems
@@ -25,8 +25,7 @@ from plugins.default_user_items import UserItems
 plugins.inject_plugin(plugins.runtime.DB, TestingKeyValueStorage({}))
 plugins.inject_plugin(plugins.runtime.AUTH, mplugins.MockAuth(0))
 plugins.inject_plugin(plugins.runtime.USER_ITEMS, mplugins.MockUserItems())
-from plugins.default_user_items import (
-    import_legacy_record, set_favorite_item, unset_favorite_item)
+from plugins.default_user_items import import_legacy_record
 
 
 def create_corpus_obj(name='korpus syn 2010'):
@@ -55,34 +54,8 @@ class TestActions(unittest.TestCase):
         self.assertEqual(len(new_rec.corpora), 1)
         self.assertDictEqual(new_rec.corpora[0], dict(id='foobar', name='The Foobar'))
 
-    async def test_set_favorite_item(self):
-        ctrl = Controller()
-        req = Request(url='http://localhost/query',
-                      form=dict(corpora=['intercorp_en', 'intercorp_cs'],
-                                subcorpus_orig_id='my_subc1_orig',
-                                subcorpus_id='my_subc1',
-                                corpname='intercorp_en'))
-        ans = await set_favorite_item(ctrl, req)
-        self.assertTrue('id' in ans)
-        added_obj = plugins.runtime.USER_ITEMS.instance.added_items[0].to_dict()
-        self.assertTrue(added_obj['id'] == ans['id'])
-        self.assertEqual(added_obj['size'], 4000)
-        self.assertEqual(added_obj['size_info'], '4k')
-        self.assertEqual(added_obj['name'], 'intercorp_en || intercorp_cs / my_subc1_orig')
-        self.assertEqual(added_obj['subcorpus_id'], 'my_subc1')
-        self.assertDictEqual(added_obj['corpora'][0], dict(name='intercorp_en', id='intercorp_en'))
-        self.assertDictEqual(added_obj['corpora'][1], dict(name='intercorp_cs', id='intercorp_cs'))
 
-    async def test_unset_favorite_item(self):
-        ctrl = Controller()
-        req = Request(url='http://localhost/foo', form=dict(id='abcdef'))
-        ans = await unset_favorite_item(ctrl, req)
-        self.assertDictEqual(ans, dict(id='abcdef'))
-        removed_obj = plugins.runtime.USER_ITEMS.instance.deleted_items[0]
-        self.assertEqual(removed_obj, 'abcdef')
-
-
-class TestPlugin(unittest.TestCase):
+class TestPlugin(unittest.IsolatedAsyncioTestCase):
 
     def setUp(self):
         self.plugin = UserItems(object(), plugins.runtime.DB.instance,

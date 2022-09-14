@@ -38,8 +38,6 @@ def find_recursive(ts: unittest.TestSuite, name: str) -> List[Any]:
 
 
 if __name__ == '__main__':
-    # import translation
-    # translation.activate('en_US')
     root_suite = unittest.TestSuite()
     root_suite.addTest(unittest.TestLoader().discover(start_dir=CORE_TEST_PATH, ))
     root_suite.addTest(unittest.TestLoader().discover(start_dir=PLUGIN_PATH, ))
