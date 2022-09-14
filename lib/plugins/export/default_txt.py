@@ -32,7 +32,7 @@ from babel.numbers import format_decimal
 from bgcalc.coll_calc import CalculateCollsResult
 from bgcalc.pquery.storage import PqueryDataLine
 from jinja2 import Environment, FileSystemLoader
-from kwiclib import KwicPageData
+from kwiclib.common import KwicPageData
 from views.colls import SavecollArgs
 from views.concordance import SaveConcArgs, _get_ipm_base_set_desc
 from views.freqs import SavefreqArgs

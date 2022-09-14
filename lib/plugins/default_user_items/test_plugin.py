@@ -17,7 +17,7 @@ import unittest
 
 import plugins
 from mocks import mplugins
-from mocks.request import Controller, PluginCtx, Request
+from mocks.request import PluginCtx
 from mocks.storage import TestingKeyValueStorage
 from plugin_types.user_items import FavoriteItem
 from plugins.default_user_items import UserItems
@@ -25,8 +25,7 @@ from plugins.default_user_items import UserItems
 plugins.inject_plugin(plugins.runtime.DB, TestingKeyValueStorage({}))
 plugins.inject_plugin(plugins.runtime.AUTH, mplugins.MockAuth(0))
 plugins.inject_plugin(plugins.runtime.USER_ITEMS, mplugins.MockUserItems())
-from plugins.default_user_items import (import_legacy_record,
-                                        set_favorite_item, unset_favorite_item)
+from plugins.default_user_items import import_legacy_record
 
 
 def create_corpus_obj(name='korpus syn 2010'):
@@ -55,34 +54,8 @@ class TestActions(unittest.TestCase):
         self.assertEqual(len(new_rec.corpora), 1)
         self.assertDictEqual(new_rec.corpora[0], dict(id='foobar', name='The Foobar'))
 
-    def test_set_favorite_item(self):
-        ctrl = Controller()
-        req = Request(url='http://localhost/query',
-                      form=dict(corpora=['intercorp_en', 'intercorp_cs'],
-                                subcorpus_orig_id='my_subc1_orig',
-                                subcorpus_id='my_subc1',
-                                corpname='intercorp_en'))
-        ans = set_favorite_item(ctrl, req)
-        self.assertTrue('id' in ans)
-        added_obj = plugins.runtime.USER_ITEMS.instance.added_items[0].to_dict()
-        self.assertTrue(added_obj['id'] == ans['id'])
-        self.assertEqual(added_obj['size'], 4000)
-        self.assertEqual(added_obj['size_info'], '4k')
-        self.assertEqual(added_obj['name'], 'intercorp_en || intercorp_cs / my_subc1_orig')
-        self.assertEqual(added_obj['subcorpus_id'], 'my_subc1')
-        self.assertDictEqual(added_obj['corpora'][0], dict(name='intercorp_en', id='intercorp_en'))
-        self.assertDictEqual(added_obj['corpora'][1], dict(name='intercorp_cs', id='intercorp_cs'))
 
-    def test_unset_favorite_item(self):
-        ctrl = Controller()
-        req = Request(url='http://localhost/foo', form=dict(id='abcdef'))
-        ans = unset_favorite_item(ctrl, req)
-        self.assertDictEqual(ans, dict(id='abcdef'))
-        removed_obj = plugins.runtime.USER_ITEMS.instance.deleted_items[0]
-        self.assertEqual(removed_obj, 'abcdef')
-
-
-class TestPlugin(unittest.TestCase):
+class TestPlugin(unittest.IsolatedAsyncioTestCase):
 
     def setUp(self):
         self.plugin = UserItems(object(), plugins.runtime.DB.instance,
@@ -100,13 +73,13 @@ class TestPlugin(unittest.TestCase):
         self.assertEqual(data['size_info'], '100')
         self.assertEqual(data['subcorpus_id'], 'foo')
 
-    def test_get_user_items(self):
+    async def test_get_user_items(self):
         papi = PluginCtx()
         papi.user_id = 7
         item1 = {'size': 150426, 'name': 'susanne - the testing one', 'subcorpus_id': '',
                  'corpora': [{'name': 'A) susanne - the testing one', 'id': 'susanne'}],
                  'id': '6287f558d64ba0e0885d0e89492e457f', 'size_info': '150k'}
-        plugins.runtime.DB.instance.hash_set(
+        await plugins.runtime.DB.instance.hash_set(
             'favitems:user:7',
             '6287f558d64ba0e0885d0e89492e457f',
             item1
@@ -114,12 +87,12 @@ class TestPlugin(unittest.TestCase):
         item2 = {'size': 120748715, 'name': 'SYN2015 (local)', 'subcorpus_id': '',
                  'corpora': [{'name': 'B) SYN2015 (local)', 'id': 'syn2015'}],
                  'id': 'f68842708bb9a89690793106738e8690', 'size_info': '121M'}
-        plugins.runtime.DB.instance.hash_set(
+        await plugins.runtime.DB.instance.hash_set(
             'favitems:user:7',
             'f68842708bb9a89690793106738e8690',
             item2
         )
-        items = self.plugin.get_user_items(papi)
+        items = await self.plugin.get_user_items(papi)
         self.assertEqual(item1['size'], items[0].size)
         self.assertEqual(item1['size_info'], items[0].size_info)
         self.assertEqual(item1['name'], items[0].name)

@@ -26,26 +26,26 @@ class TestingKeyValueStorage(KeyValueStorage):
     def reset(self):
         self._data.clear()
 
-    def list_get(self, key, from_idx=0, to_idx=-1):
+    async def list_get(self, key, from_idx=0, to_idx=-1):
         return self._data[key][from_idx:to_idx]
 
-    def list_set(self, key, idx, value):
+    async def list_set(self, key, idx, value):
         self._data[key][idx] = value
 
-    def list_append(self, key, value):
+    async def list_append(self, key, value):
         if key not in self._data:
             self._data[key] = []
         self._data[key].append(value)
 
-    def list_pop(self, key):
+    async def list_pop(self, key):
         return self._data[key].pop(0)
 
-    def list_len(self, key):
+    async def list_len(self, key):
         if key not in self._data:
             return 0
         return len(self._data[key])
 
-    def list_trim(self, key, keep_left, keep_right):
+    async def list_trim(self, key, keep_left, keep_right):
         """
         Trims the list from the beginning to keep_left - 1 and from keep_right to the end.
         The function does not return anything.
@@ -65,49 +65,61 @@ class TestingKeyValueStorage(KeyValueStorage):
         if key in self._data and type(self._data[key]) not in (str, str):
             raise Exception('Not a simple type')  # TODO exception type
 
-    def hash_get(self, key, field):
+    async def hash_get(self, key, field):
         self._check_valid_hash(key)
         return json.loads(self._data[key].get(field, '{}'))
 
-    def hash_set(self, key, field, value):
+    async def hash_set(self, key, field, value):
         if key not in self._data:
             self._data[key] = {}
         self._data[key][field] = json.dumps(value)
 
-    def hash_del(self, key, *fields):
+    async def hash_del(self, key, *fields):
         self._check_valid_hash(key)
         for item in fields:
             del self._data[key][item]
 
-    def hash_get_all(self, key):
+    async def hash_get_all(self, key):
         self._check_valid_hash(key)
         return dict((k, json.loads(v)) for k, v in list(self._data[key].items()))
 
-    def get(self, key, default=None):
+    async def get(self, key, default=None):
         self._check_valid_str(key)
         return self._data.get(key, default)
 
-    def set(self, key, data):
+    async def set(self, key, data):
         self._data[key] = data
 
-    def remove(self, key):
+    async def remove(self, key):
         if key in self._data:
             del self._data[key]
 
-    def exists(self, key):
+    async def exists(self, key):
         return key in self._data
 
-    def set_ttl(self, key, ttl):
+    async def set_ttl(self, key, ttl):
         pass
 
-    def clear_ttl(self, key):
+    async def clear_ttl(self, key):
         pass
 
-    def get_ttl(self, key):
+    async def get_ttl(self, key):
         pass
 
-    def rename(self, key, new_key):
+    async def rename(self, key, new_key):
         pass
 
-    def keys(self, pattern):
+    async def setnx(self, key, value):
+        pass
+
+    async def getset(self, key, value):
+        pass
+
+    async def incr(self, key, amount=1):
+        pass
+
+    async def hash_set_map(self, key, mapping):
+        pass
+
+    async def keys(self, pattern):
         pass

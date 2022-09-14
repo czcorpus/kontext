@@ -31,7 +31,7 @@ from babel import Locale
 from bgcalc.coll_calc import CalculateCollsResult
 from bgcalc.pquery.storage import PqueryDataLine
 from conclib.errors import ConcordanceQueryParamsError
-from kwiclib import KwicPageData
+from kwiclib.common import KwicPageData
 from openpyxl import Workbook
 from openpyxl.cell import WriteOnlyCell
 from views.colls import SavecollArgs

@@ -69,7 +69,7 @@ class DefaultDb(KeyValueStorage):
             ans = await cursor.fetchone()
             if ans and -1 < ans[0] < time.time():
                 await cursor.execute('DELETE FROM data WHERE key = ?', (key,))
-                await cursor.commit()
+                await conn.commit()
             return None
 
     async def _load_raw_data(self, key):

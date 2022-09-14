@@ -17,33 +17,12 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
-from mocks import MultiDict
-from mocks.manatee import CorpusFactory
-
 
 class PluginCtx(object):
-    user_id = 3
-    user_lang = 'en_US'
 
-
-class Controller(object):
-
-    def __init__(self):
-        self.cf = CorpusFactory()
-        self._plugin_ctx = PluginCtx()
-
-
-class Request(object):
-
-    def __init__(self, url, args=None, form=None):
-        self._url = url
-        self._args = MultiDict(args if args is not None else {})
-        self._form = MultiDict(form if form is not None else {})
+    def translate(self, text):
+        return text
 
     @property
-    def args(self):
-        return self._args
-
-    @property
-    def form(self):
-        return self._form
+    def user_lang(self):
+        return 'en-US'

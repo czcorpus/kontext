@@ -1,0 +1,11 @@
+[
+  {
+    "id": 1,
+    "username": "your_user",
+    "pwd": "yourpwd",
+    "firstname": "your_user",
+    "lastname": null,
+    "email": null,
+    "permitted_corpora": ["susanne"]
+  }
+]

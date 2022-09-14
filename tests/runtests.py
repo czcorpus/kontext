@@ -12,11 +12,12 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import sys
-import os
-import unittest
 import argparse
+import os
+import sys
+import unittest
 from typing import Any, List
+
 sys.path.insert(0, os.path.realpath('%s/../lib' %
                                     os.path.dirname(os.path.realpath(__file__))))  # application libraries
 
@@ -37,8 +38,6 @@ def find_recursive(ts: unittest.TestSuite, name: str) -> List[Any]:
 
 
 if __name__ == '__main__':
-    import translation
-    translation.activate('en_US')
     root_suite = unittest.TestSuite()
     root_suite.addTest(unittest.TestLoader().discover(start_dir=CORE_TEST_PATH, ))
     root_suite.addTest(unittest.TestLoader().discover(start_dir=PLUGIN_PATH, ))

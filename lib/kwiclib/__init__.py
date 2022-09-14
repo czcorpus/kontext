@@ -20,14 +20,16 @@ import itertools
 import math
 import re
 from collections import defaultdict
-from dataclasses import asdict, dataclass, field, InitVar
+from dataclasses import InitVar, asdict, dataclass, field
 from typing import Any, Dict, List, Mapping, Optional, Tuple, Union
 
 import manatee
 from conclib.common import KConc
 from conclib.empty import InitialConc
 from corplib.corpus import AbstractKCorpus
-from kwiclib.common import SortCritType, lngrp_sortcrit, pair, tokens2strclass
+from kwiclib.common import (
+    KwicPageData, Pagination, SortCritType, lngrp_sortcrit, pair,
+    tokens2strclass)
 from kwiclib.mlfilter import ml_filter_test
 from plugin_types.corparch.corpus import MLPositionFilter
 
@@ -56,34 +58,6 @@ class EmptyKWiclines:
 
     def nextline(self):
         return False
-
-
-class Pagination:
-    first_page = 1
-    prev_page = None
-    next_page = None
-    last_page = None
-
-    def export(self):
-        return dict(firstPage=self.first_page, prevPage=self.prev_page,
-                    nextPage=self.next_page, lastPage=self.last_page)
-
-
-@dataclass
-class KwicPageData:
-    """
-    Defines data required to render a KWIC page
-    """
-    Lines: Optional[List[Any]] = None
-    GroupNumbers: Optional[List[Any]] = None
-    fromp: Optional[int] = None
-    Page: List[Any] = field(default_factory=list)
-    pagination: Pagination = field(default_factory=lambda: Pagination())
-    concsize: Optional[int] = None
-    result_arf: Optional[float] = None
-    result_relative_freq: Optional[float] = None
-    KWICCorps: List[Any] = field(default_factory=list)
-    CorporaColumns: List[Any] = field(default_factory=list)
 
 
 @dataclass
@@ -331,7 +305,8 @@ class Kwic:
                 self.conc.add_aligned(al_corp.get_conffile())
                 self.conc.switch_aligned(al_corp.get_conffile())
                 al_lines.append(
-                    self.kwiclines(args.copy(leftctx='0', rightctx='0', attrs='word', ctxattrs=''), al_corpname)
+                    self.kwiclines(args.copy(leftctx='0', rightctx='0',
+                                             attrs='word', ctxattrs=''), al_corpname)
                 )
 
         # It appears that Manatee returns lists of different lengths in case some translations
@@ -546,8 +521,8 @@ class Kwic:
         maxleftsize = 0
         maxrightsize = 0
         filter_out_speech_tag = (
-                args.speech_segment and args.speech_segment[0] not in args.structs and
-                speech_struct_attr_name in all_structs)
+            args.speech_segment and args.speech_segment[0] not in args.structs and
+            speech_struct_attr_name in all_structs)
 
         i = args.fromline
         while kl.nextline():
@@ -563,7 +538,8 @@ class Kwic:
             kwicwords, last_left_speech_id = self.update_speech_boundaries(
                 args.speech_segment, tokens2strclass(kl.get_kwic()), 'kwic', filter_out_speech_tag, last_left_speech_id)
             rightwords = self.update_speech_boundaries(
-                args.speech_segment, tokens2strclass(kl.get_right()), 'right', filter_out_speech_tag,
+                args.speech_segment, tokens2strclass(
+                    kl.get_right()), 'right', filter_out_speech_tag,
                 last_left_speech_id)[0]
 
             ml_positions = {'left': [], 'kwic': [], 'right': []}

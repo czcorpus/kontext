@@ -10,9 +10,9 @@ RUN apt-get update \
     && mkdir /var/local/corpora/query_persistence \
     && npm install \
     && npm start build:production \
-    && npm prune --production \
     && apt-get -y remove npm nodejs \
     && apt-get -y autoremove \
+    && rm -rf node_modules \
     && rm -rf /var/lib/apt/lists/*
 
 CMD [ "python3", "./public/app.py", "--address", "0.0.0.0", "--port", "8080", "--workers", "2" ]

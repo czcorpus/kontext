@@ -30,7 +30,7 @@ from babel.numbers import format_decimal
 from bgcalc.coll_calc import CalculateCollsResult
 from bgcalc.pquery.storage import PqueryDataLine
 from conclib.errors import ConcordanceQueryParamsError
-from kwiclib import KwicPageData
+from kwiclib.common import KwicPageData
 from lxml import etree
 from views.colls import SavecollArgs
 from views.concordance import SaveConcArgs

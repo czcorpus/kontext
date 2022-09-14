@@ -21,14 +21,14 @@ import json
 import os
 import unittest
 
-from plugin_types.auth.hash import (mk_pwd_hash, mk_pwd_hash_default,
-                                    split_pwd_hash)
+from mocks.request import PluginCtx
+from plugin_types.auth.hash import (
+    mk_pwd_hash, mk_pwd_hash_default, split_pwd_hash)
 from plugins.default_auth import DefaultAuthHandler
 from plugins.default_auth.mock_redis import MockRedisCommon, MockRedisPlugin
-from translation import activate, load_translations
 
 
-class AuthTest(unittest.TestCase):
+class AuthTest(unittest.IsolatedAsyncioTestCase):
     def __init__(self, *args, **kwargs):
         super(AuthTest, self).__init__(*args, **kwargs)
         self.mck_rds_cmn = MockRedisCommon()
@@ -37,46 +37,44 @@ class AuthTest(unittest.TestCase):
                                                login_url=None, logout_url=None, smtp_server=None, mail_sender=None,
                                                confirmation_token_ttl=None, on_register_get_corpora=None,
                                                case_sensitive_corpora_names=False)
+        self.dummy_plugin_ctx = PluginCtx()
 
     def setUp(self):
         self.mock_redis_plugin.clear()
-        # these are needed to return anonymous user w/o errors:
-        load_translations(('en-US',))
-        activate('en-US')
 
-    def load_users(self):
+    async def load_users(self):
         """
-        loads users from the users.sample.json file
+        loads users from the test_users.json file
         """
-        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'scripts/users.sample.json')) as data_file:
+        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'test_users.json')) as data_file:
             data = json.load(data_file)
         for user in data:
-            self.mock_redis_plugin.add_user_dict(user)
+            await self.mock_redis_plugin.add_user_dict(user)
 
     # -----------------
     # test aux methods:
     # -----------------
 
-    def test_add_user(self):
+    async def test_add_user(self):
         """
         test the auxiliary method to add a user to the mocked redis db, both using the old and the new hashing
         """
-        self.mock_redis_plugin.add_user(2, 'mary', 'maryspassword',
-                                        'Mary', 'White', 'mary.white@localhost')
-        self.mock_redis_plugin.add_user_old_hashing(
+        await self.mock_redis_plugin.add_user(2, 'mary', 'maryspassword',
+                                              'Mary', 'White', 'mary.white@localhost')
+        await self.mock_redis_plugin.add_user_old_hashing(
             3, 'ann', 'annspassword', 'Ann', 'Rose', 'ann.rose@localhost')
-        self.assertEqual('user:2', self.mock_redis_plugin.hash_get('user_index', 'mary'))
-        self.assertEqual('mary', self.mock_redis_plugin.get('user:2').get('username'))
-        self.assertEqual('user:3', self.mock_redis_plugin.hash_get('user_index', 'ann'))
-        self.assertEqual('ann', self.mock_redis_plugin.get('user:3').get('username'))
+        self.assertEqual('user:2', await self.mock_redis_plugin.hash_get('user_index', 'mary'))
+        self.assertEqual('mary', (await self.mock_redis_plugin.get('user:2')).get('username'))
+        self.assertEqual('user:3', await self.mock_redis_plugin.hash_get('user_index', 'ann'))
+        self.assertEqual('ann', (await self.mock_redis_plugin.get('user:3')).get('username'))
 
-    def test_load_users(self):
+    async def test_load_users(self):
         """
         test loading users from the sample file to the mocked redis db, your_user's id in the sample file is 1
         """
-        self.load_users()
-        self.assertEqual('user:1', self.mock_redis_plugin.hash_get('user_index', 'your_user'))
-        self.assertEqual('your_user', self.mock_redis_plugin.get('user:1').get('username'))
+        await self.load_users()
+        self.assertEqual('user:1', await self.mock_redis_plugin.hash_get('user_index', 'your_user'))
+        self.assertEqual('your_user', (await self.mock_redis_plugin.get('user:1')).get('username'))
 
     # ---------------------
     # test package methods:
@@ -122,51 +120,51 @@ class AuthTest(unittest.TestCase):
         # test class methods:
         # -------------------
 
-    def test_find_user(self):
+    async def test_find_user(self):
         """
         load users from the sample file, try to find user 'your_user'
         """
-        self.load_users()
-        self.assertEqual('your_user', self.auth_handler._find_user('your_user').get('username'))
+        await self.load_users()
+        self.assertEqual('your_user', (await self.auth_handler._find_user('your_user')).get('username'))
 
-    def test_validate_user(self):
+    async def test_validate_user(self):
         """
         load users from sample file, try to authenticate user 'your_user' using his sample password, then try to
         authenticate as a non-existing user, which should return anonymous user
         """
-        self.load_users()
+        await self.load_users()
         msg = "failed to authenticate as sample user your_user"
-        self.assertEqual('your_user', await self.auth_handler.validate_user(
-            None, 'your_user', 'yourpwd').get('user'), msg)
+        self.assertEqual('your_user', (await self.auth_handler.validate_user(
+            self.dummy_plugin_ctx, 'your_user', 'yourpwd')).get('user'), msg)
 
         msg = "validation failed to return anonymous user for a non-existing user"
-        self.assertEqual(0, await self.auth_handler.validate_user(
-            None, 'jimmy', 'doesNotExist').get('id'), msg)
+        self.assertEqual(0, (await self.auth_handler.validate_user(
+            self.dummy_plugin_ctx, 'jimmy', 'doesNotExist')).get('id'), msg)
 
-    def test_validate_user_old_hashing_and_update_password(self):
+    async def test_validate_user_old_hashing_and_update_password(self):
         """
         save user 'mary' with her password hashed using the legacy algorithm (hashlib.md5), try to authenticate her,
         update her password using the new default method, check whether the new hash has proper format, try to
         authenticate using the new password
         """
-        self.mock_redis_plugin.add_user_old_hashing(
+        await self.mock_redis_plugin.add_user_old_hashing(
             2, 'mary', 'maryspassword', 'Mary', 'White', 'mary.white@localhost')
         msg = "wrong length of pwd_hash created using the legacy method"
-        self.assertEqual(len(self.auth_handler._find_user('mary').get('pwd_hash')), 32, msg)
+        self.assertEqual(len((await self.auth_handler._find_user('mary')).get('pwd_hash')), 32, msg)
 
         msg = "failed to authenticate using the old hashing method"
-        self.assertEqual('mary', await self.auth_handler.validate_user(
-            None, 'mary', 'maryspassword').get('user'), msg)
+        self.assertEqual('mary', (await self.auth_handler.validate_user(
+            self.dummy_plugin_ctx, 'mary', 'maryspassword')).get('user'), msg)
 
-        await self.auth_handler.update_user_password(None, 2, 'marysnewpassword')
-        split_new = split_pwd_hash(self.auth_handler._find_user('mary').get('pwd_hash'))
+        await self.auth_handler.update_user_password(self.dummy_plugin_ctx, 2, 'marysnewpassword')
+        split_new = split_pwd_hash((await self.auth_handler._find_user('mary')).get('pwd_hash'))
         msg = "the password update method failed"
         self.assertTrue(len(split_new['salt']) > 0)
         self.assertTrue(len(split_new['data']) == 2 * split_new['keylen'], msg)
 
         msg = "failed to authenticate using the new hashing method"
-        self.assertEqual('mary', await self.auth_handler.validate_user(
-            None, 'mary', 'marysnewpassword').get('user'), msg)
+        self.assertEqual('mary', (await self.auth_handler.validate_user(
+            self.dummy_plugin_ctx, 'mary', 'marysnewpassword')).get('user'), msg)
 
 
 if __name__ == '__main__':

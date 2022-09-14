@@ -42,7 +42,7 @@ class MockRedisDirect(object):
     def __init__(self, users):
         self.users = users
 
-    def set(self, key, data):
+    async def set(self, key, data):
         found = False
         for t in self.users:
             if t[0] == key:
@@ -52,7 +52,7 @@ class MockRedisDirect(object):
         if not found:
             self.users.append([key, data])
 
-    def get(self, key, default=None):
+    async def get(self, key, default=None):
         res = default
         for t in self.users:
             if t[0] == key:
@@ -71,23 +71,23 @@ class MockRedisPlugin(MockRedisDirect):
         self.user_index = {}
         self.mck_rds_cmn = MockRedisCommon()
 
-    def get(self, key, default=None):
-        data = super(MockRedisPlugin, self).get(key)
+    async def get(self, key, default=None):
+        data = await super(MockRedisPlugin, self).get(key)
         if data:
             return json.loads(data)
         return default
 
-    def set(self, key, data):
-        super(MockRedisPlugin, self).set(key, json.dumps(data))
+    async def set(self, key, data):
+        await super(MockRedisPlugin, self).set(key, json.dumps(data))
 
-    def hash_get(self, key, value):
+    async def hash_get(self, key, value):
         if key == 'user_index':
             return self.user_index.get(value, None)
         return None
 
-    def add_user(self, idx, username, pwd, firstname, lastname, email=None):
+    async def add_user(self, idx, username, pwd, firstname, lastname, email=None):
         self.user_index[username] = "user:" + str(idx)
-        self.set("user:" + str(idx), dict(
+        await self.set("user:" + str(idx), dict(
             id=idx,
             username=username,
             firstname=firstname,
@@ -95,9 +95,9 @@ class MockRedisPlugin(MockRedisDirect):
             email=email,
             pwd_hash=mk_pwd_hash_default(pwd)))
 
-    def add_user_old_hashing(self, idx, username, pwd, firstname, lastname, email=None):
+    async def add_user_old_hashing(self, idx, username, pwd, firstname, lastname, email=None):
         self.user_index[username] = "user:" + str(idx)
-        self.set("user:" + str(idx), dict(
+        await self.set("user:" + str(idx), dict(
             id=idx,
             username=username,
             firstname=firstname,
@@ -105,13 +105,13 @@ class MockRedisPlugin(MockRedisDirect):
             email=email,
             pwd_hash=hashlib.md5(pwd.encode()).hexdigest()))
 
-    def add_user_dict(self, user):
+    async def add_user_dict(self, user):
         self.user_index[user.get('username')] = "user:" + str(user.get('id'))
         if user.get('pwd') is not None:
             password = mk_pwd_hash_default(user.get('pwd'))
         else:
             password = None
-        self.set("user:" + str(user.get('id')), dict(
+        await self.set("user:" + str(user.get('id')), dict(
             id="user:" + str(user.get('id')),
             username=user.get('username'),
             firstname=user.get('firstname'),

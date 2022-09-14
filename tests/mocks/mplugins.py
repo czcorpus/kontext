@@ -17,8 +17,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
-from plugin_types.user_items import AbstractUserItems
 from plugin_types.auth import AbstractAuth
+from plugin_types.user_items import AbstractUserItems
 
 
 class MockUserItems(AbstractUserItems):
@@ -57,8 +57,17 @@ class MockAuth(AbstractAuth):
     def is_administrator(self, user_id):
         return False
 
+    async def corpus_access(self, user_dict, corpus_name):
+        raise NotImplementedError()
+
     async def permitted_corpora(self, user_dict):
         raise NotImplementedError()
 
     async def get_user_info(self, plugin_ctx):
+        raise NotImplementedError()
+
+    def get_login_url(self, return_url=None):
+        raise NotImplementedError()
+
+    def get_logout_url(self, return_url=None):
         raise NotImplementedError()
