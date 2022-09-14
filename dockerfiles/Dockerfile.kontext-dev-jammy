@@ -17,5 +17,4 @@ RUN apt-get update \
     && mkdir /var/log/rq  \
     && mkdir /var/local/corpora/query_persistence \
     && apt-get -y autoremove \
-    && rm -rf /usr/local/src/manatee-open-2.167.10 \
     && rm -rf /var/lib/apt/lists/*

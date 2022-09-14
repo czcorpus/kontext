@@ -11,8 +11,8 @@ RUN apt-get update \
     && npm install \
     && npm start build:production \
     && npm prune --production \
+    && apt-get -y remove npm nodejs \
     && apt-get -y autoremove \
-    && rm -rf /usr/local/src/manatee-open-2.167.10 \
     && rm -rf /var/lib/apt/lists/*
 
 CMD [ "python3", "./public/app.py", "--address", "0.0.0.0", "--port", "8080", "--workers", "2" ]
