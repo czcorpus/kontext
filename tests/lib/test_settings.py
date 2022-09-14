@@ -125,7 +125,7 @@ class SettingsMockedDataTest(unittest.TestCase):
         self.assertEqual(settings.get('global', 'foo'), 'xxx')
 
 
-class SettingsSampleTest(unittest.TestCase):
+class SettingsSampleTest(unittest.IsolatedAsyncioTestCase):
 
     def setUp(self):
         settings.load(conf_path)
@@ -134,12 +134,18 @@ class SettingsSampleTest(unittest.TestCase):
         v = settings.conf_path()
         self.assertEqual(v, conf_path)
 
-    def test_get_default_corpus_permitted(self):
-        v = settings.get_default_corpus(lambda x: x == 'susanne')
+    async def test_get_default_corpus_permitted(self):
+        async def test_access_fn(item):
+            return item == 'susanne'
+
+        v = await settings.get_default_corpus(test_access_fn)
         self.assertEqual(v, 'susanne')
 
-    def test_get_default_corpus_not_permitted(self):
-        v = settings.get_default_corpus(lambda x: x == 'other')
+    async def test_get_default_corpus_not_permitted(self):
+        async def test_access_fn(item):
+            return item == 'other'
+
+        v = await settings.get_default_corpus(test_access_fn)
         self.assertEqual(v, '')  # yes, it returns an empty string...
 
     def test_debug_level(self):
@@ -151,7 +157,6 @@ class SettingsSampleTest(unittest.TestCase):
     def test_sections(self):
         self.assertTrue(settings.contains('theme'))
         self.assertTrue(settings.contains('global'))
-        self.assertTrue(settings.contains('mailing'))
         self.assertTrue(settings.contains('logging'))
         self.assertTrue(settings.contains('corpora'))
         self.assertTrue(settings.contains('plugins'))

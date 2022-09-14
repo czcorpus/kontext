@@ -18,7 +18,9 @@
 
 
 import re
-from typing import Generator, Iterable, Iterator, List, Tuple, TypeVar, Union
+from dataclasses import dataclass, field
+from typing import (
+    Any, Generator, Iterable, Iterator, List, Optional, Tuple, TypeVar, Union)
 
 SortCritType = List[Tuple[str, Union[str, int]]]
 T = TypeVar('T')
@@ -58,3 +60,31 @@ def lngrp_sortcrit(lab: str, separator: str = '.') -> SortCritType:
     if not lab:
         return [('x', 'x')]
     return list(map(num2sort, lab.split(separator, 3)))
+
+
+class Pagination:
+    first_page = 1
+    prev_page = None
+    next_page = None
+    last_page = None
+
+    def export(self):
+        return dict(firstPage=self.first_page, prevPage=self.prev_page,
+                    nextPage=self.next_page, lastPage=self.last_page)
+
+
+@dataclass
+class KwicPageData:
+    """
+    Defines data required to render a KWIC page
+    """
+    Lines: Optional[List[Any]] = None
+    GroupNumbers: Optional[List[Any]] = None
+    fromp: Optional[int] = None
+    Page: List[Any] = field(default_factory=list)
+    pagination: Pagination = field(default_factory=lambda: Pagination())
+    concsize: Optional[int] = None
+    result_arf: Optional[float] = None
+    result_relative_freq: Optional[float] = None
+    KWICCorps: List[Any] = field(default_factory=list)
+    CorporaColumns: List[Any] = field(default_factory=list)

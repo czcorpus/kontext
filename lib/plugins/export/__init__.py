@@ -31,7 +31,7 @@ from action.model.wordlist import WordlistActionModel
 from babel import Locale
 from bgcalc.coll_calc import CalculateCollsResult
 from bgcalc.pquery.storage import PqueryDataLine
-from kwiclib import KwicPageData
+from kwiclib.common import KwicPageData
 from views.colls import SavecollArgs
 from views.concordance import SaveConcArgs
 from views.freqs import SavefreqArgs
