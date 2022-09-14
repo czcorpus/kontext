@@ -21,15 +21,11 @@ import json
 import os
 import unittest
 
+from mocks.request import PluginCtx
 from plugin_types.auth.hash import (
     mk_pwd_hash, mk_pwd_hash_default, split_pwd_hash)
 from plugins.default_auth import DefaultAuthHandler
 from plugins.default_auth.mock_redis import MockRedisCommon, MockRedisPlugin
-
-
-class DummyPluginCtx:
-    def translate(self, text):
-        return text
 
 
 class AuthTest(unittest.IsolatedAsyncioTestCase):
@@ -41,7 +37,7 @@ class AuthTest(unittest.IsolatedAsyncioTestCase):
                                                login_url=None, logout_url=None, smtp_server=None, mail_sender=None,
                                                confirmation_token_ttl=None, on_register_get_corpora=None,
                                                case_sensitive_corpora_names=False)
-        self.dummy_plugin_ctx = DummyPluginCtx()
+        self.dummy_plugin_ctx = PluginCtx()
 
     def setUp(self):
         self.mock_redis_plugin.clear()
