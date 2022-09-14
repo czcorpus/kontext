@@ -1,7 +1,7 @@
 #!/bin/bash
 
-dir_path=$(dirname $0)
-export GLOBAL_CONF_PATH="$dirname/kontext-deploy.json"
+dir_path=$(dirname $(realpath $0))
+export GLOBAL_CONF_PATH="$dir_path/kontext-deploy.json"
 python3 "$dir_path/kontext-update.py" "$@"
 ret=$?
 if [ $ret -eq 0 ]; then

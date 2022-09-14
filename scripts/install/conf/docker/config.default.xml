@@ -51,7 +51,6 @@
         <type>rq</type>
         <conf>/opt/kontext/conf/rq-schedule-conf.json</conf>
     </job_scheduler>
-    <mailing/>
     <logging>
         <stderr />
     </logging>
