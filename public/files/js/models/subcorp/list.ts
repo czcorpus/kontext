@@ -26,8 +26,9 @@ import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
 import { pipe, List, HTTP } from 'cnc-tskit';
 import { Actions } from './actions';
-import { importServerSubcList, SubcorpList, SubcorpusServerRecord } from './common';
+import { archiveSubcorpora, importServerSubcList, SubcorpList, SubcorpusServerRecord, wipeSubcorpora } from './common';
 import { validateGzNumber } from '../base';
+import { strictEqualParsedQueries } from '../query/query';
 
 
 
@@ -49,7 +50,7 @@ export interface SubcorpListItem {
     published:Date;
     size:number;
     public_description:string;
-
+    selected:boolean;
     info?:string;
 }
 
@@ -302,6 +303,92 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                 }
             }
         );
+
+        this.addActionHandler(
+            Actions.ToggleSelectLine,
+            action => {
+                const srchIdx = List.findIndex(
+                    x => x.id === action.payload.itemId,
+                    this.state.lines
+                );
+                if (srchIdx > -1) {
+                    this.changeState(
+                        state => {
+                            state.lines[srchIdx].selected = !state.lines[srchIdx].selected;
+                        }
+                    );
+                }
+            }
+        );
+
+        this.addActionHandler(
+            Actions.ArchiveSelectedLines,
+            action => {
+                archiveSubcorpora(
+                    this.layoutModel,
+                    pipe(
+                        this.state.lines,
+                        List.filter(
+                            v => v.selected
+                        ),
+                        List.map(
+                            v => ({
+                                corpname: v.corpus_name,
+                                subcname: v.id
+                            })
+                        )
+                    )
+                ).subscribe({
+                    next: data => {
+                        this.dispatchSideEffect(
+                            Actions.ArchiveSubcorpusDone,
+                            {
+                                archived: data.archived
+                            }
+                        );
+                    },
+                    error: error => {
+                        this.dispatchSideEffect(
+                            Actions.ArchiveSubcorpusDone,
+                            error
+                        );
+                    }
+                });
+            }
+        );
+
+        this.addActionHandler(
+            Actions.DeleteSelectedLines,
+            action => {
+                wipeSubcorpora(
+                    this.layoutModel,
+                    pipe(
+                        this.state.lines,
+                        List.filter(
+                            v => v.selected
+                        ),
+                        List.map(
+                            v => ({
+                                corpname: v.corpus_name,
+                                subcname: v.id
+                            })
+                        )
+                    )
+                ).subscribe({
+                    next: data => {
+                        this.dispatchSideEffect(
+                            Actions.WipeSubcorpusDone
+                        );
+                    },
+                    error: error => {
+                        this.dispatchSideEffect(
+                            Actions.WipeSubcorpusDone,
+                            error
+                        );
+                    }
+                });
+            }
+        );
     }
 
     private importProcessed(data:Array<Kontext.AsyncTaskInfo>):Array<UnfinishedSubcorp> {
@@ -394,7 +481,9 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         );
     }
 
-    private importAndProcessServerSubcList(data:Array<SubcorpusServerRecord>) {
+    private importAndProcessServerSubcList(
+        data:Array<SubcorpusServerRecord>
+    ):Array<SubcorpListItem> {
         return pipe(
             data,
             importServerSubcList,

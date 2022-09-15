@@ -37,14 +37,14 @@ export class Actions {
     };
 
     static ArchiveSubcorpus:Action<{
-        corpname: string;
-        subcname: string;
+        corpname:string;
+        subcname:string;
     }> = {
         name: 'SUBCORP_LIST_ARCHIVE_SUBCORPUS'
     };
 
     static ArchiveSubcorpusDone:Action<{
-        archived: number;
+        archived:Array<{corpname:string; subcname:string; archived:number}>;
     }> = {
         name: 'SUBCORP_LIST_ARCHIVE_SUBCORPUS_DONE'
     };
@@ -290,9 +290,25 @@ export class Actions {
         name: 'QUICK_SUBCORP_SUBMIT'
     };
 
-    static QuickSubcorpChangeName: Action<{
-        value: string;
+    static QuickSubcorpChangeName:Action<{
+        value:string;
     }> = {
         name: 'QUICK_SUBCORP_CHANGE_NAME'
     };
+
+    static ToggleSelectLine:Action<{
+        itemId:string;
+    }> = {
+        name: 'SUBCORP_LIST_TOGGLE_SELECT_LINE'
+    }
+
+    static ArchiveSelectedLines:Action<{
+    }> = {
+        name: 'SUBCORP_LIST_ARCHIVE_SELECTED_LINES'
+    }
+
+    static DeleteSelectedLines:Action<{
+    }> = {
+        name: 'SUBCORP_LIST_DELETE_SELECTED_LINES'
+    }
 }

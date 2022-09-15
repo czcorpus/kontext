@@ -26,7 +26,7 @@ import {
     SubcorpListModelState
 } from '../../models/subcorp/list';
 import * as PluginInterfaces from '../../types/plugins';
-import { List } from 'cnc-tskit';
+import { List, pipe } from 'cnc-tskit';
 import { Actions } from '../../models/subcorp/actions';
 import { init as editViewInit } from './edit';
 
@@ -76,6 +76,7 @@ export function init(
                     }
                 </td>
                 <td />
+                <td />
             </tr>
         );
     };
@@ -90,6 +91,29 @@ export function init(
         return <layoutViews.ConfIcon className="properties-subc"
                     title={he.translate('subclist__subc_properties')}
                     onClick={props.onClick} />;
+    }
+
+    // ------------------------ <TDSelectLine /> ------------------------
+
+    const TDSelectLine:React.FC<{
+        item:SubcorpListItem;
+
+    }> = ({item}) => {
+
+        const handleClick = () => {
+            dispatcher.dispatch(
+                Actions.ToggleSelectLine,
+                {
+                    itemId: item.id
+                }
+            );
+        };
+
+        return (
+            <td>
+                <input type="checkbox" checked={item.selected} onChange={handleClick} />
+            </td>
+        );
     }
 
     // ------------------------ <TrDataLine /> --------------------------
@@ -145,6 +169,7 @@ export function init(
                 <td>
                         <PropertiesButton onClick={()=>props.actionButtonHandle(props.idx)} />
                 </td>
+                <TDSelectLine item={props.item} />
             </tr>
         );
     };
@@ -199,6 +224,42 @@ export function init(
         );
     };
 
+    // ------------------------ <LineSelectionOps /> -------------------
+
+    const LineSelectionOps:React.FC<{
+        numSelected:number;
+
+    }> = ({numSelected}) => {
+
+        const handleClickArchive = (props) => {
+            dispatcher.dispatch(
+                Actions.ArchiveSelectedLines
+            );
+        };
+
+        const handleClickDelete = (props) => {
+            if (window.confirm(he.translate('subclist__multi_subc_delete_confirm_msg'))) {
+                dispatcher.dispatch(
+                    Actions.DeleteSelectedLines
+                );
+            }
+        };
+
+        return (
+            <S.LineSelectionOps>
+                <label>
+                {he.translate('subclist__selected_items')}: {numSelected}
+                </label>
+                <button type="button" className="util-button" onClick={handleClickArchive}>
+                    {he.translate('subclist__archive_subcorp')}
+                </button>
+                <button type="button" className="util-button" onClick={handleClickDelete}>
+                    {he.translate('subclist__action_wipe')}
+                </button>
+            </S.LineSelectionOps>
+        );
+    };
+
     // ------------------------ <DataTable /> --------------------------
 
     class DataTable extends React.Component<{
@@ -221,26 +282,40 @@ export function init(
         }
 
         render() {
+            const numSelected = pipe(
+                this.props.lines,
+                List.foldl(
+                    (acc, curr) => curr.selected ? acc + 1 : acc, 0
+                )
+            );
+
             return (
-                <table className="data">
-                    <tbody>
-                        <tr>
-                            <ThSortable ident="name" sortKey={this._exportSortKey('name')} label={he.translate('subclist__col_name')} />
-                            <ThSortable ident="corpus_name" sortKey={this._exportSortKey('corpus_name')} label={he.translate('global__corpus')} />
-                            <ThSortable ident="size" sortKey={this._exportSortKey('size')} label={he.translate('subclist__col_size')} />
-                            <ThSortable ident="created" sortKey={this._exportSortKey('created')} label={he.translate('subclist__col_created')} />
-                            <th>{he.translate('global__note_heading')}</th>
-                            <th />
-                        </tr>
-                        {List.map(item => (
-                            <TrUnfinishedLine key={`${item.name}:${item.created}`} item={item} />
-                        ), this.props.unfinished)}
-                        {List.map((item, i) => (
-                            <TrDataLine key={`${i}:${item.name}`} idx={i} item={item}
-                                    actionButtonHandle={this.props.actionButtonHandle.bind(null, 'reuse')} />
-                        ), this.props.lines)}
-                    </tbody>
-                </table>
+                <div>
+                    <table className="data">
+                        <tbody>
+                            <tr>
+                                <ThSortable ident="name" sortKey={this._exportSortKey('name')} label={he.translate('subclist__col_name')} />
+                                <ThSortable ident="corpus_name" sortKey={this._exportSortKey('corpus_name')} label={he.translate('global__corpus')} />
+                                <ThSortable ident="size" sortKey={this._exportSortKey('size')} label={he.translate('subclist__col_size')} />
+                                <ThSortable ident="created" sortKey={this._exportSortKey('created')} label={he.translate('subclist__col_created')} />
+                                <th>{he.translate('global__note_heading')}</th>
+                                <th />
+                                <th />
+                            </tr>
+                            {List.map(item => (
+                                <TrUnfinishedLine key={`${item.name}:${item.created}`} item={item} />
+                            ), this.props.unfinished)}
+                            {List.map((item, i) => (
+                                <TrDataLine key={`${i}:${item.name}`} idx={i} item={item}
+                                        actionButtonHandle={this.props.actionButtonHandle.bind(null, 'reuse')} />
+                            ), this.props.lines)}
+                        </tbody>
+                    </table>
+                    {numSelected > 0 ?
+                        <LineSelectionOps numSelected={numSelected} /> :
+                        null
+                    }
+                </div>
             );
         }
     }

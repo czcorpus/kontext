@@ -239,3 +239,36 @@ export class BaseTTSubcorpFormModel<T, U = {}> extends StatefulModel<T, U> {
         }
     }
 }
+
+export type MultipleSubc<T = {}> = Array<{corpname:string; subcname:string} & {[P in keyof T]:T[keyof T]} >;
+
+
+export function wipeSubcorpora(
+    layoutModel:PageModel,
+    items:MultipleSubc
+):Observable<{}> {
+    return layoutModel.ajax$<{deleted: MultipleSubc<{deleted: number}>}>(
+        HTTP.Method.POST,
+        layoutModel.createActionUrl('subcorpus/delete'),
+        {
+            items
+        },
+        {contentType: 'application/json'}
+    );
+}
+
+
+
+export function archiveSubcorpora(
+    layoutModel:PageModel,
+    items:Array<{corpname:string; subcname:string}>
+) {
+    return layoutModel.ajax$<{archived: MultipleSubc<{archived: number}>}>(
+        HTTP.Method.POST,
+        layoutModel.createActionUrl('subcorpus/archive'),
+        {
+            items
+        },
+        {contentType: 'application/json'}
+    );
+}
