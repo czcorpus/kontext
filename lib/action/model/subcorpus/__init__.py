@@ -102,8 +102,6 @@ class SubcorpusActionModel(CorpusActionModel):
                 await sr.create(
                     ident=subc_id.id,
                     author=author,
-                    corpname=self.args.corpname,
-                    subcname=specification.subcname,
                     size=subc.search_size,
                     public_description=specification.description,
                     data=specification)

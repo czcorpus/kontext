@@ -93,7 +93,7 @@ class MySQLSubcArchive(AbstractSubcArchive):
         self._db = db
 
     async def create(
-            self, ident: str, author: UserInfo, corpname: str, subcname: str, size: int, public_description,
+            self, ident: str, author: UserInfo, size: int, public_description,
             data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs]):
         async with self._db.cursor() as cursor:
             if isinstance(data, CreateSubcorpusRawCQLArgs):

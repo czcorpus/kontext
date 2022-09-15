@@ -73,8 +73,6 @@ class CreateSubcorpusTask(object):
             await sr.create(
                 ident=subcorpus_id.id,
                 author=self._author,
-                corpname=subcorpus_id.corpus_name,
-                subcname=specification.subcname,
                 size=conc.size(),
                 public_description=specification.description,
                 data=specification)
