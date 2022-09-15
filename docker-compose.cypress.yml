@@ -24,6 +24,8 @@ services:
       - ./scripts/install/conf/docker/config.cypress.xml:/opt/kontext/conf/config.xml
     depends_on:
       - mariadb-test
+    networks:
+      - databases
 
   rq-scheduler:
     depends_on:
@@ -33,6 +35,12 @@ services:
   rq-worker:
     depends_on:
       - mariadb-test
+    networks:
+      - databases
 
 volumes:
   kontext_testdb: {}
+
+
+networks:
+  databases: {}
