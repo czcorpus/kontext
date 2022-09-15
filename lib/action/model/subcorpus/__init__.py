@@ -49,7 +49,7 @@ class SubcorpusActionModel(CorpusActionModel):
         cql -- custom within condition
         """
         form_type = self._req.json['form_type']
-        author = self.session_get('user', 'id')
+        author = self.plugin_ctx.user_dict
         tt_query = None
 
         if form_type == 'tt-sel':
@@ -101,7 +101,7 @@ class SubcorpusActionModel(CorpusActionModel):
             with plugins.runtime.SUBC_STORAGE as sr:
                 await sr.create(
                     ident=subc_id.id,
-                    user_id=author,
+                    author=author,
                     corpname=self.args.corpname,
                     subcname=specification.subcname,
                     size=subc.search_size,

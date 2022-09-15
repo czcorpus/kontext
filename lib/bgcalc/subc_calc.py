@@ -18,10 +18,12 @@ from typing import Union
 import aiofiles.os
 import conclib.search
 import corplib
-from corplib.subcorpus import subcorpus_from_conc
-from corplib.abstract import SubcorpusIdent
-from action.argmapping.subcorpus import CreateSubcorpusArgs, CreateSubcorpusWithinArgs, CreateSubcorpusRawCQLArgs
 import plugins
+from action.argmapping.subcorpus import (
+    CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs)
+from corplib.abstract import SubcorpusIdent
+from corplib.subcorpus import subcorpus_from_conc
+from plugin_types.auth import UserInfo
 
 
 class EmptySubcorpusException(Exception):
@@ -30,8 +32,8 @@ class EmptySubcorpusException(Exception):
 
 class CreateSubcorpusTask(object):
 
-    def __init__(self, user_id: int):
-        self._user_id = user_id
+    def __init__(self, author: UserInfo):
+        self._author = author
         self._cf = corplib.CorpusFactory()
 
     async def run(
@@ -53,7 +55,7 @@ class CreateSubcorpusTask(object):
             full_cql = f'aword,[] {specification.text_types_cql}'
 
         corp = await self._cf.get_corpus(subcorpus_id.corpus_name)
-        conc = await conclib.search.get_conc(corp, self._user_id, q=(full_cql,), asnc=0)
+        conc = await conclib.search.get_conc(corp, self._author['id'], q=(full_cql,), asnc=0)
         conc.sync()
         if conc.size() == 0:
             raise EmptySubcorpusException('Empty subcorpus')
@@ -70,7 +72,7 @@ class CreateSubcorpusTask(object):
         with plugins.runtime.SUBC_STORAGE as sr:
             await sr.create(
                 ident=subcorpus_id.id,
-                user_id=self._user_id,
+                author=self._author,
                 corpname=subcorpus_id.corpus_name,
                 subcname=specification.subcname,
                 size=conc.size(),
