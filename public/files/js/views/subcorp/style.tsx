@@ -521,3 +521,16 @@ export const RawCQL = styled.div`
         margin-bottom: 0.7em;
     }
 `;
+
+// ------------------- <LineSelectionOps /> ---------------------------
+
+export const LineSelectionOps = styled.div`
+
+    margin-top: 0.7em;
+    display: flex;
+    align-items: center;
+
+    > *:not(:first-child) {
+        margin-left: 0.7em;
+    }
+`;

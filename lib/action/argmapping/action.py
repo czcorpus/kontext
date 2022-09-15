@@ -14,11 +14,12 @@
 # GNU General Public License for more details.
 
 
-from typing import List, NewType, Type
+from typing import List, NewType, Type, TypeVar
 from action.errors import UserReadableException
 from sanic.request import Request
 from dataclasses import fields
 
+T = TypeVar('T')
 
 StrOpt = NewType('StrOpt', str)
 ListStrOpt = NewType('ListStrOpt', List[str])

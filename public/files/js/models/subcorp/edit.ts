@@ -26,8 +26,16 @@ import { Actions } from './actions';
 import { Actions as TTActions } from '../textTypes/actions';
 import { HTTP, tuple } from 'cnc-tskit';
 import {
-    CreateSubcorpus, CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs,
-    CreateSubcorpusWithinArgs, isCQLSelection, SubcorpusPropertiesResponse, SubcorpusRecord, subcServerRecord2SubcorpusRecord } from './common';
+    archiveSubcorpora,
+    CreateSubcorpus,
+    CreateSubcorpusArgs,
+    CreateSubcorpusRawCQLArgs,
+    CreateSubcorpusWithinArgs,
+    isCQLSelection,
+    SubcorpusPropertiesResponse,
+    SubcorpusRecord,
+    subcServerRecord2SubcorpusRecord,
+    wipeSubcorpora } from './common';
 
 
 
@@ -102,7 +110,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
             (state, action) => {
                 state.isBusy = false;
                 if (!action.error) {
-                    state.data.archived = action.payload.archived;
+                    state.data.archived = action.payload.archived[0].archived;
                 }
             },
         );
@@ -363,13 +371,9 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
     }
 
     private wipeSubcorpus(state:SubcorpusEditModelState, dispatch: SEDispatcher) {
-        return this.layoutModel.ajax$(
-            HTTP.Method.POST,
-            this.layoutModel.createActionUrl('subcorpus/delete'),
-            {
-                corpname: state.data.corpname,
-                usesubcorp: state.data.usesubcorp
-            }
+        return wipeSubcorpora(
+            this.layoutModel,
+            [{corpname: state.data.corpname, subcname: state.data.usesubcorp}]
         ).subscribe({
             next: data => {
                 dispatch(Actions.WipeSubcorpusDone);
@@ -416,13 +420,9 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
     }
 
     private archiveSubcorpus(corpname:string, subcname:string, dispatch: SEDispatcher) {
-        return this.layoutModel.ajax$<{archived: number}>(
-            HTTP.Method.POST,
-            this.layoutModel.createActionUrl('subcorpus/archive'),
-            {
-                corpname: corpname,
-                usesubcorp: subcname
-            },
+        return archiveSubcorpora(
+            this.layoutModel,
+            [{corpname, subcname}]
         ).subscribe({
             next: resp => {
                 dispatch(
