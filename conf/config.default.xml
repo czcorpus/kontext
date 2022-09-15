@@ -112,6 +112,10 @@
             <max_num_hints>10</max_num_hints>
             <default_page_list_size>30</default_page_list_size>
         </corparch>
+        <subc_storage>
+            <module>default_subc_storage</module>
+            <db_path>/var/local/corpora/subc_storage.db</db_path>
+        <subc_storage/>
         <db>
             <module>redis_db</module>
             <host>localhost</host>
@@ -167,7 +171,6 @@
             <ttl>14400</ttl>
         </sessions>
         <subcmixer/>
-        <subc_storage/>
         <syntax_viewer/>
         <taghelper/>
         <user_items>
