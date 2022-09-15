@@ -99,6 +99,7 @@ export class Actions {
     };
 
     static WipeSubcorpusDone:Action<{
+        numWiped:number;
     }> = {
         name: 'SUBCORP_LIST_WIPE_SUBCORPUS_DONE'
     };

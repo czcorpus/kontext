@@ -246,8 +246,8 @@ export type MultipleSubc<T = {}> = Array<{corpname:string; subcname:string} & {[
 export function wipeSubcorpora(
     layoutModel:PageModel,
     items:MultipleSubc
-):Observable<{}> {
-    return layoutModel.ajax$<{deleted: MultipleSubc<{deleted: number}>}>(
+):Observable<{num_wiped:number}> {
+    return layoutModel.ajax$<{num_wiped:number}>(
         HTTP.Method.POST,
         layoutModel.createActionUrl('subcorpus/delete'),
         {

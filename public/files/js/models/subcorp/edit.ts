@@ -24,7 +24,7 @@ import { IActionQueue, SEDispatcher, StatelessModel } from 'kombo';
 import { PageModel } from '../../app/page';
 import { Actions } from './actions';
 import { Actions as TTActions } from '../textTypes/actions';
-import { HTTP, tuple } from 'cnc-tskit';
+import { HTTP, List, tuple } from 'cnc-tskit';
 import {
     archiveSubcorpora,
     CreateSubcorpus,
@@ -109,10 +109,23 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
             Actions.ArchiveSubcorpusDone,
             (state, action) => {
                 state.isBusy = false;
-                if (!action.error) {
+                if (!action.error && state.data) {
                     state.data.archived = action.payload.archived[0].archived;
                 }
             },
+            (state, action, dispatch) => {
+                if (action.error) {
+                    this.layoutModel.showMessage('error', action.error);
+
+                } else {
+                    this.layoutModel.showMessage(
+                        'info',
+                        List.size(action.payload.archived) > 1 ?
+                            this.layoutModel.translate('subclist__multi_subc_archived') :
+                            this.layoutModel.translate('subclist__subc_archived')
+                    );
+                }
+            }
         );
 
         this.addActionHandler(
@@ -149,6 +162,14 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
             Actions.WipeSubcorpusDone,
             (state, action) => {
                 state.isBusy = false;
+            },
+            (state, action, dispatch) => {
+                this.layoutModel.showMessage(
+                    'info',
+                    action.payload.numWiped > 1 ?
+                        this.layoutModel.translate('subclist__multi_subc_deleted') :
+                        this.layoutModel.translate('subclist__subc_deleted')
+                );
             }
         );
 
@@ -376,9 +397,13 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
             [{corpname: state.data.corpname, subcname: state.data.usesubcorp}]
         ).subscribe({
             next: data => {
-                dispatch(Actions.WipeSubcorpusDone);
+                dispatch(
+                    Actions.WipeSubcorpusDone,
+                    {
+                        numWiped: data.num_wiped
+                    }
+                );
                 dispatch(Actions.HideSubcEditWindow);
-                this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_deleted'));
             },
             error: error => {
                 this.layoutModel.showMessage('error', error);
@@ -429,14 +454,12 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                     Actions.ArchiveSubcorpusDone,
                     {archived: resp.archived},
                 )
-                this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_archived'));
             },
             error: error => {
                 dispatch(
                     Actions.ArchiveSubcorpusDone,
                     error,
                 )
-                this.layoutModel.showMessage('error', error);
             }
         });
     }
