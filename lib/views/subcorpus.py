@@ -218,6 +218,7 @@ async def ajax_list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KRe
 @bp.route('/delete', ['POST'])
 @http_action(access_level=1, return_type='json', action_model=UserActionModel)
 async def delete(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
+    num_wiped = 0
     for item in req.json['items']:
         with plugins.runtime.SUBC_STORAGE as sr:
             subc = await amodel.cf.get_corpus(SubcorpusIdent(id=item['subcname'], corpus_name=item['corpname']))
@@ -226,7 +227,8 @@ async def delete(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dic
             os.unlink(os.path.join(settings.get('corpora', 'subcorpora_dir'), subc.portable_ident.data_path))
         except IOError as e:
             logging.getLogger(__name__).warning(e)
-    return {}
+        num_wiped += 1
+    return {'num_wiped': num_wiped}
 
 
 @bp.route('/update_public_desc', ['POST'])

@@ -377,7 +377,10 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                 ).subscribe({
                     next: data => {
                         this.dispatchSideEffect(
-                            Actions.WipeSubcorpusDone
+                            Actions.WipeSubcorpusDone,
+                            {
+                                numWiped: data.num_wiped
+                            }
                         );
                     },
                     error: error => {
