@@ -19,7 +19,6 @@ import os
 import time
 from dataclasses import fields
 from typing import Any, Dict, Iterable, List, Optional, Tuple
-from sanic import Sanic
 
 import corplib
 import plugins
@@ -35,11 +34,12 @@ from action.plugin.ctx import AbstractUserPluginCtx
 from action.props import ActionProps
 from action.response import KResponse
 from bgcalc.task import AsyncTaskStatus
+from corplib import CorpusFactory
 from main_menu import MainMenu, generate_main_menu
 from plugin_types import CorpusDependentPlugin
 from plugin_types.auth import AbstractInternalAuth, UserInfo
 from plugin_types.subc_storage import SubcListFilterArgs
-from corplib import CorpusFactory
+from sanic import Sanic
 
 
 class UserActionModel(BaseActionModel, AbstractUserModel):
@@ -68,6 +68,12 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
         MainMenu.SAVE, MainMenu.CONCORDANCE, MainMenu.FILTER, MainMenu.FREQUENCY,
         MainMenu.COLLOCATIONS, MainMenu.VIEW('kwic-sent-switch'),
         MainMenu.CORPORA('create-subcorpus'))
+
+    FORBIDDEN_CORPUS_MENU_ITEMS = (
+        MainMenu.NEW_QUERY('new-query', 'wordlist', 'paradigmatic-query'),
+        MainMenu.CORPORA('create-subcorpus'),
+        MainMenu.SAVE, MainMenu.CONCORDANCE, MainMenu.FILTER,
+        MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.VIEW('kwic-sent-switch', 'structs-attrs'), MainMenu.HELP('how-to-cite'))
 
     def __init__(
             self, req: KRequest, resp: KResponse, action_props: ActionProps, shared_data: ModelsSharedData):
@@ -490,10 +496,20 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
             with plugins.runtime.QUERY_HISTORY as qh:
                 queries = await qh.get_user_queries(self.session_get('user', 'id'), self.cf, limit=1)
                 if len(queries) > 0:
+                    corpname = queries[0].get('corpname', None)
+                    if corpname is not None:
+                        with plugins.runtime.AUTH as auth:
+                            has_access, _ = await auth.validate_access(corpname, self.plugin_ctx.user_dict)
+                            if not has_access:
+                                corpname = None
+
                     result['last_used_corp'] = dict(
-                        corpname=queries[0].get('corpname', None),
-                        human_corpname=queries[0].get('human_corpname', None))
+                        corpname=corpname,
+                        human_corpname=None if corpname is None else queries[0].get('human_corpname', None))
         result['popup_server_messages'] = False
+
+    def disable_menu_on_forbidden_corpus(self):
+        self.disabled_menu_items = self.FORBIDDEN_CORPUS_MENU_ITEMS
 
 
 class UserPluginCtx(BasePluginCtx, AbstractUserPluginCtx):
