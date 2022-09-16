@@ -5,7 +5,7 @@ RUN wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.36.0/install.sh | 
 RUN nvm install 16
 
 RUN apt-get update
-RUN apt-get install -y sox libsox-fmt-mp3
+RUN apt-get install -y sox libsox-fmt-mp3 libcairo2
 
 COPY ./pack*.json ./
 RUN npm install
