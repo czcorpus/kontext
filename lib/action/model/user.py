@@ -496,9 +496,16 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
             with plugins.runtime.QUERY_HISTORY as qh:
                 queries = await qh.get_user_queries(self.session_get('user', 'id'), self.cf, limit=1)
                 if len(queries) > 0:
+                    corpname = queries[0].get('corpname', None)
+                    if corpname is not None:
+                        with plugins.runtime.AUTH as auth:
+                            has_access, _ = await auth.validate_access(corpname, self.plugin_ctx.user_dict)
+                            if not has_access:
+                                corpname = None
+
                     result['last_used_corp'] = dict(
-                        corpname=queries[0].get('corpname', None),
-                        human_corpname=queries[0].get('human_corpname', None))
+                        corpname=corpname,
+                        human_corpname=None if corpname is None else queries[0].get('human_corpname', None))
         result['popup_server_messages'] = False
 
     def disable_menu_on_forbidden_corpus(self):
