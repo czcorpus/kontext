@@ -3,7 +3,7 @@ FROM czcorpus/kontext-manatee:2.208-jammy
 WORKDIR /opt/kontext
 COPY . .
 RUN apt-get update \
-    && apt-get install -y sox libsox-fmt-mp3 nodejs npm python3-pip python3-icu \
+    && apt-get install -y sox libsox-fmt-mp3 nodejs npm python3-pip python3-icu libcairo2 \
     && npm install \
     && pip3 install --upgrade pip \
     && sed '/PyICU/d' ./requirements.txt | pip3 install -r /dev/stdin  \
