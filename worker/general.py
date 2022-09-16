@@ -68,8 +68,9 @@ initializer.init_plugin('dispatch_hook', optional=True)
 
 import conclib.calc
 import conclib.calc.base
+from action.argmapping.subcorpus import (
+    CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs)
 from action.argmapping.wordlist import WordlistFormArgs
-from action.argmapping.subcorpus import CreateSubcorpusArgs, CreateSubcorpusWithinArgs, CreateSubcorpusRawCQLArgs
 from bgcalc import coll_calc, freqs, pquery, subc_calc, wordlist
 from corplib import CorpusFactory
 from corplib.abstract import AbstractKCorpus, SubcorpusIdent
@@ -325,13 +326,13 @@ async def compile_docf(corpus_ident, attr, logfile):
 
 
 async def create_subcorpus(
-        user_id,
+        author,
         specification: Union[CreateSubcorpusArgs, CreateSubcorpusWithinArgs, CreateSubcorpusRawCQLArgs],
         subcorpus_id: SubcorpusIdent,
         path: str
 ):
     try:
-        worker = subc_calc.CreateSubcorpusTask(user_id=user_id)
+        worker = subc_calc.CreateSubcorpusTask(author=author)
         return await worker.run(specification, subcorpus_id, path)
     except Exception as ex:
         msg = getattr(ex, 'message', None)

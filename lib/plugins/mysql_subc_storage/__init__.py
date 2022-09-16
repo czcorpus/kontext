@@ -17,13 +17,14 @@
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 import plugins
 import ujson as json
 from action.argmapping.subcorpus import (
     CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs)
 from corplib.subcorpus import SubcorpusRecord
+from plugin_types.auth import UserInfo
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.subc_storage import AbstractSubcArchive, SubcArchiveException
 from plugins import inject
@@ -92,7 +93,7 @@ class MySQLSubcArchive(AbstractSubcArchive):
         self._db = db
 
     async def create(
-            self, ident: str, user_id: int, corpname: str, subcname: str, size: int, public_description,
+            self, ident: str, author: UserInfo, size: int, public_description,
             data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs]):
         async with self._db.cursor() as cursor:
             if isinstance(data, CreateSubcorpusRawCQLArgs):
@@ -105,7 +106,7 @@ class MySQLSubcArchive(AbstractSubcArchive):
                 f'INSERT INTO {self._bconf.subccorp_table} '
                 f'(id, user_id, author_id, corpus_name, name, {column}, created, public_description, size) '
                 'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)',
-                (ident, user_id, user_id, data.corpname, data.subcname, value, datetime.now(), public_description,
+                (ident, author['id'], author['id'], data.corpname, data.subcname, value, datetime.now(), public_description,
                  size))
             await cursor.connection.commit()
 

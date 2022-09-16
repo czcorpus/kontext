@@ -16,29 +16,27 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-import logging
 import os
 import struct
+from dataclasses import dataclass
+from typing import List, Optional
+
 import aiofiles
 import aiohttp
+import plugins
 import ujson
-from dataclasses import dataclass
-from dataclasses_json import dataclass_json, LetterCase
-from typing import Optional, List
-from sanic.blueprints import Blueprint
-from plugin_types.subcmixer import AbstractSubcMixer
-from plugin_types.subcmixer.error import (
-    ResultNotFoundException,
-    SubcMixerException
-)
+from action.argmapping.subcorpus import CreateSubcorpusArgs
+from action.control import http_action
 from action.krequest import KRequest
 from action.model.corpus import CorpusActionModel
 from action.response import KResponse
-from action.control import http_action
-from action.argmapping.subcorpus import CreateSubcorpusArgs
 from corplib.abstract import create_new_subc_ident
+from dataclasses_json import LetterCase, dataclass_json
 from plugin_types.corparch import AbstractCorporaArchive
-import plugins
+from plugin_types.subcmixer import AbstractSubcMixer
+from plugin_types.subcmixer.error import (
+    ResultNotFoundException, SubcMixerException)
+from sanic.blueprints import Blueprint
 
 bp = Blueprint('masm_subcmixer', url_prefix='subcorpus')
 
@@ -85,7 +83,7 @@ async def subcmixer_create_subcorpus(amodel: CorpusActionModel, req: KRequest, r
                 await fw.write(struct.pack('<q', mstruct.beg(idx)))
                 await fw.write(struct.pack('<q', mstruct.end(idx)))
         subc = await amodel.cf.get_corpus(subc_id)
-        author = amodel.session_get('user', 'id')
+        author = amodel.plugin_ctx.user_dict
         specification = CreateSubcorpusArgs(
             corpname=amodel.args.corpname,
             subcname=req.form.get('subcname'),
@@ -97,9 +95,7 @@ async def subcmixer_create_subcorpus(amodel: CorpusActionModel, req: KRequest, r
         with plugins.runtime.SUBC_STORAGE as sr:
             await sr.create(
                 ident=subc_id.id,
-                user_id=author,
-                corpname=amodel.args.corpname,
-                subcname=req.form.get('subcname'),
+                author=author,
                 size=subc.search_size,
                 public_description=req.form.get('description'),
                 data=specification)
