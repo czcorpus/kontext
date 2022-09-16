@@ -13,27 +13,28 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+import hashlib
 import json
+import logging
+import uuid
 from functools import wraps
 from typing import Any, Callable, Coroutine, Optional, Type, Union
-import logging
-import hashlib
-import uuid
 
 import settings
+from action.argmapping.action import create_mapped_args
 from action.errors import (
-    ForbiddenException, ImmediateRedirectException, get_traceback)
+    AlignedCorpusForbiddenException, CorpusForbiddenException,
+    ForbiddenException, ImmediateRedirectException, UserReadableException,
+    get_traceback)
 from action.krequest import KRequest
 from action.model import ModelsSharedData
 from action.model.abstract import AbstractPageModel, AbstractUserModel
 from action.model.base import BaseActionModel
 from action.model.user import UserActionModel
-from action.errors import UserReadableException
 from action.props import ActionProps
 from action.response import KResponse
 from action.templating import CustomJSONEncoder, ResultType, TplEngine
 from action.theme import apply_theme
-from action.argmapping.action import create_mapped_args
 from dataclasses_json import DataClassJsonMixin
 from sanic import HTTPResponse, Sanic, response
 from sanic.request import Request
@@ -212,6 +213,7 @@ def http_action(
 
             except ImmediateRedirectException as ex:
                 return response.redirect(ex.url, status=ex.code)
+
             except Exception as ex:
                 if aprops.return_type == 'plain':
                     raise
@@ -221,6 +223,8 @@ def http_action(
                     aprops.template = 'message.html'
                     aprops.page_model = 'message'
                     ans['popup_server_messages'] = False
+                    if isinstance(ex, (CorpusForbiddenException, AlignedCorpusForbiddenException)):
+                        amodel.disable_menu_on_forbidden_corpus()
                 if not aprops.return_type:
                     aprops.return_type = 'template'
                 if settings.is_debug_mode():
