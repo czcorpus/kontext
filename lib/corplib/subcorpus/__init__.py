@@ -20,15 +20,18 @@
 import os
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, List, Optional, Union, Callable
+from typing import Dict, List, Optional, Union
 
-from dataclasses_json import config, dataclass_json
-from manatee import Corpus, SubCorpus, Concordance, create_subcorpus as m_create_subcorpus
 import aiofiles
-from ..errors import CorpusInstantiationError, InvalidSubCorpFreqFileType, SubcorpusAlreadyExistsError
+from dataclasses_json import config, dataclass_json
+from manatee import Concordance, Corpus, SubCorpus
+from manatee import create_subcorpus as m_create_subcorpus
+
 from ..abstract import SubcorpusIdent
 from ..corpus import KCorpus
-
+from ..errors import (
+    CorpusInstantiationError, InvalidSubCorpFreqFileType,
+    SubcorpusAlreadyExistsError)
 
 """
 This module defines a backend-independent subcorpus representation.
@@ -114,7 +117,7 @@ class KSubcorpus(KCorpus):
     orig_description.
     """
 
-    def __init__(self, corp: SubCorpus, data_record: SubcorpusIdent, subcorp_root_dir: str):
+    def __init__(self, corp: SubCorpus, data_record: Union[SubcorpusIdent, SubcorpusRecord], subcorp_root_dir: str):
         super().__init__(corp, data_record.corpus_name)
         self._corpname = data_record.corpus_name
         self._data_record = data_record
@@ -124,7 +127,7 @@ class KSubcorpus(KCorpus):
         return f'KSubcorpus(corpname={self.corpname}, subcorpus_id={self.subcorpus_id}, subcorpus_name={self.subcorpus_name})'
 
     @staticmethod
-    async def load(corp: Corpus, data_record: SubcorpusIdent, subcorp_root_dir: str) -> 'KSubcorpus':
+    async def load(corp: Corpus, data_record: Union[SubcorpusIdent, SubcorpusRecord], subcorp_root_dir: str) -> 'KSubcorpus':
         """
         load is a recommended factory function to create a KSubcorpus instance.
         """
@@ -137,7 +140,7 @@ class KSubcorpus(KCorpus):
         return kcorp
 
     @property
-    def portable_ident(self) -> Union[str, SubcorpusIdent]:
+    def portable_ident(self) -> Union[SubcorpusIdent, SubcorpusRecord]:
         return self._data_record
 
     @property
@@ -149,6 +152,18 @@ class KSubcorpus(KCorpus):
         if self.is_unbound:
             return None
         return self._data_record.name
+
+    @property
+    def author_id(self):
+        if self.is_unbound:
+            return None
+        return self._data_record.author_id
+
+    @property
+    def author(self):
+        if self.is_unbound:
+            return None
+        return self._data_record.author_fullname
 
     @property
     def description(self):
@@ -180,7 +195,8 @@ class KSubcorpus(KCorpus):
 
     def freq_precalc_file(self, attrname: str, ftype: str) -> str:
         if ftype not in ('frq', 'docf', 'arf'):
-            raise InvalidSubCorpFreqFileType(f'invalid subcorpus freq type file specification: {ftype}')
+            raise InvalidSubCorpFreqFileType(
+                f'invalid subcorpus freq type file specification: {ftype}')
         return os.path.join(self._subcorp_root_dir, self._data_record.data_dir, f'data.{attrname}.{ftype}')
 
     def compile_arf(self, attr):

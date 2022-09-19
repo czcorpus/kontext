@@ -21,7 +21,7 @@ import logging
 import os
 from array import array
 from functools import cmp_to_key
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import aiofiles
 import aiofiles.os
@@ -29,14 +29,15 @@ import l10n
 import manatee
 import plugins
 from corplib.subcorpus import SubcorpusIdent, SubcorpusRecord
-from manatee import Concordance, StrVector, SubCorpus
 from plugin_types.corparch.corpus import (
     DefaultManateeCorpusInfo, ManateeCorpusInfo)
+from plugin_types.subc_storage import AbstractSubcArchive
 
 from .corpus import AbstractKCorpus, KCorpus
-from .subcorpus import KSubcorpus
-from .errors import MissingSubCorpFreqFile, CorpusInstantiationError, VirtualSubcFreqFileError
+from .errors import (
+    CorpusInstantiationError, MissingSubCorpFreqFile, VirtualSubcFreqFileError)
 from .fallback import EmptyCorpus
+from .subcorpus import KSubcorpus
 
 TYPO_CACHE_KEY = 'cached_registry_typos'
 TYPO_CACHE_TTL = 3600 * 24 * 7
@@ -67,7 +68,7 @@ def manatee_min_version(ver: str) -> bool:
     return ver_parsed <= actual
 
 
-def create_str_vector() -> StrVector:
+def create_str_vector() -> manatee.StrVector:
     """
     Creates a new manatee.StrVector instance
     """
@@ -95,7 +96,7 @@ class CorpusFactory:
 
     async def get_corpus(
             self,
-            corp_ident: Union[str, SubcorpusIdent],
+            corp_ident: Union[str, SubcorpusIdent, SubcorpusRecord],
             corp_variant: str = '') -> AbstractKCorpus:
         """
         Args:
@@ -105,8 +106,9 @@ class CorpusFactory:
                 a continuous text (e.g. kwic context) we must make sure they see only a 'legal' chunk.
             translate: a function providing translation of misc. corpus metadata
         """
-        if isinstance(corp_ident, SubcorpusRecord) and self.subcpath is None:
-            raise CorpusInstantiationError('CorpusFactory not configured for creating subcorpora instances')
+        if isinstance(corp_ident, SubcorpusIdent) and self.subcpath is None:
+            raise CorpusInstantiationError(
+                'CorpusFactory not configured for creating subcorpora instances')
         corpname = corp_ident.corpus_name if isinstance(corp_ident, SubcorpusIdent) else corp_ident
         subc_id = corp_ident.id if isinstance(corp_ident, SubcorpusIdent) else ''
         registry_file = await self._ensure_reg_file(corpname, corp_variant)
