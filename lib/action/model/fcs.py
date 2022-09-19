@@ -192,7 +192,7 @@ class FCSActionModel(UserActionModel):
     @property
     def plugin_ctx(self):
         if self._plugin_ctx is None:
-            self._plugin_ctx = CorpusPluginCtx(self, self._req, self._resp, self._shared_data)
+            self._plugin_ctx = CorpusPluginCtx(self, self._req, self._resp, self._plg_shared)
         return self._plugin_ctx
 
 
