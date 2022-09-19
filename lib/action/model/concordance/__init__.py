@@ -97,7 +97,7 @@ class ConcActionModel(CorpusActionModel):
                                                               for a in prev_corpora[1:]]
 
                     subcorpora = await subc_arch.list(
-                        self._req.ctx.session.get('user')['id'], SubcListFilterArgs(corpname=prev_corpora[0]))
+                        self._req.ctx.session.get('user')['id'], SubcListFilterArgs(), corpname=prev_corpora[0])
                     if prev_subcorp and not curr_subcorp and any(subc.id == prev_subcorp for subc in subcorpora):
                         args += [('usesubcorp', prev_subcorp)]
 

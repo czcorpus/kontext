@@ -14,16 +14,16 @@
 # GNU General Public License for more details.
 
 
-from typing import List, NewType, Type, TypeVar
+from typing import List, NewType, Type, TypeVar, Optional
 from action.errors import UserReadableException
 from sanic.request import Request
 from dataclasses import fields
 
 T = TypeVar('T')
 
-StrOpt = NewType('StrOpt', str)
+StrOpt = NewType('StrOpt', Optional[str])
 ListStrOpt = NewType('ListStrOpt', List[str])
-IntOpt = NewType('IntOpt', int)
+IntOpt = NewType('IntOpt', Optional[int])
 ListIntOpt = NewType('ListIntOpt', List[int])
 
 
