@@ -24,7 +24,7 @@ import l10n
 import plugins
 import settings
 from action.argmapping import log_mapping
-from action.argmapping.action import IntOpt, StrOpt
+from action.argmapping.action import IntOpt
 from action.control import http_action
 from action.errors import UserReadableException
 from action.krequest import KRequest
@@ -36,7 +36,8 @@ from bgcalc.task import AsyncTaskStatus
 from corplib.abstract import SubcorpusIdent
 from corplib.subcorpus import SubcorpusRecord
 from main_menu.model import MainMenu
-from plugin_types.subc_storage import AbstractSubcArchive, SubcListFilterArgs, SubcListFilterClientArgs
+from plugin_types.subc_storage import (
+    AbstractSubcArchive, SubcListFilterArgs, SubcListFilterClientArgs)
 from sanic import Blueprint
 from texttypes.model import TextTypeCollector
 
@@ -135,7 +136,7 @@ async def restore(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     return {}
 
 
-async def _filter_subcorpora(amodel: UserActionModel, req: KRequest):
+async def _filter_subcorpora(amodel: UserActionModel, req: KRequest, enable_empty_backup_corpus: bool = False):
     active_only = False if bool(int(req.args.get('show_archived', 0))) else True
     page = int(req.args.get('page', 1))
     pagesize = int(req.args.get('pagesize', amodel.args.subcpagesize))
@@ -150,7 +151,10 @@ async def _filter_subcorpora(amodel: UserActionModel, req: KRequest):
     # to get available related corpora we need to filter it here
     related_corpora = sorted(set(x.corpus_name for x in full_list))
     if corpus_name is not None:
-        full_list = [x for x in full_list if x.corpus_name == corpus_name]
+        if enable_empty_backup_corpus and corpus_name not in related_corpora:
+            corpus_name = None
+        else:
+            full_list = [x for x in full_list if x.corpus_name == corpus_name]
 
     sort = req.args.get('sort', '-created')
     sort_key, rev = amodel.parse_sorting_param(sort)
@@ -198,7 +202,7 @@ async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KRespons
         MainMenu.COLLOCATIONS,
         MainMenu.SAVE, MainMenu.CONCORDANCE)
 
-    ans = await _filter_subcorpora(amodel, req)
+    ans = await _filter_subcorpora(amodel, req, True)
 
     # TODO this might be redundant, since subc storage is now mandatory
     ans['uses_subc_storage'] = plugins.runtime.SUBC_STORAGE.exists
