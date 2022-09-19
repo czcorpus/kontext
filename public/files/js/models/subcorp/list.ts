@@ -26,9 +26,9 @@ import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
 import { pipe, List, HTTP } from 'cnc-tskit';
 import { Actions } from './actions';
+import { Actions as GlobalOptionsActions } from '../options/actions';
 import { archiveSubcorpora, importServerSubcList, SubcorpList, SubcorpusServerRecord, wipeSubcorpora } from './common';
 import { validateGzNumber } from '../base';
-import { strictEqualParsedQueries } from '../query/query';
 
 
 
@@ -37,6 +37,7 @@ export interface SubcListFilter {
     corpname:string;
     pattern:string;
     page:string;
+    pagesize:number;
 }
 
 
@@ -126,13 +127,13 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                 unfinished: [],
                 relatedCorpora,
                 sortKey,
-                filter: initialFilter || {show_archived: false, corpname: '', page: '1', pattern: ''},
+                filter: initialFilter || {show_archived: false, corpname: '', page: '1', pattern: '', pagesize: 20},
                 editWindowSubcorpus: null,
                 isBusy: false,
                 usesSubcRestore: layoutModel.getConf<boolean>('UsesSubcRestore'),
                 finishedTasks: {},
                 totalPages: layoutModel.getConf<number>('SubcTotalPages'),
-                userId: layoutModel.getConf<number>('userId')
+                userId: layoutModel.getConf<number>('userId'),
             }
         );
         this.layoutModel = layoutModel;
@@ -261,8 +262,18 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                 Actions.RestoreSubcorpusDone,
                 Actions.ReuseQueryDone,
                 Actions.ArchiveSubcorpusDone,
+                GlobalOptionsActions.GeneralSubmitDone,
             ],
             action => {
+                if (action.name === GlobalOptionsActions.GeneralSubmitDone.name) {
+                    if (action.payload['subcpagesize'] === this.state.filter.pagesize) {
+                        return
+                    }
+                    this.changeState(state => {
+                        state.filter.page = '1';
+                        state.filter.pagesize = action.payload['subcpagesize'];
+                    });
+                }
                 this.reloadItems().subscribe({
                     next: data => {
                         this.emitChange();
@@ -463,6 +474,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             sort: (this.state.sortKey.reverse ? '-' : '') + this.state.sortKey.name,
             pattern: filter.pattern,
             page: filter.page,
+            pagesize: filter.pagesize.toString(),
         }
         this.mergeFilter(args, filter);
 

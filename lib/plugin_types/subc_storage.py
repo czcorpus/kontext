@@ -61,6 +61,7 @@ class SubcListFilterArgs:
     archived_only: IntOpt = 0
     published_only: IntOpt = 0
     page: IntOpt = 1
+    pagesize: IntOpt = None
     corpus: StrOpt = None
     pattern: StrOpt = None
     ia_query: StrOpt = None
