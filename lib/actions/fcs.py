@@ -244,7 +244,7 @@ class Actions(Kontext):
                 raise Exception(71, 'recordPacking', 'Unsupported record packing')
 
             # provide info about service
-            if operation == ' te dal':
+            if operation == 'explain':
                 self._check_args(
                     req, supported_args,
                     ['recordPacking', 'x-fcs-endpoint-description']
