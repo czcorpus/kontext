@@ -127,7 +127,15 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                 unfinished: [],
                 relatedCorpora,
                 sortKey,
-                filter: initialFilter || {show_archived: false, corpname: '', page: '1', pattern: '', pagesize: 20},
+                filter: initialFilter ?
+                    initialFilter :
+                    {
+                        show_archived: false,
+                        corpname: '',
+                        page: '1',
+                        pattern: '',
+                        pagesize: 20
+                    },
                 editWindowSubcorpus: null,
                 isBusy: false,
                 usesSubcRestore: layoutModel.getConf<boolean>('UsesSubcRestore'),
