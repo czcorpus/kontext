@@ -119,7 +119,8 @@ async def archive(amodel: UserActionModel, req: KRequest, resp: KResponse):
     for item in req.json['items']:
         with plugins.runtime.SUBC_STORAGE(AbstractSubcArchive) as sr:
             dt = await sr.archive(amodel.plugin_ctx.user_id, item['corpname'], item['subcname'])
-        ans.append({'archived': dt.timestamp(), 'subcname': item['subcname'], 'corpname': item['corpname']})
+        ans.append({'archived': dt.timestamp(),
+                    'subcname': item['subcname'], 'corpname': item['corpname']})
     return {'archived': ans}
 
 
@@ -137,6 +138,7 @@ async def restore(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
 async def _filter_subcorpora(amodel: UserActionModel, req: KRequest):
     active_only = False if bool(int(req.args.get('show_archived', 0))) else True
     page = int(req.args.get('page', 1))
+    pagesize = int(req.args.get('pagesize', amodel.args.subcpagesize))
     corpus_name = req.args.get('corpname')
     filter_args = SubcListFilterArgs(
         active_only=active_only,
@@ -144,6 +146,7 @@ async def _filter_subcorpora(amodel: UserActionModel, req: KRequest):
         corpus=None,  # to get available related corpora we need None filter here
         pattern=req.args.get('pattern'),
         page=page,
+        pagesize=pagesize,
     )
 
     with plugins.runtime.SUBC_STORAGE(AbstractSubcArchive) as sr:
@@ -166,8 +169,8 @@ async def _filter_subcorpora(amodel: UserActionModel, req: KRequest):
         full_list = l10n.sort(full_list, loc=req.ui_lang,
                               key=lambda x: getattr(x, sort_key), reverse=rev)
 
-    total_pages = math.ceil(len(full_list) / amodel.args.subcpagesize)
-    full_list = full_list[(page - 1) * amodel.args.subcpagesize:page * amodel.args.subcpagesize]
+    total_pages = math.ceil(len(full_list) / pagesize)
+    full_list = full_list[(page - 1) * pagesize:page * pagesize]
 
     if filter_args.corpus is None:
         filter_args.corpus = ''  # JS code requires non-null value
@@ -224,7 +227,8 @@ async def delete(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dic
             subc = await amodel.cf.get_corpus(SubcorpusIdent(id=item['subcname'], corpus_name=item['corpname']))
             await sr.delete_query(amodel.session_get('user', 'id'), item['corpname'], item['subcname'])
         try:
-            os.unlink(os.path.join(settings.get('corpora', 'subcorpora_dir'), subc.portable_ident.data_path))
+            os.unlink(os.path.join(settings.get('corpora', 'subcorpora_dir'),
+                                   subc.portable_ident.data_path))
         except IOError as e:
             logging.getLogger(__name__).warning(e)
         num_wiped += 1
