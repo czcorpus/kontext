@@ -42,29 +42,40 @@ class SubcArchiveException(Exception):
 @dataclass
 class SubcListFilterArgs:
     """
-    SubcListFilterArgs defines filtering args for
-    listing subcorpora. Please note that
-    active_only and archived_only should be treated
-    as mutually exclusive and a respective listing
-    logic should raise an Exception in case both
-    arguments are True.
+    SubcListFilterArgs defines filtering args for listing subcorpora via subc_storage plug-in.
+    Please note that the arguments do not contain neither paging information nor filtering by
+    corpus name. This is due to the fact that we need to collect subcorpora for all the matching
+    corpora first to be able to fill in client-side corpus selection element.
 
     Attributes:
-        active_only: list only non-archived, non-deleted items
-        archived_only: list only archived items (i.e. no deleted or active ones)
+        active_only: list only non-archived, non-deleted items (mutually exclusive with 'archived_only')
+        archived_only: list only archived items (i.e. no deleted or active ones; mutually exclusive with 'active_only')
         published_only: list only items with public description (and thus searchable; please note that
             any subcorpus is publicly accessible once a user has a URL)
-        corpus: if defined then display only subcorpora of that corpus
         ia_query: ID or author name prefix for published subcorpora listing
+
+    Raises:
+        Exception in case both active_only and archived_only are True
     """
     active_only: IntOpt = 1
     archived_only: IntOpt = 0
     published_only: IntOpt = 0
+    pattern: StrOpt = None
+    ia_query: StrOpt = None
+
+
+@dataclass
+class SubcListFilterClientArgs(SubcListFilterArgs):
+    """
+    SubcListFilterClientArgs is an extension of SubcListFilterArgs which is used
+    as a source of arguments for the client-side.
+
+    Attributes:
+        corpname: if defined then display only subcorpora of that corpus
+    """
     page: IntOpt = 1
     pagesize: IntOpt = None
     corpname: StrOpt = None
-    pattern: StrOpt = None
-    ia_query: StrOpt = None
 
 
 class AbstractSubcArchive(abc.ABC):
@@ -92,8 +103,12 @@ class AbstractSubcArchive(abc.ABC):
 
     @abc.abstractmethod
     async def list(
-            self, user_id: int, filter_args: SubcListFilterArgs,
-            offset: int = 0, limit: Optional[int] = None) -> List[SubcorpusRecord]:
+            self,
+            user_id: int,
+            filter_args: SubcListFilterArgs,
+            corpname: Optional[str] = None,
+            offset: int = 0,
+            limit: Optional[int] = None) -> List[SubcorpusRecord]:
         """
         List all user subcorpora based on provided filter_args and with optional offset and limit (for pagination)
         """

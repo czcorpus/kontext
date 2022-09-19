@@ -17,14 +17,14 @@
 import logging
 import math
 import os
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from typing import Any, Dict, List
 
 import l10n
 import plugins
 import settings
 from action.argmapping import log_mapping
-from action.argmapping.action import IntOpt
+from action.argmapping.action import IntOpt, StrOpt
 from action.control import http_action
 from action.errors import UserReadableException
 from action.krequest import KRequest
@@ -36,7 +36,7 @@ from bgcalc.task import AsyncTaskStatus
 from corplib.abstract import SubcorpusIdent
 from corplib.subcorpus import SubcorpusRecord
 from main_menu.model import MainMenu
-from plugin_types.subc_storage import AbstractSubcArchive, SubcListFilterArgs
+from plugin_types.subc_storage import AbstractSubcArchive, SubcListFilterArgs, SubcListFilterClientArgs
 from sanic import Blueprint
 from texttypes.model import TextTypeCollector
 
@@ -143,11 +143,7 @@ async def _filter_subcorpora(amodel: UserActionModel, req: KRequest):
     filter_args = SubcListFilterArgs(
         active_only=active_only,
         archived_only=False,
-        corpname=None,  # to get available related corpora we need None filter here
-        pattern=req.args.get('pattern'),
-        page=page,
-        pagesize=pagesize)
-
+        pattern=req.args.get('pattern'))
     with plugins.runtime.SUBC_STORAGE(AbstractSubcArchive) as sr:
         full_list: List[SubcorpusRecord] = await sr.list(amodel.plugin_ctx.user_id, filter_args)
 
@@ -167,14 +163,18 @@ async def _filter_subcorpora(amodel: UserActionModel, req: KRequest):
     total_pages = math.ceil(len(full_list) / pagesize)
     full_list = full_list[(page - 1) * pagesize:page * pagesize]
 
-    filter_args.corpname = '' if corpus_name is None else corpus_name
-    if filter_args.pattern is None:
-        filter_args.pattern = ''  # JS code requires non-null value
+    client_filter_args = SubcListFilterClientArgs(
+        active_only=active_only,
+        archived_only=False,
+        pattern=req.args.get('pattern', ''),
+        corpname='' if corpus_name is None else corpus_name,
+        page=IntOpt(page),
+        pagesize=IntOpt(pagesize))
     return dict(
         SubcorpList=[],   # this is used by subcorpus SELECT element; no need for that here
         subcorp_list=[x.to_dict() for x in full_list],
         sort_key=dict(name=sort_key, reverse=rev),
-        filter=asdict(filter_args),
+        filter=asdict(client_filter_args),
         processed_subc=[
             v.to_dict()
             for v in amodel.get_async_tasks(category=AsyncTaskStatus.CATEGORY_SUBCORPUS)

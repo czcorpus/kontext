@@ -136,15 +136,15 @@ class MySQLSubcArchive(AbstractSubcArchive):
             )
             await cursor.connection.commit()
 
-    async def list(self, user_id, filter_args, offset=0, limit=None):
+    async def list(self, user_id, filter_args, corpname=None, offset=0, limit=None):
         if (filter_args.archived_only and filter_args.active_only or
                 filter_args.archived_only and filter_args.published_only):
             raise SubcArchiveException('Invalid filter specified')
 
         where, args = ['t1.user_id = %s'], [user_id]
-        if filter_args.corpname is not None:
+        if corpname is not None:
             where.append('t1.corpus_name = %s')
-            args.append(filter_args.corpname)
+            args.append(corpname)
         if filter_args.archived_only:
             where.append('t1.archived IS NOT NULL')
         elif filter_args.active_only:
