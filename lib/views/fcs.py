@@ -154,7 +154,7 @@ async def v1(amodel: FCSActionModel, req: KRequest, resp: KResponse):
             raise Exception(71, 'recordPacking', 'Unsupported record packing')
 
         # provide info about service
-        if common_data.operation == ' te dal':
+        if common_data.operation == 'explain':
             amodel.check_args(
                 supported_args,
                 ['recordPacking', 'x-fcs-endpoint-description']
@@ -167,8 +167,8 @@ async def v1(amodel: FCSActionModel, req: KRequest, resp: KResponse):
             additional_data['corpus_desc'] = 'Corpus {0} ({1} tokens)'.format(
                 corpus.get_conf('NAME'), l10n.simplify_num(corpus.size))
             additional_data['corpus_lang'] = Languages.get_iso_code(corpus.get_conf('LANGUAGE'))
-            additional_data['show_endpoint_desc'] = (True if req.args.get('x-fcs-endpoint-description', 'false') == 'true'
-                                                     else False)
+            additional_data['show_endpoint_desc'] = (
+                True if req.args.get('x-fcs-endpoint-description', 'false') == 'true' else False)
 
         # wordlist for a given attribute
         elif common_data.operation == 'scan':
@@ -176,13 +176,13 @@ async def v1(amodel: FCSActionModel, req: KRequest, resp: KResponse):
                 supported_args,
                 ['scanClause', 'responsePosition', 'maximumTerms', 'x-cmd-resource-info']
             )
-            scanClause: str = req.args.get('scanClause', '')
-            if scanClause.startswith('fcs.resource='):
-                value = scanClause.split('=')[1]
+            scan_clause: str = req.args.get('scanClause', '')
+            if scan_clause.startswith('fcs.resource='):
+                value = scan_clause.split('=')[1]
                 common_data.result = await amodel.corpora_info(value, common_data.maximumTerms)
             else:
                 common_data.result = await conclib.fcs_scan(
-                    corpname, scanClause, common_data.maximumTerms, common_data.responsePosition)
+                    corpname, scan_clause, common_data.maximumTerms, common_data.responsePosition)
             additional_data['resourceInfoRequest'] = req.args.get(
                 'x-cmd-resource-info', '') == 'true'
 
