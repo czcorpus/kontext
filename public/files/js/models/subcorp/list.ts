@@ -240,6 +240,12 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         this.addActionHandler(
             Actions.UpdateFilter,
             action => {
+                if (action.payload.filter.corpname !== this.state.filter.corpname) {
+                    this.layoutModel.getHistory().replaceState(
+                        'subcorpora/list',
+                        action.payload.filter.corpname ? {corpname: action.payload.filter.corpname} : {}
+                    )
+                }
                 this.filterSubject$.next(action);
             }
         );
