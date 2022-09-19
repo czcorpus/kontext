@@ -243,6 +243,17 @@ export class BaseTTSubcorpFormModel<T, U = {}> extends StatefulModel<T, U> {
 export type MultipleSubc<T = {}> = Array<{corpname:string; subcname:string} & {[P in keyof T]:T[keyof T]} >;
 
 
+export function createSelectId(corpusName:string, subcorpId:string):string {
+    return `${corpusName}:${subcorpId}`;
+}
+
+
+export function splitSelectId(selectId:string):[string, string] {
+    const temp = selectId.split(':', 2);
+    return [temp[0], temp[1]]
+}
+
+
 export function wipeSubcorpora(
     layoutModel:PageModel,
     items:MultipleSubc
