@@ -27,7 +27,7 @@ import { PageModel } from '../../app/page';
 import { pipe, List, HTTP } from 'cnc-tskit';
 import { Actions } from './actions';
 import { Actions as GlobalOptionsActions } from '../options/actions';
-import { archiveSubcorpora, importServerSubcList, SubcorpList, SubcorpusServerRecord, wipeSubcorpora } from './common';
+import { archiveSubcorpora, splitSelectId, importServerSubcList, SubcorpList, SubcorpusServerRecord, wipeSubcorpora } from './common';
 import { validateGzNumber } from '../base';
 
 
@@ -51,7 +51,6 @@ export interface SubcorpListItem {
     published:Date;
     size:number;
     public_description:string;
-    selected:boolean;
     info?:string;
 }
 
@@ -90,6 +89,7 @@ export interface SubcorpListModelState {
     usesSubcRestore:boolean;
     finishedTasks:{[taskId:string]:boolean};
     totalPages:number;
+    selectedItems:Array<string>;
 }
 
 export interface SubcorpListModelArgs {
@@ -134,6 +134,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                 finishedTasks: {},
                 totalPages: layoutModel.getConf<number>('SubcTotalPages'),
                 userId: layoutModel.getConf<number>('userId'),
+                selectedItems: [],
             }
         );
         this.layoutModel = layoutModel;
@@ -266,14 +267,18 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             ],
             action => {
                 if (action.name === GlobalOptionsActions.GeneralSubmitDone.name) {
-                    if (action.payload['subcpagesize'] === this.state.filter.pagesize) {
-                        return
-                    }
+                    if (action.payload['subcpagesize'] === this.state.filter.pagesize) return;
                     this.changeState(state => {
                         state.filter.page = '1';
                         state.filter.pagesize = action.payload['subcpagesize'];
                     });
+
+                } else if (action.name === Actions.WipeSubcorpusDone.name || action.name === Actions.ArchiveSubcorpusDone.name) {
+                    this.changeState(state => {
+                        state.selectedItems = [];
+                    });
                 }
+
                 this.reloadItems().subscribe({
                     next: data => {
                         this.emitChange();
@@ -318,16 +323,15 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         this.addActionHandler(
             Actions.ToggleSelectLine,
             action => {
-                const srchIdx = List.findIndex(
-                    x => x.id === action.payload.itemId,
-                    this.state.lines
-                );
-                if (srchIdx > -1) {
-                    this.changeState(
-                        state => {
-                            state.lines[srchIdx].selected = !state.lines[srchIdx].selected;
-                        }
-                    );
+                if (this.state.selectedItems.includes(action.payload.selectId)) {
+                    this.changeState(state => {
+                        state.selectedItems = List.removeValue(action.payload.selectId, state.selectedItems);
+                    });
+
+                } else {
+                    this.changeState(state => {
+                        state.selectedItems = List.push(action.payload.selectId, state.selectedItems);
+                    });
                 }
             }
         );
@@ -338,16 +342,14 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                 archiveSubcorpora(
                     this.layoutModel,
                     pipe(
-                        this.state.lines,
-                        List.filter(
-                            v => v.selected
-                        ),
-                        List.map(
-                            v => ({
-                                corpname: v.corpus_name,
-                                subcname: v.id
-                            })
-                        )
+                        Array.from(this.state.selectedItems),
+                        List.map(v => {
+                            const [corpus_name, id] = splitSelectId(v);
+                            return {
+                                corpname: corpus_name,
+                                subcname: id
+                            }
+                        })
                     )
                 ).subscribe({
                     next: data => {
@@ -374,16 +376,14 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                 wipeSubcorpora(
                     this.layoutModel,
                     pipe(
-                        this.state.lines,
-                        List.filter(
-                            v => v.selected
-                        ),
-                        List.map(
-                            v => ({
-                                corpname: v.corpus_name,
-                                subcname: v.id
-                            })
-                        )
+                        Array.from(this.state.selectedItems),
+                        List.map(v => {
+                            const [corpus_name, id] = splitSelectId(v);
+                            return {
+                                corpname: corpus_name,
+                                subcname: id
+                            }
+                        })
                     )
                 ).subscribe({
                     next: data => {
@@ -400,6 +400,15 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                             error
                         );
                     }
+                });
+            }
+        );
+
+        this.addActionHandler(
+            Actions.ClearSelectedLines,
+            action => {
+                this.changeState(state => {
+                    state.selectedItems = [];
                 });
             }
         );

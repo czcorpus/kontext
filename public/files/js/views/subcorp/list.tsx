@@ -25,8 +25,9 @@ import {
     SubcorpListModel, SubcListFilter, SortKey, UnfinishedSubcorp, SubcorpListItem,
     SubcorpListModelState
 } from '../../models/subcorp/list';
+import { createSelectId } from '../../models/subcorp/common';
 import * as PluginInterfaces from '../../types/plugins';
-import { List, pipe } from 'cnc-tskit';
+import { List } from 'cnc-tskit';
 import { Actions } from '../../models/subcorp/actions';
 import { init as editViewInit } from './edit';
 
@@ -96,22 +97,23 @@ export function init(
     // ------------------------ <TDSelectLine /> ------------------------
 
     const TDSelectLine:React.FC<{
-        item:SubcorpListItem;
+        selectId:string;
+        selected:boolean;
 
-    }> = ({item}) => {
+    }> = ({selected, selectId}) => {
 
         const handleClick = () => {
             dispatcher.dispatch(
                 Actions.ToggleSelectLine,
                 {
-                    itemId: item.id
+                    selectId: selectId,
                 }
             );
         };
 
         return (
             <td>
-                <input type="checkbox" checked={item.selected} onChange={handleClick} />
+                <input type="checkbox" checked={selected} onChange={handleClick} />
             </td>
         );
     }
@@ -121,6 +123,8 @@ export function init(
     const TrDataLine:React.FC<{
         idx:number;
         item:SubcorpListItem;
+        selectId:string;
+        selected:boolean;
         actionButtonHandle:(idx:number)=>void;
 
     }> = (props) => {
@@ -169,7 +173,7 @@ export function init(
                 <td>
                         <PropertiesButton onClick={()=>props.actionButtonHandle(props.idx)} />
                 </td>
-                <TDSelectLine item={props.item} />
+                <TDSelectLine selectId={props.selectId} selected={props.selected} />
             </tr>
         );
     };
@@ -231,6 +235,12 @@ export function init(
 
     }> = ({numSelected}) => {
 
+        const handleClickClear = (props) => {
+            dispatcher.dispatch(
+                Actions.ClearSelectedLines
+            );
+        };
+
         const handleClickArchive = (props) => {
             dispatcher.dispatch(
                 Actions.ArchiveSelectedLines
@@ -250,6 +260,9 @@ export function init(
                 <label>
                 {he.translate('subclist__selected_items')}: {numSelected}
                 </label>
+                <button type="button" className="util-button" onClick={handleClickClear}>
+                    {he.translate('subclist__clear_selection')}
+                </button>
                 <button type="button" className="util-button" onClick={handleClickArchive}>
                     {he.translate('subclist__archive_subcorp')}
                 </button>
@@ -266,6 +279,7 @@ export function init(
         actionButtonHandle:(action:string, idx:number)=>void;
         pattern:string;
         lines:Array<SubcorpListItem>;
+        selectedItems:Array<string>;
         sortKey:SortKey;
         unfinished:Array<UnfinishedSubcorp>;
     }> {
@@ -282,13 +296,7 @@ export function init(
         }
 
         render() {
-            const numSelected = pipe(
-                this.props.lines,
-                List.foldl(
-                    (acc, curr) => curr.selected ? acc + 1 : acc, 0
-                )
-            );
-
+            const numSelected = this.props.selectedItems.length;
             return (
                 <div>
                     <table className="data">
@@ -305,10 +313,12 @@ export function init(
                             {List.map(item => (
                                 <TrUnfinishedLine key={`${item.name}:${item.created}`} item={item} />
                             ), this.props.unfinished)}
-                            {List.map((item, i) => (
-                                <TrDataLine key={`${i}:${item.name}`} idx={i} item={item}
+                            {List.map((item, i) => {
+                                const selectId = createSelectId(item.corpus_name, item.id);
+                                return <TrDataLine key={`${i}:${item.name}`} idx={i} item={item} selectId={selectId}
+                                        selected={this.props.selectedItems.includes(selectId)}
                                         actionButtonHandle={this.props.actionButtonHandle.bind(null, 'reuse')} />
-                            ), this.props.lines)}
+                            }, this.props.lines)}
                         </tbody>
                     </table>
                     {numSelected > 0 ?
@@ -477,6 +487,7 @@ export function init(
                     <DataTable actionButtonHandle={this._handleActionButton}
                         pattern={this.props.filter.pattern}
                         lines={this.props.lines}
+                        selectedItems={this.props.selectedItems}
                         sortKey={this.props.sortKey}
                         unfinished={this.props.unfinished} />
                 </S.SubcorpList>

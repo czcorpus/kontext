@@ -628,6 +628,7 @@
         "subclist__subc_properties": "Properties",
         "subclist__archived_status_help": "An archived subcorpus does not appear by default in common listings (\"my subcorpora\", \"published subcorpora\") however, the URL addresses of searches in this subcorpus stay valid UNTRANSLATED",
         "subclist__changes_can_be_saved_info": "The changes in structure can be saved as a new subcorpus UNTRANSLATED",
+        "subclist__clear_selection": "Clear selection UNTRANSLATED",
         "pubsubclist__view_detail": "szczegōły",
         "pubsubclist__no_result": "Niy ma podkorpusuw, co by pasowały",
         "pubsubclist__use_in_query": "Użyj we zapytaniu",

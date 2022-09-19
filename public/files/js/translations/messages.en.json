@@ -629,6 +629,7 @@
         "subclist__subc_properties": "Properties",
         "subclist__archived_status_help": "An archived subcorpus does not appear by default in common listings (\"my subcorpora\", \"published subcorpora\") however, the URL addresses of searches in this subcorpus stay valid",
         "subclist__changes_can_be_saved_info": "The changes in structure can be saved as a new subcorpus",
+        "subclist__clear_selection": "Clear selection",
         "pubsubclist__view_detail": "details",
         "pubsubclist__no_result": "No matching subcorpora",
         "pubsubclist__use_in_query": "Use in query",

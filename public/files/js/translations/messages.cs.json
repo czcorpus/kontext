@@ -629,6 +629,7 @@
         "subclist__subc_properties": "Vlastnosti",
         "subclist__archived_status_help": "Archivovaný subkorpus se neobjevuje v běžných výpisech (\"mé subkorpusy\", \"publikované subkorpusy\",...) avšak všechny URL adresy s výsledky hledání v takovém subkorpusu jsou stále funkční",
         "subclist__changes_can_be_saved_info": "Změny ve struktuře subkorpusu mohou být uloženy jako nový subkorpus",
+        "subclist__clear_selection": "Zrušit výběr",
         "pubsubclist__view_detail": "podrobnosti",
         "pubsubclist__no_result": "Žádné vyhovující subkorpusy",
         "pubsubclist__use_in_query": "Použít v dotazu",

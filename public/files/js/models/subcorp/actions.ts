@@ -298,7 +298,7 @@ export class Actions {
     };
 
     static ToggleSelectLine:Action<{
-        itemId:string;
+        selectId:string;
     }> = {
         name: 'SUBCORP_LIST_TOGGLE_SELECT_LINE'
     }
@@ -311,5 +311,10 @@ export class Actions {
     static DeleteSelectedLines:Action<{
     }> = {
         name: 'SUBCORP_LIST_DELETE_SELECTED_LINES'
+    }
+
+    static ClearSelectedLines:Action<{
+    }> = {
+        name: 'SUBCORP_LIST_CLEAR_SELECTED_LINES'
     }
 }
