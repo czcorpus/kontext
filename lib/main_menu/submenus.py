@@ -129,8 +129,10 @@ class Corpora:
     )
 
     my_subcorpora: MenuItemInternal = field(
-        default_factory=lambda: MenuItemInternal(
+        default_factory=lambda: lambda args: MenuItemInternal(
             MainMenu.CORPORA('my-subcorpora'), 'My subcorpora', 'subcorpus/list'
+        ).add_args(
+            ('corpname', args['corpname'])
         ).mark_indirect()
     )
 

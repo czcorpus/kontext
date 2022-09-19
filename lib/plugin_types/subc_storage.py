@@ -62,7 +62,7 @@ class SubcListFilterArgs:
     published_only: IntOpt = 0
     page: IntOpt = 1
     pagesize: IntOpt = None
-    corpus: StrOpt = None
+    corpname: StrOpt = None
     pattern: StrOpt = None
     ia_query: StrOpt = None
 

@@ -166,9 +166,9 @@ class SQLiteSubcArchive(AbstractSubcArchive):
             raise SubcArchiveException('Invalid filter specified')
 
         where, args = ['t1.user_id = ?'], [user_id]
-        if filter_args.corpus is not None:
+        if filter_args.corpname is not None:
             where.append('t1.corpus_name = ?')
-            args.append(filter_args.corpus)
+            args.append(filter_args.corpname)
         if filter_args.archived_only:
             where.append('t1.archived IS NOT NULL')
         elif filter_args.active_only:

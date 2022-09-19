@@ -462,7 +462,7 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
         if self.user_is_anonymous():
             return []
         with plugins.runtime.SUBC_STORAGE as subc_arch:
-            return await subc_arch.list(self._req.session_get('user', 'id'), SubcListFilterArgs(corpus=corpname))
+            return await subc_arch.list(self._req.session_get('user', 'id'), SubcListFilterArgs(corpname=corpname))
 
     @staticmethod
     def parse_sorting_param(k):

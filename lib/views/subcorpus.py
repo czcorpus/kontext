@@ -143,18 +143,13 @@ async def _filter_subcorpora(amodel: UserActionModel, req: KRequest):
     filter_args = SubcListFilterArgs(
         active_only=active_only,
         archived_only=False,
-        corpus=None,  # to get available related corpora we need None filter here
+        corpname=None,  # to get available related corpora we need None filter here
         pattern=req.args.get('pattern'),
         page=page,
-        pagesize=pagesize,
-    )
+        pagesize=pagesize)
 
     with plugins.runtime.SUBC_STORAGE(AbstractSubcArchive) as sr:
-        try:
-            full_list: List[SubcorpusRecord] = await sr.list(amodel.plugin_ctx.user_id, filter_args)
-        except Exception as e:
-            logging.getLogger(__name__).error(
-                'subc_storage plug-in failed to list queries: %s' % e)
+        full_list: List[SubcorpusRecord] = await sr.list(amodel.plugin_ctx.user_id, filter_args)
 
     # to get available related corpora we need to filter it here
     related_corpora = sorted(set(x.corpus_name for x in full_list))
@@ -172,11 +167,9 @@ async def _filter_subcorpora(amodel: UserActionModel, req: KRequest):
     total_pages = math.ceil(len(full_list) / pagesize)
     full_list = full_list[(page - 1) * pagesize:page * pagesize]
 
-    if filter_args.corpus is None:
-        filter_args.corpus = ''  # JS code requires non-null value
+    filter_args.corpname = '' if corpus_name is None else corpus_name
     if filter_args.pattern is None:
         filter_args.pattern = ''  # JS code requires non-null value
-
     return dict(
         SubcorpList=[],   # this is used by subcorpus SELECT element; no need for that here
         subcorp_list=[x.to_dict() for x in full_list],
@@ -199,7 +192,11 @@ async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KRespons
     installed then the list is enriched by additional re-use/undelete information.
     """
     amodel.disabled_menu_items = (
-        MainMenu.VIEW('kwic-sent-switch'), MainMenu.VIEW('structs-attrs'), MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
+        MainMenu.VIEW('kwic-sent-switch'),
+        MainMenu.VIEW('structs-attrs'),
+        MainMenu.FILTER, MainMenu.FREQUENCY,
+        MainMenu.COLLOCATIONS,
+        MainMenu.SAVE, MainMenu.CONCORDANCE)
 
     ans = await _filter_subcorpora(amodel, req)
 
