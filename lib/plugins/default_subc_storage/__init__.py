@@ -18,7 +18,7 @@ import logging
 import os
 import sqlite3
 from datetime import datetime
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import plugins
 import ujson as json
@@ -159,6 +159,25 @@ class SQLiteSubcArchive(AbstractSubcArchive):
             self._db.commit()
         finally:
             cursor.close()
+
+    async def list_corpora(
+            self,
+            user_id: int,
+    ) -> List[str]:
+        sql = f"""
+            SELECT DISTINCT corpus_name
+            FROM {self.SUBC_TABLE_NAME}
+            WHERE user_id = ?
+            ORDER BY corpus_name
+        """
+
+        cursor = self._db.cursor()
+        try:
+            cursor.execute(sql, (user_id,))
+            data = [row['corpus_name'] for row in cursor]
+        finally:
+            cursor.close()
+        return data
 
     async def list(self, user_id, filter_args, corpname=None, offset=0, limit=None):
         if (filter_args.archived_only and filter_args.active_only or
