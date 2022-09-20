@@ -102,6 +102,15 @@ class AbstractSubcArchive(abc.ABC):
         """
 
     @abc.abstractmethod
+    async def list_corpora(
+            self,
+            user_id: int,
+    ) -> List[str]:
+        """
+        List corpora that have some subcorpora
+        """
+
+    @abc.abstractmethod
     async def list(
             self,
             user_id: int,

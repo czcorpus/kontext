@@ -24,7 +24,7 @@ import l10n
 import plugins
 import settings
 from action.argmapping import log_mapping
-from action.argmapping.action import IntOpt, StrOpt
+from action.argmapping.action import IntOpt
 from action.control import http_action
 from action.errors import UserReadableException
 from action.krequest import KRequest
@@ -36,7 +36,8 @@ from bgcalc.task import AsyncTaskStatus
 from corplib.abstract import SubcorpusIdent
 from corplib.subcorpus import SubcorpusRecord
 from main_menu.model import MainMenu
-from plugin_types.subc_storage import AbstractSubcArchive, SubcListFilterArgs, SubcListFilterClientArgs
+from plugin_types.subc_storage import (
+    AbstractSubcArchive, SubcListFilterArgs, SubcListFilterClientArgs)
 from sanic import Blueprint
 from texttypes.model import TextTypeCollector
 
@@ -135,33 +136,39 @@ async def restore(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     return {}
 
 
-async def _filter_subcorpora(amodel: UserActionModel, req: KRequest):
+async def _filter_subcorpora(amodel: UserActionModel, req: KRequest, ignore_no_subc_corpus: bool = True):
     active_only = False if bool(int(req.args.get('show_archived', 0))) else True
     page = int(req.args.get('page', 1))
     pagesize = int(req.args.get('pagesize', amodel.args.subcpagesize))
-    corpus_name = req.args.get('corpname')
+    corpus_name = None if req.args.get('corpname') == '' else req.args.get('corpname')
     filter_args = SubcListFilterArgs(
         active_only=active_only,
         archived_only=False,
         pattern=req.args.get('pattern'))
-    with plugins.runtime.SUBC_STORAGE(AbstractSubcArchive) as sr:
-        full_list: List[SubcorpusRecord] = await sr.list(amodel.plugin_ctx.user_id, filter_args)
 
-    # to get available related corpora we need to filter it here
-    related_corpora = sorted(set(x.corpus_name for x in full_list))
-    if corpus_name is not None:
-        full_list = [x for x in full_list if x.corpus_name == corpus_name]
+    full_list: List[SubcorpusRecord] = []
+    with plugins.runtime.SUBC_STORAGE(AbstractSubcArchive) as sr:
+        related_corpora = await sr.list_corpora(amodel.plugin_ctx.user_id)
+        if related_corpora:
+            # if no data for specified corpus and backup enabled, change to None corpus
+            if not ignore_no_subc_corpus and corpus_name is not None and corpus_name not in related_corpora:
+                corpus_name = None
+
+            if corpus_name is None or corpus_name in related_corpora:
+                full_list = await sr.list(amodel.plugin_ctx.user_id, filter_args, corpname=corpus_name)
 
     sort = req.args.get('sort', '-created')
     sort_key, rev = amodel.parse_sorting_param(sort)
-    if sort_key in ('size', 'created'):
-        full_list = sorted(full_list, key=lambda x: getattr(x, sort_key), reverse=rev)
-    else:
-        full_list = l10n.sort(full_list, loc=req.ui_lang,
-                              key=lambda x: getattr(x, sort_key), reverse=rev)
+    total_pages = 1
+    if full_list:
+        if sort_key in ('size', 'created'):
+            full_list = sorted(full_list, key=lambda x: getattr(x, sort_key), reverse=rev)
+        else:
+            full_list = l10n.sort(full_list, loc=req.ui_lang,
+                                  key=lambda x: getattr(x, sort_key), reverse=rev)
 
-    total_pages = math.ceil(len(full_list) / pagesize)
-    full_list = full_list[(page - 1) * pagesize:page * pagesize]
+        total_pages = math.ceil(len(full_list) / pagesize)
+        full_list = full_list[(page - 1) * pagesize:page * pagesize]
 
     client_filter_args = SubcListFilterClientArgs(
         active_only=active_only,
@@ -180,17 +187,13 @@ async def _filter_subcorpora(amodel: UserActionModel, req: KRequest):
             for v in amodel.get_async_tasks(category=AsyncTaskStatus.CATEGORY_SUBCORPUS)
         ],
         related_corpora=related_corpora,
-        total_pages=total_pages if total_pages else 1,
+        total_pages=total_pages,
     )
 
 
 @bp.route('/list')
 @http_action(access_level=1, template='subcorpus/list.html', page_model='subcorpList', action_model=UserActionModel)
 async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
-    """
-    Displays a list of user subcorpora. In case there is a 'subc_storage' plug-in
-    installed then the list is enriched by additional re-use/undelete information.
-    """
     amodel.disabled_menu_items = (
         MainMenu.VIEW('kwic-sent-switch'),
         MainMenu.VIEW('structs-attrs'),
@@ -198,7 +201,7 @@ async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KRespons
         MainMenu.COLLOCATIONS,
         MainMenu.SAVE, MainMenu.CONCORDANCE)
 
-    ans = await _filter_subcorpora(amodel, req)
+    ans = await _filter_subcorpora(amodel, req, False)
 
     # TODO this might be redundant, since subc storage is now mandatory
     ans['uses_subc_storage'] = plugins.runtime.SUBC_STORAGE.exists

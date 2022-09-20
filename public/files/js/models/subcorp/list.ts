@@ -146,6 +146,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             }
         );
         this.layoutModel = layoutModel;
+        this.layoutModel.getHistory().replaceState('subcorpus/list', {});
         this.changeState(state => {
             state.lines = this.importAndProcessServerSubcList(data);
             state.unfinished = this.importProcessed(unfinished);

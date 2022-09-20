@@ -17,7 +17,7 @@
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import plugins
 import ujson as json
@@ -135,6 +135,21 @@ class MySQLSubcArchive(AbstractSubcArchive):
                 (user_id, corpname, subc_id)
             )
             await cursor.connection.commit()
+
+    async def list_corpora(
+            self,
+            user_id: int,
+    ) -> List[str]:
+        sql = f"""
+            SELECT DISTINCT corpus_name
+            FROM {self._bconf.subccorp_table}
+            WHERE user_id = %s
+            ORDER BY corpus_name
+        """
+
+        async with self._db.cursor() as cursor:
+            await cursor.execute(sql, (user_id,))
+            return [row['corpus_name'] async for row in cursor]
 
     async def list(self, user_id, filter_args, corpname=None, offset=0, limit=None):
         if (filter_args.archived_only and filter_args.active_only or
