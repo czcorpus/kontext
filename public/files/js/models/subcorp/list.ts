@@ -86,7 +86,6 @@ export interface SubcorpListModelState {
     filter:SubcListFilter;
     isBusy:boolean;
     editWindowSubcorpus:currSubcorpusProps|null;
-    usesSubcRestore:boolean;
     finishedTasks:{[taskId:string]:boolean};
     totalPages:number;
     selectedItems:Array<string>;
@@ -138,7 +137,6 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                     },
                 editWindowSubcorpus: null,
                 isBusy: false,
-                usesSubcRestore: layoutModel.getConf<boolean>('UsesSubcRestore'),
                 finishedTasks: {},
                 totalPages: layoutModel.getConf<number>('SubcTotalPages'),
                 userId: layoutModel.getConf<number>('userId'),

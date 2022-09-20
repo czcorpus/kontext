@@ -202,9 +202,6 @@ async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KRespons
         MainMenu.SAVE, MainMenu.CONCORDANCE)
 
     ans = await _filter_subcorpora(amodel, req, False)
-
-    # TODO this might be redundant, since subc storage is now mandatory
-    ans['uses_subc_storage'] = plugins.runtime.SUBC_STORAGE.exists
     ans['uses_live_attrs'] = plugins.runtime.LIVE_ATTRIBUTES.exists
     return ans
 

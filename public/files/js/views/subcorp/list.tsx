@@ -335,7 +335,6 @@ export function init(
     const FilterForm:React.FC<{
         filter:SubcListFilter;
         relatedCorpora:Array<string>;
-        usesSubcRestore:boolean;
 
     }> = (props) => {
         const MIN_PATTERN_LENGTH = 3
@@ -461,8 +460,7 @@ export function init(
             return (
                 <S.SubcorpList>
                     <section className="inner">
-                        <FilterForm filter={this.props.filter} relatedCorpora={this.props.relatedCorpora}
-                                usesSubcRestore={this.props.usesSubcRestore} />
+                        <FilterForm filter={this.props.filter} relatedCorpora={this.props.relatedCorpora} />
                     </section>
                     {this.props.editWindowSubcorpus !== null
                         ? (
