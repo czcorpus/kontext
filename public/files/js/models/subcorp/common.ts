@@ -214,10 +214,10 @@ export class BaseTTSubcorpFormModel<T, U = {}> extends StatefulModel<T, U> {
         this.pageModel = pageModel;
     }
 
-    submit(args:CreateSubcorpusArgs|CreateSubcorpusWithinArgs, validator: (args) => Error|null):Observable<any> {
+    submit(args:CreateSubcorpusArgs|CreateSubcorpusWithinArgs, validator: (args) => Error|null):Observable<CreateSubcorpus> {
         const err = validator(args);
         if (!err) {
-            return this.pageModel.ajax$<any>(
+            return this.pageModel.ajax$<CreateSubcorpus>(
                 HTTP.Method.POST,
                 this.pageModel.createActionUrl(
                     '/subcorpus/create',

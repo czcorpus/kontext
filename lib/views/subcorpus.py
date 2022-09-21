@@ -34,7 +34,7 @@ from action.model.user import UserActionModel
 from action.response import KResponse
 from bgcalc.task import AsyncTaskStatus
 from corplib.abstract import SubcorpusIdent
-from corplib.subcorpus import SubcorpusRecord, KSubcorpus
+from corplib.subcorpus import KSubcorpus, SubcorpusRecord
 from main_menu.model import MainMenu
 from plugin_types.subc_storage import (
     AbstractSubcArchive, SubcListFilterArgs, SubcListFilterClientArgs)
@@ -69,6 +69,16 @@ async def properties(amodel: SubcorpusActionModel, req: KRequest, resp: KRespons
 async def create(amodel: SubcorpusActionModel, req: KRequest, resp: KResponse):
     try:
         return await amodel.create_subcorpus()
+    except (SubcorpusError, RuntimeError) as e:
+        raise UserReadableException(str(e)) from e
+
+
+@bp.route('/create_draft', ['POST'])
+@http_action(
+    access_level=1, return_type='json', action_model=SubcorpusActionModel)
+async def create_draft(amodel: SubcorpusActionModel, req: KRequest, resp: KResponse):
+    try:
+        return await amodel.create_mutable_subcorpus_record()
     except (SubcorpusError, RuntimeError) as e:
         raise UserReadableException(str(e)) from e
 
