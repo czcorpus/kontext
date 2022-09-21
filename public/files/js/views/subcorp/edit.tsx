@@ -202,6 +202,7 @@ export function init(
     // ------------------------ <PublishingTab /> --------------------------
 
     const PublishingTab:React.FC<{
+        subcname:string;
         description:string;
         descriptionRaw:string;
         publicCode:string;
@@ -210,9 +211,18 @@ export function init(
 
     }> = (props) => {
 
-        const handleSubmitUpdateDesc = () => {
-            dispatcher.dispatch<typeof Actions.SubmitPublicDescription>({
-                name: Actions.SubmitPublicDescription.name
+        const handleSubmitUpdateNameAndDesc = () => {
+            dispatcher.dispatch<typeof Actions.SubmitNameAndPublicDescription>({
+                name: Actions.SubmitNameAndPublicDescription.name
+            });
+        };
+
+        const handleSubcNameChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch<typeof Actions.UpdateSubcName>({
+                name: Actions.UpdateSubcName.name,
+                payload: {
+                    value: evt.target.value
+                }
             });
         };
 
@@ -234,6 +244,12 @@ export function init(
         return (
             <TabContentWrapper>
                 <S.PublishingTab>
+                    <div>
+                        <label>
+                            {he.translate('subcform__subcorpus_name')}
+                            <input type="text" onChange={handleSubcNameChange} value={props.subcname} />
+                        </label>
+                    </div>
                     <div className="header-bar">
                         <layoutViews.InlineHelp noSuperscript={true} htmlClass="help-icon">
                             {he.translate('subclist__public_description_note')}
@@ -257,7 +273,7 @@ export function init(
                     }
                     <p className="markdown-note note">({he.translate('global__markdown_supported')})</p>
                     <div>
-                        <PublishSubmitButton onSubmit={handleSubmitUpdateDesc} />
+                        <PublishSubmitButton onSubmit={handleSubmitUpdateNameAndDesc} />
                     </div>
                 </S.PublishingTab>
             </TabContentWrapper>
@@ -305,6 +321,7 @@ export function init(
                                 liveAttrsEnabled={props.liveAttrsEnabled}
                                 selectionType={getFormTypeFromSelection(props.data.selections)} />
                             <PublishingTab key="publish"
+                                subcname={props.data.name}
                                 descriptionRaw={props.data.descriptionRaw}
                                 description={props.data.description}
                                 previewEnabled={props.previewEnabled}

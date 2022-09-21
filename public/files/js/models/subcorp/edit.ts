@@ -265,17 +265,17 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
         );
 
         this.addActionHandler(
-            Actions.SubmitPublicDescription,
+            Actions.SubmitNameAndPublicDescription,
             (state, action) => {
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.updateSubcorpusDescSubmit(state, false, dispatch);
+                this.updateSubcorpusNameAndDescSubmit(state, false, dispatch);
             }
         );
 
         this.addActionHandler(
-            Actions.SubmitPublicDescriptionDone,
+            Actions.SubmitNameAndPublicDescriptionDone,
             (state, action) => {
                 state.isBusy = false;
                 if (!action.error) {
@@ -303,13 +303,20 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
         );
 
         this.addActionHandler(
+            Actions.UpdateSubcName,
+            (state, action) => {
+                state.data.name = action.payload.value;
+            }
+        );
+
+        this.addActionHandler(
             Actions.TogglePublicDescription,
             (state, action) => {
                 state.previewEnabled = !state.previewEnabled;
             },
             (state, action, dispatch) => {
                 if (state.previewEnabled && state.prevRawDescription !== state.data.descriptionRaw) {
-                    this.updateSubcorpusDescSubmit(state, true, dispatch);
+                    this.updateSubcorpusNameAndDescSubmit(state, true, dispatch);
                 }
             }
         );
@@ -324,7 +331,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
         );
     }
 
-    private updateSubcorpusDescSubmit(
+    private updateSubcorpusNameAndDescSubmit(
         state:SubcorpusEditModelState,
         previewOnly:boolean,
         dispatch:SEDispatcher
@@ -332,19 +339,21 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
         this.layoutModel.ajax$<{preview:string; saved:boolean}>(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl(
-                'subcorpus/update_public_desc',
+                'subcorpus/update_name_and_public_desc',
                 {'preview-only': previewOnly ? previewOnly : undefined}
             ),
             {
                 corpname: state.data.corpname,
                 usesubcorp: state.data.usesubcorp,
+                subcname: state.data.name,
                 description: state.data.descriptionRaw
             }
         ).subscribe({
             next: resp => {
                 dispatch(
-                    Actions.SubmitPublicDescriptionDone,
+                    Actions.SubmitNameAndPublicDescriptionDone,
                     {
+                        name: state.data.name,
                         preview: resp.preview,
                         saved: resp.saved
                     }
@@ -353,7 +362,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
             },
             error: error => {
                 dispatch(
-                    Actions.SubmitPublicDescriptionDone,
+                    Actions.SubmitNameAndPublicDescriptionDone,
                     error
                 )
             }

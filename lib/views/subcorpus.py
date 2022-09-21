@@ -247,13 +247,13 @@ async def delete(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dic
     return {'num_wiped': num_wiped}
 
 
-@bp.route('/update_public_desc', ['POST'])
+@bp.route('/update_name_and_public_desc', ['POST'])
 @http_action(access_level=1, return_type='json', action_model=CorpusActionModel)
-async def update_public_desc(amodel: CorpusActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
+async def update_name_and_public_desc(amodel: CorpusActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
     with plugins.runtime.SUBC_STORAGE as sa:
         preview_only = req.args.get('preview-only') == '1'
-        preview = await sa.update_description(
-            amodel.session_get('user', 'id'), amodel.corp.subcorpus_id, req.form.get('description'), preview_only)
+        preview = await sa.update_name_and_description(
+            amodel.session_get('user', 'id'), amodel.corp.subcorpus_id, req.form.get('subcname'), req.form.get('description'), preview_only)
     return dict(preview=preview, saved=not preview_only)
 
 

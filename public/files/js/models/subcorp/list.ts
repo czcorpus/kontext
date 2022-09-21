@@ -271,6 +271,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                 Actions.ReuseQueryDone,
                 Actions.ArchiveSubcorpusDone,
                 GlobalOptionsActions.GeneralSubmitDone,
+                Actions.SubmitNameAndPublicDescriptionDone,
             ],
             action => {
                 if (action.name === GlobalOptionsActions.GeneralSubmitDone.name) {
@@ -283,6 +284,11 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                 } else if (action.name === Actions.WipeSubcorpusDone.name || action.name === Actions.ArchiveSubcorpusDone.name) {
                     this.changeState(state => {
                         state.selectedItems = [];
+                    });
+                
+                } else if (action.name === Actions.SubmitNameAndPublicDescriptionDone.name) {
+                    this.changeState(state => {
+                        state.editWindowSubcorpus.subcorpusName = action.payload['name'];
                     });
                 }
 

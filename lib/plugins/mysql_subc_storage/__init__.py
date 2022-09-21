@@ -245,14 +245,14 @@ class MySQLSubcArchive(AbstractSubcArchive):
             )
             await cursor.connection.commit()
 
-    async def update_description(self, user_id: int, subc_id: str, description: str, preview_only: bool):
+    async def update_name_and_description(self, user_id: int, subc_id: str, subcname: str, description: str, preview_only: bool):
         if not preview_only:
             async with self._db.cursor() as cursor:
                 await cursor.execute(
                     f'UPDATE {self._bconf.subccorp_table} '
-                    'SET public_description = %s '
+                    'SET name = %s, public_description = %s '
                     'WHERE user_id = %s AND id = %s',
-                    (description, user_id, subc_id)
+                    (subcname, description, user_id, subc_id)
                 )
                 await cursor.connection.commit()
         return k_markdown(description)
