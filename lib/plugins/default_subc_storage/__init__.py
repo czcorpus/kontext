@@ -286,15 +286,15 @@ class SQLiteSubcArchive(AbstractSubcArchive):
         finally:
             cursor.close()
 
-    async def update_description(self, user_id: int, subc_id: str, description: str, preview_only: bool):
+    async def update_name_and_description(self, user_id: int, subc_id: str, subcname: str, description: str, preview_only: bool):
         if not preview_only:
             cursor = self._db.cursor()
             try:
                 cursor.execute(
                     f'UPDATE {self.SUBC_TABLE_NAME} '
-                    'SET public_description = ? '
+                    'SET name = ?, public_description = ? '
                     'WHERE user_id = ? AND id = ?',
-                    (description, user_id, subc_id)
+                    (subcname, description, user_id, subc_id)
                 )
                 self._db.commit()
             finally:

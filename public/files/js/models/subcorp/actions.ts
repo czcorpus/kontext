@@ -139,6 +139,12 @@ export class Actions {
         name: 'SUBCORP_LIST_REUSE_QUERY_DONE'
     };
 
+    static UpdateSubcName:Action<{
+        value:string;
+    }> = {
+        name: 'SUBCORP_LIST_UPDATE_NAME'
+    };
+
     static UpdatePublicDescription:Action<{
         value:string;
     }> = {
@@ -150,12 +156,14 @@ export class Actions {
         name: 'SUBCORP_LIST_TOGGLE_PUBLIC_DESCRIPTION'
     }
 
-    static SubmitPublicDescription:Action<{
+    static SubmitNameAndPublicDescription:Action<{
     }> = {
-        name: 'SUBCORP_LIST_PUBLIC_DESCRIPTION_SUBMIT'
+        name: 'SUBCORP_LIST_NAME_AND_PUBLIC_DESCRIPTION_SUBMIT'
     };
 
-    static SubmitPublicDescriptionDone:Action<{
+    static SubmitNameAndPublicDescriptionDone:Action<{
+        name:string;
+
         /**
          * Decoded Markdown description
          */
@@ -166,7 +174,7 @@ export class Actions {
          */
         saved:boolean;
     }> = {
-        name: 'SUBCORP_LIST_PUBLIC_DESCRIPTION_SUBMIT_DONE'
+        name: 'SUBCORP_LIST_NAME_AND_PUBLIC_DESCRIPTION_SUBMIT_DONE'
     };
 
     static FormSetSubcName:Action<{
