@@ -52,6 +52,7 @@ def _subc_from_row(row: Dict) -> SubcorpusRecord:
         id=row['id'],
         corpus_name=row['corpus_name'],
         name=row['name'],
+        mutable=row['mutable'],
         user_id=row['user_id'],
         author_id=row['author_id'],
         author_fullname=row['author_fullname'],
@@ -89,6 +90,7 @@ class SQLiteSubcArchive(AbstractSubcArchive):
                 CREATE TABLE {self.SUBC_TABLE_NAME} (
                     id VARCHAR(32) PRIMARY KEY,
                     name VARCHAR(127) NOT NULL,
+                    mutable INTEGER NOT NULL DEFAULT 0,
                     user_id INTEGER, -- if NULL then the subcorpus is deleted for the user but it still exists (e.g. to be avail. if published)
                     author_id INTEGER NOT NULL,
                     author_fullname varchar(127) NOT NULL,

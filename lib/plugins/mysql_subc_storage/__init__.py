@@ -53,6 +53,7 @@ def _subc_from_row(row: Dict) -> SubcorpusRecord:
         id=row['id'],
         corpus_name=row['corpus_name'],
         name=row['name'],
+        mutable=row['mutable'],
         user_id=row['user_id'],
         author_id=row['author_id'],
         author_fullname=row['fullname'],

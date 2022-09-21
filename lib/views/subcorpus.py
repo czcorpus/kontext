@@ -34,7 +34,7 @@ from action.model.user import UserActionModel
 from action.response import KResponse
 from bgcalc.task import AsyncTaskStatus
 from corplib.abstract import SubcorpusIdent
-from corplib.subcorpus import SubcorpusRecord
+from corplib.subcorpus import SubcorpusRecord, KSubcorpus
 from main_menu.model import MainMenu
 from plugin_types.subc_storage import (
     AbstractSubcArchive, SubcListFilterArgs, SubcListFilterClientArgs)
@@ -81,7 +81,6 @@ async def new(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     """
     amodel.disabled_menu_items = amodel.CONCORDANCE_ACTIONS + (MainMenu.VIEW, )
     method = req.form.get('method', 'gui')
-    subcname = req.form.get('subcname', None)
     subcnorm = req.args.get('subcnorm', 'tokens')
 
     try:
@@ -93,15 +92,17 @@ async def new(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     out = dict(SubcorpList=())
     await amodel.attach_aligned_query_params(out)
     corpus_info = await amodel.get_corpus_info(amodel.args.corpname)
-
+    if isinstance(amodel.corp, KSubcorpus):
+        if not amodel.corp.is_mutable:
+            raise UserReadableException('Cannot edit finished subcorpus', 400)
+        with plugins.runtime.SUBC_STORAGE as sr:
+            info = await sr.get_info(amodel.corp.subcorpus_id)
+        out['selected_text_types'] = info.text_types
     out.update(dict(
         Normslist=tt_sel['Normslist'],
         text_types_data=tt_sel,
-        selected_text_types=TextTypeCollector(amodel.corp, req).get_attrmap(),
         method=method,
-        subcnorm=subcnorm,
         id_attr=corpus_info.metadata.id_attr,
-        subcname=subcname,
         aligned_corpora=req.form_getlist('aligned_corpora')
     ))
     return out
