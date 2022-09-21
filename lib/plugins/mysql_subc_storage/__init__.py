@@ -94,8 +94,8 @@ class MySQLSubcArchive(AbstractSubcArchive):
         self._db = db
 
     async def create(
-            self, ident: str, author: UserInfo, size: int, public_description,
-            data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs]):
+            self, ident: str, author: UserInfo, size: int, public_description: str,
+            data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs], is_draft: bool = False):
         async with self._db.cursor() as cursor:
             if isinstance(data, CreateSubcorpusRawCQLArgs):
                 column, value = 'cql', data.cql
@@ -105,10 +105,10 @@ class MySQLSubcArchive(AbstractSubcArchive):
                 column, value = 'text_types', json.dumps(data.text_types)
             await cursor.execute(
                 f'INSERT INTO {self._bconf.subccorp_table} '
-                f'(id, user_id, author_id, corpus_name, name, {column}, created, public_description, size) '
-                'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)',
+                f'(id, user_id, author_id, corpus_name, name, {column}, created, public_description, size, mutable) '
+                'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
                 (ident, author['id'], author['id'], data.corpname, data.subcname, value, datetime.now(), public_description,
-                 size))
+                 size, 1 if is_draft else 0))
             await cursor.connection.commit()
 
     async def archive(self, user_id: int, corpname: str, subc_id: str) -> datetime:

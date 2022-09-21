@@ -110,7 +110,7 @@ class SQLiteSubcArchive(AbstractSubcArchive):
 
     async def create(
             self, ident: str, author: UserInfo, size: int, public_description,
-            data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs]):
+            data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs], is_draft: bool = False):
         if isinstance(data, CreateSubcorpusRawCQLArgs):
             column, value = 'cql', data.cql
         elif isinstance(data, CreateSubcorpusWithinArgs):
@@ -122,9 +122,9 @@ class SQLiteSubcArchive(AbstractSubcArchive):
         try:
             cursor.execute(
                 f'INSERT INTO {self.SUBC_TABLE_NAME} '
-                f'(id, user_id, author_id, author_fullname, corpus_name, name, {column}, created, public_description, size) '
-                'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                (ident, author['id'], author['id'], author['fullname'], data.corpname, data.subcname, value, datetime.now().timestamp(), public_description, size))
+                f'(id, user_id, author_id, author_fullname, corpus_name, name, {column}, created, public_description, size, mutable) '
+                'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                (ident, author['id'], author['id'], author['fullname'], data.corpname, data.subcname, value, datetime.now().timestamp(), public_description, size, 1 if is_draft else 0))
             self._db.commit()
         finally:
             cursor.close()

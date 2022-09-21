@@ -18,6 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import os
+from dataclasses import asdict
 from typing import Any, Dict
 
 import bgcalc
@@ -45,7 +46,6 @@ class SubcorpusActionModel(CorpusActionModel):
         """
         req. arguments:
         subcname -- name of new subcorpus
-        create -- bool, sets whether to create new subcorpus
         cql -- custom within condition
         """
         form_type = self._req.json['form_type']
@@ -123,3 +123,50 @@ class SubcorpusActionModel(CorpusActionModel):
         unfinished_corpora = [at for at in self.get_async_tasks(
             category=AsyncTaskStatus.CATEGORY_SUBCORPUS) if not at.is_finished()]
         return dict(processed_subc=[uc.to_dict() for uc in unfinished_corpora])
+
+    async def create_mutable_subcorpus_record(self):
+        """
+        awailable only for text types defined subcorpora
+        """
+        specification = CreateSubcorpusArgs(**self._req.json)
+        if not specification.subcname:
+            raise UserReadableException(self._req.translate('No subcorpus name specified!'))
+
+        corpus_info = await self.get_corpus_info(specification.corpname)
+        size = 0
+        if (plugins.runtime.LIVE_ATTRIBUTES.exists
+                and await plugins.runtime.LIVE_ATTRIBUTES.instance.is_enabled_for(
+                    self.plugin_ctx, [specification.corpname])  # TODO here we skip aligned corpora which is debatable
+                and len(specification.aligned_corpora) > 0):
+            if corpus_info.metadata.label_attr and corpus_info.metadata.id_attr:
+                sel_match = await plugins.runtime.LIVE_ATTRIBUTES.instance.get_attr_values(
+                    self.plugin_ctx, corpus=self.corp,
+                    attr_map=specification.text_types,
+                    aligned_corpora=specification.aligned_corpora,
+                    limit_lists=False)
+                size = sel_match.poscount
+                sel_attrs = {}
+                for k, vals in sel_match.attr_values.items():
+                    if k == corpus_info.metadata.label_attr:
+                        k = corpus_info.metadata.id_attr
+                    # now we take only attribute entries with full data listing
+                    if '.' in k and type(vals) is list:
+                        sel_attrs[k] = [v[1] for v in vals]
+                tt_query = TextTypeCollector(self.corp, sel_attrs).get_query()
+                tmp = ['<%s %s />' % item for item in tt_query]
+                full_cql = ' within '.join(tmp)
+                specification.text_types_cql = f'aword,[] within {full_cql}'
+            else:
+                raise FunctionNotSupported(
+                    'Corpus must have a bibliography item defined to support this function')
+        else:
+            tt_query = TextTypeCollector(self.corp, specification.text_types).get_query()
+            tmp = ['<%s %s />' % item for item in tt_query]
+            full_cql = ' within '.join(tmp)
+            specification.text_types_cql = f'aword,[] within {full_cql}'
+
+        subc_id = await create_new_subc_ident(self.subcpath, self.corp.corpname)
+        with plugins.runtime.SUBC_STORAGE as sr:
+            await sr.create(ident=subc_id.id, author=self.plugin_ctx.user_dict, size=size, public_description=specification.description, data=specification, is_draft=True)
+
+        return dict(subc_id=asdict(subc_id))

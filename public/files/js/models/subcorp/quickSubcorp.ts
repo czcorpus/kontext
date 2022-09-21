@@ -19,7 +19,7 @@
  */
 
 import { PageModel } from '../../app/page';
-import { TextTypesModel } from '../../models/textTypes/main';
+import * as Kontext from '../../types/kontext';
 import { CreateSubcorpusArgs, BaseTTSubcorpFormModel } from './common';
 import { IFullActionControl } from 'kombo';
 import { Actions } from './actions';
@@ -28,8 +28,8 @@ import { Actions as TTActions } from '../textTypes/actions';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions } from '../common/actions';
 import { Actions as LiveattrsActions } from '../../types/plugins/liveAttributes';
-import { concatMap, map, throwError } from 'rxjs';
-import { tuple } from 'cnc-tskit';
+import { concatMap, map, Observable, throwError } from 'rxjs';
+import { HTTP, tuple } from 'cnc-tskit';
 
 
 export interface QuickSubcorpModelState {
@@ -40,18 +40,21 @@ export interface QuickSubcorpModelState {
 }
 
 
+export interface CreateSubcorpusDraft extends Kontext.AjaxResponse {
+    subc_id:{corpus_name:string, id:string};
+}
+
+
 export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelState> implements IUnregistrable {
 
     constructor(
         dispatcher:IFullActionControl,
         pageModel:PageModel,
-        textTypesModel:TextTypesModel,
         liveAttrsEnabled:boolean
     ) {
         super(
             dispatcher,
             pageModel,
-            textTypesModel,
             {
                 subcname: '',
                 estimatedSubcSize: undefined,
@@ -150,11 +153,7 @@ export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelS
                                     text_types: action.payload.selections,
                                     form_type: 'tt-sel'
                                 };
-                                return this.submit(args, this.validate).pipe(
-                                    map(
-                                        resp => tuple(args, resp)
-                                    )
-                                )
+                                return this.submitDraft(args, this.validate);
 
                             } else {
                                 throwError(() => new Error('Invalid action passed through suspend filter'));
@@ -163,22 +162,12 @@ export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelS
                     )
 
                 ).subscribe({
-                    next: ([args,]) => {
+                    next: (resp) => {
                         this.pageModel.showMessage('info', this.pageModel.translate('subc__quick_subcorpus_created'));
-                        this.dispatchSideEffect<typeof QueryActions.QueryAddSubcorp>({
-                            name: QueryActions.QueryAddSubcorp.name,
-                            payload: {
-                                n: args.subcname,
-                                v: args.subcname
-                            }
-                        });
+                        window.location.href = this.pageModel.createActionUrl('subcorpus/new', {corpname: resp.subc_id.corpus_name, usesubcorp: resp.subc_id.id})
                     },
                     error: error => {
                         this.pageModel.showMessage('error', error);
-                        this.dispatchSideEffect(
-                            QueryActions.QueryAddSubcorp,
-                            error
-                        );
                     }
                 });
             }
@@ -202,4 +191,23 @@ export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelS
         return 'quick-subcorpus-model';
     }
 
+    submitDraft(args:CreateSubcorpusArgs, validator: (args) => Error|null):Observable<CreateSubcorpusDraft> {
+        const err = validator(args);
+        if (!err) {
+            return this.pageModel.ajax$<CreateSubcorpusDraft>(
+                HTTP.Method.POST,
+                this.pageModel.createActionUrl(
+                    '/subcorpus/create_draft',
+                    {format: 'json'}
+                ),
+                args,
+                {
+                    contentType: 'application/json'
+                }
+            );
+
+        } else {
+            return throwError(() => err);
+        }
+    }
 }
