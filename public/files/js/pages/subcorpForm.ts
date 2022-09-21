@@ -189,9 +189,10 @@ export class SubcorpForm {
             this.subcorpFormModel = new SubcorpFormModel(
                 this.layoutModel.dispatcher,
                 this.layoutModel,
-                ttComponent.ttModel,
                 this.layoutModel.getCorpusIdent().id,
-                'tt-sel'
+                'tt-sel',
+                this.layoutModel.getConf<string>('SubcorpusName'),
+                this.layoutModel.getConf<string>('SubcorpusDesc')
             );
             this.subcorpWithinFormModel = new SubcorpWithinFormModel(
                 this.layoutModel.dispatcher,
