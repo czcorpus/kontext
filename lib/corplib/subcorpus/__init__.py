@@ -136,8 +136,11 @@ class KSubcorpus(KCorpus):
         """
         full_data_path = os.path.join(subcorp_root_dir, data_record.data_path)
         if not await aiofiles.os.path.isfile(full_data_path):
-            raise CorpusInstantiationError(f'Subcorpus data not found for "{data_record.id}"')
-        subc = SubCorpus(corp, full_data_path)
+            if not data_record.mutable:
+                raise CorpusInstantiationError(f'Subcorpus data not found for "{data_record.id}"')
+            subc = corp
+        else:
+            subc = SubCorpus(corp, full_data_path)
         kcorp = KSubcorpus(subc, data_record, subcorp_root_dir)
         kcorp._corp = subc
         return kcorp
@@ -182,6 +185,13 @@ class KSubcorpus(KCorpus):
         In case of a regular corpus, the value is None
         """
         return f'{self._corpname.lower()}/{self._data_record.id}'
+
+    @property
+    def data_path(self):
+        """
+        Provide relative data path of the subcorpus
+        """
+        return self._data_record.data_path
 
     @property
     def is_unbound(self):

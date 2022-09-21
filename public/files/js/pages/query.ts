@@ -154,7 +154,6 @@ export class QueryPage {
         this.quickSubcorpModel = new QuickSubcorpModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            this.textTypesModel,
             this.liveAttrsPlugin.isActive()
         );
 

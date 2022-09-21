@@ -135,6 +135,7 @@ interface SubmitBase {
 export interface CreateSubcorpusArgs extends SubmitBase {
     text_types:TextTypes.ExportedSelection;
     aligned_corpora:Array<string>;
+    usesubcorp?:string; // if used then we expect the referred subc. to be a draft (= mutable subc.)
     form_type:'tt-sel';
 }
 
@@ -200,7 +201,7 @@ export interface CommonSubcorpFormArgs {
 
 export class BaseTTSubcorpFormModel<T, U = {}> extends StatefulModel<T, U> {
 
-    readonly pageModel:PageModel;
+    protected readonly pageModel:PageModel;
 
     constructor(
         dispatcher: IFullActionControl,
@@ -214,14 +215,20 @@ export class BaseTTSubcorpFormModel<T, U = {}> extends StatefulModel<T, U> {
         this.pageModel = pageModel;
     }
 
-    submit(args:CreateSubcorpusArgs|CreateSubcorpusWithinArgs, validator: (args) => Error|null):Observable<CreateSubcorpus> {
+    submit(
+        args:CreateSubcorpusArgs|CreateSubcorpusWithinArgs,
+        validator: (args) => Error|null
+    ):Observable<any> {
+
         const err = validator(args);
         if (!err) {
             return this.pageModel.ajax$<CreateSubcorpus>(
                 HTTP.Method.POST,
                 this.pageModel.createActionUrl(
                     '/subcorpus/create',
-                    {format: 'json'}
+                    {
+                        format: 'json'
+                    }
                 ),
                 args,
                 {

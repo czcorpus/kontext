@@ -79,6 +79,7 @@ export interface SubcorpFormModelState {
     isBusy:boolean;
     otherValidationError:Error|null;
     alignedCorpora:Array<TextTypes.AlignedLanguageItem>;
+    initialSubcorpusId:string|undefined;
 }
 
 
@@ -89,8 +90,11 @@ export class SubcorpFormModel extends BaseTTSubcorpFormModel<SubcorpFormModelSta
         pageModel:PageModel,
         corpname:string,
         inputMode:FormType,
-        subcname:string|undefined,
-        description:string|undefined
+        initialSubc:{
+            subcname:string;
+            description:string;
+            subcorpusId:string;
+        }|undefined
     ) {
         super(
             dispatcher,
@@ -99,15 +103,16 @@ export class SubcorpFormModel extends BaseTTSubcorpFormModel<SubcorpFormModelSta
                 corpname,
                 inputMode,
                 subcname: {
-                    value: subcname || '',
+                    value: initialSubc ? initialSubc.subcname : '',
                     isRequired: true,
                     isInvalid: false
                 },
                 description: {
-                    value: description || '',
+                    value: initialSubc ? initialSubc.description : '',
                     isRequired: false,
                     isInvalid: false
                 },
+                initialSubcorpusId: initialSubc ? initialSubc.subcorpusId : undefined,
                 isBusy: false,
                 alignedCorpora: [],
                 otherValidationError: null
@@ -221,6 +226,7 @@ export class SubcorpFormModel extends BaseTTSubcorpFormModel<SubcorpFormModelSta
         return {
             corpname: this.state.corpname,
             subcname: this.state.subcname.value,
+            usesubcorp: this.state.initialSubcorpusId ? this.state.initialSubcorpusId : undefined,
             description: this.state.description.value,
             aligned_corpora: List.map(v => v.value, this.state.alignedCorpora),
             text_types: ttSelection,

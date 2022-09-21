@@ -30,6 +30,7 @@ from plugin_types.subc_storage import AbstractSubcArchive, SubcArchiveException
 from plugins import inject
 from plugins.errors import PluginCompatibilityException
 from plugins.mysql_integration_db import MySqlIntegrationDb
+from pymysql.err import IntegrityError
 
 try:
     from markdown import markdown
@@ -94,8 +95,14 @@ class MySQLSubcArchive(AbstractSubcArchive):
         self._db = db
 
     async def create(
-            self, ident: str, author: UserInfo, size: int, public_description: str,
-            data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs], is_draft: bool = False):
+            self,
+            ident: str,
+            author: UserInfo,
+            size: int,
+            public_description: str,
+            data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs],
+            is_draft: bool = False
+    ):
         async with self._db.cursor() as cursor:
             if isinstance(data, CreateSubcorpusRawCQLArgs):
                 column, value = 'cql', data.cql
@@ -103,13 +110,27 @@ class MySQLSubcArchive(AbstractSubcArchive):
                 column, value = 'within_cond', json.dumps(data.within)
             elif isinstance(data, CreateSubcorpusArgs):
                 column, value = 'text_types', json.dumps(data.text_types)
-            await cursor.execute(
-                f'INSERT INTO {self._bconf.subccorp_table} '
-                f'(id, user_id, author_id, corpus_name, name, {column}, created, public_description, size, is_draft) '
-                'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
-                (ident, author['id'], author['id'], data.corpname, data.subcname, value, datetime.now(), public_description,
-                 size, 1 if is_draft else 0))
-            await cursor.connection.commit()
+            try:
+                await cursor.execute(
+                    f'INSERT INTO {self._bconf.subccorp_table} '
+                    f'(id, user_id, author_id, corpus_name, name, {column}, created, public_description, size, is_draft) '
+                    'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
+                    (ident, author['id'], author['id'], data.corpname, data.subcname, value, datetime.now(), public_description,
+                     size, 1 if is_draft else 0))
+                await cursor.connection.commit()
+            except IntegrityError as ex:
+                await cursor.execute(
+                    f'SELECT mutable FROM {self._bconf.subccorp_table} WHERE id = %s AND author_id = %s',
+                    (ident, author['id']))
+                row = await cursor.fetchone()
+                if row['mutable'] == 1:
+                    await cursor.execute(
+                        f'UPDATE {self._bconf.subccorp_table} '
+                        f'SET name = %s, {column} = %s, public_description = %s, size = %s, mutable = 0 '
+                        'WHERE id = %s AND author_id = %s',
+                        (data.subcname, value, public_description, size, ident, author['id']))
+                else:
+                    raise ex
 
     async def archive(self, user_id: int, corpname: str, subc_id: str) -> datetime:
         async with self._db.cursor() as cursor:

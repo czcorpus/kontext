@@ -53,6 +53,7 @@ class CreateSubcorpusArgs(_SubcGenerateArgsBase):
     """
     text_types: TextTypesType
     text_types_cql: Optional[str] = None
+    usesubcorp: Optional[str] = None
 
 
 @dataclass
