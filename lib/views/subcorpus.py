@@ -89,7 +89,7 @@ async def new(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
         tt_sel = {'Normslist': [], 'Blocks': []}
         resp.add_system_message('warning', e)
 
-    out = dict(SubcorpList=())
+    out = dict(SubcorpList=(), subcorpus_name=None, subcorpus_desc=None, selected_text_types={})
     await amodel.attach_aligned_query_params(out)
     corpus_info = await amodel.get_corpus_info(amodel.args.corpname)
     if isinstance(amodel.corp, KSubcorpus):
@@ -97,7 +97,11 @@ async def new(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
             raise UserReadableException('Cannot edit finished subcorpus', 400)
         with plugins.runtime.SUBC_STORAGE as sr:
             info = await sr.get_info(amodel.corp.subcorpus_id)
-        out['selected_text_types'] = info.text_types
+        out.update(dict(
+            selected_text_types=info.text_types,
+            subcorpus_name=amodel.corp.subcorpus_name,
+            subcorpus_desc=info.public_description_raw
+        ))
     out.update(dict(
         Normslist=tt_sel['Normslist'],
         text_types_data=tt_sel,

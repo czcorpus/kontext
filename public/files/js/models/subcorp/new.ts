@@ -87,19 +87,27 @@ export class SubcorpFormModel extends BaseTTSubcorpFormModel<SubcorpFormModelSta
     constructor(
         dispatcher:IFullActionControl,
         pageModel:PageModel,
-        textTypesModel:TextTypesModel,
         corpname:string,
-        inputMode:FormType
+        inputMode:FormType,
+        subcname:string|undefined,
+        description:string|undefined
     ) {
         super(
             dispatcher,
             pageModel,
-            textTypesModel,
             {
                 corpname,
                 inputMode,
-                subcname: {value: '', isRequired: true, isInvalid: false},
-                description: {value: '', isRequired: false, isInvalid: false},
+                subcname: {
+                    value: subcname || '',
+                    isRequired: true,
+                    isInvalid: false
+                },
+                description: {
+                    value: description || '',
+                    isRequired: false,
+                    isInvalid: false
+                },
                 isBusy: false,
                 alignedCorpora: [],
                 otherValidationError: null

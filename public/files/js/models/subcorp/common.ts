@@ -25,7 +25,6 @@ import { PageModel } from '../../app/page';
 import * as Kontext from '../../types/kontext';
 import * as TextTypes from '../../types/textTypes';
 import { TTInitialData } from '../textTypes/common';
-import { TextTypesModel } from '../textTypes/main';
 import { SubcorpListItem } from './list';
 
 
@@ -203,12 +202,9 @@ export class BaseTTSubcorpFormModel<T, U = {}> extends StatefulModel<T, U> {
 
     readonly pageModel:PageModel;
 
-    readonly textTypesModel:TextTypesModel;
-
     constructor(
         dispatcher: IFullActionControl,
         pageModel: PageModel,
-        textTypesModel: TextTypesModel,
         initState: T
     ) {
         super(
@@ -216,7 +212,6 @@ export class BaseTTSubcorpFormModel<T, U = {}> extends StatefulModel<T, U> {
             initState
         );
         this.pageModel = pageModel;
-        this.textTypesModel = textTypesModel;
     }
 
     submit(args:CreateSubcorpusArgs|CreateSubcorpusWithinArgs, validator: (args) => Error|null):Observable<any> {
