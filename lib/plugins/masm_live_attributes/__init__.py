@@ -18,13 +18,15 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import json
+from typing import List
 import urllib.request
 import urllib.parse
 from urllib.error import HTTPError
 
 import plugins
 from plugins.abstract.corparch import AbstractCorporaArchive
-from plugins.abstract.live_attributes import (AbstractLiveAttributes, AttrValuesResponse, LiveAttrsException)
+from plugins.abstract.live_attributes import (
+    AbstractLiveAttributes, AttrValuesResponse, BibTitle, LiveAttrsException)
 from controller import exposed
 from actions import concordance
 
@@ -119,7 +121,6 @@ class MasmLiveAttributes(AbstractLiveAttributes):
         except HTTPError as ex:
             handle_http_error(ex)
 
-
     def get_supported_structures(self, plugin_ctx, corpname):
         corpus_info = self.corparch.get_corpus_info(plugin_ctx, corpname)
         id_attr = corpus_info.metadata.id_attr
@@ -135,17 +136,15 @@ class MasmLiveAttributes(AbstractLiveAttributes):
         except HTTPError as ex:
             handle_http_error(ex)
 
-
-    def find_bib_titles(self, plugin_ctx, corpus_id, id_list):
+    def find_bib_titles(self, plugin_ctx, corpus_id, id_list) -> List[BibTitle]:
         request = self._get_request(
             f'/liveAttributes/{corpus_id}/findBibTitles', {'itemIds': id_list})
         try:
             response = urllib.request.urlopen(request)
             data = json.loads(response.read().decode())
-            return [data[item_id] for item_id in id_list]
+            return [BibTitle(item_id, data[item_id]) for item_id in id_list]
         except HTTPError as ex:
             handle_http_error(ex)
-
 
     def fill_attrs(self, corpus_id, search, values, fill):
         json_body = {'search': search, 'values': values, 'fill': fill}
@@ -155,7 +154,6 @@ class MasmLiveAttributes(AbstractLiveAttributes):
             return json.loads(response.read().decode())
         except HTTPError as ex:
             handle_http_error(ex)
-
 
 
 @plugins.inject(plugins.runtime.CORPARCH)
