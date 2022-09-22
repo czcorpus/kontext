@@ -92,7 +92,7 @@ class KResponse:
             *settings.get('global', 'redirect_safe_domains', ())
         )
         self._status: int = 200
-        self._headers: Dict[str, str] = {'Content-Type': 'text/html'}
+        self._headers: Dict[str, str] = {}
         self._new_cookies: KonTextCookie = KonTextCookie()
 
     def set_header(self, name: str, value: str):
@@ -173,12 +173,15 @@ class KResponse:
         returns:
         bool -- True if content should follow else False
         """
-        if return_type == 'json':
-            self._headers['Content-Type'] = 'application/json'
-        elif return_type == 'xml':
-            self._headers['Content-Type'] = 'application/xml'
-        elif return_type == 'plain':
-            self._headers['Content-Type'] = 'text/plain'
+        if 'Content-Type' not in self._headers:
+            if return_type == 'json':
+                self._headers['Content-Type'] = 'application/json'
+            elif return_type == 'xml':
+                self._headers['Content-Type'] = 'application/xml'
+            elif return_type == 'plain':
+                self._headers['Content-Type'] = 'text/plain'
+            else:
+                self._headers['Content-Type'] = 'text/html'
         # Note: 'template' return type should never overwrite content type here as it is action-dependent
         ans = []
         for k, v in sorted([x for x in list(self._headers.items()) if bool(x[1])], key=lambda item: item[0]):
