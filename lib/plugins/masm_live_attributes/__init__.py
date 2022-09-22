@@ -43,12 +43,17 @@ def filter_attributes(self, request):
 @exposed(return_type='json', http_method='POST')
 def attr_val_autocomplete(self, request):
     attrs = json.loads(request.form.get('attrs', '{}'))
-    attrs[request.form['patternAttr']] = '%{}%'.format(request.form['pattern'])
+    pattern_attr = request.form['patternAttr']
+    with plugins.runtime.CORPARCH as ca:
+        corpus_info = await ca.get_corpus_info(self._plugin_ctx, self.args.corpname)
+    attrs[pattern_attr] = '%{}%'.format(request.form['pattern'])
+    if pattern_attr == corpus_info.metadata.label_attr:
+        attrs[corpus_info.metadata.id_attr] = []
     aligned = json.loads(request.form.get('aligned', '[]'))
     with plugins.runtime.LIVE_ATTRIBUTES as lattr:
-        return lattr.get_attr_values(self._plugin_ctx, corpus=self.corp, attr_map=attrs,
-                                     aligned_corpora=aligned,
-                                     autocomplete_attr=request.form['patternAttr'])
+        return lattr.get_attr_values(
+            self._plugin_ctx, corpus=self.corp, attr_map=attrs, aligned_corpora=aligned,
+            autocomplete_attr=request.form['patternAttr'])
 
 
 @exposed(return_type='json', http_method='POST')
