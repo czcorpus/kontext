@@ -123,7 +123,6 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
         initialState:LiveAttrsModelState,
         controlsAlignedCorpora:boolean,
     ) {
-
         super(dispatcher, initialState);
         this.pluginApi = pluginApi;
         this.controlsAlignedCorpora = controlsAlignedCorpora;
@@ -458,7 +457,9 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             GlobalActions.CorpusSwitchModelRestore,
             null,
             (state, action, dispatch) => {
-                this.reloadSizes(state, dispatch);
+                if (!state.initialCorpusSize) {
+                    this.reloadSizes(state, dispatch);
+                }
             }
         )
 
