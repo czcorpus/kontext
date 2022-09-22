@@ -94,7 +94,7 @@ class SubcorpusActionModel(CorpusActionModel):
             raise UserReadableException(self._req.translate('No subcorpus name specified!'))
 
         if isinstance(self.corp, KSubcorpus):
-            if not self.corp.is_mutable:
+            if not self.corp.is_draft:
                 raise UserReadableException('Cannot modify finished subcorpus', 422)
             subc_id = self.corp.portable_ident
             full_path = os.path.join(self.subcpath, self.corp.data_path)

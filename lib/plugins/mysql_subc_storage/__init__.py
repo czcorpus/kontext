@@ -120,13 +120,13 @@ class MySQLSubcArchive(AbstractSubcArchive):
                 await cursor.connection.commit()
             except IntegrityError as ex:
                 await cursor.execute(
-                    f'SELECT mutable FROM {self._bconf.subccorp_table} WHERE id = %s AND author_id = %s',
+                    f'SELECT is_draft FROM {self._bconf.subccorp_table} WHERE id = %s AND author_id = %s',
                     (ident, author['id']))
                 row = await cursor.fetchone()
-                if row['mutable'] == 1:
+                if row['is_draft'] == 1:
                     await cursor.execute(
                         f'UPDATE {self._bconf.subccorp_table} '
-                        f'SET name = %s, {column} = %s, public_description = %s, size = %s, mutable = 0 '
+                        f'SET name = %s, {column} = %s, public_description = %s, size = %s, is_draft = 0 '
                         'WHERE id = %s AND author_id = %s',
                         (data.subcname, value, public_description, size, ident, author['id']))
                 else:
