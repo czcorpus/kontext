@@ -1446,7 +1446,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 if (attr.type === 'regexp' && !attr.isLocked && attr.textFieldValue) {
                     return [tuple(attr.name, attr.textFieldValue)];
 
-                } else if (attr.type === 'full' && !List.some(v => v.locked, attr.values)) {
+                } else if ((attr.type === 'full' || attr.type === 'text')  && !List.some(v => v.locked, attr.values)) {
                     return pipe(
                         attr.values,
                         List.filter(val => val.selected),
