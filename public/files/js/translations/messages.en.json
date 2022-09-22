@@ -617,6 +617,7 @@
         "subclist__subc_desc_updated": "Subcorpus description has been updated",
         "subclist__archive_subcorp": "Archive",
         "subclist__archived": "archived",
+        "subclist__draft": "draft",
         "subclist__active": "active",
         "subclist__subc_status": "Status",
         "subclist__published": "Published",

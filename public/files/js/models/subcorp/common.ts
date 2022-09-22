@@ -36,6 +36,7 @@ export interface SubcorpusServerRecord {
     author_id:number;
     author_fullname:string;
     size:number;
+    is_draft:number;
     created:number;
     archived:number|undefined;
     published:number|undefined;
@@ -72,6 +73,7 @@ export interface SubcorpusRecord {
     published:number|undefined;
     selections:SelectionsType;
     size:number;
+    isDraft:boolean;
     description:string|undefined;
     descriptionRaw:string|undefined;
     authorId:number;
@@ -90,6 +92,7 @@ export function subcServerRecord2SubcorpusRecord(srec:SubcorpusServerRecord):Sub
             srec.within_cond ||
             srec.cql,
         size: srec.size,
+        isDraft: srec.is_draft === 1 ? true : false,
         description: srec.public_description,
         descriptionRaw: srec.public_description_raw,
         authorId: srec.author_id,
@@ -179,6 +182,7 @@ export function importServerSubcList(data:Array<SubcorpusServerRecord>):Array<Su
         corpus_name: item.corpus_name,
         author_fullname: item.author_fullname,
         size: item.size,
+        is_draft: item.is_draft === 1 ? true : false,
         created: new Date(item.created * 1000),
         archived: item.archived ? new Date(item.archived * 1000) : undefined,
         selected: false,

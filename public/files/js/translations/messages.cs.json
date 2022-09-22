@@ -617,6 +617,7 @@
         "subclist__subc_desc_updated": "Popis subkorpusu byl upraven.",
         "subclist__archive_subcorp": "Archivovat",
         "subclist__archived": "archivováno",
+        "subclist__draft": "návrh",
         "subclist__active": "aktivní",
         "subclist__subc_status": "Status",
         "subclist__published": "Publikováno",

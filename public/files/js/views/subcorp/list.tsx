@@ -131,7 +131,7 @@ export function init(
 
         const renderLabel = () => {
             const item = props.item;
-            if (!item.archived) {
+            if (!item.archived && !item.is_draft) {
                 const title = he.translate('subclist__search_in_subc');
                 const href = he.createActionLink(
                     'query',
@@ -143,7 +143,7 @@ export function init(
                 return <a title={title} href={href}>{item.name}</a>;
 
             } else {
-                return <span>{props.item.name}</span>;
+                return item.is_draft ? <i>{props.item.name}</i> : <span>{props.item.name}</span>;
             }
         };
 
@@ -153,6 +153,9 @@ export function init(
         }
         if (props.item.archived) {
             List.push(he.translate('subclist__archived'), notes);
+        }
+        if (props.item.is_draft) {
+            List.push(he.translate('subclist__draft'), notes);
         }
 
         return (

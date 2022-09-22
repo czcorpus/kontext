@@ -50,6 +50,7 @@ export interface SubcorpListItem {
     created:Date;
     published:Date;
     size:number;
+    is_draft:boolean;
     public_description:string;
     info?:string;
 }
@@ -291,7 +292,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                     this.changeState(state => {
                         state.selectedItems = [];
                     });
-                
+
                 } else if (action.name === Actions.SubmitNameAndPublicDescriptionDone.name) {
                     this.changeState(state => {
                         state.editWindowSubcorpus.subcorpusName = action.payload['name'];
