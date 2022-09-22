@@ -17,6 +17,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from typing import Any, Dict, List
+
 import aiohttp
 import plugins
 import ujson
@@ -26,7 +28,7 @@ from action.model.corpus import CorpusActionModel
 from action.response import KResponse
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.live_attributes import (
-    AbstractLiveAttributes, AttrValuesResponse, LiveAttrsException)
+    AbstractLiveAttributes, AttrValuesResponse, BibTitle, LiveAttrsException)
 from sanic.blueprints import Blueprint
 
 bp = Blueprint('masm_live_attributes')
@@ -66,7 +68,7 @@ async def fill_attrs(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
         return await lattr.fill_attrs(corpus_id=amodel.corp.corpname, search=search, values=values, fill=fill)
 
 
-async def proc_masm_response(resp):
+async def proc_masm_response(resp) -> Dict[str, Any]:
     data = await resp.json()
     if 400 <= resp.status <= 500:
         raise LiveAttrsException(data.get('error', 'unspecified error'))
@@ -134,11 +136,11 @@ class MasmLiveAttributes(AbstractLiveAttributes):
             data = await proc_masm_response(resp)
         return list(data.items())
 
-    async def find_bib_titles(self, plugin_ctx, corpus_id, id_list):
+    async def find_bib_titles(self, plugin_ctx, corpus_id, id_list) -> List[BibTitle]:
         session = await self._get_session()
         async with session.post(f'/liveAttributes/{corpus_id}/findBibTitles', json={'itemIds': id_list}) as resp:
             data = await proc_masm_response(resp)
-        return [data[item_id] for item_id in id_list]
+        return [BibTitle(item_id, data[item_id]) for item_id in id_list]
 
     async def fill_attrs(self, corpus_id, search, values, fill):
         json_body = {'search': search, 'values': values, 'fill': fill}
