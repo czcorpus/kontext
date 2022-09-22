@@ -173,7 +173,7 @@ class MySQLSubcArchive(AbstractSubcArchive):
             await cursor.execute(sql, (user_id,))
             return [row['corpus_name'] async for row in cursor]
 
-    async def list(self, user_id, filter_args, corpname=None, offset=0, limit=None):
+    async def list(self, user_id, filter_args, corpname=None, offset=0, limit=None, include_drafts=False):
         if (filter_args.archived_only and filter_args.active_only or
                 filter_args.archived_only and filter_args.published_only):
             raise SubcArchiveException('Invalid filter specified')
@@ -202,6 +202,9 @@ class MySQLSubcArchive(AbstractSubcArchive):
         if limit is None:
             limit = 1000000000
         args.extend((limit, offset))
+
+        if not include_drafts:
+            where.append('t1.is_draft = 0')
 
         sql = f"""SELECT
             t1.*,

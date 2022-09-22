@@ -117,7 +117,8 @@ class AbstractSubcArchive(abc.ABC):
             filter_args: SubcListFilterArgs,
             corpname: Optional[str] = None,
             offset: int = 0,
-            limit: Optional[int] = None) -> List[SubcorpusRecord]:
+            limit: Optional[int] = None,
+            include_drafts: bool = False) -> List[SubcorpusRecord]:
         """
         List all user subcorpora based on provided filter_args and with optional offset and limit (for pagination)
         """

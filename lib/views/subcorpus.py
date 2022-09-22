@@ -172,7 +172,7 @@ async def _filter_subcorpora(amodel: UserActionModel, req: KRequest, ignore_no_s
                 corpus_name = None
 
             if corpus_name is None or corpus_name in related_corpora:
-                full_list = await sr.list(amodel.plugin_ctx.user_id, filter_args, corpname=corpus_name)
+                full_list = await sr.list(amodel.plugin_ctx.user_id, filter_args, corpname=corpus_name, include_drafts=True)
 
     sort = req.args.get('sort', '-created')
     sort_key, rev = amodel.parse_sorting_param(sort)
