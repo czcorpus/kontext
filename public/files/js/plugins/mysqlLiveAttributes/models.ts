@@ -449,7 +449,9 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             GlobalActions.CorpusSwitchModelRestore,
             null,
             (state, action, dispatch) => {
-                this.reloadSizes(state, dispatch);
+                if (!state.initialCorpusSize) {
+                    this.reloadSizes(state, dispatch);
+                }
             }
         )
     }
