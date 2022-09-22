@@ -191,8 +191,13 @@ export class SubcorpForm {
                 this.layoutModel,
                 this.layoutModel.getCorpusIdent().id,
                 'tt-sel',
-                this.layoutModel.getConf<string>('SubcorpusName'),
-                this.layoutModel.getConf<string>('SubcorpusDesc')
+                this.corpusIdent.usesubcorp ?
+                    {
+                        subcname: this.layoutModel.getConf<string>('SubcorpusName'),
+                        description: this.layoutModel.getConf<string>('SubcorpusDesc'),
+                        subcorpusId: this.corpusIdent.usesubcorp
+                    } :
+                    undefined
             );
             this.subcorpWithinFormModel = new SubcorpWithinFormModel(
                 this.layoutModel.dispatcher,

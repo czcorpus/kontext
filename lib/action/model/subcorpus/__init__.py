@@ -30,7 +30,7 @@ from action.errors import FunctionNotSupported, UserReadableException
 from action.model.corpus import CorpusActionModel
 from bgcalc.task import AsyncTaskStatus
 from corplib.abstract import create_new_subc_ident
-from corplib.subcorpus import create_subcorpus
+from corplib.subcorpus import create_subcorpus, KSubcorpus
 from texttypes.model import TextTypeCollector
 
 
@@ -93,8 +93,18 @@ class SubcorpusActionModel(CorpusActionModel):
         if not specification.subcname:
             raise UserReadableException(self._req.translate('No subcorpus name specified!'))
 
-        subc_id = await create_new_subc_ident(self.subcpath, self.corp.corpname)
-        full_path = os.path.join(self.subcpath, subc_id.data_path)
+        if isinstance(self.corp, KSubcorpus):
+            if not self.corp.is_mutable:
+                raise UserReadableException('Cannot modify finished subcorpus', 422)
+            subc_id = self.corp.portable_ident
+            full_path = os.path.join(self.subcpath, self.corp.data_path)
+            base_dir = os.path.dirname(full_path)
+            if os.path.isdir(base_dir):
+                for item in os.listdir(base_dir):
+                    os.unlink(os.path.join(base_dir, item))
+        else:
+            subc_id = await create_new_subc_ident(self.subcpath, self.corp.corpname)
+            full_path = os.path.join(self.subcpath, subc_id.data_path)
         if tt_query and len(tt_query) == 1 and not specification.has_aligned_corpora():
             await create_subcorpus(full_path, self.corp, tt_query[0][0], tt_query[0][1])
             subc = await self.cf.get_corpus(subc_id)

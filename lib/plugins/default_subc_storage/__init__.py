@@ -109,8 +109,14 @@ class SQLiteSubcArchive(AbstractSubcArchive):
             logging.getLogger(__name__).info(f'default_subc_storage created new database')
 
     async def create(
-            self, ident: str, author: UserInfo, size: int, public_description,
-            data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs], is_draft: bool = False):
+            self,
+            ident: str,
+            author: UserInfo,
+            size: int,
+            public_description,
+            data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs],
+            is_draft: bool = False
+    ):
         if isinstance(data, CreateSubcorpusRawCQLArgs):
             column, value = 'cql', data.cql
         elif isinstance(data, CreateSubcorpusWithinArgs):
