@@ -124,7 +124,7 @@ class SubcorpusActionModel(CorpusActionModel):
             category=AsyncTaskStatus.CATEGORY_SUBCORPUS) if not at.is_finished()]
         return dict(processed_subc=[uc.to_dict() for uc in unfinished_corpora])
 
-    async def create_mutable_subcorpus_record(self):
+    async def create_subcorpus_draft(self):
         """
         awailable only for text types defined subcorpora
         """

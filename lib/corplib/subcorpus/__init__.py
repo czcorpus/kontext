@@ -71,7 +71,7 @@ class SubcorpusRecord(SubcorpusIdent):
         author_id: user ID of the author (this is kept no matter whether corpus is active/archived/deleted)
         author_fullname: author first and last names
         size: size of the subcorpus in tokens
-        mutable: if True then the subcorpus structure can be modified; this state should normally exist only when
+        is_draft: if True then the subcorpus structure can be modified; this state should normally exist only when
             moving from an ad-hoc subcorpus definition to the true (stored) subcorpus
         created: datetime of corpus creation
         public_description: a public description in a decoded format (HTML)
@@ -92,7 +92,7 @@ class SubcorpusRecord(SubcorpusIdent):
     author_id: int
     author_fullname: str
     size: int
-    mutable: bool
+    is_draft: bool
     created: datetime = field(metadata=config(
         encoder=datetime.timestamp,
         decoder=datetime.fromtimestamp))
@@ -188,9 +188,9 @@ class KSubcorpus(KCorpus):
         return not isinstance(self._data_record, SubcorpusRecord)
 
     @property
-    def is_mutable(self):
+    def is_draft(self):
         if isinstance(self._data_record, SubcorpusRecord):
-            return self._data_record.mutable
+            return self._data_record.is_draft
         return False
 
     @property
