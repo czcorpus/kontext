@@ -49,7 +49,12 @@ async def filter_attributes(amodel: CorpusActionModel, req: KRequest, resp: KRes
 @http_action(return_type='json', action_model=CorpusActionModel)
 async def attr_val_autocomplete(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     attrs = ujson.loads(req.form.get('attrs', '{}'))
-    attrs[req.form.get('patternAttr')] = '%{}%'.format(req.form.get('pattern'))
+    pattern_attr = req.form.get('patternAttr')
+    with plugins.runtime.CORPARCH as ca:
+        corpus_info = await ca.get_corpus_info(amodel.plugin_ctx, amodel.corp.corpname)
+    attrs[pattern_attr] = '%{}%'.format(req.form.get('pattern'))
+    if pattern_attr == corpus_info.metadata.label_attr:
+        attrs[corpus_info.metadata.id_attr] = []
     aligned = ujson.loads(req.form.get('aligned', '[]'))
     with plugins.runtime.LIVE_ATTRIBUTES as lattr:
         return await lattr.get_attr_values(
@@ -102,7 +107,6 @@ class MasmLiveAttributes(AbstractLiveAttributes):
 
     async def get_attr_values(
             self, plugin_ctx, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None, limit_lists=True):
-
         json_body = {'attrs': attr_map}
         if aligned_corpora:
             json_body['aligned'] = aligned_corpora
