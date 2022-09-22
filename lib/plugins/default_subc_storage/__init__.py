@@ -52,7 +52,7 @@ def _subc_from_row(row: Dict) -> SubcorpusRecord:
         id=row['id'],
         corpus_name=row['corpus_name'],
         name=row['name'],
-        mutable=row['mutable'],
+        is_draft=row['is_draft'],
         user_id=row['user_id'],
         author_id=row['author_id'],
         author_fullname=row['author_fullname'],
@@ -90,7 +90,7 @@ class SQLiteSubcArchive(AbstractSubcArchive):
                 CREATE TABLE {self.SUBC_TABLE_NAME} (
                     id VARCHAR(32) PRIMARY KEY,
                     name VARCHAR(127) NOT NULL,
-                    mutable INTEGER NOT NULL DEFAULT 0,
+                    is_draft INTEGER NOT NULL DEFAULT 0,
                     user_id INTEGER, -- if NULL then the subcorpus is deleted for the user but it still exists (e.g. to be avail. if published)
                     author_id INTEGER NOT NULL,
                     author_fullname varchar(127) NOT NULL,
@@ -122,7 +122,7 @@ class SQLiteSubcArchive(AbstractSubcArchive):
         try:
             cursor.execute(
                 f'INSERT INTO {self.SUBC_TABLE_NAME} '
-                f'(id, user_id, author_id, author_fullname, corpus_name, name, {column}, created, public_description, size, mutable) '
+                f'(id, user_id, author_id, author_fullname, corpus_name, name, {column}, created, public_description, size, is_draft) '
                 'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 (ident, author['id'], author['id'], author['fullname'], data.corpname, data.subcname, value, datetime.now().timestamp(), public_description, size, 1 if is_draft else 0))
             self._db.commit()

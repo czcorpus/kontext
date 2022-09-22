@@ -53,7 +53,7 @@ def _subc_from_row(row: Dict) -> SubcorpusRecord:
         id=row['id'],
         corpus_name=row['corpus_name'],
         name=row['name'],
-        mutable=row['mutable'],
+        is_draft=row['is_draft'],
         user_id=row['user_id'],
         author_id=row['author_id'],
         author_fullname=row['fullname'],
@@ -105,7 +105,7 @@ class MySQLSubcArchive(AbstractSubcArchive):
                 column, value = 'text_types', json.dumps(data.text_types)
             await cursor.execute(
                 f'INSERT INTO {self._bconf.subccorp_table} '
-                f'(id, user_id, author_id, corpus_name, name, {column}, created, public_description, size, mutable) '
+                f'(id, user_id, author_id, corpus_name, name, {column}, created, public_description, size, is_draft) '
                 'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
                 (ident, author['id'], author['id'], data.corpname, data.subcname, value, datetime.now(), public_description,
                  size, 1 if is_draft else 0))

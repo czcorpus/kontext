@@ -78,7 +78,7 @@ async def create(amodel: SubcorpusActionModel, req: KRequest, resp: KResponse):
     access_level=1, return_type='json', action_model=SubcorpusActionModel)
 async def create_draft(amodel: SubcorpusActionModel, req: KRequest, resp: KResponse):
     try:
-        return await amodel.create_mutable_subcorpus_record()
+        return await amodel.create_subcorpus_draft()
     except (SubcorpusError, RuntimeError) as e:
         raise UserReadableException(str(e)) from e
 
@@ -103,7 +103,7 @@ async def new(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     await amodel.attach_aligned_query_params(out)
     corpus_info = await amodel.get_corpus_info(amodel.args.corpname)
     if isinstance(amodel.corp, KSubcorpus):
-        if not amodel.corp.is_mutable:
+        if not amodel.corp.is_draft:
             raise UserReadableException('Cannot edit finished subcorpus', 400)
         with plugins.runtime.SUBC_STORAGE as sr:
             info = await sr.get_info(amodel.corp.subcorpus_id)

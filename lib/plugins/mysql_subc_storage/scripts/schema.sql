@@ -6,7 +6,7 @@ DROP TABLE IF EXISTS kontext_subcorpus;
       user_id INTEGER, -- if NULL then the subcorpus is deleted for the user but it still exists (e.g. to be avail. if published)
       author_id INTEGER NOT NULL,
       corpus_name varchar(63) NOT NULL,
-      mutable TINYINT NOT NULL DEFAULT 0,
+      is_draft TINYINT NOT NULL DEFAULT 0,
       size INTEGER NOT NULL,
       cql TEXT,
       within_cond TEXT,
