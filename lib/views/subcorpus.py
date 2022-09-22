@@ -112,12 +112,14 @@ async def new(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
             subcorpus_name=amodel.corp.subcorpus_name,
             subcorpus_desc=info.public_description_raw
         ))
+        # draft subcorpus should not be projected to main menu links...
+        out['usesubcorp'] = None
     out.update(dict(
         Normslist=tt_sel['Normslist'],
         text_types_data=tt_sel,
         method=method,
         id_attr=corpus_info.metadata.id_attr,
-        aligned_corpora=req.form_getlist('aligned_corpora')
+        aligned_corpora=req.form_getlist('aligned_corpora'),
     ))
     return out
 

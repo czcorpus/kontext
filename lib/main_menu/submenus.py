@@ -107,6 +107,7 @@ class NewQuery:
             MainMenu.NEW_QUERY('wordlist'), 'Word List', 'wordlist/form'
         ).add_args(
             ('corpname', args['corpname']),
+            ('usesubcorp', args['usesubcorp']),
             ('include_nonwords', 1)
         ).mark_indirect()
     )
