@@ -148,6 +148,31 @@ class SQLiteSubcArchive(AbstractSubcArchive):
         finally:
             cursor.close()
 
+    async def update_draft(
+            self,
+            ident: str,
+            author: UserInfo,
+            size: int,
+            public_description: str,
+            data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs]
+    ):
+        if isinstance(data, CreateSubcorpusRawCQLArgs):
+            column, value = 'cql', data.cql
+        elif isinstance(data, CreateSubcorpusWithinArgs):
+            column, value = 'within_cond', json.dumps(data.within)
+        elif isinstance(data, CreateSubcorpusArgs):
+            column, value = 'text_types', json.dumps(data.text_types)
+
+        cursor = self._db.cursor()
+        try:
+            cursor.execute(
+                f'UPDATE {self.SUBC_TABLE_NAME} '
+                f'SET name = ?, {column} = ?, public_description = ?, size = ? '
+                'WHERE id = ? AND author_id = ? AND is_draft = 1',
+                (data.subcname, value, public_description, size, ident, author['id']))
+        finally:
+            cursor.close()
+
     async def archive(self, user_id: int, corpname: str, subc_id: str) -> datetime:
         cursor = self._db.cursor()
         try:
