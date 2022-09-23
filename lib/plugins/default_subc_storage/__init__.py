@@ -132,6 +132,19 @@ class SQLiteSubcArchive(AbstractSubcArchive):
                 'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 (ident, author['id'], author['id'], author['fullname'], data.corpname, data.subcname, value, datetime.now().timestamp(), public_description, size, 1 if is_draft else 0))
             self._db.commit()
+        except sqlite3.IntegrityError as ex:
+            cursor.execute(
+                f'SELECT is_draft FROM {self.SUBC_TABLE_NAME} WHERE id = ? AND author_id = ?',
+                (ident, author['id']))
+            row = cursor.fetchone()
+            if row['is_draft'] == 1:
+                await cursor.execute(
+                    f'UPDATE {self.SUBC_TABLE_NAME} '
+                    f'SET name = ?, {column} = ?, public_description = ?, size = ?, is_draft = 0 '
+                    'WHERE id = ? AND author_id = ?',
+                    (data.subcname, value, public_description, size, ident, author['id']))
+            else:
+                raise ex
         finally:
             cursor.close()
 
