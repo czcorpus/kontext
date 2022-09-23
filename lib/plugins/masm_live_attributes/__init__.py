@@ -45,7 +45,7 @@ def attr_val_autocomplete(self, request):
     attrs = json.loads(request.form.get('attrs', '{}'))
     pattern_attr = request.form['patternAttr']
     with plugins.runtime.CORPARCH as ca:
-        corpus_info = await ca.get_corpus_info(self._plugin_ctx, self.args.corpname)
+        corpus_info = ca.get_corpus_info(self._plugin_ctx, self.args.corpname)
     attrs[pattern_attr] = '%{}%'.format(request.form['pattern'])
     if pattern_attr == corpus_info.metadata.label_attr:
         attrs[corpus_info.metadata.id_attr] = []
