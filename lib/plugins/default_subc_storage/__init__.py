@@ -132,6 +132,45 @@ class SQLiteSubcArchive(AbstractSubcArchive):
                 'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 (ident, author['id'], author['id'], author['fullname'], data.corpname, data.subcname, value, datetime.now().timestamp(), public_description, size, 1 if is_draft else 0))
             self._db.commit()
+        except sqlite3.IntegrityError as ex:
+            cursor.execute(
+                f'SELECT is_draft FROM {self.SUBC_TABLE_NAME} WHERE id = ? AND author_id = ?',
+                (ident, author['id']))
+            row = cursor.fetchone()
+            if row['is_draft'] == 1:
+                await cursor.execute(
+                    f'UPDATE {self.SUBC_TABLE_NAME} '
+                    f'SET name = ?, {column} = ?, public_description = ?, size = ?, is_draft = 0 '
+                    'WHERE id = ? AND author_id = ?',
+                    (data.subcname, value, public_description, size, ident, author['id']))
+            else:
+                raise ex
+        finally:
+            cursor.close()
+
+    async def update_draft(
+            self,
+            ident: str,
+            author: UserInfo,
+            size: int,
+            public_description: str,
+            data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs]
+    ):
+        column1, column2, column3 = 'cql', 'within_cond', 'text_types'
+        if isinstance(data, CreateSubcorpusRawCQLArgs):
+            value1, value2, value3 = data.cql, None, None
+        elif isinstance(data, CreateSubcorpusWithinArgs):
+            value1, value2, value3 = None, json.dumps(data.within), None
+        elif isinstance(data, CreateSubcorpusArgs):
+            value1, value2, value3 = None, None, json.dumps(data.text_types)
+
+        cursor = self._db.cursor()
+        try:
+            cursor.execute(
+                f'UPDATE {self.SUBC_TABLE_NAME} '
+                f'SET name = ?, {column1} = ?, {column2} = ?, {column3} = ?, public_description = ?, size = ? '
+                'WHERE id = ? AND author_id = ? AND is_draft = 1',
+                (data.subcname, value1, value2, value3, public_description, size, ident, author['id']))
         finally:
             cursor.close()
 
@@ -187,7 +226,7 @@ class SQLiteSubcArchive(AbstractSubcArchive):
             cursor.close()
         return data
 
-    async def list(self, user_id, filter_args, corpname=None, offset=0, limit=None):
+    async def list(self, user_id, filter_args, corpname=None, offset=0, limit=None, include_drafts=False):
         if (filter_args.archived_only and filter_args.active_only or
                 filter_args.archived_only and filter_args.published_only):
             raise SubcArchiveException('Invalid filter specified')
@@ -216,6 +255,9 @@ class SQLiteSubcArchive(AbstractSubcArchive):
         if limit is None:
             limit = 1000000000
         args.extend((limit, offset))
+
+        if not include_drafts:
+            where.append('t1.is_draft = 0')
 
         sql = f"""SELECT
             t1.*

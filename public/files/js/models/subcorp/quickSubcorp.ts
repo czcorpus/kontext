@@ -19,8 +19,7 @@
  */
 
 import { PageModel } from '../../app/page';
-import * as Kontext from '../../types/kontext';
-import { CreateSubcorpusArgs, BaseTTSubcorpFormModel } from './common';
+import { CreateSubcorpusArgs, BaseTTSubcorpFormModel, CreateSubcorpusDraft } from './common';
 import { IFullActionControl } from 'kombo';
 import { Actions } from './actions';
 import { Actions as QueryActions } from '../query/actions';
@@ -28,8 +27,8 @@ import { Actions as TTActions } from '../textTypes/actions';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions } from '../common/actions';
 import { Actions as LiveattrsActions } from '../../types/plugins/liveAttributes';
-import { concatMap, map, Observable, throwError } from 'rxjs';
-import { HTTP, tuple } from 'cnc-tskit';
+import { concatMap, Observable, throwError } from 'rxjs';
+import { HTTP } from 'cnc-tskit';
 
 
 export interface QuickSubcorpModelState {
@@ -38,12 +37,6 @@ export interface QuickSubcorpModelState {
     liveAttrsEnabled:boolean;
     isBusy:boolean;
 }
-
-
-export interface CreateSubcorpusDraft extends Kontext.AjaxResponse {
-    subc_id:{corpus_name:string, id:string};
-}
-
 
 export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelState> implements IUnregistrable {
 
@@ -153,7 +146,7 @@ export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelS
                                     text_types: action.payload.selections,
                                     form_type: 'tt-sel'
                                 };
-                                return this.submitDraft(args, this.validate);
+                                return this.submit(args, true, this.validate);
 
                             } else {
                                 throwError(() => new Error('Invalid action passed through suspend filter'));
@@ -189,25 +182,5 @@ export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelS
 
     getRegistrationId():string {
         return 'quick-subcorpus-model';
-    }
-
-    submitDraft(args:CreateSubcorpusArgs, validator: (args) => Error|null):Observable<CreateSubcorpusDraft> {
-        const err = validator(args);
-        if (!err) {
-            return this.pageModel.ajax$<CreateSubcorpusDraft>(
-                HTTP.Method.POST,
-                this.pageModel.createActionUrl(
-                    '/subcorpus/create_draft',
-                    {format: 'json'}
-                ),
-                args,
-                {
-                    contentType: 'application/json'
-                }
-            );
-
-        } else {
-            return throwError(() => err);
-        }
     }
 }

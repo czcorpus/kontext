@@ -39,7 +39,6 @@ from main_menu.model import MainMenu
 from plugin_types.subc_storage import (
     AbstractSubcArchive, SubcListFilterArgs, SubcListFilterClientArgs)
 from sanic import Blueprint
-from texttypes.model import TextTypeCollector
 
 bp = Blueprint('subcorpus', url_prefix='subcorpus')
 
@@ -109,23 +108,20 @@ async def new(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
             info = await sr.get_info(amodel.corp.subcorpus_id)
         out.update(dict(
             selected_text_types=info.text_types,
+            within_cond=info.within_cond,
             subcorpus_name=amodel.corp.subcorpus_name,
             subcorpus_desc=info.public_description_raw
         ))
+        # draft subcorpus should not be projected to main menu links...
+        out['usesubcorp'] = None
     out.update(dict(
         Normslist=tt_sel['Normslist'],
         text_types_data=tt_sel,
         method=method,
         id_attr=corpus_info.metadata.id_attr,
-        aligned_corpora=req.form_getlist('aligned_corpora')
+        aligned_corpora=req.form_getlist('aligned_corpora'),
     ))
     return out
-
-
-@bp.route('/ajax_create_subcorpus', ['POST'])
-@http_action(access_level=1, return_type='json', action_model=SubcorpusActionModel)
-async def ajax_create_subcorpus(amodel: SubcorpusActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
-    return await amodel.create_subcorpus()
 
 
 @bp.route('/archive', ['POST'])
@@ -170,7 +166,7 @@ async def _filter_subcorpora(amodel: UserActionModel, req: KRequest, ignore_no_s
                 corpus_name = None
 
             if corpus_name is None or corpus_name in related_corpora:
-                full_list = await sr.list(amodel.plugin_ctx.user_id, filter_args, corpname=corpus_name)
+                full_list = await sr.list(amodel.plugin_ctx.user_id, filter_args, corpname=corpus_name, include_drafts=True)
 
     sort = req.args.get('sort', '-created')
     sort_key, rev = amodel.parse_sorting_param(sort)

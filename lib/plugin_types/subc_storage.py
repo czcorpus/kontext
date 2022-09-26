@@ -86,7 +86,13 @@ class AbstractSubcArchive(abc.ABC):
             data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs], is_draft: bool = False):
         """
         Create subcorpus in the database. It is assumed that actual subc. files are created somewhere else and
-        the proper path is passed here.
+        the proper path is passed here. Also creates real subcorpus from draft.
+        """
+
+    @abc.abstractmethod
+    async def update_draft(self, ident: str, author: UserInfo, size: int, public_description: str, data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs]):
+        """
+        Updates subcorpus draft in the database.
         """
 
     @abc.abstractmethod
@@ -117,7 +123,8 @@ class AbstractSubcArchive(abc.ABC):
             filter_args: SubcListFilterArgs,
             corpname: Optional[str] = None,
             offset: int = 0,
-            limit: Optional[int] = None) -> List[SubcorpusRecord]:
+            limit: Optional[int] = None,
+            include_drafts: bool = False) -> List[SubcorpusRecord]:
         """
         List all user subcorpora based on provided filter_args and with optional offset and limit (for pagination)
         """

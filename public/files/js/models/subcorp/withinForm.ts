@@ -60,12 +60,20 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
         dispatcher:IActionDispatcher,
         pageModel:PageModel,
         inputMode:FormType,
-        structsAndAttrs:Kontext.StructsAndAttrs
+        structsAndAttrs:Kontext.StructsAndAttrs,
+        initialLines?:Array<ServerWithinSelection>,
     ) {
         super(
             dispatcher,
             {
-                lines: Dict.empty(structsAndAttrs) ?
+                lines: initialLines ? 
+                    List.map((item, rowIdx) => ({
+                        rowIdx,
+                        negated: item.negated,
+                        structureName: item.structure_name,
+                        attributeCql: {value: item.attribute_cql, isRequired: true, isInvalid: false},
+                    }), initialLines) :
+                    Dict.empty(structsAndAttrs) ?
                     [] :
                     [
                         {

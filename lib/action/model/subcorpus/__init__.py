@@ -19,7 +19,7 @@
 
 import os
 from dataclasses import asdict
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional, Tuple
 
 import bgcalc
 import plugins
@@ -30,7 +30,7 @@ from action.errors import FunctionNotSupported, UserReadableException
 from action.model.corpus import CorpusActionModel
 from bgcalc.task import AsyncTaskStatus
 from corplib.abstract import create_new_subc_ident
-from corplib.subcorpus import create_subcorpus, KSubcorpus
+from corplib.subcorpus import KSubcorpus, create_subcorpus
 from texttypes.model import TextTypeCollector
 
 
@@ -42,16 +42,8 @@ class SubcorpusActionModel(CorpusActionModel):
 
     TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
 
-    async def create_subcorpus(self) -> Dict[str, Any]:
-        """
-        req. arguments:
-        subcname -- name of new subcorpus
-        cql -- custom within condition
-        """
-        form_type = self._req.json['form_type']
-        author = self.plugin_ctx.user_dict
+    async def _get_query_specification(self, form_type: str) -> Tuple[CreateSubcorpusArgs, Optional[List[Tuple[str, str]]]]:
         tt_query = None
-
         if form_type == 'tt-sel':
             specification = CreateSubcorpusArgs(**self._req.json)
             corpus_info = await self.get_corpus_info(specification.corpname)
@@ -92,6 +84,17 @@ class SubcorpusActionModel(CorpusActionModel):
             raise UserReadableException(f'Invalid form type provided - "{form_type}"')
         if not specification.subcname:
             raise UserReadableException(self._req.translate('No subcorpus name specified!'))
+        return specification, tt_query
+
+    async def create_subcorpus(self) -> Dict[str, Any]:
+        """
+        req. arguments:
+        subcname -- name of new subcorpus
+        cql -- custom within condition
+        """
+        form_type = self._req.json['form_type']
+        author = self.plugin_ctx.user_dict
+        specification, tt_query = await self._get_query_specification(form_type)
 
         if isinstance(self.corp, KSubcorpus):
             if not self.corp.is_draft:
@@ -127,7 +130,7 @@ class SubcorpusActionModel(CorpusActionModel):
                 label=f'{self.args.corpname}/{specification.subcname}',
                 args=dict(
                     subcname=specification.subcname,
-                    corpname=self.args.corpname
+                    corpname=self.args.corpname,
                 )))
 
         unfinished_corpora = [at for at in self.get_async_tasks(
@@ -136,47 +139,16 @@ class SubcorpusActionModel(CorpusActionModel):
 
     async def create_subcorpus_draft(self):
         """
-        awailable only for text types defined subcorpora
+        creates or updates subcorpus draft
         """
-        specification = CreateSubcorpusArgs(**self._req.json)
-        if not specification.subcname:
-            raise UserReadableException(self._req.translate('No subcorpus name specified!'))
-
-        corpus_info = await self.get_corpus_info(specification.corpname)
-        size = 0
-        if (plugins.runtime.LIVE_ATTRIBUTES.exists
-                and await plugins.runtime.LIVE_ATTRIBUTES.instance.is_enabled_for(
-                    self.plugin_ctx, [specification.corpname])  # TODO here we skip aligned corpora which is debatable
-                and len(specification.aligned_corpora) > 0):
-            if corpus_info.metadata.label_attr and corpus_info.metadata.id_attr:
-                sel_match = await plugins.runtime.LIVE_ATTRIBUTES.instance.get_attr_values(
-                    self.plugin_ctx, corpus=self.corp,
-                    attr_map=specification.text_types,
-                    aligned_corpora=specification.aligned_corpora,
-                    limit_lists=False)
-                size = sel_match.poscount
-                sel_attrs = {}
-                for k, vals in sel_match.attr_values.items():
-                    if k == corpus_info.metadata.label_attr:
-                        k = corpus_info.metadata.id_attr
-                    # now we take only attribute entries with full data listing
-                    if '.' in k and type(vals) is list:
-                        sel_attrs[k] = [v[1] for v in vals]
-                tt_query = TextTypeCollector(self.corp, sel_attrs).get_query()
-                tmp = ['<%s %s />' % item for item in tt_query]
-                full_cql = ' within '.join(tmp)
-                specification.text_types_cql = f'aword,[] within {full_cql}'
-            else:
-                raise FunctionNotSupported(
-                    'Corpus must have a bibliography item defined to support this function')
-        else:
-            tt_query = TextTypeCollector(self.corp, specification.text_types).get_query()
-            tmp = ['<%s %s />' % item for item in tt_query]
-            full_cql = ' within '.join(tmp)
-            specification.text_types_cql = f'aword,[] within {full_cql}'
-
-        subc_id = await create_new_subc_ident(self.subcpath, self.corp.corpname)
+        form_type = self._req.json['form_type']
+        specification, _ = await self._get_query_specification(form_type)
+        usesubcorp = self._req.json.get('usesubcorp')
         with plugins.runtime.SUBC_STORAGE as sr:
-            await sr.create(ident=subc_id.id, author=self.plugin_ctx.user_dict, size=size, public_description=specification.description, data=specification, is_draft=True)
-
-        return dict(subc_id=asdict(subc_id))
+            if not usesubcorp:
+                subc_id = await create_new_subc_ident(self.subcpath, self.corp.corpname)
+                await sr.create(ident=subc_id.id, author=self.plugin_ctx.user_dict, size=0, public_description=specification.description, data=specification, is_draft=True)
+                return dict(subc_id=asdict(subc_id))
+            else:
+                await sr.update_draft(ident=usesubcorp, author=self.plugin_ctx.user_dict, size=0, public_description=specification.description, data=specification)
+                return dict(subc_id={'id': usesubcorp, 'corpus_name': self.corp.corpname})

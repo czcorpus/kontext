@@ -22,9 +22,10 @@ This module contains dataclasses for requests specifying
 a subcorpus in different ways
 """
 
-from typing import List, Optional
 from dataclasses import dataclass
-from corplib.subcorpus import WithinType, TextTypesType
+from typing import List, Optional
+
+from corplib.subcorpus import TextTypesType, WithinType
 
 
 @dataclass
@@ -66,6 +67,7 @@ class CreateSubcorpusWithinArgs(_SubcGenerateArgsBase):
     """
 
     within: WithinType
+    usesubcorp: Optional[str] = None
 
     def deserialize(self) -> str:
         """

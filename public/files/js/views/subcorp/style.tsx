@@ -37,6 +37,12 @@ export const SubcorpForm = styled.form`
         font-size: 1.3em;
         width: 20em;
     }
+
+    .submit-buttons {
+        > *:not(:first-child) {
+            margin-left: 0.7em;
+        }
+    }
 `;
 
 // ---------------- <TRWithinBuilderWrapper /> --------------------------------------
@@ -324,6 +330,16 @@ export const RestoreTabContentWrapper = styled.div`
 
     > *:not(:first-child) {
         margin-left: 0.7em;
+    }
+`;
+
+// ---------------- <ReuseTabContentWrapper /> --------------------------------
+
+export const ReuseTabContentWrapper = styled.div`
+    .submit-buttons {
+        > *:not(:first-child) {
+            margin-left: 0.7em;
+        }
     }
 `;
 

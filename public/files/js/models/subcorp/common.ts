@@ -36,6 +36,7 @@ export interface SubcorpusServerRecord {
     author_id:number;
     author_fullname:string;
     size:number;
+    is_draft:number;
     created:number;
     archived:number|undefined;
     published:number|undefined;
@@ -72,6 +73,7 @@ export interface SubcorpusRecord {
     published:number|undefined;
     selections:SelectionsType;
     size:number;
+    isDraft:boolean;
     description:string|undefined;
     descriptionRaw:string|undefined;
     authorId:number;
@@ -90,6 +92,7 @@ export function subcServerRecord2SubcorpusRecord(srec:SubcorpusServerRecord):Sub
             srec.within_cond ||
             srec.cql,
         size: srec.size,
+        isDraft: srec.is_draft === 1 ? true : false,
         description: srec.public_description,
         descriptionRaw: srec.public_description_raw,
         authorId: srec.author_id,
@@ -147,6 +150,7 @@ export interface ServerWithinSelection {
 
 export interface CreateSubcorpusWithinArgs extends SubmitBase {
     within:Array<ServerWithinSelection>;
+    usesubcorp?:string; // if used then we expect the referred subc. to be a draft (= mutable subc.)
     form_type:'within';
 }
 
@@ -172,6 +176,10 @@ export interface CreateSubcorpus extends Kontext.AjaxResponse {
     processed_subc:Array<Kontext.AsyncTaskInfo>;
 }
 
+export interface CreateSubcorpusDraft extends Kontext.AjaxResponse {
+    subc_id:{corpus_name:string, id:string};
+}
+
 export function importServerSubcList(data:Array<SubcorpusServerRecord>):Array<SubcorpListItem> {
     return List.map(item => ({
         id: item.id,
@@ -179,6 +187,7 @@ export function importServerSubcList(data:Array<SubcorpusServerRecord>):Array<Su
         corpus_name: item.corpus_name,
         author_fullname: item.author_fullname,
         size: item.size,
+        is_draft: item.is_draft === 1 ? true : false,
         created: new Date(item.created * 1000),
         archived: item.archived ? new Date(item.archived * 1000) : undefined,
         selected: false,
@@ -217,11 +226,27 @@ export class BaseTTSubcorpFormModel<T, U = {}> extends StatefulModel<T> {
 
     submit(
         args:CreateSubcorpusArgs|CreateSubcorpusWithinArgs,
+        asDraft:boolean,
         validator: (args) => Error|null
     ):Observable<any> {
 
         const err = validator(args);
         if (!err) {
+            if (asDraft) {
+                return this.pageModel.ajax$<CreateSubcorpusDraft>(
+                    HTTP.Method.POST,
+                    this.pageModel.createActionUrl(
+                        '/subcorpus/create_draft',
+                        {
+                            format: 'json'
+                        }
+                    ),
+                    args,
+                    {
+                        contentType: 'application/json'
+                    }
+                );
+            }
             return this.pageModel.ajax$<CreateSubcorpus>(
                 HTTP.Method.POST,
                 this.pageModel.createActionUrl(

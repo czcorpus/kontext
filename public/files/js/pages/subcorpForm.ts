@@ -39,6 +39,7 @@ import { Actions as GlobalActions } from '../models/common/actions';
 import { importInitialTTData, TTInitialData } from '../models/textTypes/common';
 import { ConcFormArgs } from '../models/query/formArgs';
 import { fetchQueryFormArgs } from '../models/query/first';
+import { ServerWithinSelection } from '../models/subcorp/common';
 import { Root } from 'react-dom/client';
 import { PageMount } from '../app/mounts';
 
@@ -194,11 +195,13 @@ export class SubcorpForm {
             const ttComponent = this.createTextTypesComponents(
                 this.layoutModel.getConf<TextTypes.ExportedSelection>('SelectedTextTypes')
             );
+            const withinCond = this.layoutModel.getConf<Array<ServerWithinSelection>>('WithinCond');
+            const formType = withinCond ? 'within' : 'tt-sel';
             this.subcorpFormModel = new SubcorpFormModel(
                 this.layoutModel.dispatcher,
                 this.layoutModel,
                 this.layoutModel.getCorpusIdent().id,
-                'tt-sel',
+                formType,
                 this.corpusIdent.usesubcorp ?
                     {
                         subcname: this.layoutModel.getConf<string>('SubcorpusName'),
@@ -210,8 +213,9 @@ export class SubcorpForm {
             this.subcorpWithinFormModel = new SubcorpWithinFormModel(
                 this.layoutModel.dispatcher,
                 this.layoutModel,
-                'tt-sel',
-                this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs')
+                formType,
+                this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs'),
+                withinCond,
             );
 
             this.corparchPlugin = corplistComponent(this.layoutModel.pluginApi());

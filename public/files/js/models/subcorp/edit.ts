@@ -29,6 +29,7 @@ import {
     archiveSubcorpora,
     CreateSubcorpus,
     CreateSubcorpusArgs,
+    CreateSubcorpusDraft,
     CreateSubcorpusRawCQLArgs,
     CreateSubcorpusWithinArgs,
     isCQLSelection,
@@ -179,7 +180,6 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                const newName = action.payload.newName;
                 this.suspendWithTimeout(
                     500,
                     {},
@@ -198,33 +198,35 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
 
                 ).pipe(
                     concatMap(
-                        action => {
+                        readyAction => {
                             let args: CreateSubcorpusArgs |
                                 CreateSubcorpusWithinArgs |
                                 CreateSubcorpusRawCQLArgs;
-                            if (TTActions.isTextTypesQuerySubmitReady(action)) {
+                            if (TTActions.isTextTypesQuerySubmitReady(readyAction)) {
                                 args = {
                                     corpname: state.data.corpname,
-                                    subcname: newName,
+                                    subcname: action.payload.newName,
                                     description: '',
                                     aligned_corpora: [], // TODO what to do with this?
-                                    text_types: action.payload.selections,
-                                    form_type: 'tt-sel'
+                                    text_types: readyAction.payload.selections,
+                                    form_type: 'tt-sel',
+                                    usesubcorp: action.payload.usesubcorp,
                                 };
 
-                            } else if (Actions.isFormWithinSubmitArgsReady(action)) {
+                            } else if (Actions.isFormWithinSubmitArgsReady(readyAction)) {
                                 args = {
                                     corpname: state.data.corpname,
-                                    subcname: newName,
+                                    subcname: action.payload.newName,
                                     description: '',
-                                    within: action.payload.data,
-                                    form_type: 'within'
+                                    within: readyAction.payload.data,
+                                    form_type: 'within',
+                                    usesubcorp: action.payload.usesubcorp,
                                 };
 
-                            } else if (Actions.isReuseQueryEmptyReady(action)) {
+                            } else if (Actions.isReuseQueryEmptyReady(readyAction)) {
                                 args = {
                                     corpname: state.data.corpname,
-                                    subcname: newName,
+                                    subcname: action.payload.newName,
                                     description: '',
                                     cql: isCQLSelection(state.data.selections) ?
                                         state.data.selections :
@@ -235,6 +237,12 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                             }
 
                             if (args) {
+                                if (action.payload.asDraft) {
+                                    return this.saveDraft(state, args).pipe(
+                                        map(resp => tuple(args, resp))
+                                    )
+                                }
+
                                 return this.createSubcorpus(state, args).pipe(
                                     map(resp => tuple(args, resp))
                                 )
@@ -247,7 +255,11 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                 ).subscribe({
                     next: ([args, resp]) => {
                         dispatch(Actions.ReuseQueryDone);
-                        this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_reuse_confirm_msg'));
+                        if (action.payload.asDraft) {
+                            this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_save_draft_confirm_msg'));
+                        } else {
+                            this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_reuse_confirm_msg'));
+                        }
                     },
                     error: error => {
                         dispatch(Actions.ReuseQueryDone, error);
@@ -369,13 +381,28 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
         });
     }
 
+    private saveDraft(
+        state:SubcorpusEditModelState,
+        args:CreateSubcorpusArgs|CreateSubcorpusWithinArgs|CreateSubcorpusRawCQLArgs,
+    ):Observable<CreateSubcorpusDraft> {
+        return this.layoutModel.ajax$<CreateSubcorpusDraft>(
+            HTTP.Method.POST,
+            this.layoutModel.createActionUrl('subcorpus/create_draft'),
+            args,
+            {
+                contentType: 'application/json'
+            }
+
+        );
+    }
+
     private createSubcorpus(
         state:SubcorpusEditModelState,
         args:CreateSubcorpusArgs|CreateSubcorpusWithinArgs|CreateSubcorpusRawCQLArgs,
-    ):Observable<any> {
+    ):Observable<CreateSubcorpus> {
         return this.layoutModel.ajax$<CreateSubcorpus>(
             HTTP.Method.POST,
-            this.layoutModel.createActionUrl('subcorpus/ajax_create_subcorpus'),
+            this.layoutModel.createActionUrl('subcorpus/create'),
             args,
             {
                 contentType: 'application/json'
