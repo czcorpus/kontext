@@ -24,6 +24,7 @@ import { ITranslator, IFullActionControl } from 'kombo';
 import * as Kontext from '../kontext';
 import * as CoreViews from '../coreViews';
 import { ConcServerArgs } from '../../models/concordance/common';
+import { Root } from 'react-dom/client';
 
 
 
@@ -49,7 +50,7 @@ export interface BasePlugin {
     getComponentHelpers():Kontext.ComponentHelpers;
     renderReactComponent<T, U>(reactClass:React.ComponentClass<T>|React.FC<T>,
                             target:HTMLElement, props?:T):void;
-    unmountReactComponent(element:HTMLElement):boolean;
+    unmountReactComponent(root:Root):void
     getModels():Kontext.LayoutModel;
     getViews():CoreViews.Runtime;
     pluginTypeIsActive(name:string):boolean;

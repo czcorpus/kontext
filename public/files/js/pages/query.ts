@@ -46,6 +46,8 @@ import { QuickSubcorpModel } from '../models/subcorp/quickSubcorp';
 import { importInitialTTData, TTInitialData } from '../models/textTypes/common';
 import { ConcServerArgs } from '../models/concordance/common';
 import { AnyTTSelection, ExportedSelection } from '../types/textTypes';
+import { Root } from 'react-dom/client';
+import { PageMount } from '../app/mounts';
 
 
 /**
@@ -72,6 +74,12 @@ export class QueryPage {
     private virtualKeyboardModel:VirtualKeyboardModel;
 
     private queryContextModel:QueryContextModel;
+
+    private queryFormRoot:Root;
+
+    private topbarHelpRoot:Root;
+
+    private queryOverviewRoot:Root;
 
 
     constructor(layoutModel:PageModel, clStorage:ConcLinesStorage<StorageUsingState>) {
@@ -269,12 +277,12 @@ export class QueryPage {
             queryHelpModel: this.queryHelpModel,
             searchHistoryModel: this.layoutModel.getModels().searchHistoryModel
         });
-        this.layoutModel.renderReactComponent(
+        this.queryFormRoot = this.layoutModel.renderReactComponent(
             queryFormComponents.QueryForm,
             window.document.getElementById('query-form-mount'),
             properties
         );
-        this.layoutModel.renderReactComponent(
+        this.topbarHelpRoot = this.layoutModel.renderReactComponent(
             queryFormComponents.QueryHelp,
             window.document.getElementById('topbar-help-mount'),
             {
@@ -289,7 +297,7 @@ export class QueryPage {
             this.layoutModel.getComponentHelpers(),
             this.layoutModel.getModels().mainMenuModel
         );
-        this.layoutModel.renderReactComponent(
+        this.queryOverviewRoot = this.layoutModel.renderReactComponent(
             queryOverviewViews.EmptyQueryOverviewBar,
             window.document.getElementById('query-overview-mount'),
         );
@@ -388,12 +396,9 @@ export class QueryPage {
             // from previous instance
             this.layoutModel.registerCorpusSwitchAwareModels(
                 () => {
-                    this.layoutModel.unmountReactComponent(
-                        window.document.getElementById('view-options-mount'));
-                    this.layoutModel.unmountReactComponent(
-                        window.document.getElementById('query-form-mount'));
-                    this.layoutModel.unmountReactComponent(
-                        window.document.getElementById('query-overview-mount'));
+                    this.layoutModel.unmountReactComponent(PageMount.VIEW_OPTIONS);
+                    this.layoutModel.unmountReactComponent(this.queryFormRoot);
+                    this.layoutModel.unmountReactComponent(this.queryOverviewRoot);
                     this.init();
                 },
                 this.queryModel,

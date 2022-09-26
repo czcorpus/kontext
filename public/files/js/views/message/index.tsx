@@ -33,6 +33,7 @@ export interface MessageViewProps {
     anonymousUser:boolean;
     lastUsedCorpus:{corpname:string; human_corpname:string};
     lastUsedConc?:{id:string; args:ConcServerArgs};
+    initCallback?:()=>void;
 }
 
 export interface MessageViews {
@@ -94,7 +95,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         };
 
         return (
-            <S.MessagePageHelp>
+            <S.MessagePageHelp ref={props.initCallback}>
                 <div className="messages">
                     {props.messages.map(message => {
                         return <Message key={message.messageId} status={message.messageType} text={message.messageText} />;

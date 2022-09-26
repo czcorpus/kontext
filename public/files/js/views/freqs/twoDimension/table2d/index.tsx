@@ -542,7 +542,7 @@ export function init(
     /**
      *
      */
-    const CTCell:React.SFC<CTCellProps> = (props) => {
+    const CTCell:React.FC<CTCellProps> = (props) => {
 
         const getValue = () => {
             if (isNonEmpty()) {
@@ -757,7 +757,7 @@ export function init(
      *
      * @param {*} props
      */
-    const CTFullDataTable:React.SFC<CTFullDataTableProps> = (props) => {
+    const CTFullDataTable:React.FC<CTFullDataTableProps> = (props) => {
         const labels1 = () => {
             return props.d1Labels.filter(x => x[1]).map(x => x[0]);
         };

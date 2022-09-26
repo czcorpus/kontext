@@ -53,6 +53,7 @@ export function init(
     const TabContentWrapper:React.FC<{
         auxInfoElm?:React.ReactElement;
         htmlClass?:string;
+        children?:React.ReactNode;
     }> = (props) => (
         <S.TabContentWrapper>
             <form className={props.htmlClass}>

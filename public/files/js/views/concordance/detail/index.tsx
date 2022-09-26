@@ -67,6 +67,7 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailMo
         customStyle?:React.CSSProperties;
         takeFocus:boolean;
         onCloseClick:()=>void;
+        children?:React.ReactNode;
 
     }> = (props) => {
         const baseCSS:React.CSSProperties = {

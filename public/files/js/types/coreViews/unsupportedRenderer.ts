@@ -19,6 +19,8 @@
  */
 
 
-export interface Props {}
+export interface Props {
+    children?:React.ReactNode;
+}
 
 export type Component = React.FC<Props>;

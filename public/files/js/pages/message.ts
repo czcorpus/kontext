@@ -64,9 +64,9 @@ class MessagePage {
                             id: concId,
                             args: this.layoutModel.getConf<ConcServerArgs>('currentArgs') || undefined
                         } :
-                        undefined
-                },
-                () => this.layoutModel.dispatchServerMessages()
+                        undefined,
+                    initCallback: () => this.layoutModel.dispatchServerMessages()
+                }
             );
         });
     }
