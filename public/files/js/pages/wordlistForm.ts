@@ -28,6 +28,7 @@ import { KontextPage } from '../app/main';
 import { WlnumsTypes } from '../models/wordlist/common';
 import { Actions as GlobalActions } from '../models/common/actions';
 import createCorparch from 'plugins/corparch/init';
+import { Root } from 'react-dom/client';
 
 
 /**
@@ -44,6 +45,10 @@ class WordlistFormPage {
     private wordlistFormModel:WordlistFormModel;
 
     private corparchPlugin:PluginInterfaces.Corparch.IPlugin;
+
+    private queryOverviewRoot:Root;
+
+    private wordlistFormRoot:Root;
 
 
     constructor(layoutModel:PageModel) {
@@ -122,22 +127,20 @@ class WordlistFormPage {
                 this.layoutModel.getComponentHelpers(),
                 this.layoutModel.getModels().mainMenuModel
             );
-            this.layoutModel.renderReactComponent(
+            this.queryOverviewRoot = this.layoutModel.renderReactComponent(
                 queryOverviewViews.EmptyQueryOverviewBar,
                 window.document.getElementById('query-overview-mount'),
             );
 
-            this.layoutModel.renderReactComponent(
+            this.wordlistFormRoot = this.layoutModel.renderReactComponent(
                 this.views.WordListForm,
                 document.getElementById('wordlist-form-mount'),
                 {}
             );
             this.layoutModel.registerCorpusSwitchAwareModels(
                 () => {
-                    this.layoutModel.unmountReactComponent(
-                        window.document.getElementById('wordlist-form-mount'));
-                    this.layoutModel.unmountReactComponent(
-                        window.document.getElementById('query-overview-mount'));
+                    this.layoutModel.unmountReactComponent(this.wordlistFormRoot);
+                    this.layoutModel.unmountReactComponent(this.queryOverviewRoot);
                     this.init();
                 },
                 this.wordlistFormModel,

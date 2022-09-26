@@ -65,7 +65,7 @@ export function init(
 
     // ------------------------------ <ErrorBoundary /> -----------------------------
 
-    class ErrorBoundary extends React.Component<{}, {hasError:boolean}> {
+    class ErrorBoundary extends React.Component<{children?: React.ReactNode}, {hasError:boolean}> {
 
         constructor(props) {
             super(props);
@@ -531,7 +531,7 @@ export function init(
 
         List.empty(props.messages) ?
             null :
-            <S.MessagesDiv>
+            <S.MessagesDiv ref={props.initCallback}>
                 {props.messages.map((item, i) => (
                     <Message key={`msg:${i}`} {...item} />
                 ))}
@@ -893,7 +893,7 @@ export function init(
         CloseableFrame,
         InlineHelp,
         Abbreviation,
-        Messages: BoundWithProps<CoreViews.Message.Props, MessageModelState>(Messages, messageModel),
+        Messages: BoundWithProps<CoreViews.Messages.Props, MessageModelState>(Messages, messageModel),
         CorpnameInfoTrigger,
         ImgWithHighlight,
         ImgWithMouseover,

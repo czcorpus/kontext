@@ -134,7 +134,7 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
             GeneralSubcmixerActions.ShowWidget,
             null,
             (state, action, dispatch) => {
-                this.suspendWithTimeout(
+                this.waitForActionWithTimeout(
                     500,
                     {},
                     (sAction, syncData) => {
@@ -145,10 +145,12 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
                     }
                 ).subscribe({
                     next: data => {
-                        dispatch(
-                            GeneralSubcmixerActions.ShowWidgetDone,
-                            {...data.payload}
-                        )
+                        if (GeneralSubcmixerActions.isTextTypesSubcmixerReady(data)) {
+                            dispatch(
+                                GeneralSubcmixerActions.ShowWidgetDone,
+                                {...data.payload}
+                            )
+                        }
                     },
                     error: error => {
                         dispatch(

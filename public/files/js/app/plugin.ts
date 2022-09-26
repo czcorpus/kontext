@@ -25,6 +25,7 @@ import { Observable } from 'rxjs';
 import { PageModel } from './page';
 import { ConcServerArgs } from '../models/concordance/common';
 import { IPluginApi } from '../types/plugins/common';
+import { Root } from 'react-dom/client';
 
 
 export enum PluginName {
@@ -105,13 +106,13 @@ export class PluginApi implements IPluginApi {
         return this.pageModel.getComponentHelpers();
     }
 
-    renderReactComponent<T, U>(reactClass:React.ComponentClass<T>|React.SFC<T>,
+    renderReactComponent<T, U>(reactClass:React.ComponentClass<T>|React.FC<T>,
             target:HTMLElement, props?:T):void {
         this.pageModel.renderReactComponent(reactClass, target, props);
     }
 
-    unmountReactComponent(element:HTMLElement):boolean {
-        return this.pageModel.unmountReactComponent(element);
+    unmountReactComponent(root:Root):void {
+        root.unmount();
     }
 
     getModels():Kontext.LayoutModel {

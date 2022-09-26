@@ -109,7 +109,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
 
         // ------------- <OneEngFrame /> -------------------------------
 
-    const OneEngFrame:React.SFC<{
+    const OneEngFrame:React.FC<{
         key:any;
         id:ENGVRD.FrameID;
         info:ENGVRD.Info;
@@ -472,7 +472,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
 
     // ------------- <Pair /> -------------------------------
 
-    const Pair:React.SFC<{
+    const Pair:React.FC<{
         key:any;
         name:VRD.Sense;
         detail:VRD.SenseInfoList;

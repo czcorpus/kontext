@@ -55,7 +55,7 @@ export function init(
 
     // ------------------------ <EmptyQueryOverviewBar /> --------------------------------
 
-    const EmptyQueryOverviewBar:React.FC<MainMenuModelState> = (props) => (
+    const EmptyQueryOverviewBar:React.FC<MainMenuModelState & {children?:React.ReactNode}> = (props) => (
         <div>
             <S.QueryOverviewBarUL>
                 <layoutViews.CorpnameInfoTrigger

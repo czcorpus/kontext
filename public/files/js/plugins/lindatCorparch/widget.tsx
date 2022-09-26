@@ -85,7 +85,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------------------- <WidgetTreeLeaf /> -------------------------------
 
-    const WidgetTreeLeaf:React.SFC<{
+    const WidgetTreeLeaf:React.FC<{
         ident:string;
         name:string;
         permitted:boolean;
@@ -117,7 +117,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------------------- <WidgetItemList /> -------------------------------
 
-    const WidgetItemList:React.SFC<{
+    const WidgetItemList:React.FC<{
         name:string;
         htmlClass?:string;
         corplist:Array<Node>;

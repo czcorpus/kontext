@@ -101,6 +101,7 @@ export interface AdvancedFormFieldsetProps {
     htmlClass?:string;
     formDisabled?:boolean;
     handleClick:()=>void;
+    children?:React.ReactNode;
 }
 
 interface QueryToolboxProps {
