@@ -39,7 +39,6 @@ from main_menu.model import MainMenu
 from plugin_types.subc_storage import (
     AbstractSubcArchive, SubcListFilterArgs, SubcListFilterClientArgs)
 from sanic import Blueprint
-from texttypes.model import TextTypeCollector
 
 bp = Blueprint('subcorpus', url_prefix='subcorpus')
 
@@ -109,6 +108,7 @@ async def new(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
             info = await sr.get_info(amodel.corp.subcorpus_id)
         out.update(dict(
             selected_text_types=info.text_types,
+            within_cond=info.within_cond,
             subcorpus_name=amodel.corp.subcorpus_name,
             subcorpus_desc=info.public_description_raw
         ))

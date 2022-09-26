@@ -303,6 +303,7 @@
         "subc__quick_subcorpus_create": "Create UNTRANSLATED",
         "subc__quick_subcorpus_name": "Subcorpus name UNTRANSLATED",
         "subc__quick_subcorpus_created": "Subcorpus created UNTRANSLATED",
+        "subcform__save_draft": "Save draft UNTRANSLATED",
         "subcform__create_subcorpus": "Ustvari podkorpus",
         "task__type_subcorpus": "Ustvari nov podkorpus",
         "task__status_PENDING": "Na čakanju",

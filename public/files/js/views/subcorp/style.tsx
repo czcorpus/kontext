@@ -37,6 +37,10 @@ export const SubcorpForm = styled.form`
         font-size: 1.3em;
         width: 20em;
     }
+
+    .submit-buttons {
+        margin-right: 0.3em;
+    }
 `;
 
 // ---------------- <TRWithinBuilderWrapper /> --------------------------------------

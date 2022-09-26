@@ -110,7 +110,8 @@ export function init({
         constructor(props) {
             super(props);
             this._handleInputModeChange = this._handleInputModeChange.bind(this);
-            this._handleSubmitClick = this._handleSubmitClick.bind(this);
+            this._handleCreateClick = this._handleCreateClick.bind(this);
+            this._handleSaveDraftClick = this._handleSaveDraftClick.bind(this);
         }
 
         _handleInputModeChange(v) {
@@ -122,11 +123,22 @@ export function init({
             });
         }
 
-        _handleSubmitClick() {
+        _handleSaveDraftClick() {
             dispatcher.dispatch<typeof Actions.FormSubmit>({
                 name: Actions.FormSubmit.name,
                 payload: {
-                    selectionType: this.props.inputMode
+                    selectionType: this.props.inputMode,
+                    asDraft: true,
+                }
+            });
+        }
+
+        _handleCreateClick() {
+            dispatcher.dispatch<typeof Actions.FormSubmit>({
+                name: Actions.FormSubmit.name,
+                payload: {
+                    selectionType: this.props.inputMode,
+                    asDraft: false,
                 }
             });
         }
@@ -184,11 +196,15 @@ export function init({
                     </div>
                     {this.props.isBusy ?
                         <layoutViews.AjaxLoaderBarImage /> :
-                        <p>
-                        <button className="default-button" type="button"
-                                onClick={this._handleSubmitClick}>
-                            {he.translate('subcform__create_subcorpus')}
-                        </button>
+                        <p className='submit-buttons'>
+                            <button className="default-button" type="button"
+                                    onClick={this._handleSaveDraftClick}>
+                                {he.translate('subcform__save_draft')}
+                            </button>
+                            <button className="default-button" type="button"
+                                    onClick={this._handleCreateClick}>
+                                {he.translate('subcform__create_subcorpus')}
+                            </button>
                         </p>
                     }
                 </S.SubcorpForm>

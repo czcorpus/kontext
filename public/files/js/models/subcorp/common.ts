@@ -150,6 +150,7 @@ export interface ServerWithinSelection {
 
 export interface CreateSubcorpusWithinArgs extends SubmitBase {
     within:Array<ServerWithinSelection>;
+    usesubcorp?:string; // if used then we expect the referred subc. to be a draft (= mutable subc.)
     form_type:'within';
 }
 
@@ -173,6 +174,10 @@ export interface SubcorpList extends Kontext.AjaxResponse {
 
 export interface CreateSubcorpus extends Kontext.AjaxResponse {
     processed_subc:Array<Kontext.AsyncTaskInfo>;
+}
+
+export interface CreateSubcorpusDraft extends Kontext.AjaxResponse {
+    subc_id:{corpus_name:string, id:string};
 }
 
 export function importServerSubcList(data:Array<SubcorpusServerRecord>):Array<SubcorpListItem> {
@@ -221,11 +226,27 @@ export class BaseTTSubcorpFormModel<T, U = {}> extends StatefulModel<T, U> {
 
     submit(
         args:CreateSubcorpusArgs|CreateSubcorpusWithinArgs,
+        asDraft:boolean,
         validator: (args) => Error|null
     ):Observable<any> {
 
         const err = validator(args);
         if (!err) {
+            if (asDraft) {
+                return this.pageModel.ajax$<CreateSubcorpusDraft>(
+                    HTTP.Method.POST,
+                    this.pageModel.createActionUrl(
+                        '/subcorpus/create_draft',
+                        {
+                            format: 'json'
+                        }
+                    ),
+                    args,
+                    {
+                        contentType: 'application/json'
+                    }
+                );
+            }
             return this.pageModel.ajax$<CreateSubcorpus>(
                 HTTP.Method.POST,
                 this.pageModel.createActionUrl(

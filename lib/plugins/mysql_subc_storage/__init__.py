@@ -141,18 +141,19 @@ class MySQLSubcArchive(AbstractSubcArchive):
             data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs]
     ):
         async with self._db.cursor() as cursor:
+            column1, column2, column3 = 'cql', 'within_cond', 'text_types'
             if isinstance(data, CreateSubcorpusRawCQLArgs):
-                column, value = 'cql', data.cql
+                value1, value2, value3 = data.cql, None, None
             elif isinstance(data, CreateSubcorpusWithinArgs):
-                column, value = 'within_cond', json.dumps(data.within)
+                value1, value2, value3 = None, json.dumps(data.within), None
             elif isinstance(data, CreateSubcorpusArgs):
-                column, value = 'text_types', json.dumps(data.text_types)
+                value1, value2, value3 = None, None, json.dumps(data.text_types)
 
             await cursor.execute(
                 f'UPDATE {self._bconf.subccorp_table} '
-                f'SET name = %s, {column} = %s, public_description = %s, size = %s '
+                f'SET name = %s, {column1} = %s, {column2} = %s, {column3} = %s, public_description = %s, size = %s '
                 'WHERE id = %s AND author_id = %s AND is_draft = 1',
-                (data.subcname, value, public_description, size, ident, author['id']))
+                (data.subcname, value1, value2, value3, public_description, size, ident, author['id']))
 
     async def archive(self, user_id: int, corpname: str, subc_id: str) -> datetime:
         async with self._db.cursor() as cursor:

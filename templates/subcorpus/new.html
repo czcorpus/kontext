@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 {% block bodyonload %}
 __conf.textTypesData = {{ text_types_data|to_json }};
 __conf.SelectedTextTypes = {{ selected_text_types|to_json }};
+__conf.WithinCond = {{ within_cond|to_json }};
 __conf.SubcorpusName = {{ subcorpus_name|to_json }};
 __conf.SubcorpusDesc = {{ subcorpus_desc|to_json }};
 __conf.HasSubcmixer = {{ has_subcmixer|to_json }};

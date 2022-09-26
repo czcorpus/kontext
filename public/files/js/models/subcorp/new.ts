@@ -152,22 +152,25 @@ export class SubcorpFormModel extends BaseTTSubcorpFormModel<SubcorpFormModelSta
                     }
                 ).pipe(
                     concatMap(
-                        (action) => {
-                            if (TTActions.isTextTypesQuerySubmitReady(action)) {
+                        (readyAction) => {
+                            if (TTActions.isTextTypesQuerySubmitReady(readyAction)) {
                                 return this.submit(
-                                    this.getSubmitArgs(action.payload.selections),
-                                    (args) => this.validateForm(action.payload.selections, true)
+                                    this.getSubmitArgs(readyAction.payload.selections),
+                                    action.payload.asDraft,
+                                    (args) => this.validateForm(readyAction.payload.selections, true)
                                 );
 
-                            } else if (Actions.isFormWithinSubmitArgsReady(action)) {
+                            } else if (Actions.isFormWithinSubmitArgsReady(readyAction)) {
                                 return this.submit(
                                     {
                                         corpname: this.state.corpname,
                                         subcname: this.state.subcname.value,
                                         description: this.state.description.value,
-                                        within: action.payload.data,
+                                        within: readyAction.payload.data,
+                                        usesubcorp: this.state.initialSubcorpusId ? this.state.initialSubcorpusId : undefined,
                                         form_type: 'within'
                                     },
+                                    action.payload.asDraft,
                                     (args) => undefined // TODO
                                 );
                             }

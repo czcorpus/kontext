@@ -156,20 +156,21 @@ class SQLiteSubcArchive(AbstractSubcArchive):
             public_description: str,
             data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs]
     ):
+        column1, column2, column3 = 'cql', 'within_cond', 'text_types'
         if isinstance(data, CreateSubcorpusRawCQLArgs):
-            column, value = 'cql', data.cql
+            value1, value2, value3 = data.cql, None, None
         elif isinstance(data, CreateSubcorpusWithinArgs):
-            column, value = 'within_cond', json.dumps(data.within)
+            value1, value2, value3 = None, json.dumps(data.within), None
         elif isinstance(data, CreateSubcorpusArgs):
-            column, value = 'text_types', json.dumps(data.text_types)
+            value1, value2, value3 = None, None, json.dumps(data.text_types)
 
         cursor = self._db.cursor()
         try:
             cursor.execute(
                 f'UPDATE {self.SUBC_TABLE_NAME} '
-                f'SET name = ?, {column} = ?, public_description = ?, size = ? '
+                f'SET name = ?, {column1} = ?, {column2} = ?, {column3} = ?, public_description = ?, size = ? '
                 'WHERE id = ? AND author_id = ? AND is_draft = 1',
-                (data.subcname, value, public_description, size, ident, author['id']))
+                (data.subcname, value1, value2, value3, public_description, size, ident, author['id']))
         finally:
             cursor.close()
 

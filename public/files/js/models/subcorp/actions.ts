@@ -197,6 +197,7 @@ export class Actions {
 
     static FormSubmit:Action<{
         selectionType:FormType;
+        asDraft:boolean;
     }> = {
         name: 'SUBCORP_FORM_SUBMIT'
     };
