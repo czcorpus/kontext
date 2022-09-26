@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
+import { createRoot, Root } from 'react-dom/client';
 import { ITranslator, IFullActionControl, StatelessModel } from 'kombo';
 import { Observable, Subject } from 'rxjs';
 import { webSocket } from 'rxjs/webSocket';
@@ -60,6 +60,7 @@ import { GlobalStyle } from '../views/theme/default/global';
 import { SearchHistoryModel } from '../models/searchHistory';
 import { IPluginApi } from '../types/plugins/common';
 import { FreqResultViews } from '../models/freqs/common';
+import { PageMount } from './mounts';
 
 
 export enum DownloadType {
@@ -173,6 +174,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
 
     private readonly appNavig:AppNavigation;
 
+    private readonly reactRoots:{[elementId:string]:Root};
+
     /**
      *
      */
@@ -184,6 +187,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
         this.userSettings = userSettings;
         this.dispatcher = dispatcher;
         this.globalKeyHandlers = [];
+        this.reactRoots = {};
     }
 
     /**
@@ -216,21 +220,32 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      * @param props Properties used by created component
      * @param callback a function called once the component is rendered
      */
-    renderReactComponent<T>(reactClass:React.ComponentClass<T>|React.SFC<T>,
-            target:HTMLElement, props?:T, callback?:()=>void):void {
-        ReactDOM.render(
-            React.createElement<T>(reactClass, props),
-            target,
-            callback
+    renderReactComponent<T>(
+        reactClass:React.ComponentClass<T>|React.FC<T>,
+        target:HTMLElement,
+        props?:T
+    ):Root {
+        const root = createRoot(target);
+        root.render(
+            React.createElement<T>(reactClass, props)
         );
+        return root;
     }
 
     /**
      *
-     * @param element An element the component will be removed from
      */
-    unmountReactComponent(element:HTMLElement):boolean {
-        return ReactDOM.unmountComponentAtNode(element);
+    unmountReactComponent(root:Root|string):void {
+        if (typeof root === 'string') {
+            const ownRoot = this.reactRoots[root];
+            if (ownRoot === undefined) {
+                throw new Error(`Cannot unmount unregistered page mount ${root}`);
+            }
+            ownRoot.unmount();
+
+        } else {
+            root.unmount();
+        }
     }
 
     /**
@@ -399,11 +414,10 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      */
     initNotifications() {
         if (this.getConf<boolean>('popupServerMessages')) {
-            this.renderReactComponent(
+            this.reactRoots[PageMount.CLIENT_MESAGES] = this.renderReactComponent(
                 this.layoutViews.Messages,
-                document.querySelector('#content .messages-mount') as HTMLElement,
-                undefined,
-                () => this.dispatchServerMessages()
+                document.querySelector(PageMount.CLIENT_MESAGES) as HTMLElement,
+                {initCallback: () => this.dispatchServerMessages()}
             );
         }
     }
@@ -609,9 +623,9 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             mainMenuModel: this.mainMenuModel,
             asyncTaskModel: this.getModels().asyncTaskInfoModel
         });
-        this.renderReactComponent(
+        this.reactRoots[PageMount.MAIN_MENU_MOUNT] = this.renderReactComponent(
             menuViews.MainMenu,
-            window.document.getElementById('main-menu-mount'),
+            window.document.getElementById(PageMount.MAIN_MENU_MOUNT),
             {}
         );
     }
@@ -625,11 +639,11 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             this.getComponentHelpers(),
             this.corpusInfoModel
         );
-        const target = window.document.getElementById('general-overview-mount');
+        const target = window.document.getElementById(PageMount.GENERAL_OVERVIEW);
         if (target) { // few pages do not use this
-            this.renderReactComponent(
+            this.reactRoots[PageMount.GENERAL_OVERVIEW] = this.renderReactComponent(
                 overviewViews.OverviewArea,
-                window.document.getElementById('general-overview-mount'),
+                target,
                 {
                     isLocalUiLang: this.getConf<boolean>('isLocalUiLang')
                 }
@@ -648,9 +662,9 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             mainMenuModel
         });
 
-        this.renderReactComponent(
+        this.reactRoots[PageMount.VIEW_OPTIONS] = this.renderReactComponent(
             viewOptionsViews.OptionsContainer,
-            window.document.getElementById('view-options-mount'),
+            window.document.getElementById(PageMount.VIEW_OPTIONS),
             {
                 corpusIdent: this.getCorpusIdent()
             }
@@ -658,9 +672,9 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
     }
 
     private initGlobalStyles():void {
-        this.renderReactComponent(
+        this.reactRoots[PageMount.GLOBAL_STYLE] = this.renderReactComponent(
             GlobalStyle,
-            window.document.getElementById('global-style-mount')
+            window.document.getElementById(PageMount.GLOBAL_STYLE)
         );
     }
 
@@ -669,12 +683,12 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      */
     private initIssueReporting():boolean {
         if (this.pluginTypeIsActive(PluginName.ISSUE_REPORTING)) {
-            const mount = document.getElementById('error-reporting-mount');
+            const mount = document.getElementById(PageMount.ERROR_REPORTING);
             if (mount) {
                 const plugin = issueReportingPlugin(this.pluginApi())
                 this.renderReactComponent(
                     plugin.getWidgetView(),
-                    document.getElementById('error-reporting-mount'),
+                    document.getElementById(PageMount.ERROR_REPORTING),
                     this.getConf<Kontext.GeneralProps>('issueReportingAction')
                 );
                 return true;
@@ -853,9 +867,9 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                 searchHistoryModel: this.searchHistoryModel
             });
 
-            this.renderReactComponent(
+            this.reactRoots[PageMount.QUERY_HISTORY] = this.renderReactComponent(
                 qhViews.HistoryContainer,
-                document.getElementById('query-history-mount')
+                document.getElementById(PageMount.QUERY_HISTORY)
             );
 
             this.commonViews = commonViewsFactory(this.getComponentHelpers());
@@ -890,10 +904,10 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
 
             const auth:PluginInterfaces.Auth.IPlugin = authPlugin(this.pluginApi());
             if (this.isNotEmptyPlugin(auth)) {
-                const mountElm = document.getElementById('user-pane-mount');
+                const mountElm = document.getElementById(PageMount.USER_PANE);
                 const userPaneView = auth.getUserPaneView();
                 if (userPaneView) {
-                    this.renderReactComponent(
+                    this.reactRoots[PageMount.USER_PANE] = this.renderReactComponent(
                         userPaneView,
                         mountElm,
                         {

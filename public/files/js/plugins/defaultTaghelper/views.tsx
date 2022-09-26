@@ -37,7 +37,7 @@ export function init(
     dispatcher:IActionDispatcher,
     he:Kontext.ComponentHelpers,
     frameModel:TabFrameModel,
-    deps:Array<[string, React.FC<{}>|React.ComponentClass<{}>, UDTagBuilderModel|PosTagModel, unknown]>
+    deps:Array<[string, React.FC|React.ComponentClass<PluginInterfaces.TagHelper.ViewProps>, UDTagBuilderModel|PosTagModel, unknown]>
 ):PluginInterfaces.TagHelper.View {
 
     const layoutViews = he.getLayoutViews();
@@ -176,7 +176,7 @@ export function init(
     // ------------------------------ <TagBuilder /> ----------------------------
 
     type ActiveTagBuilderProps = PluginInterfaces.TagHelper.ViewProps &
-            {activeView:React.ComponentClass|React.FC};
+            {activeView:React.ComponentClass<PluginInterfaces.TagHelper.ViewProps>|React.FC};
 
     const UDTagBuilder:React.FC<ActiveTagBuilderProps & UDTagBuilderModelState> = (props) => {
         return (

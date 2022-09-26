@@ -49,7 +49,7 @@ export function init(
         hint:string;
     }
 
-    const CTFreqFormMinFreqInput:React.SFC<CTFreqFormMinFreqInputProps> = (props) => {
+    const CTFreqFormMinFreqInput:React.FC<CTFreqFormMinFreqInputProps> = (props) => {
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch<typeof Actions.FreqctFormSetMinFreq>({
@@ -95,7 +95,7 @@ export function init(
         positionRangeLabels:Array<string>;
     }
 
-    const CTFreqPosSelect:React.SFC<CTFreqPosSelectProps> = (props) => {
+    const CTFreqPosSelect:React.FC<CTFreqPosSelectProps> = (props) => {
 
         const handleChange = (evt) => {
             dispatcher.dispatch<typeof Actions.FreqctFormSetCtx>({
@@ -121,7 +121,7 @@ export function init(
         value:string;
     }
 
-    const CTFreqNodeStartSelect:React.SFC<CTFreqNodeStartSelectProps> = (props) => {
+    const CTFreqNodeStartSelect:React.FC<CTFreqNodeStartSelectProps> = (props) => {
 
         const handleChange = (evt) => {
             dispatcher.dispatch<typeof Actions.FreqctFormSetAlignType>({

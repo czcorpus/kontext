@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2015 Charles University in Prague, Faculty of Arts,
+ * Copyright (c) 2013 Charles University in Prague, Faculty of Arts,
  *                    Institute of the Czech National Corpus
- * Copyright (c) 2015 Tomas Machalek <tomas.machalek@gmail.com>
+ * Copyright (c) 2022 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,8 +18,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-export interface Props {
-    initCallback:()=>void;
-}
+export enum PageMount {
 
-export type Component = React.ComponentClass<Props>;
+    CLIENT_MESAGES = '#content .messages-mount',
+    MAIN_MENU_MOUNT = 'main-menu-mount',
+    GENERAL_OVERVIEW = 'general-overview-mount',
+    VIEW_OPTIONS = 'view-options-mount',
+    GLOBAL_STYLE = 'global-style-mount',
+    ERROR_REPORTING = 'error-reporting-mount',
+    QUERY_HISTORY = 'query-history-mount',
+    USER_PANE = 'user-pane-mount'
+}

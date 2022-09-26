@@ -22,6 +22,7 @@ export interface Props {
     invalid:boolean;
     errorDesc?:string;
     htmlClass?:string;
+    children?:React.ReactNode;
 }
 
 export type Component = React.FC<Props>;

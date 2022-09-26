@@ -39,12 +39,14 @@ import { Actions as GlobalActions } from '../models/common/actions';
 import { importInitialTTData, TTInitialData } from '../models/textTypes/common';
 import { ConcFormArgs } from '../models/query/formArgs';
 import { fetchQueryFormArgs } from '../models/query/first';
+import { Root } from 'react-dom/client';
+import { PageMount } from '../app/mounts';
 
 
 interface TTProps {
     alignedCorpora:Array<string>;
-    LiveAttrsCustomTT:React.ComponentClass|React.SFC|null;
-    LiveAttrsView:React.ComponentClass|React.SFC;
+    LiveAttrsCustomTT:React.ComponentClass|React.FC|null;
+    LiveAttrsView:React.ComponentClass|React.FC;
     manualAlignCorporaMode:boolean;
 }
 
@@ -77,13 +79,17 @@ export class SubcorpForm {
 
     private liveAttrsPlugin:PluginInterfaces.LiveAttributes.IPlugin;
 
+    private subcorpFormRoot:Root;
+
+    private queryOverviewRoot:Root;
+
     constructor(pageModel:PageModel, corpusIdent:Kontext.FullCorpusIdent) {
         this.layoutModel = pageModel;
         this.corpusIdent = corpusIdent;
     }
 
     private initSubcorpForm(ttComponent:React.ComponentClass<TextTypesPanelProps>, ttProps:TTProps):void {
-        this.layoutModel.renderReactComponent(
+        this.subcorpFormRoot = this.layoutModel.renderReactComponent(
             this.viewComponents.SubcorpForm,
             window.document.getElementById('subcorp-form-mount'),
             {
@@ -92,6 +98,8 @@ export class SubcorpForm {
             }
         );
     }
+
+    unregister():void {}
 
     private createTextTypesComponents(selectedTextTypes:TextTypes.ExportedSelection):TTInitData {
         const ttData = this.layoutModel.getConf<TTInitialData>('textTypesData');
@@ -175,7 +183,7 @@ export class SubcorpForm {
             this.layoutModel.getComponentHelpers(),
             this.layoutModel.getModels().mainMenuModel
         );
-        this.layoutModel.renderReactComponent(
+        this.queryOverviewRoot = this.layoutModel.renderReactComponent(
             queryOverviewViews.EmptyQueryOverviewBar,
             window.document.getElementById('query-overview-mount'),
         );
@@ -210,18 +218,10 @@ export class SubcorpForm {
 
             this.layoutModel.registerCorpusSwitchAwareModels(
                 () => {
-                    this.layoutModel.unmountReactComponent(
-                        window.document.getElementById('subcorp-form-mount')
-                    );
-                    this.layoutModel.unmountReactComponent(
-                        window.document.getElementById('view-options-mount')
-                    );
-                    this.layoutModel.unmountReactComponent(
-                        window.document.getElementById('general-overview-mount')
-                    );
-                    this.layoutModel.unmountReactComponent(
-                        window.document.getElementById('query-overview-mount')
-                    );
+                    this.layoutModel.unmountReactComponent(this.subcorpFormRoot);
+                    this.layoutModel.unmountReactComponent(PageMount.VIEW_OPTIONS);
+                    this.layoutModel.unmountReactComponent(PageMount.GENERAL_OVERVIEW);
+                    this.layoutModel.unmountReactComponent(this.queryOverviewRoot);
                     this.init();
                 },
                 this.corparchPlugin,

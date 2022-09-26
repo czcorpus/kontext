@@ -33,6 +33,7 @@ import { FreqIntersectionArgs, importConcQueries, newModelState, InvolvedConcFor
     storedQueryToModel } from '../models/pquery/common';
 import { AttrHelper } from '../models/cqleditor/attrs';
 import { HtmlHelpModel } from '../models/help/help';
+import { Root } from 'react-dom/client';
 
 
 
@@ -43,6 +44,8 @@ import { HtmlHelpModel } from '../models/help/help';
 class ParadigmaticQueryPage {
 
     private readonly layoutModel:PageModel;
+
+    private pqueryFormRoot:Root;
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
@@ -137,7 +140,7 @@ class ParadigmaticQueryPage {
                 helpModel
             });
             const [corparchWidget, corparchPlg]  = this.initCorplistComponent();
-            this.layoutModel.renderReactComponent(
+            this.pqueryFormRoot = this.layoutModel.renderReactComponent(
                 pqueryView.PqueryForm,
                 window.document.getElementById('pquery-form-mount'),
                 {
@@ -155,8 +158,7 @@ class ParadigmaticQueryPage {
 
             this.layoutModel.registerCorpusSwitchAwareModels(
                 () => {
-                    this.layoutModel.unmountReactComponent(
-                        window.document.getElementById('pquery-form-mount'));
+                    this.layoutModel.unmountReactComponent(this.pqueryFormRoot);
                     this.init();
                 },
                 formModel,

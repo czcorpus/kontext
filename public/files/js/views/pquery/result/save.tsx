@@ -152,7 +152,7 @@ export function init(
         toValue:Kontext.FormValue<string>;
     }
 
-    const TRSelLineRangeInputs:React.SFC<TRSelLineRangeInputsProps> = (props) => {
+    const TRSelLineRangeInputs:React.FC<TRSelLineRangeInputsProps> = (props) => {
 
         const handleFromInput = (evt) => {
             dispatcher.dispatch<typeof Actions.SaveFormSetFromLine>({

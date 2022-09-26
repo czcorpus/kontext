@@ -23,6 +23,7 @@ export interface Props {
     initialExpanded:boolean;
     label:string;
     alwaysExpanded?:boolean;
+    children?:React.ReactNode;
 }
 
 export type Component = React.FC<Props>;

@@ -21,7 +21,6 @@
 import * as Kontext from '../../types/kontext';
 import * as TextTypes from '../../types/textTypes';
 import { PageModel } from '../../app/page';
-import { TextTypesModel } from '../textTypes/main';
 import { BaseSubcorpFormState, CreateSubcorpusArgs, BaseTTSubcorpFormModel, FormType } from './common';
 import { ITranslator, IFullActionControl } from 'kombo';
 import { Dict, List } from 'cnc-tskit';
@@ -29,7 +28,7 @@ import { Actions } from './actions';
 import { Actions as GlobalActions } from '../common/actions';
 import { Actions as TTActions } from '../textTypes/actions';
 import { IUnregistrable } from '../common/common';
-import { concatMap, map } from 'rxjs';
+import { concatMap } from 'rxjs';
 
 /**
  * Validates form fields and stored possible errors there. In case of errors
@@ -217,6 +216,8 @@ export class SubcorpFormModel extends BaseTTSubcorpFormModel<SubcorpFormModelSta
             }
         );
     }
+
+    unregister():void {}
 
     getRegistrationId():string {
         return 'subcorp-form-model';

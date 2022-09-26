@@ -186,7 +186,7 @@ export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage {
         );
     }
 
-    getForm():React.SFC<{}> {
+    getForm():React.FC<{}> {
         return this.viewsLib.FilterPageComponent;
     }
 

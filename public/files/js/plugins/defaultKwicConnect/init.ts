@@ -78,7 +78,7 @@ export class DefaultKwicConnectPlugin implements PluginInterfaces.KwicConnect.IP
         return true;
     }
 
-    getWidgetView():React.ComponentClass<{}>|React.SFC<{}> {
+    getWidgetView():React.ComponentClass<{}>|React.FC<{}> {
         return this.views.KwicConnectContainer;
     }
 

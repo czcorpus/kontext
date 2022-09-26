@@ -201,7 +201,7 @@ export class CollFormModel extends StatelessModel<CollFormModelState> {
             Actions.ResultSortByColumn.name,
             Actions.PopHistory.name,
             Actions.ResultReload.name,
-            MainMenuActions.DirectSave.name,          
+            MainMenuActions.DirectSave.name,
         );
     }
 

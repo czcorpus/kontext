@@ -199,7 +199,7 @@ export interface CommonSubcorpFormArgs {
 }
 
 
-export class BaseTTSubcorpFormModel<T, U = {}> extends StatefulModel<T, U> {
+export class BaseTTSubcorpFormModel<T, U = {}> extends StatefulModel<T> {
 
     protected readonly pageModel:PageModel;
 
