@@ -46,7 +46,9 @@ export function init(he:Kontext.ComponentHelpers) {
                 <dl>
                     <dt>{he.translate('subclist__subc_status')}:</dt>
                     <dd>
-                        {props.data.archived ?
+                        {props.data.isDraft ?
+                            he.translate('subclist__draft') :
+                        props.data.archived ?
                             <>
                                 {he.translate('subclist__archived') + '\u00a0'}
                                 <layoutViews.InlineHelp customStyle={{maxWidth: '28em', fontSize: '0.8em'}}>

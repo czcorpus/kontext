@@ -98,7 +98,8 @@ async def new(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
         tt_sel = {'Normslist': [], 'Blocks': []}
         resp.add_system_message('warning', e)
 
-    out = dict(SubcorpList=(), subcorpus_name=None, subcorpus_desc=None, selected_text_types={})
+    out = dict(SubcorpList=(), subcorpus_name=None, subcorpus_desc=None,
+               selected_text_types={}, within_cond=None)
     await amodel.attach_aligned_query_params(out)
     corpus_info = await amodel.get_corpus_info(amodel.args.corpname)
     if isinstance(amodel.corp, KSubcorpus):
