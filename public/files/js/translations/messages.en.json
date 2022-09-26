@@ -598,6 +598,7 @@
         "subclist__pattern_in_description": "Found in description",
         "subclist__filter_heading": "Filter",
         "subclist__search_in_subc": "Search in the subcorpus",
+        "subclist__edit_draft": "Edit draft",
         "subclist__col_name": "Name",
         "subclist__col_size": "Size (tokens)",
         "subclist__col_created": "Created",

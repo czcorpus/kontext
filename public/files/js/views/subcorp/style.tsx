@@ -38,8 +38,8 @@ export const SubcorpForm = styled.form`
         width: 20em;
     }
 
-    .submit-buttons {
-        margin-right: 0.3em;
+    .submit-buttons button {
+        margin-right: 0.5em;
     }
 `;
 

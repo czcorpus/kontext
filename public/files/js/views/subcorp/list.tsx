@@ -143,7 +143,18 @@ export function init(
                 return <a title={title} href={href}>{item.name}</a>;
 
             } else {
-                return item.is_draft ? <i>{props.item.name}</i> : <span>{props.item.name}</span>;
+                if (item.is_draft) {
+                    const title = he.translate('subclist__edit_draft');
+                    const href = he.createActionLink(
+                        'subcorpus/new',
+                        {
+                            corpname: item.corpus_name,
+                            usesubcorp: item.id
+                        }
+                    );
+                    return <i><a title={title} href={href}>{item.name}</a></i>;
+                }
+                return <span>{props.item.name}</span>;
             }
         };
 

@@ -609,6 +609,7 @@
         "subclist__pattern_in_description": "Found in description UNTRANSLATED",
         "subclist__filter_heading": "Filter",
         "subclist__search_in_subc": "Išči v podkorpusu",
+        "subclist__edit_draft": "Edit draft UNTRANSLATED",
         "subclist__col_name": "Ime",
         "subclist__col_size": "Velikost (v pojavnicah)",
         "subclist__col_created": "Ustvarjeno",

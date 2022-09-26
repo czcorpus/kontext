@@ -598,6 +598,7 @@
         "subclist__pattern_in_description": "Nalezeno podle popisu",
         "subclist__filter_heading": "Filtr",
         "subclist__search_in_subc": "Hledat v subkorpusu",
+        "subclist__edit_draft": "Upravit návrh",
         "subclist__col_name": "Název",
         "subclist__col_size": "Velikost (pozice)",
         "subclist__col_created": "Vytvořeno",
