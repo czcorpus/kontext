@@ -610,6 +610,7 @@
         "subclist__subc_delete_confirm_msg": "Subkorpus bude vymazán a již jej nebude možné obnovit.",
         "subclist__multi_subc_delete_confirm_msg": "Zvolené subkorpusy budou vymazány a již je nebude možné obnovit.",
         "subclist__subc_reuse_confirm_msg": "Vytváří se nový subkorpus",
+        "subclist__subc_save_draft_confirm_msg": "Návrh byl uložen",
         "subclist__col_published": "Veřejně přístupný UNUSED",
         "subclist__publish_warning": "Skutečně chcete tento subkorpus zpřístupnit všem?",
         "subclist__subc_actions_{subc}": "Subkorpus {subc}",

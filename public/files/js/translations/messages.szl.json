@@ -609,6 +609,7 @@
         "subclist__subc_delete_confirm_msg": "The subcorpus is about to be deleted. It will be impossible to restore the subcorpus. UNTRANSLATED",
         "subclist__multi_subc_delete_confirm_msg": "The selected subcorpora will be deleted and it will be impossible to restore them later. UNTRANSLATED",
         "subclist__subc_reuse_confirm_msg": "Nowy podkorpus je tworzōny",
+        "subclist__subc_save_draft_confirm_msg": "Draft has been saved UNTRANSLATED",
         "subclist__col_published": "Dostympny publicznie",
         "subclist__publish_warning": "Na isto chcesz zrobić korpus dostympny dlŏ wszyjskich?",
         "subclist__subc_actions_{subc}": "Podkorpus {subc}",

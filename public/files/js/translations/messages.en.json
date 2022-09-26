@@ -610,6 +610,7 @@
         "subclist__subc_delete_confirm_msg": "The subcorpus is about to be deleted. It will be impossible to restore the subcorpus.",
         "subclist__multi_subc_delete_confirm_msg": "The selected subcorpora will be deleted and it will be impossible to restore them later.",
         "subclist__subc_reuse_confirm_msg": "A new subcorpus is being created",
+        "subclist__subc_save_draft_confirm_msg": "Draft has been saved",
         "subclist__col_published": "Publicly accessible",
         "subclist__publish_warning": "Are you sure you want to make the subcorpus accessible by anyone?",
         "subclist__subc_actions_{subc}": "Subcorpus {subc}",

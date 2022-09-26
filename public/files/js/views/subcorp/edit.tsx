@@ -111,24 +111,62 @@ export function init(
             }
         };
 
+        const handleSave = () => {
+            dispatcher.dispatch<typeof Actions.ReuseQuery>({
+                name: Actions.ReuseQuery.name,
+                payload: {
+                    selectionType: props.selectionType,
+                    newName: props.data.name,
+                    usesubcorp: props.data.usesubcorp,
+                    asDraft: true,
+                }
+            });
+        };
+
+        const handleCreate = () => {
+            dispatcher.dispatch<typeof Actions.ReuseQuery>({
+                name: Actions.ReuseQuery.name,
+                payload: {
+                    selectionType: props.selectionType,
+                    newName: props.data.name,
+                    usesubcorp: props.data.usesubcorp,
+                }
+            });
+        };
+
         return (
             <TabContentWrapper htmlClass="reuse">
-                <div className="info">
-                    <layoutViews.InlineHelp noSuperscript={true} htmlClass="help-icon">
-                        {he.translate('subclist__changes_can_be_saved_info')}
-                    </layoutViews.InlineHelp>
-                </div>
-                {isCQLSelection(props.data.selections) ?
-                    <RawCQL cql={props.data.selections} /> : null}
-                {isServerWithinSelection(props.data.selections) ?
-                    <WithinForm /> : null}
-                {isTTSelection(props.data.selections) ?
-                    <ttViews.TextTypesPanel LiveAttrsCustomTT={props.liveAttrsEnabled ? liveAttrsViews.LiveAttrsCustomTT : null} LiveAttrsView={props.liveAttrsEnabled ? liveAttrsViews.LiveAttrsView : null} /> :
-                    null}
-                <button type="button" className="default-button"
-                            onClick={handleReuse}>
-                        {he.translate('subclist__action_reuse')}
-                </button>
+                <S.ReuseTabContentWrapper>
+                    <div className="info">
+                        <layoutViews.InlineHelp noSuperscript={true} htmlClass="help-icon">
+                            {he.translate('subclist__changes_can_be_saved_info')}
+                        </layoutViews.InlineHelp>
+                    </div>
+                    {isCQLSelection(props.data.selections) ?
+                        <RawCQL cql={props.data.selections} /> : null}
+                    {isServerWithinSelection(props.data.selections) ?
+                        <WithinForm /> : null}
+                    {isTTSelection(props.data.selections) ?
+                        <ttViews.TextTypesPanel LiveAttrsCustomTT={props.liveAttrsEnabled ? liveAttrsViews.LiveAttrsCustomTT : null} LiveAttrsView={props.liveAttrsEnabled ? liveAttrsViews.LiveAttrsView : null} /> :
+                        null}
+                    {
+                        props.data.isDraft ?
+                        <p className='submit-buttons'>
+                            <button type="button" className="default-button"
+                                    onClick={handleSave}>
+                                {he.translate('subcform__save_draft')}
+                            </button>
+                            <button type="button" className="default-button"
+                                    onClick={handleCreate}>
+                                {he.translate('subcform__create_subcorpus')}
+                            </button>
+                        </p> :
+                        <button type="button" className="default-button"
+                                    onClick={handleReuse}>
+                                {he.translate('subclist__action_reuse')}
+                        </button>
+                    }
+                </S.ReuseTabContentWrapper>
             </TabContentWrapper>
         );
     }

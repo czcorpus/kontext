@@ -117,6 +117,8 @@ export class Actions {
     static ReuseQuery:Action<{
         selectionType:FormType;
         newName:string;
+        usesubcorp?:string;
+        asDraft?:boolean;
     }> = {
         name: 'SUBCORP_LIST_REUSE_QUERY'
     };
@@ -137,6 +139,16 @@ export class Actions {
     static ReuseQueryDone:Action<{
     }> = {
         name: 'SUBCORP_LIST_REUSE_QUERY_DONE'
+    };
+
+    static UpdateDraft:Action<{
+    }> = {
+        name: 'SUBCORP_LIST_UPDATE_DRAFT'
+    };
+
+    static UpdateDraftDone:Action<{
+    }> = {
+        name: 'SUBCORP_LIST_UPDATE_DRAFT_DONE'
     };
 
     static UpdateSubcName:Action<{

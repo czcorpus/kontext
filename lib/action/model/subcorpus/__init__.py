@@ -130,7 +130,7 @@ class SubcorpusActionModel(CorpusActionModel):
                 label=f'{self.args.corpname}/{specification.subcname}',
                 args=dict(
                     subcname=specification.subcname,
-                    corpname=self.args.corpname
+                    corpname=self.args.corpname,
                 )))
 
         unfinished_corpora = [at for at in self.get_async_tasks(
