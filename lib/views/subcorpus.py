@@ -124,12 +124,6 @@ async def new(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     return out
 
 
-@bp.route('/ajax_create_subcorpus', ['POST'])
-@http_action(access_level=1, return_type='json', action_model=SubcorpusActionModel)
-async def ajax_create_subcorpus(amodel: SubcorpusActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
-    return await amodel.create_subcorpus()
-
-
 @bp.route('/archive', ['POST'])
 @http_action(access_level=1, return_type='json', action_model=UserActionModel)
 async def archive(amodel: UserActionModel, req: KRequest, resp: KResponse):

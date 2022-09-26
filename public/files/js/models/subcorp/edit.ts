@@ -402,7 +402,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
     ):Observable<CreateSubcorpus> {
         return this.layoutModel.ajax$<CreateSubcorpus>(
             HTTP.Method.POST,
-            this.layoutModel.createActionUrl('subcorpus/ajax_create_subcorpus'),
+            this.layoutModel.createActionUrl('subcorpus/create'),
             args,
             {
                 contentType: 'application/json'
