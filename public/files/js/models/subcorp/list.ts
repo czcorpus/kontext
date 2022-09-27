@@ -243,7 +243,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             action => {
                 if (action.payload.filter.corpname !== this.state.filter.corpname) {
                     this.layoutModel.getHistory().replaceState(
-                        'subcorpora/list',
+                        'subcorpus/list',
                         action.payload.filter.corpname ? {corpname: action.payload.filter.corpname} : {}
                     )
                 }
