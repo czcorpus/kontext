@@ -272,6 +272,16 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         );
 
         this.addActionHandler(
+            Actions.LoadSubcorpusDone,
+            action => this.changeState(state => {
+                if (action.error) {
+                    state.editWindowSubcorpus = null;
+                    this.layoutModel.showMessage('error', action.error);
+                }
+            })
+        );
+
+        this.addActionHandler(
             [
                 Actions.WipeSubcorpusDone,
                 Actions.RestoreSubcorpusDone,

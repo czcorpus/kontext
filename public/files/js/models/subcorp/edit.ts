@@ -88,11 +88,6 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                     state.liveAttrsEnabled = action.payload.liveAttrsEnabled;
                     state.prevRawDescription = state.data.descriptionRaw;
                 }
-            },
-            (state, action, dispatch) => {
-                if (action.error) {
-                    this.layoutModel.showMessage('error', action.error);
-                }
             }
         );
 

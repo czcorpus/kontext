@@ -66,7 +66,7 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
         super(
             dispatcher,
             {
-                lines: initialLines ? 
+                lines: initialLines ?
                     List.map((item, rowIdx) => ({
                         rowIdx,
                         negated: item.negated,
@@ -203,11 +203,6 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
                         }),
                         action.payload?.data.selections
                     )
-                }
-            },
-            (state, action, dispatch) => {
-                if (action.error) {
-                    this.pageModel.showMessage('error', action.error);
                 }
             }
         )
