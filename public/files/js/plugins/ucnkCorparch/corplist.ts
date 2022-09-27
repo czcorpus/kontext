@@ -105,7 +105,7 @@ export class CorpusAccessRequestModel extends StatelessModel<{isBusy:boolean;}> 
     ):Observable<Kontext.AjaxResponse> {
         return this.pluginApi.ajax$<Kontext.AjaxResponse>(
             HTTP.Method.POST,
-            this.pluginApi.createActionUrl('ask_corpus_access'),
+            this.pluginApi.createActionUrl('user/ask_corpus_access'),
             {
                 corpusId,
                 corpusName,

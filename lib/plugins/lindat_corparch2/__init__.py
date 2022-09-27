@@ -130,8 +130,8 @@ import l10n
 import plugins
 from action.plugin.ctx import PluginCtx
 from lxml import etree
-from plugin_types.corparch import (AbstractSearchableCorporaArchive,
-                                   CorplistProvider)
+from plugin_types.corparch import (
+    AbstractSearchableCorporaArchive, CorplistProvider)
 from plugin_types.corparch.corpus import BrokenCorpusInfo, CorpusInfo
 from plugins import inject
 from settings import import_bool
@@ -361,7 +361,7 @@ class DefaultCorplistProvider(CorplistProvider):
         return ans
 
 
-@bp.route('/get_favorite_corpora')
+@bp.route('/user/get_favorite_corpora')
 @http_action(return_type='json', access_level=1, action_model=UserActionModel)
 async def get_favorite_corpora(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.CORPARCH as ca, plugins.runtime.USER_ITEMS as ui:
