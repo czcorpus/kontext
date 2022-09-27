@@ -27,6 +27,9 @@ To see the format of the "corplist.xml" file please
 see default_corparch/resources/corplist.rng.
 
 """
+from dataclasses import asdict, dataclass
+from typing import Any, Dict
+from dataclasses_json import dataclass_json
 try:
     from markdown import markdown
 except ImportError:
@@ -54,24 +57,26 @@ from translation import ugettext as _
 DEFAULT_LANG = 'en'
 
 
+@dataclass_json
+@dataclass
 class UcnkCorpusListItem(CorpusListItem):
     """
     A modified CorpusListInfo containing 'requestable' flag
     """
+    size_info: str = None
+    requestable: bool = False
 
-    def __init__(self):
-        super(CorpusListItem, self).__init__()
-        self.requestable = False
+    def __post_init__(self):
+        pass
 
 
+@dataclass_json
+@dataclass
 class UcnkCorpusInfo(CorpusInfo):
     """
     A modified CorpusInfo containing 'requestable' flag
     """
-
-    def __init__(self):
-        super(UcnkCorpusInfo, self).__init__()
-        self.requestable = False
+    requestable: bool = False
 
 
 @exposed(return_type='json', access_level=1, skip_corpus_init=True)
@@ -116,9 +121,11 @@ class UcnkCorpArch3(MySQLCorparch):
         self.access_req_recipients = access_req_recipients
         self.default_label = default_label
 
-    def corpus_list_item_from_row(self, plugin_ctx, row):
-        obj = super(UcnkCorpArch3, self).corpus_list_item_from_row(plugin_ctx, row)
-        obj.requestable = row['requestable']
+    def corpus_list_item_from_row(self, plugin_ctx, row: Dict[str, Any]) -> UcnkCorpusListItem:
+        obj = UcnkCorpusListItem(
+            requestable=row['requestable'],
+            **asdict(super(UcnkCorpArch3, self).corpus_list_item_from_row(plugin_ctx, row)),
+        )
         return obj
 
     def list_corpora(self, plugin_ctx, substrs=None, keywords=None, min_size=0, max_size=None, requestable=False,
