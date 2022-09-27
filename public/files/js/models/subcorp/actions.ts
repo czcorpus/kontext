@@ -44,7 +44,11 @@ export class Actions {
     };
 
     static ArchiveSubcorpusDone:Action<{
-        archived:Array<{corpname:string; subcname:string; archived:number}>;
+        archived:Array<{
+            corpname:string;
+            subcname:string;
+            archived:number
+        }>;
     }> = {
         name: 'SUBCORP_LIST_ARCHIVE_SUBCORPUS_DONE'
     };
