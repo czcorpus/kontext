@@ -163,7 +163,7 @@ export class AudioPlayer {
                 }
             );
         }
-        
+
         this.waveformSources = List.shift(this.waveformSources);
         this.itemsToPlay = List.shift(this.itemsToPlay);
         sound.play();

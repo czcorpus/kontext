@@ -321,6 +321,28 @@ export const QuickSubcLABEL = styled.label`
     }
 `
 
+// ----------------- <QuickSubcForm /> ----------------------------------------
+
+export const QuickSubcForm = styled.form`
+    display: flex;
+    flex-direction: column;
+
+    > * {
+        margin-top: 0.3em;
+        margin-bottom: 0.3em;
+    }
+
+    label {
+        display: flex;
+        align-items: center;
+    }
+
+    .submit-section {
+        margin-top: 0.9em;
+    }
+
+`;
+
 // ---------------- <RestoreTabContentWrapper /> --------------------------------
 
 export const RestoreTabContentWrapper = styled.div`

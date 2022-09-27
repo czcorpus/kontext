@@ -138,11 +138,14 @@ export function init(
         return (
             <TabContentWrapper htmlClass="reuse">
                 <S.ReuseTabContentWrapper>
-                    <div className="info">
-                        <layoutViews.InlineHelp noSuperscript={true} htmlClass="help-icon">
-                            {he.translate('subclist__changes_can_be_saved_info')}
-                        </layoutViews.InlineHelp>
-                    </div>
+                    {props.data.isDraft ?
+                        null :
+                        <div className="info">
+                            <layoutViews.InlineHelp noSuperscript={true} htmlClass="help-icon">
+                                {he.translate('subclist__changes_can_be_saved_info')}
+                            </layoutViews.InlineHelp>
+                        </div>
+                    }
                     {isCQLSelection(props.data.selections) ?
                         <RawCQL cql={props.data.selections} /> : null}
                     {isServerWithinSelection(props.data.selections) ?

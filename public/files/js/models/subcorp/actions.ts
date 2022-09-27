@@ -312,30 +312,41 @@ export class Actions {
         name: 'QUICK_SUBCORP_SUBMIT'
     };
 
+    static QuickSubcorpSubmitDone:Action<{
+    }> = {
+        name: 'QUICK_SUBCORP_SUBMIT_DONE'
+    };
+
     static QuickSubcorpChangeName:Action<{
         value:string;
     }> = {
         name: 'QUICK_SUBCORP_CHANGE_NAME'
     };
 
+    static QuickSubcorpSetGoToSubcPageWhenDone:Action<{
+        value:boolean;
+    }> = {
+        name: 'QUICK_SUBCORP_SET_GO_TO_SUBC_PAGE_WHEN_DONE'
+    };
+
     static ToggleSelectLine:Action<{
         selectId:string;
     }> = {
         name: 'SUBCORP_LIST_TOGGLE_SELECT_LINE'
-    }
+    };
 
     static ArchiveSelectedLines:Action<{
     }> = {
         name: 'SUBCORP_LIST_ARCHIVE_SELECTED_LINES'
-    }
+    };
 
     static DeleteSelectedLines:Action<{
     }> = {
         name: 'SUBCORP_LIST_DELETE_SELECTED_LINES'
-    }
+    };
 
     static ClearSelectedLines:Action<{
     }> = {
         name: 'SUBCORP_LIST_CLEAR_SELECTED_LINES'
-    }
+    };
 }

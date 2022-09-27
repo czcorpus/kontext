@@ -35,6 +35,7 @@ import { Actions } from './actions';
 import { Actions as GenOptsActions } from '../options/actions';
 import { Actions as TTActions } from '../../models/textTypes/actions';
 import { Actions as GlobalActions } from '../common/actions';
+import { Actions as QuickSubcorpActions } from '../subcorp/actions';
 import { IUnregistrable } from '../common/common';
 import * as PluginInterfaces from '../../types/plugins';
 import { ConcQueryResponse, ConcServerArgs } from '../concordance/common';
@@ -678,6 +679,15 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             action => {
                 this.changeState(state => {
                     state.subcorpList.push(action.payload);
+                    state.quickSubcorpVisible = false;
+                });
+            }
+        );
+
+        this.addActionHandler(
+            QuickSubcorpActions.QuickSubcorpSubmitDone,
+            action => {
+                this.changeState(state => {
                     state.quickSubcorpVisible = false;
                 });
             }

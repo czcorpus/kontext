@@ -257,7 +257,7 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
         };
 
         return (
-            <>
+            <div>
                 <S.LiveAttributesControlsUL className="controls">
                     <li>
                         <RefineButton enabled={props.controlsEnabled} clickHandler={handleRefine} />
@@ -275,7 +275,7 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
                     : null}
                 </S.LiveAttributesControlsUL>
                 <SelectionSteps items={props.selectionSteps} isLoading={props.isBusy} />
-            </>
+            </div>
         );
     }
 

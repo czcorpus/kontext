@@ -28,6 +28,35 @@ export function init(he:Kontext.ComponentHelpers) {
 
     const layoutViews = he.getLayoutViews();
 
+
+    // --------------------- <StatusDisplay /> -------------------------------------
+
+    const StatusDisplay:React.FC<{
+        isDraft:boolean;
+        isArchived:boolean;
+
+    }> = ({isDraft, isArchived}) => {
+
+
+
+        if (isDraft) {
+            return isArchived ?
+                <span>{he.translate('subclist__draft')} ({he.translate('subclist__archived')})</span> :
+                <span>{he.translate('subclist__draft')}</span>;
+
+        } else if (isArchived) {
+            return <>
+                {he.translate('subclist__archived') + '\u00a0'}
+                <layoutViews.InlineHelp customStyle={{maxWidth: '28em', fontSize: '0.8em'}}>
+                    {he.translate('subclist__archived_status_help')}
+                </layoutViews.InlineHelp>
+            </>;
+
+        } else {
+            return <span>{he.translate('subclist__active')}</span>;
+        }
+    }
+
     // --------------------- <SubcorpusInfo /> -------------------------------------
 
     const SubcorpusInfo:React.FC<{
@@ -46,17 +75,7 @@ export function init(he:Kontext.ComponentHelpers) {
                 <dl>
                     <dt>{he.translate('subclist__subc_status')}:</dt>
                     <dd>
-                        {props.data.isDraft ?
-                            he.translate('subclist__draft') :
-                        props.data.archived ?
-                            <>
-                                {he.translate('subclist__archived') + '\u00a0'}
-                                <layoutViews.InlineHelp customStyle={{maxWidth: '28em', fontSize: '0.8em'}}>
-                                    {he.translate('subclist__archived_status_help')}
-                                </layoutViews.InlineHelp>
-                            </> :
-                            he.translate('subclist__active')
-                        }
+                        <StatusDisplay isArchived={!!props.data.archived} isDraft={props.data.isDraft} />
                     </dd>
                     <dt>{he.translate('global__size_in_tokens')}:</dt>
                     <dd>{he.formatNumber(props.data.size)}</dd>
