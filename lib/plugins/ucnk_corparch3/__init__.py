@@ -32,7 +32,9 @@ import os
 import smtplib
 import time
 from collections import defaultdict
+from dataclasses import asdict, dataclass
 from email.mime.text import MIMEText
+from typing import Any, Dict
 
 import plugins
 from action.control import http_action
@@ -40,6 +42,7 @@ from action.errors import ForbiddenException
 from action.krequest import KRequest
 from action.model.user import UserActionModel
 from action.response import KResponse
+from dataclasses_json import dataclass_json
 from plugin_types.auth import AbstractAuth
 from plugin_types.corparch import CorpusInfo, CorpusListItem
 from plugin_types.integration_db import IntegrationDatabase
@@ -56,24 +59,26 @@ bp = Blueprint('ucnk_corparch3')
 DEFAULT_LANG = 'en'
 
 
+@dataclass_json
+@dataclass
 class UcnkCorpusListItem(CorpusListItem):
     """
     A modified CorpusListInfo containing 'requestable' flag
     """
+    size_info: str = None
+    requestable: bool = False
 
-    def __init__(self):
-        super(CorpusListItem, self).__init__()
-        self.requestable = False
+    def __post_init__(self):
+        pass
 
 
+@dataclass_json
+@dataclass
 class UcnkCorpusInfo(CorpusInfo):
     """
     A modified CorpusInfo containing 'requestable' flag
     """
-
-    def __init__(self):
-        super(UcnkCorpusInfo, self).__init__()
-        self.requestable = False
+    requestable: bool = False
 
 
 @bp.route('/get_favorite_corpora')
@@ -120,17 +125,19 @@ class UcnkCorpArch3(MySQLCorparch):
         self.access_req_recipients = access_req_recipients
         self.default_label = default_label
 
-    def corpus_list_item_from_row(self, plugin_ctx, row):
-        obj = super(UcnkCorpArch3, self).corpus_list_item_from_row(plugin_ctx, row)
-        obj.requestable = row['requestable']
+    def corpus_list_item_from_row(self, plugin_ctx, row: Dict[str, Any]) -> UcnkCorpusListItem:
+        obj = UcnkCorpusListItem(
+            requestable=row['requestable'],
+            **asdict(super(UcnkCorpArch3, self).corpus_list_item_from_row(plugin_ctx, row)),
+        )
         return obj
 
-    def list_corpora(self, plugin_ctx, substrs=None, keywords=None, min_size=0, max_size=None, requestable=False,
-                     offset=0, limit=-1, favourites=()):
-        return super(UcnkCorpArch3, self).list_corpora(plugin_ctx=plugin_ctx, substrs=substrs, keywords=keywords,
-                                                       min_size=min_size, max_size=max_size, requestable=requestable,
-                                                       offset=offset, limit=limit if limit > -1 else 1000000000,
-                                                       favourites=favourites)
+    async def list_corpora(self, plugin_ctx, substrs=None, keywords=None, min_size=0, max_size=None, requestable=False,
+                           offset=0, limit=-1, favourites=()):
+        return await super(UcnkCorpArch3, self).list_corpora(plugin_ctx=plugin_ctx, substrs=substrs, keywords=keywords,
+                                                             min_size=min_size, max_size=max_size, requestable=requestable,
+                                                             offset=offset, limit=limit if limit > -1 else 1000000000,
+                                                             favourites=favourites)
 
     async def export(self, plugin_ctx):
         ans = await super(UcnkCorpArch3, self).export(plugin_ctx)

@@ -30,19 +30,18 @@ from action.model.user import UserActionModel
 from action.plugin.ctx import AbstractCorpusPluginCtx, PluginCtx
 from action.response import KResponse
 from aiomysql.cursors import Cursor
-from plugin_types.corparch import (AbstractSearchableCorporaArchive,
-                                   CorpusListItem)
+from plugin_types.corparch import (
+    AbstractSearchableCorporaArchive, CorpusListItem)
 from plugin_types.corparch.backend import DatabaseBackend
-from plugin_types.corparch.corpus import (BrokenCorpusInfo, CorpusInfo,
-                                          KwicConnect, MLPositionFilter,
-                                          QuerySuggest, StructAttrInfo,
-                                          TokenConnect)
+from plugin_types.corparch.corpus import (
+    BrokenCorpusInfo, CorpusInfo, KwicConnect, MLPositionFilter, QuerySuggest,
+    StructAttrInfo, TokenConnect)
 from plugin_types.user_items import AbstractUserItems
 from plugins import inject
 from plugins.common.mysql import MySQLConf, MySQLOps
 from plugins.mysql_corparch.backend import Backend
-from plugins.mysql_corparch.corplist import (DefaultCorplistProvider,
-                                             parse_query)
+from plugins.mysql_corparch.corplist import (
+    DefaultCorplistProvider, parse_query)
 from plugins.mysql_integration_db import MySqlIntegrationDb
 from sanic.blueprints import Blueprint
 
@@ -186,7 +185,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
                 ans.append(tmp)
         return ans
 
-    def corpus_list_item_from_row(self, plugin_ctx, row):
+    def corpus_list_item_from_row(self, plugin_ctx, row: Dict[str, Any]) -> CorpusListItem:
         desc = row['description_cs'] if plugin_ctx.user_lang == 'cs_CZ' else row['description_en']
         keywords = [x for x in (row['keywords'].split(',') if row['keywords'] else []) if x]
         return CorpusListItem(id=row['id'],
