@@ -19,7 +19,7 @@
  */
 
 import { PageModel } from '../../app/page';
-import { CreateSubcorpusArgs, BaseTTSubcorpFormModel, CreateSubcorpusDraft } from './common';
+import { CreateSubcorpusArgs, BaseTTSubcorpFormModel } from './common';
 import { IFullActionControl } from 'kombo';
 import { Actions } from './actions';
 import { Actions as QueryActions } from '../query/actions';
@@ -27,14 +27,14 @@ import { Actions as TTActions } from '../textTypes/actions';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions } from '../common/actions';
 import { Actions as LiveattrsActions } from '../../types/plugins/liveAttributes';
-import { concatMap, Observable, throwError } from 'rxjs';
-import { HTTP } from 'cnc-tskit';
+import { concatMap, throwError } from 'rxjs';
 
 
 export interface QuickSubcorpModelState {
     subcname: string;
     estimatedSubcSize:number|undefined;
     liveAttrsEnabled:boolean;
+    goToSubcPageWhenDone:boolean;
     isBusy:boolean;
 }
 
@@ -51,6 +51,7 @@ export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelS
             {
                 subcname: '',
                 estimatedSubcSize: undefined,
+                goToSubcPageWhenDone: false,
                 isBusy: false,
                 liveAttrsEnabled
             },
@@ -124,7 +125,7 @@ export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelS
                     }
                 );
 
-                this.suspendWithTimeout(
+                this.waitForActionWithTimeout(
                     2000,
                     {},
                     (action, syncData) => {
@@ -157,20 +158,52 @@ export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelS
                 ).subscribe({
                     next: (resp) => {
                         this.pageModel.showMessage('info', this.pageModel.translate('subc__quick_subcorpus_created'));
-                        window.location.href = this.pageModel.createActionUrl('subcorpus/new', {corpname: resp.subc_id.corpus_name, usesubcorp: resp.subc_id.id})
+                        if (this.state.goToSubcPageWhenDone) {
+                            window.location.href = this.pageModel.createActionUrl(
+                                'subcorpus/new', {corpname: resp.subc_id.corpus_name, usesubcorp: resp.subc_id.id})
+
+                        } else {
+                            this.dispatchSideEffect(
+                                Actions.QuickSubcorpSubmitDone
+                            );
+                        }
                     },
                     error: error => {
                         this.pageModel.showMessage('error', error);
+                        this.dispatchSideEffect(
+                            Actions.QuickSubcorpSubmitDone,
+                            error
+                        );
                     }
                 });
             }
         );
 
         this.addActionHandler(
+            Actions.QuickSubcorpSubmitDone,
+            action => {
+                this.changeState(
+                    state => {
+                        state.isBusy = false;
+                    }
+                );
+            }
+        )
+
+        this.addActionHandler(
             Actions.QuickSubcorpChangeName,
             action => {
                 this.changeState(state => {
                     state.subcname = action.payload.value;
+                });
+            }
+        );
+
+        this.addActionHandler(
+            Actions.QuickSubcorpSetGoToSubcPageWhenDone,
+            action => {
+                this.changeState(state => {
+                    state.goToSubcPageWhenDone = action.payload.value;
                 });
             }
         );

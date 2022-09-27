@@ -49,7 +49,7 @@ export function init({ dispatcher, he, quickSubcorpModel }: QuickSubcorpWidgetAr
     // ------------------------------------------- <QuickSubcorpWidget /> ----------------------------
 
     const QuickSubcorpWidget: React.FC<QuickSubcorpWidgetProps & QuickSubcorpModelState> = (props) => {
-        
+
         const inputRef = React.createRef<HTMLInputElement>();
         React.useLayoutEffect(
             () => inputRef.current.focus(),
@@ -64,6 +64,13 @@ export function init({ dispatcher, he, quickSubcorpModel }: QuickSubcorpWidgetAr
                 }
             });
         };
+
+        const changeGotoSubcorp = (e:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch(
+                Actions.QuickSubcorpSetGoToSubcPageWhenDone,
+                {value: e.currentTarget.checked}
+            )
+        }
 
         const submitAction = () => {
             if (props.subcname) {
@@ -84,22 +91,30 @@ export function init({ dispatcher, he, quickSubcorpModel }: QuickSubcorpWidgetAr
             <layoutViews.ModalOverlay onCloseKey={props.onClose}>
                 <layoutViews.CloseableFrame onCloseClick={props.onClose}
                         label={he.translate('subc__quick_subcorpus_form_hd')} scrollable={true}>
-                    {props.estimatedSubcSize ?
-                        <p>{he.translate('global__size_in_tokens')}: <strong>{he.formatNumber(props.estimatedSubcSize)}</strong></p> :
-                        null}
-                    <S.QuickSubcLABEL>
-                        {he.translate('subc__quick_subcorpus_name')}:
-                        <input name="subcorpName" style={{ marginRight: '1em' }}
-                            onChange={changeName} value={props.subcname}
-                            onKeyPress={keyPressHandler}
-                            ref={inputRef} />
-                    </S.QuickSubcLABEL>
-                    {props.isBusy ?
-                        <layoutViews.AjaxLoaderBarImage /> :
-                        <button type="button" className={"util-button" + (props.subcname ? "" : " disabled")} onClick={submitAction}>
-                            {he.translate('subc__quick_subcorpus_create')}
-                        </button>
-                    }
+                    <S.QuickSubcForm>
+                        {props.estimatedSubcSize ?
+                            <p>{he.translate('global__size_in_tokens')}: <strong>{he.formatNumber(props.estimatedSubcSize)}</strong></p> :
+                            null}
+                        <S.QuickSubcLABEL>
+                            {he.translate('subc__quick_subcorpus_name')}:
+                            <input name="subcorpName" style={{ marginRight: '1em' }}
+                                onChange={changeName} value={props.subcname}
+                                onKeyPress={keyPressHandler}
+                                ref={inputRef} />
+                        </S.QuickSubcLABEL>
+                        <label>
+                            {he.translate('subc__quick_subc_what_to_do_when_saved')}
+                            <input type="checkbox" checked={props.goToSubcPageWhenDone} onChange={changeGotoSubcorp} />
+                        </label>
+                        <div className="submit-section">
+                            {props.isBusy ?
+                                <layoutViews.AjaxLoaderBarImage /> :
+                                <button type="button" className={"util-button" + (props.subcname ? "" : " disabled")} onClick={submitAction}>
+                                    {he.translate('subc__quick_subcorpus_create')}
+                                </button>
+                            }
+                        </div>
+                    </S.QuickSubcForm>
                 </layoutViews.CloseableFrame>
             </layoutViews.ModalOverlay>
         );
