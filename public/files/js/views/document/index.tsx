@@ -867,7 +867,7 @@ export function init(
                         {parseInt(props.currentPage) > 1 ?
                             (<a onClick={(e) => props.handlePageChange(`${parseInt(props.currentPage)-1}`)}>
                                 <img className="over-img" src={he.createStaticUrl('img/prev-page.svg')}
-                                        alt="další" title="další" />
+                                        alt={he.translate('global__prev_page_btn')} />
                             </a>) : null}
                     </div>
                     <span className="curr-page">{renderPageNum()}</span>
@@ -876,7 +876,7 @@ export function init(
                         {parseInt(props.currentPage) < props.totalPages ?
                             (<a onClick={(e) => props.handlePageChange(`${parseInt(props.currentPage)+1}`)}>
                                 <img className="over-img" src={he.createStaticUrl('img/next-page.svg')}
-                                        alt="další" title="další" />
+                                        alt={he.translate('global__next_page_btn')} />
                             </a>) : null}
                     </div>
                 </div>

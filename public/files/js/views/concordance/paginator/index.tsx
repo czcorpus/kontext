@@ -133,7 +133,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }> = (props) => {
 
         return <NavigButton image="img/first-page.svg"
-                    action="firstPage" label={he.translate('concview__first_page_btn')}
+                    action="firstPage" label={he.translate('global__first_page_btn')}
                     clickHandler={props.clickHandler} />;
     };
 
@@ -145,7 +145,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }> = (props) => {
 
         return <NavigButton image="img/prev-page.svg"
-                    action="prevPage" label={he.translate('concview__prev_page_btn')}
+                    action="prevPage" label={he.translate('global__prev_page_btn')}
                     clickHandler={props.clickHandler} />;
     };
 
@@ -157,7 +157,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }> = (props) => {
 
         return <NavigButton image="img/next-page.svg"
-                    action="nextPage" label={he.translate('concview__next_page_btn')}
+                    action="nextPage" label={he.translate('global__next_page_btn')}
                     clickHandler={props.clickHandler} />;
     };
 
@@ -169,7 +169,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }> = (props) => {
 
         return <NavigButton image="img/last-page.svg"
-                    action="lastPage" label={he.translate('concview__last_page_btn')}
+                    action="lastPage" label={he.translate('global__last_page_btn')}
                     clickHandler={props.clickHandler} />;
     };
 
