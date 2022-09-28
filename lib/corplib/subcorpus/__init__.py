@@ -136,7 +136,7 @@ class KSubcorpus(KCorpus):
         """
         full_data_path = os.path.join(subcorp_root_dir, data_record.data_path)
         if not await aiofiles.os.path.isfile(full_data_path):
-            if not data_record.is_draft:
+            if (isinstance(data_record, SubcorpusRecord) and not data_record.is_draft) or isinstance(data_record, SubcorpusIdent):
                 raise CorpusInstantiationError(f'Subcorpus data not found for "{data_record.id}"')
             subc = corp
         else:

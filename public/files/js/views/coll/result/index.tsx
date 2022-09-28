@@ -260,7 +260,7 @@ export function init(
             <div className="ktx-pagination-right">
                 <a onClick={handleClick}>
                     <img src={utils.createStaticUrl('img/next-page.svg')}
-                            alt={utils.translate('concview__next_page_btn')} />
+                            alt={utils.translate('global__next_page_btn')} />
                 </a>
             </div>
         );

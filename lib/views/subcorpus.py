@@ -34,6 +34,7 @@ from action.model.user import UserActionModel
 from action.response import KResponse
 from bgcalc.task import AsyncTaskStatus
 from corplib.abstract import SubcorpusIdent
+from corplib.errors import CorpusInstantiationError
 from corplib.subcorpus import KSubcorpus, SubcorpusRecord
 from main_menu.model import MainMenu
 from plugin_types.subc_storage import (
@@ -46,7 +47,7 @@ bp = Blueprint('subcorpus', url_prefix='subcorpus')
 @bp.route('/properties')
 @http_action(
     access_level=1, return_type='json', action_model=CorpusActionModel)
-async def properties(amodel: SubcorpusActionModel, req: KRequest, resp: KResponse):
+async def properties(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     corp_ident = amodel.corp.portable_ident
     struct_and_attrs = await amodel.get_structs_and_attrs()
     with plugins.runtime.SUBC_STORAGE as sr:
@@ -233,13 +234,13 @@ async def delete(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dic
     num_wiped = 0
     for item in req.json['items']:
         with plugins.runtime.SUBC_STORAGE as sr:
-            subc = await amodel.cf.get_corpus(SubcorpusIdent(id=item['subcname'], corpus_name=item['corpname']))
             await sr.delete_query(amodel.session_get('user', 'id'), item['corpname'], item['subcname'])
-        try:
-            os.unlink(os.path.join(settings.get('corpora', 'subcorpora_dir'),
-                                   subc.portable_ident.data_path))
-        except IOError as e:
-            logging.getLogger(__name__).warning(e)
+            try:
+                subc = await amodel.cf.get_corpus(await sr.get_info(item['subcname']))
+                os.unlink(os.path.join(settings.get('corpora', 'subcorpora_dir'),
+                                       subc.portable_ident.data_path))
+            except (CorpusInstantiationError, IOError) as e:
+                logging.getLogger(__name__).warning(e)
         num_wiped += 1
     return {'num_wiped': num_wiped}
 

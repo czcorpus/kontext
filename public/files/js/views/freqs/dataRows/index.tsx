@@ -173,7 +173,11 @@ export function init(
                 return (
                     <span title={he.translate('global__sorted')}>
                          {props.data.n}
-                        <img className="sort-flag" src={he.createStaticUrl('img/sort_desc.svg')} />
+                        <img className="sort-flag" src={
+                            props.sortColumn === 'rel' || props.sortColumn === 'freq' ?
+                            he.createStaticUrl('img/sort_desc.svg') :
+                            he.createStaticUrl('img/sort_asc.svg')
+                        } />
                     </span>
                 );
 

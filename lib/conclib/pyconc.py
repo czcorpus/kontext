@@ -29,8 +29,9 @@ from corplib.corpus import AbstractKCorpus
 from kwiclib.common import lngrp_sortcrit
 from strings import escape_attr_val
 
-from .errors import (ConcordanceException, EmptyParallelCorporaIntersection,
-                     UnknownConcordanceAction)
+from .errors import (
+    ConcordanceException, EmptyParallelCorporaIntersection,
+    UnknownConcordanceAction)
 
 
 def get_conc_labelmap(infopath):
@@ -170,7 +171,8 @@ class PyConc(manatee.Concordance):
                 self.add_aligned(options[1:])
             except RuntimeError as e:
                 logging.getLogger(__name__).warning('Failed to add aligned corpus: %s' % e)
-                raise EmptyParallelCorporaIntersection('No alignment available for the selected languages')
+                raise EmptyParallelCorporaIntersection(
+                    'No alignment available for the selected languages')
             self.switch_aligned(options[1:])
             self.corpname = options[1:]
         else:
@@ -232,7 +234,7 @@ class PyConc(manatee.Concordance):
         return ans
 
     def xfreq_dist(
-            self, crit: str, limit: int = 1, sortkey: str = 'f', ftt_include_empty: int = 0, rel_mode: int = 0,
+            self, crit: str, limit: int = 1, sortkey: str = 'freq', ftt_include_empty: int = 0, rel_mode: int = 0,
             collator_locale: str = 'en_US') -> FreqData:
         """
         Calculates data (including data for visual output) of a frequency distribution

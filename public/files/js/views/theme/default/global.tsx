@@ -389,34 +389,18 @@ export const GlobalStyle = createGlobalStyle`
         display: block;
     }
 
-    .ktx-pagination-left {
+    .ktx-pagination-left, .ktx-pagination-right {
         display: inline-block;
         padding-right: 0.3em;
     }
 
-    .ktx-pagination-left > a {
+    .ktx-pagination-left > a, .ktx-pagination-right > a {
         display: inline-block;
         vertical-align: middle;
         margin-top: -0.1em;
     }
 
-    .ktx-pagination-left > a > img {
-        display: block;
-        height: ${theme.navigIconSize};
-    }
-
-    .ktx-pagination-right {
-        display: inline-block;
-        padding-left: 0.3em;
-    }
-
-    .ktx-pagination-right > a {
-        display: inline-block;
-        vertical-align: middle;
-        margin-top: -0.1em;
-    }
-
-    .ktx-pagination-right > a > img {
+    .ktx-pagination-left > a > img, .ktx-pagination-right > a > img {
         display: block;
         height: ${theme.navigIconSize};
     }

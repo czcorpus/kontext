@@ -243,7 +243,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             action => {
                 if (action.payload.filter.corpname !== this.state.filter.corpname) {
                     this.layoutModel.getHistory().replaceState(
-                        'subcorpora/list',
+                        'subcorpus/list',
                         action.payload.filter.corpname ? {corpname: action.payload.filter.corpname} : {}
                     )
                 }
@@ -272,6 +272,16 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         );
 
         this.addActionHandler(
+            Actions.LoadSubcorpusDone,
+            action => this.changeState(state => {
+                if (action.error) {
+                    state.editWindowSubcorpus = null;
+                    this.layoutModel.showMessage('error', action.error);
+                }
+            })
+        );
+
+        this.addActionHandler(
             [
                 Actions.WipeSubcorpusDone,
                 Actions.RestoreSubcorpusDone,
@@ -288,10 +298,42 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                         state.filter.pagesize = action.payload['subcpagesize'];
                     });
 
-                } else if (action.name === Actions.WipeSubcorpusDone.name || action.name === Actions.ArchiveSubcorpusDone.name) {
+                } else if (
+                    action.name === Actions.WipeSubcorpusDone.name ||
+                    action.name === Actions.ArchiveSubcorpusDone.name ||
+                    action.name === Actions.RestoreSubcorpusDone.name
+                ) {
                     this.changeState(state => {
                         state.selectedItems = [];
                     });
+
+                    if (action.error) {
+                        this.layoutModel.showMessage('error', action.error);
+
+                    } else {
+                        if (action.name === Actions.WipeSubcorpusDone.name) {
+                            this.layoutModel.showMessage(
+                                'info',
+                                action.payload['numWiped'] > 1 ?
+                                    this.layoutModel.translate('subclist__multi_subc_deleted') :
+                                    this.layoutModel.translate('subclist__subc_deleted')
+                            );
+
+                        } else if (action.name === Actions.ArchiveSubcorpusDone.name) {
+                            this.layoutModel.showMessage(
+                                'info',
+                                List.size(action.payload['archived']) > 1 ?
+                                    this.layoutModel.translate('subclist__multi_subc_archived') :
+                                    this.layoutModel.translate('subclist__subc_archived')
+                            );
+
+                        } else {
+                            this.layoutModel.showMessage(
+                                'info',
+                                this.layoutModel.translate('subclist__subc_restored')
+                            );
+                        }
+                    }
 
                 } else if (action.name === Actions.SubmitNameAndPublicDescriptionDone.name) {
                     this.changeState(state => {

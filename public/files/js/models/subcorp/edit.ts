@@ -88,11 +88,6 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                     state.liveAttrsEnabled = action.payload.liveAttrsEnabled;
                     state.prevRawDescription = state.data.descriptionRaw;
                 }
-            },
-            (state, action, dispatch) => {
-                if (action.error) {
-                    this.layoutModel.showMessage('error', action.error);
-                }
             }
         );
 
@@ -112,19 +107,6 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                 state.isBusy = false;
                 if (!action.error && state.data) {
                     state.data.archived = action.payload.archived[0].archived;
-                }
-            },
-            (state, action, dispatch) => {
-                if (action.error) {
-                    this.layoutModel.showMessage('error', action.error);
-
-                } else {
-                    this.layoutModel.showMessage(
-                        'info',
-                        List.size(action.payload.archived) > 1 ?
-                            this.layoutModel.translate('subclist__multi_subc_archived') :
-                            this.layoutModel.translate('subclist__subc_archived')
-                    );
                 }
             }
         );
@@ -163,14 +145,6 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
             Actions.WipeSubcorpusDone,
             (state, action) => {
                 state.isBusy = false;
-            },
-            (state, action, dispatch) => {
-                this.layoutModel.showMessage(
-                    'info',
-                    action.payload.numWiped > 1 ?
-                        this.layoutModel.translate('subclist__multi_subc_deleted') :
-                        this.layoutModel.translate('subclist__subc_deleted')
-                );
             }
         );
 
@@ -510,11 +484,15 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
             }
         ).subscribe({
             next: data => {
-                dispatch(Actions.RestoreSubcorpusDone);
-                this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_restored'));
+                dispatch(
+                    Actions.RestoreSubcorpusDone
+                );
             },
             error: error => {
-                this.layoutModel.showMessage('error', error);
+                dispatch(
+                    Actions.RestoreSubcorpusDone,
+                    error,
+                );
             }
         });
     }
