@@ -39,6 +39,12 @@
             <item>freqs</item>
         </conc_dashboard_modules>
         <integration_testing_env>true</integration_testing_env>
+        <sessions>
+            <backend_host>kontext_redis_1</backend_host>
+            <backend_port>6379</backend_port>
+            <backend_db>2</backend_db>
+            <ttl>14400</ttl>
+        </sessions>
     </global>
     <calc_backend>
         <type>rq</type>
@@ -168,13 +174,6 @@
                 <item>3</item>
             </excluded_users>
         </settings_storage>
-        <sessions>
-            <module>default_sessions</module>
-            <backend_host>kontext_redis_1</backend_host>
-            <backend_port>6379</backend_port>
-            <backend_db>2</backend_db>
-            <ttl>14400</ttl>
-        </sessions>
         <subcmixer/>
         <subc_storage>
             <module>mysql_subc_storage</module>

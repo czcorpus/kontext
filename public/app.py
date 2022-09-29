@@ -166,7 +166,7 @@ async def sigusr1_handler():
 async def server_init(app, loop):
     setproctitle(f'sanic-kontext [{CONF_PATH}][worker]')
     loop.add_signal_handler(signal.SIGUSR1, lambda: asyncio.create_task(sigusr1_handler()))
-    db_conf = settings.get('plugins', 'sessions')
+    db_conf = settings.get('global', 'sessions')
     # TODO we should probably use a custom configuration for this as the "db" can be non-Redis
     app.ctx.redis = aioredis.from_url(
         f'redis://{db_conf["backend_host"]}:{db_conf["backend_port"]}',

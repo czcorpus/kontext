@@ -2,15 +2,17 @@
 #                    Institute of the Czech National Corpus
 # Copyright (c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
 
-import os
-import sys
-from pwd import getpwuid
 import argparse
-from functools import wraps
-from types import GeneratorType
-from lxml import etree
 import json
+import os
 import platform
+import sys
+from functools import wraps
+from pwd import getpwuid
+from types import GeneratorType
+
+from lxml import etree
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../lib'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../scripts'))
 import settings
@@ -267,7 +269,7 @@ def test_4(finfo):
         yield finfo.file_exists(os.path.join(mp, 'manatee.py'))
     else:
         try:
-            import corplib   # corplib imports manatee
+            import corplib  # corplib imports manatee
             yield True, None
             ver_ok = corplib.manatee_min_version(MIN_MANATEE_VERSION)
             yield ver_ok, None if ver_ok else Exception(f'The version must be at least {MIN_MANATEE_VERSION}')
@@ -391,51 +393,44 @@ def test_15(finfo):
     return _test_plugin_common('auth', conf)
 
 
-@test('[sessions] is present',
-      '... and a respective module is set and exists')
-def test_16(finfo):
-    conf = settings.get('plugins', 'sessions')
-    return _test_plugin_common('sessions', conf)
-
-
 @test('[settings_storage] is present',
       '... and a respective module is set and exists')
-def test_17(finfo):
+def test_16(finfo):
     conf = settings.get('plugins', 'settings_storage')
     return _test_plugin_common('settings_storage', conf)
 
 
 @test('[query_persistence] is present',
       '... and a respective module is set and exists')
-def test_18(finfo):
+def test_17(finfo):
     conf = settings.get('plugins', 'query_persistence')
     return _test_plugin_common('query_persistence', conf)
 
 
 @test('[conc_cache] is present',
       '... and a respective module is set and exists')
-def test_19(finfo):
+def test_18(finfo):
     conf = settings.get('plugins', 'conc_cache')
     return _test_plugin_common('conc_cache', conf)
 
 
 @test('[user_items] is present',
       '... and a respective module is set and exists')
-def test_21(finfo):
+def test_19(finfo):
     conf = settings.get('plugins', 'user_items')
     return _test_plugin_common('user_items', conf)
 
 
 @test('[menu_items] is present',
       '... and a respective module is set and exists')
-def test_22(finfo):
+def test_20(finfo):
     conf = settings.get('plugins', 'menu_items')
     return _test_plugin_common('menu_items', conf)
 
 
 @test('[menu_items] data JSON file exists (if applicable)',
       '... and is loadable')
-def test_22_b(finfo):
+def test_20_b(finfo):
     conf = settings.get('plugins', 'menu_items')
     if conf['module'] == 'default_menu_items':
         path = conf['data_path']

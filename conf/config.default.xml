@@ -38,6 +38,12 @@
         <conc_dashboard_modules>
             <item>freqs</item>
         </conc_dashboard_modules>
+        <sessions>
+            <backend_host>localhost</backend_host>
+            <backend_port>6379</backend_port>
+            <backend_db>2</backend_db>
+            <ttl>14400</ttl>
+        </sessions>
     </global>
     <calc_backend>
         <type>rq</type>
@@ -166,10 +172,6 @@
                 <item>3</item>
             </excluded_users>
         </settings_storage>
-        <sessions>
-            <module>default_sessions</module>
-            <ttl>14400</ttl>
-        </sessions>
         <subcmixer/>
         <syntax_viewer/>
         <taghelper/>

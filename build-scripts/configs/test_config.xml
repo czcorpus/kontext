@@ -43,6 +43,12 @@
         <cookie_path_prefix>/</cookie_path_prefix>
         <static_files_prefix>/files</static_files_prefix>
         <use_conc_toolbar>1</use_conc_toolbar>
+        <sessions>
+            <backend_host>localhost</backend_host>
+            <backend_port>6379</backend_port>
+            <backend_db>2</backend_db>
+            <ttl>14400</ttl>
+        </sessions>
     </global>
     <mailing>
         <smtp_server>acme.localdomain</smtp_server>
@@ -152,10 +158,6 @@
             <module>default_settings_storage</module>
             <excluded_users/>
         </settings_storage>
-        <sessions>
-            <module>default_sessions</module>
-            <ttl>14400</ttl>
-        </sessions>
         <subcmixer/>
         <syntax_viewer>
             <module>default_syntax_viewer</module>

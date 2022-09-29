@@ -173,7 +173,6 @@ class SettingsSampleTest(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(settings.contains('plugins', 'menu_items'))
         self.assertTrue(settings.contains('plugins', 'query_history'))
         self.assertTrue(settings.contains('plugins', 'settings_storage'))
-        self.assertTrue(settings.contains('plugins', 'sessions'))
         self.assertTrue(settings.contains('plugins', 'subcmixer'))
         self.assertTrue(settings.contains('plugins', 'subc_storage'))
         self.assertTrue(settings.contains('plugins', 'syntax_viewer'))

@@ -44,8 +44,8 @@ import aiohttp
 import plugins
 import ujson as json
 from action.plugin.ctx import PluginCtx
-from plugin_types.auth import (AbstractRemoteAuth, CorpusAccess, GetUserInfo,
-                               UserInfo)
+from plugin_types.auth import (
+    AbstractRemoteAuth, CorpusAccess, GetUserInfo, UserInfo)
 from plugin_types.corparch.backend import DatabaseBackend
 from plugin_types.integration_db import IntegrationDatabase
 from plugins import inject
@@ -89,16 +89,14 @@ class CentralAuth(AbstractRemoteAuth):
     A custom authentication class for the Institute of the Czech National Corpus
     """
 
-    def __init__(self, db: DatabaseBackend, sessions: Session, auth_conf: AuthConf):
+    def __init__(self, db: DatabaseBackend, auth_conf: AuthConf):
         """
         arguments:
         db -- a key-value storage plug-in
-        sessions -- a sessions plug-in
         conf -- a 'settings' module
         """
         super().__init__(auth_conf.anonymous_user_id)
         self._db = db
-        self._sessions = sessions
         self._auth_conf = auth_conf
         try:
             if self._auth_conf.unverified_ssl_cert:
@@ -233,8 +231,8 @@ class CentralAuth(AbstractRemoteAuth):
         return self._auth_conf.logout_url % (urllib.parse.quote(return_url) if return_url is not None else '')
 
 
-@inject(plugins.runtime.SESSIONS, plugins.runtime.INTEGRATION_DB)
-def create_instance(conf, sessions: Session, cnc_db: IntegrationDatabase):
+@inject(plugins.runtime.INTEGRATION_DB)
+def create_instance(conf, cnc_db: IntegrationDatabase):
     logging.getLogger(__name__).info(f'ucnk_remote_auth6 uses integration_db[{cnc_db.info}]')
     backend = Backend(
         cnc_db, user_table='user', user_group_acc_attr='corplist', corp_table='corpora', corp_id_attr='id',
@@ -243,4 +241,4 @@ def create_instance(conf, sessions: Session, cnc_db: IntegrationDatabase):
         group_pc_acc_table='corplist_parallel_corpus', group_pc_acc_pc_attr='parallel_corpus_id',
         group_pc_acc_group_attr='corplist_id', user_pc_acc_table='user_parallel_corpus',
         user_pc_acc_pc_attr='parallel_corpus_id', enable_parallel_acc=True)
-    return CentralAuth(db=backend, sessions=sessions, auth_conf=AuthConf.from_conf(conf))
+    return CentralAuth(db=backend, auth_conf=AuthConf.from_conf(conf))

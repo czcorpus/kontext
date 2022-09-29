@@ -30,11 +30,11 @@ from typing import List
 import mailing
 import plugins
 from action.plugin.ctx import PluginCtx
-from plugin_types.auth import (AbstractInternalAuth, AuthException,
-                               CorpusAccess, GetUserInfo,
-                               SignUpNeedsUpdateException)
-from plugin_types.auth.hash import (mk_pwd_hash, mk_pwd_hash_default,
-                                    split_pwd_hash)
+from plugin_types.auth import (
+    AbstractInternalAuth, AuthException, CorpusAccess, GetUserInfo,
+    SignUpNeedsUpdateException)
+from plugin_types.auth.hash import (
+    mk_pwd_hash, mk_pwd_hash_default, split_pwd_hash)
 from plugin_types.general_storage import KeyValueStorage
 from plugins import inject
 
@@ -70,14 +70,13 @@ class DefaultAuthHandler(AbstractInternalAuth):
 
     USER_INDEX_KEY = 'user_index'
 
-    def __init__(self, db: KeyValueStorage, sessions, anonymous_user_id: int, case_sensitive_corpora_names: bool,
+    def __init__(self, db: KeyValueStorage, anonymous_user_id: int, case_sensitive_corpora_names: bool,
                  login_url, logout_url, smtp_server, mail_sender,
                  confirmation_token_ttl, on_register_get_corpora):
         """
         """
         super().__init__(anonymous_user_id)
         self.db = db
-        self.sessions = sessions
         self._login_url = login_url
         self._logout_url = logout_url
         self._smtp_server = smtp_server
@@ -118,7 +117,6 @@ class DefaultAuthHandler(AbstractInternalAuth):
         arguments:
         session -- Werkzeug session instance
         """
-        self.sessions.delete(session)
         session.clear()
 
     async def update_user_password(self, plugin_ctx, user_id, password):
@@ -333,15 +331,14 @@ class DefaultAuthHandler(AbstractInternalAuth):
         return None
 
 
-@inject(plugins.runtime.DB, plugins.runtime.SESSIONS)
-def create_instance(conf, db, sessions):
+@inject(plugins.runtime.DB)
+def create_instance(conf, db):
     """
     This function must be always implemented. KonText uses it to create an instance of your
     authentication object. The settings module is passed as a parameter.
     """
     plugin_conf = conf.get('plugins', 'auth')
     return DefaultAuthHandler(db=db,
-                              sessions=sessions,
                               anonymous_user_id=int(plugin_conf['anonymous_user_id']),
                               case_sensitive_corpora_names=plugin_conf.get(
                                   'case_sensitive_corpora_names', False),

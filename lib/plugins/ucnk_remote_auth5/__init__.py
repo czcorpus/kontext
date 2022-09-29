@@ -36,8 +36,8 @@ import urllib.request
 import plugins
 import ujson as json
 from action.plugin.ctx import PluginCtx
-from plugin_types.auth import (AbstractRemoteAuth, CorpusAccess, GetUserInfo,
-                               UserInfo)
+from plugin_types.auth import (
+    AbstractRemoteAuth, CorpusAccess, GetUserInfo, UserInfo)
 from plugin_types.corparch.backend import DatabaseBackend
 from plugin_types.integration_db import IntegrationDatabase
 from plugins import inject
@@ -74,16 +74,14 @@ class CentralAuth(AbstractRemoteAuth):
     A custom authentication class for the Institute of the Czech National Corpus
     """
 
-    def __init__(self, db: DatabaseBackend, sessions: Session, conf: AuthConf, toolbar_conf: ToolbarConf):
+    def __init__(self, db: DatabaseBackend, conf: AuthConf, toolbar_conf: ToolbarConf):
         """
         arguments:
         db -- a key-value storage plug-in
-        sessions -- a sessions plug-in
         conf -- a 'settings' module
         """
         super(CentralAuth, self).__init__(conf.anonymous_user_id)
         self._db = db
-        self._sessions = sessions
         self._toolbar_conf = toolbar_conf
         self._conf = conf
         try:
@@ -229,12 +227,12 @@ class CentralAuth(AbstractRemoteAuth):
         return self._conf.logout_url % (urllib.parse.quote(return_url) if return_url is not None else '')
 
 
-@inject(plugins.runtime.SESSIONS, plugins.runtime.INTEGRATION_DB)
-def create_instance(conf, sessions: Session, cnc_db: IntegrationDatabase):
+@inject(plugins.runtime.INTEGRATION_DB)
+def create_instance(conf, cnc_db: IntegrationDatabase):
     logging.getLogger(__name__).info(f'ucnk_remote_auth5 uses integration_db[{cnc_db.info}]')
     backend = Backend(
         cnc_db, user_table='user', corp_table='corpora', corp_id_attr='id',
         group_acc_table='relation', group_acc_group_attr='corplist', group_acc_corp_attr='corpora',
         user_acc_table='user_corpus_relation', user_acc_corp_attr='corpus_id')
-    return CentralAuth(db=backend, sessions=sessions, conf=AuthConf(conf),
+    return CentralAuth(db=backend, conf=AuthConf(conf),
                        toolbar_conf=ToolbarConf(conf))

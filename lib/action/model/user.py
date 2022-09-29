@@ -282,10 +282,7 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
 
     async def init_session(self) -> None:
         """
-        Starts/reloads user's web session data. It can be called even
-        if there is no 'sessions' plugin installed (in such case, it just
-        creates an empty dictionary with some predefined keys to allow other
-        parts of the application to operate properly)
+        Starts/reloads user's web session data.
         """
         with plugins.runtime.AUTH as auth:
 

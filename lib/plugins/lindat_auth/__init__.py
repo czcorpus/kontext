@@ -79,7 +79,7 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
     async def get_user_info(self, plugin_ctx):
         raise NotImplementedError()
 
-    def __init__(self, corplist, db: KeyValueStorage, sessions: Session, conf, failover):
+    def __init__(self, corplist, db: KeyValueStorage, conf, failover):
         """
 
         Arguments:
@@ -93,7 +93,6 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
         anonymous_id = int(conf['anonymous_user_id'])
         super(FederatedAuthWithFailover, self).__init__(anonymous_id=anonymous_id)
         self._db = db
-        self._sessions = sessions
         self._corplist = corplist
         self._failover_auth = failover
         self._logout_url = conf['logout_url']
@@ -129,7 +128,6 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
         return self._login_url
 
     def logout(self, session):
-        self._sessions.delete(session)
         session.clear()
 
     async def corpus_access(self, user_dict, corpus_name) -> CorpusAccess:
@@ -333,8 +331,8 @@ def _get_non_empty_header(ftor, *args):
 
 # =============================================================================
 
-@plugins.inject(plugins.runtime.DB, plugins.runtime.SESSIONS)
-def create_instance(conf, db: KeyValueStorage, sessions: Session):
+@plugins.inject(plugins.runtime.DB)
+def create_instance(conf, db: KeyValueStorage):
     auth_conf = conf.get('plugins', 'auth')
     corparch_conf = conf.get('plugins', 'corparch')
     corplist_file = None
@@ -353,7 +351,6 @@ def create_instance(conf, db: KeyValueStorage, sessions: Session):
     return FederatedAuthWithFailover(
         corplist=corplist,
         db=auth_db,
-        sessions=sessions,
         conf=auth_conf,
         failover=failover_auth
     )

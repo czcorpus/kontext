@@ -24,8 +24,9 @@ coroutines within a single process.
 
 import logging
 from types import ModuleType
-from typing import (Any, Callable, Dict, Generic, Iterator, List, Optional,
-    Sequence, TypeVar, Union)
+from typing import (
+    Any, Callable, Dict, Generic, Iterator, List, Optional, Sequence, TypeVar,
+    Union)
 
 from action.plugin.ctx import AbstractUserPluginCtx
 from plugin_types.action_log import AbstractActionLog
@@ -163,7 +164,6 @@ class _ID(Generic[T]):
 class _Names(object):
     DB: _ID[KeyValueStorage] = _ID('db')
     INTEGRATION_DB: _ID[IntegrationDatabase] = _ID('integration_db')
-    SESSIONS: _ID[Session] = _ID('sessions')
     SETTINGS_STORAGE: _ID[AbstractSettingsStorage] = _ID('settings_storage')
     AUTH: _ID['AbstractAuth'] = _ID('auth')
     QUERY_PERSISTENCE: _ID[AbstractQueryPersistence] = _ID('query_persistence')
@@ -198,7 +198,7 @@ class _Names(object):
         determines possible dependencies between plug-ins when using @inject.
         """
         return iter([
-            self.DB, self.INTEGRATION_DB, self.SESSIONS, self.SETTINGS_STORAGE, self.AUTH,
+            self.DB, self.INTEGRATION_DB, self.SETTINGS_STORAGE, self.AUTH,
             self.QUERY_PERSISTENCE, self.CONC_CACHE, self.EXPORT, self.EXPORT_FREQ2D, self.USER_ITEMS,
             self.MENU_ITEMS, self.AUDIO_PROVIDER, self.GETLANG, self.CORPARCH, self.SUBC_STORAGE, self.QUERY_HISTORY,
             self.APPLICATION_BAR, self.FOOTER_BAR, self.LIVE_ATTRIBUTES, self.TAGHELPER,
@@ -262,7 +262,7 @@ def inject(*args: _ID) -> Callable[[Any], Any]:
     as positional arguments. The first argument is always
     the 'settings' object.
 
-    @inject(plugins.runtime.DB, plugins.runtime.SESSIONS, plugins.runtime.AUTH)
+    @inject(plugins.runtime.DB, plugins.runtime.AUTH)
     def create_instance(conf, db, sessions, auth):
       pass
 
