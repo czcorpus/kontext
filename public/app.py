@@ -163,17 +163,18 @@ async def sigusr1_handler():
 
 
 @application.listener('before_server_start')
-async def server_init(app, loop):
+async def server_init(app: Sanic, loop: asyncio.BaseEventLoop):
     setproctitle(f'sanic-kontext [{CONF_PATH}][worker]')
     loop.add_signal_handler(signal.SIGUSR1, lambda: asyncio.create_task(sigusr1_handler()))
-    db_conf = settings.get('global', 'sessions')
+    sessions_conf = settings.get('sessions')
     # TODO we should probably use a custom configuration for this as the "db" can be non-Redis
     app.ctx.redis = aioredis.from_url(
-        f'redis://{db_conf["backend_host"]}:{db_conf["backend_port"]}',
-        db=db_conf["backend_db"],
+        f'redis://{sessions_conf["backend_host"]}:{sessions_conf["backend_port"]}',
+        db=sessions_conf["backend_db"],
         decode_responses=True)
     # init extensions fabrics
-    session.init_app(app, interface=AIORedisSessionInterface(app.ctx.redis))
+    session.init_app(app, interface=AIORedisSessionInterface(
+        app.ctx.redis, expiry=sessions_conf["ttl"]))
 
 
 @application.middleware('request')

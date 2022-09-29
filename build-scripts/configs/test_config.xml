@@ -43,13 +43,13 @@
         <cookie_path_prefix>/</cookie_path_prefix>
         <static_files_prefix>/files</static_files_prefix>
         <use_conc_toolbar>1</use_conc_toolbar>
-        <sessions>
-            <backend_host>localhost</backend_host>
-            <backend_port>6379</backend_port>
-            <backend_db>2</backend_db>
-            <ttl>14400</ttl>
-        </sessions>
     </global>
+    <sessions>
+        <backend_host>localhost</backend_host>
+        <backend_port>6379</backend_port>
+        <backend_db>2</backend_db>
+        <ttl>14400</ttl>
+    </sessions>
     <mailing>
         <smtp_server>acme.localdomain</smtp_server>
         <sender>acme@localdomain</sender>

@@ -157,6 +157,7 @@ class SettingsSampleTest(unittest.IsolatedAsyncioTestCase):
     def test_sections(self):
         self.assertTrue(settings.contains('theme'))
         self.assertTrue(settings.contains('global'))
+        self.assertTrue(settings.contains('sessions'))
         self.assertTrue(settings.contains('logging'))
         self.assertTrue(settings.contains('corpora'))
         self.assertTrue(settings.contains('plugins'))

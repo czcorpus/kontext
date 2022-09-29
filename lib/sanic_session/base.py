@@ -28,6 +28,7 @@ import time
 import uuid
 
 import ujson as json
+from sanic import HTTPResponse, Request
 from sanic_session.utils import CallbackDict
 
 
@@ -62,7 +63,7 @@ class BaseSessionInterface(metaclass=abc.ABCMeta):
         self.session_name = session_name
         self.secure = secure
 
-    def _delete_cookie(self, request, response):
+    def _delete_cookie(self, request: Request, response: HTTPResponse):
         req = get_request_container(request)
         response.cookies[self.cookie_name] = req[self.session_name].sid
 
@@ -71,11 +72,11 @@ class BaseSessionInterface(metaclass=abc.ABCMeta):
         response.cookies[self.cookie_name]["max-age"] = 0
 
     @staticmethod
-    def _calculate_expires(expiry):
+    def _calculate_expires(expiry: int):
         expires = time.time() + expiry
         return datetime.datetime.fromtimestamp(expires)
 
-    def _set_cookie_props(self, request, response):
+    def _set_cookie_props(self, request: Request, response: HTTPResponse):
         req = get_request_container(request)
         response.cookies[self.cookie_name] = req[self.session_name].sid
         response.cookies[self.cookie_name]["httponly"] = self.httponly
@@ -117,7 +118,7 @@ class BaseSessionInterface(metaclass=abc.ABCMeta):
         """Set value for datastore"""
         raise NotImplementedError
 
-    async def open(self, request) -> SessionDict:
+    async def open(self, request: Request) -> SessionDict:
         """
         Opens a session onto the request. Restores the client's session
         from the datastore if one exists.The session data will be available on
@@ -153,7 +154,7 @@ class BaseSessionInterface(metaclass=abc.ABCMeta):
 
         return session_dict
 
-    async def save(self, request, response) -> None:
+    async def save(self, request: Request, response: HTTPResponse) -> None:
         """Saves the session to the datastore.
 
         Args:
