@@ -157,6 +157,7 @@ class SettingsSampleTest(unittest.IsolatedAsyncioTestCase):
     def test_sections(self):
         self.assertTrue(settings.contains('theme'))
         self.assertTrue(settings.contains('global'))
+        self.assertTrue(settings.contains('sessions'))
         self.assertTrue(settings.contains('logging'))
         self.assertTrue(settings.contains('corpora'))
         self.assertTrue(settings.contains('plugins'))
@@ -173,7 +174,6 @@ class SettingsSampleTest(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(settings.contains('plugins', 'menu_items'))
         self.assertTrue(settings.contains('plugins', 'query_history'))
         self.assertTrue(settings.contains('plugins', 'settings_storage'))
-        self.assertTrue(settings.contains('plugins', 'sessions'))
         self.assertTrue(settings.contains('plugins', 'subcmixer'))
         self.assertTrue(settings.contains('plugins', 'subc_storage'))
         self.assertTrue(settings.contains('plugins', 'syntax_viewer'))

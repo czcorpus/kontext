@@ -40,7 +40,7 @@ _help_links: Dict[str, Any] = {}
 _state: ConfState = ConfState()
 
 SECTIONS = (
-    'theme', 'global', 'calc_backend', 'job_scheduler', 'mailing', 'logging', 'corpora', 'fcs', 'plugins')
+    'theme', 'global', 'sessions', 'calc_backend', 'job_scheduler', 'mailing', 'logging', 'corpora', 'fcs', 'plugins')
 
 DEFAULT_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 

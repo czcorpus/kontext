@@ -33,11 +33,11 @@ from typing import List
 import mailing
 import plugins
 from action.plugin.ctx import PluginCtx
-from plugin_types.auth import (AbstractInternalAuth, AuthException,
-                               CorpusAccess, GetUserInfo,
-                               SignUpNeedsUpdateException)
-from plugin_types.auth.hash import (mk_pwd_hash, mk_pwd_hash_default,
-                                    split_pwd_hash)
+from plugin_types.auth import (
+    AbstractInternalAuth, AuthException, CorpusAccess, GetUserInfo,
+    SignUpNeedsUpdateException)
+from plugin_types.auth.hash import (
+    mk_pwd_hash, mk_pwd_hash_default, split_pwd_hash)
 from plugins import inject
 from plugins.common.mysql import MySQLConf, MySQLOps
 from plugins.mysql_integration_db import MySqlIntegrationDb
@@ -62,7 +62,6 @@ class MysqlAuthHandler(AbstractInternalAuth):
     def __init__(
             self,
             db: MySQLOps,
-            sessions: Session,
             anonymous_user_id,
             case_sensitive_corpora_names: bool,
             login_url,
@@ -76,7 +75,6 @@ class MysqlAuthHandler(AbstractInternalAuth):
         """
         super().__init__(anonymous_user_id)
         self.db = db
-        self.sessions = sessions
         self._login_url = login_url
         self._logout_url = logout_url
         self._smtp_server = smtp_server
@@ -117,7 +115,6 @@ class MysqlAuthHandler(AbstractInternalAuth):
         arguments:
         session -- Werkzeug session instance
         """
-        self.sessions.delete(session)
         session.clear()
 
     async def update_user_password(self, plugin_ctx, user_id, password):
@@ -398,8 +395,8 @@ class MysqlAuthHandler(AbstractInternalAuth):
         return None
 
 
-@inject(plugins.runtime.INTEGRATION_DB, plugins.runtime.SESSIONS)
-def create_instance(conf, integ_db: MySqlIntegrationDb, sessions: Session):
+@inject(plugins.runtime.INTEGRATION_DB)
+def create_instance(conf, integ_db: MySqlIntegrationDb):
     """
     This function must be always implemented. KonText uses it to create an instance of your
     authentication object. The settings module is passed as a parameter.
@@ -415,7 +412,6 @@ def create_instance(conf, integ_db: MySqlIntegrationDb, sessions: Session):
                 plugin_conf['mysql_user'], plugin_conf['mysql_host']))
     return MysqlAuthHandler(
         db=dbx,
-        sessions=sessions,
         anonymous_user_id=int(plugin_conf['anonymous_user_id']),
         case_sensitive_corpora_names=plugin_conf.get('case_sensitive_corpora_names', False),
         login_url=plugin_conf.get('login_url', '/user/login'),

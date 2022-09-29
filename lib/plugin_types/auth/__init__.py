@@ -14,12 +14,12 @@
 
 from typing import TYPE_CHECKING, Any, Dict, List, NamedTuple, Optional, Tuple
 
+from sanic_session.base import SessionDict
+
 try:
     from typing import TypedDict
 except ImportError:
     from typing_extensions import TypedDict
-
-from secure_cookie.session import Session
 
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
@@ -250,7 +250,7 @@ class AbstractInternalAuth(AbstractSemiInternalAuth):
         """
 
     @abc.abstractmethod
-    def logout(self, session: Session):
+    def logout(self, session: SessionDict):
         """
         Logs-out current user (identified by passed session object).
         """

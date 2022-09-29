@@ -177,7 +177,6 @@ if __name__ == '__main__':
     logger = autoconf.logger
 
     initializer.init_plugin('db')
-    initializer.init_plugin('sessions')
     initializer.init_plugin('auth')
 
     parser = argparse.ArgumentParser(
