@@ -26,11 +26,15 @@ from sanic import HTTPResponse, Request, Sanic
 
 from .aioredis import AIORedisSessionInterface
 from .base import BaseSessionInterface
+from .memcache import MemcacheSessionInterface
+from .memory import InMemorySessionInterface
 from .redis import RedisSessionInterface
 
 __all__ = (
     "RedisSessionInterface",
     "AIORedisSessionInterface",
+    "MemcacheSessionInterface",
+    "InMemorySessionInterface",
     "Session",
 )
 

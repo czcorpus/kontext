@@ -41,6 +41,7 @@
         <integration_testing_env>true</integration_testing_env>
     </global>
     <sessions>
+        <interface>redis</interface>
         <backend_host>kontext_redis_1</backend_host>
         <backend_port>6379</backend_port>
         <backend_db>2</backend_db>

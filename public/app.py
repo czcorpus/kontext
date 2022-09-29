@@ -57,10 +57,11 @@ from action.cookie import KonTextCookie
 from action.plugin.initializer import install_plugin_actions, setup_plugins
 from action.templating import TplEngine
 from plugin_types.auth import UserInfo
-from redis import asyncio as aioredis
 from sanic import Request, Sanic
 from sanic_babel import Babel
-from sanic_session import AIORedisSessionInterface, Session
+from sanic_session import (
+    AIORedisSessionInterface, InMemorySessionInterface,
+    MemcacheSessionInterface, Session)
 from texttypes.cache import TextTypesCache
 from views.colls import bp as colls_bp
 from views.concordance import bp as conc_bp
@@ -167,14 +168,30 @@ async def server_init(app: Sanic, loop: asyncio.BaseEventLoop):
     setproctitle(f'sanic-kontext [{CONF_PATH}][worker]')
     loop.add_signal_handler(signal.SIGUSR1, lambda: asyncio.create_task(sigusr1_handler()))
     sessions_conf = settings.get('sessions')
+    expiry = int(sessions_conf['ttl'])
     # TODO we should probably use a custom configuration for this as the "db" can be non-Redis
-    app.ctx.redis = aioredis.from_url(
-        f'redis://{sessions_conf["backend_host"]}:{sessions_conf["backend_port"]}',
-        db=sessions_conf["backend_db"],
-        decode_responses=True)
+    if sessions_conf['interface'] == 'redis':
+        from redis import asyncio as aioredis
+        app.ctx.redis = aioredis.from_url(
+            f'redis://{sessions_conf["backend_host"]}:{sessions_conf["backend_port"]}',
+            db=sessions_conf["backend_db"],
+            decode_responses=True)
+        interface = AIORedisSessionInterface(app.ctx.redis, expiry=expiry)
+
+    elif sessions_conf['interface'] == 'memcache':
+        from aiomcache import Client
+        app.ctx.memcache = Client(sessions_conf["backend_host"], sessions_conf["backend_port"])
+        interface = MemcacheSessionInterface(app.ctx.memcache, expiry=expiry)
+
+    elif sessions_conf['interface'] == 'memory':
+        interface = InMemorySessionInterface(expiry=expiry)
+
+    else:
+        raise ValueError(
+            f'Invalid sessions interface `{sessions_conf["interface"]}`. Use `redis`, `memcache` or `memory`.')
+
     # init extensions fabrics
-    session.init_app(app, interface=AIORedisSessionInterface(
-        app.ctx.redis, expiry=sessions_conf["ttl"]))
+    session.init_app(app, interface=interface)
 
 
 @application.middleware('request')
