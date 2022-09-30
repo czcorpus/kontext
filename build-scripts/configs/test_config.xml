@@ -45,6 +45,7 @@
         <use_conc_toolbar>1</use_conc_toolbar>
     </global>
     <sessions>
+        <interface>redis</interface>
         <backend_host>localhost</backend_host>
         <backend_port>6379</backend_port>
         <backend_db>2</backend_db>
