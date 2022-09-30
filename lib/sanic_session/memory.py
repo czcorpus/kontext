@@ -1,3 +1,5 @@
+import asyncio
+
 from .base import BaseSessionInterface
 from .utils import ExpiringDict
 
@@ -30,11 +32,14 @@ class InMemorySessionInterface(BaseSessionInterface):
         self.session_store = ExpiringDict()
 
     async def _get_value(self, prefix, sid):
+        await asyncio.sleep(0)
         return self.session_store.get(self.prefix + sid)
 
     async def _delete_key(self, key):
+        await asyncio.sleep(0)
         if key in self.session_store:
             self.session_store.delete(key)
 
     async def _set_value(self, key, data):
+        await asyncio.sleep(0)
         self.session_store.set(key, data, self.expiry)
