@@ -12,7 +12,7 @@ cmd = "python3 build3 2.208 -o tmp/masm3"
 # Binary file yields from `cmd`.
 bin = "tmp/masm3"
 # Customize binary.
-full_bin = "./tmp/masm3 start conf-docker.json"
+full_bin = "./tmp/masm3 start docker-conf.json"
 # Watch these filename extensions.
 include_ext = ["go", "py"]
 # Ignore these filename extensions or directories.
