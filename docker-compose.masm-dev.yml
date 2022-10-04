@@ -1,0 +1,23 @@
+version: "3"
+
+services:
+  masm:
+    build: ${MASM_PATH}
+    ports:
+      - 8088:8088
+    networks:
+      - kontext
+      - databases
+    command: bash -c "export PATH=$PATH:/usr/local/go/bin && curl -sSfL https://raw.githubusercontent.com/cosmtrek/air/master/install.sh | sh -s -- -b /usr/local/go/bin && air"
+    volumes:
+      - ${MASM_PATH}:/opt/masm
+      - ./scripts/install/conf/docker/masm-conf.json:/opt/masm/docker-conf.xml
+      - ./scripts/install/conf/docker/masm.air.toml:/opt/masm/.air.toml
+      - corpora-data:/var/lib/manatee
+
+volumes:
+  corpora-data: {}
+
+networks:
+  kontext: {}
+  databases: {}

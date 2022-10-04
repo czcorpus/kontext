@@ -1,0 +1,44 @@
+{
+    "listenAddress" : "0.0.0.0",
+    "listenPort": 8088,
+    "serverReadTimeoutSecs": 120,
+    "logFile": "dev.log",
+    "corporaSetup": {
+        "registryDirPaths": ["/var/lib/manatee/registry"],
+        "textTypesDbDirPath": "/var/lib/manatee/metadata",
+        "verticalFilesDirPath": "/var/lib/manatee/vert",
+        "corpusDataPath": {
+            "abstract": "/var/lib/manatee/indexed-abstract",
+            "cnc": "/var/lib/manatee/indexed",
+            "kontext": "/var/lib/manatee/indexed-fast"
+        },
+        "altAccessMapping": {
+            "omezeni": ""
+        },
+        "syncAllowedCorpora": ["susanne", "syn2015"],
+        "wordSketchDefDirPath": "/var/lib/manatee/ske-wsdef",
+        "manateeDynlibPath": "/a/path/to/ucnkdynfn.so"
+    },
+    "kontextSoftResetURL": "http://localhost:8989/kontext-services/soft-reset-all",
+    "cncDb": {
+        "host": "kontext_mariadb_1:3306",
+        "user": "kontext",
+        "passwd": "kontext-secret",
+        "db": "kontext"
+    },
+    "liveAttrs": {
+        "db": {
+            "type": "mysql",
+            "name": "liveattrs",
+            "host": "kontext_mariadb_1:3306",
+            "user": "liveattrs",
+            "password": "liveattrs-secret",
+            "preconfSettings": []
+        },
+        "confDirPath": "/opt/masm/vert-tagextract/conf"
+    },
+    "jobs": {
+        "statusDataPath": "/tmp/cnc-masm-data.bin",
+        "maxNumRestarts": 3
+    }
+}
