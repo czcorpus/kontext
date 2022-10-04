@@ -11,7 +11,7 @@ services:
     command: bash -c "export PATH=$PATH:/usr/local/go/bin && curl -sSfL https://raw.githubusercontent.com/cosmtrek/air/master/install.sh | sh -s -- -b /usr/local/go/bin && air"
     volumes:
       - ${MASM_PATH}:/opt/masm
-      - ./scripts/install/conf/docker/masm-conf.json:/opt/masm/docker-conf.xml
+      - ./scripts/install/conf/docker/masm-conf.json:/opt/masm/docker-conf.json
       - ./scripts/install/conf/docker/masm.air.toml:/opt/masm/.air.toml
       - corpora-data:/var/lib/manatee
 
