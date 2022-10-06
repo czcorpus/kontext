@@ -56,6 +56,9 @@ export interface KWICSection {
      */
     rightOffsets:Array<number>;
 
+    /**
+     * Higlighted positions for multi layered corpora
+     */
     highlightPositions:Array<number>;
 }
 
