@@ -55,7 +55,7 @@ from plugin_types.syntax_viewer import AbstractSyntaxViewerPlugin
 from plugin_types.taghelper import AbstractTaghelper
 from plugin_types.token_connect import AbstractTokenConnect
 from plugin_types.user_items import AbstractUserItems
-from secure_cookie.session import Session
+from plugin_types.backlinks import AbstractBacklinks
 
 from .export import Loader
 from .export_freq2d import Loader as LoaderFreq2d
@@ -191,6 +191,7 @@ class _Names(object):
     DISPATCH_HOOK: _ID[AbstractDispatchHook] = _ID('dispatch_hook', optional=True)
     QUERY_SUGGEST: _ID[AbstractQuerySuggest] = _ID('query_suggest', optional=True)
     ACTION_LOG: _ID[AbstractActionLog] = _ID('action_log', optional=True)
+    BACKLINKS: _ID[AbstractBacklinks] = _ID('backlinks', optional=True)
 
     def __iter__(self) -> Iterator[_ID]:
         """
@@ -203,7 +204,7 @@ class _Names(object):
             self.MENU_ITEMS, self.AUDIO_PROVIDER, self.GETLANG, self.CORPARCH, self.SUBC_STORAGE, self.QUERY_HISTORY,
             self.APPLICATION_BAR, self.FOOTER_BAR, self.LIVE_ATTRIBUTES, self.TAGHELPER,
             self.SYNTAX_VIEWER, self.SUBCMIXER, self.CHART_EXPORT, self.ISSUE_REPORTING, self.TOKEN_CONNECT,
-            self.KWIC_CONNECT, self.DISPATCH_HOOK, self.QUERY_SUGGEST, self.ACTION_LOG])
+            self.KWIC_CONNECT, self.DISPATCH_HOOK, self.QUERY_SUGGEST, self.ACTION_LOG, self.BACKLINKS])
 
 
 runtime: _Names = _Names()

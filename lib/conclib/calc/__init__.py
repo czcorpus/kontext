@@ -212,8 +212,8 @@ async def find_cached_conc_base(
         # now we know that someone already calculated the conc (but it might not be finished yet)
         if cache_path:
             try:
-                ready = await wait_for_conc(cache_map=cache_map, corp_cache_key=corp_cache_key,
-                                            q=q[:i], minsize=minsize)
+                ready = await wait_for_conc(
+                    cache_map=cache_map, corp_cache_key=corp_cache_key, q=q[:i], minsize=minsize)
                 if not ready:
                     if minsize != 0:
                         await cancel_conc_task(cache_map, corp_cache_key, q[:i])
