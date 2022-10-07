@@ -374,6 +374,31 @@
                     </optional>
                 </interleave>
             </element>
+            <element name="sessions">
+                <a:documentation>A section for configuring HTTP sessions</a:documentation>
+                <interleave>
+                    <element name="interface">
+                        <choice>
+                            <value>redis</value>
+                            <value>memcache</value>
+                            <value>memory</value>
+                        </choice>
+                    </element>
+                    <element name="backend_host">
+                        <text />
+                    </element>
+                    <element name="backend_port">
+                        <data type="positiveInteger" />
+                    </element>
+                    <element name="backend_db">
+                        <data type="positiveInteger" />
+                    </element>
+                    <element name="ttl">
+                        <a:documentation>number of seconds of inactivity</a:documentation>
+                        <data type="positiveInteger" />
+                    </element>
+                </interleave>
+            </element>
             <element name="calc_backend">
                 <a:documentation>Selects a backend used to calculate miscellaneous task in the background</a:documentation>
                 <interleave>
@@ -747,26 +772,6 @@
                     <element name="settings_storage">
                         <a:documentation>A plug-in to store and retrieve user settings</a:documentation>
                         <ref name="plugin_common" />
-                        <ref name="customPluginConfiguration" />
-                    </element>
-                    <element name="sessions">
-                        <a:documentation>A plug-in for handling web sessions.</a:documentation>
-                        <ref name="plugin_common" />
-                        <optional>
-                            <element name="backend_host">
-                                <text />
-                            </element>
-                            <element name="backend_port">
-                                <data type="positiveInteger" />
-                            </element>
-                            <element name="backend_db">
-                                <data type="positiveInteger" />
-                            </element>
-                            <element name="ttl">
-                                <a:documentation>number of seconds of inactivity</a:documentation>
-                                <data type="positiveInteger" />
-                            </element>
-                        </optional>
                         <ref name="customPluginConfiguration" />
                     </element>
                     <element name="corparch">
