@@ -22,6 +22,7 @@ from action.control import http_action
 from action.krequest import KRequest
 from action.response import KResponse
 from action.model.concordance import ConcActionModel
+from action.errors import UserReadableException
 from views.concordance import view_conc
 
 bp = Blueprint('ucnk_backlinks', url_prefix='b')
@@ -42,8 +43,13 @@ def col_lemma_log(request: KRequest):
 async def view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     """
     """
+    cl = req.args.get('cl')
+    if not cl:
+        raise UserReadableException('Missing parameter "cl"')
+    if amodel.args.corpname not in ('syn_v11', ):
+        raise UserReadableException('Function not supported in {}'.format(amodel.args.corpname))
     amodel.args.q = [
-        'q[col_lemma="{cl}"][]*[col_lemma="{cl}"] within <s />'.format(cl=req.args.get('cl')),
+        'q[col_lemma="{cl}"][]*[col_lemma="{cl}"] within <s />'.format(cl=cl),
         'D',
         'f']
     amodel.args.refs = '=doc.title,=doc.pubyear'
