@@ -42,7 +42,7 @@ REQUIREMENTS = [
     'nginx',
     'libltdl7',
     'libpcre3',
-    'libicu-dev',
+    'python3-icu',
     'libpcre++-dev',
     'libxml2-dev',
     'libxslt1-dev',
