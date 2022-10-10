@@ -46,6 +46,7 @@ from .abstract.kwic_connect import AbstractKwicConnect
 from .abstract.query_suggest import AbstractQuerySuggest
 from .abstract.action_log import AbstractActionLog
 from .abstract.audio_provider import AbstractAudioProvider
+from .abstract.backlinks import AbstractBacklinks
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
     from .abstract.auth import AbstractAuth
@@ -167,6 +168,7 @@ class _Names(object):
     DISPATCH_HOOK: _ID[AbstractDispatchHook] = _ID('dispatch_hook', optional=True)
     QUERY_SUGGEST: _ID[AbstractQuerySuggest] = _ID('query_suggest', optional=True)
     ACTION_LOG: _ID[AbstractActionLog] = _ID('action_log', optional=True)
+    BACKLINKS: _ID[AbstractBacklinks] = _ID('backlinks', optional=True)
 
     def __iter__(self) -> Iterator[_ID]:
         return iter([
@@ -175,7 +177,7 @@ class _Names(object):
             self.MENU_ITEMS, self.AUDIO_PROVIDER, self.GETLANG, self.CORPARCH, self.QUERY_HISTORY,
             self.APPLICATION_BAR, self.FOOTER_BAR, self.LIVE_ATTRIBUTES, self.SUBC_RESTORE, self.TAGHELPER,
             self.SYNTAX_VIEWER, self.SUBCMIXER, self.CHART_EXPORT, self.ISSUE_REPORTING, self.TOKEN_CONNECT,
-            self.KWIC_CONNECT, self.DISPATCH_HOOK, self.QUERY_SUGGEST, self.ACTION_LOG])
+            self.KWIC_CONNECT, self.DISPATCH_HOOK, self.QUERY_SUGGEST, self.ACTION_LOG, self.BACKLINKS])
 
 
 runtime: _Names = _Names()

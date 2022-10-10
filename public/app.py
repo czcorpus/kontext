@@ -167,6 +167,10 @@ class WsgiApp(object):
         elif path_info.startswith('/wordlist'):
             from actions.wordlist import Wordlist
             return Wordlist(request, ui_lang, self._tt_cache)
+        elif path_info.startswith('/b'):
+            from actions.backlinks import BacklinksActions
+            return BacklinksActions(request, ui_lang, self._tt_cache)
+
         else:
             from actions.concordance import Actions
             return Actions(request, ui_lang, self._tt_cache)
