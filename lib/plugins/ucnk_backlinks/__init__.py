@@ -37,7 +37,7 @@ def col_lemma_log(request: KRequest):
 
 @bp.route('/col_lemma')
 @http_action(
-    mutates_result=False, action_log_mapper=col_lemma_log, template='view.html', page_model='view',
+    mutates_result=True, action_log_mapper=col_lemma_log, template='view.html', page_model='view',
     action_model=ConcActionModel)
 async def view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     """
@@ -46,6 +46,8 @@ async def view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         'q[col_lemma="{cl}"][]*[col_lemma="{cl}"] within <s />'.format(cl=req.args.get('cl')),
         'D',
         'f']
+    amodel.args.refs = '=doc.title,=doc.pubyear'
+    amodel.args.viewmode = 'sen'
     return await view_conc(amodel, req, resp, False, req.session_get('user', 'id'))
 
 
