@@ -877,6 +877,12 @@
                             <ref name="customPluginConfiguration" />
                         </optional>
                     </element>
+                    <element name="backlinks">
+                        <optional>
+                            <ref name="plugin_common" />
+                            <ref name="customPluginConfiguration" />
+                        </optional>
+                    </element>
                 </interleave>
             </element>
         </element>
