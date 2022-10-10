@@ -12,7 +12,7 @@ Markdown >= 3.3.6
 openpyxl >= 3.0.5
 redis >= 3.5.3
 rejson >= 0.5.6
-PyICU >= 1.5
+# PyICU >= 1.5 => please install python3-icu via system package manager instead
 babel >= 2.9.1
 mysql-connector-python >= 8.0.28
 dataclasses-json >= 0.5.6
