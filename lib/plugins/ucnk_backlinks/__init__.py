@@ -53,6 +53,11 @@ async def view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         'D',
         'f']
     amodel.args.refs = '=doc.title,=doc.pubyear'
+    amodel.args.pagesize = 50
+    amodel.args.attrs = 'word'
+    amodel.args.attr_vmode = 'mouseover'
+    amodel.args.base_viewattr = 'word'
+    amodel.args.structs = ''
     amodel.args.viewmode = 'sen'
     return await view_conc(amodel, req, resp, False, req.session_get('user', 'id'))
 
