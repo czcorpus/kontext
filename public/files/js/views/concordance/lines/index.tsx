@@ -366,8 +366,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                                 hasKwic={hasKwic} lineIdx={props.lineIdx} attrViewMode={props.attrViewMode}
                                 supportsTokenConnect={props.supportsTokenConnect}
                                 kwicTokenNum={props.output.tokenNumber} audioPlayerStatus={props.audioPlayerStatus}
-                                highlightMLPositions={props.output.highlightMLPositions}
-                                highlightPositions={highlightPositions ? highlightPositions.kwic[i] : []} />,
+                                highlightPositions={props.output.highlightMLPositions.concat(highlightPositions ? highlightPositions.kwic[i] : [])} />,
                         ' '
                     ],
                     props.output.kwic
@@ -438,7 +437,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         attrViewMode:ViewOptions.AttrViewMode;
         supportsTokenConnect:boolean;
         audioPlayerStatus:PlayerStatus;
-        highlightMLPositions:Array<number>;
         highlightPositions:Array<number>;
 
     }> = (props) => {
@@ -475,9 +473,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                 return <span className={props.item.className === 'strc' ? 'strc' : null}>
                     {List.flatMap((v, i) => {
                         let element;
-                        if (props.highlightMLPositions.includes(i)) {
-                            element = [<strong className={getViewModeClass(props.attrViewMode)}>{v}</strong>];
-                        } else if (props.highlightPositions.includes(i)) {
+                        if (props.highlightPositions.includes(i)) {
                             element = [<span className="highlight">{v}</span>];
                         } else {
                             element = [v];
@@ -653,8 +649,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                                         attrViewMode={this.props.attrViewMode}
                                         supportsTokenConnect={this.props.supportsTokenConnect}
                                         kwicTokenNum={corpusOutput.tokenNumber} audioPlayerStatus={this.props.audioPlayerStatus}
-                                        highlightMLPositions={corpusOutput.highlightMLPositions}
-                                        highlightPositions={highlightPositions ? highlightPositions.kwic[i] : []} />,
+                                        highlightPositions={corpusOutput.highlightMLPositions.concat(highlightPositions ? highlightPositions.kwic[i] : [])} />,
                                 ' '
                             ],
                             corpusOutput.kwic
@@ -787,7 +782,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                                         emptyRefValPlaceholder={this.props.emptyRefValPlaceholder}
                                         refsDetailClickHandler={this._refsDetailClickHandler} />
                                 </td>
-                                {alCorp.tokenNumber > -1 ? this._renderText(alCorp, i + 1, shadowAlignedCorpora[i]) :
+                                {alCorp.tokenNumber > -1 ? this._renderText(alCorp, i + 1, shadowAlignedCorpora ? shadowAlignedCorpora[i] : null) :
                                     <td className="note">{`// ${he.translate('concview__translat_not_avail')} //`}</td>
                                 }
                             </React.Fragment>;
