@@ -32,7 +32,7 @@ import { ConcDetailModel } from '../../../models/concordance/detail';
 import { Actions } from '../../../models/concordance/actions';
 import { Actions as MainMenuActions } from '../../../models/mainMenu/actions';
 import {
-    ConcToken, KWICSection, LineSelectionModes, TextChunk,
+    KWICSection, LineSelectionModes, TextChunk,
     Line as ConcLine } from '../../../models/concordance/common';
 import * as S from './style';
 import { PlayerStatus } from '../../../models/concordance/media';
@@ -194,7 +194,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
 
     const Token:React.FC<{
         tokenId:number;
-        data:ConcToken;
+        data:TextChunk;
         viewMode:ViewOptions.AttrViewMode;
         isKwic:boolean;
         supportsTokenConnect:boolean;
@@ -238,7 +238,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         chunkOffset:number;
         idx:number;
         supportsTokenConnect:boolean;
-        data:ConcToken;
+        data:TextChunk;
         attrViewMode:ViewOptions.AttrViewMode;
         highlightPositions:Array<number>;
 
@@ -275,11 +275,11 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         } else {
             return (
             <>
-                {props.data.text.map((s) => ({text: [s], className: props.data.className, tailPosAttrs: []})).map((data, i) => (
+                {props.data.text.map((s) => ({text: [s], className: props.data.className, tailPosAttrs: []} as TextChunk)).map((item, i) => (
                     <React.Fragment key={`${props.position}:${props.idx}:${i}`}>
                         {i > 0 ? ' ' : ''}
                         <span className={getViewModeClass(props.attrViewMode) + (props.highlightPositions.includes(i) ? " highlight" : "")}>
-                            <Token tokenId={mkTokenId(i)} data={data} viewMode={props.attrViewMode} isKwic={false}
+                            <Token tokenId={mkTokenId(i)} data={item} viewMode={props.attrViewMode} isKwic={false}
                                     supportsTokenConnect={props.supportsTokenConnect} />
                         </span>
                     </React.Fragment>
@@ -607,7 +607,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             }
         }
 
-        _exportTextElmClass(corpname, ...customClasses) {
+        _exportTextElmClass(corpname:string, ...customClasses:string[]) {
             const ans = customClasses.slice();
             if (corpname === this.props.mainCorp) {
                 ans.push('maincorp');
@@ -615,7 +615,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             return ans.join(' ');
         }
 
-        _renderTextParMode(corpname, corpusOutput:KWICSection, shadowOutput:KWICSection) {
+        _renderTextParMode(corpname:string, corpusOutput:KWICSection, shadowOutput:KWICSection) {
             const hasKwic = this.props.corpsWithKwic.indexOf(corpname) > -1;
             const handleTokenClick = (evt) => this._handleNonKwicTokenClick(
                 corpname, this.props.lineIdx, Number(evt.target.getAttribute('data-tokenid'))
@@ -669,7 +669,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             );
         }
 
-        _renderText(corpusOutput, corpusIdx, shadowOutput) {
+        _renderText(corpusOutput:KWICSection, corpusIdx:number, shadowOutput:KWICSection) {
             const corpname = this.props.cols[corpusIdx].n;
             if (this.props.viewMode === 'kwic') {
                 return <TextKwicMode
@@ -691,7 +691,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             }
         }
 
-        _renderTextSimple(corpusOutput, corpusIdx) {
+        _renderTextSimple(corpusOutput:KWICSection) {
             const mp  = v => v.text.join(' ');
             return corpusOutput.left.map(mp)
                     .concat(corpusOutput.kwic.map(mp))
@@ -769,7 +769,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                     </td>
                     {List.head(this.props.cols).visible ?
                             this._renderText(primaryLang, 0, shadowPrimaryLang) :
-                            <td title={this._renderTextSimple(primaryLang, 0)}>{'\u2026'}</td>
+                            <td title={this._renderTextSimple(primaryLang)}>{'\u2026'}</td>
                     }
                     {alignedCorpora.map((alCorp, i) => {
                         if (this.props.cols[i + 1].visible) {
@@ -790,7 +790,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                         } else {
                             return <React.Fragment key={`al-${i}`}>
                                 <td className="ref" />
-                                <td key="par" title={this._renderTextSimple(alCorp, i + 1)}>{'\u2026'}</td>
+                                <td key="par" title={this._renderTextSimple(alCorp)}>{'\u2026'}</td>
                             </React.Fragment>;
                         }
                     })}

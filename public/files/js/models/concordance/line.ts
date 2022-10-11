@@ -19,14 +19,10 @@
  */
 
 import { List, pipe } from 'cnc-tskit';
-import { KWICSection, MLPositionsData, SentSection, TextChunk } from './common';
+import { KWICSection, MLPositionsData, TextChunk } from './common';
 
 
 export class ConclineSectionOps {
-
-    static isKwicSection(sect:KWICSection|SentSection):sect is KWICSection {
-        return sect['left'] !== undefined && sect['kwic'] !== undefined && sect['right'] !== undefined;
-    }
 
     static newKWICSection(
         tokenNumber:number,
@@ -62,22 +58,11 @@ export class ConclineSectionOps {
         return ans;
     }
 
-    static newSentSection(
-        tokenNumber:number,
-        lineNumber:number,
-        ref:Array<string>,
-        items:Array<TextChunk>
-    ) {
-        return {tokenNumber, lineNumber, ref, items};
+    static getAllChunks(sect:KWICSection):Array<TextChunk> {
+        return sect.left.concat(sect.kwic, sect.right);
     }
 
-    static getAllChunks(sect:KWICSection|SentSection):Array<TextChunk> {
-        return ConclineSectionOps.isKwicSection(sect) ?
-            sect.left.concat(sect.kwic, sect.right) :
-            sect.items;
-    }
-
-    static findChunk(sect:KWICSection|SentSection, chunkId:string):TextChunk {
+    static findChunk(sect:KWICSection, chunkId:string):TextChunk {
         return List.find(v => v.id === chunkId, ConclineSectionOps.getAllChunks(sect));
     }
 }

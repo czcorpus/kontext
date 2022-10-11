@@ -24,12 +24,6 @@ import * as ViewOptions from '../../types/viewOptions';
 import { DataSaveFormat } from '../../app/navigation/save';
 
 
-export interface ConcToken {
-    className:string;
-    text:Array<string>; // array => multiple words per 'pseudo-position'
-    tailPosAttrs:Array<string>; // array => multiple pos attrs per whole 'pseudo-position'
-}
-
 export interface KWICSection {
 
     tokenNumber:number;
@@ -63,26 +57,15 @@ export interface KWICSection {
 }
 
 
-/**
- * @todo - this is not used
- */
-export interface SentSection {
-    tokenNumber:number;
-    lineNumber:number;
-    ref:Array<string>;
-    items:Array<TextChunk>;
-}
-
-
 export class TextChunk {
     id:string;
     className:string;
-    text:Array<string>;
+    text:Array<string>; // array => multiple words per 'pseudo-position'
     openLink:{speechPath:string};
     closeLink:{speechPath:string};
     continued:boolean;
     showAudioPlayer:boolean;
-    tailPosAttrs:Array<string>;
+    tailPosAttrs:Array<string>; // array => multiple pos attrs per whole 'pseudo-position'
 }
 
 export interface Line {
@@ -90,7 +73,7 @@ export interface Line {
     lineNumber:number;
     kwicLength:number;
     hasFocus:boolean;
-    languages:Array<KWICSection|SentSection>;
+    languages:Array<KWICSection>;
 }
 
 
