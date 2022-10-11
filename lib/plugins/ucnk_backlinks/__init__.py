@@ -46,6 +46,11 @@ def col_lemma(self, req):
         'D',
         'f']
     self.args.refs = '=doc.title,=doc.pubyear'
+    self.args.pagesize = 50
+    self.args.attrs = 'word'
+    self.args.attr_vmode = 'mouseover'
+    self.args.base_viewattr = 'word'
+    self.args.structs = ''
     self.args.viewmode = 'sen'
     return self.view(req)
 
