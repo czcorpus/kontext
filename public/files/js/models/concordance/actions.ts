@@ -490,4 +490,10 @@ export class Actions {
     static DashboardToggleExtInfo:Action<{}> = {
         name: 'DASHBOARD_TOGGLE_EXTENDED_INFO'
     };
+
+    static SetHighlightItems:Action<{
+        items:Array<string>;
+    }> = {
+        name: 'CONCORDANCE_SET_HIGHLIGHT_ITEMS'
+    };
 }

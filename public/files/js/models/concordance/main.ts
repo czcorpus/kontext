@@ -240,7 +240,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 concId: layoutModel.getConf<string>('concPersistenceOpId'),
                 baseViewAttr: lineViewProps.baseViewAttr,
                 lines: importLines(initialData, viewAttrs.indexOf(lineViewProps.baseViewAttr) - 1),
-                shadowLines: null,
+                shadowLines: null, // used as highlighting reference
                 highlightItems: [],
                 viewAttrs,
                 numItemsInLockedGroups: lineViewProps.NumItemsInLockedGroups,
@@ -344,6 +344,9 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                             concId: action.payload.data.conc_persistence_op_id
                         }
                     });
+                    if (this.state.highlightItems.length) {
+                        this.reloadShadowLines();
+                    }
                 }
             }
         );
@@ -447,6 +450,9 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         this.layoutModel.showMessage('error', err);
                     }
                 });
+                if (this.state.highlightItems.length) {
+                    this.reloadShadowLines();
+                }
             }
         );
 
@@ -460,8 +466,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 }).pipe(
                     concatMap(v => this.loadConcPage())
 
-                ).subscribe(
-                    ([concId,]) => {
+                ).subscribe({
+                    next: ([concId,]) => {
                         this.pushHistoryState({
                             name: Actions.ReloadConc.name,
                             payload: {
@@ -470,10 +476,10 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         });
                         this.emitChange();
                     },
-                    (err) => {
+                    error: (err) => {
                         this.layoutModel.showMessage('error', err);
                     }
-                );
+                });
             }
         );
 
@@ -497,20 +503,23 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 });
                 if (this.state.concSize > 0) {
                     if (prevConcSize === 0) {
-                        this.changePage('customPage', 1).subscribe(
-                            () => {
+                        this.changePage('customPage', 1).subscribe({
+                            next: () => {
                                 this.busyTimer = this.stopBusyTimer(this.busyTimer);
                                 this.emitChange();
                             },
-                            (err) => {
+                            error: (err) => {
                                 this.busyTimer = this.stopBusyTimer(this.busyTimer);
                                 this.emitChange();
                                 this.layoutModel.showMessage('error', err);
                             }
-                        );
+                        });
 
                     } else {
                         this.busyTimer = this.stopBusyTimer(this.busyTimer);
+                    }
+                    if (this.state.highlightItems.length) {
+                        this.reloadShadowLines();
                     }
                 }
                 this.emitChange();
@@ -540,16 +549,19 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         this.addActionHandler<typeof Actions.SwitchKwicSentMode>(
             Actions.SwitchKwicSentMode.name,
             action => {
-                this.changeViewMode().subscribe(
-                    () => {
+                this.changeViewMode().subscribe({
+                    next: () => {
                         this.emitChange();
                     },
-                    (err) => {
+                    error: (err) => {
                         console.error(err);
                         this.layoutModel.showMessage('error', err);
                         this.emitChange();
                     }
-                );
+                });
+                if (this.state.highlightItems.length) {
+                    this.reloadShadowLines();
+                }
             }
         );
 
@@ -594,8 +606,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         state.showLineNumbers = action.payload.showLineNumbers;
                         state.currentPage = 1;
                     });
-                    this.loadConcPage().subscribe(
-                        ([concId,]) => {
+                    this.loadConcPage().subscribe({
+                        next: ([concId,]) => {
                             this.pushHistoryState({
                                 name: Actions.ReloadConc.name,
                                 payload: {
@@ -604,10 +616,13 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                             });
                             this.emitChange();
                         },
-                        (err) => {
+                        error: (err) => {
                             this.layoutModel.showMessage('error', err);
                         }
-                    );
+                    });
+                    if (this.state.highlightItems.length) {
+                        this.reloadShadowLines();
+                    }
                 }
             }
         );
@@ -808,6 +823,18 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 });
             }
         );
+
+        this.addActionHandler(
+            Actions.SetHighlightItems,
+            action => {
+                this.changeState(state => {
+                    state.highlightItems = action.payload.items;
+                });
+                if (this.state.shadowLines === null) {
+                    this.reloadShadowLines();
+                }
+            }
+        );
     }
 
     private stopBusyTimer(subs:Subscription):null {
@@ -944,6 +971,27 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         );
     }
 
+    private reloadShadowLines() {
+        const args = {
+            ...this.layoutModel.getConcArgs(),
+            attrs: ['lemma'], // TODO depends on corpus
+            format: 'json',
+            q: ['~' + this.state.concId],
+        };
+        this.layoutModel.ajax$<AjaxConcResponse>(
+            HTTP.Method.GET,
+            this.layoutModel.createActionUrl('view'),
+            args
+        ).subscribe({
+            next: data => this.changeState(state => {
+                state.shadowLines = importLines(
+                    data.Lines,
+                    this.getViewAttrs().indexOf(state.baseViewAttr) - 1
+                );
+            })
+        });
+    }
+
     private importData(state:ConcordanceModelState, data:AjaxConcResponse):void {
         state.lines = importLines(
             data.Lines,
@@ -955,6 +1003,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         state.unfinishedCalculation = !!data.running_calc;
         state.lineGroupIds = [];
         state.concId = data.conc_persistence_op_id;
+        state.shadowLines = null;
     }
 
     private changeGroupNaming(state:ConcordanceModelState, data:ConcGroupChangePayload):void {
