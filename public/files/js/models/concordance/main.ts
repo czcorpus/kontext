@@ -116,6 +116,10 @@ export interface ConcordanceModelState {
 
     lines:Array<Line>;
 
+    shadowLines:Array<Line>;
+
+    highlightItems:Array<string>;
+
     viewMode:'kwic'|'sen'|'align';
 
     attrViewMode:ViewOptions.AttrViewMode;
@@ -236,6 +240,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 concId: layoutModel.getConf<string>('concPersistenceOpId'),
                 baseViewAttr: lineViewProps.baseViewAttr,
                 lines: importLines(initialData, viewAttrs.indexOf(lineViewProps.baseViewAttr) - 1),
+                shadowLines: null,
+                highlightItems: [],
                 viewAttrs,
                 numItemsInLockedGroups: lineViewProps.NumItemsInLockedGroups,
                 pagination: lineViewProps.pagination, // TODO possible mutable mess

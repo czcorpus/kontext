@@ -143,6 +143,10 @@ export const ConcLines = styled.table`
         font-size: 110%;
     }
 
+    .highlight {
+        font-weight: bold;
+    }
+
     .concordance-col-heading {
         min-width: 280px;
         text-align: center;
