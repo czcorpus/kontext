@@ -118,8 +118,8 @@ class TreqBackend(HTTPBackend):
         treq_link = None
         if translat_corp and translat_lang:
             common_groups = self.find_lang_common_groups(primary_lang, translat_lang)
-            args = dict(lang1=self.enc_val(primary_lang), lang2=self.enc_val(translat_lang),
-                        groups=[self.enc_val(s) for s in common_groups],
+            args = dict(lang1=self._client.enc_val(primary_lang), lang2=self._client.enc_val(translat_lang),
+                        groups=[self._client.enc_val(s) for s in common_groups],
                         **query_args)
             t_args = self.mk_page_args(**args)
             treq_link = (self.mk_server_addr() + '/index.php', t_args)
@@ -128,7 +128,7 @@ class TreqBackend(HTTPBackend):
 
             try:
                 logging.getLogger(__name__).debug('Treq request args: {0}'.format(ta_args))
-                data, status = await self._client.request('GET', self.mk_api_path(ta_args))
+                data, status = await self._client.request('GET', self.mk_api_path(ta_args), {})
                 data = json.loads(data)
                 max_items = self._conf.get('maxResultItems', self.DEFAULT_MAX_RESULT_LINES)
                 data['lines'] = data['lines'][:max_items]
