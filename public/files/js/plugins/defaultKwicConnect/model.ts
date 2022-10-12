@@ -88,6 +88,7 @@ export interface KwicConnectState {
     data:Array<ProviderWordMatch>;
     blockedByAsyncConc:boolean;
     hasOmittedItems:boolean;
+    highlighted:Array<string>;
 }
 
 
@@ -141,7 +142,8 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
                 mainCorp,
                 freqType: FreqDistType.LEMMA,
                 blockedByAsyncConc: isUnfinishedCalculation,
-                hasOmittedItems: false
+                hasOmittedItems: false,
+                highlighted: [],
             }
         );
         this.pluginApi = pluginApi;
@@ -158,22 +160,22 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
                     });
                 }
                 if (!this.state.blockedByAsyncConc && List.empty(this.state.data)) {
-                    this.suspendWithTimeout(5000, {}, (action, syncData) => {
+                    this.waitForActionWithTimeout(5000, {}, (action, syncData) => {
                         if (ConcActions.isConcordanceRecalculationReady(action)) {
                             return null;
                         }
                         return syncData;
 
-                    }).subscribe(
-                        action => {
+                    }).subscribe({
+                        next: action => {
                             if (ConcActions.isConcordanceRecalculationReady(action)) {
                                 this.loadData(action.payload.overviewMinFreq);
                             }
                         },
-                        error => {
+                        error: error => {
                             this.pluginApi.showMessage('error', error);
                         }
-                    );
+                    });
                 }
 
             }
@@ -207,22 +209,22 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
                     state.blockedByAsyncConc = !action.payload.finished;
                 });
                 if (prevBlocked && !this.state.blockedByAsyncConc) {
-                    this.suspendWithTimeout(5000, {}, (action, syncData) => {
+                    this.waitForActionWithTimeout(5000, {}, (action, syncData) => {
                         if (ConcActions.isConcordanceRecalculationReady(action)) {
                             return null;
                         }
                         return syncData;
 
-                    }).subscribe(
-                        action => {
+                    }).subscribe({
+                        next: action => {
                             if (ConcActions.isConcordanceRecalculationReady(action)) {
                                 this.loadData(action.payload.overviewMinFreq);
                             }
                         },
-                        error => {
+                        error: error => {
                             this.pluginApi.showMessage('error', error);
                         }
-                    );
+                    });
 
                 }
             }
@@ -231,8 +233,8 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
 
     private loadData(flimit:number):void {
         const freqType = this.selectFreqType();
-        this.fetchResponses(freqType, flimit).subscribe(
-            (data) => {
+        this.fetchResponses(freqType, flimit).subscribe({
+            next: (data) => {
                 this.dispatchSideEffect<typeof Actions.FetchInfoDone>({
                     name: Actions.FetchInfoDone.name,
                     payload: {
@@ -241,7 +243,7 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
                     }
                 });
             },
-            (err) => {
+            error: (err) => {
                 this.pluginApi.showMessage('error', err);
                 this.dispatchSideEffect<typeof Actions.FetchInfoDone>({
                     name: Actions.FetchInfoDone.name,
@@ -252,7 +254,7 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
                     error: err
                 });
             }
-        );
+        });
     }
 
     private fetchResponses(
