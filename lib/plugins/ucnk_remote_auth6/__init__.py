@@ -38,7 +38,7 @@ import logging
 import ssl
 import urllib.parse
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
 
 import aiohttp
 import plugins
@@ -50,7 +50,6 @@ from plugin_types.corparch.backend import DatabaseBackend
 from plugin_types.integration_db import IntegrationDatabase
 from plugins import inject
 from plugins.mysql_corparch.backend import Backend
-from secure_cookie.session import Session
 
 IMPLICIT_CORPUS = 'susanne'
 
@@ -108,25 +107,36 @@ class CentralAuth(AbstractRemoteAuth):
                 'Using fallback https client initialization due to older Python version.')
             self._ssl_context = None
 
+    @property
+    def _toolbar_uses_ssl(self):
+        return self._auth_conf.toolbar_url.startswith('https://')
+
     @staticmethod
     def _mk_user_key(user_id: int) -> str:
         return f'user:{user_id}'
 
-    def _create_session(self) -> aiohttp.ClientSession:
+    def _create_client_session(self, cookies: Dict[str, str]) -> aiohttp.ClientSession:
         timeout = aiohttp.ClientTimeout(total=self._auth_conf.toolbar_server_timeout)
         if self._ssl_context is not None:
             return aiohttp.ClientSession(
                 connector=aiohttp.TCPConnector(ssl_context=self._ssl_context),
                 timeout=timeout,
                 headers={'Content-Type': 'application/x-www-form-urlencoded'},
+                cookies=cookies
             )
         return aiohttp.ClientSession(
             timeout=timeout,
             headers={'Content-Type': 'application/x-www-form-urlencoded'},
+            cookies=cookies
         )
 
-    async def _fetch_toolbar_api_response(self, args: List[Tuple[str, str]]) -> str:
-        async with self._create_session() as session:
+    async def _fetch_toolbar_api_response(
+            self,
+            args: List[Tuple[str, str]],
+            cookies: Optional[Dict[str, str]] = None) -> str:
+        if cookies is None:
+            cookies = {}
+        async with self._create_client_session(cookies) as session:
             async with session.post(self._auth_conf.toolbar_url, params=args) as response:
                 if response.status == 200:
                     return (await response.read()).decode('utf-8')

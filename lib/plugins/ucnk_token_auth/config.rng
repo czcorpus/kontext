@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"
+         xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0">
+
+    <start>
+        <element name="auth">
+            <element name="module">
+                <value>ucnk_token_auth</value>
+            </element>
+            <element name="js_module">
+                <a:documentation>
+                    The plug-in is mostly meant for API installations, but we have to
+                    still fill in some js_module here due to KonText plug-in architecture
+                    - defaultAuth should do the job in most cases.
+                </a:documentation>
+                <choice>
+                    <value>defaultAuth</value>
+                </choice>
+            </element>
+            <element name="anonymous_user_id">
+                <data type="nonNegativeInteger" />
+            </element>
+            <element name="auth_cookie_name">
+                <text />
+            </element>
+            <element name="login_url">
+                <text />
+            </element>
+            <element name="logout_url">
+                <text />
+            </element>
+            <element name="toolbar_url">
+                <text />
+            </element>
+            <element name="cookie_sid">
+                <text />
+            </element>
+            <element name="api_key_header">
+                <text />
+            </element>
+            <element name="toolbar_server_timeout">
+                <data type="nonNegativeInteger" />
+            </element>
+            <element name="toolbar_unverified_ssl_cert">
+                <a:documentation>In case you use an unverified SSL certificate (e.g. for development or some internal
+                use) set this to 1/true - otherwise, the plug-in will refuse to communicate with central auth
+                server.</a:documentation>
+                <choice>
+                    <value>0</value>
+                    <value>1</value>
+                    <value>true</value>
+                    <value>false</value>
+                </choice>
+            </element>
+        </element>
+    </start>
+</grammar>
