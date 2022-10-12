@@ -68,7 +68,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         }
     }
 
-    function findHighlightPositions(shadowOutput:KWICSection, highlightItems:Array<HighlightItem>, corpusIdx) {
+    function findHighlightPositions(shadowOutput:KWICSection, highlightItems:Array<HighlightItem>, corpusIdx:number) {
         const items = pipe(
             highlightItems,
             List.filter(v => v.level == -1 || v.level == corpusIdx),

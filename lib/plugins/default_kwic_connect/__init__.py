@@ -20,8 +20,8 @@
 Required XML configuration: please see ./config.rng
 """
 
-import logging
 import asyncio
+import logging
 from typing import Dict, List, Tuple
 
 import plugins
@@ -50,8 +50,7 @@ def merge_results(curr, new, word: str):
         return curr
 
 
-async def handle_word_req(args):
-    word, corpora, providers, ui_lang = args
+async def handle_word_req(word, corpora, providers, ui_lang):
     with plugins.runtime.KWIC_CONNECT as kc:
         return word, await kc.fetch_data(providers, corpora, word, ui_lang)
 
@@ -65,7 +64,7 @@ async def fetch_external_kwic_info(amodel: ConcActionModel, req: KRequest, resp:
         args = [(w, [amodel.corp.corpname] + amodel.args.align, corpus_info.kwic_connect.providers, req.ui_lang)
                 for w in words]
         provider_all = []
-        for f in asyncio.as_completed([handle_word_req(*args) for _ in range(len(words))]):
+        for f in asyncio.as_completed([handle_word_req(*arg) for arg in args]):
             word, res = await f
             provider_all = merge_results(provider_all, res, word)
         ans = []
