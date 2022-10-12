@@ -111,6 +111,11 @@ function importLines(data:Array<ServerLineData>, mainAttrIdx:number):Array<Line>
     return ans;
 }
 
+export interface HighlightItem {
+    level:number; // 0 first corpus, 1 second corpus, ... -1: all corpora
+    value:string
+}
+
 
 export interface ConcordanceModelState {
 
@@ -118,7 +123,7 @@ export interface ConcordanceModelState {
 
     shadowLines:Array<Line>;
 
-    highlightItems:Array<string>;
+    highlightItems:Array<HighlightItem>;
 
     viewMode:'kwic'|'sen'|'align';
 
@@ -344,7 +349,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                             concId: action.payload.data.conc_persistence_op_id
                         }
                     });
-                    if (this.state.highlightItems.length) {
+                    if (!List.empty(this.state.highlightItems)) {
                         this.reloadShadowLines();
                     }
                 }
@@ -450,7 +455,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         this.layoutModel.showMessage('error', err);
                     }
                 });
-                if (this.state.highlightItems.length) {
+                if (!List.empty(this.state.highlightItems)) {
                     this.reloadShadowLines();
                 }
             }
@@ -518,7 +523,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                     } else {
                         this.busyTimer = this.stopBusyTimer(this.busyTimer);
                     }
-                    if (this.state.highlightItems.length) {
+                    if (!List.empty(this.state.highlightItems)) {
                         this.reloadShadowLines();
                     }
                 }
@@ -559,7 +564,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         this.emitChange();
                     }
                 });
-                if (this.state.highlightItems.length) {
+                if (!List.empty(this.state.highlightItems)) {
                     this.reloadShadowLines();
                 }
             }
@@ -620,7 +625,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                             this.layoutModel.showMessage('error', err);
                         }
                     });
-                    if (this.state.highlightItems.length) {
+                    if (!List.empty(this.state.highlightItems)) {
                         this.reloadShadowLines();
                     }
                 }
@@ -825,10 +830,23 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         );
 
         this.addActionHandler(
-            Actions.SetHighlightItems,
+            Actions.SetHighlightValue,
             action => {
                 this.changeState(state => {
-                    state.highlightItems = action.payload.items;
+                    if (action.payload.highlight) {
+                        const itemIdx = List.findIndex(v => v.value === action.payload.value && v.level === action.payload.level, state.highlightItems);
+                        if (itemIdx === -1) {
+                            state.highlightItems = List.push({
+                                value: action.payload.value,
+                                level: action.payload.level,
+                            }, state.highlightItems);
+                        }
+                    } else {
+                        const itemIdx = List.findIndex(v => v.value === action.payload.value && v.level === action.payload.level, state.highlightItems);
+                        if (itemIdx > -1) {
+                            state.highlightItems = List.removeAt(itemIdx, state.highlightItems);
+                        }
+                    }
                 });
                 if (this.state.shadowLines === null) {
                     this.reloadShadowLines();

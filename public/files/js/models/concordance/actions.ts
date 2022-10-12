@@ -491,9 +491,11 @@ export class Actions {
         name: 'DASHBOARD_TOGGLE_EXTENDED_INFO'
     };
 
-    static SetHighlightItems:Action<{
-        items:Array<string>;
+    static SetHighlightValue:Action<{
+        value:string;
+        level:number;
+        highlight:boolean;
     }> = {
-        name: 'CONCORDANCE_SET_HIGHLIGHT_ITEMS'
+        name: 'CONCORDANCE_SET_HIGHLIGHT_VALUE'
     };
 }

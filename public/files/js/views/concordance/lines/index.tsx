@@ -25,7 +25,7 @@ import { List, pipe } from 'cnc-tskit';
 import * as Kontext from '../../../types/kontext';
 import * as ViewOptions from '../../../types/viewOptions';
 import { init as lineExtrasViewsInit } from '../lineExtras';
-import { ConcordanceModel, ConcordanceModelState } from '../../../models/concordance/main';
+import { ConcordanceModel, ConcordanceModelState, HighlightItem } from '../../../models/concordance/main';
 import { LineSelectionModel, LineSelectionModelState }
     from '../../../models/concordance/lineSelection';
 import { ConcDetailModel } from '../../../models/concordance/detail';
@@ -68,16 +68,25 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         }
     }
 
-    function findHighlightPositions(data:Array<TextChunk>, highlightItems:Array<string>):Array<Array<number>> {
-        return List.map(
-            (item) => List.reduce((acc, val, i) => {
-                if (highlightItems.includes(val)) {
+    function findHighlightPositions(shadowOutput:KWICSection, highlightItems:Array<HighlightItem>, corpusIdx) {
+        const items = pipe(
+            highlightItems,
+            List.filter(v => v.level == -1 || v.level == corpusIdx),
+            List.map(v => v.value),
+        );
+        const positionReducer = (chunks:Array<TextChunk>):Array<Array<number>> => List.map((chunk) =>
+            List.reduce((acc, val, i) => {
+                if (items.includes(val)) {
                     acc.push(i);
                 }
                 return acc;
-            }, [], item.text),
-            data
-        );
+            }, [], chunk.text),
+        chunks);
+        return ({
+            left: positionReducer(shadowOutput.left),
+            kwic: positionReducer(shadowOutput.kwic),
+            right: positionReducer(shadowOutput.right),
+        })
     }
 
     function getViewModeTitle(
@@ -293,13 +302,14 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
 
     const TextKwicMode:React.FC<{
         corpname:string;
+        corpusIdx:number;
         isAlignedMainCorp:boolean;
         corpsWithKwic:Array<string>;
         supportsTokenConnect:boolean;
         lineIdx:number;
         output:KWICSection;
         shadowOutput:KWICSection;
-        highlightItems:Array<string>;
+        highlightItems:Array<HighlightItem>;
         kwicLength:number;
         attrViewMode:ViewOptions.AttrViewMode;
         tokenConnectClickHandler:(corpusId:string, tokenNumber:number, kwicLength:number, lineIdx:number)=>void;
@@ -335,12 +345,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             props.tokenConnectClickHandler(corpusId, tokenNumber, props.kwicLength, lineIdx);
         };
 
-        const highlightPositions = props.shadowOutput ? {
-            left: findHighlightPositions(props.shadowOutput.left, props.highlightItems),
-            kwic: findHighlightPositions(props.shadowOutput.kwic, props.highlightItems),
-            right: findHighlightPositions(props.shadowOutput.right, props.highlightItems),
-        } : null;
-
+        const highlightPositions = props.shadowOutput ? findHighlightPositions(props.shadowOutput, props.highlightItems, props.corpusIdx) : null;
         return <>
             <td className={exportTextElmClass(props.corpname, 'lc')}
                     onClick={handleTokenClick}>
@@ -558,7 +563,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         emptyRefValPlaceholder:string;
         data:ConcLine;
         shadowData:ConcLine;
-        highlightItems:Array<string>;
+        highlightItems:Array<HighlightItem>;
         groupColor:string|undefined;
         groupTextColor:string|undefined;
         audioPlayerStatus:PlayerStatus;
@@ -615,18 +620,14 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             return ans.join(' ');
         }
 
-        _renderTextParMode(corpname:string, corpusOutput:KWICSection, shadowOutput:KWICSection) {
+        _renderTextParMode(corpusIdx:number, corpusOutput:KWICSection, shadowOutput:KWICSection) {
+            const corpname = this.props.cols[corpusIdx].n;
             const hasKwic = this.props.corpsWithKwic.indexOf(corpname) > -1;
             const handleTokenClick = (evt) => this._handleNonKwicTokenClick(
                 corpname, this.props.lineIdx, Number(evt.target.getAttribute('data-tokenid'))
             );
 
-            const highlightPositions = shadowOutput ? {
-                left: findHighlightPositions(shadowOutput.left, this.props.highlightItems),
-                kwic: findHighlightPositions(shadowOutput.kwic, this.props.highlightItems),
-                right: findHighlightPositions(shadowOutput.right, this.props.highlightItems),
-            } : null
-
+            const highlightPositions = shadowOutput ? findHighlightPositions(shadowOutput, this.props.highlightItems, corpusIdx) : null
             return (
                 <td className={this._exportTextElmClass(corpname, 'par')}>
                     <span onClick={handleTokenClick}>
@@ -669,11 +670,12 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             );
         }
 
-        _renderText(corpusOutput:KWICSection, corpusIdx:number, shadowOutput:KWICSection) {
-            const corpname = this.props.cols[corpusIdx].n;
+        _renderText(corpusIdx:number, corpusOutput:KWICSection, shadowOutput:KWICSection) {
             if (this.props.viewMode === 'kwic') {
+                const corpname = this.props.cols[corpusIdx].n;
                 return <TextKwicMode
                             corpname={corpname}
+                            corpusIdx={corpusIdx}
                             isAlignedMainCorp={this.props.mainCorp === corpname && this.props.cols.length > 1}
                             corpsWithKwic={this.props.corpsWithKwic}
                             supportsTokenConnect={this.props.supportsTokenConnect}
@@ -687,7 +689,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                             audioPlayerStatus={this.props.audioPlayerStatus} />;
 
             } else {
-                return this._renderTextParMode(corpname, corpusOutput, shadowOutput);
+                return this._renderTextParMode(corpusIdx, corpusOutput, shadowOutput);
             }
         }
 
@@ -768,7 +770,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
 
                     </td>
                     {List.head(this.props.cols).visible ?
-                            this._renderText(primaryLang, 0, shadowPrimaryLang) :
+                            this._renderText(0, primaryLang, shadowPrimaryLang) :
                             <td title={this._renderTextSimple(primaryLang)}>{'\u2026'}</td>
                     }
                     {alignedCorpora.map((alCorp, i) => {
@@ -782,7 +784,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                                         emptyRefValPlaceholder={this.props.emptyRefValPlaceholder}
                                         refsDetailClickHandler={this._refsDetailClickHandler} />
                                 </td>
-                                {alCorp.tokenNumber > -1 ? this._renderText(alCorp, i + 1, shadowAlignedCorpora ? shadowAlignedCorpora[i] : null) :
+                                {alCorp.tokenNumber > -1 ? this._renderText(i + 1, alCorp, shadowAlignedCorpora ? shadowAlignedCorpora[i] : null) :
                                     <td className="note">{`// ${he.translate('concview__translat_not_avail')} //`}</td>
                                 }
                             </React.Fragment>;

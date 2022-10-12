@@ -107,8 +107,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
     }
 
     const TreqRenderer:Views['TreqRenderer'] = (props) => {
-        const [state, updateState] = React.useState({selected: []});
-
         const handleClick = (word) => () => {
             dispatcher.dispatch<typeof QueryActions.QueryInputSetQuery>({
                 name: QueryActions.QueryInputSetQuery.name,
@@ -127,13 +125,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
         }
 
         const handleHighlight = (evt) => {
-            const selected = evt.target.checked ?
-                List.addUnique(evt.target.value, [...state.selected]) :
-                List.removeValue(evt.target.value, [...state.selected])
-            updateState({selected});
             dispatcher.dispatch(
-                ConcActions.SetHighlightItems,
-                {items: selected},
+                ConcActions.SetHighlightValue,
+                {value: evt.target.value, level: 1, highlight: evt.target.checked},
             )
         }
 
@@ -145,7 +139,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                         {translations.length > 0 ? '' : '\u2014'}
                         {List.map((translation, i) => (
                             <React.Fragment key={`${translation['righ']}:${i}`}>
-                                <input type='checkbox' value={translation['righ']} checked={state.selected.includes(translation['righ'])} onChange={handleHighlight}/>
+                                <input type='checkbox' value={translation['righ']} onChange={handleHighlight}/>
                                 <a className="word"
                                         onClick={handleClick(translation['righ'])}
                                         title={he.translate('default_kwic_connect__use_as_filter_in_2nd_corp')}>
