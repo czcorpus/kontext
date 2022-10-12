@@ -32,13 +32,13 @@ function (doc) {
 
 from plugins.abstract.query_suggest import AbstractBackend
 import couchdb
+import json
 from plugins.default_query_suggest.formats.cnc_sublemma import CncSublemmaSuggestion, SuggestionLemmaData
 from typing import Dict
-from strings import simple_query_escape
 
 
 def norm_str(s: str):
-    return f'"{simple_query_escape(s.lower())}"'
+    return json.dumps(str(s).lower())
 
 
 class CouchDBBackend(AbstractBackend[Dict[str, CncSublemmaSuggestion]]):
