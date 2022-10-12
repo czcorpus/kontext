@@ -22,6 +22,7 @@ import * as Kontext from '../../types/kontext';
 import { IActionDispatcher } from 'kombo';
 import { List } from 'cnc-tskit';
 import { Actions as QueryActions } from '../../models/query/actions';
+import { Actions as ConcActions } from '../../models/concordance/actions';
 
 
 export interface Views {
@@ -106,6 +107,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
     }
 
     const TreqRenderer:Views['TreqRenderer'] = (props) => {
+        const [state, updateState] = React.useState({selected: []});
+
         const handleClick = (word) => () => {
             dispatcher.dispatch<typeof QueryActions.QueryInputSetQuery>({
                 name: QueryActions.QueryInputSetQuery.name,
@@ -123,6 +126,17 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
             });
         }
 
+        const handleHighlight = (evt) => {
+            const selected = evt.target.checked ?
+                List.addUnique(evt.target.value, [...state.selected]) :
+                List.removeValue(evt.target.value, [...state.selected])
+            updateState({selected});
+            dispatcher.dispatch(
+                ConcActions.SetHighlightItems,
+                {items: selected},
+            )
+        }
+
         const renderWords = () => {
             const translations = props.data.contents['translations'];
             if (translations.length > 0) {
@@ -131,6 +145,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                         {translations.length > 0 ? '' : '\u2014'}
                         {List.map((translation, i) => (
                             <React.Fragment key={`${translation['righ']}:${i}`}>
+                                <input type='checkbox' value={translation['righ']} checked={state.selected.includes(translation['righ'])} onChange={handleHighlight}/>
                                 <a className="word"
                                         onClick={handleClick(translation['righ'])}
                                         title={he.translate('default_kwic_connect__use_as_filter_in_2nd_corp')}>
@@ -138,7 +153,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                                 </a>
                                 {'\u00a0'}
                                 <span className="note" title={he.translate('default_kwic_connect__abs_freq') + ': ' + translation['freq']}>
-                                  ({he.formatNumber(translation['perc'], 1)}%)
+                                ({he.formatNumber(translation['perc'], 1)}%)
                                 </span>
                                 {i < props.data.contents.translations.length - 1 ? ', ' : null}
                             </React.Fragment>
