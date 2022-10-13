@@ -144,7 +144,7 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
                 freqType: FreqDistType.LEMMA,
                 blockedByAsyncConc: isUnfinishedCalculation,
                 hasOmittedItems: false,
-                highlightItems: [],
+                highlightItems: []
             }
         );
         this.pluginApi = pluginApi;

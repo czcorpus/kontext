@@ -123,6 +123,8 @@ export interface ConcordanceModelState {
 
     shadowLines:Array<Line>;
 
+    shadowPosattrs:Array<string>;
+
     highlightItems:Array<HighlightItem>;
 
     viewMode:'kwic'|'sen'|'align';
@@ -246,6 +248,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 baseViewAttr: lineViewProps.baseViewAttr,
                 lines: importLines(initialData, viewAttrs.indexOf(lineViewProps.baseViewAttr) - 1),
                 shadowLines: null, // used as highlighting reference
+                shadowPosattrs: [],
                 highlightItems: [],
                 viewAttrs,
                 numItemsInLockedGroups: lineViewProps.NumItemsInLockedGroups,
@@ -350,7 +353,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         }
                     });
                     if (!List.empty(this.state.highlightItems)) {
-                        this.reloadShadowLines(this.state.currentPage);
+                        this.reloadShadowLines(this.state.currentPage, this.state.shadowPosattrs);
                     }
                 }
             }
@@ -422,7 +425,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             ],
             action => {
                 forkJoin([
-                    this.suspend({}, (action, syncData) => {
+                    this.waitForAction({}, (action, syncData) => {
                         return action.name === Actions.PublishStoredLineSelections.name ?
                             null : syncData;
                     }).pipe(
@@ -436,7 +439,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                     tap(([wakePayload,[,pageNum]]) => {
                         this.applyLineSelections(wakePayload);
                         if (!List.empty(this.state.highlightItems)) {
-                            this.reloadShadowLines(pageNum);
+                            this.reloadShadowLines(pageNum, this.state.shadowPosattrs);
                         }
                     })
 
@@ -524,7 +527,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         this.busyTimer = this.stopBusyTimer(this.busyTimer);
                     }
                     if (!List.empty(this.state.highlightItems)) {
-                        this.reloadShadowLines(this.state.currentPage);
+                        this.reloadShadowLines(this.state.currentPage, this.state.shadowPosattrs);
                     }
                 }
                 this.emitChange();
@@ -565,7 +568,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                     }
                 });
                 if (!List.empty(this.state.highlightItems)) {
-                    this.reloadShadowLines(this.state.currentPage);
+                    this.reloadShadowLines(this.state.currentPage, this.state.shadowPosattrs);
                 }
             }
         );
@@ -626,7 +629,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         }
                     });
                     if (!List.empty(this.state.highlightItems)) {
-                        this.reloadShadowLines(this.state.currentPage);
+                        this.reloadShadowLines(this.state.currentPage, this.state.shadowPosattrs);
                     }
                 }
             }
@@ -832,13 +835,14 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         this.addActionHandler(
             Actions.SetHighlightItems,
             action => {
-                if (this.state.shadowLines === null) {
-                    this.reloadShadowLines(this.state.currentPage);
-                }
                 this.changeState(state => {
                     state.forceScroll = window.pageYOffset;
                     state.highlightItems = action.payload.items;
+                    state.shadowPosattrs = List.addUnique(action.payload.matchPosAttr, state.shadowPosattrs);
                 });
+                if (this.state.shadowLines === null) {
+                    this.reloadShadowLines(this.state.currentPage, this.state.shadowPosattrs);
+                }
             }
         );
     }
@@ -977,10 +981,10 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         );
     }
 
-    private reloadShadowLines(fromp:number) {
+    private reloadShadowLines(fromp:number, attrs: Array<string>) {
         const args = {
             ...this.layoutModel.getConcArgs(),
-            attrs: ['lemma'], // TODO depends on corpus
+            attrs,
             format: 'json',
             fromp,
             q: ['~' + this.state.concId],

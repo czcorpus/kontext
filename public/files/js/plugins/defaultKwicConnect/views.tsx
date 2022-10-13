@@ -77,6 +77,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                                                             data: item,
                                                             corpora: this.props.corpora,
                                                             highlightItems: this.props.highlightItems,
+                                                            freqType: this.props.freqType
                                                         }
                                                     ), output.data)
                                                 }
