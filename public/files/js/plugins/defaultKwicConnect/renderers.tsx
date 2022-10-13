@@ -23,28 +23,34 @@ import { IActionDispatcher } from 'kombo';
 import { List } from 'cnc-tskit';
 import { Actions as QueryActions } from '../../models/query/actions';
 import { Actions as ConcActions } from '../../models/concordance/actions';
+import { HighlightItem } from '../../models/concordance/main';
 
 
 export interface Views {
     RawHtmlRenderer:React.FC<{
         corpora: Array<string>;
         data: {contents: Array<[string, string]>};
+        highlightItems: Array<HighlightItem>;
     }>;
     DataMuseSimilarWords:React.FC<{
         corpora: Array<string>;
         data:any;
+        highlightItems: Array<HighlightItem>;
     }>;
     TreqRenderer:React.FC<{
         corpora: Array<string>;
         data:any;
+        highlightItems: Array<HighlightItem>;
     }>;
     UnsupportedRenderer:React.FC<{
         corpora: Array<string>;
         data:any;
+        highlightItems: Array<HighlightItem>;
     }>;
     CustomMessageRenderer:React.FC<{
         corpora: Array<string>;
         data:any;
+        highlightItems: Array<HighlightItem>;
     }>;
 }
 
@@ -107,7 +113,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
     }
 
     const TreqRenderer:Views['TreqRenderer'] = (props) => {
-        const handleClick = (word) => () => {
+        const handleClick = (word:string) => () => {
             dispatcher.dispatch<typeof QueryActions.QueryInputSetQuery>({
                 name: QueryActions.QueryInputSetQuery.name,
                 payload: {
@@ -124,11 +130,20 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
             });
         }
 
-        const handleHighlight = (evt) => {
+        // handling highlights only for first aligned corpus (level = 1)
+        const handleHighlight = (evt:React.ChangeEvent<HTMLInputElement>) => {
             dispatcher.dispatch(
-                ConcActions.SetHighlightValue,
-                {value: evt.target.value, level: 1, highlight: evt.target.checked},
-            )
+                ConcActions.SetHighlightItems,
+                {
+                    items: evt.target.checked ?
+                        List.push({value: evt.target.value, level: 1}, [...props.highlightItems]) :
+                        List.filter(v => !(v.level === 1 && v.value === evt.target.value), [...props.highlightItems])
+                }
+            );
+        }
+
+        const _isHighlighted = (value:string):boolean => {
+            return List.some(v => v.level === 1 && v.value === value, props.highlightItems);
         }
 
         const renderWords = () => {
@@ -139,7 +154,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                         {translations.length > 0 ? '' : '\u2014'}
                         {List.map((translation, i) => (
                             <React.Fragment key={`${translation['righ']}:${i}`}>
-                                <input type='checkbox' value={translation['righ']} onChange={handleHighlight}/>
+                                <input type='checkbox' value={translation['righ']} checked={_isHighlighted(translation['righ'])} onChange={handleHighlight}/>
                                 <a className="word"
                                         onClick={handleClick(translation['righ'])}
                                         title={he.translate('default_kwic_connect__use_as_filter_in_2nd_corp')}>

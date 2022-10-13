@@ -830,28 +830,15 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         );
 
         this.addActionHandler(
-            Actions.SetHighlightValue,
+            Actions.SetHighlightItems,
             action => {
-                this.changeState(state => {
-                    state.forceScroll = window.pageYOffset;
-                    if (action.payload.highlight) {
-                        const itemIdx = List.findIndex(v => v.value === action.payload.value && v.level === action.payload.level, state.highlightItems);
-                        if (itemIdx === -1) {
-                            state.highlightItems = List.push({
-                                value: action.payload.value,
-                                level: action.payload.level,
-                            }, state.highlightItems);
-                        }
-                    } else {
-                        const itemIdx = List.findIndex(v => v.value === action.payload.value && v.level === action.payload.level, state.highlightItems);
-                        if (itemIdx > -1) {
-                            state.highlightItems = List.removeAt(itemIdx, state.highlightItems);
-                        }
-                    }
-                });
                 if (this.state.shadowLines === null) {
                     this.reloadShadowLines();
                 }
+                this.changeState(state => {
+                    state.forceScroll = window.pageYOffset;
+                    state.highlightItems = action.payload.items;
+                });
             }
         );
     }

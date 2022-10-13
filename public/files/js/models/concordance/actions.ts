@@ -23,6 +23,7 @@ import { AudioPlayerActions, DetailExpandPositions, LineSelectionModes, LineSelV
     AjaxConcResponse, LineGroupId, RefsColumn, PaginationActions, LineGroupChartData } from './common';
 import * as TextTypes from '../../types/textTypes';
 import { DataSaveFormat } from '../../app/navigation/save';
+import { HighlightItem } from './main';
 
 
 export interface ConcGroupChangePayload {
@@ -491,11 +492,9 @@ export class Actions {
         name: 'DASHBOARD_TOGGLE_EXTENDED_INFO'
     };
 
-    static SetHighlightValue:Action<{
-        value:string;
-        level:number;
-        highlight:boolean;
+    static SetHighlightItems:Action<{
+        items:Array<HighlightItem>;
     }> = {
-        name: 'CONCORDANCE_SET_HIGHLIGHT_VALUE'
+        name: 'CONCORDANCE_SET_HIGHLIGHT_ITEMS'
     };
 }
