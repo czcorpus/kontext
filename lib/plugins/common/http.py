@@ -22,6 +22,7 @@ import urllib.parse
 from typing import Any, Dict, List, Tuple, Union
 
 import aiohttp
+from sanic import Sanic
 
 
 class HTTPClientException(Exception):
@@ -29,6 +30,8 @@ class HTTPClientException(Exception):
 
 
 class HTTPClient:
+
+    TIMEOUT = 15
 
     def __init__(self, server: str, enable_ssl: bool = False):
         self._server = server
@@ -42,14 +45,9 @@ class HTTPClient:
     def _is_found(response: aiohttp.ClientResponse) -> bool:
         return 200 <= response.status < 300
 
-    def create_connection(self) -> aiohttp.ClientSession:
-        timeout = aiohttp.ClientTimeout(total=15)
-        if self._ssl_context is not None:
-            return aiohttp.ClientSession(
-                connector=aiohttp.TCPConnector(ssl_context=self._ssl_context),
-                timeout=timeout,
-            )
-        return aiohttp.ClientSession(timeout=timeout)
+    @property
+    def _app_client_session(self) -> aiohttp.ClientSession:
+        return Sanic.get_app('kontext').ctx.client_session
 
     async def process_response(self, response: aiohttp.ClientResponse):
         if self._is_valid_response(response):
@@ -76,15 +74,13 @@ class HTTPClient:
     async def request(
             self, method: str, path: str, args: Union[Dict[str, Any], List[Tuple[str, Any]]], data: Any = None,
             headers=None):
-        async with self.create_connection() as session:
-            url = self._server + (path + '?' + self._process_args(args) if args else path)
-            async with session.request(method, url, data=data, headers=headers if headers is not None else {}) as response:
-                return await self.process_response(response)
+        url = self._server + (path + '?' + self._process_args(args) if args else path)
+        async with self._app_client_session.request(method, url, data=data, headers=headers if headers is not None else {}, timeout=self.TIMEOUT, ssl=self._ssl_context) as response:
+            return await self.process_response(response)
 
     async def json_request(
             self, method: str, path: str, args: Union[Dict[str, Any], List[Tuple[str, Any]]], data: Any = None,
             headers=None):
-        async with self.create_connection() as session:
-            url = self._server + (path + '?' + self._process_args(args) if args else path)
-            async with session.request(method, url, json=data, headers=headers if headers is not None else {}) as response:
-                return await self.process_response(response)
+        url = self._server + (path + '?' + self._process_args(args) if args else path)
+        async with self._app_client_session.request(method, url, json=data, headers=headers if headers is not None else {}, timeout=self.TIMEOUT, ssl=self._ssl_context) as response:
+            return await self.process_response(response)
