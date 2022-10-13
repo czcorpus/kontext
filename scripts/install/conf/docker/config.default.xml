@@ -119,7 +119,7 @@
         <subc_storage>
             <module>default_subc_storage</module>
             <db_path>/var/local/corpora/subc_storage.db</db_path>
-        <subc_storage/>
+        </subc_storage>
         <db>
             <module>redis_db</module>
             <host>kontext_redis_1</host>
