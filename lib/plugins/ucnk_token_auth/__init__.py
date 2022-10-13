@@ -21,24 +21,26 @@ this module contains a UCNK-specific token authentication plug-in for KonText ru
 as an API instance.
 """
 import logging
-from typing import Dict, List, Optional
 import ssl
 from dataclasses import dataclass
+from typing import Dict, List, Optional
+
 import aiohttp
-from sanic.blueprints import Blueprint
-import ujson
-from action.plugin.ctx import PluginCtx
-from action.control import http_action
-from action.model.user import UserActionModel
-from action.krequest import KRequest
-from action.response import KResponse
 import plugins
+import ujson
+from action.control import http_action
+from action.krequest import KRequest
+from action.model.user import UserActionModel
+from action.plugin.ctx import PluginCtx
+from action.response import KResponse
+from plugin_types.auth import (
+    AbstractRemoteTokenAuth, CorpusAccess, GetUserInfo, UserInfo)
 from plugin_types.corparch.backend import DatabaseBackend
 from plugin_types.integration_db import IntegrationDatabase
-from plugin_types.auth import AbstractRemoteTokenAuth, CorpusAccess, GetUserInfo
-from plugin_types.auth import UserInfo
 from plugins import inject
 from plugins.mysql_corparch.backend import Backend
+from sanic import Sanic
+from sanic.blueprints import Blueprint
 
 IMPLICIT_CORPUS = 'susanne'
 
@@ -133,43 +135,29 @@ class UCNKTokenAuth(AbstractRemoteTokenAuth):
     def _toolbar_uses_ssl(self):
         return self._auth_conf.toolbar_url.startswith('https://')
 
-    def _create_client_session(self, cookies: Dict[str, str]) -> aiohttp.ClientSession:
-        timeout = aiohttp.ClientTimeout(total=self._auth_conf.toolbar_server_timeout)
-        if self._ssl_context is not None:
-            return aiohttp.ClientSession(
-                connector=aiohttp.TCPConnector(ssl_context=self._ssl_context),
-                timeout=timeout,
-                headers={'Content-Type': 'application/x-www-form-urlencoded'},
-                cookies=cookies
-            )
-        return aiohttp.ClientSession(
-            timeout=timeout,
-            headers={'Content-Type': 'application/x-www-form-urlencoded'},
-            cookies=cookies
-        )
+    @property
+    def _app_client_session(self) -> aiohttp.ClientSession:
+        return Sanic.get_app('kontext').ctx.client_session
 
     async def _fetch_toolbar_api_response(self, cookies: Dict[str, str]) -> str:
         if cookies is None:
             cookies = {}
-        async with self._create_client_session(cookies) as session:
-            async with session.post(self._auth_conf.toolbar_url, cookies=cookies) as response:
-                if response.status == 200:
-                    return (await response.read()).decode('utf-8')
-                else:
-                    raise Exception(
-                        f'Failed to load data from authentication server (UCNK toolbar): status {response.status}'
-                    )
+        async with self._app_client_session.post(self._auth_conf.toolbar_url, cookies=cookies, timeout=self._auth_conf.toolbar_server_timeout, ssl=self._ssl_context) as response:
+            if response.status == 200:
+                return (await response.read()).decode('utf-8')
+            else:
+                raise Exception(
+                    f'Failed to load data from authentication server (UCNK toolbar): status {response.status}'
+                )
 
     async def authenticate(self, plugin_ctx: 'PluginCtx', token_id):
-        async with self._create_client_session({}) as session:
-            async with session.post(
-                    self._auth_conf.login_url, data={'personal_access_token': token_id}) as response:
-                if response.status == 200:
-                    return dict(x_api_key=response.cookies[self._auth_conf.cookie_sid].value)
-                else:
-                    raise Exception(
-                        f'Failed to load data from authentication server (UCNK toolbar): status {response.status}'
-                    )
+        async with self._app_client_session.post(self._auth_conf.login_url, data={'personal_access_token': token_id}, headers={'Content-Type': 'application/x-www-form-urlencoded'}, timeout=self._auth_conf.toolbar_server_timeout, ssl=self._ssl_context) as response:
+            if response.status == 200:
+                return dict(x_api_key=response.cookies[self._auth_conf.cookie_sid].value)
+            else:
+                raise Exception(
+                    f'Failed to load data from authentication server (UCNK toolbar): status {response.status}'
+                )
 
     async def revalidate(self, plugin_ctx: PluginCtx):
         curr_user_id = plugin_ctx.session.get('user', {'id': None})['id']
