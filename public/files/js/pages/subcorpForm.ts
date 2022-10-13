@@ -223,8 +223,6 @@ export class SubcorpForm {
             this.layoutModel.registerCorpusSwitchAwareModels(
                 () => {
                     this.layoutModel.unmountReactComponent(this.subcorpFormRoot);
-                    this.layoutModel.unmountReactComponent(PageMount.VIEW_OPTIONS);
-                    this.layoutModel.unmountReactComponent(PageMount.GENERAL_OVERVIEW);
                     this.layoutModel.unmountReactComponent(this.queryOverviewRoot);
                     this.init();
                 },

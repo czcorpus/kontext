@@ -23,7 +23,7 @@ import { createRoot, Root } from 'react-dom/client';
 import { ITranslator, IFullActionControl, StatelessModel } from 'kombo';
 import { Observable, Subject } from 'rxjs';
 import { webSocket } from 'rxjs/webSocket';
-import { List, HTTP, tuple, pipe, URL as CURL } from 'cnc-tskit';
+import { List, HTTP, tuple, pipe, URL as CURL, Dict } from 'cnc-tskit';
 
 import * as PluginInterfaces from '../types/plugins';
 import * as Kontext from '../types/kontext';
@@ -215,10 +215,10 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
     /**
      * Renders provided React component with specified mount element.
      *
-     * @param reactClass
+     * Please note that handling of the returned root is up to the caller.
+     *
      * @param target An element whose content will be replaced by rendered React component
      * @param props Properties used by created component
-     * @param callback a function called once the component is rendered
      */
     renderReactComponent<T>(
         reactClass:React.ComponentClass<T>|React.FC<T>,
@@ -230,6 +230,25 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             React.createElement<T>(reactClass, props)
         );
         return root;
+    }
+
+    /**
+     *
+     * Renders a component to a mount point identified by a PageMount value.
+     * Such a render registers a newly created React root and in case of repeated
+     * render, the root is reused.
+     */
+    renderLayoutReactComponent<T>(
+        reactClass:React.ComponentClass<T>|React.FC<T>,
+        target:PageMount,
+        props?:T
+    ):Root {
+        if (this.reactRoots[target] === undefined) {
+            const newRoot = createRoot(document.querySelector(target));
+            this.reactRoots[target] = newRoot;
+        }
+        this.reactRoots[target].render(React.createElement<T>(reactClass, props));
+        return this.reactRoots[target];
     }
 
     /**
@@ -414,9 +433,9 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      */
     initNotifications() {
         if (this.getConf<boolean>('popupServerMessages')) {
-            this.reactRoots[PageMount.CLIENT_MESAGES] = this.renderReactComponent(
+            this.renderLayoutReactComponent(
                 this.layoutViews.Messages,
-                document.querySelector(PageMount.CLIENT_MESAGES) as HTMLElement,
+                PageMount.CLIENT_MESAGES,
                 {initCallback: () => this.dispatchServerMessages()}
             );
         }
@@ -623,9 +642,9 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             mainMenuModel: this.mainMenuModel,
             asyncTaskModel: this.getModels().asyncTaskInfoModel
         });
-        this.reactRoots[PageMount.MAIN_MENU_MOUNT] = this.renderReactComponent(
+        this.renderLayoutReactComponent(
             menuViews.MainMenu,
-            window.document.getElementById(PageMount.MAIN_MENU_MOUNT),
+            PageMount.MAIN_MENU_MOUNT,
             {}
         );
     }
@@ -640,10 +659,10 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             this.corpusInfoModel
         );
         const target = window.document.getElementById(PageMount.GENERAL_OVERVIEW);
-        if (target) { // few pages do not use this
-            this.reactRoots[PageMount.GENERAL_OVERVIEW] = this.renderReactComponent(
+        if (target) {
+            this.renderLayoutReactComponent(
                 overviewViews.OverviewArea,
-                target,
+                PageMount.GENERAL_OVERVIEW,
                 {
                     isLocalUiLang: this.getConf<boolean>('isLocalUiLang')
                 }
@@ -662,9 +681,9 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             mainMenuModel
         });
 
-        this.reactRoots[PageMount.VIEW_OPTIONS] = this.renderReactComponent(
+        this.renderLayoutReactComponent(
             viewOptionsViews.OptionsContainer,
-            window.document.getElementById(PageMount.VIEW_OPTIONS),
+            PageMount.VIEW_OPTIONS,
             {
                 corpusIdent: this.getCorpusIdent()
             }
@@ -672,9 +691,9 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
     }
 
     private initGlobalStyles():void {
-        this.reactRoots[PageMount.GLOBAL_STYLE] = this.renderReactComponent(
+        this.renderLayoutReactComponent(
             GlobalStyle,
-            window.document.getElementById(PageMount.GLOBAL_STYLE)
+            PageMount.GLOBAL_STYLE
         );
     }
 
@@ -686,9 +705,9 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             const mount = document.getElementById(PageMount.ERROR_REPORTING);
             if (mount) {
                 const plugin = issueReportingPlugin(this.pluginApi())
-                this.renderReactComponent(
+                this.renderLayoutReactComponent(
                     plugin.getWidgetView(),
-                    document.getElementById(PageMount.ERROR_REPORTING),
+                    PageMount.ERROR_REPORTING,
                     this.getConf<Kontext.GeneralProps>('issueReportingAction')
                 );
                 return true;
@@ -867,9 +886,9 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                 searchHistoryModel: this.searchHistoryModel
             });
 
-            this.reactRoots[PageMount.QUERY_HISTORY] = this.renderReactComponent(
+            this.renderLayoutReactComponent(
                 qhViews.HistoryContainer,
-                document.getElementById(PageMount.QUERY_HISTORY)
+                PageMount.QUERY_HISTORY
             );
 
             this.commonViews = commonViewsFactory(this.getComponentHelpers());
@@ -904,12 +923,11 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
 
             const auth:PluginInterfaces.Auth.IPlugin = authPlugin(this.pluginApi());
             if (this.isNotEmptyPlugin(auth)) {
-                const mountElm = document.getElementById(PageMount.USER_PANE);
                 const userPaneView = auth.getUserPaneView();
                 if (userPaneView) {
-                    this.reactRoots[PageMount.USER_PANE] = this.renderReactComponent(
+                    this.renderLayoutReactComponent(
                         userPaneView,
-                        mountElm,
+                        PageMount.USER_PANE,
                         {
                             isAnonymous: this.getConf<boolean>('anonymousUser'),
                             fullname: this.getConf<string>('userFullname')

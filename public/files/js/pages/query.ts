@@ -396,9 +396,9 @@ export class QueryPage {
             // from previous instance
             this.layoutModel.registerCorpusSwitchAwareModels(
                 () => {
-                    this.layoutModel.unmountReactComponent(PageMount.VIEW_OPTIONS);
                     this.layoutModel.unmountReactComponent(this.queryFormRoot);
                     this.layoutModel.unmountReactComponent(this.queryOverviewRoot);
+                    this.layoutModel.unmountReactComponent(this.topbarHelpRoot);
                     this.init();
                 },
                 this.queryModel,
