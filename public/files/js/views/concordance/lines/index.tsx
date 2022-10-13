@@ -479,7 +479,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                     {List.flatMap((v, i) => {
                         let element;
                         if (props.highlightPositions.includes(i)) {
-                            element = [<span className="highlight">{v}</span>];
+                            element = [<span key={i} className="highlight">{v}</span>];
                         } else {
                             element = [v];
                         }
@@ -627,7 +627,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                 corpname, this.props.lineIdx, Number(evt.target.getAttribute('data-tokenid'))
             );
 
-            const highlightPositions = shadowOutput ? findHighlightPositions(shadowOutput, this.props.highlightItems, corpusIdx) : null
+            const highlightPositions = shadowOutput ? findHighlightPositions(shadowOutput, this.props.highlightItems, corpusIdx) : null;
             return (
                 <td className={this._exportTextElmClass(corpname, 'par')}>
                     <span onClick={handleTokenClick}>

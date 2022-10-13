@@ -75,7 +75,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                                                         {
                                                             key: `provider:${j}`,
                                                             data: item,
-                                                            corpora: this.props.corpora
+                                                            corpora: this.props.corpora,
+                                                            highlightItems: this.props.highlightItems,
                                                         }
                                                     ), output.data)
                                                 }

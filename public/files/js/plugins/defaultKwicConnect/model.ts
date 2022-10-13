@@ -29,6 +29,7 @@ import { FreqServerArgs } from '../../models/freqs/regular/common';
 import { HTTP, List } from 'cnc-tskit';
 import { Actions } from './actions';
 import { IPluginApi } from '../../types/plugins/common';
+import { HighlightItem } from '../../models/concordance/main';
 
 
 export enum KnownRenderers {
@@ -88,7 +89,7 @@ export interface KwicConnectState {
     data:Array<ProviderWordMatch>;
     blockedByAsyncConc:boolean;
     hasOmittedItems:boolean;
-    highlighted:Array<string>;
+    highlightItems:Array<HighlightItem>;
 }
 
 
@@ -143,7 +144,7 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
                 freqType: FreqDistType.LEMMA,
                 blockedByAsyncConc: isUnfinishedCalculation,
                 hasOmittedItems: false,
-                highlighted: [],
+                highlightItems: [],
             }
         );
         this.pluginApi = pluginApi;
@@ -227,6 +228,15 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
                     });
 
                 }
+            }
+        );
+
+        this.addActionHandler(
+            ConcActions.SetHighlightItems,
+            action => {
+                this.changeState(state => {
+                    state.highlightItems = action.payload.items;
+                });
             }
         );
     }
