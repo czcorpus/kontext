@@ -21,11 +21,11 @@
 export enum PageMount {
 
     CLIENT_MESAGES = '#content .messages-mount',
-    MAIN_MENU_MOUNT = 'main-menu-mount',
-    GENERAL_OVERVIEW = 'general-overview-mount',
-    VIEW_OPTIONS = 'view-options-mount',
-    GLOBAL_STYLE = 'global-style-mount',
-    ERROR_REPORTING = 'error-reporting-mount',
-    QUERY_HISTORY = 'query-history-mount',
-    USER_PANE = 'user-pane-mount'
+    MAIN_MENU_MOUNT = '#main-menu-mount',
+    GENERAL_OVERVIEW = '#general-overview-mount',
+    VIEW_OPTIONS = '#view-options-mount',
+    GLOBAL_STYLE = '#global-style-mount',
+    ERROR_REPORTING = '#error-reporting-mount',
+    QUERY_HISTORY = '#query-history-mount',
+    USER_PANE = '#user-pane-mount'
 }
