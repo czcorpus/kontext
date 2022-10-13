@@ -325,6 +325,21 @@ class AbstractRemoteAuth(AbstractAuth):
         """
 
 
+class AbstractRemoteTokenAuth(AbstractAuth):
+    @abc.abstractmethod
+    async def revalidate(self, plugin_ctx: 'PluginCtx'):
+        pass
+
+    @abc.abstractmethod
+    async def authenticate(self, plugin_ctx: 'PluginCtx', token_id: str) -> Dict[str, str]:
+        """
+        Authenticate user via provided personal access token. The method should return
+        a dict of cookies returned by a respective token authentication service. It is
+        then up to the user to pass the cookies to each API request.
+        """
+        pass
+
+
 class AuthException(Exception):
     """
     General authentication/authorization exception
