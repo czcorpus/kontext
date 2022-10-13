@@ -49,6 +49,7 @@ LOCALE_PATH = os.path.realpath(f'{os.path.dirname(__file__)}/../locale')
 
 from typing import Optional
 
+import aiohttp
 import plugins
 import plugins.export
 import settings
@@ -192,6 +193,12 @@ async def server_init(app: Sanic, loop: asyncio.BaseEventLoop):
 
     # init extensions fabrics
     session.init_app(app, interface=interface)
+    app.ctx.client_session = aiohttp.ClientSession()
+
+
+@application.listener('after_server_stop')
+async def server_init(app: Sanic, loop: asyncio.BaseEventLoop):
+    await app.ctx.client_session.close()
 
 
 @application.middleware('request')

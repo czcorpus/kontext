@@ -38,7 +38,7 @@ import logging
 import ssl
 import urllib.parse
 from dataclasses import dataclass
-from typing import List, Optional, Tuple, Dict
+from typing import Dict, List, Optional, Tuple
 
 import aiohttp
 import plugins
@@ -50,6 +50,7 @@ from plugin_types.corparch.backend import DatabaseBackend
 from plugin_types.integration_db import IntegrationDatabase
 from plugins import inject
 from plugins.mysql_corparch.backend import Backend
+from sanic import Sanic
 
 IMPLICIT_CORPUS = 'susanne'
 
@@ -115,20 +116,9 @@ class CentralAuth(AbstractRemoteAuth):
     def _mk_user_key(user_id: int) -> str:
         return f'user:{user_id}'
 
-    def _create_client_session(self, cookies: Dict[str, str]) -> aiohttp.ClientSession:
-        timeout = aiohttp.ClientTimeout(total=self._auth_conf.toolbar_server_timeout)
-        if self._ssl_context is not None:
-            return aiohttp.ClientSession(
-                connector=aiohttp.TCPConnector(ssl_context=self._ssl_context),
-                timeout=timeout,
-                headers={'Content-Type': 'application/x-www-form-urlencoded'},
-                cookies=cookies
-            )
-        return aiohttp.ClientSession(
-            timeout=timeout,
-            headers={'Content-Type': 'application/x-www-form-urlencoded'},
-            cookies=cookies
-        )
+    @property
+    def _app_client_session(self) -> aiohttp.ClientSession:
+        return Sanic.get_app('kontext').ctx.client_session
 
     async def _fetch_toolbar_api_response(
             self,
@@ -136,14 +126,13 @@ class CentralAuth(AbstractRemoteAuth):
             cookies: Optional[Dict[str, str]] = None) -> str:
         if cookies is None:
             cookies = {}
-        async with self._create_client_session(cookies) as session:
-            async with session.post(self._auth_conf.toolbar_url, params=args) as response:
-                if response.status == 200:
-                    return (await response.read()).decode('utf-8')
-                else:
-                    raise Exception(
-                        f'Failed to load data from authentication server (UCNK toolbar): status {response.status}'
-                    )
+        async with self._app_client_session.post(self._auth_conf.toolbar_url, headers={'Content-Type': 'application/x-www-form-urlencoded'}, params=args, cookies=cookies, timeout=self._auth_conf.toolbar_server_timeout, ssl=self._ssl_context) as response:
+            if response.status == 200:
+                return (await response.read()).decode('utf-8')
+            else:
+                raise Exception(
+                    f'Failed to load data from authentication server (UCNK toolbar): status {response.status}'
+                )
 
     async def revalidate(self, plugin_ctx: PluginCtx):
         """
