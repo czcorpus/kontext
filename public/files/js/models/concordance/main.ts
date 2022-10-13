@@ -833,6 +833,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             Actions.SetHighlightValue,
             action => {
                 this.changeState(state => {
+                    state.forceScroll = window.pageYOffset;
                     if (action.payload.highlight) {
                         const itemIdx = List.findIndex(v => v.value === action.payload.value && v.level === action.payload.level, state.highlightItems);
                         if (itemIdx === -1) {
