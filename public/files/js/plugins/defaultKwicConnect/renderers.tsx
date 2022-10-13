@@ -20,10 +20,11 @@
 import * as React from 'react';
 import * as Kontext from '../../types/kontext';
 import { IActionDispatcher } from 'kombo';
-import { List } from 'cnc-tskit';
+import { List, pipe } from 'cnc-tskit';
 import { Actions as QueryActions } from '../../models/query/actions';
 import { Actions as ConcActions } from '../../models/concordance/actions';
 import { HighlightItem } from '../../models/concordance/main';
+import { FreqDistType } from './model';
 
 
 export interface Views {
@@ -31,26 +32,31 @@ export interface Views {
         corpora: Array<string>;
         data: {contents: Array<[string, string]>};
         highlightItems: Array<HighlightItem>;
+        freqType: FreqDistType;
     }>;
     DataMuseSimilarWords:React.FC<{
         corpora: Array<string>;
         data:any;
         highlightItems: Array<HighlightItem>;
+        freqType: FreqDistType;
     }>;
     TreqRenderer:React.FC<{
         corpora: Array<string>;
         data:any;
         highlightItems: Array<HighlightItem>;
+        freqType: FreqDistType;
     }>;
     UnsupportedRenderer:React.FC<{
         corpora: Array<string>;
         data:any;
         highlightItems: Array<HighlightItem>;
+        freqType: FreqDistType;
     }>;
     CustomMessageRenderer:React.FC<{
         corpora: Array<string>;
         data:any;
         highlightItems: Array<HighlightItem>;
+        freqType: FreqDistType;
     }>;
 }
 
@@ -101,6 +107,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
         args:Array<[string, string]>;
 
     }> = (props) => {
+
         return <form className="view-in-treq" action={props.action} method="post" target="_blank">
             {List.map(([k, v], i) =>
                 <input key={`arg:${i}:${k}`} type="hidden" name={k} value={v} />,
@@ -112,7 +119,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
         </form>;
     }
 
+    // ---------------------------------- <TreqRenderer /> ------------------------------------------
+
     const TreqRenderer:Views['TreqRenderer'] = (props) => {
+
+        const [toggleAllOn, setToggleAll] = React.useState(false);
+
         const handleClick = (word:string) => () => {
             dispatcher.dispatch<typeof QueryActions.QueryInputSetQuery>({
                 name: QueryActions.QueryInputSetQuery.name,
@@ -132,12 +144,46 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
 
         // handling highlights only for first aligned corpus (level = 1)
         const handleHighlight = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            if (evt.target.checked) {
+                dispatcher.dispatch(
+                    ConcActions.SetHighlightItems,
+                    {
+                        matchPosAttr: props.freqType as string,
+                        items: List.push({value: evt.target.value, level: 1}, [...props.highlightItems])
+                    }
+                );
+
+            } else {
+                const items = List.filter(v => !(v.level === 1 && v.value === evt.target.value), [...props.highlightItems]);
+                if (List.empty(items)) {
+                    setToggleAll(false);
+                }
+                dispatcher.dispatch(
+                    ConcActions.SetHighlightItems,
+                    {
+                        matchPosAttr: props.freqType as string,
+                        items
+                    }
+                );
+            }
+        }
+
+        const handleHighlightAll = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            setToggleAll(!toggleAllOn);
+
+            const translations:Array<{freq:number; perc:number; left:string; righ:string}> = props.data.contents['translations'];
             dispatcher.dispatch(
                 ConcActions.SetHighlightItems,
                 {
+                    matchPosAttr: props.freqType as string,
                     items: evt.target.checked ?
-                        List.push({value: evt.target.value, level: 1}, [...props.highlightItems]) :
-                        List.filter(v => !(v.level === 1 && v.value === evt.target.value), [...props.highlightItems])
+                        pipe(
+                            translations,
+                            List.map(
+                                v => ({value: v.righ, level: 1})
+                            )
+                        ) :
+                        []
                 }
             );
         }
@@ -185,6 +231,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
             <div className="provider-block">
                 <strong className="base-word">{props.data.kwic}:</strong>
                 {renderWords()}
+                <p>
+                    <label>
+                        {he.translate('default_kwic_connect__highlight_all_translations')}
+                        <input type="checkbox" onChange={handleHighlightAll} checked={toggleAllOn} />
+                    </label>
+                </p>
                 <TreqBacklinkForm action={backLink[0]} args={backLink[1]} />
             </div>
         );

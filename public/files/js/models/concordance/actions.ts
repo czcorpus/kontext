@@ -494,6 +494,7 @@ export class Actions {
 
     static SetHighlightItems:Action<{
         items:Array<HighlightItem>;
+        matchPosAttr:string;
     }> = {
         name: 'CONCORDANCE_SET_HIGHLIGHT_ITEMS'
     };
