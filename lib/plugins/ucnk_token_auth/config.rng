@@ -30,13 +30,13 @@
             <element name="logout_url">
                 <text />
             </element>
-            <element name="toolbar_url">
-                <text />
-            </element>
             <element name="cookie_sid">
                 <text />
             </element>
             <element name="api_key_header">
+                <text />
+            </element>
+            <element name="toolbar_url">
                 <text />
             </element>
             <element name="toolbar_server_timeout">
