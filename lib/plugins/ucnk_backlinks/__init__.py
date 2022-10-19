@@ -48,10 +48,11 @@ async def view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         raise UserReadableException('Missing parameter "cl"')
     if amodel.args.corpname not in ('syn_v11', ):
         raise UserReadableException('Function not supported in {}'.format(amodel.args.corpname))
-    amodel.args.q = [
-        'q[col_lemma="{cl}"][]*[col_lemma="{cl}"] within <s />'.format(cl=cl),
-        'D',
-        'f']
+    amodel.args.q = ['q[col_lemma="{cl}"][]*[col_lemma="{cl}"] within <s />'.format(cl=cl)]
+    pf = req.args.get('p')
+    if pf:
+        amodel.args.q.append(f'p0 0 1 [lemma="{pf}"]')
+    amodel.args.q.extend(['D', 'f'])
     amodel.args.refs = '=doc.title,=doc.pubyear'
     amodel.args.pagesize = 50
     amodel.args.attrs = 'word'
