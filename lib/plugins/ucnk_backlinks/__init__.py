@@ -41,10 +41,11 @@ def col_lemma(self, req):
         raise UserActionException('Missing parameter "cl"')
     if self.args.corpname not in ('syn_v11', ):
         raise UserActionException('Function not supported in {}'.format(self.args.corpname))
-    self.args.q = [
-        'q[col_lemma="{cl}"][]*[col_lemma="{cl}"] within <s />'.format(cl=cl),
-        'D',
-        'f']
+    self.args.q = ['q[col_lemma="{cl}"][]*[col_lemma="{cl}"] within <s />'.format(cl=cl)]
+    pf = req.args.get('p')
+    if pf:
+        self.args.q.append(f'p0 0 1 [lemma="{pf}"]')
+    self.args.q.extend(['D', 'f'])
     self.args.refs = '=doc.title,=doc.pubyear'
     self.args.pagesize = 50
     self.args.attrs = 'word'
