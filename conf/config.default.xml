@@ -38,6 +38,7 @@
         <conc_dashboard_modules>
             <item>freqs</item>
         </conc_dashboard_modules>
+        <no_anonymous_access>0</no_anonymous_access>
     </global>
     <sessions>
         <interface>redis</interface>

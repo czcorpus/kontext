@@ -184,8 +184,10 @@ def http_action(
             path_elms = norm_path.split('/')
             action_name = path_elms[-1]
             action_prefix = '/'.join(path_elms[:-1]) if len(path_elms) > 1 else ''
+            no_anonymous_access = settings.get_bool('global', 'no_anonymous_access', False)
             aprops = ActionProps(
-                action_name=action_name, action_prefix=action_prefix, access_level=access_level,
+                action_name=action_name, action_prefix=action_prefix,
+                access_level=1 if no_anonymous_access else access_level,
                 return_type=return_type, page_model=page_model, template=template,
                 mutates_result=mutates_result, action_log_mapper=action_log_mapper)
             expl_return_type = get_explicit_return_type(req)
