@@ -372,6 +372,13 @@
                             </oneOrMore>
                         </element>
                     </optional>
+                    <optional>
+                        <element name="no_anonymous_access">
+                            <ref name="boolValues" />
+                            <a:documentation>Nothing will be accessible without login if set to true.
+                            Usefull for API instance.</a:documentation>
+                        </element>
+                    </optional>
                 </interleave>
             </element>
             <element name="sessions">
