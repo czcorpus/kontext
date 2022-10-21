@@ -40,6 +40,7 @@ from action.req_args import JSONRequestArgsProxy, RequestArgsProxy
 from action.response import KResponse
 from corplib.abstract import AbstractKCorpus
 from corplib.corpus import KCorpus
+from corplib.subcorpus import SubcorpusRecord
 from corplib.fallback import EmptyCorpus, ErrorCorpus
 from main_menu.model import EventTriggeringItem, MainMenu
 from plugin_types.corparch.corpus import (
@@ -614,14 +615,16 @@ class CorpusActionModel(UserActionModel):
         """
         subcorp_list = l10n.sort(
             await self.user_subc_names(self.corp.corpname), loc=self._req.ui_lang, key=lambda x: x.name)
-        if self.corp.author_id is not None and self.corp.author_id != self._req.session_get('user', 'id'):
+        if (
+                self.corp.subcorpus_id and
+                self.corp.author_id is not None and
+                self.corp.author_id != self._req.session_get('user', 'id')):
             try:
                 srch = next((x for x in subcorp_list if x.id == self.corp.subcorpus_id))
             except StopIteration:
                 srch = None
             if srch is None:
-                subcorp_list.insert(0, dict(v=self.corp.subcorpus_name, n=self.corp.subcorpus_name,
-                                            pub=self.corp.subcorpus_id, foreign=True))
+                subcorp_list.insert(0, self.corp.portable_ident)
         if len(subcorp_list) > 0:
             subcorp_list = (
                 [{'n': '--{}--'.format(self._req.translate('whole corpus')), 'v': ''}] +
