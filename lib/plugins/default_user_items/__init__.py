@@ -67,7 +67,7 @@ def import_record(obj):
 
 
 @bp.route('/user/set_favorite_item', methods=['POST'])
-@http_action(return_type='json', access_level=1, action_model=CorpusActionModel)
+@http_action(return_type='json', access_level=2, action_model=CorpusActionModel)
 async def set_favorite_item(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     """
     """
@@ -99,7 +99,7 @@ async def set_favorite_item(amodel: CorpusActionModel, req: KRequest, resp: KRes
 
 
 @bp.route('/user/unset_favorite_item', methods=['POST'])
-@http_action(return_type='json', access_level=1, action_model=CorpusActionModel)
+@http_action(return_type='json', access_level=2, action_model=CorpusActionModel)
 async def unset_favorite_item(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.USER_ITEMS as uit:
         await uit.delete_user_item(amodel.plugin_ctx, req.form.get('id'))

@@ -64,7 +64,7 @@ class GeneralFreqArgs:
 
 @bp.route('/freqs')
 @http_action(
-    access_level=0, action_model=ConcActionModel, page_model='freq', template='freqs.html', mapped_args=GeneralFreqArgs)
+    action_model=ConcActionModel, page_model='freq', template='freqs.html', mapped_args=GeneralFreqArgs)
 async def freqs(amodel: ConcActionModel, req: KRequest[GeneralFreqArgs], resp: KResponse):
     """
     Display a frequency list (tokens, text types) based on more low-level arguments. In case the
@@ -108,7 +108,7 @@ class SharedFreqArgs:
 
 @bp.route('/shared_freqs')
 @http_action(
-    access_level=0, action_model=ConcActionModel, page_model='freq', template='freqs.html', mapped_args=SharedFreqArgs)
+    action_model=ConcActionModel, page_model='freq', template='freqs.html', mapped_args=SharedFreqArgs)
 async def shared_freqs(amodel: ConcActionModel, req: KRequest[SharedFreqArgs], resp: KResponse):
     """
     Display a frequency list (tokens, text types) based on more low-level arguments. In case the
@@ -366,7 +366,7 @@ async def _freqml(amodel: ConcActionModel, req: KRequest[MLFreqRequestArgs], res
 
 @bp.route('/freqml')
 @http_action(
-    access_level=0, template='freqs.html', page_model='freq', action_model=ConcActionModel,
+    template='freqs.html', page_model='freq', action_model=ConcActionModel,
     mapped_args=MLFreqRequestArgs)
 async def freqml(amodel: ConcActionModel, req: KRequest[MLFreqRequestArgs], resp: KResponse):
     try:
@@ -387,7 +387,7 @@ class FreqttActionArgs:
 
 @bp.route('/freqtt')
 @http_action(
-    access_level=1, template='freqs.html', action_model=ConcActionModel, page_model='freq',
+    access_level=2, template='freqs.html', action_model=ConcActionModel, page_model='freq',
     mapped_args=FreqttActionArgs)
 async def freqtt(amodel: ConcActionModel, req: KRequest[FreqttActionArgs], resp: KResponse):
     if not req.mapped_args.fttattr:
@@ -437,7 +437,7 @@ async def _freqct(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 
 
 @bp.route('/freqct')
-@http_action(action_model=ConcActionModel, access_level=1, page_model='freq', template='freqs.html')
+@http_action(action_model=ConcActionModel, access_level=2, page_model='freq', template='freqs.html')
 async def freqct(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     """
     """
@@ -449,7 +449,7 @@ async def freqct(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 
 
 @bp.route('/export_freqct', methods=['POST'])
-@http_action(action_model=UserActionModel, access_level=1, return_type='plain')
+@http_action(action_model=UserActionModel, access_level=2, return_type='plain')
 async def export_freqct(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.EXPORT_FREQ2D as plg:
         data = req.json
@@ -485,7 +485,7 @@ class SavefreqArgs:
 
 @bp.route('/savefreq')
 @http_action(
-    access_level=1, action_model=ConcActionModel, mapped_args=SavefreqArgs, return_type='plain')
+    access_level=2, action_model=ConcActionModel, mapped_args=SavefreqArgs, return_type='plain')
 async def savefreq(amodel: ConcActionModel, req: KRequest[SavefreqArgs], resp: KResponse):
     """
     save a frequency list

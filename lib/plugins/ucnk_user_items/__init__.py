@@ -32,7 +32,7 @@ bp = Blueprint('ucnk_user_items')
 
 
 @bp.route('/user/set_favorite_item', methods=['POST'])
-@http_action(return_type='json', access_level=1, action_model=UserActionModel)
+@http_action(return_type='json', access_level=2, action_model=UserActionModel)
 async def set_favorite_item(amodel: UserActionModel, req: KRequest, resp: KResponse):
     """
     """
@@ -72,7 +72,7 @@ async def set_favorite_item(amodel: UserActionModel, req: KRequest, resp: KRespo
 
 
 @bp.route('/user/unset_favorite_item', methods=['POST'])
-@http_action(return_type='json', access_level=1, action_model=UserActionModel)
+@http_action(return_type='json', access_level=2, action_model=UserActionModel)
 async def unset_favorite_item(amodel, req, resp):
     with plugins.runtime.USER_ITEMS as uit:
         await uit.delete_user_item(amodel.plugin_ctx, req.form.get('id'))
