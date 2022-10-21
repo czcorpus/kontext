@@ -46,7 +46,7 @@ bp = Blueprint('subcorpus', url_prefix='subcorpus')
 
 @bp.route('/properties')
 @http_action(
-    access_level=1, return_type='json', action_model=CorpusActionModel)
+    access_level=2, return_type='json', action_model=CorpusActionModel)
 async def properties(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     corp_ident = amodel.corp.portable_ident
     struct_and_attrs = await amodel.get_structs_and_attrs()
@@ -65,7 +65,7 @@ async def properties(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
 
 @bp.route('/create', ['POST'])
 @http_action(
-    access_level=1, return_type='json', action_log_mapper=log_mapping.new_subcorpus, action_model=SubcorpusActionModel)
+    access_level=2, return_type='json', action_log_mapper=log_mapping.new_subcorpus, action_model=SubcorpusActionModel)
 async def create(amodel: SubcorpusActionModel, req: KRequest, resp: KResponse):
     try:
         return await amodel.create_subcorpus()
@@ -75,7 +75,7 @@ async def create(amodel: SubcorpusActionModel, req: KRequest, resp: KResponse):
 
 @bp.route('/create_draft', ['POST'])
 @http_action(
-    access_level=1, return_type='json', action_model=SubcorpusActionModel)
+    access_level=2, return_type='json', action_model=SubcorpusActionModel)
 async def create_draft(amodel: SubcorpusActionModel, req: KRequest, resp: KResponse):
     try:
         return await amodel.create_subcorpus_draft()
@@ -84,7 +84,7 @@ async def create_draft(amodel: SubcorpusActionModel, req: KRequest, resp: KRespo
 
 
 @bp.route('/new')
-@http_action(access_level=1, template='subcorpus/new.html', page_model='subcorpForm', action_model=CorpusActionModel)
+@http_action(access_level=2, template='subcorpus/new.html', page_model='subcorpForm', action_model=CorpusActionModel)
 async def new(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     """
     Displays a form to create a new subcorpus
@@ -127,7 +127,7 @@ async def new(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
 
 
 @bp.route('/archive', ['POST'])
-@http_action(access_level=1, return_type='json', action_model=UserActionModel)
+@http_action(access_level=2, return_type='json', action_model=UserActionModel)
 async def archive(amodel: UserActionModel, req: KRequest, resp: KResponse):
     ans = []
     for item in req.json['items']:
@@ -139,7 +139,7 @@ async def archive(amodel: UserActionModel, req: KRequest, resp: KResponse):
 
 
 @bp.route('/restore', ['POST'])
-@http_action(access_level=1, return_type='json', action_model=CorpusActionModel)
+@http_action(access_level=2, return_type='json', action_model=CorpusActionModel)
 async def restore(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     corp_ident = amodel.corp.portable_ident
     if isinstance(corp_ident, SubcorpusIdent):
@@ -205,7 +205,7 @@ async def _filter_subcorpora(amodel: UserActionModel, req: KRequest, ignore_no_s
 
 
 @bp.route('/list')
-@http_action(access_level=1, template='subcorpus/list.html', page_model='subcorpList', action_model=UserActionModel)
+@http_action(access_level=2, template='subcorpus/list.html', page_model='subcorpList', action_model=UserActionModel)
 async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
     amodel.disabled_menu_items = (
         MainMenu.VIEW('kwic-sent-switch'),
@@ -220,7 +220,7 @@ async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KRespons
 
 
 @bp.route('/ajax_list')
-@http_action(access_level=1, return_type='json', action_model=UserActionModel)
+@http_action(access_level=2, return_type='json', action_model=UserActionModel)
 async def ajax_list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
     """
     Used for updating subcorpora page information.
@@ -229,7 +229,7 @@ async def ajax_list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KRe
 
 
 @bp.route('/delete', ['POST'])
-@http_action(access_level=1, return_type='json', action_model=UserActionModel)
+@http_action(access_level=2, return_type='json', action_model=UserActionModel)
 async def delete(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
     num_wiped = 0
     for item in req.json['items']:
@@ -246,7 +246,7 @@ async def delete(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dic
 
 
 @bp.route('/update_name_and_public_desc', ['POST'])
-@http_action(access_level=1, return_type='json', action_model=CorpusActionModel)
+@http_action(access_level=2, return_type='json', action_model=CorpusActionModel)
 async def update_name_and_public_desc(amodel: CorpusActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
     with plugins.runtime.SUBC_STORAGE as sa:
         preview_only = req.args.get('preview-only') == '1'

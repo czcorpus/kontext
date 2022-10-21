@@ -72,7 +72,7 @@ class TokenAuthConf:
 
 
 @bp.route('/token/authenticate', methods=['POST'])
-@http_action(return_type='json', action_model=UserActionModel)
+@http_action(access_level=0, return_type='json', action_model=UserActionModel)
 async def token_login(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.AUTH as auth_plg:
         return await auth_plg.authenticate(amodel.plugin_ctx, req.form.get('t'))

@@ -357,7 +357,7 @@ async def create_view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 
 
 @bp.route('/archive_concordance', ['POST'])
-@http_action(access_level=1, return_type='json', action_model=UserActionModel)
+@http_action(access_level=2, return_type='json', action_model=UserActionModel)
 async def archive_concordance(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.QUERY_PERSISTENCE as qp:
         revoke = bool(int(req.args.get('revoke')))
@@ -367,7 +367,7 @@ async def archive_concordance(amodel: UserActionModel, req: KRequest, resp: KRes
 
 
 @bp.route('/get_stored_conc_archived_status')
-@http_action(access_level=1, return_type='json', action_model=UserActionModel)
+@http_action(access_level=2, return_type='json', action_model=UserActionModel)
 async def get_stored_conc_archived_status(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.QUERY_PERSISTENCE as qp:
         return {
@@ -469,7 +469,7 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 
 
 @bp.route('/save_query', ['POST'])
-@http_action(access_level=1, return_type='json', action_model=UserActionModel)
+@http_action(access_level=2, return_type='json', action_model=UserActionModel)
 async def save_query(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.QUERY_HISTORY as qh, plugins.runtime.QUERY_PERSISTENCE as qp:
         _, data = await qp.archive(amodel.session_get('user', 'id'), req.json['query_id'])
@@ -488,7 +488,7 @@ async def save_query(amodel: UserActionModel, req: KRequest, resp: KResponse):
 
 
 @bp.route('/unsave_query', ['POST'])
-@http_action(access_level=1, return_type='json', action_model=UserActionModel)
+@http_action(access_level=2, return_type='json', action_model=UserActionModel)
 async def unsave_query(amodel: UserActionModel, req: KRequest, resp: KResponse):
     # as opposed to the 'save_query' method which also performs archiving of conc params,
     # this method keeps the conc params as they are because we assume that user just does
@@ -504,7 +504,7 @@ async def unsave_query(amodel: UserActionModel, req: KRequest, resp: KResponse):
 
 
 @bp.route('/delete_query', ['POST'])
-@http_action(access_level=1, return_type='json', action_model=UserActionModel)
+@http_action(access_level=2, return_type='json', action_model=UserActionModel)
 async def delete_query(amodel: UserActionModel, req: KRequest, resp: KResponse):
     # remove query from history (respective results are kept)
     with plugins.runtime.QUERY_HISTORY as qh:
@@ -576,7 +576,7 @@ def _widectx(amodel: ConcActionModel, position: int, left_ctx: int, right_ctx: i
 
 
 @bp.route('/widectx')
-@http_action(access_level=0, action_log_mapper=log_mapping.widectx, action_model=ConcActionModel)
+@http_action(action_log_mapper=log_mapping.widectx, action_model=ConcActionModel)
 async def widectx(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     """
     display a hit in a wider context
@@ -722,7 +722,7 @@ async def switch_main_corp(amodel: ConcActionModel, req: KRequest, resp: KRespon
 
 
 @bp.route('/filter', methods=['POST'])
-@http_action(access_level=1, mutates_result=True, return_type='json', action_model=ConcActionModel)
+@http_action(access_level=2, mutates_result=True, return_type='json', action_model=ConcActionModel)
 async def filter(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     """
     Positive/Negative filter
@@ -828,7 +828,7 @@ async def filter_firsthits(amodel: ConcActionModel, req: KRequest, resp: KRespon
 
 
 @bp.route('/sortx', ['POST'])
-@http_action(access_level=1, template='view.html', page_model='view', mutates_result=True, action_model=ConcActionModel)
+@http_action(access_level=2, template='view.html', page_model='view', mutates_result=True, action_model=ConcActionModel)
 async def sortx(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     """
     simple sort concordance
@@ -858,7 +858,7 @@ async def sortx(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 
 
 @bp.route('/mlsortx', ['POST'])
-@http_action(access_level=1, template='view.html', page_model='view', mutates_result=True, action_model=ConcActionModel)
+@http_action(access_level=2, template='view.html', page_model='view', mutates_result=True, action_model=ConcActionModel)
 async def mlsortx(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     """
     multiple level sort concordance
@@ -1019,7 +1019,7 @@ async def ajax_rename_line_group(amodel: ConcActionModel, req: KRequest, resp: K
 
 
 @bp.route('/export_line_groups_chart', ['POST'])
-@http_action(access_level=1, return_type='plain', mutates_result=True, action_model=ConcActionModel)
+@http_action(access_level=2, return_type='plain', mutates_result=True, action_model=ConcActionModel)
 async def export_line_groups_chart(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.CHART_EXPORT as ce:
         format = req.json.get('cformat')
@@ -1145,7 +1145,7 @@ def _get_ipm_base_set_desc(corp: AbstractKCorpus, contains_within, translate: Ca
 
 @bp.route('/saveconc')
 @http_action(
-    access_level=1, action_model=ConcActionModel, mapped_args=SaveConcArgs, return_type='plain')
+    access_level=2, action_model=ConcActionModel, mapped_args=SaveConcArgs, return_type='plain')
 async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: KResponse):
     try:
         corpus_info = await amodel.get_corpus_info(amodel.args.corpname)
@@ -1196,7 +1196,7 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
 
 @bp.route('/reduce', methods=['POST'])
 @http_action(
-    action_model=ConcActionModel, access_level=0, template='view.html', page_model='view', mutates_result=True)
+    action_model=ConcActionModel, template='view.html', page_model='view', mutates_result=True)
 async def reduce(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     """
     random sample
@@ -1220,7 +1220,7 @@ class StructctxArgs:
 
 
 @bp.route('/structctx')
-@http_action(action_model=ConcActionModel, mapped_args=StructctxArgs, access_level=1, return_type='json')
+@http_action(action_model=ConcActionModel, mapped_args=StructctxArgs, access_level=2, return_type='json')
 def structctx(amodel: ConcActionModel, req: KRequest[StructctxArgs], resp: KResponse):
     """
     display a hit in a context of a structure"

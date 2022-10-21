@@ -41,7 +41,7 @@ bp = Blueprint('wordlist', url_prefix='wordlist')
 
 
 @bp.route('/form')
-@http_action(access_level=1, template='wordlist/form.html', page_model='wordlistForm', action_model=WordlistActionModel)
+@http_action(access_level=2, template='wordlist/form.html', page_model='wordlistForm', action_model=WordlistActionModel)
 async def form(amodel: WordlistActionModel, _: KRequest, __: KResponse):
     """
     Word List Form
@@ -56,7 +56,7 @@ async def form(amodel: WordlistActionModel, _: KRequest, __: KResponse):
 
 @bp.route('/submit', ['POST'])
 @http_action(
-    access_level=1, return_type='json', page_model='wordlist', mutates_result=True,
+    access_level=2, return_type='json', page_model='wordlist', mutates_result=True,
     action_log_mapper=log_mapping.wordlist, action_model=WordlistActionModel)
 async def submit(amodel: WordlistActionModel, req: KRequest, _: KResponse):
     form_args = WordlistFormArgs()
@@ -96,7 +96,7 @@ async def submit(amodel: WordlistActionModel, req: KRequest, _: KResponse):
 
 @bp.route('/restore')
 @http_action(
-    access_level=1, template='wordlist/restore.html', page_model='restoreWordlist',
+    access_level=2, template='wordlist/restore.html', page_model='restoreWordlist',
     mutates_result=True, action_log_mapper=log_mapping.wordlist, action_model=WordlistActionModel)
 async def restore(amodel: WordlistActionModel, req: KRequest, _: KResponse):
     worker = calc_backend_client(settings)
@@ -125,7 +125,7 @@ async def restore(amodel: WordlistActionModel, req: KRequest, _: KResponse):
 
 @bp.route('/result')
 @http_action(
-    access_level=1, template='wordlist/result.html', page_model='wordlist',
+    access_level=2, template='wordlist/result.html', page_model='wordlist',
     action_log_mapper=log_mapping.wordlist, action_model=WordlistActionModel)
 async def result(amodel: WordlistActionModel, req: KRequest, _: KResponse):
     amodel.disabled_menu_items = (
@@ -235,7 +235,7 @@ async def struct_result(amodel: WordlistActionModel, req: KRequest, _: KResponse
 
 
 @bp.route('/savewl')
-@http_action(access_level=1, return_type='plain', action_model=WordlistActionModel, mapped_args=WordlistSaveFormArgs)
+@http_action(access_level=2, return_type='plain', action_model=WordlistActionModel, mapped_args=WordlistSaveFormArgs)
 async def savewl(amodel: WordlistActionModel, req: KRequest[WordlistSaveFormArgs], resp: KResponse):
     """
     save word list

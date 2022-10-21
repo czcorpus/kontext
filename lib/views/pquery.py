@@ -182,7 +182,7 @@ class SavePQueryArgs:
 
 
 @bp.route('/download')
-@http_action(access_level=1, return_type='plain', action_model=ParadigmaticQueryActionModel, mapped_args=SavePQueryArgs)
+@http_action(access_level=2, return_type='plain', action_model=ParadigmaticQueryActionModel, mapped_args=SavePQueryArgs)
 async def download(amodel: ParadigmaticQueryActionModel, req: KRequest[SavePQueryArgs], resp: KResponse):
     """
     dawnload a paradigmatic query results

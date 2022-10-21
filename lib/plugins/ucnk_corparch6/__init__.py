@@ -82,14 +82,14 @@ class UcnkCorpusInfo(CorpusInfo):
 
 
 @bp.route('/user/get_favorite_corpora')
-@http_action(return_type='json', access_level=1, action_model=UserActionModel)
+@http_action(return_type='json', access_level=2, action_model=UserActionModel)
 async def get_favorite_corpora(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.CORPARCH as ca, plugins.runtime.USER_ITEMS as ui:
         return await ca.export_favorite(amodel.plugin_ctx, await ui.get_user_items(amodel.plugin_ctx))
 
 
 @bp.route('/user/ask_corpus_access', methods=['POST'])
-@http_action(access_level=1, return_type='json', action_model=UserActionModel)
+@http_action(access_level=2, return_type='json', action_model=UserActionModel)
 async def ask_corpus_access(amodel: UserActionModel, req: KRequest, resp: KResponse):
     ans = {}
     with plugins.runtime.CORPARCH as ca:

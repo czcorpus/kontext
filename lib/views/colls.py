@@ -34,7 +34,7 @@ bp = Blueprint('colls')
 
 
 @bp.route('/collx')
-@http_action(action_model=ConcActionModel, access_level=1, template='collx.html', page_model='coll')
+@http_action(action_model=ConcActionModel, access_level=2, template='collx.html', page_model='coll')
 async def collx(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     """
     list collocations
@@ -113,7 +113,7 @@ class SavecollArgs:
 
 @bp.route('/savecoll')
 @http_action(
-    action_model=ConcActionModel, mapped_args=SavecollArgs, access_level=1, return_type='plain')
+    action_model=ConcActionModel, mapped_args=SavecollArgs, access_level=2, return_type='plain')
 async def savecoll(amodel: ConcActionModel, req: KRequest[SavecollArgs], resp: KResponse):
     """
     save collocations

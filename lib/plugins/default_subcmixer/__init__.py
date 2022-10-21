@@ -42,7 +42,7 @@ bp = Blueprint('default_subcmixer')
 
 
 @bp.route('/subcmixer_run_calc', methods=['POST'])
-@http_action(return_type='json', access_level=1, action_model=CorpusActionModel)
+@http_action(return_type='json', access_level=2, action_model=CorpusActionModel)
 def subcmixer_run_calc(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     try:
         with plugins.runtime.SUBCMIXER as sm:
@@ -56,7 +56,7 @@ def subcmixer_run_calc(amodel: CorpusActionModel, req: KRequest, resp: KResponse
 
 
 @bp.route('/subcmixer_create_subcorpus', methods=['POST'])
-@http_action(return_type='json', access_level=1, action_model=CorpusActionModel)
+@http_action(return_type='json', access_level=2, action_model=CorpusActionModel)
 async def subcmixer_create_subcorpus(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     """
     Create a subcorpus in a low-level way.

@@ -206,6 +206,6 @@ async def viewoptsx(amodel: UserActionModel, req: KRequest, resp: KResponse):
 
 
 @bp.route('/toggle_conc_dashboard', ['POST'])
-@http_action(access_level=1, return_type='json', action_model=UserActionModel)
+@http_action(access_level=2, return_type='json', action_model=UserActionModel)
 async def toggle_conc_dashboard(amodel: UserActionModel, req: KRequest, resp: KResponse):
     return {}

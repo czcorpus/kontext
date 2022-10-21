@@ -32,7 +32,12 @@ class ActionProps:
 
     return_type: str
 
-    access_level: int = 0
+    access_level: int = 1
+    """
+    0 = always public access (even if no_anonymous_access is set to true; this is mostly for login actions
+    1 = public access if no_anonymous_access is False
+    2 = only for registered users
+    """
 
     http_method: Union[Optional[str], Tuple[str, ...]] = 'GET'
 

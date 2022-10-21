@@ -30,7 +30,7 @@ bp = Blueprint('user', url_prefix='user')
 
 
 @bp.route('/loginx', methods=['GET'])
-@http_action(template='user/login.html', action_model=UserActionModel)
+@http_action(access_level=0, template='user/login.html', action_model=UserActionModel)
 async def loginx(amodel: UserActionModel, req: KRequest, resp: KResponse):
     """
     This method is used by some of the installations with Shibboleth-based authentication.
@@ -45,7 +45,7 @@ async def loginx(amodel: UserActionModel, req: KRequest, resp: KResponse):
 
 
 @bp.route('/login', methods=['POST'])
-@http_action(template='user/login.html', action_model=UserActionModel)
+@http_action(access_level=0, template='user/login.html', action_model=UserActionModel)
 async def login(amodel: UserActionModel, req: KRequest, resp: KResponse):
     amodel.disabled_menu_items = amodel.USER_ACTIONS_DISABLED_ITEMS
     with plugins.runtime.AUTH as auth:
@@ -66,7 +66,7 @@ async def login(amodel: UserActionModel, req: KRequest, resp: KResponse):
 
 @bp.route('/logoutx', methods=['POST'])
 @http_action(
-    access_level=1, template='user/login.html', page_model='login', action_model=UserActionModel)
+    access_level=2, template='user/login.html', page_model='login', action_model=UserActionModel)
 async def logoutx(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.AUTH(AbstractInternalAuth) as auth:
         amodel.disabled_menu_items = amodel.USER_ACTIONS_DISABLED_ITEMS
@@ -142,13 +142,12 @@ async def sign_up_confirm_email(amodel: UserActionModel, req: KRequest, resp: KR
             return ans
         except SignUpNeedsUpdateException as ex:
             logging.getLogger(__name__).warning(ex)
-            raise ImmediateRedirectException(req.create_url('user/sign_up_form',
-                                                            dict(key=key, username_taken=1)))
+            raise ImmediateRedirectException(req.create_url('user/sign_up_form', dict(key=key, username_taken=1)))
 
 
 @bp.route('/set_user_password', methods=['POST'])
 @http_action(
-    access_level=1, return_type='json', action_model=UserActionModel)
+    access_level=2, return_type='json', action_model=UserActionModel)
 async def set_user_password(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.AUTH(AbstractInternalAuth) as auth:
         curr_passwd = req.form.get('curr_passwd')
@@ -184,9 +183,16 @@ async def set_user_password(amodel: UserActionModel, req: KRequest, resp: KRespo
 
 
 async def _load_query_history(
-        amodel: UserActionModel, user_id: int, offset: int, limit: int, from_date: str, to_date: str, q_supertype: str, corpname: str, archived_only: bool):
-
-    rows = ()
+        amodel: UserActionModel,
+        user_id: int,
+        offset: int,
+        limit: int,
+        from_date: str,
+        to_date: str,
+        q_supertype: str,
+        corpname: str,
+        archived_only: bool):
+    rows = []
     with plugins.runtime.QUERY_HISTORY as qh:
         rows = await qh.get_user_queries(
             user_id,
@@ -199,7 +205,7 @@ async def _load_query_history(
 
 
 @bp.route('/ajax_query_history')
-@http_action(access_level=1, return_type='json', action_model=UserActionModel)
+@http_action(access_level=2, return_type='json', action_model=UserActionModel)
 async def ajax_query_history(amodel: UserActionModel, req: KRequest, resp: KResponse):
     offset = int(req.args.get('offset', '0'))
     limit = int(req.args.get('limit'))
@@ -220,14 +226,14 @@ async def ajax_query_history(amodel: UserActionModel, req: KRequest, resp: KResp
 
 
 @bp.route('/ajax_get_toolbar')
-@http_action(return_type='template', action_model=UserActionModel)
+@http_action(access_level=0, return_type='template', action_model=UserActionModel)
 async def ajax_get_toolbar(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.APPLICATION_BAR as ab:
         return await ab.get_contents(plugin_ctx=amodel.plugin_ctx, return_url=amodel.return_url)
 
 
 @bp.route('/ajax_user_info')
-@http_action(return_type='json', action_model=UserActionModel)
+@http_action(access_level=0, return_type='json', action_model=UserActionModel)
 async def ajax_user_info(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.AUTH as auth:
         user_info = await auth.get_user_info(amodel.plugin_ctx)
@@ -240,7 +246,7 @@ async def ajax_user_info(amodel: UserActionModel, req: KRequest, resp: KResponse
 @bp.route('/profile')
 @http_action(
     return_type='template', template='user/administration.html', page_model='userProfile',
-    access_level=1, action_model=UserActionModel)
+    access_level=2, action_model=UserActionModel)
 async def profile(amodel: UserActionModel, req: KRequest, resp: KResponse):
     if not amodel.uses_internal_user_pages():
         raise UserReadableException(req.translate('This function is disabled.'))

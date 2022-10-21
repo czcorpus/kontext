@@ -124,11 +124,11 @@ def get_explicit_return_type(req: KRequest) -> Optional[str]:
 
 
 def _is_authorized_to_execute_action(amodel: AbstractPageModel, aprops: ActionProps):
-    return not isinstance(amodel, AbstractUserModel) or aprops.access_level == 0 or not amodel.user_is_anonymous()
+    return not isinstance(amodel, AbstractUserModel) or aprops.access_level <= 1 or not amodel.user_is_anonymous()
 
 
 def http_action(
-        access_level: int = 0,
+        access_level: int = 1,
         template: Optional[str] = None,
         action_model: Optional[Type[BaseActionModel]] = None,
         page_model: Optional[str] = None,
@@ -144,7 +144,7 @@ def http_action(
     def some_action(action_model: BaseActionModel, req: KRequest, resp: KResponse) -> ResultType
 
     arguments:
-    access_level -- 0,1,... (0 = public user, 1 = logged in user)
+    access_level -- 0, 1, 2 (0 = public user always, 1 = public user iff no_public_access is False, 2 = logged in user)
     template -- a Jinja2 template source path (a relative path starting in the 'templates' dir)
     action_model -- a model providing functions for handling user session (session in a general sense),
                     accessing corpora and misc. search results
@@ -185,9 +185,13 @@ def http_action(
             action_name = path_elms[-1]
             action_prefix = '/'.join(path_elms[:-1]) if len(path_elms) > 1 else ''
             no_anonymous_access = settings.get_bool('global', 'no_anonymous_access', False)
+            if no_anonymous_access and access_level == 1:
+                runtime_access_level = 2
+            else:
+                runtime_access_level = access_level
             aprops = ActionProps(
                 action_name=action_name, action_prefix=action_prefix,
-                access_level=1 if no_anonymous_access else access_level,
+                access_level=runtime_access_level,
                 return_type=return_type, page_model=page_model, template=template,
                 mutates_result=mutates_result, action_log_mapper=action_log_mapper)
             expl_return_type = get_explicit_return_type(req)
