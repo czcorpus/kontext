@@ -93,3 +93,8 @@ export const GroupIndicator = styled.a`
         border-radius: 30%;
     }
 `;
+
+export const QueryOpInfoLI = styled.li`
+
+
+`;

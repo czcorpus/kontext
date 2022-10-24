@@ -17,7 +17,9 @@
 # 02110-1301, USA.
 
 import sys
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Optional
+from dataclasses import dataclass
+from dataclasses_json import dataclass_json
 
 import manatee
 import plugins
@@ -40,6 +42,31 @@ def conc_is_sorted(q: Union[List[str], Tuple[str, ...]]) -> bool:
     return ans
 
 
+@dataclass
+class ConcDescItem:
+    op: str
+    args: str
+    url1: List[Tuple[str, str]]
+    url2: List[Tuple[str, str]]
+    size: int
+    fullsize: int
+    opid: str
+    nicearg: Optional[List[str]] = None
+    conc_persistence_op_id: Optional[str] = None
+
+
+@dataclass_json
+@dataclass
+class ConcDescJsonItem:
+    op: str
+    opid: str
+    args: str
+    nicearg: str
+    tourl: str
+    size: int
+    fullsize: int
+
+
 async def get_conc_desc(corpus: AbstractKCorpus, q=None, translate=True, skip_internals=True, translator=lambda x: x):
     """
     arguments:
@@ -60,12 +87,14 @@ async def get_conc_desc(corpus: AbstractKCorpus, q=None, translate=True, skip_in
 
     async def detect_internal_op(qx, pos):
         if pos > len(qx) - 3 or not skip_internals:
-            return False, await get_size(pos)
+            csize, _ = await get_size(pos)
+            return False, csize
         align_end = 0
         for j in range(pos, len(qx) - 2, 3):
             if is_aligned_op(qx, j):
                 align_end = j + 2
-        return align_end > 0, await get_size(align_end)
+        csize, _ = await get_size(align_end)
+        return align_end > 0, csize
 
     if q is None:
         q = []
@@ -96,13 +125,12 @@ async def get_conc_desc(corpus: AbstractKCorpus, q=None, translate=True, skip_in
             last_user_op_idx = i - 1
             while is_align_op:
                 if last_user_op_idx >= 0:
-                    tmp = desc[last_user_op_idx]
-                    desc[last_user_op_idx] = tmp[:4] + (size,) + tmp[-1:]
+                    desc[last_user_op_idx].size = size
                 i += 3  # ignore aligned corpus operation, i is now the next valid operation
                 is_align_op, size = await detect_internal_op(q, i)
             if i > len(q) - 1:
                 break
-        size = await get_size(i)
+        size, fsize = await get_size(i)
         opid = q[i][0]
         args = q[i][1:]
         url1 = [('q', qi) for qi in q[:i]]
@@ -123,9 +151,9 @@ async def get_conc_desc(corpus: AbstractKCorpus, q=None, translate=True, skip_in
             size = ''
             args = translator('enabled')
         elif opid == 'X':  # aligned corpora changes (<= orig_size) total size
-            desc[-1] = desc[-1][:4] + (size,) + desc[-1][5:]
+            desc[-1].size = size
         if op:
-            desc.append((op, args, url1, url2, size, opid))
+            desc.append(ConcDescItem(op, args, url1, url2, size, fsize, opid))
         i += 1
     return desc
 

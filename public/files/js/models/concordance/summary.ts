@@ -25,7 +25,7 @@ import { PageModel } from '../../app/page';
 import * as Kontext from '../../types/kontext';
 import * as TextTypes from '../../types/textTypes';
 import { Observable } from 'rxjs';
-import { HTTP } from 'cnc-tskit';
+import { HTTP, List } from 'cnc-tskit';
 import * as PluginInterfaces from '../../types/plugins';
 
 
@@ -42,6 +42,8 @@ export interface ConcSummaryModelState {
     corpusIpm:number; // ipm related to the whole corpus or a named subcorpus
     ipm:number|null;
     baseCorpusSize:number;
+    corpusSampleSize:number;
+    queryChainSize:number;
     concSize:number;
     fullSize:number; // TODO explain
     baseCorpname:string;
@@ -114,6 +116,7 @@ export class ConcSummaryModel extends StatelessModel<ConcSummaryModelState> {
                 state.concSize = action.payload.data.concsize;
                 state.fullSize = action.payload.data.fullsize;
                 state.ipm = null;
+                state.queryChainSize = List.size(action.payload.data.query_overview);
                 state.corpusIpm = action.payload.data.result_relative_freq;
             }
         );

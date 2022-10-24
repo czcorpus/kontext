@@ -217,7 +217,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             <div className="ktx-pagination-core">
                 <span className="curr-page">{renderCurrentPage(numPages)}</span>
                 {'\u00A0/\u00A0'}
-                <span className="numofpages">{he.formatNumber(numPages)}</span>
+                <span className="num-of-pages">{he.formatNumber(numPages)}</span>
             </div>
         );
     };

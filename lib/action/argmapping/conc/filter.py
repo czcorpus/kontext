@@ -84,7 +84,7 @@ class FilterFormArgs(ConcFormArgs[_FilterFormArgs]):
         self.data.filtpos = data['filtpos']
         self.data.inclkwic = data['inclkwic']
         self.data.qmcase = data['qmcase']
-        self.data.within = data['within']
+        self.data.within = data.get('within')
         self.data.default_attr = data['default_attr']
         self.data.use_regexp = data.get('use_regexp', False)
         self.data.no_query_history = data.get('no_query_history', False)

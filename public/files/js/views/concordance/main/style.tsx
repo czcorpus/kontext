@@ -91,43 +91,6 @@ const ConcVerticalBar = styled.div`
             color: ${theme.colorLightText};
         }
 
-        .result-info {
-            flex-grow: 3;
-            margin: 0;
-            font-size: 1em;
-            font-family: ${theme.condensedFontFamily};
-
-            #ipm-loader img {
-                background-color: white;
-                border-radius: 3px;
-                padding: 3px 20px;
-                opacity: 0.7;
-                position: absolute;
-            }
-
-            .ipm {
-                font-weight: bold;
-            }
-
-            sup {
-                vertical-align: middle;
-                top: -0.4em;
-                padding-left: 0.2em;
-            }
-
-            .notice-shuffled {
-                white-space: nowrap;
-            }
-
-            .ipm-note img {
-                display: inline-block;
-                width: 1em;
-                vertical-align: middle;
-                margin-right: 0.3em;
-                margin-left: 0.1em;
-            }
-        }
-
         .conc-loader {
             display: inline-block;
             vertical-align: middle;
@@ -138,6 +101,53 @@ const ConcVerticalBar = styled.div`
                 width: 16px;
             }
         }
+    }
+`;
+
+// ----------------- <ConcSummary /> ------------------
+
+export const ConcSummary = styled.div`
+    flex-grow: 3;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 1em;
+    font-family: ${theme.condensedFontFamily};
+
+    #ipm-loader img {
+        background-color: white;
+        border-radius: 3px;
+        padding: 3px 20px;
+        opacity: 0.7;
+        position: absolute;
+    }
+
+    .size-warning img {
+        display: block;
+        width: 1em;
+        margin-right: 0.2em;
+    }
+
+    .ipm {
+        font-weight: bold;
+    }
+
+    sup {
+        vertical-align: middle;
+        top: -0.4em;
+        padding-left: 0.2em;
+    }
+
+    .notice-shuffled {
+        white-space: nowrap;
+    }
+
+    .ipm-note img {
+        display: inline-block;
+        width: 1em;
+        vertical-align: middle;
+        margin-right: 0.3em;
+        margin-left: 0.1em;
     }
 `;
 

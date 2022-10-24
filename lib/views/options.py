@@ -131,7 +131,7 @@ async def viewattrs(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     out['newctxsize'] = amodel.args.kwicleftctx[1:]
     out['structattrs'] = structattrs
     out['curr_structattrs'] = amodel.args.structattrs
-    out['query_overview'] = await amodel.concdesc_json()
+    out['query_overview'] = [x.to_dict() for x in (await amodel.concdesc_json())]
     out['CurrentAttrs'] = amodel.args.attrs.split(',')
     out['use_conc_toolbar'] = settings.get_bool('global', 'use_conc_toolbar')
     return out

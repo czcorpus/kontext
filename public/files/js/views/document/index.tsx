@@ -871,7 +871,7 @@ export function init(
                             </a>) : null}
                     </div>
                     <span className="curr-page">{renderPageNum()}</span>
-                    <span className="numofpages">{'\u00a0/\u00a0'}{props.totalPages}</span>
+                    <span className="num-of-pages">{'\u00a0/\u00a0'}{props.totalPages}</span>
                     <div className="ktx-pagination-right">
                         {parseInt(props.currentPage) < props.totalPages ?
                             (<a onClick={(e) => props.handlePageChange(`${parseInt(props.currentPage)+1}`)}>

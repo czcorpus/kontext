@@ -362,36 +362,35 @@ export const GlobalStyle = createGlobalStyle`
 
     .ktx-pagination-core {
         vertical-align: middle;
-    }
 
-    .ktx-pagination-core .curr-page {
-        display: inline-block;
-        padding: 0;
-        text-align: left;
-        width: 3em;
-    }
+        .curr-page {
+            display: inline-block;
+            padding: 0;
+            text-align: left;
+            width: 3em;
+        }
 
-    .ktx-pagination-core .curr-page input {
-        display: block;
-        width: 3em;
-        border: ${theme.inputBorderStyle};
-        border-radius: ${theme.inputBorderRadius};
-        box-sizing: border-box;
-    }
+        .curr-page input {
+            display: block;
+            width: 3em;
+            border: ${theme.inputBorderStyle};
+            border-radius: ${theme.inputBorderRadius};
+            box-sizing: border-box;
+        }
 
-    .ktx-pagination-core .curr-page .overlay {
-        position: absolute;
-    }
+        .curr-page .overlay {
+            position: absolute;
+        }
 
-    .ktx-pagination-core .curr-page img.ajax-loader-bar {
-        margin-top: 0.2em;
-        margin-left: 0.2em;
-        display: block;
+        .curr-page img.ajax-loader-bar {
+            margin-top: 0.2em;
+            margin-left: 0.2em;
+            display: block;
+        }
     }
 
     .ktx-pagination-left, .ktx-pagination-right {
         display: inline-block;
-        padding-right: 0.3em;
     }
 
     .ktx-pagination-left > a, .ktx-pagination-right > a {
@@ -403,6 +402,14 @@ export const GlobalStyle = createGlobalStyle`
     .ktx-pagination-left > a > img, .ktx-pagination-right > a > img {
         display: block;
         height: ${theme.navigIconSize};
+    }
+
+    .ktx-pagination-left {
+        margin-right: 0.3em;
+    }
+
+    .ktx-pagination-right {
+        margin-left: 0.3em;
     }
 
     .ktx-pagination a:last-of-type img {

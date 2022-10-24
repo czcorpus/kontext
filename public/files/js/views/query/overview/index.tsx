@@ -369,8 +369,18 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
             }
         };
 
+        const showSize = () => {
+            if (props.item.fullSize > props.item.size) {
+                return he.translate('query__overview_using_implicit_sample_{size}', {size: props.item.size});
+
+            } else if (props.item.size) {
+                return he.translate('query__overview_hits_{num_hits}', {num_hits: props.item.size});
+            }
+            return null;
+        };
+
         return (
-            <li className="QueryOpInfo">
+            <S.QueryOpInfoLI>
                 {renderLabel()}{':\u00a0'}
                 {props.item.userEntry ?
                     (<a className="args" onClick={props.clickHandler} title={he.translate('query__click_to_edit_the_op')}>
@@ -379,10 +389,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                     : (<a className="args" onClick={props.clickHandler} title={he.translate('query__click_to_edit_the_op')}>
                         {'\u2713'}</a>)
                     }
-                {props.item.size ?
-                        '\u00a0(' + he.translate('query__overview_hits_{num_hits}',
-                        {num_hits: props.item.size}) + ')'
-                    : null}
+                {'\u00a0'}({showSize()})
                 {props.hasOpenEditor ?
                     <QueryEditor
                         corpname={props.corpname}
@@ -399,7 +406,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                         resultSize={props.item.size}
                         groupsSelected={props.groupsSelected} />
                     : null}
-            </li>
+            </S.QueryOpInfoLI>
         );
     };
 
@@ -541,8 +548,9 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         );
     }
 
-    const BoundQueryOverview = BoundWithProps<QueryOverviewProps, QueryReplayModelState|IndirectQueryReplayModelState>(
-        QueryOverview, queryReplayModel);
+    const BoundQueryOverview = BoundWithProps
+        <QueryOverviewProps, QueryReplayModelState|IndirectQueryReplayModelState>(
+            QueryOverview, queryReplayModel);
 
 
     // ------------------------ <RedirectingQueryOverview /> -------------------------------

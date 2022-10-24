@@ -83,7 +83,6 @@ class GeneralWorker:
             (fullsize,) = struct.unpack('q', cache.read(8))
             cache.seek(32)
             (concsize,) = struct.unpack('i', cache.read(4))
-
             if fullsize > 0:
                 relconcsize = 1000000.0 * fullsize / corp.search_size
             else:

@@ -177,13 +177,13 @@ class ConcCacheStatus:
 class AbstractConcCache(abc.ABC):
 
     @abc.abstractmethod
-    async def get_stored_size(self, corp_cache_key: str, q: QueryType) -> Union[int, None]:
+    async def get_stored_size(self, corp_cache_key: str, q: QueryType) -> Union[Tuple[int, int], Tuple[None, None]]:
         """
-        Return stored concordance size.
+        Return stored concordance size and fullsize (differs in case there is an implicit sample used).
         The method should return None if no record is found at all.
 
         Arguments:
-        corp_cache_key -- a md5 hash generated from subcorpus identifier by
+        corp_cache_key -- a hash generated from (sub)corpus identifier by
                     CorpusFactory.get_corpus()
         q -- a list of query elements
         """
