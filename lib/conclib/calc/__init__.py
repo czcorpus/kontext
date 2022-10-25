@@ -354,8 +354,9 @@ class ConcSyncCalculation(GeneralWorker):
                 calc_from = 1
             else:
                 for i in range(calc_from, len(query)):
-                    await self.cache_map.add_to_map(corp_cache_key, query[:i + 1], ConcCacheStatus(task_id=self._task_id),
-                                                    overwrite=True)
+                    await self.cache_map.add_to_map(
+                        corp_cache_key, query[:i + 1], ConcCacheStatus(task_id=self._task_id),
+                        overwrite=True)
         except Exception as ex:
             logging.getLogger(__name__).error(ex)
             manatee_err = extract_manatee_error(ex)

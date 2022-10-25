@@ -186,7 +186,7 @@ async def get_conc(
     lock = asyncio.Lock()
     async with lock:
         # 1st coroutine goes through (there is no conc cache yet)
-        # 2nd goes through but it already finds an open cache entry so it 'wait_for_conc()' inside the lock
+        # 2nd goes through, but it already finds an open cache entry so it 'wait_for_conc()' inside the lock
         # >= 3 cannot enter but once it can the concordance is already avail. so there is no unnecessary lag here
         # (it doesn't matter whether a coroutine waits here or in 'wait_for_conc()')
         calc_from, conc = await find_cached_conc_base(corp, corp.cache_key, q, minsize)
