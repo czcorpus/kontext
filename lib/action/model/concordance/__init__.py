@@ -39,6 +39,7 @@ from action.model.concordance.linesel import LinesGroups
 from action.model.corpus import CorpusActionModel, CorpusPluginCtx
 from action.props import ActionProps
 from action.response import KResponse
+from conclib import ConcDescJsonItem
 from conclib.common import KConc
 from conclib.search import get_conc
 from main_menu.model import MainMenu
@@ -552,7 +553,7 @@ class ConcActionModel(CorpusActionModel):
                     fullsize=fullsize, finished=conc.finished())
 
     async def concdesc_json(self):
-        out_list: List[Dict[str, Any]] = []
+        out_list: List[ConcDescJsonItem] = []
         conc_desc = await conclib.get_conc_desc(corpus=self.corp, q=self.args.q)
 
         def nicearg(arg):
@@ -571,26 +572,27 @@ class ConcActionModel(CorpusActionModel):
                         niceargs.append('within')
                     prev_other = args[i]
             return ', '.join(niceargs)
-
-        for o, a, u1, u2, s, opid in conc_desc:
-            u2.append(('corpname', self.args.corpname))
+        # o,  a,    u1,   u2,   s,           opid
+        # op, args, url1, url2, size, fsize, opid
+        for op_item in conc_desc:
+            op_item.url2.append(('corpname', self.args.corpname))
             if self.args.usesubcorp:
-                u2.append(('usesubcorp', self.args.usesubcorp))
-            out_list.append(dict(
-                op=self._req.translate(o),
-                opid=opid,
-                arg=a,
-                nicearg=nicearg(a),
-                tourl=urllib.parse.urlencode(u2),
-                size=s))
-
+                op_item.url2.append(('usesubcorp', self.args.usesubcorp))
+            out_list.append(ConcDescJsonItem(
+                op=self._req.translate(op_item.op),
+                opid=op_item.opid,
+                args=op_item.args,
+                nicearg=nicearg(op_item.args),
+                tourl=urllib.parse.urlencode(op_item.url2),
+                size=op_item.size,
+                fullsize=op_item.fullsize))
         return out_list
 
     async def attach_query_overview(self, out):
-        out['query_overview'] = await self.concdesc_json()
+        out['query_overview'] = [x.to_dict() for x in (await self.concdesc_json())]
         if len(out['query_overview']) > 0:
             out['page_title'] = '{0} / {1}'.format(
-                self.corp.human_readable_corpname, out['query_overview'][0].get('nicearg'))
+                self.corp.human_readable_corpname, out['query_overview'][0]['nicearg'])
 
     @staticmethod
     def filter_lines(data, pnfilter):

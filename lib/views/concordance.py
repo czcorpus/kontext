@@ -526,14 +526,14 @@ async def concdesc_json(amodel: ConcActionModel, req: KRequest, resp: KResponse)
         form = pipeline[i]
         if isinstance(form, QueryFormArgs):
             if len(form.data.curr_queries) == 1:
-                cd_item['nicearg'] = list(form.data.curr_queries.values())[0]
+                cd_item.nicearg = list(form.data.curr_queries.values())[0]
             else:
-                cd_item['nicearg'] = ', '.join(
+                cd_item.nicearg = ', '.join(
                     f'{k}: {v}' for k, v in form.data.curr_queries.items())
         elif isinstance(form, FilterFormArgs):
-            cd_item['nicearg'] = form.data.query
-        cd_item['conc_persistence_op_id'] = pipeline[i].op_key
-    return {'Desc': conc_desc}
+            cd_item.nicearg = form.data.query
+        cd_item.conc_persistence_op_id = pipeline[i].op_key
+    return {'Desc': [x.to_dict() for x in conc_desc]}
 
 
 @bp.route('/ajax_fetch_conc_form_args')

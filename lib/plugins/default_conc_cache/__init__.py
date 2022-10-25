@@ -91,9 +91,11 @@ class DefaultCacheMapping(AbstractConcCache):
     async def get_stored_calc_status(self, corp_cache_key: Optional[str], q: Tuple[str, ...]) -> Union[ConcCacheStatus, None]:
         return await self._get_entry(corp_cache_key, q)
 
-    async def get_stored_size(self, corp_cache_key: Optional[str], q: Tuple[str, ...]) -> Union[int, None]:
+    async def get_stored_size(self, corp_cache_key, q):
         val = await self._get_entry(corp_cache_key, q)
-        return val.concsize if val else None
+        if val:
+            return val.concsize, val.fullsize
+        return None, None
 
     async def ensure_writable_storage(self):
         cache_dir = self._cache_dir_path()

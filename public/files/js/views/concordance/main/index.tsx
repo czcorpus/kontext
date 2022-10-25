@@ -294,11 +294,24 @@ export function init({
                         {he.formatNumber(props.concSize)}</strong>);
 
             } else {
-                ans.push(<a key="hits:1b" className="size-warning"><img src={he.createStaticUrl('img/warning-icon.svg')} /></a>);
-                ans.push(<span key="hits:2b" id="loader"></span>);
-                ans.push(<strong key="hits:3b" className={`conc-size${props.isUnfinishedConc ? ' unfinished' : ''}`}>{he.formatNumber(props.concSize)}</strong>);
-                ans.push('\u00a0' + he.translate('concview__out_of_total') + '\u00a0');
-                ans.push(<span key="hits:4b" id="fullsize" title={String(props.fullSize)}>{he.formatNumber(props.fullSize)}</span>);
+                ans.push(
+                    <React.Fragment key="hits:3">
+                        <a key="hits:1b" className="size-warning">
+                            <img src={he.createStaticUrl('img/warning-icon.svg')} />
+                        </a>
+                        <span key="hits:2b" id="loader"></span>
+                        <strong key="hits:3b" className={`conc-size${props.isUnfinishedConc ? ' unfinished' : ''}`}>{he.formatNumber(props.concSize)}</strong>
+                        {'\u00a0'}
+                        {props.queryChainSize === 1 ?
+                            <>
+                                {he.translate('concview__out_of_total')}
+                                {'\u00a0'}
+                                <span key="hits:4b" id="fullsize" title={String(props.fullSize)}>{he.formatNumber(props.fullSize)}</span>
+                            </> :
+                            he.translate('concview__size_with_respect_to_cut_conc_{size}', {size: he.formatNumber(props.corpusSampleSize)})
+                        }
+                    </React.Fragment>
+                );
             }
             return ans;
         };
@@ -374,8 +387,8 @@ export function init({
         };
 
         return (
-            <div className="result-info">
-                {he.translate('concview__hits_label')}:  {renderNumHits()}
+            <S.ConcSummary>
+                {he.translate('concview__hits_label')}:{'\u00a0'}{renderNumHits()}
                 <span id="conc-calc-info" title="90"></span>
                 <span className="separ">|</span>
                 <layoutViews.Abbreviation url={he.getHelpLink('term_ipm')}
@@ -399,7 +412,7 @@ export function init({
                     he.translate('concview__result_shuffled') :
                     he.translate('concview__result_sorted')}
                 </span>
-            </div>
+            </S.ConcSummary>
         );
     }
 

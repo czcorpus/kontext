@@ -445,6 +445,13 @@ export interface QueryOperation {
      * was executed.
      */
     size:number;
+
+    /**
+     * In case an implicit sample size was used,
+     * this represents the full (non sampled) concordance
+     * size.
+     */
+     fullsize:number;
 }
 
 export type VirtualKeys = Array<Array<[string, string]>>;

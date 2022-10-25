@@ -111,7 +111,9 @@ export class QueryInfoModel<T extends QueryInfoModelState> extends StatelessMode
                         opid: v.opid,
                         userEntry: v.nicearg,
                         encodedArgs: v.arg,
-                        size: v.size
+                        size: v.size,
+                        fullSize: v.fullsize
+
                     }),
                     data.Desc
                 )

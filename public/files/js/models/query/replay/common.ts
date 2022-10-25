@@ -29,6 +29,12 @@ export interface QueryOverviewResponseRow {
     nicearg:string;
     arg:string;
     size:number;
+
+    /**
+     * in case an implicit sample (= a concordance cut) is used,
+     * this value represents the possible full concordance size
+     */
+    fullsize:number;
 }
 
 /**
@@ -52,6 +58,8 @@ export interface PersistentQueryOperation {
     encodedArgs:string;
 
     size:number;
+
+    fullSize:number;
 }
 
 
@@ -105,6 +113,7 @@ export function importEncodedOperation(operation:Kontext.QueryOperation):Persist
         encodedArgs: operation.arg,
         concPersistenceId: undefined,
         size: operation.size,
+        fullSize: operation.fullsize,
         formType: mapOpIdToFormType(operation.opid)
     };
 }
