@@ -505,6 +505,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             ConcActions.AsyncCalculationUpdated,
             (state, action) => {
                 List.last(state.operations).size = action.payload.concsize;
+                List.last(state.operations).fullSize = action.payload.fullsize;
             }
         );
     }

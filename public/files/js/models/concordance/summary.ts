@@ -66,14 +66,14 @@ export class ConcSummaryModel extends StatelessModel<ConcSummaryModelState> {
         super(dispatcher, initialState);
         this.layoutModel = layoutModel;
 
-        this.addActionHandler<typeof Actions.CalculateIpmForAdHocSubc>(
-            Actions.CalculateIpmForAdHocSubc.name,
+        this.addActionHandler(
+            Actions.CalculateIpmForAdHocSubc,
             (state, action) => {
                 state.isBusy = true;
             },
 
             (state, action, dispatch) => {
-                this.suspend({}, (action, syncData) => {
+                this.waitForAction({}, (action, syncData) => {
                     return action.name === Actions.CalculateIpmForAdHocSubcReady.name ?
                         null : syncData;
 
@@ -109,8 +109,8 @@ export class ConcSummaryModel extends StatelessModel<ConcSummaryModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.AddedNewOperation>(
-            Actions.AddedNewOperation.name,
+        this.addActionHandler(
+            Actions.AddedNewOperation,
             (state, action) => {
                 state.arf = action.payload.data.result_arf;
                 state.concSize = action.payload.data.concsize;
@@ -121,42 +121,43 @@ export class ConcSummaryModel extends StatelessModel<ConcSummaryModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.CalculateIpmForAdHocSubcDone>(
-            Actions.CalculateIpmForAdHocSubcDone.name,
+        this.addActionHandler(
+            Actions.CalculateIpmForAdHocSubcDone,
             (state, action) => {
                 state.isBusy = false;
                 state.ipm = action.payload.ipm;
             }
         );
 
-        this.addActionHandler<typeof Actions.AsyncCalculationUpdated>(
-            Actions.AsyncCalculationUpdated.name,
+        this.addActionHandler(
+            Actions.AsyncCalculationUpdated,
             (state, action) => {
                 state.isUnfinishedConc = !action.payload.finished;
                 state.concSize = action.payload.concsize;
                 state.fullSize = action.payload.fullsize;
                 state.corpusIpm = action.payload.relconcsize;
                 state.arf = action.payload.arf;
+                state.queryChainSize = 1; // the action can happen iff processing the first operation
             },
             (state, action, dispatch) => {
                 const concSize = action.payload?.concsize ?
                     action.payload.concsize :
                     state.concSize;
-                dispatch<typeof Actions.ConcordanceRecalculationReady>({
-                    name: Actions.ConcordanceRecalculationReady.name,
-                    payload: {
+                dispatch(
+                    Actions.ConcordanceRecalculationReady,
+                    {
                         concSize,
                         overviewMinFreq: this.getRecommOverviewMinFreq(concSize)
                     }
-                });
+                );
             }
         ).sideEffectAlsoOn(
             Actions.LoadTTDictOverview.name,
             PluginInterfaces.KwicConnect.Actions.FetchInfo
         );
 
-        this.addActionHandler<typeof Actions.AsyncCalculationFailed>(
-            Actions.AsyncCalculationFailed.name,
+        this.addActionHandler(
+            Actions.AsyncCalculationFailed,
             (state, action) => {
                     state.isUnfinishedConc = false;
                     state.concSize = 0;
@@ -168,7 +169,11 @@ export class ConcSummaryModel extends StatelessModel<ConcSummaryModelState> {
         );
     }
 
-    private calculateAdHocIpm(state:ConcSummaryModelState, ttSelection:TextTypes.ExportedSelection):Observable<number> {
+    private calculateAdHocIpm(
+        state:ConcSummaryModelState,
+        ttSelection:TextTypes.ExportedSelection
+    ):Observable<number> {
+
         return this.layoutModel.ajax$<WithinMaxHits>(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl(
