@@ -225,6 +225,17 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             }
         );
 
+        this.addActionHandler(
+            QueryActions.SetCompositionMode,
+            action => {
+                this.changeState(
+                    state => {
+                        state.compositionModeOn = action.payload.status;
+                    }
+                )
+            }
+        );
+
         this.addActionHandler<typeof QueryActions.QueryInputMoveCursor>(
             QueryActions.QueryInputMoveCursor.name,
             action => {
