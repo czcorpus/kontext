@@ -33,7 +33,6 @@ import { Actions } from './actions';
 import { Actions as ConcActions } from '../concordance/actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
 import * as PluginInterfaces from '../../types/plugins';
-import { TextTypesModel } from '../textTypes/main';
 import { AjaxConcResponse } from '../concordance/common';
 import { QueryType, AnyQuery, AdvancedQuery, SimpleQuery, parseSimpleQuery } from './query';
 import { highlightSyntaxStatic } from '../cqleditor/parser';
