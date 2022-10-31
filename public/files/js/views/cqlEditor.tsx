@@ -65,6 +65,7 @@ interface CQLEditorCoreState {
     queries:{[sourceId:string]:AdvancedQuery|SimpleQuery}|unknown; // pquery block -> query
     downArrowTriggersHistory:{[sourceId:string]:boolean};
     cqlEditorMessages:{[sourceId:string]:Array<string>};
+    compositionModeOn:boolean;
 }
 
 
@@ -151,10 +152,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             this.inputKeyDownHandler = this.inputKeyDownHandler.bind(this);
             this.ffKeyDownHandler = this.ffKeyDownHandler.bind(this);
             this.handleSelect = this.handleSelect.bind(this);
+            this.handleCompositionStart = this.handleCompositionStart.bind(this);
+            this.handleCompositionEnd = this.handleCompositionEnd.bind(this);
             this.contentEditable = new ContentEditable<HTMLPreElement>(this.props.inputRef);
         }
 
-        private handleInputChange() {
+        private newInputDispatch() {
             const [rawAnchorIdx, rawFocusIdx] = this.contentEditable.getRawSelection();
             const query = this.contentEditable.extractText();
 
@@ -169,6 +172,35 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     insertRange: null
                 }
             });
+        }
+
+        private handleInputChange() {
+            if (!this.props.compositionModeOn) {
+                this.newInputDispatch();
+            }
+        }
+
+        private handleCompositionStart() {
+            dispatcher.dispatch<typeof Actions.SetCompositionMode>({
+                name: Actions.SetCompositionMode.name,
+                payload: {
+                    formType: this.props.formType,
+                    status: true
+                }
+            });
+        }
+
+        private handleCompositionEnd() {
+            dispatcher.dispatch<typeof Actions.SetCompositionMode>({
+                name: Actions.SetCompositionMode.name,
+                payload: {
+                    formType: this.props.formType,
+                    status: false
+                }
+            });
+            // Chrome performs onCompositionEnd action after inputChange
+            // we have to dispatch new state here
+            this.newInputDispatch();
         }
 
         private findLinkParent(elm:HTMLElement):HTMLElement {
@@ -361,6 +393,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 contentEditable={true}
                                 spellCheck={false}
                                 onInput={(evt) => this.handleInputChange()}
+                                onCompositionStart={this.handleCompositionStart}
+                                onCompositionEnd={this.handleCompositionEnd}
                                 onClick={this.handleEditorClick}
                                 className="cql-input"
                                 ref={this.props.inputRef}
