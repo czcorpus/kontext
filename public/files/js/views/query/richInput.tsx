@@ -81,22 +81,26 @@ export function init(
             this.handleCompositionEnd = this.handleCompositionEnd.bind(this);
         }
 
+        private newInputDispatch(evt:React.ChangeEvent<HTMLInputElement>|React.CompositionEvent<HTMLInputElement>) {
+            const [rawAnchorIdx, rawFocusIdx] = this.contentEditable.getRawSelection();
+            const query = this.contentEditable.extractText();
+            dispatcher.dispatch<typeof Actions.QueryInputSetQuery>({
+                name: Actions.QueryInputSetQuery.name,
+                payload: {
+                    formType: this.props.formType,
+                    sourceId: this.props.sourceId,
+                    query,
+                    rawAnchorIdx,
+                    rawFocusIdx,
+                    insertRange: null
+                }
+            });
+        }
+
 
         private handleInputChange(evt:React.ChangeEvent<HTMLInputElement>) {
             if (!this.props.compositionModeOn) {
-                const [rawAnchorIdx, rawFocusIdx] = this.contentEditable.getRawSelection();
-                const query = this.contentEditable.extractText();
-                dispatcher.dispatch<typeof Actions.QueryInputSetQuery>({
-                    name: Actions.QueryInputSetQuery.name,
-                    payload: {
-                        formType: this.props.formType,
-                        sourceId: this.props.sourceId,
-                        query,
-                        rawAnchorIdx,
-                        rawFocusIdx,
-                        insertRange: null
-                    }
-                });
+                this.newInputDispatch(evt);
             }
         }
 
@@ -238,7 +242,7 @@ export function init(
             });
         }
 
-        private handleCompositionEnd() {
+        private handleCompositionEnd(evt:React.CompositionEvent<HTMLInputElement>) {
             dispatcher.dispatch<typeof Actions.SetCompositionMode>({
                 name: Actions.SetCompositionMode.name,
                 payload: {
@@ -246,6 +250,9 @@ export function init(
                     status: false
                 }
             });
+            // Chrome performs onCompositionEnd action after inputChange
+            // we have to dispatch new state here
+            this.newInputDispatch(evt);
         }
 
         componentDidUpdate(prevProps:RichInputProps & QueryFormModelState, _:unknown) {
