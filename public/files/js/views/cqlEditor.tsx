@@ -339,16 +339,18 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private handleSelect() {
-            const [anchorIdx, focusIdx] = this.contentEditable.getRawSelection();
-            dispatcher.dispatch<typeof Actions.QueryInputSelectText>({
-                name: Actions.QueryInputSelectText.name,
-                payload: {
-                    sourceId: this.props.sourceId,
-                    formType: this.props.formType,
-                    anchorIdx,
-                    focusIdx
-                }
-            });
+            if (!this.props.compositionModeOn) {
+                const [anchorIdx, focusIdx] = this.contentEditable.getRawSelection();
+                dispatcher.dispatch<typeof Actions.QueryInputSelectText>({
+                    name: Actions.QueryInputSelectText.name,
+                    payload: {
+                        sourceId: this.props.sourceId,
+                        formType: this.props.formType,
+                        anchorIdx,
+                        focusIdx
+                    }
+                });
+            }
         }
 
         componentDidUpdate(prevProps, prevState) {
