@@ -38,6 +38,7 @@ import { QueryType, AnyQuery, AdvancedQuery, SimpleQuery, parseSimpleQuery } fro
 import { highlightSyntaxStatic } from '../cqleditor/parser';
 import { AttrHelper } from '../cqleditor/attrs';
 import * as formArgs from './formArgs';
+import { TextTypesModel } from '../textTypes/main';
 
 
 /**
