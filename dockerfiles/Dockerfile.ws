@@ -1,4 +1,4 @@
-FROM czcorpus/kontext-manatee:latest
+FROM czcorpus/kontext-manatee:2.167.10
 
 RUN pip3 install --upgrade pip && pip3 install aiohttp
 

@@ -144,6 +144,7 @@ export interface PqueryFormModelState {
     structAttrs:Array<Kontext.AttrItem>;
     paramsVisible:boolean;
     posRangeNotSupported:boolean;  // for structural attributes pos range makes no sense
+    compositionModeOn:boolean;
 }
 
 /**
@@ -192,7 +193,7 @@ export function newModelState(
                             type: 'specification',
                             maxNonMatchingRatio: Kontext.newFormValue('0', true)
                         },
-                        type: 'partial-query'
+                        type: 'partial-query',
                     }
                 ),
                 2
@@ -222,7 +223,8 @@ export function newModelState(
         attrs,
         structAttrs,
         paramsVisible: true,
-        posRangeNotSupported: defaultAttr.includes('.')
+        posRangeNotSupported: defaultAttr.includes('.'),
+        compositionModeOn: false,
     };
 }
 
@@ -465,7 +467,8 @@ export function storedQueryToModel(
         attrs,
         structAttrs,
         paramsVisible: true,
-        posRangeNotSupported: sq.attr.includes('.')
+        posRangeNotSupported: sq.attr.includes('.'),
+        compositionModeOn: false,
     }
 }
 
