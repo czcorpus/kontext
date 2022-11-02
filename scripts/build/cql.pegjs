@@ -149,13 +149,23 @@ RgAlt =
     LBRACKET (RgChar / DASH)+ RBRACKET
 
 RgChar =
-    RG_ESCAPED / AnyLetter / RG_OP / RG_NON_LETTER / RG_NON_SPEC / RG_AMP
+    RG_ESCAPED / AnyLetter / RG_OP / RG_NON_LETTER / RG_NON_SPEC / RG_AMP / RG_UNICODE_PROP
 
 RG_OP =
     [,\-_\^\$ ] / [0-9\?\*\+\.\|]
 
 RG_ESCAPED =
     '\\{' / '\\}' / '\\(' / '\\)' / '\\[' / '\\]' / '\\?' / '\\!' / '\\.' / '\\"' / '\\*' / '\\+' / '\\^' / '\\$' / '\\|'
+
+RG_UNICODE_PROP =
+    '\\p\{L\}' / '\\p\{Ll\}' / '\\p\{Lu\}' / '\\p\{Lt\}' / '\\p\{L&\}' / '\\p\{Lm\}' / '\\p\{Lo\}' /
+    '\\p\{M\}' / '\\p\{Mn\}' / '\\p\{Mc\}' / '\\p\{Me\}' /
+    '\\p\{Z\}' / '\\p\{Zs\}' / '\\p\{Zl\}' / '\\p\{Zp\}' /
+    '\\p\{S\}' / '\\p\{Sm\}' / '\\p\{Sc\}' / '\\p\{Sk\}' / '\\p\{So\}' /
+    '\\p\{N\}' / '\\p\{Nd\}' / '\\p\{Nl\}' / '\\p\{No\}' /
+    '\\p\{P\}' / '\\p\{Pd\}' / '\\p\{Ps\}' / '\\p\{Pe\}' / '\\p\{Pi\}' / '\\p\{Pf\}' / '\\p\{Pc\}' / '\\p\{Po\}' /
+    '\\p\{C\}' / '\\p\{Cc\}' / '\\p\{Cf\}' / '\\p\{Co\}' / '\\p\{Cs\}' / '\\p\{Cn\}'
+
 
 // {n}, {n,}, {n,m}
 RgRange =

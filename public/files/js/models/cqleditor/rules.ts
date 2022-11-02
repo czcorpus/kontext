@@ -553,6 +553,7 @@ export interface ParsedPQItem {
             case 'RG_ESCAPED':
             case 'NO_RG_SPEC':
             case 'NO_RG_ESCAPED':
+            case 'RG_UNICODE_PROP':
                 return `<span class="${CLASS_OPERATOR}">${this.query.substring(startIdx, endIdx)}</span>`;
             case 'SEMI':
             break;
