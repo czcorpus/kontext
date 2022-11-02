@@ -63,6 +63,18 @@ def lngrp_sortstr(lab, separator='.'):
     return '|'.join([f[c] % s for c, s in lngrp_sortcrit(lab, separator)])
 
 
+def _extract_file_acc_err(ex):
+    msg = str(ex)
+    if not msg:
+        return f'failed with error {ex.__class__.__name__}'
+    srch = re.match(r'FileAccessError\s*\(([^)]+)\) in', msg)
+    if srch:
+        att_path = srch.group(1)
+        if os.path.exists(os.path.dirname(att_path)):
+            return f'failed to access attribute/structure {os.path.splitext(os.path.basename(att_path))[0]}'
+    return msg
+
+
 class PyConc(manatee.Concordance):
     selected_grps: List[int] = []
 
@@ -104,6 +116,9 @@ class PyConc(manatee.Concordance):
             raise ConcordanceException(
                 'Character encoding of this corpus ({0}) does not support one or more characters in the query.'
                 .format(self.corpus_encoding))
+        except manatee.FileAccessError as ex:
+            raise ConcordanceException(
+                getattr(ex, 'message', f'failed to create concordance: {_extract_file_acc_err(ex)}'))
 
     def get_conc_file(self):
         return self._conc_file
