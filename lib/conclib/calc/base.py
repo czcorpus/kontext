@@ -108,8 +108,9 @@ class GeneralWorker:
             ans_conc = PyConc(corp, q[0][0], q[0][1:], samplesize)
         else:
             raise NotImplementedError('Function "online sample" is not supported')
-        logging.getLogger(__name__).debug(f'compute_conc({corp.corpname}, [{", ".join(q)}]) '
-                                          f'-> {(time.time() - start_time):.4f}')
+        logging.getLogger(__name__).debug(
+            f'compute_conc({corp.corpname}, [{", ".join(q)}]) '
+            f'-> {(time.time() - start_time):.4f}')
         return ans_conc
 
 
