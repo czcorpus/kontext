@@ -21,16 +21,16 @@ A corparch database backend for MySQL/MariaDB for 'read' operations. Please note
 that the backend also covers operations required by mysql_auth plug-in.
 """
 
+import logging
 from contextlib import asynccontextmanager
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from aiomysql.cursors import Cursor
 from plugin_types.auth import CorpusAccess
 from plugin_types.corparch.backend import DatabaseBackend
-from plugin_types.corparch.backend.regkeys import (POS_COLS_MAP, REG_COLS_MAP,
-                                                   REG_VAR_COLS_MAP,
-                                                   SATTR_COLS_MAP,
-                                                   STRUCT_COLS_MAP)
+from plugin_types.corparch.backend.regkeys import (
+    POS_COLS_MAP, REG_COLS_MAP, REG_VAR_COLS_MAP, SATTR_COLS_MAP,
+    STRUCT_COLS_MAP)
 from plugin_types.corparch.corpus import PosCategoryItem, TagsetInfo
 from plugins.common.mysql import MySQLOps
 
@@ -422,11 +422,11 @@ class Backend(DatabaseBackend):
         total_acc_sql, total_acc_args = self._total_access_query(user_id)
         args: List[Any] = [user_id] + total_acc_args + [corpus_id]
         await cursor.execute(
-            'SELECT %s AS user_id, c.name AS corpus_id, IF (ucp.limited = 1, \'omezeni\', NULL) AS variant '
+            f'SELECT %s AS user_id, c.{self._corp_id_attr} AS corpus_id, IF (ucp.limited = 1, \'omezeni\', NULL) AS variant '
             'FROM ( '
             f' {total_acc_sql} '
             ') as ucp '
-            f'JOIN {self._corp_table} AS c ON ucp.corpus_id = c.id AND c.name = %s '
+            f'JOIN {self._corp_table} AS c ON ucp.corpus_id = c.{self._corp_id_attr} AND c.{self._corp_id_attr} = %s '
             'ORDER BY ucp.limited LIMIT 1',
             args)
         row = await cursor.fetchone()
@@ -437,11 +437,11 @@ class Backend(DatabaseBackend):
     async def get_permitted_corpora(self, cursor: Cursor, user_id: str) -> List[str]:
         total_acc_sql, total_acc_args = self._total_access_query(user_id)
         await cursor.execute(
-            'SELECT %s AS user_id, c.name AS corpus_id, IF (ucp.limited = 1, \'omezeni\', NULL) AS variant '
+            f'SELECT %s AS user_id, c.{self._corp_id_attr} AS corpus_id, IF (ucp.limited = 1, \'omezeni\', NULL) AS variant '
             'FROM ( '
             f' {total_acc_sql} '
             ') as ucp '
-            f'JOIN {self._corp_table} AS c ON ucp.corpus_id = c.id', [user_id] + total_acc_args)
+            f'JOIN {self._corp_table} AS c ON ucp.corpus_id = c.{self._corp_id_attr}', [user_id] + total_acc_args)
         return [r['corpus_id'] for r in cursor.fetchall()]
 
     async def load_corpus_tagsets(self, cursor: Cursor, corpus_id: str) -> List[TagsetInfo]:
