@@ -426,7 +426,7 @@ class Backend(DatabaseBackend):
             'FROM ( '
             f' {total_acc_sql} '
             ') as ucp '
-            f'JOIN {self._corp_table} AS c ON ucp.corpus_id = c.id AND c.name = %s '
+            f'JOIN {self._corp_table} AS c ON ucp.corpus_id = c.{self._corp_id_attr} AND c.name = %s '
             'ORDER BY ucp.limited LIMIT 1',
             args)
         row = await cursor.fetchone()

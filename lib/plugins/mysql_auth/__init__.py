@@ -41,6 +41,7 @@ from plugin_types.auth.hash import (
 from plugins import inject
 from plugins.common.mysql import MySQLConf, MySQLOps
 from plugins.mysql_integration_db import MySqlIntegrationDb
+from plugins.mysql_corparch.backend import Backend
 from secure_cookie.session import Session
 
 from .sign_up import SignUpToken
@@ -62,6 +63,7 @@ class MysqlAuthHandler(AbstractInternalAuth):
     def __init__(
             self,
             db: MySQLOps,
+            corparch_backend,
             anonymous_user_id,
             case_sensitive_corpora_names: bool,
             login_url,
@@ -75,6 +77,7 @@ class MysqlAuthHandler(AbstractInternalAuth):
         """
         super().__init__(anonymous_user_id)
         self.db = db
+        self._corparch_backend = corparch_backend
         self._login_url = login_url
         self._logout_url = logout_url
         self._smtp_server = smtp_server
@@ -145,74 +148,16 @@ class MysqlAuthHandler(AbstractInternalAuth):
     async def corpus_access(self, user_dict, corpus_name) -> CorpusAccess:
         if corpus_name == IMPLICIT_CORPUS:
             return CorpusAccess(False, True, '')
-        async with self.db.cursor() as cursor:
-            await cursor.execute(
-                'SELECT guaccess.name, MAX(guaccess.limited) AS limited '
-                'FROM ('
-                '   SELECT c.name, gr.limited '
-                '   FROM kontext_corpus AS c '
-                '     JOIN kontext_group_access AS gr ON gr.corpus_name = c.name '
-                '     JOIN kontext_user AS ku ON ku.group_access = gr.group_access '
-                '   WHERE ku.id = %s AND c.name = %s '
-                '   UNION '
-                '   SELECT c.name, ucr.limited '
-                '   FROM kontext_corpus AS c '
-                '     JOIN kontext_user_access AS ucr ON  c.name = ucr.corpus_name '
-                '   WHERE ucr.user_id = %s AND c.name = %s '
-                '   UNION '
-                '   SELECT c.name, gr.limited '
-                '   FROM kontext_corpus AS c '
-                '     JOIN kontext_group_pc_access AS gr ON gr.parallel_corpus_id = c.parallel_corpus_id '
-                '     JOIN kontext_user AS ku ON ku.group_access = gr.group_access '
-                '   WHERE ku.id = %s AND c.name = %s '
-                '   UNION '
-                '   SELECT c.name, ucr.limited '
-                '   FROM kontext_corpus AS c '
-                '     JOIN kontext_user_pc_access AS ucr ON c.parallel_corpus_id = ucr.parallel_corpus_id '
-                '   WHERE ucr.user_id = %s AND c.name = %s '
-                ') AS guaccess '
-                'GROUP BY guaccess.name',
-                4 * (user_dict['id'], corpus_name)
-            )
-            row = await cursor.fetchone()
-        if row is not None:
-            return CorpusAccess(False, True, self._variant_prefix(corpus_name))
-        return CorpusAccess(False, False, '')
+        async with self._corparch_backend.cursor() as cursor:
+            _, access, variant = await self._corparch_backend.corpus_access(cursor, user_dict['id'], corpus_name)
+            return CorpusAccess(False, access, variant)
 
     async def permitted_corpora(self, user_dict) -> List[str]:
-        async with self.db.cursor() as cursor:
-            await cursor.execute(
-                'SELECT guaccess.name, MAX(guaccess.limited) AS limited '
-                'FROM ('
-                '   SELECT c.name, gr.limited '
-                '   FROM kontext_corpus AS c '
-                '     JOIN kontext_group_access AS gr ON gr.corpus_name = c.name '
-                '     JOIN kontext_user AS ku ON ku.group_access = gr.group_access '
-                '   WHERE ku.id = %s '
-                '   UNION '
-                '   SELECT c.name, ucr.limited '
-                '   FROM kontext_corpus AS c '
-                '     JOIN kontext_user_access AS ucr ON  c.name = ucr.corpus_name '
-                '   WHERE ucr.user_id = %s '
-                '   UNION '
-                '   SELECT c.name, gr.limited '
-                '   FROM kontext_corpus AS c '
-                '     JOIN kontext_group_pc_access AS gr ON gr.parallel_corpus_id = c.parallel_corpus_id '
-                '     JOIN kontext_user AS ku ON ku.group_access = gr.group_access '
-                '   WHERE ku.id = %s '
-                '   UNION '
-                '   SELECT c.name, ucr.limited '
-                '   FROM kontext_corpus AS c '
-                '     JOIN kontext_user_pc_access AS ucr ON c.parallel_corpus_id = ucr.parallel_corpus_id '
-                '   WHERE ucr.user_id = %s '
-                ') AS guaccess '
-                'GROUP BY guaccess.name',
-                4 * (user_dict['id'],)
-            )
-            corpora = [row['name'] async for row in cursor]
-            if IMPLICIT_CORPUS not in corpora:
-                corpora.append(IMPLICIT_CORPUS)
-            return corpora
+        async with self._corparch_backend.cursor() as cursor:
+            corpora = await self._corparch_backend.get_permitted_corpora(cursor, str(user_dict['id']))
+        if IMPLICIT_CORPUS not in corpora:
+            corpora.append(IMPLICIT_CORPUS)
+        return corpora
 
     def ignores_corpora_names_case(self):
         return not self._case_sensitive_corpora_names
@@ -319,8 +264,9 @@ class MysqlAuthHandler(AbstractInternalAuth):
                                              credentials['firstname'], credentials['lastname'], token)
             if not ok:
                 raise Exception(
-                    plugin_ctx.translate('Failed to send a confirmation e-mail. Please check that you entered a valid e-mail and try '
-                                         'again. Alternatively you can report a problem.'))
+                    plugin_ctx.translate(
+                        'Failed to send a confirmation e-mail. Please check that you entered a valid e-mail and try '
+                        'again. Alternatively you can report a problem.'))
 
         return dict((k, ' '.join(v)) for k, v in errors.items())
 
@@ -405,13 +351,16 @@ def create_instance(conf, integ_db: MySqlIntegrationDb):
     if integ_db and integ_db.is_active and 'mysql_host' not in plugin_conf:
         dbx = integ_db
         logging.getLogger(__name__).info(f'mysql_auth uses integration_db[{integ_db.info}]')
+        corparch_backend = Backend(integ_db, enable_parallel_acc=True)
     else:
         dbx = MySQLOps(**MySQLConf(plugin_conf).conn_dict)
         logging.getLogger(__name__).info(
             'mysql_auth uses custom database configuration {}@{}'.format(
                 plugin_conf['mysql_user'], plugin_conf['mysql_host']))
+        corparch_backend = Backend(MySQLOps(**MySQLConf(plugin_conf).conn_dict))
     return MysqlAuthHandler(
         db=dbx,
+        corparch_backend=corparch_backend,
         anonymous_user_id=int(plugin_conf['anonymous_user_id']),
         case_sensitive_corpora_names=plugin_conf.get('case_sensitive_corpora_names', False),
         login_url=plugin_conf.get('login_url', '/user/login'),
