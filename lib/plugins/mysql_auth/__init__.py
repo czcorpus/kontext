@@ -42,7 +42,6 @@ from plugins import inject
 from plugins.common.mysql import MySQLConf, MySQLOps
 from plugins.mysql_integration_db import MySqlIntegrationDb
 from plugins.mysql_corparch.backend import Backend
-from secure_cookie.session import Session
 
 from .sign_up import SignUpToken
 
@@ -101,8 +100,8 @@ class MysqlAuthHandler(AbstractInternalAuth):
                     if crypt.crypt(password, user_data['pwd_hash']) == user_data['pwd_hash']:
                         valid_pwd = True
             else:
-                if user_data['pwd_hash'] == mk_pwd_hash(password, split['salt'], split['iterations'],
-                                                        split['keylen'], split['algo']):
+                if user_data['pwd_hash'] == mk_pwd_hash(
+                        password, split['salt'], split['iterations'], split['keylen'], split['algo']):
                     valid_pwd = True
 
             if user_data['username'] == username and valid_pwd:

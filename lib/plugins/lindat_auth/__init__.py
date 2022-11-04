@@ -21,7 +21,6 @@ from plugin_types.auth import AbstractSemiInternalAuth, CorpusAccess
 from plugin_types.general_storage import KeyValueStorage
 from plugins.errors import PluginException
 from sanic import Blueprint
-from secure_cookie.session import Session
 
 _logger = logging.getLogger(__name__)
 
