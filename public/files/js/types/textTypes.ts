@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { IModel } from 'kombo';
 import { WidgetView } from '../models/textTypes/common'; // TODO this breaks meaning of the 'common' module
 
 
@@ -125,7 +124,21 @@ export interface RegexpAttributeSelection {
 export type AnyTTSelection = TextInputAttributeSelection|FullAttributeSelection|
         RegexpAttributeSelection;
 
-export type ExportedSelection = {[sca:string]:Array<string>|string};
+
+export interface ExportedRegexpSelection {
+    regexp:string
+};
+
+export type SingleValueExportedTTSelection = string|ExportedRegexpSelection;
+
+export type AnyExportedTTSelection = Array<string>|SingleValueExportedTTSelection;
+
+export function isExportedRegexpSelection(v:AnyExportedTTSelection):v is ExportedRegexpSelection {
+    return typeof v['regexp'] === 'string';
+}
+
+
+export type ExportedSelection = {[sca:string]:AnyExportedTTSelection};
 
 
 /**

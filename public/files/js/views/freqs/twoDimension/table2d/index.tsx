@@ -806,17 +806,33 @@ export function init(
                         {'\u00a0'}
                         {he.translate('freq__ct_current_adhoc_subc_is')}:
                         {'\u00a0'}
-                        {Object.keys(props.concSelectedTextTypes).map(v => {
-                            const data = props.concSelectedTextTypes[v];
-                            const values = Array.isArray(data) ? data : [data];
+                        {pipe(
+                            props.concSelectedTextTypes,
+                            Dict.keys(),
+                            List.map(v => {
+                                const data = props.concSelectedTextTypes[v];
+                                const getValues = () => {
+                                    if (Array.isArray(data)) {
+                                        return data;
 
-                            return (
-                                <span key={v}>
-                                    <strong>{v}</strong>
-                                    {' \u2208 {' + List.map<string|number, string>(v => `"${v}"`, values).join(', ') + '}'}
-                                </span>
-                            );
-                        })}
+                                    } else if (TextTypes.isExportedRegexpSelection(data)) {
+                                        return [data.regexp];
+
+                                    } else {
+                                        return [data];
+                                    }
+                                };
+
+                                return (
+                                    <span key={v}>
+                                        <strong>{v}</strong>
+                                        {' \u2208 {' }
+                                        {List.map<string|number, string>(v => `"${v}"`, getValues()).join(', ')}
+                                        {'}'}
+                                    </span>
+                                );
+                            })
+                        )}
                     </p>
                 );
             }

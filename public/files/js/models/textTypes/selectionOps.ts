@@ -85,9 +85,14 @@ export class TTSelOps {
         }
     }
 
-    static exportSelections(sel:TextTypes.AnyTTSelection, lockedOnesOnly:boolean, includeSubcorpDefinition:boolean):Array<string> {
+    static exportSelections(
+        sel:TextTypes.AnyTTSelection,
+        lockedOnesOnly:boolean,
+        includeSubcorpDefinition:boolean
+    ):Array<string>|TextTypes.ExportedRegexpSelection {
+
         if (sel.type === 'regexp') {
-            return [sel.textFieldValue];
+            return {regexp: sel.textFieldValue};
         }
         const filter = lockedOnesOnly ?
             List.filter<TextTypes.AttributeValue>(item => item.locked) :
