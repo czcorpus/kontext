@@ -26,7 +26,7 @@ import { pipe, List, Dict, tuple, HTTP } from 'cnc-tskit';
 import * as Kontext from '../../types/kontext';
 import * as TextTypes from '../../types/textTypes';
 import * as PluginInterfaces from '../../types/plugins';
-import { SelectionFilterMap } from '../../models/textTypes/common';
+import { extractTTSelectionValue, SelectionFilterMap } from '../../models/textTypes/common';
 import { Actions as TTActions } from '../../models/textTypes/actions';
 import { Actions as QueryActions } from '../../models/query/actions';
 import { Actions as SubcActions } from '../../models/subcorp/actions';
@@ -617,7 +617,9 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                                     type: 'encoded'
                                 } :
                                 {
-                                    selections: Array.isArray(sels) ? sels : [sels],
+                                    selections: Array.isArray(sels) ?
+                                        sels :
+                                        [extractTTSelectionValue(sels)],
                                     type: 'default'
                                 }
                             )

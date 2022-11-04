@@ -123,9 +123,39 @@ export interface TTInitialData {
 }
 
 
-const typeIsSelected = (data:TextTypes.ExportedSelection, attr:string, v:string):boolean => {
+export const textTypeSelectionEquals = (sel:TextTypes.AnyExportedTTSelection, v:string):boolean => {
+    if (Array.isArray(sel)) {
+        return sel.indexOf(v) > -1;
+
+    } else if (typeof sel === 'string') {
+        return sel === v;
+
+    } else {
+        return sel.regexp === v;
+    }
+};
+
+
+export const extractTTSelectionValue = (sel:TextTypes.SingleValueExportedTTSelection):string => {
+    if (typeof sel === 'string') {
+        return sel;
+    }
+    return sel.regexp;
+}
+
+
+const textTypeValueIsSelected = (data:TextTypes.ExportedSelection, attr:string, v:string):boolean => {
     if (data.hasOwnProperty(attr)) {
-        return data[attr].indexOf(v) > -1;
+        const typeSelection = data[attr];
+        if (Array.isArray(typeSelection)) {
+            return List.find(item => item === v, typeSelection) !== undefined;
+
+        } else if (TextTypes.isExportedRegexpSelection(typeSelection)) {
+            return typeSelection.regexp === v;
+
+        } else {
+            return typeSelection === v;
+        }
     }
     return false;
 }
@@ -177,11 +207,11 @@ export function importInitialTTData(data:TTInitialData,
                     valItem => ({
                         value: valItem.v,
                         ident: valItem.v, // TODO what about bib items?
-                        selected: typeIsSelected(selectedItems, attrItem.name, valItem.v) || typeIsSelected(subcorpDefinition, attrItem.name, valItem.v) ?
+                        selected: textTypeValueIsSelected(selectedItems, attrItem.name, valItem.v) || textTypeValueIsSelected(subcorpDefinition, attrItem.name, valItem.v) ?
                             true : false,
-                        definesSubcorp: typeIsSelected(subcorpDefinition, attrItem.name, valItem.v) ?
+                        definesSubcorp: textTypeValueIsSelected(subcorpDefinition, attrItem.name, valItem.v) ?
                             true : false,
-                        locked: typeIsSelected(subcorpDefinition, attrItem.name, valItem.v) ?
+                        locked: textTypeValueIsSelected(subcorpDefinition, attrItem.name, valItem.v) ?
                             true : false,
                         availItems:valItem.xcnt,
                         // TODO here we expect that initial data

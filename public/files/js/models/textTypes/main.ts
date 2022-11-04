@@ -27,7 +27,7 @@ import * as Kontext from '../../types/kontext';
 import * as TextTypes from '../../types/textTypes';
 import * as PluginInterfaces from '../../types/plugins';
 import { TTSelOps } from './selectionOps';
-import { SelectionFilterMap, IntervalChar, WidgetView, importInitialTTData } from './common';
+import { SelectionFilterMap, IntervalChar, WidgetView, importInitialTTData, textTypeSelectionEquals, extractTTSelectionValue } from './common';
 import { Actions } from './actions';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions } from '../common/actions';
@@ -752,12 +752,15 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                         if (attr.type === 'text') {
                             List.forEach(
                                 checkedVal => {
+                                    const extractedVal = typeof checkedVal === 'string' ?
+                                        checkedVal :
+                                        checkedVal.regexp;
                                     attr = TTSelOps.addValue(
                                         attr,
                                         {
-                                            ident: checkedVal,
-                                            value: checkedVal in bibMapping ?
-                                                bibMapping[checkedVal] : checkedVal,
+                                            ident: extractedVal,
+                                            value: extractedVal in bibMapping ?
+                                                bibMapping[extractedVal] : extractedVal,
                                             selected: true,
                                             locked: false,
                                             definesSubcorp: false,
@@ -777,7 +780,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                                         ...item,
                                         value: item.ident in bibMapping ?
                                             bibMapping[item.ident] : item.value,
-                                        selected: checkedOfAttr.indexOf(item.value) > -1 ? true : false,
+                                        selected: textTypeSelectionEquals(checkedOfAttr, item.value),
                                         locked: false
                                     })
                                 );
@@ -790,8 +793,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                                     attr = TTSelOps.addValue(
                                         attr,
                                         {
-                                            ident: checkedVal,
-                                            value: checkedVal,
+                                            ident: extractTTSelectionValue(checkedVal),
+                                            value: extractTTSelectionValue(checkedVal),
                                             selected: true,
                                             locked: false,
                                             definesSubcorp: false,
@@ -806,8 +809,9 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                         } else if (attr.type === 'regexp') {
                             state.attributes[attrIdx] = {
                                 ...attr,
-                                textFieldValue: checkedOfAttrNorm[0],
-                                textFieldDecoded: Strings.shortenText(checkedOfAttrNorm[0], 50, '\u2026')
+                                textFieldValue: extractTTSelectionValue(checkedOfAttrNorm[0]),
+                                textFieldDecoded: Strings.shortenText(
+                                    extractTTSelectionValue(checkedOfAttrNorm[0]), 50, '\u2026')
                             };
 
                         } else {
@@ -815,7 +819,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                                 attr,
                                 item => ({
                                     ...item,
-                                    selected: checkedOfAttr.indexOf(item.value) > -1 ? true : false,
+                                    selected: textTypeSelectionEquals(checkedOfAttr, item.value),
                                     locked: false
                                 })
                             );
@@ -992,15 +996,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 const trueAttr = attrSel.name !== bibLabelAttr ?
                         attrSel.name : bibIdAttr;
                 if (TTSelOps.hasUserChanges(attrSel, includeSubcorpDefinition)) {
-                    if (attrSel.type === 'regexp' && attrSel.widget === 'days') {
-                        ans[trueAttr] = attrSel.textFieldValue;
-
-                    } else if (attrSel.type === 'text') {
-                        ans[trueAttr] = TTSelOps.exportSelections(attrSel, lockedOnesOnly, includeSubcorpDefinition);
-
-                    } else {
-                        ans[trueAttr] = TTSelOps.exportSelections(attrSel, lockedOnesOnly, includeSubcorpDefinition);
-                    }
+                    ans[trueAttr] = TTSelOps.exportSelections(attrSel, lockedOnesOnly, includeSubcorpDefinition);
                 }
             },
             attributes
