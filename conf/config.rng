@@ -249,9 +249,9 @@
                                 <data type="language" />
                             </element>
                         </oneOrMore>
-                        <element name="jwt_secret">
-                            <text />
-                        </element>
+                    </element>
+                    <element name="jwt_secret">
+                        <text />
                     </element>
                     <element name="upload_cache_dir">
                         <a:documentation>A path where uploaded file (e.g. pos./neg. filter words)
