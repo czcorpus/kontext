@@ -46,6 +46,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'lib'))  # appl
 CONF_PATH = os.getenv(
     'KONTEXT_CONF', os.path.realpath(f'{os.path.dirname(os.path.realpath(__file__))}/../conf/config.xml'))
 LOCALE_PATH = os.path.realpath(f'{os.path.dirname(__file__)}/../locale')
+JWT_COOKIE_NAME = 'kontext_jwt'
+JWT_ALGORITHM = 'HS256'
 
 from typing import Optional
 
@@ -57,12 +59,11 @@ from action.context import ApplicationContext
 from action.cookie import KonTextCookie
 from action.plugin.initializer import install_plugin_actions, setup_plugins
 from action.templating import TplEngine
-from plugin_types.auth import UserInfo
 from sanic import Request, Sanic
+from sanic.response import HTTPResponse
 from sanic_babel import Babel
-from sanic_session import (
-    AIORedisSessionInterface, InMemorySessionInterface,
-    MemcacheSessionInterface, Session)
+import jwt
+from jwt.exceptions import InvalidSignatureError
 from texttypes.cache import TextTypesCache
 from views.colls import bp as colls_bp
 from views.concordance import bp as conc_bp
@@ -128,7 +129,6 @@ application.config['redirect_safe_domains'] = settings.get('global', 'redirect_s
 application.config['cookies_same_site'] = settings.get('global', 'cookies_same_site', None)
 application.config['static_files_prefix'] = settings.get(
     'global', 'static_files_prefix', '../files')
-session = Session()
 
 application.blueprint(root_bp)
 application.blueprint(conc_bp)
@@ -168,31 +168,7 @@ async def sigusr1_handler():
 async def server_init(app: Sanic, loop: asyncio.BaseEventLoop):
     setproctitle(f'sanic-kontext [{CONF_PATH}][worker]')
     loop.add_signal_handler(signal.SIGUSR1, lambda: asyncio.create_task(sigusr1_handler()))
-    sessions_conf = settings.get('sessions')
-    expiry = int(sessions_conf['ttl'])
-    # TODO we should probably use a custom configuration for this as the "db" can be non-Redis
-    if sessions_conf['interface'] == 'redis':
-        from redis import asyncio as aioredis
-        app.ctx.redis = aioredis.from_url(
-            f'redis://{sessions_conf["backend_host"]}:{sessions_conf["backend_port"]}',
-            db=sessions_conf["backend_db"],
-            decode_responses=True)
-        interface = AIORedisSessionInterface(app.ctx.redis, expiry=expiry)
-
-    elif sessions_conf['interface'] == 'memcache':
-        from aiomcache import Client
-        app.ctx.memcache = Client(sessions_conf["backend_host"], sessions_conf["backend_port"])
-        interface = MemcacheSessionInterface(app.ctx.memcache, expiry=expiry)
-
-    elif sessions_conf['interface'] == 'memory':
-        interface = InMemorySessionInterface(expiry=expiry)
-
-    else:
-        raise ValueError(
-            f'Invalid sessions interface `{sessions_conf["interface"]}`. Use `redis`, `memcache` or `memory`.')
-
     # init extensions fabrics
-    session.init_app(app, interface=interface)
     app.ctx.client_session = aiohttp.ClientSession()
 
 
@@ -202,9 +178,24 @@ async def server_init(app: Sanic, loop: asyncio.BaseEventLoop):
 
 
 @application.middleware('request')
-async def extract_user(request: Request):
-    request.ctx.user_info = UserInfo(
-        id=0, user='anonymous', api_key=None, email=None, fullname='Anonymous User')  # TODO
+async def extract_jwt(request: Request):
+    if JWT_COOKIE_NAME in request.cookies:
+        try:
+            request.ctx.session = jwt.decode(
+                request.cookies[JWT_COOKIE_NAME], settings.get('global', 'jwt_secret'), algorithms=[JWT_ALGORITHM])
+            return
+        except InvalidSignatureError as ex:
+            logging.getLogger(__name__).warning(f'extract jwt: {ex}')
+            pass
+    request.ctx.session = {}
+
+
+@application.middleware('response')
+async def store_jwt(request: Request, response: HTTPResponse):
+    response.cookies[JWT_COOKIE_NAME] = jwt.encode(
+        request.ctx.session,  settings.get('global', 'jwt_secret'), algorithm=JWT_ALGORITHM)
+    response.cookies[JWT_COOKIE_NAME]['httponly'] = True
+    response.cookies[JWT_COOKIE_NAME]['secure'] = bool(request.conn_info.ssl)
 
 
 application.config['BABEL_TRANSLATION_DIRECTORIES'] = LOCALE_PATH

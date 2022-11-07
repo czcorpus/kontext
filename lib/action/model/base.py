@@ -28,7 +28,6 @@ from action.req_args import create_req_arg_proxy
 from action.response import KResponse
 from main_menu.model import AbstractMenuItem, MainMenuItemId
 from sanic import Sanic
-from sanic_session import Session
 from action.model import ModelsSharedData
 
 
@@ -211,7 +210,7 @@ class BasePluginCtx(AbstractBasePluginCtx):
         return self._request.cookies
 
     @property
-    def session(self) -> Session:
+    def session(self) -> Dict[str, Any]:
         return self._request.ctx.session
 
     @property

@@ -6,9 +6,10 @@ PyICU >= 1.5
 babel >= 2.9.1
 jinja2 >= 2.11.3
 secure-cookie >= 0.1.0
-sanic == 22.6.2
+sanic >= 22.9.1
 sanic-babel >= 0.3.0
 sanic-jinja2 >= 2022.1.13
+pyJWT >= 2.6.0
 # please note that lxml package requires the following system packages:
 # libxml2-dev, libxslt-dev, python-dev
 lxml >= 3.4

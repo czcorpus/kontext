@@ -172,7 +172,7 @@ class CentralAuth(AbstractRemoteAuth):
             response_obj['user']['id'] = int(response_obj['user']['id'])
 
         if curr_user_id != response_obj['user']['id']:
-            plugin_ctx.refresh_session_id()
+            plugin_ctx.clear_session()
             if response_obj['user']['id'] != self._anonymous_id:
                 # user logged in => keep session data (except for credentials)
                 plugin_ctx.session['user'] = UserInfo(
@@ -184,7 +184,6 @@ class CentralAuth(AbstractRemoteAuth):
                     api_key=None)
                 # reload available corpora from remote server
             else:  # logout => clear current user's session data and set new credentials
-                plugin_ctx.session.clear()
                 plugin_ctx.session['user'] = self.anonymous_user(plugin_ctx)
 
     async def corpus_access(self, user_dict, corpus_name: str) -> CorpusAccess:
