@@ -658,7 +658,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             this.getComponentHelpers(),
             this.corpusInfoModel
         );
-        const target = window.document.getElementById(PageMount.GENERAL_OVERVIEW);
+        const target = window.document.querySelector(PageMount.GENERAL_OVERVIEW);
         if (target) {
             this.renderLayoutReactComponent(
                 overviewViews.OverviewArea,
@@ -702,7 +702,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      */
     private initIssueReporting():boolean {
         if (this.pluginTypeIsActive(PluginName.ISSUE_REPORTING)) {
-            const mount = document.getElementById(PageMount.ERROR_REPORTING);
+            const mount = document.querySelector(PageMount.ERROR_REPORTING);
             if (mount) {
                 const plugin = issueReportingPlugin(this.pluginApi())
                 this.renderLayoutReactComponent(

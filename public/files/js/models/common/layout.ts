@@ -318,20 +318,19 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState>
             action => {
                 this.changeState(state => {state.isWaiting = true})
                 this.emitChange();
-                this.loadCorpusInfo(action.payload.corpusId).subscribe(
-                    null,
-                    (err) => {
-                        this.changeState(state => {state.isWaiting = false});
-                        this.pluginApi.showMessage('error', err);
-                    },
-                    () => {
+                this.loadCorpusInfo(action.payload.corpusId).subscribe({
+                    next: next => {
                         this.changeState(state => {
                             state.currentCorpus = action.payload.corpusId;
                             state.currentInfoType = CorpusInfoType.CORPUS;
                             state.isWaiting = false;
                         });
                     },
-                )
+                    error: err => {
+                        this.changeState(state => {state.isWaiting = false});
+                        this.pluginApi.showMessage('error', err);
+                    },
+                });
             }
         );
 
