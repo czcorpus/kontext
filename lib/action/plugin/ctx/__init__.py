@@ -20,7 +20,6 @@ from action.krequest import KRequest
 from corplib import CorpusFactory
 from corplib.abstract import AbstractKCorpus
 from plugin_types.auth import UserInfo
-from sanic_session import Session
 
 
 class AbstractBasePluginCtx(abc.ABC):
@@ -89,7 +88,7 @@ class AbstractBasePluginCtx(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def session(self) -> Session:
+    def session(self) -> Dict[str, Any]:
         pass
 
     @property
@@ -105,7 +104,7 @@ class AbstractBasePluginCtx(abc.ABC):
 class AbstractUserPluginCtx(AbstractBasePluginCtx, abc.ABC):
 
     @abc.abstractmethod
-    def refresh_session_id(self) -> None:
+    def clear_session(self) -> None:
         pass
 
     @property

@@ -61,7 +61,6 @@ async def lindat_login(amodel: UserActionModel, req: KRequest, resp: KResponse):
         else:
             amodel.disabled_menu_items = amodel.USER_ACTIONS_DISABLED_ITEMS
             resp.add_system_message('error', req.translate('Incorrect username or password'))
-        amodel.refresh_session_id()
         return ans
 
 

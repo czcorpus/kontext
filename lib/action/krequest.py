@@ -24,8 +24,6 @@ from babel import Locale
 from plugin_types.auth import UserInfo
 from sanic.request import Request, RequestParameters
 from sanic_babel import get_locale, gettext
-from sanic_session.base import SessionDict
-
 M_args = TypeVar('M_args')
 
 
@@ -85,7 +83,7 @@ class KRequest(Generic[M_args]):
         return self._request.headers
 
     @property
-    def session(self) -> SessionDict:
+    def session(self) -> Dict[str, Any]:
         return self._request.ctx.session
 
     @property

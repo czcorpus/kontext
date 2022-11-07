@@ -39,14 +39,8 @@
             <item>freqs</item>
         </conc_dashboard_modules>
         <no_anonymous_access>0</no_anonymous_access>
+        <jwt_secret>my_secret</jwt_secret>
     </global>
-    <sessions>
-        <interface>redis</interface>
-        <backend_host>localhost</backend_host>
-        <backend_port>6379</backend_port>
-        <backend_db>2</backend_db>
-        <ttl>14400</ttl>
-    </sessions>
     <calc_backend>
         <type>rq</type>
         <task_time_limit>300</task_time_limit>

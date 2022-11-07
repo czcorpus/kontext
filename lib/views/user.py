@@ -60,7 +60,6 @@ async def login(amodel: UserActionModel, req: KRequest, resp: KResponse):
         else:
             amodel.disabled_menu_items = amodel.USER_ACTIONS_DISABLED_ITEMS
             resp.add_system_message('error', req.translate('Incorrect username or password'))
-        amodel.refresh_session_id()
         return ans
 
 
@@ -72,7 +71,7 @@ async def logoutx(amodel: UserActionModel, req: KRequest, resp: KResponse):
         amodel.disabled_menu_items = amodel.USER_ACTIONS_DISABLED_ITEMS
         auth.logout(req.session)
         await amodel.init_session()
-        amodel.refresh_session_id()
+        amodel.clear_session()
         auth.logout_hook(amodel.plugin_ctx)
         resp.redirect(req.create_url('query', {}))
     return {}

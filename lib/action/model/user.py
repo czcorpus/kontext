@@ -78,7 +78,6 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
     def __init__(
             self, req: KRequest, resp: KResponse, action_props: ActionProps, shared_data: ModelsSharedData):
         super().__init__(req, resp, action_props, shared_data)
-        self._uses_valid_sid: bool = True
         self.return_url: Optional[str] = None
         self._plugin_ctx: Optional[UserPluginCtx] = None
         self.args = UserActionArgs()
@@ -301,12 +300,10 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
                             'User authentication error. Please try to reload the page or '
                             'contact system administrator.'))
 
-    def refresh_session_id(self) -> None:
+    def clear_session(self) -> None:
         """
-        This tells the wrapping WSGI app to create a new session with
-        the same data as the current session.
         """
-        self._uses_valid_sid = False
+        self._req.ctx.session = {}
 
     async def _export_optional_plugins_conf(self, result, active_corpora: List[str]):
         """
@@ -523,8 +520,8 @@ class UserPluginCtx(BasePluginCtx, AbstractUserPluginCtx):
         super().__init__(action_model, request, response, plg_shared)
         self._action_model = action_model
 
-    def refresh_session_id(self) -> None:
-        return self._action_model.refresh_session_id()
+    def clear_session(self) -> None:
+        return self._action_model.clear_session()
 
     @property
     def user_is_anonymous(self) -> bool:

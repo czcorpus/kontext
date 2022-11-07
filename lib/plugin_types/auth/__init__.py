@@ -14,8 +14,6 @@
 
 from typing import TYPE_CHECKING, Any, Dict, List, NamedTuple, Optional, Tuple
 
-from sanic_session.base import SessionDict
-
 try:
     from typing import TypedDict
 except ImportError:
@@ -250,7 +248,7 @@ class AbstractInternalAuth(AbstractSemiInternalAuth):
         """
 
     @abc.abstractmethod
-    def logout(self, session: SessionDict):
+    def logout(self, session: Dict[str, Any]):
         """
         Logs-out current user (identified by passed session object).
         """

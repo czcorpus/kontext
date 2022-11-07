@@ -249,6 +249,9 @@
                                 <data type="language" />
                             </element>
                         </oneOrMore>
+                        <element name="jwt_secret">
+                            <text />
+                        </element>
                     </element>
                     <element name="upload_cache_dir">
                         <a:documentation>A path where uploaded file (e.g. pos./neg. filter words)
@@ -379,31 +382,6 @@
                             Usefull for API instance.</a:documentation>
                         </element>
                     </optional>
-                </interleave>
-            </element>
-            <element name="sessions">
-                <a:documentation>A section for configuring HTTP sessions</a:documentation>
-                <interleave>
-                    <element name="interface">
-                        <choice>
-                            <value>redis</value>
-                            <value>memcache</value>
-                            <value>memory</value>
-                        </choice>
-                    </element>
-                    <element name="backend_host">
-                        <text />
-                    </element>
-                    <element name="backend_port">
-                        <data type="positiveInteger" />
-                    </element>
-                    <element name="backend_db">
-                        <data type="positiveInteger" />
-                    </element>
-                    <element name="ttl">
-                        <a:documentation>number of seconds of inactivity</a:documentation>
-                        <data type="positiveInteger" />
-                    </element>
                 </interleave>
             </element>
             <element name="calc_backend">
