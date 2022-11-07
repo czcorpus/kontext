@@ -196,7 +196,8 @@ async def store_jwt(request: Request, response: HTTPResponse):
         request.ctx.session,  settings.get('global', 'jwt_secret'), algorithm=JWT_ALGORITHM)
     response.cookies[JWT_COOKIE_NAME]['httponly'] = True
     response.cookies[JWT_COOKIE_NAME]['secure'] = bool(
-        request.conn_info.ssl or request.headers.get('x-forwarded-protocol', '') == 'https')
+        request.conn_info.ssl or request.headers.get('x-forwarded-protocol', '') == 'https'
+        or request.headers.get('x-forwarded-proto') == 'https')
 
 
 application.config['BABEL_TRANSLATION_DIRECTORIES'] = LOCALE_PATH
