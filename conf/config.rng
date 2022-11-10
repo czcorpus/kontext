@@ -253,6 +253,20 @@
                     <element name="jwt_secret">
                         <text />
                     </element>
+                    <optional>
+                        <element name="jwt_ttl_secs">
+                            <data type="positiveInteger" />
+                            <a:documentation>
+                                Default value is 3600 (= 1 hour).
+
+                                Number of seconds a single jwt token should be valid. Please note that during normal
+                                operation, each time server responds, it updates JWT's 'exp' value which effectively
+                                generates new token. So by using always the most recent token and keeping the time
+                                between requests smaller than this config. value, user may access KonText
+                                indefinitely. By contrast - using a single token will be always limited by this value.
+                            </a:documentation>
+                        </element>
+                    </optional>
                     <element name="upload_cache_dir">
                         <a:documentation>A path where uploaded file (e.g. pos./neg. filter words)
                         are temporarily stored before being processed</a:documentation>

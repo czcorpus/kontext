@@ -27,6 +27,7 @@ import logging
 import os
 import signal
 import sys
+from datetime import datetime, timedelta, timezone
 from logging.handlers import QueueListener
 
 from concurrent_log_handler import ConcurrentRotatingFileHandler
@@ -63,7 +64,7 @@ from sanic import Request, Sanic
 from sanic.response import HTTPResponse
 from sanic_babel import Babel
 import jwt
-from jwt.exceptions import InvalidSignatureError
+from jwt.exceptions import InvalidSignatureError, ExpiredSignatureError
 from texttypes.cache import TextTypesCache
 from views.colls import bp as colls_bp
 from views.concordance import bp as conc_bp
@@ -185,13 +186,20 @@ async def extract_jwt(request: Request):
                 request.cookies[JWT_COOKIE_NAME], settings.get('global', 'jwt_secret'), algorithms=[JWT_ALGORITHM])
             return
         except InvalidSignatureError as ex:
-            logging.getLogger(__name__).warning(f'extract jwt: {ex}')
+            logging.getLogger(__name__).warning(f'failed to extract JWT token: {ex}')
+            request.ctx.session = {}
+        except ExpiredSignatureError:
+            # in case a client uses too old token, we clear the session and user
+            # must log in again (or the 'revalidation' mechanism will resolve
+            # this in case KonText uses "remote auth" type of auth plug-in).
             pass
     request.ctx.session = {}
 
 
 @application.middleware('response')
 async def store_jwt(request: Request, response: HTTPResponse):
+    ttl = settings.get_int('global', 'jwt_ttl_secs', 3600)
+    request.ctx.session['exp'] = datetime.now(timezone.utc) + timedelta(seconds=ttl)
     response.cookies[JWT_COOKIE_NAME] = jwt.encode(
         request.ctx.session,  settings.get('global', 'jwt_secret'), algorithm=JWT_ALGORITHM)
     response.cookies[JWT_COOKIE_NAME]['httponly'] = True
