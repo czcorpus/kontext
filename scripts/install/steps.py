@@ -318,6 +318,8 @@ class SetupKontext(InstallationStep):
         create_directory('/var/local/corpora/freqs-precalc', WEBSERVER_USER, WEBSERVER_USER, 0o2775)
         create_directory('/var/local/corpora/freqs-cache', WEBSERVER_USER, WEBSERVER_USER, 0o2775)
         create_directory('/var/local/corpora/colls-cache', WEBSERVER_USER, WEBSERVER_USER, 0o2775)
+        create_directory('/var/local/corpora/query_persistence',
+                         WEBSERVER_USER, WEBSERVER_USER, 0o2775)
 
         create_directory('/var/log/kontext', WEBSERVER_USER, None)
         create_directory('/tmp/kontext-upload', WEBSERVER_USER, None, 0o775)
