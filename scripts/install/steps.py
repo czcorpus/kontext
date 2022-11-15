@@ -211,8 +211,8 @@ class SetupManatee(InstallationStep):
         # install manatee with ucnk patch
         print('Installing Manatee-Open...')
 
-        if manatee_version == '2.208':
-            url = 'https://corpora.fi.muni.cz/noske/current/src/manatee-open-2.208.tar.gz'
+        if manatee_version == '2.214.1':
+            url = 'https://corpora.fi.muni.cz/noske/current/src/manatee-open-2.214.1.tar.gz'
         else:
             url = f'http://corpora.fi.muni.cz/noske/src/manatee-open/manatee-open-{manatee_version}.tar.gz'
         # build manatee from source using patch
