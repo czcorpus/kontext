@@ -1,4 +1,4 @@
-FROM czcorpus/kontext-manatee:2.208-jammy
+FROM czcorpus/kontext-manatee:2.214.1-jammy
 
 WORKDIR /opt/kontext
 COPY . .
@@ -9,7 +9,6 @@ RUN apt-get update \
     && sed '/PyICU/d' ./requirements.txt | pip3 install -r /dev/stdin  \
     && python3 scripts/install/steps.py SetupKontext \
     && mkdir /var/log/rq  \
-    && mkdir /var/local/corpora/query_persistence \
     && apt-get -y autoremove \
     && rm -rf /var/lib/apt/lists/*
 

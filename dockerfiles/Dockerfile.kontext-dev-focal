@@ -15,6 +15,6 @@ RUN pip3 install --upgrade pip && pip3 install -r requirements.txt -r dev-requir
 
 COPY ./conf ./conf
 RUN python3 scripts/install/steps.py SetupKontext
-RUN mkdir /var/log/rq && mkdir /var/local/corpora/query_persistence
+RUN mkdir /var/log/rq
 
 COPY launcher-config.json launcher-menu.json tsconfig.json webpack.dev.js ./

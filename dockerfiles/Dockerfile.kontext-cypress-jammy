@@ -1,4 +1,4 @@
-FROM czcorpus/kontext-manatee:2.208-jammy
+FROM czcorpus/kontext-manatee:2.214.1-jammy
 
 SHELL ["/bin/bash", "--login", "-c"]
 
@@ -6,7 +6,6 @@ RUN apt-get update && apt-get install -y sox libsox-fmt-mp3 nodejs npm python3-p
 
 COPY ./requirements.txt ./
 RUN pip3 install --upgrade pip && pip3 install -r requirements.txt
-RUN mkdir /var/local/corpora/query_persistence
 
 COPY ./pack*.json ./
 RUN npm install

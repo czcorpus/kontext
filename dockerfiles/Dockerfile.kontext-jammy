@@ -1,4 +1,4 @@
-FROM czcorpus/kontext-manatee:2.208-jammy
+FROM czcorpus/kontext-manatee:2.214.1-jammy
 
 SHELL ["/bin/bash", "--login", "-c"]
 COPY . .
@@ -7,7 +7,6 @@ RUN apt-get update \
     && pip3 install --upgrade pip \
     && pip3 install -r requirements.txt \
     && python3 scripts/install/steps.py SetupKontext \
-    && mkdir /var/local/corpora/query_persistence \
     && npm install \
     && npm start build:production \
     && apt-get -y remove npm nodejs \
