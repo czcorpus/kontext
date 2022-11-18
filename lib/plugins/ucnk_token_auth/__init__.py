@@ -179,7 +179,7 @@ class UCNKTokenAuth(AbstractRemoteTokenAuth):
                     api_key=None)
                 # reload available corpora from remote server
             else:  # logout => clear current user's session data and set new credentials
-                plugin_ctx.session.update(dict(user=self.anonymous_user(plugin_ctx))
+                plugin_ctx.session.update(dict(user=self.anonymous_user(plugin_ctx)))
 
     @staticmethod
     def export_actions():
