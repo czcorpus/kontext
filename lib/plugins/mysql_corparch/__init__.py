@@ -162,7 +162,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
             ans.manatee.lang = row['language']
             ans.manatee.name = row['name']
             ans.part_of_ml_corpus = row['part_of_ml_corpus']
-            ans.ml_position_filter = MLPositionFilter[row['ml_position_filter']]
+            ans.ml_position_filter = MLPositionFilter(row['ml_position_filter'])
             return ans
         return None
 

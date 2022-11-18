@@ -149,7 +149,7 @@ class MLPositionFilter(enum.Enum):
 
     """
 
-    none = 0
+    none = None
     """
     The 'none' filter is the default and basically means that the corpora cannot be layered
     """
@@ -159,6 +159,15 @@ class MLPositionFilter(enum.Enum):
     The 'alphanum' filter can be used for aligned corpora where by removing any non-alphanumeric characters 
     (with the exception for the underscore char.), the positions from different corpora become 1:1.
     """
+
+    @classmethod
+    def _missing_(cls, value):
+        """
+        for backward compatibility, we also support creating None value from 'none' value
+        """
+        if value == 'none':
+            return cls.none
+        return None
 
 
 @dataclass_json
