@@ -276,6 +276,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
                 ans = 0
             else:
                 will_be_archived = self.will_be_archived(None, conc_id)
+                archived_rec = data
                 if will_be_archived is not None:
                     data_key = mk_key(conc_id)
                     self.db.list_append(self._archive_queue_key, dict(key=data_key, revoke=will_be_archived))
