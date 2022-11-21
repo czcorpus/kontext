@@ -53,8 +53,8 @@ export class RefsDetailModel extends StatelessModel<RefsDetailModelState> {
         );
         this.layoutModel = layoutModel;
 
-        this.addActionHandler<typeof Actions.ShowRefDetail>(
-            Actions.ShowRefDetail.name,
+        this.addActionHandler(
+            Actions.ShowRefDetail,
             (state, action) => {
                 state.isBusy = true;
             },
@@ -65,37 +65,43 @@ export class RefsDetailModel extends StatelessModel<RefsDetailModelState> {
 
                 ).subscribe({
                     next: data => {
-                        dispatch<typeof Actions.ShowRefDetailDone>({
-                            name: Actions.ShowRefDetailDone.name,
-                            payload: {
+                        dispatch(
+                            Actions.ShowRefDetailDone,
+                            {
                                 data,
                                 lineIdx: action.payload.lineIdx
                             }
-                        });
+                        );
                     },
                     error: err => {
                         this.layoutModel.showMessage('error', err);
-                        dispatch<typeof Actions.ShowRefDetailDone>({
-                            name: Actions.ShowRefDetailDone.name,
-                            error: err
-                        });
+                        dispatch(
+                            Actions.ShowRefDetailDone,
+                            err
+                        );
                     }
                 });
             }
         );
 
-        this.addActionHandler<typeof Actions.ShowRefDetailDone>(
-            Actions.ShowRefDetailDone.name,
+        this.addActionHandler(
+            Actions.ShowRefDetailDone,
             (state, action) => {
                 state.isBusy = false;
-                state.data = action.payload.data;
-                state.lineIdx = action.payload.lineIdx;
+                if (!action.error) {
+                    state.data = action.payload.data;
+                    state.lineIdx = action.payload.lineIdx;
+
+                } else {
+                    state.data = [];
+                    state.lineIdx = null;
+                }
             }
         );
 
-        this.addActionHandler<typeof Actions.RefResetDetail>(
-            Actions.RefResetDetail.name,
-            (state, action) => {
+        this.addActionHandler(
+            Actions.RefResetDetail,
+            (state, _) => {
                 if (state.lineIdx !== null) {
                     state.lineIdx = null;
                     state.data = [];
