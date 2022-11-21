@@ -88,8 +88,14 @@ export class RefsDetailModel extends StatelessModel<RefsDetailModelState> {
             Actions.ShowRefDetailDone.name,
             (state, action) => {
                 state.isBusy = false;
-                state.data = action.payload.data;
-                state.lineIdx = action.payload.lineIdx;
+                if (!action.error) {
+                    state.data = action.payload.data;
+                    state.lineIdx = action.payload.lineIdx;
+
+                } else {
+                    state.data = [];
+                    state.lineIdx = null;
+                }
             }
         );
 
