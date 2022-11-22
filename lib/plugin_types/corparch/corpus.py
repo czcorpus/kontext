@@ -154,7 +154,7 @@ class MLPositionFilter(enum.Enum):
     The 'none' filter is the default and basically means that the corpora cannot be layered
     """
 
-    alphanum = 1
+    alphanum = 'alphanum'
     """
     The 'alphanum' filter can be used for aligned corpora where by removing any non-alphanumeric characters 
     (with the exception for the underscore char.), the positions from different corpora become 1:1.

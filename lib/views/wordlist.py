@@ -54,13 +54,7 @@ async def form(amodel: WordlistActionModel, _: KRequest, __: KResponse):
     return out
 
 
-@bp.route('/submit', ['POST'])
-@http_action(
-    access_level=2, return_type='json', page_model='wordlist', mutates_result=True,
-    action_log_mapper=log_mapping.wordlist, action_model=WordlistActionModel)
-async def submit(amodel: WordlistActionModel, req: KRequest, _: KResponse):
-    form_args = WordlistFormArgs()
-    form_args.update_by_user_query(req.json)
+async def create_result(amodel: WordlistActionModel, form_args: WordlistFormArgs):
     worker = calc_backend_client(settings)
     ans = dict(
         corpname=amodel.args.corpname, usesubcorp=amodel.args.usesubcorp, freq_files_avail=True, subtasks=[])
@@ -69,8 +63,8 @@ async def submit(amodel: WordlistActionModel, req: KRequest, _: KResponse):
         args=(amodel.corp.portable_ident, form_args.to_dict(), amodel.corp.size))
     bg_result = async_res.get()
     if isinstance(bg_result, MissingSubCorpFreqFile):
-        data_calc = await build_arf_db(amodel.session_get(
-            'user', 'id'), amodel.corp, form_args.wlattr)
+        data_calc = await build_arf_db(
+            amodel.session_get('user', 'id'), amodel.corp, form_args.wlattr)
         if type(data_calc) is list:
             for subtask in data_calc:
                 # TODO get rid of private method
@@ -92,6 +86,16 @@ async def submit(amodel: WordlistActionModel, req: KRequest, _: KResponse):
 
     amodel.on_query_store(on_query_store)
     return ans
+
+
+@bp.route('/submit', ['POST'])
+@http_action(
+    access_level=2, return_type='json', page_model='wordlist', mutates_result=True,
+    action_log_mapper=log_mapping.wordlist, action_model=WordlistActionModel)
+async def submit(amodel: WordlistActionModel, req: KRequest, _: KResponse):
+    form_args = WordlistFormArgs()
+    form_args.update_by_user_query(req.json)
+    return await create_result(amodel, form_args)
 
 
 @bp.route('/restore')
@@ -123,11 +127,7 @@ async def restore(amodel: WordlistActionModel, req: KRequest, _: KResponse):
         'next_action_args': {}}
 
 
-@bp.route('/result')
-@http_action(
-    access_level=2, template='wordlist/result.html', page_model='wordlist',
-    action_log_mapper=log_mapping.wordlist, action_model=WordlistActionModel)
-async def result(amodel: WordlistActionModel, req: KRequest, _: KResponse):
+async def view_result(amodel: WordlistActionModel, req: KRequest):
     amodel.disabled_menu_items = (
         MainMenu.VIEW('kwic-sent-switch', 'structs-attrs'),
         MainMenu.FILTER,
@@ -189,6 +189,14 @@ async def result(amodel: WordlistActionModel, req: KRequest, _: KResponse):
     result['query_id'] = amodel.q_code
     await amodel.export_subcorpora_list(result)
     return result
+
+
+@bp.route('/result')
+@http_action(
+    access_level=2, template='wordlist/result.html', page_model='wordlist',
+    action_log_mapper=log_mapping.wordlist, action_model=WordlistActionModel)
+async def result(amodel: WordlistActionModel, req: KRequest, _: KResponse):
+    return await view_result(amodel, req)
 
 
 @bp.route('/struct_result', ['POST'])

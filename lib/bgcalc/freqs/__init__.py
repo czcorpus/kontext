@@ -113,7 +113,7 @@ async def write_log_header(corp, logfile):
         await f.write('%d\n%s\n0 %%' % (os.getpid(), corp.search_size))
 
 
-async def build_arf_db(user_id: int, corp: KCorpus, attrname: str) -> Union[float, List[AsyncTaskStatus]]:
+async def build_arf_db(user_id: int, corp: AbstractKCorpus, attrname: str) -> Union[float, List[AsyncTaskStatus]]:
     """
     Provides a higher level wrapper to create_arf_db(). Function creates
     a background process where create_arf_db() is run. In case the
