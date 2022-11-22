@@ -22,8 +22,11 @@ from action.control import http_action
 from action.krequest import KRequest
 from action.response import KResponse
 from action.model.concordance import ConcActionModel
+from action.model.wordlist import WordlistActionModel
+from action.argmapping.wordlist import WordlistFormArgs
 from action.errors import UserReadableException
 from views.concordance import view_conc
+from views.wordlist import create_result as wl_create_result, view_result as wl_view_result
 
 bp = Blueprint('ucnk_backlinks', url_prefix='b')
 
@@ -40,7 +43,7 @@ def col_lemma_log(request: KRequest):
 @http_action(
     mutates_result=True, action_log_mapper=col_lemma_log, template='view.html', page_model='view',
     action_model=ConcActionModel)
-async def view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+async def col_lemma(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     """
     """
     cl = req.args.get('cl')
@@ -61,6 +64,27 @@ async def view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     amodel.args.structs = ''
     amodel.args.viewmode = 'sen'
     return await view_conc(amodel, req, resp, False, req.session_get('user', 'id'))
+
+
+@bp.route('/ic_tags')
+@http_action(
+    action_model=WordlistActionModel, template='wordlist/result.html', mutates_result=True,
+    action_log_mapper=col_lemma_log, page_model='wordlist')
+async def ic_tags(amodel: WordlistActionModel, req: KRequest, _):
+    form_args = WordlistFormArgs()
+    form_args.wlpat = req.args.get('tag', '.+')
+    form_args.wlattr = 'tag'
+    form_args.wlnums = 'frq'
+    form_args.include_nonwords = 0
+    form_args.wlminfreq = 1
+    ans = await wl_create_result(amodel, form_args)
+    if ans.get('freq_files_avail', False) is False:
+        if not amodel.args.usesubcorp:
+            corp_id = amodel.args.corpname
+        else:
+            corp_id = f'{amodel.args.corpname}/{amodel.args.usesubcorp}'
+        raise UserReadableException(f'Missing intermediate frequency data for {corp_id}')
+    return await wl_view_result(amodel, req)
 
 
 class UcnkBacklinks(AbstractBacklinks):

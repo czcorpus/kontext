@@ -19,7 +19,7 @@ from action.argmapping.action import IntOpt
 
 
 @dataclass
-class WordlistFormArgs(object):
+class WordlistFormArgs:
     _id: str = None
     form_type: str = 'wlist'
     corpname: str = None
