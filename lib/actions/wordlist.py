@@ -103,11 +103,7 @@ class Wordlist(Kontext):
         self.export_form_args(out)
         return out
 
-    @exposed(access_level=1, http_method='POST', page_model='wordlist',
-             return_type='json', mutates_result=True, action_log_mapper=log_mapping.wordlist)
-    def submit(self, request):
-        form_args = WordlistFormArgs()
-        form_args.update_by_user_query(request.json)
+    def create_result(self, form_args: WordlistFormArgs):
         worker = calc_backend_client(settings)
         ans = dict(corpname=self.args.corpname, usesubcorp=self.args.usesubcorp,
                    freq_files_avail=True, subtasks=[])
@@ -138,9 +134,14 @@ class Wordlist(Kontext):
         self.on_conc_store = on_conc_store
         return ans
 
-    @exposed(access_level=1, http_method='GET', page_model='wordlist',
-             action_log_mapper=log_mapping.wordlist)
-    def result(self, request):
+    @exposed(access_level=1, http_method='POST', page_model='wordlist',
+             return_type='json', mutates_result=True, action_log_mapper=log_mapping.wordlist)
+    def submit(self, request):
+        form_args = WordlistFormArgs()
+        form_args.update_by_user_query(request.json)
+        return self.create_result(form_args)
+
+    def view_result(self, request):
         """
         """
         self.disabled_menu_items = (MainMenu.VIEW('kwic-sent-switch', 'structs-attrs'),
@@ -188,6 +189,11 @@ class Wordlist(Kontext):
         result['query_id'] = self._q_code
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, result)
         return result
+
+    @exposed(access_level=1, http_method='GET', page_model='wordlist',
+             action_log_mapper=log_mapping.wordlist)
+    def result(self, request):
+        return self.view_result(request)
 
     @exposed(http_method='POST', mutates_result=True, return_type='json')
     def struct_result(self, request):
@@ -293,3 +299,23 @@ class Wordlist(Kontext):
                 if tr.status == 'FAILURE':
                     raise BgCalcError(f'Task {t} failed')
         return {'status': freq_calc.build_arf_db_status(self.corp, attrname)}
+
+    @exposed(
+        template='wordlist/result.html', mutates_result=True, page_model='wordlist', access_level=1)
+    def ic_tags(self, req):
+        form_args = WordlistFormArgs()
+        form_args.corpname = self.args.corpname
+        form_args.usesubcorp = self.args.usesubcorp
+        form_args.wlpat = req.args.get('tag', '.+')
+        form_args.wlattr = 'tag'
+        form_args.wlnums = 'frq'
+        form_args.include_nonwords = 0
+        form_args.wlminfreq = 1
+        ans = self.create_result(form_args)
+        if ans.get('freq_files_avail', False) is False:
+            if not self.args.usesubcorp:
+                corp_id = self.args.corpname
+            else:
+                corp_id = f'{self.args.corpname}/{self.args.usesubcorp}'
+            raise UserActionException(f'Missing intermediate frequency data for {corp_id}')
+        return self.view_result(req)
