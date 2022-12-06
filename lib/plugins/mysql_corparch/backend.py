@@ -27,10 +27,9 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 from aiomysql.cursors import Cursor
 from plugin_types.auth import CorpusAccess
 from plugin_types.corparch.backend import DatabaseBackend
-from plugin_types.corparch.backend.regkeys import (POS_COLS_MAP, REG_COLS_MAP,
-                                                   REG_VAR_COLS_MAP,
-                                                   SATTR_COLS_MAP,
-                                                   STRUCT_COLS_MAP)
+from plugin_types.corparch.backend.regkeys import (
+    POS_COLS_MAP, REG_COLS_MAP, REG_VAR_COLS_MAP, SATTR_COLS_MAP,
+    STRUCT_COLS_MAP)
 from plugin_types.corparch.corpus import PosCategoryItem, TagsetInfo
 from plugins.common.mysql import MySQLOps
 
@@ -441,7 +440,7 @@ class Backend(DatabaseBackend):
             'FROM ( '
             f' {total_acc_sql} '
             ') as ucp '
-            f'JOIN {self._corp_table} AS c ON ucp.corpus_id = c.id', [user_id] + total_acc_args)
+            f'JOIN {self._corp_table} AS c ON ucp.corpus_id = c.{self._corp_id_attr}', [user_id] + total_acc_args)
         return [r['corpus_id'] for r in cursor.fetchall()]
 
     async def load_corpus_tagsets(self, cursor: Cursor, corpus_id: str) -> List[TagsetInfo]:
