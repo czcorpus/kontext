@@ -26,7 +26,7 @@ import { FreqChartsAvailableTypes } from '../freqs/common';
 
 export interface CorpusSwitchModelRestorePayload {
     data:{[key:string]:any};
-    corpora:Array<[string, string]>;
+    corpora:Array<[string, string]>; // [from, to] corpus
     newPrimaryCorpus?:string;
 }
 
