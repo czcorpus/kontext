@@ -51,6 +51,7 @@ KonText is an **advanced corpus query interface** and corpus data **integration 
     * finding corpus by a keyword (tag), size, description
     * adding corpus to **favorites** (incl. subcorpora, aligned corpora)
 * saving result to Excel, CSV, XML, TXT
+* [HTTP API](https://github.com/czcorpus/kontext/wiki/HTTP-API) access
 * integrability with existing information systems
 
 
