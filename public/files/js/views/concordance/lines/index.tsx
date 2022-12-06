@@ -600,14 +600,16 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                     });
 
                 } else if (kwicLength === -1) { // non kwic search (e.g. aligned language)
-                    dispatcher.dispatch<typeof Actions.ShowTokenDetail>({
-                        name: Actions.ShowTokenDetail.name,
-                        payload: {
-                            corpusId: corpusId,
-                            tokenNumber: tokenNumber,
-                            lineIdx: lineIdx
-                        }
-                    });
+                    if (this.props.mainCorp && corpusId !== this.props.mainCorp) { // handle click only for parallel corpora
+                        dispatcher.dispatch<typeof Actions.ShowTokenDetail>({
+                            name: Actions.ShowTokenDetail.name,
+                            payload: {
+                                corpusId: corpusId,
+                                tokenNumber: tokenNumber,
+                                lineIdx: lineIdx
+                            }
+                        });
+                    }
                 }
             }
         }
