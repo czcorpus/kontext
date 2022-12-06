@@ -58,7 +58,7 @@ KonText is an **advanced corpus query interface** and corpus data **integration 
 ## Internal features
 
 * modern client-side application (written in TypeScript, event stream architecture, React components, extensible)
-* server-side written as a **WSGI application** with fully **decoupled background concordance/frequency/collocation calculation** (using an integrated worker server)
+* server-side written using the [Sanic](https://sanic.dev/en/) framework with fully **decoupled background concordance/frequency/collocation calculation** (using an integrated Rq/Celery worker server)
 * modular code design with dynamically loadable plug-ins providing custom functionality implementation (e.g. custom database
 adapters, authentication method, corpus listing widgets, HTTP session management)
 
