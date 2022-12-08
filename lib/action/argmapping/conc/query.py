@@ -117,21 +117,21 @@ class QueryFormArgs(ConcFormArgs[_QueryFormArgs]):
             self.data.curr_query_types[corp] = query['qtype']
             self.data.curr_queries[corp] = query.get('query')
             self.data.curr_parsed_queries[corp] = query.get('queryParsed', [])
-            self.data.curr_pcq_pos_neg_values[corp] = query['pcq_pos_neg']
-            self.data.curr_include_empty_values[corp] = query['include_empty']
+            self.data.curr_pcq_pos_neg_values[corp] = query.get('pcq_pos_neg', 'pos')
+            self.data.curr_include_empty_values[corp] = query.get('include_empty', False)
             self.data.curr_qmcase_values[corp] = query.get('qmcase', False)
             self.data.curr_default_attr_values[corp] = query.get('default_attr')
             self.data.curr_use_regexp_values[corp] = query.get('use_regexp', False)
         self.data.bib_mapping = bib_mapping
 
-        ctx = data['context']
+        ctx = data.get('context', {})
         self.data.fc_lemword_type = ctx.get('fc_lemword_type', self.data.fc_lemword_type)
         self.data.fc_lemword_wsize = ctx.get('fc_lemword_wsize', self.data.fc_lemword_wsize)
         self.data.fc_lemword = ctx.get('fc_lemword', self.data.fc_lemword)
         self.data.fc_pos_type = ctx.get('fc_pos_type', self.data.fc_pos_type)
         self.data.fc_pos_wsize = ctx.get('fc_pos_wsize', self.data.fc_pos_wsize)
         self.data.fc_pos = ctx.get('fc_pos', self.data.fc_pos)
-        self.data.selected_text_types = data['text_types']
+        self.data.selected_text_types = data.get('text_types', {})
 
     async def _add_corpus_metadata(self, corpus_id: str):
         with plugins.runtime.CORPARCH as ca, plugins.runtime.TAGHELPER as th:
