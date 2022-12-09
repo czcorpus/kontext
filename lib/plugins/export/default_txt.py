@@ -77,7 +77,7 @@ class TXTExport(AbstractExport):
         # we must set contains_within = False as it is impossible (in the current user interface)
         # to offer a custom i.p.m. calculation before the download starts
         output['result_relative_freq_rel_to'] = _get_ipm_base_set_desc(
-            amodel.corp, contains_within=False)
+            amodel.corp, contains_within=False, translate=amodel.plugin_ctx.translate)
         output['Desc'] = await amodel.concdesc_json()
         amodel.update_output_with_group_info(output)
 
