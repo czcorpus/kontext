@@ -43,9 +43,15 @@ class SubcorpusActionModel(CorpusActionModel):
     TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
 
     async def _get_query_specification(self, form_type: str) -> Tuple[CreateSubcorpusArgs, Optional[List[Tuple[str, str]]]]:
+        # handles default values
+        specification_args = {
+            'description': "",
+            'aligned_corpora': [],
+            **self._req.json,
+        }
         tt_query = None
         if form_type == 'tt-sel':
-            specification = CreateSubcorpusArgs(**self._req.json)
+            specification = CreateSubcorpusArgs(**specification_args)
             corpus_info = await self.get_corpus_info(specification.corpname)
             if (plugins.runtime.LIVE_ATTRIBUTES.exists
                     and await plugins.runtime.LIVE_ATTRIBUTES.instance.is_enabled_for(
@@ -77,9 +83,9 @@ class SubcorpusActionModel(CorpusActionModel):
                 full_cql = ' within '.join(tmp)
                 specification.text_types_cql = f'aword,[] within {full_cql}'
         elif form_type == 'within':
-            specification = CreateSubcorpusWithinArgs(aligned_corpora=[], **self._req.json)
+            specification = CreateSubcorpusWithinArgs(**specification_args)
         elif form_type == 'cql':
-            specification = CreateSubcorpusRawCQLArgs(**self._req.json)
+            specification = CreateSubcorpusRawCQLArgs(**specification_args)
         else:
             raise UserReadableException(f'Invalid form type provided - "{form_type}"')
         if not specification.subcname:
@@ -108,6 +114,7 @@ class SubcorpusActionModel(CorpusActionModel):
         else:
             subc_id = await create_new_subc_ident(self.subcpath, self.corp.corpname)
             full_path = os.path.join(self.subcpath, subc_id.data_path)
+
         if tt_query and len(tt_query) == 1 and not specification.has_aligned_corpora():
             await create_subcorpus(full_path, self.corp, tt_query[0][0], tt_query[0][1])
             subc = await self.cf.get_corpus(subc_id)
