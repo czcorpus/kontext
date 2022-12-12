@@ -107,8 +107,11 @@ def exposed(access_level: int = 0, template: Optional[str] = None, vars: Tuple =
 
 
 def val_to_js(obj):
-    return re.sub(r'<(/)?(script|iframe|frame|frameset|embed|img|object)>', r'<" + "\g<1>\g<2>>', json.dumps(obj),
-                  flags=re.IGNORECASE)
+    return markupsafe.Markup(
+        json.dumps(obj).replace("<", "\\u003c")
+        .replace(">", "\\u003e")
+        .replace("&", "\\u0026")
+        .replace("'", "\\u0027"))
 
 
 class KonTextCookie(http.cookies.BaseCookie):
@@ -687,7 +690,10 @@ class Controller(object):
         self._install_plugin_actions()
         self._proc_time = time.time()
         path = path if path is not None else self._import_req_path()
-        methodname = path[0]
+        path_elms = [x for x in path if x]
+        if len(path_elms) > 1:
+            raise NotFoundException('Unknown path')
+        methodname = path_elms[0]
         headers: List[Tuple[str, str]] = []
         err: Optional[Tuple[Exception, Optional[str]]] = None
         action_metadata: Dict[str, Any] = self._get_method_metadata(methodname)
