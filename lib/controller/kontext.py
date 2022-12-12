@@ -949,7 +949,6 @@ class Kontext(Controller):
 
         # util functions
         result['to_str'] = lambda s: str(s) if s is not None else ''
-        # the output of 'to_json' is actually only json-like (see the function val_to_js)
 
         with plugins.runtime.ISSUE_REPORTING as irp:
             result['issue_reporting_action'] = irp.export_report_action(
