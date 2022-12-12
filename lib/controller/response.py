@@ -25,6 +25,7 @@ from urllib.parse import urlparse
 from xml.sax.saxutils import escape
 from dataclasses_json.api import DataClassJsonMixin
 import werkzeug.http
+import markupsafe
 
 from translation import ugettext
 import l10n
@@ -52,8 +53,11 @@ class CustomJSONEncoder(json.JSONEncoder):
 
 def val_to_js(obj):
     s = obj.to_json() if callable(getattr(obj, 'to_json', None)) else json.dumps(obj, cls=CustomJSONEncoder)
-    return re.sub(
-        r'<(/)?(script|iframe|frame|frameset|embed|img|object)>', r'<" + "\g<1>\g<2>>', s, flags=re.IGNORECASE)
+    return markupsafe.Markup(
+        s.replace("<", "\\u003c")
+        .replace(">", "\\u003e")
+        .replace("&", "\\u0026")
+        .replace("'", "\\u0027"))
 
 
 @jinja2.pass_context
