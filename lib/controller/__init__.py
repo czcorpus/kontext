@@ -477,8 +477,8 @@ class Controller(ABC):
             tpl_path, method_ans = self.process_action('message_xml', req_args)
             action_metadata.update(self._get_method_metadata('message_xml'))
         elif action_metadata['return_type'] == 'plain':
-            tpl_path, method_ans = self.process_action('message_json', req_args)
-            action_metadata.update(self._get_method_metadata('message_json'))
+            tpl_path, method_ans = self.process_action('message_plain', req_args)
+            action_metadata.update(self._get_method_metadata('message_plain'))
         else:
             tpl_path, method_ans = self.process_action('message', req_args)
             action_metadata.update(self._get_method_metadata('message'))
@@ -514,18 +514,20 @@ class Controller(ABC):
         self._proc_time = time.time()
         path = path if path is not None else self._import_req_path()
         path_elms = [x for x in path if x]
-        if len(path_elms) > 1:
-            raise NotFoundException('Unknown path')
-        methodname = path_elms[0]
-        err: Optional[Tuple[Exception, Optional[str]]] = None
-        action_metadata: Dict[str, Any] = self._get_method_metadata(methodname)
+        action_metadata: Dict[str, Any] = dict(return_type='plain')
         tmpl: Optional[str]
         result: Optional[Dict[str, Any]]
-        if not action_metadata:
-            def null(): pass
-            action_metadata = {}
-            action_metadata.update(exposed()(null).__dict__)
+        err: Optional[Tuple[Exception, Optional[str]]] = None
+        methodname = 'message'
         try:
+            if len(path_elms) > 1:
+                raise NotFoundException('Unknown path')
+            methodname = path_elms[0]
+            action_metadata = self._get_method_metadata(methodname)
+            if not action_metadata:
+                def null(): pass
+                action_metadata = {}
+                action_metadata.update(exposed()(null).__dict__)
             self.init_session()
             if self.is_action(methodname, action_metadata):
                 req_args = self.pre_dispatch(methodname, action_metadata)

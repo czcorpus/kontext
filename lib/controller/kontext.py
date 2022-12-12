@@ -1215,6 +1215,10 @@ class Kontext(Controller):
     def message_json(self, *args, **kwargs):
         return self.message(*args, **kwargs)
 
+    @exposed(accept_kwargs=True, func_arg_mapped=True, skip_corpus_init=True, return_type='plain')
+    def message_plain(self, *args, **kwargs):
+        return "\n".join(msg for _, msg in self._system_messages)
+
     @exposed(accept_kwargs=True, func_arg_mapped=True, skip_corpus_init=True, return_type='xml')
     def message_xml(self, *args, **kwargs):
         return self.message(*args, **kwargs)
