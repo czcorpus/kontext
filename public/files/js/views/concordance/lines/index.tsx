@@ -599,17 +599,15 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                         }
                     });
 
-                } else if (kwicLength === -1) { // non kwic search (e.g. aligned language)
-                    if (this.props.mainCorp && corpusId !== this.props.mainCorp) { // handle click only for parallel corpora
-                        dispatcher.dispatch<typeof Actions.ShowTokenDetail>({
-                            name: Actions.ShowTokenDetail.name,
-                            payload: {
-                                corpusId: corpusId,
-                                tokenNumber: tokenNumber,
-                                lineIdx: lineIdx
-                            }
-                        });
-                    }
+                } else if (kwicLength === -1) {
+                    dispatcher.dispatch<typeof Actions.ShowTokenDetail>({
+                        name: Actions.ShowTokenDetail.name,
+                        payload: {
+                            corpusId: corpusId,
+                            tokenNumber: tokenNumber,
+                            lineIdx: lineIdx
+                        }
+                    });
                 }
             }
         }
@@ -708,7 +706,9 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         }
 
         _handleNonKwicTokenClick(corpusId, lineIdx, tokenNumber) {
-            this._detailClickHandler(corpusId, tokenNumber, -1, lineIdx);
+            if (this.props.supportsTokenConnect) {
+                this._detailClickHandler(corpusId, tokenNumber, -1, lineIdx);
+            }
         }
 
         _refsDetailClickHandler(corpusId, tokenNumber, lineIdx) {
