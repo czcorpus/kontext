@@ -5,6 +5,8 @@ from typing import Any, Callable, Dict, Union
 from xml.sax.saxutils import escape
 
 import jinja2
+import markupsafe
+
 import l10n
 import strings
 from dataclasses_json import DataClassJsonMixin
@@ -26,8 +28,11 @@ class CustomJSONEncoder(json.JSONEncoder):
 
 def val_to_js(obj):
     s = obj.to_json() if callable(getattr(obj, 'to_json', None)) else json.dumps(obj, cls=CustomJSONEncoder)
-    return re.sub(
-        r'<(/)?(script|iframe|frame|frameset|embed|img|object)>', r'<" + "\g<1>\g<2>>', s, flags=re.IGNORECASE)
+    return markupsafe.Markup(
+        s.replace("<", "\\u003c")
+        .replace(">", "\\u003e")
+        .replace("&", "\\u0026")
+        .replace("'", "\\u0027"))
 
 
 class TplEngine:
