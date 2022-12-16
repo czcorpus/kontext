@@ -3,24 +3,29 @@
        "defaultTD__unsupported_renderer": "Required renderer module not found",
        "defaultTD__original_data": "Data",
        "defaultTD__failed_to_fetch_external_information": "Failed to load an information from a third party source",
-       "defaultTD__plug_in_error_symbol_alt": "Plug-in error"
+       "defaultTD__plug_in_error_symbol_alt": "Plug-in error",
+       "defaultTD__link_to_the_lemur_db": "A link to the LEMUR database"
     },
     "cs-CZ": {
         "defaultTD__unsupported_renderer": "Požadovaný zobrazovací modul nebyl nalezen",
         "defaultTD__original_data": "Data",
         "defaultTD__failed_to_fetch_external_information": "Nepodařilo se načíst informaci ze zdroje třetí strany",
-        "defaultTD__plug_in_error_symbol_alt": "Chyba plug-inu"
+        "defaultTD__plug_in_error_symbol_alt": "Chyba plug-inu",
+        "defaultTD__link_to_the_lemur_db": "A link to the LEMUR database"
+
     },
     "szl": {
        "defaultTD__unsupported_renderer": "Wymŏgany moduł rynderera niy bōł znaleziōny",
        "defaultTD__original_data": "Dane",
        "defaultTD__failed_to_fetch_external_information": "Niy szło zaladować informacyji ze zewnyntrznego zdrzōdła",
-       "defaultTD__plug_in_error_symbol_alt": "Plug-in error"
+       "defaultTD__plug_in_error_symbol_alt": "Plug-in error",
+       "defaultTD__link_to_the_lemur_db": "A link to the LEMUR database UNTRANSLATED"
     },
     "sl-SI": {
         "defaultTD__unsupported_renderer": "Zahtevanega modula upodabljalnika ni bilo mogoče najti",
         "defaultTD__original_data": "Podatki",
         "defaultTD__failed_to_fetch_external_information": "Podatkov iz tujega vira ni bilo mogoče naložiti",
-        "defaultTD__plug_in_error_symbol_alt": "Napaka vtičnika"
+        "defaultTD__plug_in_error_symbol_alt": "Napaka vtičnika",
+        "defaultTD__link_to_the_lemur_db": "A link to the LEMUR database UNTRANSLATED"
     }
 }

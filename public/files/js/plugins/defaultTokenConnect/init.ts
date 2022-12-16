@@ -27,10 +27,6 @@ import { HTTP, List, pipe } from 'cnc-tskit';
 import { IPluginApi } from '../../types/plugins/common';
 
 
-declare var require:any;
-require('./style.css');
-
-
 export type ServerExportedConf = {
     providers:Array<{is_kwic_view:boolean, ident:string}>;
 }
@@ -108,7 +104,10 @@ export class DefaultTokenConnectBackend implements PluginInterfaces.TokenConnect
     }
 
     selectRenderer(typeId:string):PluginInterfaces.TokenConnect.Renderer {
+        console.log('select renderer = ', typeId, this.views.DisplayLinkRenderer)
         switch (typeId) {
+            case KnownRenderers.DISPLAY_LINK:
+                return this.views.DisplayLinkRenderer;
             case KnownRenderers.RAW_HTML:
                 return this.views.RawHtmlRenderer;
             case KnownRenderers.SIMPLE_TABULAR:

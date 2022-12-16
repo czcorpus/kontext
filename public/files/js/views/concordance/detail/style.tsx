@@ -180,6 +180,43 @@ export const ConcordanceDetail = styled.div`
     .coll {
         color: ${theme.colorLogoPink};
     }
+
+    .token-detail {
+
+        h2.token {
+            font-weight: bold;
+            margin-left: 0;
+            font-size: 1.7em;
+        }
+
+        hr {
+            margin-top: 0;
+            margin-bottom: 0.7em;
+            background-color: #8d8c8c;
+        }
+
+        /* a heading for a service output */
+        dt {
+            display: flex;
+            align-items: center;
+            color: #7c7c7c;
+            text-align: right;
+            margin-inline-start: 0;
+            font-size: 1.1em;
+
+            img {
+                width: 1.3em;
+                margin-left: 0.1em;
+                margin-right: 0.4em;
+            }
+        }
+
+        dd {
+            margin-inline-start: 1.5em;
+            margin-top: 0.7em;
+        }
+
+    }
 `;
 
 

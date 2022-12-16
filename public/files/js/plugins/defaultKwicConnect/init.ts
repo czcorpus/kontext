@@ -84,6 +84,8 @@ export class DefaultKwicConnectPlugin implements PluginInterfaces.KwicConnect.IP
 
     selectRenderer(typeId:KnownRenderers):PluginInterfaces.TokenConnect.Renderer {
         switch (typeId) {
+            case KnownRenderers.DISPLAY_LINK:
+                return this.renderers.DisplayLinkRenderer;
             case KnownRenderers.RAW_HTML:
                 return this.renderers.RawHtmlRenderer;
             case KnownRenderers.DATAMUSE:
