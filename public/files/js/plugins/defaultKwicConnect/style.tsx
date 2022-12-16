@@ -34,7 +34,7 @@ export const KwicConnectContainer = styled.div`
         padding: 1em;
     }
 
-    h3.tckc-provider {
+    dt {
         color: ${theme.colorDefaultText};
         text-align: right;
         margin-top: 1em;
@@ -42,6 +42,8 @@ export const KwicConnectContainer = styled.div`
         padding-bottom: 0.2em;
         font-size: 1.1em;
         background-color: transparent;
+        display: flex;
+        align-items: center;
 
         img {
             width: 1.1em;
