@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { List } from 'cnc-tskit';
+import { List, pipe } from 'cnc-tskit';
 
 import * as Kontext from '../../../types/kontext';
 import * as PluginInterfaces from '../../../types/plugins';
@@ -235,22 +235,34 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailMo
             return (
                 <div className="token-detail">
                     <h2 className="token">{'"'}{props.tokenConnectData.token}{'"'}</h2>
-                    {props.tokenConnectData.renders.filter(r => !r.isKwicView).map((v, i) => {
-                        return (
-                            <div key={`resource:${i}`}>
-                                {v.heading ?
-                                    <h2 className="tckc-provider">
-                                        {v.heading} <img src={he.createStaticUrl('img/book.svg')}
-                                                alt={he.translate('global__icon_book')} /></h2> :
-                                    null
-                                }
-                                <hr />
-                                <layoutViews.ErrorBoundary>
-                                    <v.renderer data={v.contents} />
-                                </layoutViews.ErrorBoundary>
-                            </div>
-                        );
-                    })}
+                    <dl>
+                    {pipe(
+                        props.tokenConnectData.renders,
+                        List.filter(r => !r.isKwicView),
+                        List.map(
+                            (v, i) => (
+                                <React.Fragment key={`resource:${i}`}>
+                                    <dt>
+                                    {v.heading ?
+                                        <>
+                                            <img src={he.createStaticUrl('img/book.svg')}
+                                                    alt={he.translate('global__icon_book')} />
+                                            {v.heading}:
+                                        </> :
+                                        null
+                                    }
+                                    </dt>
+                                    <dd>
+                                    <layoutViews.ErrorBoundary>
+                                        <v.renderer data={v.contents} />
+                                    </layoutViews.ErrorBoundary>
+                                    </dd>
+                                    {i > 0 ? <hr /> : null}
+                                </React.Fragment>
+                            )
+                        )
+                    )}
+                    </dl>
                 </div>
             );
         }

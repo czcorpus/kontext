@@ -33,6 +33,7 @@ import { HighlightItem } from '../../models/concordance/main';
 
 
 export enum KnownRenderers {
+    DISPLAY_LINK = 'display-link',
     RAW_HTML = 'raw-html',
     DATAMUSE = 'datamuse-json',
     TREQ = 'treq-json',
