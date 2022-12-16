@@ -24,6 +24,34 @@ from plugins.common.http import HTTPClient
 from plugins.default_token_connect.backends.cache import cached
 
 
+class DisplayLinkBackend(AbstractBackend):
+    """
+    DisplayLink just shows a clickable link to an external service. I.e. the plug-in does not
+    load any content from the target service in this case.
+    """
+    def __init__(self, conf, ident, db, ttl):
+        super().__init__(ident, db, ttl)
+        self._conf = conf
+
+    def get_required_attrs(self):
+        if 'posAttrs' in self._conf:
+            logging.getLogger(__name__).warning(
+                'You are using a deprecated "conf.posAttr" value; please use "conf.attrs" instead.')
+            return self._conf.get('posAttrs', [])
+        else:
+            return self._conf.get('attrs', [])
+
+    async def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None):
+        attr = self._conf['posAttrs'][0]
+        value = query_args[attr]
+        if value:
+            proto_pref = 'https://' if bool(self._conf['ssl']) is True else 'http://'
+            server = self._conf['server']
+            path = self._conf['path']
+            link = f'{proto_pref}{server}{path}'.format(**query_args)
+            return dict(link=link), True
+        return dict(), False
+
 class HTTPBackend(AbstractBackend):
     """
     The default_token_connect's JSON config file defines a template of an abstract path identifying a resource.
@@ -40,13 +68,14 @@ class HTTPBackend(AbstractBackend):
     """
 
     def __init__(self, conf, ident, db, ttl):
-        super(HTTPBackend, self).__init__(ident, db, ttl)
+        super().__init__(ident, db, ttl)
         self._conf = conf
         port_str = '' if self._conf.get('port', 80) else ':{}'.format(self._conf.get('port'))
         if self._conf['ssl']:
             self._client = HTTPClient('https://{}{}'.format(self._conf['server'], port_str))
         else:
             self._client = HTTPClient('http://{}{}'.format(self._conf['server'], port_str))
+
 
     @cached
     async def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None):

@@ -22,9 +22,11 @@ import * as React from 'react';
 import * as Kontext from '../../../types/kontext';
 import { IActionDispatcher } from 'kombo';
 import { init as ftInit, FormattedTextRendererProps } from './formattedText';
+import * as S from '../style';
 
 
 export interface Views {
+    DisplayLinkRenderer:React.FC<{data: {link: string};}>;
     RawHtmlRenderer:React.FC<{data: Array<[string, string]>}>;
     SimpleTabularRenderer:React.FC<{data: Array<Array<[string, string]>>}>;
     DescriptionListRenderer:React.FC<{data: Array<[string, string]>}>;
@@ -50,6 +52,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
 
     const layoutViews = he.getLayoutViews();
     const FormattedTextRenderer = ftInit(he);
+
+    // ------------- <DisplayLinkRenderer /> -------------------------------
+
+    const DisplayLinkRenderer:Views['DisplayLinkRenderer'] = (props) => (
+        <div>
+            <a target="_blank" className="external" href={props.data.link}>{props.data.link}</a>
+        </div>
+    );
 
     // ------------- <RawHtmlRenderer /> -------------------------------
 
@@ -145,14 +155,23 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
         </div>
     };
 
+    function Wrapped<T extends {[k:string]:any}>(Renderer:React.ComponentClass<T>|React.FC<T>) {
+        return (props:T) => (
+            <S.TokenConnectContainer>
+                <Renderer {...props} />
+            </S.TokenConnectContainer>
+        );
+    }
+
     return {
-        RawHtmlRenderer,
-        SimpleTabularRenderer,
-        DescriptionListRenderer,
-        UnsupportedRenderer,
-        DataMuseSimilarWords,
-        ErrorRenderer,
-        FormattedTextRenderer
+        DisplayLinkRenderer: Wrapped(DisplayLinkRenderer),
+        RawHtmlRenderer: Wrapped(RawHtmlRenderer),
+        SimpleTabularRenderer: Wrapped(SimpleTabularRenderer),
+        DescriptionListRenderer: Wrapped(DescriptionListRenderer),
+        UnsupportedRenderer: Wrapped(UnsupportedRenderer),
+        DataMuseSimilarWords: Wrapped(DataMuseSimilarWords),
+        ErrorRenderer: Wrapped(ErrorRenderer),
+        FormattedTextRenderer: Wrapped(FormattedTextRenderer)
     };
 
 }

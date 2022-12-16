@@ -28,6 +28,9 @@ import { FreqDistType } from './model';
 
 
 export interface Views {
+    DisplayLinkRenderer:React.FC<{
+        data: {link: string};
+    }>;
     RawHtmlRenderer:React.FC<{
         corpora: Array<string>;
         data: {contents: Array<[string, string]>};
@@ -62,6 +65,14 @@ export interface Views {
 
 
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):Views {
+
+    const DisplayLinkRenderer:Views['DisplayLinkRenderer'] = (props) => (
+        <div>
+            <a target="_blank" className="external" href={props.data.link}>
+                {props.data.link}
+            </a>
+        </div>
+    );
 
     const RawHtmlRenderer:Views['RawHtmlRenderer'] = (props) => {
         return (
@@ -259,10 +270,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
     };
 
     return {
-        RawHtmlRenderer: RawHtmlRenderer,
-        DataMuseSimilarWords: DataMuseSimilarWords,
-        TreqRenderer: TreqRenderer,
-        UnsupportedRenderer: UnsupportedRenderer,
-        CustomMessageRenderer: CustomMessageRenderer
+        DisplayLinkRenderer,
+        RawHtmlRenderer,
+        DataMuseSimilarWords,
+        TreqRenderer,
+        UnsupportedRenderer,
+        CustomMessageRenderer
     };
 }

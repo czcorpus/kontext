@@ -37,6 +37,15 @@ class ErrorFrontend(AbstractFrontend):
         response.contents = data
         return response
 
+class DisplayLinkFrontend(AbstractFrontend):
+    def __init__(self, conf):
+        super().__init__(conf)
+
+    def export_data(self, data, status, lang, is_kwic_view):
+        response = super().export_data(data, status, lang, is_kwic_view)
+        response.renderer = 'display-link'
+        response.contents = data
+        return response
 
 class RawHtmlFrontend(AbstractFrontend):
 
