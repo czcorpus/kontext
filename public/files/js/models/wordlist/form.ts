@@ -29,7 +29,6 @@ import { validateGzNumber } from '../base';
 import { PageModel } from '../../app/page';
 import { Actions } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
-import { Actions as QueryActions } from '../query/actions';
 import { Actions as GlobalActions } from '../common/actions';
 import { Actions as ATActions } from '../../models/asyncTask/actions';
 import {

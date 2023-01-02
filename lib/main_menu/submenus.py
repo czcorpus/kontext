@@ -94,6 +94,15 @@ class NewQuery:
         ).mark_indirect()
     )
 
+    keywords_extraction: MenuItemInternal = field(
+        default_factory=lambda: lambda args: MenuItemInternal(
+            MainMenu.NEW_QUERY('wordlist'), 'Keywords extraction', 'keywords/form'
+        ).add_args(
+            ('corpname', args['corpname']),
+            ('usesubcorp', args['usesubcorp'])
+        ).mark_indirect()
+    )
+
     recent_queries: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
             MainMenu.NEW_QUERY('history'), 'Recent queries',

@@ -55,6 +55,11 @@ def wordlist(request: KRequest):
         corpname=request.form.get('corpname'), wlsort=request.form.get('wlsort'),
         wlnums=request.form.get('wlnums'), wltype=request.form.get('wltype'))
 
+def keywords(request: KRequest):
+    # TODO !!!
+    import logging
+    logging.getLogger(__name__).warning('keywords log mapping not implemented yet')
+    return {}
 
 def widectx(request: KRequest):
     attrs = request.args.get('attrs', '').split(',')
