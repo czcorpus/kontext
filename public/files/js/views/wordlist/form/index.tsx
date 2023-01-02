@@ -29,7 +29,6 @@ import { Actions } from '../../../models/wordlist/actions';
 import { FileTarget, WlnumsTypes } from '../../../models/wordlist/common';
 import * as S from './style';
 import * as SC from '../../query/style';
-import { QueryOverviewBarUL as Style_QueryOverviewBarUL } from '../../query/basicOverview/style';
 
 
 export interface WordlistFormViewArgs {
@@ -39,17 +38,8 @@ export interface WordlistFormViewArgs {
     wordlistFormModel:WordlistFormModel
 }
 
-export interface CorpInfoToolbarProps {
-    corpname:string;
-    humanCorpname:string;
-    usesubcorp:string;
-    origSubcorpName:string;
-    foreignSubcorp:boolean;
-}
-
 export interface WordlistFormExportViews {
     WordListForm:React.ComponentClass<{}>;
-    CorpInfoToolbar:React.FC<CorpInfoToolbarProps>;
 }
 
 
@@ -98,20 +88,6 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                     </select>
                 </span>
             </>
-        );
-    };
-
-    // ------------------- <CorpInfoToolbar /> -----------------------------
-
-    const CorpInfoToolbar:React.FC<CorpInfoToolbarProps> = (props) => {
-        return (
-            <Style_QueryOverviewBarUL>
-                <layoutViews.CorpnameInfoTrigger corpname={props.corpname}
-                        humanCorpname={props.humanCorpname}
-                        usesubcorp={props.usesubcorp}
-                        origSubcorpName={props.origSubcorpName}
-                        foreignSubcorp={props.foreignSubcorp} />
-            </Style_QueryOverviewBarUL>
         );
     };
 
@@ -816,6 +792,5 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
     return {
         WordListForm: Bound(WordListForm, wordlistFormModel),
-        CorpInfoToolbar
     };
 }
