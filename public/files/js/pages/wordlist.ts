@@ -20,7 +20,7 @@
 
 import * as Kontext from '../types/kontext';
 import { PageModel, DownloadType } from '../app/page';
-import { init as wordlistFormInit, WordlistFormExportViews } from '../views/wordlist/form';
+import { WordlistFormExportViews } from '../views/wordlist/form';
 import { init as wordlistResultViewInit } from '../views/wordlist/result';
 import { init as wordlistSaveViewInit } from '../views/wordlist/save';
 import { WordlistFormModel, WordlistFormModelArgs } from '../models/wordlist/form';
@@ -51,26 +51,6 @@ export class WordlistPage {
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
-    }
-
-    private initCorpInfoToolbar():void {
-        this.wordlistViews = wordlistFormInit({
-            dispatcher: this.layoutModel.dispatcher,
-            he: this.layoutModel.getComponentHelpers(),
-            CorparchWidget: null,
-            wordlistFormModel: null
-        });
-        this.layoutModel.renderReactComponent(
-            this.wordlistViews.CorpInfoToolbar,
-            window.document.getElementById('query-overview-mount'),
-            {
-                corpname: this.layoutModel.getCorpusIdent().id,
-                humanCorpname: this.layoutModel.getCorpusIdent().name,
-                usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
-                origSubcorpName: undefined,
-                foreignSubcorp: undefined
-            }
-        );
     }
 
     setDownloadLink(name:string, format:string, url:string, args:WordlistSaveArgs):void {
@@ -171,7 +151,6 @@ export class WordlistPage {
                 {}
             );
 
-            this.initCorpInfoToolbar();
             this.layoutModel.initKeyShortcuts();
 
             this.layoutModel.getHistory().setOnPopState(
