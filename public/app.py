@@ -80,6 +80,7 @@ from views.subcorpus import bp as subcorpus_bp
 from views.tools import bp as tools_bp
 from views.user import bp as user_bp
 from views.wordlist import bp as wordlist_bp
+from views.keywords import bp as keywords_bp
 
 # we ensure that the application's locale is always the same
 locale.setlocale(locale.LC_ALL, 'en_US.utf-8')
@@ -136,6 +137,7 @@ application.blueprint(conc_bp)
 application.blueprint(user_bp)
 application.blueprint(corpora_bp)
 application.blueprint(wordlist_bp)
+application.blueprint(keywords_bp)
 application.blueprint(freqs_bp)
 application.blueprint(dispersion_bp)
 application.blueprint(colls_bp)
