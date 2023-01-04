@@ -377,8 +377,10 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
     def export_actions():
         return bp
 
-    async def _export_featured(self, cursor: Cursor, plugin_ctx):
-        return [dict(r) for r in await self.backend.load_featured_corpora(cursor, plugin_ctx.user_lang)]
+    async def _export_featured(self, cursor: Cursor, plugin_ctx: PluginCtx):
+        return [
+            dict(r)
+            for r in await self.backend.load_featured_corpora(cursor, plugin_ctx.user_id, plugin_ctx.user_lang)]
 
     async def export(self, plugin_ctx):
         async with self._backend.cursor() as cursor:
