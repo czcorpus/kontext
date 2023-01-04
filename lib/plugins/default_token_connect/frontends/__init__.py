@@ -37,6 +37,7 @@ class ErrorFrontend(AbstractFrontend):
         response.contents = data
         return response
 
+
 class DisplayLinkFrontend(AbstractFrontend):
     def __init__(self, conf):
         super().__init__(conf)
@@ -46,6 +47,7 @@ class DisplayLinkFrontend(AbstractFrontend):
         response.renderer = 'display-link'
         response.contents = data
         return response
+
 
 class RawHtmlFrontend(AbstractFrontend):
 

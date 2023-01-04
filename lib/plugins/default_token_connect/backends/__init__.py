@@ -44,7 +44,7 @@ class DisplayLinkBackend(AbstractBackend):
         else:
             return self._conf.get('attrs', [])
 
-    def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None):
+    def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None, cookies=None):
         attr = self._conf['posAttrs'][0]
         value = query_args[attr]
         if value:
@@ -54,6 +54,7 @@ class DisplayLinkBackend(AbstractBackend):
             link = f'{proto_pref}{server}{path}'.format(**query_args)
             return dict(link=link), True
         return dict(), False
+
 
 class HTTPBackend(AbstractBackend):
     """
@@ -112,7 +113,7 @@ class HTTPBackend(AbstractBackend):
             return self._conf.get('attrs', [])
 
     @cached
-    def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None):
+    def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None, cookies=None):
         connection = self.create_connection()
         try:
             args = dict(

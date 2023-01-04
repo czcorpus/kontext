@@ -18,6 +18,7 @@
 
 import abc
 from plugins.abstract import CorpusDependentPlugin
+from controller.plg import PluginCtx
 
 
 class AbstractKwicConnect(CorpusDependentPlugin):
@@ -27,7 +28,7 @@ class AbstractKwicConnect(CorpusDependentPlugin):
         pass
 
     @abc.abstractmethod
-    def fetch_data(self, provider_ids, corpora, lemma, lang):
+    def fetch_data(self, plugin_ctx: 'PluginCtx', provider_ids, corpora, lemma, lang):
         pass
 
     def gives_kwic_hints(self, corpora):
