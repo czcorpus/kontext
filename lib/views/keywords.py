@@ -15,7 +15,6 @@
 
 
 import logging
-
 import settings
 from action.argmapping import log_mapping
 from action.argmapping.keywords import KeywordsFormArgs
