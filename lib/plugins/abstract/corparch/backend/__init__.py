@@ -72,7 +72,13 @@ class DatabaseBackend:
         pass
 
     @abc.abstractmethod
-    def load_featured_corpora(self, user_lang: str) -> Iterable[Dict[str, str]]:
+    async def load_featured_corpora(self, user_id: int, user_lang: str) -> Iterable[Dict[str, str]]:
+        """
+        load_featured_corpora should load all the featured corpora user_id has access to. It is not required to
+        include also "requestable" corpora (i.e. corpora one can view in lists etc. but without access to them)
+        as it seems a bit weird to propagate corpora with such a limited access. So it is left to implementers how
+        to handle such corpora.
+        """
         pass
 
     @abc.abstractmethod

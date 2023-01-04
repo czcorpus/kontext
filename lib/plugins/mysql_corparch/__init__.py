@@ -355,7 +355,9 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
         return {actions.user.User: [get_favorite_corpora]}
 
     def _export_featured(self, plugin_ctx):
-        return [dict(r) for r in self.backend.load_featured_corpora(plugin_ctx.user_lang)]
+        return [
+            dict(r)
+            for r in self.backend.load_featured_corpora(plugin_ctx.user_id, plugin_ctx.user_lang)]
 
     def export(self, plugin_ctx):
         return dict(
