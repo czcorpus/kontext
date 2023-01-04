@@ -40,9 +40,10 @@ if settings.get('global', 'manatee_path', None):
 import logging
 
 import general
+from action.argmapping.subcorpus import (
+    CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs)
 from bgcalc.adapter.factory import init_backend
 from corplib.abstract import SubcorpusIdent
-from action.argmapping.subcorpus import CreateSubcorpusArgs, CreateSubcorpusWithinArgs, CreateSubcorpusRawCQLArgs
 
 uvloop.install()
 
@@ -131,6 +132,13 @@ async def compile_docf(corpus_ident, attr, logfile):
 @as_sync
 async def get_wordlist(corpus_ident: Union[str, SubcorpusIdent], args, max_items):
     return await general.get_wordlist(corpus_ident, args, max_items)
+
+# ----------------------------- KEYWORDS --------------------------------------
+
+
+@as_sync
+async def get_keywords(corpus_ident: Union[str, SubcorpusIdent], ref_corpus_ident: Union[str, SubcorpusIdent], args, max_items):
+    return await general.get_keywords(corpus_ident, ref_corpus_ident, args, max_items)
 
 # ----------------------------- SUBCORPORA ------------------------------------
 

@@ -25,6 +25,7 @@ import { Bound, IActionDispatcher } from 'kombo';
 
 import * as Kontext from '../../../types/kontext';
 import * as PluginInterfaces from '../../../types/plugins';
+import { Actions } from '../../../models/keywords/actions';
 import { KeywordsFormModel, KeywordsFormState } from '../../../models/keywords/form';
 
 
@@ -45,12 +46,60 @@ export function init({
 
     const layoutViews = he.getLayoutViews();
 
-
     const KeywordsForm:React.FC<KeywordsFormState> = (props) => {
+        const handleRefCorpChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch(
+                Actions.SetRefCorp,
+                {value: evt.target.value}
+            );
+        }
+
+        const handleRefSubcorpChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch(
+                Actions.SetRefSubcorp,
+                {value: evt.target.value}
+            );
+        }
+
+        const handleAttrChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch(
+                Actions.SetAttr,
+                {value: evt.target.value}
+            );
+        }
+
+        const handlePatternChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch(
+                Actions.SetPattern,
+                {value: evt.target.value}
+            );
+        }
+
+        const handleSubmit = (evt) => {
+            dispatcher.dispatch(Actions.SubmitQuery);
+        }
 
         return (
             <div>
-                keywords form (TODO)
+                {CorparchWidget ? <CorparchWidget /> : null}
+                <label>Reference corp</label>
+                <input onChange={handleRefCorpChange} type='text' value={props.refCorp}/>
+                <label>Reference subcorp</label>
+                <input onChange={handleRefSubcorpChange} type='text' value={props.refSubcorp}/>
+                <br/>
+                <label>Attr</label>
+                <input onChange={handleAttrChange} type='text' value={props.attr}/>
+                <br/>
+                <label>Pattern</label>
+                <input onChange={handlePatternChange} type='text' value={props.pattern}/>
+                <br/>
+                <button role='button' onClick={handleSubmit}>Submit</button>
+                {
+                    props.isBusy ?
+                        <img className="ajax-loader" src={he.createStaticUrl('img/ajax-loader-bar.gif')}
+                            alt={he.translate('global__loading')} title={he.translate('global__loading')} /> :
+                        null
+                }
             </div>
         );
     }

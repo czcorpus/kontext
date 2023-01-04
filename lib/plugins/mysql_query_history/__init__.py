@@ -228,7 +228,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
                 q_id = item['query_id']
                 q_supertype = item['q_supertype']
                 if q_id not in qdata_map:
-                    logging.getLogger(__name__).warning('Missing conc data for query {}'.format(q_id))
+                    logging.getLogger(__name__).warning(f'Missing conc data for query {q_id}')
                     continue
                 qdata = qdata_map[q_id]
                 if q_supertype == 'conc':
@@ -305,6 +305,18 @@ class MySqlQueryHistory(AbstractQueryHistory):
                         subcorpus_name=subc_names.get(qdata.get('usesubcorp')),
                         pfilter_words=qdata['form']['pfilter_words'],
                         nfilter_words=qdata['form']['nfilter_words'])
+                    tmp.update(item)
+                    tmp.update(qdata)
+                    full_data.append(tmp)
+                elif q_supertype == 'kwords':
+                    if not qdata:
+                        continue
+                    tmp = dict(
+                        corpname=qdata['corpora'][0],
+                        aligned=[],
+                        human_corpname=(await corpora.corpus(qdata['corpora'][0])).human_readable_corpname,
+                        query=qdata.get('form', {}).get('wlpat'),
+                        subcorpus_name=subc_names.get(qdata.get('usesubcorp')))
                     tmp.update(item)
                     tmp.update(qdata)
                     full_data.append(tmp)

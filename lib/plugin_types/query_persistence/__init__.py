@@ -165,6 +165,8 @@ class AbstractQueryPersistence(abc.ABC):
             return 'pquery'
         elif data.get('form', {}).get('form_type') == 'wlist':
             return 'wlist'
+        elif data.get('form', {}).get('form_type') == 'kwords':
+            return 'kwords'
         elif 'lastop_form' in data:
             form_type = data['lastop_form'].get('form_type')
             if form_type in ('query', 'filter', 'sort', 'sample', 'shuffle', 'switchmc', 'lgroup', 'locked', 'subhits', 'firsthits'):
