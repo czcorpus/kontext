@@ -322,14 +322,20 @@ class Backend(DatabaseBackend):
         c.execute(sql, where + [limit, offset])
         return c.fetchall()
 
-    def load_featured_corpora(self, user_lang: str) -> Iterable[Dict[str, str]]:
+    def load_featured_corpora(self, user_id, user_lang):
+        """
+        note: we ignore requestable corpora here
+        """
         cursor = self._db.cursor()
-        desc_col = 'c.description_{0}'.format(user_lang[:2])
-        cursor.execute('SELECT c.name AS corpus_id, c.name AS id, ifnull(rc.name, c.name) AS name, '
-                       f'{desc_col} AS description, c.size '
-                       f'FROM {self._corp_table} AS c '
-                       'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
-                       'WHERE c.active = 1 AND c.featured = 1 ORDER BY c.name')
+        total_acc_sql, total_acc_args = self._total_access_query(user_id)
+        desc_col = f'c.description_{user_lang[:2]}'
+        cursor.execute(
+            'SELECT c.name AS corpus_id, c.name AS id, ifnull(rc.name, c.name) AS name, '
+            f'{desc_col} AS description, c.size '
+            f'FROM {self._corp_table} AS c '
+            'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
+            f'JOIN ( {total_acc_sql} ) AS ca ON ca.corpus_id = c.name '
+            'WHERE c.active = 1 AND c.featured = 1 ORDER BY c.name', total_acc_args)
         return cursor.fetchall()
 
     def load_registry_table(self, corpus_id: str, variant: str) -> Dict[str, str]:
