@@ -66,10 +66,11 @@ initializer.init_plugin('dispatch_hook', optional=True)
 
 import conclib.calc
 import conclib.calc.base
+from action.argmapping.keywords import KeywordsFormArgs
 from action.argmapping.subcorpus import (
     CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs)
 from action.argmapping.wordlist import WordlistFormArgs
-from bgcalc import coll_calc, freqs, pquery, subc_calc, wordlist
+from bgcalc import coll_calc, freqs, keywords, pquery, subc_calc, wordlist
 from corplib import CorpusFactory
 from corplib.abstract import AbstractKCorpus, SubcorpusIdent
 from corplib.corpus import KCorpus
@@ -345,6 +346,15 @@ async def get_wordlist(corpus_ident: Union[str, SubcorpusRecord], args, max_item
     form = WordlistFormArgs.from_dict(args)
     corp = await _load_corp(corpus_ident)
     await wordlist.wordlist(corp, form, max_items)
+
+# ----------------------------- KEYWORDS --------------------------------------
+
+
+async def get_keywords(corpus_ident: Union[str, SubcorpusRecord], ref_corpus_ident: Union[str, SubcorpusRecord], args, max_items):
+    form = KeywordsFormArgs.from_dict(args)
+    corp = await _load_corp(corpus_ident)
+    ref_corp = await _load_corp(ref_corpus_ident)
+    await keywords.keywords(corp, ref_corp, form, max_items)
 
 
 # ----------------------------- PLUG-IN TASKS ---------------------------------

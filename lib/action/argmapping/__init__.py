@@ -61,6 +61,9 @@ WordlistArgsMapping = (
     'wlsort',
 )
 
+KeywordsArgsMapping = (
+)
+
 
 def comma_separated_to_js(v: str) -> List[str]:
     return v.split(',') if v else []

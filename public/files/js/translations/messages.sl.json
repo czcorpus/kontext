@@ -486,6 +486,7 @@
         "qhistory__qs_conc": "konkordanca",
         "qhistory__qs_pquery": "paradigmatična poizvedba",
         "qhistory__qs_wlist": "seznam besed",
+        "qhistory__qs_kwords": "keywords UNTRANSLATED",
         "qhistory__remove_from_list": "Odstrani s seznama",
         "qhistory__item_removed": "Odstranjeno s seznama",
         "qhistory__blank_query": "prazno",
