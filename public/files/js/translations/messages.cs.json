@@ -445,6 +445,7 @@
         "qhistory__qs_conc": "konkordance",
         "qhistory__qs_pquery": "paradigmatický dotaz",
         "qhistory__qs_wlist": "seznam slov",
+        "qhistory__qs_kwords": "klíčová slova",
         "qhistory__remove_from_list": "Odstranit ze seznamu",
         "qhistory__item_removed": "Odstraněno ze seznamu",
         "qhistory__blank_query": "nevyplněno",
