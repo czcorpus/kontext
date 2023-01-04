@@ -117,10 +117,15 @@ export interface PQueryHistoryItem extends AbstractQueryHistoryItem {
     q_supertype:'pquery';
 }
 
+export interface KwordsHistoryItem extends AbstractQueryHistoryItem {
+    q_supertype:'kwords';
+}
+
 export type QueryHistoryItem =
     ConcQueryHistoryItem |
     WlistQueryHistoryItem |
-    PQueryHistoryItem;
+    PQueryHistoryItem |
+    KwordsHistoryItem;
 
 export function isConcQueryHistoryItem(item:QueryHistoryItem):item is ConcQueryHistoryItem {
     return item.q_supertype === 'conc';

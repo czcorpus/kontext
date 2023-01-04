@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 {% block title%}KonText - {{ "Keywords extraction results"|_ }}{% endblock %}
 
 {% block bodyonload %}
+__conf.Keywords = {{ data|to_json }};
 keywordsPage.init(__conf);
 {% endblock %}
 

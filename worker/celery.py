@@ -45,9 +45,10 @@ settings.load(os.path.join(APP_PATH, 'conf', 'config.xml'))
 if settings.get('global', 'manatee_path', None):
     sys.path.insert(0, settings.get('global', 'manatee_path'))
 
+from action.argmapping.subcorpus import (
+    CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs)
 from bgcalc.adapter.factory import init_backend
 from corplib.abstract import SubcorpusIdent
-from action.argmapping.subcorpus import CreateSubcorpusArgs, CreateSubcorpusWithinArgs, CreateSubcorpusRawCQLArgs
 
 from worker import general
 
@@ -178,6 +179,13 @@ async def create_subcorpus(
 async def get_wordlist(corpus_ident: Union[str, SubcorpusIdent], args, max_items):
     return await general.get_wordlist(corpus_ident, args, max_items)
 
+# ----------------------------- KEYWORDS --------------------------------------
+
+
+@worker.task(name='get_keywords')
+@as_sync
+async def get_keywords(corpus_ident: Union[str, SubcorpusIdent], ref_corpus_ident: Union[str, SubcorpusIdent], args, max_items):
+    return await general.get_keywords(corpus_ident, ref_corpus_ident, args, max_items)
 
 # ----------------------------- PLUG-IN TASKS ---------------------------------
 

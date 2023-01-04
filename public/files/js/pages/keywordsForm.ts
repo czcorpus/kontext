@@ -81,6 +81,14 @@ export class KeywordsFormPage {
                 view,
                 window.document.getElementById('keywords-form-mount'),
             );
+            this.layoutModel.registerCorpusSwitchAwareModels(
+                () => {
+                    this.layoutModel.unmountReactComponent(this.reactRoot);
+                    this.init();
+                },
+                this.formModel,
+                this.corparchPlugin
+            );
         });
     }
 }

@@ -24,6 +24,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 {% block title%}KonText - {{ "Keywords extraction Form"|_ }}{% endblock %}
 
 {% block bodyonload %}
+__conf.SubcorpList = {{ SubcorpList|to_json }};
+__conf.AttrList = {{ AttrList|to_json }};
 keywordsFormPage.init(__conf);
 {% endblock %}
 

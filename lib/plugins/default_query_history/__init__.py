@@ -291,6 +291,19 @@ class QueryHistory(AbstractQueryHistory):
                     tmp.update(item)
                     tmp.update(stored)
                     full_data.append(tmp)
+                elif item_qs == 'kwords':
+                    stored = await self._query_persistence.open(item['query_id'])
+                    if not stored:
+                        continue
+                    tmp = dict(
+                        corpname=stored['corpora'][0],
+                        aligned=[],
+                        human_corpname=(await corpora.corpus(
+                            stored['corpora'][0])).get_conf('NAME'),
+                        query=stored.get('form', {}).get('wlpat'))
+                    tmp.update(item)
+                    tmp.update(stored)
+                    full_data.append(tmp)
 
             else:
                 # deprecated type of record (this will vanish soon as there

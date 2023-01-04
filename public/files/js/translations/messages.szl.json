@@ -465,6 +465,7 @@
         "qhistory__qs_conc": "concordance UNTRANSLATED",
         "qhistory__qs_pquery": "paradigmatic query UNTRANSLATED",
         "qhistory__qs_wlist": "word list UNTRANSLATED",
+        "qhistory__qs_kwords": "keywords UNTRANSLATED",
         "qhistory__remove_from_list": "Remove from the list UNTRANSLATED",
         "qhistory__item_removed": "Removed from the list UNTRANSLATED",
         "qhistory__blank_query": "blank UNTRANSLATED",
