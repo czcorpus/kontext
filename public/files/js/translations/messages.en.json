@@ -448,6 +448,7 @@
         "qhistory__qs_conc": "concordance",
         "qhistory__qs_pquery": "paradigmatic query",
         "qhistory__qs_wlist": "word list",
+        "qhistory__qs_kwords": "keywords",
         "qhistory__remove_from_list": "Remove from the list",
         "qhistory__item_removed": "Removed from the list",
         "qhistory__blank_query": "blank",

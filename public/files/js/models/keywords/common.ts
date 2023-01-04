@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Charles University in Prague, Faculty of Arts,
+ * Copyright (c) 2023 Charles University, Faculty of Arts,
  *                    Institute of the Czech National Corpus
  * Copyright (c) 2023 Tomas Machalek <tomas.machalek@gmail.com>
  * Copyright (c) 2023 Martin Zimandl <martin.zimandl@gmail.com>
@@ -19,43 +19,35 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { IActionDispatcher, StatelessModel } from 'kombo';
-import { PageModel } from '../../app/page';
-import { Keyword } from './common';
+import { WlnumsTypes } from "../wordlist/common";
 
-
-
-export interface KeywordsResultState {
-    data:Array<Keyword>;
-    isBusy:boolean;
+export interface KeywordsSubmitArgs {
+    corpname:string;
+    usesubcorp:string;
+    ref_corpname:string;
+    ref_usesubcorp:string;
+    wlattr:string;
+    wlpat:string;
+    wlminfreq:number;
+    wlnums:WlnumsTypes;
+    wltype:string;
+    include_nonwords:boolean;
 }
 
-
-export interface KeywordsResultModelArgs {
-    dispatcher:IActionDispatcher;
-    layoutModel:PageModel;
+export interface KeywordsSubmitResponse {
+    corpname:string;
+    usesubcorp:string;
+    freq_files_avail:boolean;
+    subtasks:Array<string>;
+    kw_query_id:string;
 }
 
-/**
- *
- */
-export class KeywordsResultModel extends StatelessModel<KeywordsResultState> {
-
-    private readonly layoutModel:PageModel;
-
-    constructor({
-        dispatcher,
-        layoutModel
-    }:KeywordsResultModelArgs) {
-        super(
-            dispatcher,
-            {
-                data: layoutModel.getConf('Keywords'),
-                isBusy: false,
-            }
-        );
-        this.layoutModel = layoutModel;
-
-    }
-
+export interface Keyword {
+    item:string;
+    score:number;
+    frq1:number;
+    frq2:number;
+    rel_frq1:number;
+    rel_frq2:number;
+    query:string;
 }
