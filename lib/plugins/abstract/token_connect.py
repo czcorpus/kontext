@@ -98,6 +98,13 @@ class AbstractBackend(abc.ABC):
         self._ttl: int = ttl
         self._provider_id: str = provider_id
 
+    def get_required_cookies(self) -> List[str]:
+        """
+         get_required_cookies returns a list of cookie names required in user's request and to be reused in
+         an internal request to a specified backend service.
+        """
+        return []
+
     def get_cache_db(self) -> KeyValueStorage:
         return self._db
 
@@ -110,8 +117,16 @@ class AbstractBackend(abc.ABC):
         return self._ttl
 
     @abc.abstractmethod
-    def fetch(self, corpora: List[str], maincorp: KCorpus, token_id: int, num_tokens: int,
-              query_args: Dict[str, str], lang: str, context: Tuple[int, int] = None) -> Tuple[Any, bool]:
+    def fetch(
+            self,
+            corpora: List[str],
+            maincorp: KCorpus,
+            token_id: int,
+            num_tokens: int,
+            query_args: Dict[str, str],
+            lang: str,
+            context: Tuple[int, int] = None,
+            cookies: Dict[str, str] = None) -> Tuple[Any, bool]:
         pass
 
     def enabled_for_corpora(self, corpora: Iterable[str]) -> bool:
@@ -202,8 +217,16 @@ class AbstractTokenConnect(CorpusDependentPlugin):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def fetch_data(self, provider_ids: List[str], corpus: KCorpus, corpora: List[str], token_id: int,
-                   num_tokens: int, lang: str, context: Tuple[int, int] = None) -> List[Tuple[Any, bool]]:
+    def fetch_data(
+            self,
+            plugin_ctx: 'PluginCtx',
+            provider_ids: List[str],
+            corpus: KCorpus,
+            corpora: List[str],
+            token_id: int,
+            num_tokens: int,
+            lang: str,
+            context: Tuple[int, int] = None) -> List[Tuple[Any, bool]]:
         """
         Obtain (in a synchronous way) data from all the backends
         identified by a list of provider ids.

@@ -31,13 +31,13 @@ backends (see especially HTTP backend which uses these attributes to construct a
 
 Required XML configuration: please see config.rng
 """
-
+from typing import Tuple, Dict
 import json
 import logging
 import manatee
 
 import plugins
-from plugins.abstract.token_connect import AbstractTokenConnect, find_implementation
+from plugins.abstract.token_connect import AbstractTokenConnect, find_implementation, AbstractBackend, AbstractFrontend
 from actions import concordance
 from controller import exposed
 from corplib.corpus import KCorpus
@@ -65,10 +65,10 @@ def fetch_token_detail(self, request):
                int(request.args.get('detail_right_ctx', 40)))
     with plugins.runtime.TOKEN_CONNECT as td, plugins.runtime.CORPARCH as ca:
         corpus_info = ca.get_corpus_info(self._plugin_ctx, self.corp.corpname)
-        token, resp_data = td.fetch_data(corpus_info.token_connect.providers, self.corp,
-                                         [self.corp.corpname] +
-                                         self.args.align, token_id, num_tokens, self.ui_lang,
-                                         context)
+        token, resp_data = td.fetch_data(
+            self._plugin_ctx, corpus_info.token_connect.providers, self.corp,
+            [self.corp.corpname] + self.args.align, token_id, num_tokens, self.ui_lang,
+            context)
     return dict(token=token, items=[item for item in resp_data])
 
 
@@ -120,14 +120,14 @@ def add_structattr_support(corp: KCorpus, attrs, token_id):
 
 class DefaultTokenConnect(AbstractTokenConnect):
 
-    def __init__(self, providers, corparch):
+    def __init__(self, providers: Dict[str, Tuple[AbstractBackend, AbstractFrontend]], corparch):
         self._corparch = corparch
         self._providers = providers
 
     def map_providers(self, providers):
         return [self._providers[ident] + (is_kwic_view,) for ident, is_kwic_view in providers]
 
-    def fetch_data(self, providers, corpus, corpora, token_id, num_tokens, lang, context=None):
+    def fetch_data(self, providers, corpus, corpora, token_id, num_tokens, lang, context=None, cookies=None):
         ans = []
         # first, we pre-load all possible required (struct/pos) attributes all
         # the defined providers need
@@ -176,7 +176,7 @@ class DefaultTokenConnect(AbstractTokenConnect):
         return {concordance.Actions: [fetch_token_detail]}
 
 
-def init_provider(conf, ident, db, ttl):
+def init_provider(conf, ident, db, ttl) -> Tuple[AbstractBackend, AbstractFrontend]:
     """
     Create and return both backend and frontend.
 
@@ -191,7 +191,7 @@ def init_provider(conf, ident, db, ttl):
     return backend_class(conf['conf'], ident, db, ttl), frontend_class(conf)
 
 
-def setup_providers(plg_conf, db):
+def setup_providers(plg_conf, db) -> Dict[str, Tuple[AbstractBackend, AbstractFrontend]]:
     with open(plg_conf['providers_conf'], 'rb') as fr:
         providers_conf = json.load(fr)
     providers = dict((b['ident'], init_provider(b, b['ident'], db, plg_conf['ttl']))

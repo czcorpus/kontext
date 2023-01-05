@@ -19,13 +19,14 @@
 """
 Required XML configuration: please see ./config.rng
 """
-
+from typing import List, Tuple, Any, Dict
 from plugins.abstract.kwic_connect import AbstractKwicConnect
-from plugins.default_token_connect import setup_providers
+from plugins.default_token_connect import setup_providers, AbstractBackend, AbstractFrontend
 import plugins
 import logging
 from actions import concordance
 from controller import exposed
+from controller.plg import PluginCtx
 from multiprocessing.pool import ThreadPool
 
 
@@ -40,10 +41,10 @@ def merge_results(curr, new, word):
         return curr
 
 
-def handle_word_req(args):
-    word, corpora, providers, ui_lang = args
+def handle_word_req(args: Tuple[PluginCtx, str, List[str], List[Any], str]):
+    plugin_ctx, word, corpora, providers, ui_lang = args
     with plugins.runtime.KWIC_CONNECT as kc:
-        return word, kc.fetch_data(providers, corpora, word, ui_lang)
+        return word, kc.fetch_data(plugin_ctx, providers, corpora, word, ui_lang)
 
 
 @exposed(return_type='json')
@@ -51,8 +52,10 @@ def fetch_external_kwic_info(self, request):
     words = request.args.getlist('w')
     with plugins.runtime.CORPARCH as ca:
         corpus_info = ca.get_corpus_info(self._plugin_ctx, self.corp.corpname)
-        args = [(w, [self.corp.corpname] + self.args.align, corpus_info.kwic_connect.providers, self.ui_lang)
-                for w in words]
+        args = [
+            (self._plugin_ctx, w,
+            [self.corp.corpname] + self.args.align, corpus_info.kwic_connect.providers, self.ui_lang)
+            for w in words]
         results = ThreadPool(len(words)).imap_unordered(handle_word_req, args)
         provider_all = []
         for word, res in results:
@@ -78,7 +81,7 @@ def get_corpus_kc_providers(self, _):
 
 class DefaultKwicConnect(AbstractKwicConnect):
 
-    def __init__(self, providers, corparch, max_kwic_words, load_chunk_size):
+    def __init__(self, providers: Dict[str, Tuple[AbstractBackend, AbstractFrontend]], corparch, max_kwic_words, load_chunk_size):
         self._corparch = corparch
         self._max_kwic_words = max_kwic_words
         self._load_chunk_size = load_chunk_size
@@ -100,13 +103,19 @@ class DefaultKwicConnect(AbstractKwicConnect):
     def export_actions(self):
         return {concordance.Actions: [fetch_external_kwic_info, get_corpus_kc_providers]}
 
-    def fetch_data(self, provider_ids, corpora, lemma, lang):
+    def fetch_data(self, plugin_ctx, provider_ids, corpora, lemma, lang):
         ans = []
         for backend, frontend in self.map_providers(provider_ids):
             try:
                 if backend.enabled_for_corpora(corpora):
+                    cookies = {}
+                    for cname in backend.get_required_cookies():
+                        if cname not in plugin_ctx.cookies:
+                            raise Exception(f'Backend configuration problem: cookie {cname} not available')
+                        ck = plugin_ctx.cookies[cname]
+                        cookies[cname] = ck.value
                     data, status = backend.fetch(
-                        corpora, None, None, 1, dict(lemma=lemma), lang, (-1, 1))
+                        corpora, None, None, 1, dict(lemma=lemma), lang, (-1, 1), cookies)
                     ans.append(frontend.export_data(
                         data, status, lang, is_kwic_view=False).to_dict())
             except EnvironmentError as ex:
