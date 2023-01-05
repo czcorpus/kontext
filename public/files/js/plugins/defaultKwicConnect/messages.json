@@ -1,5 +1,5 @@
 {
-    "en-Us": {
+    "en-US": {
         "default_kwic_connect__view_in_treq": "view in Treq",
         "default_kwic_connect__translation_not_found": "translation not found",
         "default_kwic_connect__using_attr_for_srch_{attr}": "Using attribute [{attr}] for the search",
