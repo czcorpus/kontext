@@ -132,7 +132,7 @@ class TreqBackend(HTTPBackend):
         else:
             raise Exception('Failed to load the data - error {0}'.format(response.status))
 
-    #@cached
+    @cached
     def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None, cookies=None):
         """
         """
