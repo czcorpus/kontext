@@ -33,15 +33,7 @@ class DisplayLinkBackend(AbstractBackend):
         super().__init__(ident, db, ttl)
         self._conf = conf
 
-    def get_required_attrs(self):
-        if 'posAttrs' in self._conf:
-            logging.getLogger(__name__).warning(
-                'You are using a deprecated "conf.posAttr" value; please use "conf.attrs" instead.')
-            return self._conf.get('posAttrs', [])
-        else:
-            return self._conf.get('attrs', [])
-
-    async def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None):
+    async def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None, cookies=None):
         attr = self._conf['posAttrs'][0]
         value = query_args[attr]
         if value:
@@ -51,6 +43,7 @@ class DisplayLinkBackend(AbstractBackend):
             link = f'{proto_pref}{server}{path}'.format(**query_args)
             return dict(link=link), True
         return dict(), False
+
 
 class HTTPBackend(AbstractBackend):
     """
@@ -78,7 +71,7 @@ class HTTPBackend(AbstractBackend):
 
 
     @cached
-    async def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None):
+    async def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None, cookies=None):
         args = dict(
             ui_lang=self._client.enc_val(lang), corpus=self._client.enc_val(corpora[0]),
             corpus2=self._client.enc_val(corpora[1] if len(corpora) > 1 else ''),
