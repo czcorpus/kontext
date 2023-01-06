@@ -44,10 +44,10 @@ class HTTPClient:
     def create_connection(self):
         if self._ssl:
             return http.client.HTTPSConnection(
-                self._server, port=self._port, timeout=15)
+                self._server, port=self._port, timeout=40)
         else:
             return http.client.HTTPConnection(
-                self._server, port=self._port, timeout=15)
+                self._server, port=self._port, timeout=40)
 
     def process_response(self, connection):
         response = connection.getresponse()

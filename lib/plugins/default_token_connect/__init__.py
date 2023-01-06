@@ -127,7 +127,7 @@ class DefaultTokenConnect(AbstractTokenConnect):
     def map_providers(self, providers):
         return [self._providers[ident] + (is_kwic_view,) for ident, is_kwic_view in providers]
 
-    def fetch_data(self, providers, corpus, corpora, token_id, num_tokens, lang, context=None, cookies=None):
+    def fetch_data(self, plugin_ctx, providers, corpus, corpora, token_id, num_tokens, lang, context=None):
         ans = []
         # first, we pre-load all possible required (struct/pos) attributes all
         # the defined providers need
@@ -151,8 +151,14 @@ class DefaultTokenConnect(AbstractTokenConnect):
                         args[s][sa] = v
                     else:
                         args[attr] = v
+                cookies = {}
+                for cname in backend.get_required_cookies():
+                    if cname not in plugin_ctx.cookies:
+                        raise Exception(f'Backend configuration problem: cookie {cname} not available')
+                    ck = plugin_ctx.cookies[cname]
+                    cookies[cname] = ck.value
                 data, status = backend.fetch(
-                    corpora, corpus, token_id, num_tokens, args, lang, context)
+                    corpora, corpus, token_id, num_tokens, args, lang, context, cookies)
                 ans.append(frontend.export_data(data, status, lang, is_kwic_view).to_dict())
             except TypeError as ex:
                 logging.getLogger(__name__).error('TokenConnect backend error: {0}'.format(ex))

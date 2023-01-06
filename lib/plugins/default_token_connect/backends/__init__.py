@@ -36,14 +36,6 @@ class DisplayLinkBackend(AbstractBackend):
         super().__init__(ident, db, ttl)
         self._conf = conf
 
-    def get_required_attrs(self):
-        if 'posAttrs' in self._conf:
-            logging.getLogger(__name__).warning(
-                'You are using a deprecated "conf.posAttr" value; please use "conf.attrs" instead.')
-            return self._conf.get('posAttrs', [])
-        else:
-            return self._conf.get('attrs', [])
-
     def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None, cookies=None):
         attr = self._conf['posAttrs'][0]
         value = query_args[attr]
@@ -86,10 +78,10 @@ class HTTPBackend(AbstractBackend):
     def create_connection(self):
         if self._conf['ssl']:
             return http.client.HTTPSConnection(
-                self._conf['server'], port=self._conf['port'], timeout=15)
+                self._conf['server'], port=self._conf['port'], timeout=40)
         else:
             return http.client.HTTPConnection(
-                self._conf['server'], port=self._conf['port'], timeout=15)
+                self._conf['server'], port=self._conf['port'], timeout=40)
 
     def process_response(self, connection):
         response = connection.getresponse()
@@ -103,14 +95,6 @@ class HTTPBackend(AbstractBackend):
     @staticmethod
     def enc_val(s):
         return urllib.parse.quote(s)
-
-    def get_required_attrs(self):
-        if 'posAttrs' in self._conf:
-            logging.getLogger(__name__).warning(
-                'You are using a deprecated "conf.posAttr" value; please use "conf.attrs" instead.')
-            return self._conf.get('posAttrs', [])
-        else:
-            return self._conf.get('attrs', [])
 
     @cached
     def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None, cookies=None):
