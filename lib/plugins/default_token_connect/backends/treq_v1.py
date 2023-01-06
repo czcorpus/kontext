@@ -118,7 +118,7 @@ class TreqBackend(HTTPBackend):
             return f'https://{self.BACKLINK_SERVER}'
         return f'http://{self.BACKLINK_SERVER}'
 
-    #@cached
+    @cached
     async def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None, cookies=None):
         """
         """

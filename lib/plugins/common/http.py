@@ -31,11 +31,10 @@ class HTTPClientException(Exception):
 
 class HTTPClient:
 
-    TIMEOUT = 15
-
     def __init__(self, server: str, enable_ssl: bool = False):
         self._server = server
         self._ssl_context = ssl.create_default_context() if enable_ssl else None
+        self._client_timeout = None
 
     @staticmethod
     def _is_valid_response(response: aiohttp.ClientResponse) -> bool:
@@ -48,6 +47,12 @@ class HTTPClient:
     @property
     def _app_client_session(self) -> aiohttp.ClientSession:
         return Sanic.get_app('kontext').ctx.client_session
+
+    @property
+    def client_timeout(self) -> int:
+        if not self._client_timeout:
+            self._client_timeout = Sanic.get_app('kontext').ctx.kontext_conf.get('http_client_timeout_secs')
+        return self._client_timeout
 
     async def process_response(self, response: aiohttp.ClientResponse):
         if self._is_valid_response(response):
@@ -75,12 +80,24 @@ class HTTPClient:
             self, method: str, path: str, args: Union[Dict[str, Any], List[Tuple[str, Any]]], data: Any = None,
             headers=None):
         url = self._server + (path + '?' + self._process_args(args) if args else path)
-        async with self._app_client_session.request(method, url, data=data, headers=headers if headers is not None else {}, timeout=self.TIMEOUT, ssl=self._ssl_context) as response:
+        async with self._app_client_session.request(
+                method,
+                url,
+                data=data,
+                headers=headers if headers is not None else {},
+                timeout=self.client_timeout,
+                ssl=self._ssl_context) as response:
             return await self.process_response(response)
 
     async def json_request(
             self, method: str, path: str, args: Union[Dict[str, Any], List[Tuple[str, Any]]], data: Any = None,
             headers=None):
         url = self._server + (path + '?' + self._process_args(args) if args else path)
-        async with self._app_client_session.request(method, url, json=data, headers=headers if headers is not None else {}, timeout=self.TIMEOUT, ssl=self._ssl_context) as response:
+        async with self._app_client_session.request(
+                method,
+                url,
+                json=data,
+                headers=headers if headers is not None else {},
+                timeout=self.client_timeout,
+                ssl=self._ssl_context) as response:
             return await self.process_response(response)

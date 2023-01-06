@@ -164,8 +164,6 @@ class DefaultTokenConnect(AbstractTokenConnect):
         for backend, frontend, is_kwic_view in self.map_providers(providers):
             try:
                 args = {}
-                logging.getLogger(__name__).warning(
-                    '>>>> backend.get_required_attrs(): {}'.format(backend.get_required_attrs()))
                 for attr in backend.get_required_attrs():
                     v = fetch_any_attr(corpus, attr, token_id, num_tokens)
                     if '.' in attr:
