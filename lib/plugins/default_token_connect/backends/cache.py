@@ -36,11 +36,11 @@ def mk_token_connect_hash(corpora, token_id, num_tokens, query_args, lang, conte
     return md5(f'{corpora}{token_id}{num_tokens}{args}{lang}{context}{cookies}'.encode('utf-8')).hexdigest()
 
 
-def mk_token_connect_cache_key(provider_id, corpora, token_id, num_tokens, query_args, lang, context=None, cookies=None):
+def mk_token_connect_cache_key(provider_id, corpora, token_id, num_tokens, query_args, lang, context=None):
     """
     Returns a cache key based on the passed parameters.
     """
-    return f'token_connect_cache:{provider_id}:{mk_token_connect_hash(corpora, token_id, num_tokens, query_args, lang, context, cookies)}'
+    return f'token_connect_cache:{provider_id}:{mk_token_connect_hash(corpora, token_id, num_tokens, query_args, lang, context)}'
 
 
 def cached(fn):
@@ -58,7 +58,7 @@ def cached(fn):
         """
         cache_db: KeyValueStorage = self.get_cache_db()
         key = mk_token_connect_cache_key(
-            self.provider_id, corpora, token_id, num_tokens, query_args, lang, context, cookies)
+            self.provider_id, corpora, token_id, num_tokens, query_args, lang, context)
 
         cached_data = await cache_db.get(key)
         # if no result is found in the cache, call the backend function

@@ -49,6 +49,7 @@ CONF_PATH = os.getenv(
 LOCALE_PATH = os.path.realpath(f'{os.path.dirname(__file__)}/../locale')
 JWT_COOKIE_NAME = 'kontext_jwt'
 JWT_ALGORITHM = 'HS256'
+DFLT_HTTP_CLIENT_TIMEOUT = 20
 
 from typing import Optional
 
@@ -171,6 +172,13 @@ async def server_init(app: Sanic, loop: asyncio.BaseEventLoop):
     loop.add_signal_handler(signal.SIGUSR1, lambda: asyncio.create_task(sigusr1_handler()))
     # init extensions fabrics
     app.ctx.client_session = aiohttp.ClientSession()
+    # runtime conf (this should have its own module in the future)
+    http_client_conf = settings.get_int('global', 'http_client_timeout_secs', 0)
+    if not http_client_conf:
+        http_client_conf = DFLT_HTTP_CLIENT_TIMEOUT
+        logging.getLogger(__name__).warning(
+            f'Internal HTTP client timeout not configured, using default {DFLT_HTTP_CLIENT_TIMEOUT} sec.')
+    app.ctx.kontext_conf = {'http_client_timeout_secs': http_client_conf}
 
 
 @application.listener('after_server_stop')
