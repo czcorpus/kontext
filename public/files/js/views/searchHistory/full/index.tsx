@@ -54,6 +54,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 return he.translate('qhistory__qs_pquery');
             case 'wlist':
                 return he.translate('qhistory__qs_wlist');
+            case 'kwords':
+                return he.translate('qhistory__qs_kwords');
         }
     };
 
@@ -86,7 +88,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 </option>
                 {List.map(
                     v => <option key={v} value={v}>{supertypeToHuman(v)}</option>,
-                    ['conc', 'pquery', 'wlist'] as Array<Kontext.QuerySupertype>
+                    ['conc', 'pquery', 'wlist', 'kwords'] as Array<Kontext.QuerySupertype>
                 )}
             </S.SearchKindSelector>
         );
@@ -582,6 +584,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             query_sh={data.query_sh}
                             pfilter={data.pfilter_words}
                             nfilter={data.nfilter_words} />;
+            case 'kwords':
+                return <p>{JSON.stringify(data)}</p>;
             }
         };
         return (

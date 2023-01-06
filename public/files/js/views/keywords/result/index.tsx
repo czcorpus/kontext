@@ -24,8 +24,8 @@ import * as React from 'react';
 import { Bound, IActionDispatcher } from 'kombo';
 
 import * as Kontext from '../../../types/kontext';
-import { KeywordsFormState } from '../../../models/keywords/form';
 import { KeywordsResultModel, KeywordsResultState } from '../../../models/keywords/result';
+import { List } from 'cnc-tskit';
 
 
 export interface KeywordsResultViewArgs {
@@ -45,10 +45,34 @@ export function init({
 
     const KeywordsResult:React.FC<KeywordsResultState> = (props) => {
 
-
         return (
             <div>
-                keywords result (TODO)
+                <table>
+                    <thead>
+                        <tr>
+                            <th>item</th>
+                            <th>score</th>
+                            <th>frq1</th>
+                            <th>frq2</th>
+                            <th>rel_frq1</th>
+                            <th>rel_frq2</th>
+                            <th>query</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {
+                            List.map(kw => <tr>
+                                <td>{kw.item}</td>
+                                <td>{kw.score}</td>
+                                <td>{kw.frq1}</td>
+                                <td>{kw.frq2}</td>
+                                <td>{kw.rel_frq1}</td>
+                                <td>{kw.rel_frq2}</td>
+                                <td>{kw.query}</td>
+                            </tr>, props.data)
+                        }
+                    </tbody>
+                </table>
             </div>
         );
     }
