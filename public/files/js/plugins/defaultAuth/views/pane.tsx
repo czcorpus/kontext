@@ -154,6 +154,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         render() {
+            console.log('this.props.isAnonymous: ', this.props.isAnonymous);
             return (
                 <div className="UserPane">
                     <span className="user">

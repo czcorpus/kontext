@@ -43,6 +43,8 @@ class TreqBackend(HTTPBackend):
 
     DEFAULT_MAX_RESULT_LINES = 10
 
+    DEFAULT_SID_COOKIE_NAME = 'cnc_toolbar_sid'
+
     AVAIL_GROUPS = None
 
     AVAIL_LANG_MAPPINGS = None
@@ -53,6 +55,13 @@ class TreqBackend(HTTPBackend):
         self.BACKLINK_SERVER = conf.get('backlinkServer', conf['server'])
         self.AVAIL_GROUPS = conf.get('availGroups', {})
         self.AVAIL_LANG_MAPPINGS = conf.get('availTranslations', {})
+
+    @property
+    def sid_cookie(self):
+        return self._conf.get('sidCookie', self.DEFAULT_SID_COOKIE_NAME)
+
+    def get_required_cookies(self):
+        return [self.sid_cookie]
 
     @staticmethod
     def _lang_from_corpname(corpname):
@@ -109,8 +118,8 @@ class TreqBackend(HTTPBackend):
             return f'https://{self.BACKLINK_SERVER}'
         return f'http://{self.BACKLINK_SERVER}'
 
-    @cached
-    async def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None):
+    #@cached
+    async def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None, cookies=None):
         """
         """
         primary_lang = self._lang_from_corpname(corpora[0])
@@ -118,28 +127,37 @@ class TreqBackend(HTTPBackend):
         treq_link = None
         if translat_corp and translat_lang:
             common_groups = self.find_lang_common_groups(primary_lang, translat_lang)
-            args = dict(lang1=self._client.enc_val(primary_lang), lang2=self._client.enc_val(translat_lang),
-                        groups=[self._client.enc_val(s) for s in common_groups],
-                        **query_args)
+            args = dict(
+                lang1=self._client.enc_val(primary_lang), lang2=self._client.enc_val(translat_lang),
+                groups=[self._client.enc_val(s) for s in common_groups],
+                **query_args)
             t_args = self.mk_backlink_args(**args)
             treq_link = (self.mk_backlink_addr() + '/index.php', t_args)
-            ta_args = self.mk_api_args(lang1=args['lang1'], lang2=args['lang2'], groups=args['groups'],
-                                       lemma=args['lemma'])
+            ta_args = self.mk_api_args(
+                lang1=args['lang1'], lang2=args['lang2'], groups=args['groups'], lemma=args['lemma'])
 
             try:
                 logging.getLogger(__name__).debug('Treq request args: {0}'.format(ta_args))
-                data, status = await self._client.request('GET', self.mk_api_path(ta_args), {})
+                headers = {
+                    'Cookie': f'{self.sid_cookie}={cookies[self.sid_cookie]}'
+                }
+                data, status = await self._client.request('GET', self.mk_api_path(ta_args), {}, headers=headers)
                 data = json.loads(data)
                 max_items = self._conf.get('maxResultItems', self.DEFAULT_MAX_RESULT_LINES)
-                data['lines'] = data['lines'][:max_items]
+                orig = data['lines'][:max_items]
+                data['lines'] = []
+                for item in orig:
+                    data['lines'].append(dict(
+                        freq=item['freq'], perc=item['perc'], left=item['from'], righ=item['to']))
             except ValueError:
                 logging.getLogger(__name__).error('Failed to parse response: {0}'.format(data))
                 data = dict(sum=0, lines=[])
 
         else:
             data = dict(sum=0, lines=[])
-        return json.dumps(dict(treq_link=treq_link,
-                               sum=data.get('sum', 0),
-                               translations=data.get('lines', []),
-                               primary_corp=corpora[0],
-                               translat_corp=translat_corp)), True
+        return json.dumps(dict(
+            treq_link=treq_link,
+            sum=data.get('sum', 0),
+            translations=data.get('lines', []),
+            primary_corp=corpora[0],
+            translat_corp=translat_corp)), True

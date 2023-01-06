@@ -45,6 +45,7 @@ add your frontend or backend (depending on what needs to be customized).
 """
 import abc
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Sequence, Tuple
+import logging
 
 from corplib.corpus import KCorpus
 from plugin_types.general_storage import KeyValueStorage
@@ -101,6 +102,13 @@ class AbstractBackend(abc.ABC):
         self._ttl: int = ttl
         self._provider_id: str = provider_id
 
+    def get_required_cookies(self) -> List[str]:
+        """
+         get_required_cookies returns a list of cookie names required in user's request and to be reused in
+         an internal request to a specified backend service.
+        """
+        return []
+
     def get_cache_db(self) -> KeyValueStorage:
         return self._db
 
@@ -113,8 +121,16 @@ class AbstractBackend(abc.ABC):
         return self._ttl
 
     @abc.abstractmethod
-    async def fetch(self, corpora: List[str], maincorp: KCorpus, token_id: int, num_tokens: int,
-                    query_args: Dict[str, str], lang: str, context: Tuple[int, int] = None) -> Tuple[Any, bool]:
+    async def fetch(
+            self,
+            corpora: List[str],
+            maincorp: KCorpus,
+            token_id: int,
+            num_tokens: int,
+            query_args: Dict[str, str],
+            lang: str,
+            context: Tuple[int, int] = None,
+            cookies: Dict[str, str] = None) -> Tuple[Any, bool]:
         pass
 
     def enabled_for_corpora(self, corpora: Iterable[str]) -> bool:
@@ -134,7 +150,12 @@ class AbstractBackend(abc.ABC):
         This is typically configured in provider's
         JSON configuration.
         """
-        return []
+        if 'posAttrs' in self._conf:
+            logging.getLogger(__name__).warning(
+                'You are using a deprecated "conf.posAttr" value; please use "conf.attrs" instead.')
+            return self._conf.get('posAttrs', [])
+        else:
+            return self._conf.get('attrs', [])
 
 
 class AbstractFrontend(abc.ABC):
@@ -209,14 +230,23 @@ class AbstractTokenConnect(CorpusDependentPlugin):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    async def fetch_data(self, providers: Sequence[Tuple[str, bool]], corpus: KCorpus, corpora: List[str], token_id: int,
-                         num_tokens: int, lang: str, context: Tuple[int, int] = None) -> List[Tuple[Any, bool]]:
+    async def fetch_data(
+            self,
+            plugin_ctx: 'PluginCtx',
+            providers: Sequence[Tuple[str, bool]],
+            corpus: KCorpus,
+            corpora: List[str],
+            token_id: int,
+            num_tokens: int,
+            lang: str,
+            context: Tuple[int, int] = None) -> List[Tuple[Any, bool]]:
         """
         Obtain (in a synchronous way) data from all the backends
         identified by a list of provider ids.
 
         arguments:
-        provider_ids -- list of defined providers we want to search in
+        plugin_ctx -- PluginCtx object providing access to the current user request and scope
+        providers -- list of defined providers we want to search in
         corpus -- corpus object used to fetch actual positional attributes used
                   to query the providers
         corpora -- list of involved corpora IDs
