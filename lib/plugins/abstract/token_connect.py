@@ -45,6 +45,8 @@ add your frontend or backend (depending on what needs to be customized).
 """
 import abc
 from typing import Dict, Any, List, Tuple, Iterable, TYPE_CHECKING
+import logging
+
 from corplib.corpus import KCorpus
 from plugins.abstract.general_storage import KeyValueStorage
 # this is to fix cyclic imports when running the app caused by typing
@@ -98,12 +100,13 @@ class AbstractBackend(abc.ABC):
         self._ttl: int = ttl
         self._provider_id: str = provider_id
 
-    def get_required_cookies(self) -> List[str]:
-        """
-         get_required_cookies returns a list of cookie names required in user's request and to be reused in
-         an internal request to a specified backend service.
-        """
-        return []
+    def get_required_attrs(self):
+        if 'posAttrs' in self._conf:
+            logging.getLogger(__name__).warning(
+                'You are using a deprecated "conf.posAttr" value; please use "conf.attrs" instead.')
+            return self._conf.get('posAttrs', [])
+        else:
+            return self._conf.get('attrs', [])
 
     def get_cache_db(self) -> KeyValueStorage:
         return self._db

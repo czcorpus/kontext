@@ -136,6 +136,8 @@ class TreqBackend(HTTPBackend):
     def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None, cookies=None):
         """
         """
+        if cookies is None:
+            cookies = {}
         primary_lang = self._lang_from_corpname(corpora[0])
         translat_corp, translat_lang = self._find_second_lang(corpora)
         treq_link = None
