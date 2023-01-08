@@ -141,6 +141,13 @@ class AbstractBackend(abc.ABC):
         """
         return True
 
+    def get_required_cookies(self) -> List[str]:
+        """
+         get_required_cookies returns a list of cookie names required in user's request and to be reused in
+         an internal request to a specified backend service.
+        """
+        return []
+
     def get_required_attrs(self) -> List[str]:
         """
         Which positional and structural attributes are needed to
