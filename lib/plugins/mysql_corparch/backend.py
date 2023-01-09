@@ -335,7 +335,7 @@ class Backend(DatabaseBackend):
             f'{desc_col} AS description, c.size '
             f'FROM {self._corp_table} AS c '
             'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
-            f'JOIN ( {total_acc_sql} ) AS ca ON ca.corpus_id = c.name '
+            f'JOIN ( {total_acc_sql} ) AS ca ON ca.corpus_id = c.{self._corp_id_attr} '
             'WHERE c.active = 1 AND c.featured = 1 ORDER BY c.name', total_acc_args)
         return await cursor.fetchall()
 
