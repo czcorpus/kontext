@@ -309,6 +309,9 @@ class Freq2DCalculation:
             # math.floor(x) == math.ceil(x) - 1 (indexing from 0)
             plimit = math.floor(limit / 100. * len(values))
             ans = values[plimit:]
+        else:
+            raise UserReadableException(
+                f'Unknown limit type - expecting one of {{abs, ipm, pabs, pipm}}, got: {limit_type}')
         if len(ans) > 1000:
             raise UserReadableException(
                 'The result is too large. Please try to increase the minimum frequency.')
