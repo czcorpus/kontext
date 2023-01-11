@@ -36,6 +36,9 @@ class DisplayLinkBackend(AbstractBackend):
         super().__init__(ident, db, ttl)
         self._conf = conf
 
+    def get_required_attrs(self):
+        return self._conf.get('posAttrs', [])
+
     def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None, cookies=None):
         attr = self._conf['posAttrs'][0]
         value = query_args[attr]
