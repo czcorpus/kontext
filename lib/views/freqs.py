@@ -400,7 +400,7 @@ async def freqtt(amodel: ConcActionModel, req: KRequest[FreqttActionArgs], resp:
     ans = await _freqs(
         amodel, req,
         fcrit=tuple(f'{a} 0' for a in req.mapped_args.fttattr),
-        fcrit_async=[f'{a} 0' for a in req.mapped_args.fttattr_async],
+        fcrit_async=tuple(f'{a} 0' for a in req.mapped_args.fttattr_async),
         flimit=req.mapped_args.flimit,
         freq_sort=req.mapped_args.freq_sort)
     ans['freq_type'] = 'text-types'
@@ -417,7 +417,7 @@ async def _freqct(amodel: ConcActionModel, req: KRequest, resp: KResponse, max_r
         q=amodel.args.q,
         ctminfreq=int(req.args.get('ctminfreq', '1')),
         ctminfreq_type=req.args.get('ctminfreq_type'),
-        fcrit=f'{amodel.args.ctattr1} {amodel.args.ctfcrit1} {amodel.args.ctattr2} {amodel.args.ctfcrit2}',
+        fcrit=f'{amodel.args.ctfcrit1} {amodel.args.ctfcrit2}',
         max_result_size=max_result_size)
     try:
         freq_data = await calculate_freq2d(args)
@@ -428,8 +428,8 @@ async def _freqct(amodel: ConcActionModel, req: KRequest, resp: KResponse, max_r
 
     ans = dict(
         freq_type='2-attribute',
-        attr1=amodel.args.ctattr1,
-        attr2=amodel.args.ctattr2,
+        attr1=amodel.args.ctfcrit1.split(' ', 1)[0],
+        attr2=amodel.args.ctfcrit2.split(' ', 1)[0],
         data=freq_data,
         freq_form_args=FreqFormArgs().update(amodel.args).to_dict(),
         coll_form_args=CollFormArgs().update(amodel.args).to_dict(),

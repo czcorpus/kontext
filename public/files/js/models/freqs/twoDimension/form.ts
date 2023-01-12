@@ -229,10 +229,8 @@ export class Freq2DFormModel extends StatelessModel<Freq2DFormModelState> {
     private getSubmitArgs(state:Freq2DFormModelState):CTFreqServerArgs {
         return {
             ...this.pageModel.getConcArgs(),
-            ctfcrit1: this.generateCrit(state, 1),
-            ctfcrit2: this.generateCrit(state, 2),
-            ctattr1: state.attr1,
-            ctattr2: state.attr2,
+            ctfcrit1: `${state.attr1} ${this.generateCrit(state, 1)}`,
+            ctfcrit2: `${state.attr2} ${this.generateCrit(state, 2)}`,
             ctminfreq: state.minFreq,
             ctminfreq_type: state.minFreqType
         };

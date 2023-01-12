@@ -12,7 +12,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from action.argmapping import Args
 
@@ -61,7 +61,18 @@ class FreqFormArgs:
         return dict(self.__dict__)
 
 
-class CTFreqFormArgs(object):
+class CTFreqFormArgs:
+    """
+    CTFreqFormArgs specifies parameters used in
+    2D freq. distribution form. Please note that
+    while the form arguments contain separated
+    attributes and criteria (ctattr*, ctfcrit*),
+    the server API action for calculating
+    the distribution requires (just like other
+    freq. distributions) single string for both
+    attribute and criterion
+    (e.g. "ctfcrit1=lemma 0<0")
+    """
 
     def __init__(self, default_attr: str = 'word'):
         self.ctminfreq: int = 80
@@ -71,13 +82,19 @@ class CTFreqFormArgs(object):
         self.ctattr2: str = default_attr
         self.ctfcrit2: str = '0<0'
 
+    def _import_fcrit(self, v: str) -> Tuple[str, str]:
+        """
+        Transform single string freq. criterion into
+        two values - attribute and positional information.
+        """
+        items = v.split(' ', 1)
+        return items[0], items[1]
+
     def update(self, args: Args) -> 'CTFreqFormArgs':
         self.ctminfreq = args.ctminfreq
         self.ctminfreq_type = args.ctminfreq_type
-        self.ctattr1 = args.ctattr1
-        self.ctfcrit1 = args.ctfcrit1
-        self.ctattr2 = args.ctattr2
-        self.ctfcrit2 = args.ctfcrit2
+        self.ctattr1, self.ctfcrit1 = self._import_fcrit(args.ctfcrit1)
+        self.ctattr2, self.ctfcrit2 = self._import_fcrit(args.ctfcrit2)
         return self
 
     def to_dict(self) -> Dict[str, Any]:
