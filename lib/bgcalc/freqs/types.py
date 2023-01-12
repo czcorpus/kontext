@@ -56,6 +56,7 @@ class Freq2DCalcArgs:
     ctminfreq: int
     ctminfreq_type: str
     fcrit: str
+    max_result_size: int = 1000
     cache_path: Optional[str] = None
     subcorpora_dir: Optional[str] = None
     subcorpus_id: Optional[str] = None

@@ -20,6 +20,7 @@ import sys
 from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import List, Tuple
+from sanic import Blueprint
 
 import plugins
 from action.argmapping.action import IntOpt, ListStrOpt, StrOpt
@@ -38,10 +39,14 @@ from conclib.errors import ConcNotFoundException, ConcordanceQueryParamsError
 from conclib.freq import MLFreqArgs, multi_level_crit
 from conclib.search import get_conc
 from main_menu import MainMenu
-from sanic import Blueprint
 from strings import escape_attr_val
+import settings
 
 bp = Blueprint('freqs')
+
+# "unlimited" freqct result has still a hard limit to prevent bigger issues
+CT_MAX_RESULT_SIZE_UNLIMITED = 1_000_000
+CT_MAX_RESULT_SIZE_LIMITED = 1_000
 
 
 @dataclass
@@ -403,7 +408,7 @@ async def freqtt(amodel: ConcActionModel, req: KRequest[FreqttActionArgs], resp:
     return ans
 
 
-async def _freqct(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+async def _freqct(amodel: ConcActionModel, req: KRequest, resp: KResponse, max_result_size: int):
     args = Freq2DCalcArgs(
         corpname=amodel.corp.corpname,
         subcorpus_id=amodel.corp.subcorpus_id,
@@ -412,8 +417,8 @@ async def _freqct(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         q=amodel.args.q,
         ctminfreq=int(req.args.get('ctminfreq', '1')),
         ctminfreq_type=req.args.get('ctminfreq_type'),
-        fcrit=f'{amodel.args.ctattr1} {amodel.args.ctfcrit1} {amodel.args.ctattr2} {amodel.args.ctfcrit2}')
-
+        fcrit=f'{amodel.args.ctattr1} {amodel.args.ctfcrit1} {amodel.args.ctattr2} {amodel.args.ctfcrit2}',
+        max_result_size=max_result_size)
     try:
         freq_data = await calculate_freq2d(args)
     except UserReadableException as ex:
@@ -441,9 +446,11 @@ async def _freqct(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 async def freqct(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     """
     """
+    no_anonym_acc = settings.get_bool('global', 'no_anonymous_access', False)
+    max_result_size = CT_MAX_RESULT_SIZE_UNLIMITED if no_anonym_acc else CT_MAX_RESULT_SIZE_LIMITED
     try:
         await require_existing_conc(amodel.corp, amodel.args.q)
-        return await _freqct(amodel, req, resp)
+        return await _freqct(amodel, req, resp, max_result_size)
     except ConcNotFoundException:
         amodel.go_to_restore_conc('freqct')
 

@@ -265,7 +265,7 @@ class Freq2DCalculation:
         norms2_dict = self._conc.get_attr_values_sizes(sattr)
         return [norms2_dict.get(x[sattr_idx], 0) for x in words]
 
-    def ct_dist(self, crit, limit_type, limit=1):
+    def ct_dist(self, crit, flimit_type, flimit=1, max_result_size=1000):
         """
         Calculate join distribution (2d frequency).
         """
@@ -296,23 +296,23 @@ class Freq2DCalculation:
         else:
             norms = [self._corp.size] * len(words)
         mans = list(zip(words, freqs, norms))
-        if limit_type == 'abs':
-            ans = [v for v in mans if v[1] >= limit]
-        elif limit_type == 'ipm':
-            ans = [v for v in mans if v[1] / float(v[2]) * 1e6 >= limit]
-        elif limit_type == 'pabs':
+        if flimit_type == 'abs':
+            ans = [v for v in mans if v[1] >= flimit]
+        elif flimit_type == 'ipm':
+            ans = [v for v in mans if v[1] / float(v[2]) * 1e6 >= flimit]
+        elif flimit_type == 'pabs':
             values = sorted(mans, key=lambda v: v[1])
-            plimit = int(math.floor(limit / 100. * len(values)))
+            plimit = int(math.floor(flimit / 100. * len(values)))
             ans = values[plimit:]
-        elif limit_type == 'pipm':
+        elif flimit_type == 'pipm':
             values = sorted(mans, key=lambda v: v[1] / float(v[2]) * 1e6)
             # math.floor(x) == math.ceil(x) - 1 (indexing from 0)
-            plimit = math.floor(limit / 100. * len(values))
+            plimit = math.floor(flimit / 100. * len(values))
             ans = values[plimit:]
         else:
             raise UserReadableException(
-                f'Unknown limit type - expecting one of {{abs, ipm, pabs, pipm}}, got: {limit_type}')
-        if len(ans) > 1000:
+                f'Unknown limit type - expecting one of {{abs, ipm, pabs, pipm}}, got: {flimit_type}')
+        if len(ans) > max_result_size:
             raise UserReadableException(
                 'The result is too large. Please try to increase the minimum frequency.')
         return ans, len(mans)
@@ -327,7 +327,8 @@ class Freq2DCalculation:
             else self._args.corpname)
         self._conc = await require_existing_conc(corp=self._corp, q=self._args.q)
         result, full_size = self.ct_dist(
-            self._args.fcrit, limit=self._args.ctminfreq, limit_type=self._args.ctminfreq_type)
+            self._args.fcrit, flimit=self._args.ctminfreq, flimit_type=self._args.ctminfreq_type,
+            max_result_size=self._args.max_result_size)
         return dict(data=[x[0] + x[1:] for x in result], full_size=full_size)
 
 
