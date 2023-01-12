@@ -36,8 +36,6 @@ export const sortAttrVals = (x1:Kontext.AttrItem, x2:Kontext.AttrItem) => {
 export interface CTFreqServerArgs extends ConcServerArgs {
     ctfcrit1:string;
     ctfcrit2:string;
-    ctattr1:string;
-    ctattr2:string;
     ctminfreq:string;
     ctminfreq_type:string;
 }

@@ -579,10 +579,8 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
     getSubmitArgs():CTFreqServerArgs {
         return {
             ...this.pageModel.getConcArgs(),
-            ctfcrit1: this.state.ctFcrit1,
-            ctfcrit2: this.state.ctFcrit2,
-            ctattr1: this.state.attr1,
-            ctattr2: this.state.attr2,
+            ctfcrit1: `${this.state.attr1} ${this.state.ctFcrit1}`,
+            ctfcrit2: `${this.state.attr2} ${this.state.ctFcrit2}`,
             ctminfreq: this.state.minFreq,
             ctminfreq_type: this.state.minFreqType
         };
