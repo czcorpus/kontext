@@ -132,7 +132,7 @@ export type CTFreqResultItem = [string, string, number, number];
 
 export interface CTFreqResultData {
     data: Array<CTFreqResultItem>;
-    full_size:number;
+    size:number;
 }
 
 export interface CTFreqResultResponse extends AjaxConcResponse {
