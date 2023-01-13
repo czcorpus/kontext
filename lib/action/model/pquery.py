@@ -123,20 +123,22 @@ class ParadigmaticQueryActionModel(CorpusActionModel):
 
         return ans
 
-    async def post_dispatch(self, action_props: ActionProps, result, err_desc):
-        await super().post_dispatch(action_props, result, err_desc)
+    async def post_dispatch(self, action_props, resp, err_desc):
+        await super().post_dispatch(action_props, resp, err_desc)
         # create and store concordance query key
         if action_props.mutates_result:
             with plugins.runtime.QUERY_HISTORY as qh, plugins.runtime.QUERY_PERSISTENCE as qp:
-                query_id = await qp.store(user_id=self.session_get('user', 'id'),
-                                          curr_data=dict(form=self._curr_pquery_args.to_qp(),
-                                                         corpora=[self._curr_pquery_args.corpname],
-                                                         usesubcorp=self._curr_pquery_args.usesubcorp))
+                query_id = await qp.store(
+                    user_id=self.session_get('user', 'id'),
+                    curr_data=dict(
+                        form=self._curr_pquery_args.to_qp(),
+                        corpora=[self._curr_pquery_args.corpname],
+                        usesubcorp=self._curr_pquery_args.usesubcorp))
                 ts = await qh.store(
                     user_id=self.session_get('user', 'id'),
                     query_id=query_id, q_supertype='pquery')
                 for fn in self._on_query_store:
-                    fn([query_id], ts, result)
+                    fn([query_id], ts, resp.result)
 
     def _add_save_menu_item(self, label: str, save_format: Optional[str] = None, hint: Optional[str] = None):
         if save_format is None:

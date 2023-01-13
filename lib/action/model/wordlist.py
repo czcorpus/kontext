@@ -66,7 +66,7 @@ class WordlistActionModel(CorpusActionModel):
     def set_curr_wlform_args(self, args: WordlistFormArgs):
         self._curr_wlform_args = args
 
-    async def post_dispatch(self, action_props: ActionProps, result: Dict[str, Any], err_desc):
+    async def post_dispatch(self, action_props, resp, err_desc):
         await super().post_dispatch(action_props, result, err_desc)
         if action_props.mutates_result:
             with plugins.runtime.QUERY_HISTORY as qh, plugins.runtime.QUERY_PERSISTENCE as qp:
