@@ -39,6 +39,7 @@ from action.argmapping.conc.filter import (
     SubHitsFilterFormArgs)
 from action.argmapping.conc.other import (
     KwicSwitchArgs, LgroupOpArgs, LockedOpFormsArgs, SampleFormArgs)
+from action.result.concordance import QueryAction
 from action.argmapping.conc.sort import SortFormArgs
 from action.control import http_action
 from action.errors import NotFoundException, UserReadableException
@@ -79,7 +80,7 @@ async def first_form(_, req: KRequest, resp: KResponse):
 
 
 @bp.route('/query')
-@http_action(template='query.html', page_model='query', action_model=ConcActionModel)
+@http_action(template='query.html', page_model=QueryAction, action_model=ConcActionModel)
 async def query(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     amodel.disabled_menu_items = (
         MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
@@ -111,7 +112,7 @@ async def query(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     await amodel.attach_query_params(out)
     await amodel.attach_aligned_query_params(out)
     await amodel.export_subcorpora_list(out)
-    return out
+    resp.set_result(out)
 
 
 @bp.route('/query_submit', methods=['POST'])

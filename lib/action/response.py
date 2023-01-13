@@ -1,19 +1,41 @@
-from typing import Dict, Iterable, List, Tuple
+# Copyright (c) 2022 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2023 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright(c) 2023 Martin Zimandl <martin.zimandl@gmail.com>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2
+# dated June, 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+
+from typing import Dict, Iterable, List, Tuple, Any, TypeVar, Generic
 from urllib.parse import urlparse
 
 from action.cookie import KonTextCookie
 from action.errors import ForbiddenException
 from sanic.helpers import STATUS_CODES
+from action.templating import ResultType
 
+T = TypeVar('T', bound=ResultType)
 
-class KResponse:
+class KResponse(Generic[T]):
     """
-    KResponse provides a high level access to action responses. It is responsible
-    for setting HTTP status code, headers, for rendering output from result data
+    KResponse provides high level access to action responses including handling of response data.
+    It is responsible for setting HTTP status code, headers, for rendering output from result data
     (templating engine, JSON encoding,...) etc.
+
+    Response data are separated into two blocks:
+    - API response (type T)
+    - template data
     """
 
-    def __init__(self, root_url: str, redirect_safe_domains: Iterable[str], cookies_same_site: str):
+    def __init__(self, root_url: str, redirect_safe_domains: Iterable[str], cookies_same_site: str, result: T):
         self._root_url = root_url
         self._redirect_safe_domains: Tuple[str, ...] = (
             urlparse(self._root_url).netloc, *redirect_safe_domains)
@@ -22,6 +44,18 @@ class KResponse:
         self._new_cookies: KonTextCookie = KonTextCookie()
         self._cookies_same_site = cookies_same_site
         self._system_messages: List[Tuple[str, str]] = []
+        self._tpl_data: ResultType = {}
+        self._result: T = result
+
+    def set_result(self, result: T):
+        self._result = result
+
+    @property
+    def result(self):
+        return self._result
+    @property
+    def tpl_data(self):
+        return self._tpl_data
 
     def add_system_message(self, msg_type: str, text: str) -> None:
         """

@@ -233,15 +233,15 @@ class ConcActionModel(CorpusActionModel):
         """
         self._auto_generated_conc_ops.append((q_idx, query_form_args))
 
-    async def post_dispatch(self, action_props, result, err_desc):
+    async def post_dispatch(self, action_props, resp, err_desc):
         """
-        post_dispatch calls its descendant first and then
+        post_dispatch calls its descendant first, then
         it stores actual concordance parameters and updates
         action result accordingly
         """
-        await super().post_dispatch(action_props, result, err_desc)
+        await super().post_dispatch(action_props, resp, err_desc)
         # create and store concordance query key
-        if type(result) is dict:
+        if type(resp.result) is dict:
             if action_props.mutates_result:
                 next_query_keys, history_ts = await self._store_conc_params()
             else:
@@ -249,9 +249,9 @@ class ConcActionModel(CorpusActionModel):
                     'id', None)] if self._active_q_data else []
                 history_ts = None
             for fn in self._on_query_store:
-                fn(next_query_keys, history_ts, result)
+                fn(next_query_keys, history_ts, resp.result)
             self._update_output_with_conc_params(
-                next_query_keys[-1] if len(next_query_keys) else None, result)
+                next_query_keys[-1] if len(next_query_keys) else None, resp.result)
 
     async def _store_conc_params(self) -> Tuple[List[str], Optional[int]]:
         """

@@ -13,10 +13,11 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Any, Dict, Union
+from typing import Union
 from abc import abstractmethod, ABC
 from action.req_args import RequestArgsProxy, JSONRequestArgsProxy
 from action.props import ActionProps
+from action.response import KResponse
 
 from sanic import Sanic
 
@@ -27,7 +28,7 @@ class AbstractPageModel(ABC):
     """
 
     @abstractmethod
-    async def add_globals(self, app: Sanic, action_props: ActionProps, result: Dict[str, Any]):
+    async def add_globals(self, app: Sanic, action_props: ActionProps, resp: KResponse):
         pass
 
     @abstractmethod
@@ -45,7 +46,7 @@ class AbstractPageModel(ABC):
         pass
 
     @abstractmethod
-    async def post_dispatch(self, action_props: ActionProps, result, err_desc):
+    async def post_dispatch(self, action_props: ActionProps, resp: KResponse, err_desc):
         """
         Execute actions required after a user action is performed. The result
         argument is the one the user action returned. The err_desc argument may

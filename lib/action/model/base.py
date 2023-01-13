@@ -102,8 +102,12 @@ class BaseActionModel(AbstractPageModel):
         result['use_conc_toolbar'] = False
         result['shuffle_min_result_warning'] = 0
         result['multilevel_freq_dist_max_levels'] = 0
-        page_model = action_props.page_model if action_props.page_model else l10n.camelize(
-            action_props.action_name)
+        if action_props.page_model is None:
+            page_model = l10n.camelize(action_props.action_name)
+        elif type(action_props.page_model) is str:
+            page_model = action_props.page_model
+        else:
+            page_model = action_props.page_model.js_module
         result['page_model'] = page_model
         avail_languages = settings.get_full('global', 'translations')
         ui_lang = self._req.ui_lang.replace('_', '-') if self._req.ui_lang else 'en-US'
@@ -134,7 +138,7 @@ class BaseActionModel(AbstractPageModel):
                 raise UserReadableException(f'Unknown output format: {self._req.args.get("format")}')
         return create_req_arg_proxy(self._req.form, self._req.args, self._req.json)
 
-    async def post_dispatch(self, action_props, result, err_desc):
+    async def post_dispatch(self, action_props, resp, err_desc):
         pass
 
     async def resolve_error_state(self, req: KRequest, resp: KResponse, result, err: Exception):
