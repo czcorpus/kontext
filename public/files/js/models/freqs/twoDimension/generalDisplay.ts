@@ -94,7 +94,7 @@ export interface GeneralFreq2DModelState {
      * This is calculated on server because some data are already filtered there so the client
      * sees only a fraction.
      */
-    fullSize:number;
+    dataSize:number;
 
     usesAdHocSubcorpus:boolean;
 
@@ -147,9 +147,9 @@ export abstract class GeneralFreq2DModel<T extends GeneralFreq2DModelState> exte
             case FreqFilterQuantities.ABS_PERCENTILE:
             case FreqFilterQuantities.IPM_PERCENTILE:
                 const [sortMap, origSize] = this.createPercentileSortMapping(state);
-                const emptyItemsRatio = 1 - origSize / state.fullSize;
+                const emptyItemsRatio = 1 - origSize / state.dataSize;
                 return (v:CTFreqCell) => {
-                    return v && sortMap[v.origOrder] / state.fullSize + emptyItemsRatio >= minFreq / 100;
+                    return v && sortMap[v.origOrder] / state.dataSize + emptyItemsRatio >= minFreq / 100;
                 }
             default:
                 throw new Error('Unknown freq type: ' + state.minFreqType);
