@@ -15,12 +15,18 @@ services:
     networks:
       - databases
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
 
   redis:
     image: redis:latest
     networks:
       - databases
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1s
+      timeout: 10s
+      retries: 5
 
 networks:
   databases: {}
