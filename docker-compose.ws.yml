@@ -17,14 +17,14 @@ services:
       - databases
       - kontext
     depends_on:
-      - redis
-      - kontext
+      redis:
+        condition: service_healthy
 
   nginx:
     volumes:
       - ./scripts/install/conf/docker/nginx.ws.conf:/etc/nginx/conf.d/default.conf
     depends_on:
-      - ws
+      ws: service_started
 
 volumes:
   corpora-data: {}

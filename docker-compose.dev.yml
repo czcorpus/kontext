@@ -42,7 +42,8 @@ services:
       - databases
       - kontext
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
 
   rq-worker:
     build:
@@ -64,8 +65,10 @@ services:
     networks:
       - databases
     depends_on:
-      - redis
-      - kontext-dev
+      redis:
+        condition: service_healthy
+      kontext-dev:
+        condition: service_started
 
   rq-scheduler:
     build:
@@ -77,8 +80,10 @@ services:
     networks:
       - databases
     depends_on:
-      - redis
-    restart: always
+      redis:
+        condition: service_healthy
+      kontext-dev:
+        condition: service_started
 
   redis:
     image: redis:latest
@@ -90,6 +95,11 @@ services:
       - "16379:6379"
     volumes:
       - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1s
+      timeout: 10s
+      retries: 5
 
   nginx:
     image: nginx:latest
@@ -108,7 +118,8 @@ services:
     networks:
       - kontext
     depends_on:
-      - kontext-dev
+      kontext-dev:
+        condition: service_started
 
 volumes:
   dist: {}

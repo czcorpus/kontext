@@ -15,6 +15,11 @@ services:
       - "3306:3306"
     networks:
       - databases
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "--password=$MYSQL_ROOT_PASSWORD"]
+      interval: 1s
+      timeout: 10s
+      retries: 5
 
 volumes:
   mdbdata: {}
