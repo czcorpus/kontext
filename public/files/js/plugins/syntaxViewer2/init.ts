@@ -169,12 +169,17 @@ class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> implements P
                 paddingLeft: 20,
                 paddingRight: 20,
                 onOverflow: (width:number, height:number) => {
-                    const mo = document.getElementById('modal-overlay');
-                    const box = mo.querySelector('div.syntax-tree') as HTMLElement;
-                    box.style['top'] = '0';
-                    box.style['left'] = '50%';
-                    box.style['transform'] = 'translate(-50%, 0%)';
+                    const box = document.querySelector('.syntax-tree.tooltip-box') as HTMLElement;
+                    if (box !== null) {
+                        box.style['top'] = '0';
+                        box.style['left'] = '50%';
+                        box.style['transform'] = 'translate(-50%, 0%)';
+
+                    } else {
+                        throw new Error('Failed to correct overflowing box - wrapping element not found');
+                    }
                     return [width, height];
+
                 }
             }
         );
