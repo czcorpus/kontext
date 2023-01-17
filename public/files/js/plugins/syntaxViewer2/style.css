@@ -1,3 +1,7 @@
+.syntax-tree {
+    width: 100%;
+}
+
 .syntax-tree img {
     cursor: pointer;
 }
