@@ -91,6 +91,27 @@ describe('Subcorpora', () => {
         cy.get('td').filter((index, elt) => { return elt.innerText.match(/draft/) }).should('have.length', 2);
     });
 
+    it('creates subcorpus draft and switches to new subcorpus view', () => {
+        cy.url().should('include', '/query');
+
+        // create subcorpus draft from text type
+        cy.contains('h2 a', 'Restrict search').click();
+        cy.get('input[type=checkbox]').check('1');
+        cy.contains('a.util-button', 'Save as a subcorpus draft').click();
+        cy.get('.closeable-frame input[name=subcorpName]').type('sus9');
+        cy.get('.closeable-frame input[type=checkbox]').check();
+        cy.contains('button', 'Create draft').click();
+
+        // should be on new page
+        cy.url().should('include', '/subcorpus/new');
+
+        cy.hoverNthMenuItem(2);
+        cy.clickMenuItem(2, 2);
+
+        cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus9').should('have.length', 1);
+        deleteSubcorpus('sus9');
+    });
+
     it('creates subcorpus from draft', () => {
         // open create subcorpus
         cy.hoverNthMenuItem(2);
