@@ -584,7 +584,7 @@ class ManateeBackend(SearchBackend):
             tb = TreeBuilder()
             tree_list.append(tb.process(conf, parsed_data))
         template = TreexTemplate(tree_id_list, tree_list, tree_configs)
-        return template.export(), TreeNodeEncoder
+        return await template.export(), TreeNodeEncoder
 
 
 class TreeNodeEncoder(json.JSONEncoder):
