@@ -62,13 +62,13 @@ export class ViewPageModels {
     ttDistModel:TextTypesDistModel;
     dashboardModel:ConcDashboard;
     usageTipsModel:UsageTipsModel;
-    syntaxViewModel:IModel<PluginInterfaces.SyntaxViewer.BaseState>;
 }
 
 
 export class MainModuleArgs extends ViewPageModels {
     dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
+    SyntaxViewComponent:React.ComponentClass|React.FC;
 }
 
 
@@ -113,7 +113,7 @@ export function init({
     concSummaryModel,
     ttDistModel,
     dashboardModel,
-    syntaxViewModel
+    SyntaxViewComponent
 }:MainModuleArgs):MainViews {
 
     const layoutViews = he.getLayoutViews();
@@ -518,33 +518,14 @@ export function init({
 
     // ------------------------- <SyntaxViewPane /> ----------------------------
 
-    interface SyntaxViewPaneProps {
-        onCloseClick:()=>void;
-    }
 
-    class SyntaxViewPane extends React.PureComponent<SyntaxViewPaneProps & PluginInterfaces.SyntaxViewer.BaseState> {
-
-        render() {
-            return (
-                <layoutViews.ModalOverlay onCloseKey={this.props.onCloseClick} isScrollable={true}>
-                    <layoutViews.PopupBox onCloseClick={this.props.onCloseClick}
-                            customClass="syntax-tree">
-                        <S2.SyntaxViewPane id="syntax-view-pane">
-                            {this.props.isBusy ?
-                                (<div className="ajax-loader">
-                                    <img src={he.createStaticUrl('img/ajax-loader.gif')}
-                                            alt={he.translate('global__loading')} />
-                                </div>) : null
-                            }
-                        </S2.SyntaxViewPane>
-                    </layoutViews.PopupBox>
-                </layoutViews.ModalOverlay>
-            );
-        }
-    };
-
-    const BoundSyntaxViewPane = BoundWithProps<SyntaxViewPaneProps, PluginInterfaces.SyntaxViewer.BaseState>(SyntaxViewPane, syntaxViewModel);
-
+    const SyntaxViewPane:React.FC<{onCloseClick:()=>void}> = (props) => (
+        <layoutViews.ModalOverlay onCloseKey={props.onCloseClick} isScrollable={true}>
+            <layoutViews.PopupBox onCloseClick={props.onCloseClick}>
+                <SyntaxViewComponent />
+            </layoutViews.PopupBox>
+        </layoutViews.ModalOverlay>
+    );
 
     // ------------------------- <ConcordanceView /> ---------------------------
 
@@ -556,6 +537,12 @@ export function init({
             this._handleDetailCloseClick = this._handleDetailCloseClick.bind(this);
             this._handleAnonymousUserWarning = this._handleAnonymousUserWarning.bind(this);
             this._handleSyntaxBoxClose = this._handleSyntaxBoxClose.bind(this);
+        }
+
+        _handleSyntaxBoxClose() {
+            dispatcher.dispatch<typeof Actions.CloseSyntaxView>({
+                name: Actions.CloseSyntaxView.name
+            });
         }
 
         _handleDetailCloseClick() {
@@ -584,17 +571,11 @@ export function init({
             });
         }
 
-        _handleSyntaxBoxClose() {
-            dispatcher.dispatch<typeof Actions.CloseSyntaxView>({
-                name: Actions.CloseSyntaxView.name
-            });
-        }
-
         render() {
             return (
                 <S.ConcordanceView>
                     {this.props.syntaxViewVisible ?
-                        <BoundSyntaxViewPane onCloseClick={this._handleSyntaxBoxClose} /> : null}
+                        <SyntaxViewPane onCloseClick={this._handleSyntaxBoxClose} /> : null}
                     {this.props.kwicDetailVisible ?
                         <concDetailViews.ConcordanceDetail closeClickHandler={this._handleDetailCloseClick} />
                         : null}

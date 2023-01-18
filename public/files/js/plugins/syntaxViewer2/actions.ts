@@ -28,4 +28,11 @@ export class Actions {
     }> = {
         name: 'SYNTAX_VIEWER_SWITCH_CORPUS'
     }
+
+    static AreaResized:Action<{
+        width:number;
+        height:number;
+    }> = {
+        name: 'SYNTAX_VIEWER_AREA_RESIZED'
+    }
 }
