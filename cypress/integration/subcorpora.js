@@ -163,15 +163,52 @@ describe('Subcorpora', () => {
         cy.get('#my-subcorpora-mount table.data tbody tr').should('have.length', 1);
     });
 
-    it('creates subcorpus draft, edits it and removes it', () => {
-        createSubcorpus('sus-sub', 'description', ['1'], true);
+    it('creates subcorpus, edits it and removes it', () => {
+        createSubcorpus('sus4', 'some description', ['1'], false);
 
         // check values and edit draft in properties
         cy.url().should('include', '/subcorpus/list');
-        openProperties('sus-sub');
+
+        cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus4').should('have.length', 1);
+        cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus4new').should('have.length', 0);
+        cy.get('#my-subcorpora-mount div.inputs input#inp_pattern').type('beautiful');
+        cy.wait(500); // searching is delayed
+        cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'Found in description').should('have.length', 0);
+        cy.get('#my-subcorpora-mount div.inputs input#inp_pattern').clear();
+        cy.wait(500); // searching is delayed
+
+        openProperties('sus4');
         cy.get('.closeable-frame').contains('button', 'Name and public description').click();
-        cy.get('.closeable-frame input').should('have.value', 'sus-sub');
-        cy.get('.closeable-frame input[type=text]').clear().type('new-name');
+        cy.get('.closeable-frame input[type=text]').should('have.value', 'sus4');
+        cy.get('.closeable-frame input[type=text]').clear().type('sus4new');
+        cy.get('.closeable-frame textarea').should('have.value', 'some description');
+        cy.get('.closeable-frame textarea').clear().type('beautiful subcorpus');
+        cy.get('.closeable-frame').contains('button', 'Update name and public description').click();
+        closeProperties();
+
+        cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus4new').should('have.length', 1);
+        cy.get('#my-subcorpora-mount div.inputs input#inp_pattern').type('beautiful');
+        cy.wait(500); // searching is delayed
+        cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'Found in description').should('have.length', 1);
+
+        openProperties('sus4new');
+        cy.get('.closeable-frame').contains('button', 'Name and public description').click();
+        cy.get('.closeable-frame input[type=text]').should('have.value', 'sus4new');
+        cy.get('.closeable-frame textarea').should('have.value', 'beautiful subcorpus');
+        closeProperties();
+
+        deleteSubcorpus('sus4new');
+    });
+
+    it('creates subcorpus draft, edits it and removes it', () => {
+        createSubcorpus('sus5', 'description', ['1'], true);
+
+        // check values and edit draft in properties
+        cy.url().should('include', '/subcorpus/list');
+        openProperties('sus5');
+        cy.get('.closeable-frame').contains('button', 'Name and public description').click();
+        cy.get('.closeable-frame input').should('have.value', 'sus5');
+        cy.get('.closeable-frame input[type=text]').clear().type('sus5new');
         cy.get('.closeable-frame textarea').should('have.value', 'description');
         cy.get('.closeable-frame textarea').clear().type('new description');
         cy.get('.closeable-frame').contains('button', 'Update name and public description').click();
@@ -181,14 +218,13 @@ describe('Subcorpora', () => {
         cy.get('.closeable-frame').get('input[value=2]').should('not.be.checked');
         cy.get('.closeable-frame').get('input[type=checkbox]').check('2');
         cy.get('.closeable-frame').contains('button', 'Save draft').click();
-
         closeProperties();
 
         // check change and edit draft on subcorpus/new page
-        cy.get('#my-subcorpora-mount table.data tbody tr a').contains('new-name').click();
+        cy.get('#my-subcorpora-mount table.data tbody tr a').contains('sus5new').click();
         cy.url().should('include', '/subcorpus/new');
-        cy.get('#subcorp-form-mount table.form .subcname input').should('have.value', 'new-name');
-        cy.get('#subcorp-form-mount table.form .subcname input').clear().type('old-name');
+        cy.get('#subcorp-form-mount table.form .subcname input').should('have.value', 'sus5new');
+        cy.get('#subcorp-form-mount table.form .subcname input').clear().type('sus5old');
         // TODO - for some reason textarea is empty, manually it works
         // cy.get('#subcorp-form-mount table.form textarea').should('have.value', 'new description');
         cy.get('#subcorp-form-mount table.form textarea').clear().type('old description');
@@ -199,27 +235,27 @@ describe('Subcorpora', () => {
 
         // check change in properties
         cy.url().should('include', '/subcorpus/list');
-        openProperties('old-name');
+        openProperties('sus5old');
         cy.get('.closeable-frame').contains('button', 'Subcorpus structure').click();
         cy.get('.closeable-frame').get('input[value=1]').should('not.be.checked');
         cy.get('.closeable-frame').get('input[value=2]').should('be.checked');
         cy.get('.closeable-frame').contains('button', 'Name and public description').click();
-        cy.get('.closeable-frame input').should('have.value', 'old-name');
+        cy.get('.closeable-frame input').should('have.value', 'sus5old');
         cy.get('.closeable-frame textarea').should('have.value', 'old description');
         closeProperties();
 
-        deleteSubcorpus('old-name');
+        deleteSubcorpus('sus5old');
     });
 
     it('tests archiving subcorpus', () => {
-        createSubcorpus('archive-sub', '', ['1'], false);
+        createSubcorpus('sus6', '', ['1'], false);
 
-        // table contains `archive-sub` subcorpus
+        // table contains `sus6` subcorpus
         cy.url().should('include', '/subcorpus/list');
-        cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'archive-sub').should('have.length', 1);
+        cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus6').should('have.length', 1);
 
         // archive it
-        openProperties('archive-sub');
+        openProperties('sus6');
         cy.get('.closeable-frame').contains('button', 'Archive').click();
         closeProperties();
 
@@ -229,11 +265,43 @@ describe('Subcorpora', () => {
         cy.get('#my-subcorpora-mount table.data tbody tr').contains('archived').should('have.length', 1);
 
         // restore archived subcorpus
-        openProperties('archive-sub');
+        openProperties('sus6');
         cy.get('.closeable-frame').contains('button', 'Restore').click();
         closeProperties();
         cy.get('#my-subcorpora-mount table.data tbody tr').contains('archived').should('have.length', 0);
 
-        deleteSubcorpus('archive-sub');
+        deleteSubcorpus('sus6');
+    });
+
+    it('tests reusing subcorpus', () => {
+        createSubcorpus('sus7', '', ['1'], false);
+
+        cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus7').should('have.length', 1);
+        cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus8').should('have.length', 0);
+
+        openProperties('sus7');
+        cy.get('.closeable-frame').contains('button', 'Subcorpus structure').click();
+        cy.get('.closeable-frame input[type=checkbox]').check('10');
+
+        cy.window().then((p) => {
+            cy.stub(p, 'prompt').returns('sus8');
+            cy.get('.closeable-frame').contains('button', 'Save as').click();
+        });
+        cy.get('div.messages-mount div.message').should('have.length', 1);
+        cy.get('div.messages-mount div.message').contains('A new subcorpus is being created').should('have.length', 1);
+        cy.get('div.messages-mount div.message a.close-icon').click();
+        closeProperties();
+
+        cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus7').should('have.length', 1);
+        cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus8').should('have.length', 1);
+
+        openProperties('sus8');
+        cy.get('.closeable-frame').contains('button', 'Subcorpus structure').click();
+        cy.get('.closeable-frame input[value=1]').should('be.checked');
+        cy.get('.closeable-frame input[value=10]').should('be.checked');
+        closeProperties();
+
+        deleteSubcorpus('sus7');
+        deleteSubcorpus('sus8');
     });
 });
