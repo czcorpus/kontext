@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2021 Charles University in Prague, Faculty of Arts,
+ * Copyright (c) 2023 Charles University in Prague, Faculty of Arts,
  *                    Institute of the Czech National Corpus
- * Copyright (c) 2021 Martin Zimandl <martin.zimandl@gmail.com>
+ * Copyright (c) 2023 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,15 +18,23 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import styled from 'styled-components';
-import * as theme from '../theme/default';
+import * as React from 'react';
+import { IActionDispatcher, IModel } from 'kombo';
+import { ComponentHelpers } from '../../types/kontext';
+import { SyntaxTreeViewerState } from './common';
 
+export function init(
+    dispatcher:IActionDispatcher,
+    he:ComponentHelpers,
+    model:IModel<SyntaxTreeViewerState>
+):React.FC {
 
+    const wrapper:React.FC = (props) => (
+        <div>
 
-// ---------------- <UsageTips /> --------------------------------------
+        </div>
+    );
 
-export const UsageTips = styled.div`
-    .next-hint a {
-        text-decoration: none;
-    }
-`;
+    return wrapper;
+
+}

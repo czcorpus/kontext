@@ -48,6 +48,11 @@ class KResponse(Generic[T]):
         self._result: T = result
 
     def set_result(self, result: T):
+        """
+        Set action result. The preferable type is BaseResult as
+        it provides typed values and also information about JS/TS
+        module for result handling.
+        """
         self._result = result
 
     @property

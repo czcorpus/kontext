@@ -33,12 +33,11 @@ import { HTTP, List, pipe } from 'cnc-tskit';
 import { Actions } from '../syntaxViewer2/actions';
 import { Actions as ConcActions } from '../../models/concordance/actions';
 import { IPluginApi } from '../../types/plugins/common';
+import { SyntaxTreeViewerState } from './common';
+import { init as viewInit } from './view';
+import * as React from 'react';
 require('./style.css'); // webpack
 
-
-export interface SyntaxTreeViewerState extends PluginInterfaces.SyntaxViewer.BaseState {
-    data:any; // TODO type
-}
 
 /**
  *
@@ -49,9 +48,9 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
 
     private resizeThrottleTimer:number;
 
-    private errorHandler:(e:Error)=>void;
-
     private corpusSelectHandler:(e)=>void;
+
+    private view:React.FC;
 
     constructor(dispatcher:IFullActionControl, pluginApi:IPluginApi) {
         super(
@@ -65,6 +64,7 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
             }
         );
         this.pluginApi = pluginApi;
+        this.view = viewInit(dispatcher, pluginApi.getComponentHelpers(), this);
 
         this.addActionHandler<typeof ConcActions.ShowSyntaxView>(
             ConcActions.ShowSyntaxView.name,
@@ -121,6 +121,10 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
         return this;
     }
 
+    getView():React.FC|React.ComponentClass {
+        return this.view;
+    }
+
     onPageResize = () => {
         const target = document.getElementById(this.state.targetHTMLElementID);
         if (this.resizeThrottleTimer) {
@@ -167,15 +171,8 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
                     name: ConcActions.CloseSyntaxView.name
                 });
                 this.pluginApi.showMessage('error', error);
-                if (this.errorHandler) {
-                    this.errorHandler(error);
-                }
             }
         });
-    }
-
-    registerOnError(fn:(e:Error)=>void):void {
-        this.errorHandler = fn;
     }
 
     private renderTree(target:HTMLElement):void {
@@ -199,12 +196,12 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
             $(target).append(corpusSwitch);
             $(target).append(window.document.createElement('hr'));
         }
-        
+
         const treexFrame = window.document.createElement('div');
         treexFrame.style['width'] = `${(window.innerWidth - 55).toFixed(0)}px`;
         treexFrame.style['height'] = `${(window.innerHeight - 70).toFixed(0)}px`;
         treexFrame.style['overflow'] = 'auto';
-        
+
         $(target).append(treexFrame);
         $(treexFrame).treexView(this.state.data);
     }

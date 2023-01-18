@@ -916,7 +916,6 @@ export class ViewPage {
 
     private initModels(
         queryFormArgs:formArgs.QueryFormArgsResponse,
-        syntaxViewer:PluginInterfaces.SyntaxViewer.IPlugin,
         tokenConnect:PluginInterfaces.TokenConnect.IPlugin
     ):ViewConfiguration {
 
@@ -995,7 +994,6 @@ export class ViewPage {
                 saveLinkFn: this.setDownloadLink.bind(this),
                 quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit')
             }),
-            syntaxViewer,
             lineViewProps,
             this.layoutModel.getConf<Array<ServerLineData>>('Lines')
         );
@@ -1025,8 +1023,6 @@ export class ViewPage {
                 isBusy: false
             }
         );
-
-        this.viewModels.syntaxViewModel = syntaxViewer.getModel();
 
         this.viewModels.lineSelectionModel = new LineSelectionModel({
             layoutModel: this.layoutModel,
@@ -1108,10 +1104,10 @@ export class ViewPage {
             const ttData = this.layoutModel.getConf<TTInitialData>('textTypesData');
             const [ttModel, ttInitialData] = this.initTextTypesModel(ttData);
             this.queryModels.textTypesModel = ttModel;
-            let syntaxViewerModel:PluginInterfaces.SyntaxViewer.IPlugin =
+            let syntaxViewerPlugin:PluginInterfaces.SyntaxViewer.IPlugin =
                 syntaxViewerInit(this.layoutModel.pluginApi());
-            if (!this.layoutModel.isNotEmptyPlugin(syntaxViewerModel)) {
-                syntaxViewerModel = new DummySyntaxViewModel(
+            if (!this.layoutModel.isNotEmptyPlugin(syntaxViewerPlugin)) {
+                syntaxViewerPlugin = new DummySyntaxViewModel(
                     this.layoutModel.dispatcher,
                     {
                         isBusy: false,
@@ -1129,13 +1125,13 @@ export class ViewPage {
 
             const lineViewProps = this.initModels(
                 queryFormArgs,
-                syntaxViewerModel,
                 this.initTokenConnect()
             );
 
             this.concViews = concViewsInit({
                 dispatcher: this.layoutModel.dispatcher,
                 he: this.layoutModel.getComponentHelpers(),
+                SyntaxViewComponent: syntaxViewerPlugin.getView(),
                 ...this.viewModels
             });
             const tagHelperPlg = tagHelperPlugin(this.layoutModel.pluginApi());

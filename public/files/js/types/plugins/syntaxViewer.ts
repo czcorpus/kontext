@@ -19,16 +19,15 @@
  */
 
 import { IModel } from 'kombo';
+import * as React from 'react';
 import { BasePlugin, IPluginApi } from './common';
 
 // ------------------------------------------------------------------------
 // ------------------------------ [syntax_viewer] plug-in -----------------
 
 export interface IPlugin extends BasePlugin {
-    close():void;
-    onPageResize():void;
-    registerOnError(fn:(e:Error)=>void):void;
     getModel():IModel<BaseState>;
+    getView():React.FC|React.ComponentClass;
 }
 
 export interface Factory {

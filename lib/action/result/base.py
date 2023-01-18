@@ -13,10 +13,29 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Optional
+from typing import Optional, TypeVar, Generic
 from dataclasses import dataclass
 
+T = TypeVar('T')
+
 @dataclass
-class BaseResult:
+class BaseResult(Generic[T]):
+    """
+    Base result represents the most general value representing
+    a result of an action function.
+
+    This value can be set as a result to KResponse (KResponse.set_result(result)).
+    """
 
     js_module: Optional[str] = None
+    """
+    js_module represents JS/TS module providing PageModel for a respective
+    result page.
+    """
+
+    value: Optional[T] = None
+    """
+    value is a raw API response providing action result data which can be
+    used either "as is" or with matching "js_module" value providing client-side
+    application to handle the data. 
+    """
