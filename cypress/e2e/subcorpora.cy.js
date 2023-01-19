@@ -84,8 +84,6 @@ describe('Subcorpora', () => {
         cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus2').contains('td', 'draft').should('have.length', 1);
 
         deleteSubcorpus('sus2');
-        cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus2').contains('td', 'draft').should('have.length', 0);
-        cy.wait(500); // searching is delayed
         cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus2').should('have.length', 0);
     });
 
