@@ -32,7 +32,7 @@ describe('Subcorpora', () => {
     }
 
     const openProperties = (name) => {
-        cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', name).find('a.properties-subc').click();
+        cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', name).should('have.length', 1).find('a.properties-subc').click();
     }
 
     const closeProperties = () => {
@@ -42,6 +42,10 @@ describe('Subcorpora', () => {
     const deleteSubcorpus = (name) => {
         openProperties(name);
         cy.get('.closeable-frame').contains('button', 'Delete').click();
+    }
+
+    const closeMessages = (message) => {
+        cy.get('div.messages-mount').contains('div.message', message).should('have.length', 1).find('a.close-icon').click();
     }
 
     it('tests empty subcorpora list', () => {
@@ -80,8 +84,6 @@ describe('Subcorpora', () => {
         cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus2').contains('td', 'draft').should('have.length', 1);
 
         deleteSubcorpus('sus2');
-        cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus2').contains('td', 'draft').should('have.length', 0);
-        cy.wait(500); // searching is delayed
         cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus2').should('have.length', 0);
     });
 
@@ -175,6 +177,7 @@ describe('Subcorpora', () => {
         cy.get('.closeable-frame textarea').should('have.value', 'some description');
         cy.get('.closeable-frame textarea').clear().type('beautiful subcorpus');
         cy.get('.closeable-frame').contains('button', 'Update name and public description').click();
+        closeMessages('Subcorpus description has been updated');
         closeProperties();
 
         cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus7new').should('have.length', 1);
@@ -278,9 +281,7 @@ describe('Subcorpora', () => {
             cy.stub(p, 'prompt').returns('sus11');
             cy.get('.closeable-frame').contains('button', 'Save as').click();
         });
-        cy.get('div.messages-mount div.message').should('have.length', 1);
-        cy.get('div.messages-mount div.message').contains('A new subcorpus is being created').should('have.length', 1);
-        cy.get('div.messages-mount div.message a.close-icon').click();
+        closeMessages('A new subcorpus is being created');
         closeProperties();
 
         cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus10').should('have.length', 1);
