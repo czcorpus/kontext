@@ -169,7 +169,7 @@ class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> implements P
                 paddingLeft: 20,
                 paddingRight: 20,
                 onOverflow: (width:number, height:number) => {
-                    const box = document.querySelector('.syntax-tree.tooltip-box') as HTMLElement;
+                    const box = document.querySelector('.syntax-tree-frame.tooltip-box') as HTMLElement;
                     if (box !== null) {
                         box.style['top'] = '0';
                         box.style['left'] = '50%';

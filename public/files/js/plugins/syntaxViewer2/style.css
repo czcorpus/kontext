@@ -1,20 +1,20 @@
-.syntax-tree {
+.syntax-tree-frame {
     width: 100%;
 }
 
-.syntax-tree img {
+.syntax-tree-frame img {
     cursor: pointer;
 }
 
-.tooltip-box.syntax-tree {
+.tooltip-box.syntax-tree-frame {
     padding: 0;
 }
 
-.syntax-tree {
+.syntax-tree-frame {
     box-sizing: border-box;
 }
 
-.syntax-tree .token-node {
+.syntax-tree-frame .token-node {
     font-size: 8pt;
     font-family: Verdana, sans-serif;
     background-color: RGBA(240, 240, 240, 0.8);
@@ -26,41 +26,41 @@
     box-shadow: 0 2px 4px #A0A0A0;
 }
 
-.syntax-tree .token-node.focused {
+.syntax-tree-frame .token-node.focused {
     background-color: #FFF;
     box-shadow: 0 2px 4px #E2007A;
 }
 
-.syntax-tree .sentence {
+.syntax-tree-frame .sentence {
     padding: 0.6em;
     line-height: 1.4em;
     font-size: 1.1em;
     display: flex;
 }
 
-.syntax-tree .sentence span {
+.syntax-tree-frame .sentence span {
     padding: 0.1em 0.1em;
 }
 
-.syntax-tree .sentence span.focused {
+.syntax-tree-frame .sentence span.focused {
     background-color: RGBA(0, 158, 224, 0.4);
 }
 
-.syntax-tree .sentence span.multival-start {
+.syntax-tree-frame .sentence span.multival-start {
     padding-right: 0;
 }
 
-.syntax-tree .sentence span.multival-end {
+.syntax-tree-frame .sentence span.multival-end {
     padding-left: 0;
 }
 
-.syntax-tree .sentence span.kwic {
+.syntax-tree-frame .sentence span.kwic {
     font-weight: bold;
     color: #E2007A;
 }
 
 
-.syntax-tree table.node-detail {
+.syntax-tree-frame table.node-detail {
     border: 1px solid #dddddd;
     border-radius: 3px;
     box-shadow: 0 2px 4px #A0A0A0;
@@ -70,39 +70,39 @@
     font-size: 0.9em;
 }
 
-.syntax-tree table.node-detail th {
+.syntax-tree-frame table.node-detail th {
     padding-right: 0.7em;
     padding-left: 0.7em;
     text-align: right;
 }
 
-.syntax-tree table.node-detail td {
+.syntax-tree-frame table.node-detail td {
     padding-right: 0.4em;
 }
 
-.syntax-tree table.node-detail td.controls {
+.syntax-tree-frame table.node-detail td.controls {
     text-align: right;
     padding: 0.4em;
 }
 
-.syntax-tree table.node-detail td.controls a {
+.syntax-tree-frame table.node-detail td.controls a {
     cursor: pointer;
 }
 
-.syntax-tree table.node-detail  td.controls a img {
+.syntax-tree-frame table.node-detail  td.controls a img {
     width: 1em;
 }
 
-.syntax-tree table.node-detail td a.detail-ref {
+.syntax-tree-frame table.node-detail td a.detail-ref {
     color: #009EE0;
     text-decoration: none;
 }
 
-.syntax-tree table.node-detail  td a.detail-ref:hover {
+.syntax-tree-frame table.node-detail  td a.detail-ref:hover {
     text-decoration: underline;
 }
 
-.syntax-tree .corpus-switch {
+.syntax-tree-frame .corpus-switch {
     padding: 0.1em;
     margin: 0.4em 0 0 0.6em;
 }

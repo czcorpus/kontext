@@ -515,7 +515,7 @@ export function init({
             return (
                 <layoutViews.ModalOverlay onCloseKey={this.props.onCloseClick} isScrollable={true}>
                     <layoutViews.PopupBox onCloseClick={this.props.onCloseClick}
-                            customClass="syntax-tree">
+                            customClass="syntax-tree-frame">
                         <S2.SyntaxViewPane id="syntax-view-pane">
                             {this.props.isBusy ?
                                 (<div className="ajax-loader">
