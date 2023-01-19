@@ -197,11 +197,11 @@ class MySQLSubcArchive(AbstractSubcArchive):
             return [row['corpus_name'] async for row in cursor]
 
     async def list(self, user_id, filter_args, corpname=None, offset=0, limit=None, include_drafts=False):
-        if (filter_args.archived_only and filter_args.active_only or
-                filter_args.archived_only and filter_args.published_only):
+        if (filter_args.archived_only and filter_args.active_only) or \
+           (filter_args.archived_only and filter_args.published_only):
             raise SubcArchiveException('Invalid filter specified')
 
-        where, args = ['t1.user_id = %s'], [user_id]
+        where, args = ['(t1.user_id IS NOT NULL AND t1.user_id = %s)'], [user_id]
         if corpname is not None:
             where.append('t1.corpus_name = %s')
             args.append(corpname)
@@ -214,12 +214,12 @@ class MySQLSubcArchive(AbstractSubcArchive):
 
         if filter_args.pattern:
             v = f'%{filter_args.pattern}%'
-            where.append('t1.name LIKE %s OR t1.public_description LIKE %s')
+            where.append('(t1.name LIKE %s OR t1.public_description LIKE %s)')
             args.extend([v, v])
 
         if filter_args.ia_query:
             v = f'{filter_args.ia_query}%'
-            where.append(f't1.id LIKE %s OR t2.{self._bconf.user_table_lastname_col} LIKE %s')
+            where.append(f'(t1.id LIKE %s OR t2.{self._bconf.user_table_lastname_col} LIKE %s)')
             args.extend([v, v])
 
         if limit is None:

@@ -54,7 +54,7 @@ describe('Subcorpora', () => {
     });
 
     it('creates and deletes subcorpus', () => {
-        createSubcorpus('sus1', '', ['1'], false);
+        createSubcorpus('sus1', 'description', ['1'], false);
 
         // table contains `sus1` subcorpus
         cy.url().should('include', '/subcorpus/list');
@@ -66,10 +66,13 @@ describe('Subcorpora', () => {
         cy.clickMenuItem(2, 2);
         deleteSubcorpus('sus1');
         cy.get('#my-subcorpora-mount table.data tbody tr').contains('sus1').should('have.length', 0);
+        cy.get('#my-subcorpora-mount div.inputs input#inp_pattern').type('description');
+        cy.wait(500); // searching is delayed
+        cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus1').should('have.length', 0);
     });
 
     it('creates and deletes subcorpus draft', () => {
-        createSubcorpus('sus2', '', ['1'], true);
+        createSubcorpus('sus2', 'description', ['1'], true);
 
         // contains one subcorpus
         cy.url().should('include', '/subcorpus/list');
@@ -78,6 +81,8 @@ describe('Subcorpora', () => {
 
         deleteSubcorpus('sus2');
         cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus2').contains('td', 'draft').should('have.length', 0);
+        cy.wait(500); // searching is delayed
+        cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus2').should('have.length', 0);
     });
 
     it('creates subcorpus draft from query view', () => {
@@ -120,7 +125,7 @@ describe('Subcorpora', () => {
     });
 
     it('creates subcorpus from draft', () => {
-        createSubcorpus('sus5', '', ['1'], true);
+        createSubcorpus('sus5', 'description', ['1'], true);
         cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus5').contains('td', 'draft').should('have.length', 1);
 
         cy.get('#my-subcorpora-mount table.data tbody tr a').contains('sus5').click();
@@ -138,7 +143,7 @@ describe('Subcorpora', () => {
     });
 
     it('creates subcorpus from draft using properties window', () => {
-        createSubcorpus('sus6', '', ['1'], true);
+        createSubcorpus('sus6', 'description', ['1'], true);
         cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus6').contains('td', 'draft').should('have.length', 1);
         openProperties('sus6');
         cy.contains('button', 'Subcorpus structure').click();
@@ -162,11 +167,6 @@ describe('Subcorpora', () => {
 
         cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus7').should('have.length', 1);
         cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus7new').should('have.length', 0);
-        cy.get('#my-subcorpora-mount div.inputs input#inp_pattern').type('beautiful');
-        cy.wait(500); // searching is delayed
-        cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'Found in description').should('have.length', 0);
-        cy.get('#my-subcorpora-mount div.inputs input#inp_pattern').clear();
-        cy.wait(500); // searching is delayed
 
         openProperties('sus7');
         cy.get('.closeable-frame').contains('button', 'Name and public description').click();
@@ -180,7 +180,7 @@ describe('Subcorpora', () => {
         cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus7new').should('have.length', 1);
         cy.get('#my-subcorpora-mount div.inputs input#inp_pattern').type('beautiful');
         cy.wait(500); // searching is delayed
-        cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'Found in description').should('have.length', 1);
+        cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus7new').contains('tr', 'Found in description').should('have.length', 1);
 
         openProperties('sus7new');
         cy.get('.closeable-frame').contains('button', 'Name and public description').click();
@@ -239,7 +239,7 @@ describe('Subcorpora', () => {
     });
 
     it('tests archiving subcorpus', () => {
-        createSubcorpus('sus9', '', ['1'], false);
+        createSubcorpus('sus9', 'description', ['1'], false);
 
         // table contains `sus9` subcorpus
         cy.url().should('include', '/subcorpus/list');
@@ -265,7 +265,7 @@ describe('Subcorpora', () => {
     });
 
     it('tests reusing subcorpus', () => {
-        createSubcorpus('sus10', '', ['1'], false);
+        createSubcorpus('sus10', 'description', ['1'], false);
 
         cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus10').should('have.length', 1);
         cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus11').should('have.length', 0);
@@ -298,9 +298,9 @@ describe('Subcorpora', () => {
     });
 
     it('checks subcorp page size settings', () => {
-        createSubcorpus('sus12', '', ['1'], false);
-        createSubcorpus('sus13', '', ['1'], false);
-        createSubcorpus('sus14', '', ['1'], false);
+        createSubcorpus('sus12', 'description', ['1'], false);
+        createSubcorpus('sus13', 'description', ['1'], false);
+        createSubcorpus('sus14', 'description', ['1'], false);
 
         // set subcorpus page size to 1
         cy.hoverNthMenuItem(8);
