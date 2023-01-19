@@ -37,12 +37,20 @@ services:
     depends_on:
       mariadb-test:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+      kontext:
+        condition: service_started
     restart: always
 
   rq-worker:
     depends_on:
       mariadb-test:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+      kontext:
+        condition: service_started
     networks:
       - databases
 
