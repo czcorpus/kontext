@@ -322,7 +322,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                 state.selectionTypes[action.payload.attrName] = tuple(
                     action.payload.type,
                     action.payload.decodedValue
-                );''
+                );
             }
         );
 
