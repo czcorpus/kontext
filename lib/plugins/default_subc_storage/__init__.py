@@ -227,11 +227,11 @@ class SQLiteSubcArchive(AbstractSubcArchive):
         return data
 
     async def list(self, user_id, filter_args, corpname=None, offset=0, limit=None, include_drafts=False):
-        if (filter_args.archived_only and filter_args.active_only or
-                filter_args.archived_only and filter_args.published_only):
+        if (filter_args.archived_only and filter_args.active_only) or \
+           (filter_args.archived_only and filter_args.published_only):
             raise SubcArchiveException('Invalid filter specified')
 
-        where, args = ['t1.user_id = ?'], [user_id]
+        where, args = ['(t1.user_id IS NOT NULL AND t1.user_id = ?)'], [user_id]
         if corpname is not None:
             where.append('t1.corpus_name = ?')
             args.append(corpname)
@@ -244,12 +244,12 @@ class SQLiteSubcArchive(AbstractSubcArchive):
 
         if filter_args.pattern:
             v = f'%{filter_args.pattern}%'
-            where.append('t1.name LIKE ? OR t1.public_description LIKE ?')
+            where.append('(t1.name LIKE ? OR t1.public_description LIKE ?)')
             args.extend([v, v])
 
         if filter_args.ia_query:
             v = f'{filter_args.ia_query}%'
-            where.append('t1.id LIKE ? OR t1.author_fullname LIKE ?')
+            where.append('(t1.id LIKE ? OR t1.author_fullname LIKE ?)')
             args.extend([v, v])
 
         if limit is None:
