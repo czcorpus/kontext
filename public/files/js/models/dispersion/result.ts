@@ -23,9 +23,12 @@
 import { HTTP } from 'cnc-tskit';
 import { IActionQueue, StatelessModel } from 'kombo';
 import { Observable } from 'rxjs';
+import { FormValue } from '../../types/kontext';
 import { PageModel } from '../../app/page';
 import { ChartExportFormat } from '../../types/kontext';
 import { Actions } from './actions';
+import { validateGzNumber } from '../base';
+import { stackOffsetExpand } from 'd3';
 
 
 export interface DispersionDataRow {
@@ -38,9 +41,21 @@ export interface DispersionDataRow {
 export interface DispersionResultModelState {
     isBusy:boolean;
     concordanceId:string;
-    resolution:number;
+    resolution:FormValue<string>;
+    maxResolution:number;
     data:Array<DispersionDataRow>;
     downloadFormat:ChartExportFormat;
+}
+
+function validateResolution(state:DispersionResultModelState):boolean {
+    if (!validateGzNumber(state.resolution.value)) {
+        return false;
+    }
+    const intval = parseInt(state.resolution.value);
+    if (intval < 1 || intval > state.maxResolution) {
+        return false;
+    }
+    return true;
 }
 
 
@@ -53,22 +68,58 @@ export class DispersionResultModel extends StatelessModel<DispersionResultModelS
         layoutModel:PageModel,
         initialState:DispersionResultModelState
     ) {
-
         super(dispatcher, initialState);
         this.layoutModel = layoutModel;
 
         this.addActionHandler(
             Actions.ChangeResolution,
             (state, action) => {
-                if (action.payload.value > 1000) {
-                    state.resolution = 1000;
-                } else if (action.payload.value < 1) {
-                    state.resolution = 1;
+                state.resolution.value = action.payload.value;
+                if (state.resolution.value !== '' && !validateResolution(state)) {
+                    state.resolution.isInvalid = true;
+                    state.resolution.errorDesc = this.layoutModel.translate(
+                        'dispersion__max_resolution_is_{value}', {value: state.maxResolution});
+
                 } else {
-                    state.resolution = action.payload.value;
+                    state.resolution.isInvalid = false;
+                    state.resolution.errorDesc = undefined;
                 }
             }
-        )
+        );
+
+        this.addActionHandler(
+            Actions.ChangeResolutionAndReload,
+            (state, action) => {
+                state.resolution.value = action.payload.value;
+                if (state.resolution.value !== '' && !validateResolution(state)) {
+                    state.resolution.isInvalid = true;
+                    state.resolution.errorDesc = this.layoutModel.translate(
+                        'dispersion__max_resolution_is_{value}', {value: state.maxResolution});
+
+                } else {
+                    state.resolution.isInvalid = false;
+                    state.resolution.errorDesc = undefined;
+                }
+            },
+            (state, action, dispatch) => {
+                if (state.resolution.value !== '' && validateResolution(state)) {
+                    this.reloadData(state).subscribe({
+                        next: data => {
+                            dispatch<typeof Actions.ReloadDone>({
+                                name: Actions.ReloadDone.name,
+                                payload: {data}
+                            });
+                        },
+                        error: error => {
+                            dispatch<typeof Actions.ReloadDone>({
+                                name: Actions.ReloadDone.name,
+                                error
+                            });
+                        }
+                    });
+                }
+            }
+        );
 
         this.addActionHandler(
             Actions.ReloadDone,
@@ -102,7 +153,7 @@ export class DispersionResultModel extends StatelessModel<DispersionResultModelS
                         'dispersion/index',
                         {
                             q: `~${state.concordanceId}`,
-                            resolution: state.resolution,
+                            resolution: state.resolution.value,
                         }
                     );
 
@@ -120,7 +171,7 @@ export class DispersionResultModel extends StatelessModel<DispersionResultModelS
                                 error
                             });
                         }
-                    })
+                    });
                 }
             }
         )
@@ -132,7 +183,7 @@ export class DispersionResultModel extends StatelessModel<DispersionResultModelS
             this.layoutModel.createActionUrl('dispersion/ajax_get_freq_dispersion'),
             {
                 q: `~${state.concordanceId}`,
-                resolution: state.resolution,
+                resolution: state.resolution.value,
             }
         )
     }

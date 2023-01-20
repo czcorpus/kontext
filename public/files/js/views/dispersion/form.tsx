@@ -34,14 +34,14 @@ export function init(
     he:ComponentHelpers,
     dispersionModel:DispersionResultModel
 ) {
-    const handleResolutionChange = (evt) => {
-        const value = parseInt(evt.target.value);
-        if (value) {
-            dispatcher.dispatch<typeof Actions.ChangeResolution>({
-                name: Actions.ChangeResolution.name,
-                payload: {value}
-            });
-        }
+
+    const layoutViews = he.getLayoutViews();
+
+    const handleResolutionChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
+        dispatcher.dispatch<typeof Actions.ChangeResolution>({
+            name: Actions.ChangeResolution.name,
+            payload: {value: evt.target.value}
+        });
     }
 
     const DispersionForm:React.FC<DispersionResultModelState> = (props) => {
@@ -49,7 +49,10 @@ export function init(
         return (
             <S.FreqDispersionParamFieldset>
                 <label htmlFor='resolution-input'>{he.translate('dispersion__resolution')}</label>
-                <input id='resolution-input' onChange={handleResolutionChange} value={props.resolution}/>
+                <layoutViews.ValidatedItem invalid={props.resolution.isInvalid} errorDesc={props.resolution.errorDesc}>
+                    <input id='resolution-input' onChange={handleResolutionChange} value={props.resolution.value}/>
+                </layoutViews.ValidatedItem>
+
             </S.FreqDispersionParamFieldset>
         )
     }

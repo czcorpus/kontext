@@ -132,25 +132,20 @@ export function init(
             });
         }
 
-        const handleResolutionChange = (evt) => {
-            const value = parseInt(evt.target.value);
-            if (value) {
-                dispatcher.dispatch<typeof Actions.ChangeResolution>({
-                    name: Actions.ChangeResolution.name,
-                    payload: {value}
-                });
-                dispatcher.dispatch<typeof Actions.SubmitForm>({
-                    name: Actions.SubmitForm.name,
-                    payload: {reloadPage: false}
-                });
-            }
+        const handleResolutionChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch<typeof Actions.ChangeResolutionAndReload>({
+                name: Actions.ChangeResolutionAndReload.name,
+                payload: {value: evt.target.value}
+            });
         }
 
         return (
             <S.FreqDispersionSection>
                 <S.FreqDispersionParamFieldset>
                     <label htmlFor='resolution-input'>{he.translate('dispersion__resolution')}:</label>
-                    <input id='resolution-input' onChange={handleResolutionChange} value={props.resolution}/>
+                    <globalComponents.ValidatedItem invalid={props.resolution.isInvalid} errorDesc={props.resolution.errorDesc}>
+                        <input id='resolution-input' onChange={handleResolutionChange} value={props.resolution.value}/>
+                    </globalComponents.ValidatedItem>
                     <label>{he.translate('dispersion__download_chart')}:</label>
                     <DownloadFormatSelector format={props.downloadFormat} />
                     <S.DownloadButton src={he.createStaticUrl('img/download-button.svg')} alt={he.translate('dispersion__download_chart')} onClick={handleDownload} />

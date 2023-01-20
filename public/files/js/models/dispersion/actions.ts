@@ -43,10 +43,17 @@ export class Actions {
     };
 
     static ChangeResolution:Action<{
-        value:number;
+        value:string;
 
     }> = {
         name: 'FREQ_DISPERSION_CHANGE_RESOLUTION'
+    };
+
+    static ChangeResolutionAndReload:Action<{
+        value:string;
+
+    }> = {
+        name: 'FREQ_DISPERSION_CHANGE_RESOLUTION_AND_RELOAD'
     };
 
     static SetDownloadFormat:Action<{
