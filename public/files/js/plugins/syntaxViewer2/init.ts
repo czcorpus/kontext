@@ -26,6 +26,8 @@ import { IPluginApi } from '../../types/plugins/common';
 import * as React from 'react';
 import { SyntaxTreeModel } from './model';
 import { init as initView } from './view';
+import { PluginName } from '../../app/plugin';
+import { EmptySyntaxViewer } from '../empty/syntaxViewer/init';
 
 
 declare var require:any;
@@ -72,7 +74,18 @@ class SyntaxTreeViewer implements PluginInterfaces.SyntaxViewer.IPlugin {
 }
 
 const create:PluginInterfaces.SyntaxViewer.Factory = (pluginApi) => {
-    return new SyntaxTreeViewer(pluginApi.dispatcher(), pluginApi);
+    if (pluginApi.pluginTypeIsActive(PluginName.SYNTAX_VIEWER)) {
+        return new SyntaxTreeViewer(pluginApi.dispatcher(), pluginApi);
+    }
+    return new EmptySyntaxViewer(
+        pluginApi.dispatcher(),
+        {
+            isBusy: false,
+            sentenceTokens: [],
+            activeToken: -1,
+            targetHTMLElementID: ''
+        }
+    );
 };
 
 export default create;
