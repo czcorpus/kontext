@@ -915,6 +915,7 @@
         "pquery__condition_always": "vždy",
         "dispersion__resolution": "rozlišení",
         "dispersion__download_chart": "stáhnout graf",
-        "dispersion__print_quality": "pro tisk"
+        "dispersion__print_quality": "pro tisk",
+        "dispersion__max_resolution_is_{value}": "Hodnota rozlišení musí být mezi 1 a {value}"
     }
 }
