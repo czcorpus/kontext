@@ -333,19 +333,13 @@ async def view_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse, asn
     return out
 
 
-# TODO vars=('orig_query', ) ??
 @bp.route('/view')
 @http_action(
     mutates_result=False, action_log_mapper=log_mapping.view, template='view.html', action_model=ConcActionModel)
 async def view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     """
-    KWIC view
+    Concordance view
     """
-    resp.set_cookie(
-        'cnc_toolbar_sid',
-        '5bb424ca362e-0e96fcc772232a17b63c7a5343ec0f829b6c4ef0db9d294c0c8d99148b1b4aa881186d9c2a3b965cf3f31b97fa33eda34db9ed26a13713bed6fbafe16f642275',
-        path='/',
-        expires=time.strftime('%a, %d %b %Y %T GMT', time.gmtime(time.time() + 180 * 24 * 3600)))
     asnc = bool(int(req.args.get('asnc'))) if 'asnc' in req.args else False
     return await view_conc(
         amodel, req, resp, asnc, req.session_get('user', 'id'))
