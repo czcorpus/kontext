@@ -154,7 +154,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.suspendWithTimeout(
+                this.waitForActionWithTimeout(
                     500,
                     {},
                     (sAction, syncData) => {
@@ -180,7 +180,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                                 args = {
                                     corpname: state.data.corpname,
                                     subcname: action.payload.newName,
-                                    description: '',
+                                    description: state.data.descriptionRaw,
                                     aligned_corpora: [], // TODO what to do with this?
                                     text_types: readyAction.payload.selections,
                                     form_type: 'tt-sel',
@@ -191,7 +191,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                                 args = {
                                     corpname: state.data.corpname,
                                     subcname: action.payload.newName,
-                                    description: '',
+                                    description: state.data.descriptionRaw,
                                     within: readyAction.payload.data,
                                     form_type: 'within',
                                     usesubcorp: action.payload.usesubcorp,
@@ -201,7 +201,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                                 args = {
                                     corpname: state.data.corpname,
                                     subcname: action.payload.newName,
-                                    description: '',
+                                    description: state.data.descriptionRaw,
                                     cql: isCQLSelection(state.data.selections) ?
                                         state.data.selections :
                                         '',
