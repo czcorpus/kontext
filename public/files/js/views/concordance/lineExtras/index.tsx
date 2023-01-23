@@ -110,7 +110,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             return (
                 <span>
                     <S.AudioLink onClick={handleClick}>{getChar()}</S.AudioLink>
-                    <mediaViews.AudioPlayer playerId={ConcordanceModel.AUDIO_PLAYER_ID} status={props.audioPlayerStatus} />
+                    <span style={{position: 'absolute',  marginTop: '2em'}}>
+                        <mediaViews.AudioPlayer playerId={ConcordanceModel.AUDIO_PLAYER_ID} status={props.audioPlayerStatus}/>
+                    </span>
                 </span>
             );
 
