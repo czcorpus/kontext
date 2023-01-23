@@ -337,7 +337,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 state.branchReplayIsRunning = true;
             },
             (state, action, dispatch) => {
-                this.suspendWithTimeout(
+                this.waitForActionWithTimeout(
                     2000,
                     {ttSelections: false, contextData: false},
                     (action, syncData) => {
