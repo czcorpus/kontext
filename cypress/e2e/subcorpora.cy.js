@@ -282,7 +282,6 @@ describe('Subcorpora', () => {
         cy.url().should('include', '/subcorpus/new');
         cy.get('#subcorp-form-mount table.form .subcname input').should('have.value', 'sus8new');
         cy.get('#subcorp-form-mount table.form .subcname input').clear().type('sus8old');
-        // TODO - for some reason textarea is empty, manually it works
         cy.get('#subcorp-form-mount table.form textarea').should('have.value', 'new description');
         cy.get('#subcorp-form-mount table.form textarea').clear().type('old description');
         cy.get('input[value=1]').should('not.be.checked');

@@ -44,9 +44,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     class KwicConnectContainer extends React.PureComponent<KwicConnectContainerProps & KwicConnectState> {
 
         componentDidMount() {
-            dispatcher.dispatch({
-                name: PluginInterfaces.KwicConnect.Actions.FetchInfo
-            });
+            dispatcher.dispatch(PluginInterfaces.KwicConnect.Actions.FetchInfo);
         }
 
         render() {
