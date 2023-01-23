@@ -77,7 +77,7 @@ class MySQLSubcRestore(AbstractSubcRestore):
             sql.append('LIMIT %s, %s')
             args += (from_idx, to_idx - from_idx)
         else:
-            sql.append('OFFSET %s ROWS')
+            sql.append('LIMIT %s, 1000000000')
             args += (from_idx,)
 
         with self._db.cursor() as cursor:
@@ -108,7 +108,7 @@ class MySQLSubcRestore(AbstractSubcRestore):
     def extend_subc_list(self, plugin_ctx: PluginCtx, subc_list: List[Dict[str, Any]], filter_args: Dict[str, Any], from_idx: int, to_idx: Optional[int]=None, include_cql: bool=False) -> List[Dict[str, Any]]:
         """
         Enriches KonText's original subcorpora list by the information about queries which
-        produced these subcorpora. It it also able to insert an information about deleted
+        produced these subcorpora. It is also able to insert an information about deleted
         subcorpora.
 
         Args:
