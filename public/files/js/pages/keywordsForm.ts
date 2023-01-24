@@ -24,7 +24,7 @@ import { PageModel } from '../app/page';
 import { KontextPage } from '../app/main';
 import * as PluginInterfaces from '../types/plugins';
 import createCorparch from 'plugins/corparch/init';
-import { KeywordsFormModel } from '../models/keywords/form';
+import { KeywordsFormModel, KeywordsFormModelArgs } from '../models/keywords/form';
 import { init as viewInit } from '../views/keywords/form';
 import { Actions as GlobalActions } from '../models/common/actions';
 import { Root } from 'react-dom/client';
@@ -66,9 +66,11 @@ export class KeywordsFormPage {
 
     init():void {
         this.layoutModel.init(true, [], () => {
+            const kwForm = this.layoutModel.getConf<KeywordsFormModelArgs["initialArgs"]>('FormData');
             this.formModel = new KeywordsFormModel({
                 dispatcher: this.layoutModel.dispatcher,
-                layoutModel: this.layoutModel
+                layoutModel: this.layoutModel,
+                initialArgs: kwForm,
             });
             this.corparchPlugin = createCorparch(this.layoutModel.pluginApi());
             const view = viewInit({
