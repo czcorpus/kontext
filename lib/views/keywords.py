@@ -15,6 +15,7 @@
 
 
 import logging
+import time
 
 import settings
 from action.argmapping import log_mapping
@@ -27,6 +28,7 @@ from action.response import KResponse
 from bgcalc import calc_backend_client
 from bgcalc.freqs import build_arf_db
 from bgcalc.keywords import KeywordsResultNotFound, require_existing_keywords
+from bgcalc.task import AsyncTaskStatus
 from corplib.abstract import SubcorpusIdent
 from corplib.errors import MissingSubCorpFreqFile
 from main_menu.model import MainMenu
@@ -112,9 +114,8 @@ async def view_result(amodel: KeywordsActionModel, req: KRequest):
             limit=KWPAGESIZE, kwsort=kwsort,
             collator_locale=(await amodel.get_corpus_info(amodel.corp.corpname)).collator_locale)
     except KeywordsResultNotFound:
-        raise
         raise ImmediateRedirectException(req.create_url(
-            'wordlist/restore', dict(q=req.args_getlist('q')[0])))
+            'keywords/restore', dict(q=req.args_getlist('q')[0])))
 
     result = dict(
         data=data, total=total, form=amodel.curr_kwform_args.to_dict(),
@@ -140,3 +141,34 @@ async def view_result(amodel: KeywordsActionModel, req: KRequest):
     action_log_mapper=log_mapping.keywords, action_model=KeywordsActionModel)
 async def result(amodel: KeywordsActionModel, req: KRequest, _: KResponse):
     return await view_result(amodel, req)
+
+
+@bp.route('/restore')
+@http_action(
+    access_level=2, template='keywords/restore.html', page_model='restoreKeywords',
+    mutates_result=True, action_log_mapper=log_mapping.wordlist, action_model=KeywordsActionModel)
+async def restore(amodel: KeywordsActionModel, req: KRequest, _: KResponse):
+    worker = calc_backend_client(settings)
+    ref_corp_ident = SubcorpusIdent(amodel.curr_kwform_args.ref_usesubcorp,
+                                    amodel.curr_kwform_args.ref_corpname) if amodel.curr_kwform_args.ref_usesubcorp else amodel.curr_kwform_args.ref_corpname
+    async_res = await worker.send_task(
+        'get_keywords', object.__class__,
+        args=(amodel.corp.portable_ident, ref_corp_ident, amodel.curr_kwform_args.to_dict(), amodel.corp.size))
+
+    def on_query_store(query_ids, history_ts, result):
+        async_task = AsyncTaskStatus(
+            status=async_res.status, ident=async_res.id,
+            category=AsyncTaskStatus.CATEGORY_KWORDS,
+            label=query_ids[0],
+            args=dict(query_id=query_ids[0], last_update=time.time()),
+            url=req.create_url('keywords/result', dict(q=f'~{query_ids[0]}')),
+            auto_redirect=True)
+        amodel.store_async_task(async_task)
+        result['task'] = async_task.to_dict()
+
+    amodel.on_query_store(on_query_store)
+
+    return {
+        'finished': False,
+        'next_action': '',
+        'next_action_args': {}}

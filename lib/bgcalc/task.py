@@ -34,6 +34,7 @@ class AsyncTaskStatus:
     CATEGORY_PQUERY: ClassVar[str] = 'pquery'
     CATEGORY_FREQ_PRECALC: ClassVar[str] = 'freqPrecalc'
     CATEGORY_WORDLIST: ClassVar[str] = 'wordlist'
+    CATEGORY_KWORDS: ClassVar[str] = 'kwords'
 
     ident: str
     "task identifier (unique per specific task instance)"
