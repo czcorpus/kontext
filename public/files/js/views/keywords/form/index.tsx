@@ -24,6 +24,7 @@ import * as React from 'react';
 import { Bound, IActionDispatcher } from 'kombo';
 
 import * as Kontext from '../../../types/kontext';
+import * as S from './style';
 import * as PluginInterfaces from '../../../types/plugins';
 import { Actions } from '../../../models/keywords/actions';
 import { KeywordsFormModel, KeywordsFormState } from '../../../models/keywords/form';
@@ -80,27 +81,27 @@ export function init({
         }
 
         return (
-            <div>
+            <S.KeywordsForm>
                 {CorparchWidget ? <CorparchWidget /> : null}
-                <label>Reference corp</label>
-                <input onChange={handleRefCorpChange} type='text' value={props.refCorp}/>
-                <label>Reference subcorp</label>
-                <input onChange={handleRefSubcorpChange} type='text' value={props.refSubcorp}/>
-                <br/>
-                <label>Attr</label>
-                <input onChange={handleAttrChange} type='text' value={props.attr}/>
-                <br/>
-                <label>Pattern</label>
-                <input onChange={handlePatternChange} type='text' value={props.pattern}/>
-                <br/>
-                <button role='button' onClick={handleSubmit}>Submit</button>
-                {
-                    props.isBusy ?
-                        <img className="ajax-loader" src={he.createStaticUrl('img/ajax-loader-bar.gif')}
-                            alt={he.translate('global__loading')} title={he.translate('global__loading')} /> :
-                        null
-                }
-            </div>
+                <S.MainFieldset>
+                    <label>Reference corp</label>
+                    <input onChange={handleRefCorpChange} type='text' value={props.refCorp}/>
+                    <label>Reference subcorp</label>
+                    <input onChange={handleRefSubcorpChange} type='text' value={props.refSubcorp}/>
+                    <label>Attr</label>
+                    <input onChange={handleAttrChange} type='text' value={props.attr}/>
+                    <label>Pattern</label>
+                    <input onChange={handlePatternChange} type='text' value={props.pattern}/>
+                </S.MainFieldset>
+                <div className="buttons">
+                    {
+                        props.isBusy ?
+                            <img className="ajax-loader" src={he.createStaticUrl('img/ajax-loader-bar.gif')}
+                                alt={he.translate('global__loading')} title={he.translate('global__loading')} /> :
+                            <button role='button' className="default-button" onClick={handleSubmit}>{he.translate('query__search_btn')}</button>
+                    }
+                </div>
+            </S.KeywordsForm>
         );
     }
 

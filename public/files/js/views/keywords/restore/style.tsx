@@ -1,8 +1,7 @@
 /*
- * Copyright (c) 2023 Charles University in Prague, Faculty of Arts,
+ * Copyright (c) 2021 Charles University, Faculty of Arts,
  *                    Institute of the Czech National Corpus
- * Copyright (c) 2023 Tomas Machalek <tomas.machalek@gmail.com>
- * Copyright (c) 2023 Martin Zimandl <martin.zimandl@gmail.com>
+ * Copyright (c) 2021 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,26 +18,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-
 import styled from 'styled-components';
-import * as theme from '../../theme/default';
-
-// ---------------- <KeywordsForm /> --------------------------------------
-
-export const KeywordsForm = styled.form`
 
 
-`;
+export const Restore = styled.div`
 
-// ---------------- <MainFieldset /> --------------------------------------------
+    text-align: center;
+    font-size: 120%;
+    max-width: 80em;
 
-export const MainFieldset = styled.div`
-
-    display: grid;
-    grid-template-columns: 10em 1fr;
-    grid-gap: 0.7em;
-    align-items: center;
-    margin-top: 3.4em;
-    margin-bottom: 1.6em;
-
+    .loader {
+        text-align: center;
+        padding: 2em;
+    }
 `;

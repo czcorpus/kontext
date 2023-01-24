@@ -1,7 +1,6 @@
 /*
  * Copyright (c) 2023 Charles University in Prague, Faculty of Arts,
  *                    Institute of the Czech National Corpus
- * Copyright (c) 2023 Tomas Machalek <tomas.machalek@gmail.com>
  * Copyright (c) 2023 Martin Zimandl <martin.zimandl@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
@@ -19,26 +18,25 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-
-import styled from 'styled-components';
-import * as theme from '../../theme/default';
-
-// ---------------- <KeywordsForm /> --------------------------------------
-
-export const KeywordsForm = styled.form`
+import * as React from 'react';
+import * as Kontext from '../../../types/kontext';
+import * as S from './style';
 
 
-`;
+export function init(utils:Kontext.ComponentHelpers):React.FC<{}> {
 
-// ---------------- <MainFieldset /> --------------------------------------------
+    const layoutViews = utils.getLayoutViews();
 
-export const MainFieldset = styled.div`
+    const Page:React.FC<{}> = (props) => (
+        <S.Restore>
+            <p>{utils.translate('kwordsRestore__please_wait_msg')}</p>
+            <p className="loader">
+                <layoutViews.AjaxLoaderImage />
+            </p>
+        </S.Restore>
+    );
 
-    display: grid;
-    grid-template-columns: 10em 1fr;
-    grid-gap: 0.7em;
-    align-items: center;
-    margin-top: 3.4em;
-    margin-bottom: 1.6em;
+    return Page;
+}
 
-`;
+
