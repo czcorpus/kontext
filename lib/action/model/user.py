@@ -391,7 +391,7 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
         return at_list
 
     async def add_globals(self, app: Sanic, action_props: ActionProps, result: Dict[str, Any]):
-        # updates result dict with javascript modules paths required by some of the optional plugins
+        # updates result dict with javascript modules paths required by some optional plugins
         result = await super().add_globals(app, action_props, result)
         await self.export_optional_plugins_conf(result)
         self.configure_auth_urls(result)
