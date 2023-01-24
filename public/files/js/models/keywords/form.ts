@@ -68,10 +68,10 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
             dispatcher,
             {
                 isBusy: false,
-                refCorp: initialArgs.ref_corpname ? initialArgs.ref_corpname : layoutModel.getNestedConf('corpusIdent', 'name'),
-                refSubcorp: initialArgs.ref_usesubcorp,
-                attr: initialArgs.wlattr ? initialArgs.wlattr : 'lemma',
-                pattern: initialArgs.wlpat ? initialArgs.wlpat : '.*',
+                refCorp: initialArgs ? initialArgs.ref_corpname : layoutModel.getNestedConf('corpusIdent', 'name'),
+                refSubcorp: initialArgs ? initialArgs.ref_usesubcorp : '',
+                attr: initialArgs ? initialArgs.wlattr : 'lemma',
+                pattern: initialArgs ? initialArgs.wlpat : '.*',
             }
         );
         this.layoutModel = layoutModel;
