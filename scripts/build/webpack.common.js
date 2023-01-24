@@ -60,6 +60,7 @@ module.exports = {
             restoreWordlist: mkpath('js/pages/restoreWordlist.ts'),
             keywords: mkpath('js/pages/keywords.ts'),
             keywordsForm: mkpath('js/pages/keywordsForm.ts'),
+            restoreKeywords: mkpath('js/pages/restoreKeywords.ts'),
             login: mkpath('js/pages/login.ts'),
             userProfile: mkpath('js/pages/userProfile.ts'),
             userSignUp: mkpath('js/pages/userSignUp.ts'),
