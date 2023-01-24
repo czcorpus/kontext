@@ -346,6 +346,25 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         </S.QueryInfoDiv>
     );
 
+    // -------------------- <KWordsQueryInfo /> ------------------------
+
+    const KWordsQueryInfo:React.FC<{
+        itemIdx:number;
+        isEdited:boolean;
+        query_sh:string;
+        query:string;
+    }> = (props) => (
+        <S.QueryInfoDiv onClick={handleAreaClick(props.itemIdx)} title={he.translate('qhistory__open_in_form')}>
+            <S.QueryAndTypeDiv>
+                {
+                    props.query_sh ?
+                    <QS.SyntaxHighlight className="query" dangerouslySetInnerHTML={{__html: props.query_sh}} /> :
+                    <span className="query">{props.query}</span>
+                }
+            </S.QueryAndTypeDiv>
+        </S.QueryInfoDiv>
+    );
+
     // -------------------- <SavedNameInfo /> ------------------------
 
     const SavedNameInfo:React.FC<{
@@ -589,7 +608,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             pfilter={data.pfilter_words}
                             nfilter={data.nfilter_words} />;
             case 'kwords':
-                return <p>{JSON.stringify(data)}</p>;
+                return <KWordsQueryInfo
+                            itemIdx={data.idx}
+                            isEdited={toolbarVisible}
+                            query={data.query}
+                            query_sh={data.query_sh} />;
             }
         };
         return (

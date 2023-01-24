@@ -205,6 +205,8 @@ export function getApplyRules(querySuperType:Kontext.QuerySupertype):Array<strin
             return ['Query', 'WithinContainingPart', 'Sequence', 'RegExpRaw'];
         case 'wlist':
             return ['RegExpRaw'];
+        case 'kwords':
+            return ['RegExpRaw'];
     }
 }
 
