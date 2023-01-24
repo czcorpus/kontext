@@ -396,6 +396,17 @@
                             Usefull for API instance.</a:documentation>
                         </element>
                     </optional>
+                    <optional>
+                        <element name="http_client_timeout_secs">
+                            <data type="nonNegativeInteger" />
+                            <a:documentation>
+                                For many data integration tasks, KonText and its plug-ins use internal HTTP client.
+                                This configuration specifies how many seconds should the client wait for responses.
+                                Please note that the value may have no effect in case HTTP server defines shorter
+                                timeouts.
+                            </a:documentation>
+                        </element>
+                    </optional>
                 </interleave>
             </element>
             <element name="calc_backend">

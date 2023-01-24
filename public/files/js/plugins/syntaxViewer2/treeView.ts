@@ -150,7 +150,7 @@ class TreeGenerator {
             this.importSentence(data[0], nodes)
         );
         const rowCount = nodes[0].labels.length;
-        
+
         this.calcViewSize(tokens, nodeMap, rowCount);
         this.generateNodeCoords(tokens, nodeMap);
         const edges = this.generateEdges(nodeMap);
@@ -512,9 +512,13 @@ export function createGenerator(
     componentHelpers:Kontext.ComponentHelpers,
     detailAttrOrders:DetailAttrOrders
 ):TreeGeneratorFn {
-
-    return (data:Array<srcData.Data>, zone:string, tree:string, target:HTMLElement,
-            options:Options) => {
+    return (
+        data:Array<srcData.Data>,
+        zone:string,
+        tree:string,
+        target:HTMLElement,
+        options:Options
+    ) => {
         const gen = new TreeGenerator(options, componentHelpers, detailAttrOrders);
         gen.generate(data, zone, tree, target);
     }
@@ -531,7 +535,6 @@ export function generate(
     target:HTMLElement,
     options:Options
 ) {
-
     const helpers = {
         translate : (x, v) => x.replace(/[_-]/g, ' '),
         createStaticUrl : x => `../../../${x}`,

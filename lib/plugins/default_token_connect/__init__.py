@@ -33,7 +33,7 @@ Required XML configuration: please see config.rng
 """
 
 import logging
-from typing import Any, Dict, List, Sequence, Tuple
+from typing import Any, Dict, Sequence, Tuple
 
 import manatee
 import plugins
@@ -43,9 +43,11 @@ from action.model.concordance import ConcActionModel
 from corplib.corpus import KCorpus
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.general_storage import KeyValueStorage
-from plugin_types.token_connect import (AbstractBackend, AbstractFrontend,
-                                        AbstractTokenConnect,
-                                        find_implementation)
+from plugin_types.token_connect import (
+    AbstractBackend,
+    AbstractFrontend,
+    AbstractTokenConnect,
+    find_implementation)
 from plugins.default_token_connect.frontends import ErrorFrontend
 from sanic.blueprints import Blueprint
 
@@ -74,10 +76,12 @@ async def fetch_token_detail(amodel, req, resp):
                int(req.args.get('detail_right_ctx', 40)))
     with plugins.runtime.TOKEN_CONNECT as td, plugins.runtime.CORPARCH as ca:
         corpus_info = await ca.get_corpus_info(amodel.plugin_ctx, amodel.corp.corpname)
-        token, resp_data = await td.fetch_data(corpus_info.token_connect.providers, amodel.corp,
-                                               [amodel.corp.corpname] +
-                                               amodel.args.align, token_id, num_tokens, req.ui_lang,
-                                               context)
+        token, resp_data = await td.fetch_data(
+            amodel.plugin_ctx,
+            corpus_info.token_connect.providers,
+            amodel.corp,
+            [amodel.corp.corpname] + amodel.args.align,
+            token_id, num_tokens, req.ui_lang, context)
     return dict(token=token, items=[item for item in resp_data])
 
 
@@ -137,8 +141,15 @@ class DefaultTokenConnect(AbstractTokenConnect):
         return [self._providers[ident] + (is_kwic_view,) for ident, is_kwic_view in providers]
 
     async def fetch_data(
-            self, providers: Sequence[Tuple[str, bool]], corpus: KCorpus, corpora: List[str],
-            token_id: int, num_tokens: int, lang: str, context=None):
+            self,
+            plugin_ctx,
+            providers,
+            corpus,
+            corpora,
+            token_id,
+            num_tokens,
+            lang,
+            context=None):
         ans = []
         # first, we pre-load all possible required (struct/pos) attributes all
         # the defined providers need
@@ -162,8 +173,13 @@ class DefaultTokenConnect(AbstractTokenConnect):
                         args[s][sa] = v
                     else:
                         args[attr] = v
+                cookies = {}
+                for cname in backend.get_required_cookies():
+                    if cname not in plugin_ctx.cookies:
+                        raise Exception(f'Backend configuration problem: cookie {cname} not available')
+                    cookies[cname] = plugin_ctx.cookies[cname]
                 data, status = await backend.fetch(
-                    corpora, corpus, token_id, num_tokens, args, lang, context)
+                    corpora, corpus, token_id, num_tokens, args, lang, context, cookies)
                 ans.append(frontend.export_data(data, status, lang, is_kwic_view).to_dict())
             except TypeError as ex:
                 logging.getLogger(__name__).error('TokenConnect backend error: {0}'.format(ex))

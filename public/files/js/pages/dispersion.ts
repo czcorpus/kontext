@@ -174,8 +174,12 @@ export class DispersionPage {
             {
                 isBusy: false,
                 concordanceId: this.layoutModel.getConf<string>('concPersistenceOpId'),
-                resolution: this.layoutModel.getConf<number>('dispersionResolution'),
-                data: [],
+                resolution: Kontext.newFormValue(
+                    this.layoutModel.getConf<number>('dispersionResolution') + '',
+                    true
+                ),
+                maxResolution: this.layoutModel.getConf<number>('maxDispersionResolution'),
+                data: this.layoutModel.getConf<Array<DispersionDataRow>>('dispersionData'),
                 downloadFormat: 'png',
             }
         );
@@ -342,21 +346,10 @@ export class DispersionPage {
             this.initQueryOpNavigation();
             this.initAnalysisViews();
 
-            const model = new DispersionResultModel(
-                this.layoutModel.dispatcher,
-                this.layoutModel,
-                {
-                    isBusy: false,
-                    concordanceId: this.layoutModel.getConf<string>('concPersistenceOpId'),
-                    resolution: this.layoutModel.getConf<number>('dispersionResolution'),
-                    data: this.layoutModel.getConf<Array<DispersionDataRow>>('dispersionData'),
-                    downloadFormat: 'png',
-                }
-            );
             const resultView = viewInit(
                 this.layoutModel.dispatcher,
                 this.layoutModel.getComponentHelpers(),
-                model
+                this.dispersionModel
             );
             this.layoutModel.renderReactComponent(
                 resultView,
@@ -364,8 +357,6 @@ export class DispersionPage {
                 {
                 }
             );
-            console.log('Dispersion page init OK, model is: ', model);
-
         });
     }
 }

@@ -258,12 +258,10 @@ class Args(UserActionArgs):
 
     # 80th percentile (see ctminfreq_type)
     ctminfreq: int = field(default=80, metadata=mk_metdata())
-    ctminfreq_type: str = field(default='pabs', metadata=mk_metdata()
-                                )  # percentile as a default filter mode
-    ctattr1: str = field(default='word', metadata=mk_metdata())
-    ctattr2: str = field(default='word', metadata=mk_metdata())
-    ctfcrit1: str = field(default='0<0', metadata=mk_metdata())
-    ctfcrit2: str = field(default='0<0', metadata=mk_metdata())
+    ctminfreq_type: str = field(
+        default='pabs', metadata=mk_metdata())  # percentile as a default filter mode
+    ctfcrit1: str = field(default='word 0<0', metadata=mk_metdata())  # freq. crit. for the 1st dim. in 2D freq. dist.
+    ctfcrit2: str = field(default='word 0<0', metadata=mk_metdata())  # freq. crit. for the 2nd dim. in 2D freq. dist.
 
     maxsavelines: int = field(default=1000, metadata=mk_metdata())
     fcrit: List[str] = field(default_factory=list, metadata=mk_metdata())

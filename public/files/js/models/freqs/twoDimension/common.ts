@@ -36,8 +36,6 @@ export const sortAttrVals = (x1:Kontext.AttrItem, x2:Kontext.AttrItem) => {
 export interface CTFreqServerArgs extends ConcServerArgs {
     ctfcrit1:string;
     ctfcrit2:string;
-    ctattr1:string;
-    ctattr2:string;
     ctminfreq:string;
     ctminfreq_type:string;
 }
@@ -134,7 +132,7 @@ export type CTFreqResultItem = [string, string, number, number];
 
 export interface CTFreqResultData {
     data: Array<CTFreqResultItem>;
-    full_size:number;
+    size:number;
 }
 
 export interface CTFreqResultResponse extends AjaxConcResponse {

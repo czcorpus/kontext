@@ -114,9 +114,10 @@ export class CollPage {
             {
                 isBusy: false,
                 concordanceId: this.layoutModel.getConf<string>('concPersistenceOpId'),
-                resolution: 100,
+                resolution: Kontext.newFormValue('100', true),
+                maxResolution: this.layoutModel.getConf<number>('maxDispersionResolution'),
                 data: [],
-                downloadFormat: 'png',
+                downloadFormat: 'png'
             }
         );
 

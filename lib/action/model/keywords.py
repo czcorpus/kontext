@@ -61,8 +61,8 @@ class KeywordsActionModel(CorpusActionModel):
     def set_curr_kwform_args(self, args: KeywordsFormArgs):
         self._curr_kwform_args = args
 
-    async def post_dispatch(self, action_props: ActionProps, result: Dict[str, Any], err_desc):
-        await super().post_dispatch(action_props, result, err_desc)
+    async def post_dispatch(self, action_props: ActionProps, resp: KResponse, err_desc):
+        await super().post_dispatch(action_props, resp, err_desc)
         if action_props.mutates_result:
             with plugins.runtime.QUERY_HISTORY as qh, plugins.runtime.QUERY_PERSISTENCE as qp:
                 query_id = await qp.store(
@@ -75,7 +75,7 @@ class KeywordsActionModel(CorpusActionModel):
                     user_id=self.session_get('user', 'id'),
                     query_id=query_id, q_supertype='kwords')
                 for fn in self._on_query_store:
-                    fn([query_id], ts, result)
+                    fn([query_id], ts, resp.result)
 
     def export_form_args(self, result: Dict[str, Any]):
         if self._curr_kwform_args:

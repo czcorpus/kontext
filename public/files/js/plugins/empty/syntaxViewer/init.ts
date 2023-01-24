@@ -20,6 +20,7 @@
 
 import * as PluginInterfaces from '../../../types/plugins';
 import { IModel, StatefulModel, IFullActionControl } from 'kombo';
+import { FC, ComponentClass } from 'react';
 
 
 export class EmptySyntaxViewerModel extends StatefulModel<PluginInterfaces.SyntaxViewer.BaseState> {
@@ -38,14 +39,12 @@ export class EmptySyntaxViewer implements PluginInterfaces.SyntaxViewer.IPlugin 
         return false;
     }
 
-    close():void {}
-
-    onPageResize():void {}
-
-    registerOnError(fn:(e:Error)=>void):void {}
-
     getModel():IModel<PluginInterfaces.SyntaxViewer.BaseState> {
         return this.model;
+    }
+
+    getView():FC|ComponentClass {
+        return undefined;
     }
 }
 

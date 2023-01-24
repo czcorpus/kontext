@@ -19,7 +19,7 @@
 
 from dataclasses import dataclass
 from typing import Any, Callable, Optional, Tuple, Union
-
+from action.result.base import BaseResult
 from action.krequest import KRequest
 
 
@@ -41,8 +41,11 @@ class ActionProps:
 
     http_method: Union[Optional[str], Tuple[str, ...]] = 'GET'
 
-    page_model: Optional[str] = None
-    """A module name for TypeScript page model"""
+    page_model: Optional[Union[str, BaseResult]] = None
+    """
+    Either a module name for TypeScript page model or a variant of action.result.base.BaseResult
+    (which, among others, also provides the TypeScript module)
+    """
 
     template: Optional[str] = None
 

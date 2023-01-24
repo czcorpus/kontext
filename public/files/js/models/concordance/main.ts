@@ -210,8 +210,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
 
     private readonly saveModel:ConcSaveModel;
 
-    private readonly syntaxViewModel:PluginInterfaces.SyntaxViewer.IPlugin;
-
     private readonly audioPlayer:AudioPlayer;
 
     /**
@@ -225,7 +223,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         layoutModel:PageModel,
         dispatcher:IFullActionControl,
         saveModel:ConcSaveModel,
-        syntaxViewModel:PluginInterfaces.SyntaxViewer.IPlugin,
         lineViewProps:ViewConfiguration,
         initialData:Array<ServerLineData>,
     ) {
@@ -277,7 +274,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         );
         this.layoutModel = layoutModel;
         this.saveModel = saveModel;
-        this.syntaxViewModel = syntaxViewModel;
         this.audioPlayer = new AudioPlayer(
             this.layoutModel.createStaticUrl('misc/soundmanager2/'),
             () => {
@@ -1220,10 +1216,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
 
     getSaveModel():ConcSaveModel {
         return this.saveModel;
-    }
-
-    getSyntaxViewModel():PluginInterfaces.SyntaxViewer.IPlugin {
-        return this.syntaxViewModel;
     }
 }
 

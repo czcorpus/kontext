@@ -20,6 +20,7 @@ import abc
 from typing import Any, Dict, List
 
 from plugin_types import CorpusDependentPlugin
+from action.plugin.ctx import PluginCtx
 
 
 class AbstractKwicConnect(CorpusDependentPlugin):
@@ -29,7 +30,7 @@ class AbstractKwicConnect(CorpusDependentPlugin):
         pass
 
     @abc.abstractmethod
-    async def fetch_data(self, provider_ids, corpora, lemma, lang) -> List[Dict[str, Any]]:
+    async def fetch_data(self, plugin_ctx: PluginCtx, provider_ids, corpora, lemma, lang) -> List[Dict[str, Any]]:
         pass
 
     def gives_kwic_hints(self, corpora):

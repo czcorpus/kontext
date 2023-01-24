@@ -77,7 +77,7 @@ def _get_freq_dispersion(conc: PyConc, resolution: int) -> List[FreqDispersionBi
 async def ajax_get_freq_dispersion(amodel: ConcActionModel, req: KRequest, resp: KResponse) -> List[FreqDispersionBin]:
     conc = await require_existing_conc(amodel.corp, amodel.args.q)
     resolution = int(req.args.get('resolution', 100))
-    if 0 < resolution < 1000:
+    if 0 < resolution <= 1000:
         return _get_freq_dispersion(conc, resolution)
     raise UserReadableException('Invalid dispersion resolution. Acceptable values [1, 1000].')
 

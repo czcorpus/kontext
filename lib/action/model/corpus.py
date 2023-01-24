@@ -571,10 +571,10 @@ class CorpusActionModel(UserActionModel):
 
         result['explicit_conc_persistence_ui'] = settings.get_bool(
             'global', 'explicit_conc_persistence_ui', False)
+        result['max_dispersion_resulution'] = 1000
         for k in asdict(self.args):
             if k not in result:
                 result[k] = getattr(self.args, k)
-
         return result
 
     def get_struct_opts(self) -> str:

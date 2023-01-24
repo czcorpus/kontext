@@ -21,23 +21,7 @@
 import styled from 'styled-components';
 import * as theme from '../theme/default';
 
-// ---------------- <SyntaxViewPane /> --------------------------------------
 
-export const SyntaxViewPane = styled.div`
-    min-height: 2em;
-
-    div.ajax-loader {
-
-        text-align: center;
-        padding-top: 1em;
-        padding-bottom: 1em;
-
-        img {
-            display: inline-block;
-        }
-
-    }
-`;
 
 // ---------------- <UsageTips /> --------------------------------------
 

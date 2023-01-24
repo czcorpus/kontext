@@ -118,6 +118,16 @@ export class ConcSummaryModel extends StatelessModel<ConcSummaryModelState> {
                 state.ipm = null;
                 state.queryChainSize = List.size(action.payload.data.query_overview);
                 state.corpusIpm = action.payload.data.result_relative_freq;
+            },
+            (state, action, dispatch) => {
+                const concSize = action.payload.data.concsize;
+                dispatch(
+                    Actions.ConcordanceRecalculationReady,
+                    {
+                        concSize,
+                        overviewMinFreq: this.getRecommOverviewMinFreq(concSize)
+                    }
+                );
             }
         );
 
@@ -153,7 +163,7 @@ export class ConcSummaryModel extends StatelessModel<ConcSummaryModelState> {
             }
         ).sideEffectAlsoOn(
             Actions.LoadTTDictOverview.name,
-            PluginInterfaces.KwicConnect.Actions.FetchInfo
+            PluginInterfaces.KwicConnect.Actions.FetchInfo.name,
         );
 
         this.addActionHandler(

@@ -16,6 +16,11 @@ services:
       - "3306:3306"
     networks:
       - databases
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "--password=$MYSQL_ROOT_PASSWORD"]
+      interval: 1s
+      timeout: 10s
+      retries: 5
 
   kontext:
     build:
@@ -23,18 +28,29 @@ services:
     volumes:
       - ./scripts/install/conf/docker/config.cypress.xml:/opt/kontext/conf/config.xml
     depends_on:
-      - mariadb-test
+      mariadb-test:
+        condition: service_healthy
     networks:
       - databases
 
   rq-scheduler:
     depends_on:
-      - mariadb-test
+      mariadb-test:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kontext:
+        condition: service_started
     restart: always
 
   rq-worker:
     depends_on:
-      - mariadb-test
+      mariadb-test:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kontext:
+        condition: service_started
     networks:
       - databases
 

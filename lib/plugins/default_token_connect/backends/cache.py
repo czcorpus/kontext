@@ -23,7 +23,7 @@ from hashlib import md5
 from plugin_types.general_storage import KeyValueStorage
 
 
-def mk_token_connect_hash(corpora, token_id, num_tokens, query_args, lang, context=None):
+def mk_token_connect_hash(corpora, token_id, num_tokens, query_args, lang, context=None, cookies=None):
     """
     Returns a hashed cache key based on the passed parameters.
     """
@@ -33,7 +33,7 @@ def mk_token_connect_hash(corpora, token_id, num_tokens, query_args, lang, conte
             args.append((x, sorted([(x2, y2) for x2, y2 in list(y.items())], key=lambda x: x[0])))
         else:
             args.append((x, y))
-    return md5(f'{corpora}{token_id}{num_tokens}{args}{lang}{context}'.encode('utf-8')).hexdigest()
+    return md5(f'{corpora}{token_id}{num_tokens}{args}{lang}{context}{cookies}'.encode('utf-8')).hexdigest()
 
 
 def mk_token_connect_cache_key(provider_id, corpora, token_id, num_tokens, query_args, lang, context=None):
@@ -52,18 +52,18 @@ def cached(fn):
     """
 
     @wraps(fn)
-    async def wrapper(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context):
+    async def wrapper(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context, cookies):
         """
         get cache db using a method defined in the abstract class
         """
         cache_db: KeyValueStorage = self.get_cache_db()
-        key = mk_token_connect_cache_key(self.provider_id, corpora,
-                                         token_id, num_tokens, query_args, lang, context)
+        key = mk_token_connect_cache_key(
+            self.provider_id, corpora, token_id, num_tokens, query_args, lang, context)
 
         cached_data = await cache_db.get(key)
         # if no result is found in the cache, call the backend function
         if cached_data is None:
-            res = await fn(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context)
+            res = await fn(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context, cookies)
             # if a result is returned by the backend function, encode and zip its data part and store it in
             # the cache along with the "found" parameter
             await cache_db.set(key, {'data': res[0], 'found': res[1]})

@@ -19,7 +19,7 @@ import re
 import time
 from dataclasses import asdict
 from datetime import datetime
-from typing import Dict, Iterable, List, Optional, Union
+from typing import Dict, Iterable, List, Optional, Union, Tuple
 
 import aiofiles
 import aiofiles.os
@@ -265,9 +265,26 @@ class Freq2DCalculation:
         norms2_dict = self._conc.get_attr_values_sizes(sattr)
         return [norms2_dict.get(x[sattr_idx], 0) for x in words]
 
-    def ct_dist(self, crit, limit_type, limit=1):
+    def ct_dist(
+            self,
+            crit,
+            flimit_type,
+            flimit=1,
+            max_result_size=1000
+    ) -> List[Tuple[str, float, float]]:
         """
         Calculate join distribution (2d frequency).
+
+        Args:
+            crit -- a criterion for both dimensions (e.g. 'word 0<0 doc.txtype_group 0')
+            flimit_type -- a unit applied to 'flimit'; must be one of {abs, ipm, pabs, pipm}
+                where 'pabs' and 'pipm' are percentile versions of 'abs' and 'ipm'.
+            max_result_size -- no matter what flimit+flimit_type is involved, KonText must
+                always load all the matching values first before it starts to calculate freq.
+                information needed to sort and cut the final result. This value specifies max.
+                number of initial result size to prevent server overload.
+        Returns:
+            list of 3-tuples (word, abs. freq., norm)
         """
         words = manatee.StrVector()
         freqs = manatee.NumVector()
@@ -285,34 +302,37 @@ class Freq2DCalculation:
             raise Freq2DCalculationError(
                 'Exactly two attributes (either positional or structural) can be used')
 
-        words = [tuple(w.split('\t')) for w in words]
+        swords: List[Tuple[str,...]] = [tuple(w.split('\t')) for w in words]
 
         num_structattrs = self._get_num_structattrs(attrs)
         if num_structattrs == 2:
-            norms = [1e6] * len(words)  # this is not really needed
+            norms = [1e6] * len(swords)  # this is not really needed
         elif num_structattrs == 1:
             sattr_idx = 0 if '.' in attrs[0] else 1
-            norms = self._calc_1sattr_norms(words, sattr=attrs[sattr_idx], sattr_idx=sattr_idx)
+            norms = self._calc_1sattr_norms(swords, sattr=attrs[sattr_idx], sattr_idx=sattr_idx)
         else:
-            norms = [self._corp.size] * len(words)
-        mans = list(zip(words, freqs, norms))
-        if limit_type == 'abs':
-            ans = [v for v in mans if v[1] >= limit]
-        elif limit_type == 'ipm':
-            ans = [v for v in mans if v[1] / float(v[2]) * 1e6 >= limit]
-        elif limit_type == 'pabs':
+            norms = [self._corp.size] * len(swords)
+        mans = list(zip(swords, freqs, norms))
+        if flimit_type == 'abs':
+            ans = [v for v in mans if v[1] >= flimit]
+        elif flimit_type == 'ipm':
+            ans = [v for v in mans if v[1] / float(v[2]) * 1e6 >= flimit]
+        elif flimit_type == 'pabs':
             values = sorted(mans, key=lambda v: v[1])
-            plimit = int(math.floor(limit / 100. * len(values)))
+            plimit = int(math.floor(flimit / 100. * len(values)))
             ans = values[plimit:]
-        elif limit_type == 'pipm':
+        elif flimit_type == 'pipm':
             values = sorted(mans, key=lambda v: v[1] / float(v[2]) * 1e6)
             # math.floor(x) == math.ceil(x) - 1 (indexing from 0)
-            plimit = math.floor(limit / 100. * len(values))
+            plimit = math.floor(flimit / 100. * len(values))
             ans = values[plimit:]
-        if len(ans) > 1000:
+        else:
+            raise UserReadableException(
+                f'Unknown limit type - expecting one of {{abs, ipm, pabs, pipm}}, got: {flimit_type}')
+        if len(ans) > max_result_size:
             raise UserReadableException(
                 'The result is too large. Please try to increase the minimum frequency.')
-        return ans, len(mans)
+        return [x[0] + x[1:] for x in ans]
 
     async def run(self):
         """
@@ -323,9 +343,10 @@ class Freq2DCalculation:
             SubcorpusIdent(corpus_name=self._args.corpname, id=self._args.subcorpus_id) if self._args.subcorpus_id
             else self._args.corpname)
         self._conc = await require_existing_conc(corp=self._corp, q=self._args.q)
-        result, full_size = self.ct_dist(
-            self._args.fcrit, limit=self._args.ctminfreq, limit_type=self._args.ctminfreq_type)
-        return dict(data=[x[0] + x[1:] for x in result], full_size=full_size)
+        result = self.ct_dist(
+            self._args.fcrit, flimit=self._args.ctminfreq, flimit_type=self._args.ctminfreq_type,
+            max_result_size=self._args.max_result_size)
+        return dict(data=result, size=len(result))
 
 
 async def calculate_freq2d(args):

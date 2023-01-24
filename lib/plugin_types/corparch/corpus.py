@@ -145,8 +145,10 @@ class MLPositionFilter(enum.Enum):
     sentences (or other structures). Using such a filter in specific cases, a simulation of
     a multi-layer corpus can be achieved via aligned corpora.
 
-    For now only "none" and "alphanum" filters are available.
-
+    For now only None and "alphanum" filters are available.
+    Note: in older versions there was a string value 'none' instead of actual None
+    used. To keep backward compatibility, the class is able to handle 'none' too
+    (see method _missing_).
     """
 
     none = None

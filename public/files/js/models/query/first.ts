@@ -485,7 +485,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                     });
                 }
 
-                this.suspendWithTimeout(
+                this.waitForActionWithTimeout(
                     2000,
                     {ttSelections: false, contextData: false},
                     (action, syncData) => {

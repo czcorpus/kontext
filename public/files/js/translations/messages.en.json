@@ -916,6 +916,7 @@
         "pquery__condition_always": "always",
         "dispersion__resolution": "resolution",
         "dispersion__download_chart": "download the chart",
-        "dispersion__print_quality": "for printing"
+        "dispersion__print_quality": "for printing",
+        "dispersion__max_resolution_is_{value}": "The resolution value must be between 1 and {value}"
     }
 }

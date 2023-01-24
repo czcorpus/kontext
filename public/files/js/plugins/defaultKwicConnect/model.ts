@@ -22,6 +22,7 @@ import * as PluginInterfaces from '../../types/plugins';
 import * as Kontext from '../../types/kontext';
 import * as ttResponse from '../../models/concordance/ttdist/response';
 import { Actions as ConcActions } from '../../models/concordance/actions';
+import { Actions as QueryActions } from '../../models/query/actions';
 import { StatefulModel, IFullActionControl } from 'kombo';
 import { Observable, of as rxOf, concat } from 'rxjs';
 import { concatMap } from 'rxjs/operators';
@@ -180,6 +181,33 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
                     });
                 }
 
+            }
+        );
+
+        this.addActionHandler(
+            QueryActions.BranchQuery,
+            state => {
+                this.changeState(state => {
+                    state.data = [];
+                });
+                if (!this.state.blockedByAsyncConc) {
+                    this.waitForActionWithTimeout(5000, {}, (action, syncData) => {
+                        if (ConcActions.isConcordanceRecalculationReady(action)) {
+                            return null;
+                        }
+                        return syncData;
+
+                    }).subscribe({
+                        next: action => {
+                            if (ConcActions.isConcordanceRecalculationReady(action)) {
+                                this.loadData(action.payload.overviewMinFreq);
+                            }
+                        },
+                        error: error => {
+                            this.pluginApi.showMessage('error', error);
+                        }
+                    });
+                }
             }
         );
 

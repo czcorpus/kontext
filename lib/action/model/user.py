@@ -112,7 +112,7 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
             raise UserReadableException(ex)
         return req_args
 
-    async def post_dispatch(self, action_props, result, err_desc):
+    async def post_dispatch(self, action_props, resp, err_desc):
         """
         Runs after main action is processed but before any rendering (incl. HTTP headers)
         """

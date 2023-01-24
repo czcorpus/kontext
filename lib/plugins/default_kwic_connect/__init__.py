@@ -50,9 +50,9 @@ def merge_results(curr, new, word: str):
         return curr
 
 
-async def handle_word_req(word, corpora, providers, ui_lang):
+async def handle_word_req(plugin_ctx, word, corpora, providers, ui_lang):
     with plugins.runtime.KWIC_CONNECT as kc:
-        return word, await kc.fetch_data(providers, corpora, word, ui_lang)
+        return word, await kc.fetch_data(plugin_ctx, providers, corpora, word, ui_lang)
 
 
 @bp.route('/fetch_external_kwic_info')
@@ -61,8 +61,13 @@ async def fetch_external_kwic_info(amodel: ConcActionModel, req: KRequest, resp:
     words = req.args_getlist('w')
     with plugins.runtime.CORPARCH as ca:
         corpus_info = await ca.get_corpus_info(amodel.plugin_ctx, amodel.corp.corpname)
-        args = [(w, [amodel.corp.corpname] + amodel.args.align, corpus_info.kwic_connect.providers, req.ui_lang)
-                for w in words]
+        args = [(
+            amodel.plugin_ctx,
+            w,
+            [amodel.corp.corpname] + amodel.args.align,
+            corpus_info.kwic_connect.providers,
+            req.ui_lang)
+            for w in words]
         provider_all = []
         for f in asyncio.as_completed([handle_word_req(*arg) for arg in args]):
             word, res = await f
@@ -73,7 +78,9 @@ async def fetch_external_kwic_info(amodel: ConcActionModel, req: KRequest, resp:
                 renderer=provider[0]['renderer'],
                 heading=provider[0]['heading'],
                 note=provider[0]['note'],
-                data=[dict(kwic=item['kwic'], status=item['status'], contents=item['contents']) for item in provider]))
+                data=[
+                    dict(kwic=item['kwic'], status=item['status'], contents=item['contents'])
+                    for item in provider]))
     return dict(data=ans)
 
 
@@ -115,13 +122,24 @@ class DefaultKwicConnect(AbstractKwicConnect):
     def export_actions():
         return bp
 
-    async def fetch_data(self, provider_ids: List[str], corpora: List[str], lemma: str, lang: str) -> List[Dict]:
+    async def fetch_data(
+            self,
+            plugin_ctx,
+            provider_ids,
+            corpora,
+            lemma,
+            lang) -> List[Dict]:
         ans = []
         for backend, frontend in self.map_providers(provider_ids):
             try:
                 if backend.enabled_for_corpora(corpora):
+                    cookies = {}
+                    for cname in backend.get_required_cookies():
+                        if cname not in plugin_ctx.cookies:
+                            raise Exception(f'Backend configuration problem: cookie {cname} not available')
+                        cookies[cname] = plugin_ctx.cookies[cname]
                     data, status = await backend.fetch(
-                        corpora, None, None, 1, dict(lemma=lemma), lang, (-1, 1))
+                        corpora, None, None, 1, dict(lemma=lemma), lang, (-1, 1), cookies)
                     ans.append(frontend.export_data(
                         data, status, lang, is_kwic_view=False).to_dict())
             except EnvironmentError as ex:

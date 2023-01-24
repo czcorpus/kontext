@@ -90,7 +90,7 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel<Freq2DFlatViewModelS
                 minFreqType: props.ctminfreq_type,
                 alphaLevel: Maths.AlphaLevel.LEVEL_5,
                 availAlphaLevels: importAvailAlphaLevels(),
-                fullSize: null,
+                dataSize: null,
                 usesAdHocSubcorpus: props.usesAdHocSubcorpus,
                 origData: [],
                 data: [],
@@ -229,7 +229,7 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel<Freq2DFlatViewModelS
     }
 
     protected importData(state:Freq2DFlatViewModelState, data:CTFreqResultData):void {
-        state.fullSize = data.full_size;
+        state.dataSize = data.size;
         state.origData = List.map(
             ([label1, label2, absFreq, total], i) => {
                 const confInt = Maths.wilsonConfInterval(absFreq, total, state.alphaLevel);

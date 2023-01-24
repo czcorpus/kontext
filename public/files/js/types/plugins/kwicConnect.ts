@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { Action } from 'kombo';
 import { BasePlugin, IPluginApi } from './common';
 
 // ------------------------------------------------------------------------
@@ -29,8 +30,10 @@ export interface IPlugin extends BasePlugin {
     getWidgetView():WidgetWiew;
 }
 
-export enum Actions {
-    FetchInfo = 'KWIC_CONNECT_FETCH_INFO'
+export class Actions {
+    static FetchInfo:Action<{}> = {
+        name: 'KWIC_CONNECT_FETCH_INFO'
+    };
 }
 
 export type Factory = (

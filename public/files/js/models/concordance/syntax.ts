@@ -31,17 +31,17 @@ export class DummySyntaxViewModel extends StatefulModel<PluginInterfaces.SyntaxV
 
     close():void {}
 
-    onPageResize():void {}
-
     isWaiting():boolean {
         return false;
     }
 
     onAction(action:Action) {}
 
-    registerOnError(fn:(e:Error)=>void):void {}
-
     getModel():IModel<PluginInterfaces.SyntaxViewer.BaseState> {
         return this;
+    }
+
+    getView() {
+        return undefined;
     }
 }

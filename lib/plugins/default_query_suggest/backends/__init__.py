@@ -32,14 +32,6 @@ class HTTPBackend(AbstractBackend):
         else:
             self._client = HTTPClient('http://{}{}'.format(self._conf['server'], port_str))
 
-    def get_required_attrs(self):
-        if 'posAttrs' in self._conf:
-            logging.getLogger(__name__).warning(
-                'You are using a deprecated "conf.posAttr" value; please use "conf.attrs" instead.')
-            return self._conf.get('posAttrs', [])
-        else:
-            return self._conf.get('attrs', [])
-
     async def find_suggestion(
             self, user_id, ui_lang, maincorp, corpora, subcorpus, value, value_type, value_subformat,
             query_type, p_attr, struct, s_attr):

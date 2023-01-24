@@ -32,6 +32,7 @@ from action.model.abstract import AbstractPageModel, AbstractUserModel
 from action.model.base import BaseActionModel
 from action.model.user import UserActionModel
 from action.props import ActionProps
+from action.result.base import BaseResult
 from action.response import KResponse
 from action.templating import CustomJSONEncoder, ResultType, TplEngine
 from action.theme import apply_theme
@@ -47,7 +48,6 @@ async def _output_result(
         action_props: ActionProps,
         tpl_engine: TplEngine,
         translate: Callable[[str], str],
-        result: ResultType,
         resp: KResponse) -> Union[str, bytes]:
     """
     Renders a response body out of a provided data (result). The concrete form of data transformation
@@ -59,10 +59,9 @@ async def _output_result(
     'plain' + str
     A callable 'result' can be used for lazy result evaluation or for JSON encoding with a custom encoder
     """
-    if 300 <= resp.http_status_code < 400 or result is None:
+    if 300 <= resp.http_status_code < 400 or resp.result is None:
         return ''
-    if callable(result):
-        result = result()
+    result = resp.result() if callable(resp.result) else resp.result
     if action_props.return_type == 'json':
         try:
             if type(result) in (str, bytes):
@@ -88,7 +87,9 @@ async def _output_result(
         action_model.init_menu(result)
         return tpl_engine.render(action_props.template, result)
 
-    if isinstance(result, dict) and 'messages' in result and any(result['messages'], lambda x: x[0] == 'error'):
+    if (isinstance(result, dict) and
+            'messages' in result and
+            any(x[0] == 'error' for x in result['messages'])):
         raise RuntimeError(f'Exceptions occured: {result["messages"]}')
     raise RuntimeError(
         f'Unsupported result and return_type combination: {result.__class__.__name__},  {action_props.return_type}')
@@ -111,7 +112,7 @@ async def resolve_error(
         resp.set_http_status(err.code)
     else:
         resp.set_http_status(500)
-    return ans
+    resp.set_result(ans)
 
 
 def get_explicit_return_type(req: KRequest) -> Optional[str]:
@@ -131,7 +132,7 @@ def http_action(
         access_level: int = 1,
         template: Optional[str] = None,
         action_model: Optional[Type[BaseActionModel]] = None,
-        page_model: Optional[str] = None,
+        page_model: Optional[Union[str, Type[BaseResult]]] = None,
         mapped_args: Optional[Type] = None,
         mutates_result: bool = False,
         return_type: Optional[str] = None,
@@ -148,7 +149,7 @@ def http_action(
     template -- a Jinja2 template source path (a relative path starting in the 'templates' dir)
     action_model -- a model providing functions for handling user session (session in a general sense),
                     accessing corpora and misc. search results
-    page_model -- a JavaScript page module
+    page_model -- a JavaScript page module or action.result.base.BaseResult providing also response data container
     mapped_args -- any class (typically, a dataclass) request arguments will be mapped to; the class must
                    provide one of the following typed arguments: int, List[int], str, List[str].
                    All the values can be also Optional.
@@ -174,7 +175,8 @@ def http_action(
             resp = KResponse(
                 root_url=req.get_root_url(),
                 redirect_safe_domains=application.config['redirect_safe_domains'],
-                cookies_same_site=application.config['cookies_same_site']
+                cookies_same_site=application.config['cookies_same_site'],
+                result=page_model if isinstance(page_model, BaseResult) else None
             )
 
             if request.path.startswith(app_url_prefix):
@@ -210,7 +212,11 @@ def http_action(
                 if _is_authorized_to_execute_action(amodel, aprops):
                     await amodel.pre_dispatch(None)
                     ans = await func(amodel, req, resp)
-                    await amodel.post_dispatch(aprops, ans, None)
+                    if resp.result and ans:
+                        raise RuntimeError('Cannot use both KResponse result container and legacy result return')
+                    elif ans is not None:
+                        resp.set_result(ans)
+                    await amodel.post_dispatch(aprops, resp, None)
                 else:
                     amodel = UserActionModel(req, resp, aprops, shared_data)
                     await amodel.pre_dispatch(None)
@@ -224,11 +230,11 @@ def http_action(
                 if aprops.return_type == 'plain':
                     raise
                 resp.add_system_message('error', str(ex))
-                ans = await resolve_error(amodel, req, resp, ex)
+                await resolve_error(amodel, req, resp, ex)
                 if aprops.template:
                     aprops.template = 'message.html'
                     aprops.page_model = 'message'
-                    ans['popup_server_messages'] = False
+                    resp.result['popup_server_messages'] = False
                     if isinstance(ex, (CorpusForbiddenException, AlignedCorpusForbiddenException)):
                         amodel.disable_menu_on_forbidden_corpus()
                 if not aprops.return_type:
@@ -240,7 +246,7 @@ def http_action(
                         '{0}\n@{1}\n{2}'.format(ex, err_id, ''.join(get_traceback())))
                     resp.add_system_message('error', traceback.format_exc())
 
-            if ans is None:
+            if resp.result is None:
                 resp_body = None
             else:
                 resp_body = await _output_result(
@@ -249,7 +255,6 @@ def http_action(
                     action_props=aprops,
                     tpl_engine=application.ctx.templating,
                     translate=req.translate,
-                    result=ans,
                     resp=resp)
             return HTTPResponse(
                 body=resp_body,

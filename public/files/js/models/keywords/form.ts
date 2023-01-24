@@ -26,7 +26,7 @@ import { IUnregistrable } from '../common/common';
 import { Actions } from './actions';
 import { Actions as GlobalActions } from '../common/actions';
 import { KeywordsSubmitArgs, KeywordsSubmitResponse } from './common';
-import { WlnumsTypes } from '../wordlist/common';
+import { WlnumsTypes, WlTypes } from '../wordlist/common';
 
 
 
@@ -44,6 +44,12 @@ export interface KeywordsFormCorpSwitchPreserve {
 export interface KeywordsFormModelArgs {
     dispatcher:IActionDispatcher;
     layoutModel:PageModel;
+    initialArgs:{
+        ref_corpname:string;
+        ref_usesubcorp:string;
+        wlattr:string;
+        wlpat:string;
+    };
 }
 
 /**
@@ -55,16 +61,17 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
 
     constructor({
         dispatcher,
-        layoutModel
+        layoutModel,
+        initialArgs,
     }:KeywordsFormModelArgs) {
         super(
             dispatcher,
             {
                 isBusy: false,
-                refCorp: layoutModel.getNestedConf('corpusIdent', 'name'),
-                refSubcorp: '',
-                attr: 'lemma',
-                pattern: '.*',
+                refCorp: initialArgs.ref_corpname ? initialArgs.ref_corpname : layoutModel.getNestedConf('corpusIdent', 'name'),
+                refSubcorp: initialArgs.ref_usesubcorp,
+                attr: initialArgs.wlattr ? initialArgs.wlattr : 'lemma',
+                pattern: initialArgs.wlpat ? initialArgs.wlpat : '.*',
             }
         );
         this.layoutModel = layoutModel;
