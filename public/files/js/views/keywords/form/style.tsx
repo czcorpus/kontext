@@ -29,3 +29,16 @@ export const KeywordsForm = styled.form`
 
 
 `;
+
+// ---------------- <MainFieldset /> --------------------------------------------
+
+export const MainFieldset = styled.div`
+
+    display: grid;
+    grid-template-columns: 10em 1fr;
+    grid-gap: 0.7em;
+    align-items: center;
+    margin-top: 3.4em;
+    margin-bottom: 1.6em;
+
+`;
