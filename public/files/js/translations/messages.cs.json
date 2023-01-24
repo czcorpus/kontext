@@ -658,6 +658,7 @@
         "task__type_freqPrecalc": "Výpočet pomocných dat pro frekvenční distribuci",
         "task__type_chart_download": "Stažení frekv. grafu",
         "task__type_wordlist": "Seznam slov",
+        "task__type_kwords": "Klíčová slova",
         "task__status_PENDING": "Běží",
         "task__status_STARTED": "Běží",
         "task__status_RETRY": "Opakování po chybě",
@@ -915,6 +916,7 @@
         "dispersion__resolution": "rozlišení",
         "dispersion__download_chart": "stáhnout graf",
         "dispersion__print_quality": "pro tisk",
-        "dispersion__max_resolution_is_{value}": "Hodnota rozlišení musí být mezi 1 a {value}"
+        "dispersion__max_resolution_is_{value}": "Hodnota rozlišení musí být mezi 1 a {value}",
+        "kwordsRestore__please_wait_msg": "Počkejte prosím. Připravuje se seznam klíčových slov."
     }
 }

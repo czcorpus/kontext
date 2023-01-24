@@ -658,6 +658,7 @@
         "task__type_freqPrecalc": "Frequency auxiliary data precalculation",
         "task__type_chart_download": "Frequency chart download",
         "task__type_wordlist": "Word list",
+        "task__type_kwords": "Keywords",
         "task__status_PENDING": "Running",
         "task__status_STARTED": "Running",
         "task__status_RETRY": "Retrying",
@@ -915,6 +916,7 @@
         "dispersion__resolution": "resolution",
         "dispersion__download_chart": "download the chart",
         "dispersion__print_quality": "for printing",
-        "dispersion__max_resolution_is_{value}": "The resolution value must be between 1 and {value}"
+        "dispersion__max_resolution_is_{value}": "The resolution value must be between 1 and {value}",
+        "kwordsRestore__please_wait_msg": "Please wait. Keywords are being prepared."
     }
 }
