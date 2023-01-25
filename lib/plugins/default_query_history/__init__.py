@@ -150,7 +150,7 @@ class QueryHistory(AbstractQueryHistory):
 
         form_type = edata.get('lastop_form', {}).get('form_type', None)
         if form_type not in ('query', 'filter'):
-            logging.getLogger(__name__).warning(f'Fixing broken query history record of invalid type {form_type}')
+            logging.getLogger(__name__).warning(f'Fixing broken query history record {q_id} of invalid type {form_type}')
             ops = await self._query_persistence.map_pipeline_ops(q_id, extract_id)
             q_id, edata = ops[0]
 
