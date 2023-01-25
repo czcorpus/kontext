@@ -745,14 +745,15 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
     }
 
     supportsWebSocket():boolean {
-        return window['WebSocket'] !== undefined && this.getConf('jobStatusServiceUrl');
+        return window['WebSocket'] !== undefined && this.getConf('enabledWebsockets');
     }
 
     openWebSocket<T, U>(path:string='', args?:{}):[Subject<T>, Observable<U>] {
         const params = args ?
                 '?' + pipe(args, CURL.valueToPairs(), List.map(([k, v]) => `${k}=${v}`)).join('&') :
                 '';
-        const url = new URL(path + params, this.getConf<string>('jobStatusServiceUrl'));
+        // TODO make creating ws url nicer
+        const url = new URL(path + params, this.createActionUrl(`ws/${path}`).replace('https', 'ws').replace('http', 'ws'));
         const ws = webSocket<any>(url.href);
         const input = new Subject<T>();
         input.subscribe(ws);

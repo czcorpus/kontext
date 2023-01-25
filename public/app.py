@@ -147,7 +147,8 @@ application.blueprint(tools_bp)
 application.blueprint(subcorpus_bp)
 application.blueprint(fcs_common_bp)
 application.blueprint(fcs_v1_bp)
-application.blueprint(websocket_bp)
+if settings.get_bool('global', 'enabled_websockets'):
+    application.blueprint(websocket_bp)
 setup_plugins()
 install_plugin_actions(application)
 

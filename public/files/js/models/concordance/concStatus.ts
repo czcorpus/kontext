@@ -71,11 +71,13 @@ export class HitReloader {
         };
 
         if (this.layoutModel.supportsWebSocket()) {
-            const [checkConc$, concCacheStatusSocket] = this.layoutModel.openWebSocket<{
-                user_id:number;
-                corp_id:string;
-                subc_path:string;
-                conc_id:string}, ConcStatus>('conc_cache_status');
+            const args = {
+                user_id: this.layoutModel.getConf<number>('userId'),
+                corp_id: this.layoutModel.getCorpusIdent().id,
+                subc_id: this.layoutModel.getCorpusIdent().usesubcorp,
+                conc_id: this.layoutModel.getConf<string>('concPersistenceOpId')
+            };
+            const [_, concCacheStatusSocket] = this.layoutModel.openWebSocket<null, ConcStatus>('conc_cache_status', args);
             concCacheStatusSocket.subscribe({
                 next: response => {
                     applyData(response);
@@ -87,12 +89,6 @@ export class HitReloader {
                     });
                     this.layoutModel.showMessage('error', err);
                 }
-            });
-            checkConc$.next({
-                user_id: this.layoutModel.getConf<number>('userId'),
-                corp_id: this.layoutModel.getCorpusIdent().id,
-                subc_path: this.layoutModel.getCorpusIdent().usesubcorp,
-                conc_id: this.layoutModel.getConf<string>('concPersistenceOpId')
             });
 
         } else {
