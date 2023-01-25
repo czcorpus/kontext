@@ -22,7 +22,7 @@ import logging
 import random
 import time
 from datetime import datetime
-from typing import Callable
+from typing import Dict, Tuple
 
 import plugins
 from corplib.fallback import EmptyCorpus
@@ -144,8 +144,15 @@ class QueryHistory(AbstractQueryHistory):
         return await self._query_persistence.open(q_id) is not None
 
     async def _merge_conc_data(self, data):
+        async def extract_id(item_id: str, item_data: Dict) -> Tuple[str, Dict]: return item_id, item_data
         q_id = data['query_id']
         edata = await self._query_persistence.open(q_id)
+
+        form_type = edata.get('lastop_form', {}).get('form_type', None)
+        if form_type not in ('query', 'filter'):
+            logging.getLogger(__name__).warning(f'Fixing broken query history record of invalid type {form_type}')
+            ops = await self._query_persistence.map_pipeline_ops(q_id, extract_id)
+            q_id, edata = ops[0]
 
         def get_ac_val(data, name, corp): return data[name][corp] if name in data else None
 
