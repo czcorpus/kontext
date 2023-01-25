@@ -54,6 +54,7 @@ DFLT_HTTP_CLIENT_TIMEOUT = 20
 from typing import Optional
 
 import aiohttp
+import jwt
 import plugins
 import plugins.export
 import settings
@@ -61,11 +62,10 @@ from action.context import ApplicationContext
 from action.cookie import KonTextCookie
 from action.plugin.initializer import install_plugin_actions, setup_plugins
 from action.templating import TplEngine
+from jwt.exceptions import ExpiredSignatureError, InvalidSignatureError
 from sanic import Request, Sanic
 from sanic.response import HTTPResponse
 from sanic_babel import Babel
-import jwt
-from jwt.exceptions import InvalidSignatureError, ExpiredSignatureError
 from texttypes.cache import TextTypesCache
 from views.colls import bp as colls_bp
 from views.concordance import bp as conc_bp
@@ -80,6 +80,7 @@ from views.root import bp as root_bp
 from views.subcorpus import bp as subcorpus_bp
 from views.tools import bp as tools_bp
 from views.user import bp as user_bp
+from views.websocket import bp as websocket_bp
 from views.wordlist import bp as wordlist_bp
 
 # we ensure that the application's locale is always the same
@@ -146,6 +147,7 @@ application.blueprint(tools_bp)
 application.blueprint(subcorpus_bp)
 application.blueprint(fcs_common_bp)
 application.blueprint(fcs_v1_bp)
+application.blueprint(websocket_bp)
 setup_plugins()
 install_plugin_actions(application)
 
