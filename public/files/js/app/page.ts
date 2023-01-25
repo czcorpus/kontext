@@ -750,7 +750,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
 
     openWebSocket<T, U>(path:string='', args?:{}):[Subject<T>, Observable<U>] {
         const params = args ?
-                '?' + pipe(args, CURL.valueToPairs(), List.map(([k, v]) => `${k}=${v}`)) :
+                '?' + pipe(args, CURL.valueToPairs(), List.map(([k, v]) => `${k}=${v}`)).join('&') :
                 '';
         const url = new URL(path + params, this.getConf<string>('jobStatusServiceUrl'));
         const ws = webSocket<any>(url.href);

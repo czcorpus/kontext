@@ -53,7 +53,7 @@ async def _init_user_action_model(request: Request) -> UserActionModel:
     return amodel
 
 
-@bp.websocket('/job_status')
+@bp.websocket('/task_status')
 async def check_tasks_status(request: Request, ws: Websocket):
     try:
         amodel = await _init_user_action_model(request)
@@ -62,16 +62,23 @@ async def check_tasks_status(request: Request, ws: Websocket):
         await ws.send('Access forbidden - please log-in.')
         return
 
-    watched_task_ids = await ws.recv()
-    tasks = {t.ident: t for t in (await _check_tasks_status(amodel, request, None)) if t.ident in watched_task_ids}
+    watched_tasks = request.args.get('taskId')
+    if not watched_tasks:
+        await ws.send('Missing `taskId` parameter.')
+        return
+    tasks = {t.ident: t for t in (await _check_tasks_status(amodel, request, None)) if t.ident in watched_tasks}
+    watched_tasks = [x for x in watched_tasks if x in tasks]
+
     await ws.send(json.dumps([v.to_dict() for v in tasks.values()]))
-    while True:
+    while watched_tasks:
         await asyncio.sleep(1)  # TODO move constant to settings or something
         changed = []
         for t in await _check_tasks_status(amodel, request, None):
             # AsyncTaskStatus has defined __eq__ method to check change
-            if t != tasks[t.ident]:
-                changed.append(t.to_dict())
+            if t.ident in watched_tasks and (t.ident not in tasks or t != tasks[t.ident]):
                 tasks[t.ident] = t
+                changed.append(t.to_dict())
+                if t.is_finished():
+                    watched_tasks = [x for x in watched_tasks if x != t.ident]
         if changed:
             await ws.send(json.dumps(changed))

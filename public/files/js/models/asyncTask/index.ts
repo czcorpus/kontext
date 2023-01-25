@@ -326,7 +326,13 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
 
     private checkCurrentTasks():void {
         if (this.pageModel.supportsWebSocket()) {
-            const [checkTasks$, statusSocket] = this.pageModel.openWebSocket<Array<string>, Array<Kontext.AsyncTaskInfo>>('job_status');
+            const tasks = pipe(
+                this.state.asyncTasks,
+                // exclude download tasks
+                List.filter(v => !Dict.hasValue(v.category, DownloadType)),
+                List.map(item => item.ident),
+            );
+            const [_, statusSocket] = this.pageModel.openWebSocket<Array<string>, Array<Kontext.AsyncTaskInfo>>('task_status', {taskId: tasks});
             statusSocket.subscribe({
                 next: data => {
                     this.changeState(state => {
@@ -348,14 +354,6 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                     console.log('error: ', error);
                 }
             });
-            checkTasks$.next(
-                pipe(
-                    this.state.asyncTasks,
-                    // exclude download tasks
-                    List.filter(v => !Dict.hasValue(v.category, DownloadType)),
-                    List.map(item => item.ident),
-                )
-            );
 
         } else { // the ajax way
 
