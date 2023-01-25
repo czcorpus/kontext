@@ -53,7 +53,7 @@ async def _init_user_action_model(request: Request) -> UserActionModel:
     return amodel
 
 
-@bp.websocket('/check_tasks_status')
+@bp.websocket('/job_status')
 async def check_tasks_status(request: Request, ws: Websocket):
     try:
         amodel = await _init_user_action_model(request)
@@ -62,9 +62,16 @@ async def check_tasks_status(request: Request, ws: Websocket):
         await ws.send('Access forbidden - please log-in.')
         return
 
-    tasks = await _check_tasks_status(amodel, request, None)
-    await ws.send(json.dumps(tasks))
+    watched_task_ids = await ws.recv()
+    tasks = {t.ident: t for t in (await _check_tasks_status(amodel, request, None)) if t.ident in watched_task_ids}
+    await ws.send(json.dumps([v.to_dict() for v in tasks.values()]))
     while True:
-        await asyncio.sleep(1)
-        new_tasks = await _check_tasks_status(amodel, request, None)
-        await ws.send(json.dumps(new_tasks))
+        await asyncio.sleep(1)  # TODO move constant to settings or something
+        changed = []
+        for t in await _check_tasks_status(amodel, request, None):
+            # AsyncTaskStatus has defined __eq__ method to check change
+            if t != tasks[t.ident]:
+                changed.append(t.to_dict())
+                tasks[t.ident] = t
+        if changed:
+            await ws.send(json.dumps(changed))
