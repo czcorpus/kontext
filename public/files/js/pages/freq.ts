@@ -252,8 +252,7 @@ class FreqPage {
             this.layoutModel.dispatcher,
             this.layoutModel,
             this.layoutModel.getConf<string>('concPersistenceOpId'),
-            this.layoutModel.getConf<number>('concUrlTTLDays'),
-            this.layoutModel.getConf<boolean>('concExplicitPersistenceUI')
+            this.layoutModel.getConf<number>('concUrlTTLDays')
         );
         const queryOverviewViews = queryOverviewInit({
             dispatcher: this.layoutModel.dispatcher,

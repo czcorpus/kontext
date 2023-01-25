@@ -46,7 +46,6 @@ export interface QuerySaveAsFormModelState {
     concTTLDays:number;
     concIsArchived:boolean;
     willBeArchived:boolean;
-    concExplicitPersistenceUI:boolean;
 }
 
 /**
@@ -60,8 +59,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
         dispatcher:IActionDispatcher,
         layoutModel:PageModel,
         queryId:string,
-        concTTLDays:number,
-        concExplicitPersistenceUI:boolean
+        concTTLDays:number
     ) {
         super(
             dispatcher,
@@ -72,8 +70,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                 isValidated: false,
                 concTTLDays,
                 concIsArchived: false,
-                willBeArchived: false,
-                concExplicitPersistenceUI
+                willBeArchived: false
             }
         );
         this.layoutModel = layoutModel;

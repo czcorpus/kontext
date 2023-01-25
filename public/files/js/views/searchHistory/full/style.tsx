@@ -133,9 +133,9 @@ export const DataRowLi = styled.li`
     }
 `;
 
-// ------------- <SavedNameInfoSpan /> -------------------------
+// ------------- <SavedNameInfo /> -------------------------
 
-export const SavedNameInfoSpan = styled.span`
+export const SavedNameInfo = styled.div`
 
     color: ${theme.colorLogoPink};
     padding-right: 0.7em;
@@ -244,10 +244,9 @@ export const ActionsDiv = styled.div`
     justify-content: flex-start;
 
     .tools {
+        display: flex;
         flex-grow: 1;
         text-align: right;
-
-        display: flex;
         align-items: center;
         justify-content: flex-end;
     }
@@ -266,9 +265,25 @@ export const ActionsDiv = styled.div`
 // ---------------------- <SaveItemForm /> ------------------------------
 
 export const SaveItemForm = styled.div`
-
-    display: inline;
+    display: flex;
+    align-items: center;
     margin-left: 1em;
+    border: ${theme.inputBorderStyle};
+    border-radius: ${theme.borderRadiusDefault};
+    background-color: #FFFFFF;
+    padding: 0.2em 0.7em;
+
+    label {
+
+        display: flex;
+        flex-direction: column;
+        margin-left: 1em;
+        margin-right: 1em;
+
+        span {
+            text-align: left;
+        }
+    }
 `;
 
 // ---------------------- <FilterForm /> --------------------------------
@@ -297,10 +312,17 @@ export const FilterForm = styled.div`
 
 `;
 
+// ---------------------- <RowToolbar /> ------------------------------
+
+export const RowToolbar = styled.div`
+    display: flex;
+    align-items: center;
+`;
+
 // ---------------------- <RemoveFromHistoryButton /> -----------------
 
 export const RemoveFromHistoryButton = styled.button`
-
+    white-space: nowrap;
     margin-right: 1em;
 `;
 
