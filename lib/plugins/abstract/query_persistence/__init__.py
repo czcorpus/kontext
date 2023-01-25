@@ -18,7 +18,7 @@
 
 import abc
 import logging
-from typing import Dict, Optional, Tuple, Any, Union, List, Callable
+from typing import Dict, Optional, Tuple, Any, Union, List, Callable, TypeVar
 import settings
 if settings.get_bool('global', 'legacy_support', False):
     from legacy.concordance import upgrade_stored_record
@@ -165,6 +165,33 @@ class AbstractQueryPersistence(abc.ABC):
             raise ValueError(f'Cannot determine query supertype from type {form_type}')
         raise ValueError(f'Cannot determine query supertype from data {data}')
 
+    MapRes = TypeVar('MapRes')
+
+    def map_pipeline_ops(self, last_id: str, fn: Callable[[str, Dict], MapRes]) -> List[MapRes]:
+        """
+        Go back to the first operation of a query chain starting from 'last_id' and apply
+        a provided map function to the value
+        """
+        ans = []
+        data = self.open(last_id)
+        if data is None:
+            raise QueryPersistenceRecNotFound(f'no data found for query "{last_id}"')
+        else:
+            ans.append(fn(data['id'], data))
+        limit = 100
+        while data is not None and data.get('prev_id') and limit > 0:
+            prev_id = data['prev_id']
+            data = self.open(prev_id)
+            if data is None:
+                raise QueryPersistenceRecNotFound(f'no data found for query "{prev_id}"')
+            else:
+                ans.insert(0, fn(data['id'], data))
+            limit -= 1
+        if limit == 0:
+            logging.getLogger(__name__).warning(
+                'Reached hard limit when loading query pipeline {0}'.format(last_id))
+        return ans
+
     def load_pipeline_ops(
             self, plugin_ctx: PluginCtx, last_id: str,
             conc_form_args_factory: ConcFormArgsFactory) -> List[ConcFormArgs]:
@@ -177,26 +204,11 @@ class AbstractQueryPersistence(abc.ABC):
         corpus - so it is not possible to load an operation pipeline
         form a corpus Foo while using corpus Bar.
         """
-        ans = []
-        attr_list = plugin_ctx.current_corpus.get_posattrs()
-        data = self.open(last_id)  # type: ignore
-        if data is not None:
+        def map_fn(op_id: str, data: Dict) -> ConcFormArgs:
             form_data = upgrade_stored_record(data.get('lastop_form', {}), attr_list)
-            ans.append(conc_form_args_factory(
-                plugin_ctx, data.get('corpora', []), form_data, data['id']))
-        limit = 100
-        while data is not None and data.get('prev_id') and limit > 0:
-            prev_id = data['prev_id']
-            data = self.open(prev_id)  # type: ignore
-            if data is None:
-                raise QueryPersistenceRecNotFound(f'no data found for query "{prev_id}"')
-            else:
-                form_data = upgrade_stored_record(data.get('lastop_form', {}), attr_list)
-                ans.insert(0, conc_form_args_factory(
-                    plugin_ctx, data.get('corpora', []), form_data, data['id']))
-            limit -= 1
-            if limit == 0:
-                logging.getLogger(__name__).warning('Reached hard limit when loading query pipeline {0}'.format(
-                    last_id))
+            return conc_form_args_factory(plugin_ctx, data.get('corpora', []), form_data, op_id)
+
+        attr_list = plugin_ctx.current_corpus.get_posattrs()
+        ans = self.map_pipeline_ops(last_id, map_fn)
         logging.getLogger(__name__).debug('load pipeline ops: {}'.format(ans))
         return ans
