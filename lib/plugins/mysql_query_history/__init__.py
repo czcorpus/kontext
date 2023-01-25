@@ -236,10 +236,11 @@ class MySqlQueryHistory(AbstractQueryHistory):
                     # to the first query in chain (this fixes possibly broken query history records)
                     form_type = qdata.get('lastop_form', {}).get('form_type', None)
                     if form_type not in ('query', 'filter'):
-                        logging.getLogger(__name__).warning(
-                            f'Fixing broken query history record of invalid type {form_type}')
                         ops = await self._query_persistence.map_pipeline_ops(q_id, extract_id)
+                        logging.getLogger(__name__).warning(
+                            f'Fixing broken query history record {q_id} of invalid type "{form_type}" (proper id: {ops[0][0]})')
                         q_id, qdata = ops[0]
+                        qdata['query_id'], item['query_id'] = q_id, q_id
                     tmp = await self._merge_conc_data(item, qdata)
                     if not tmp:
                         continue
