@@ -18,7 +18,7 @@
 
 import abc
 import logging
-from typing import Any, Callable, Coroutine, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Coroutine, Dict, List, Optional, Tuple, Union, TypeVar, Awaitable
 
 import settings
 
@@ -138,6 +138,9 @@ class AbstractQueryPersistence(abc.ABC):
             True if the concordance will be archived
             False if it is scheduled to be revoked
             None in other cases (i.e. if it's not queued at all)
+
+        TODO: maybe we should consider a better return type as the bool makes
+              this a bit confusing (False => is already stored and will be revoked ?!)
         """
 
     @staticmethod
@@ -170,6 +173,34 @@ class AbstractQueryPersistence(abc.ABC):
             raise ValueError(f'Cannot determine query supertype from type {form_type}')
         raise ValueError(f'Cannot determine query supertype from data {data}')
 
+    MapRes = TypeVar('MapRes')
+
+    async def map_pipeline_ops(self, last_id: str, fn: Callable[[str, Dict], Awaitable[MapRes]]) -> List[MapRes]:
+        """
+        Go back to the first operation of a query chain starting from 'last_id' and apply
+        a provided map function to the value
+        """
+        ans = []
+        data = await self.open(last_id)
+        if data is None:
+            raise QueryPersistenceRecNotFound(f'no data found for query "{last_id}"')
+        else:
+            ans.append(await fn(data['id'], data))
+        limit = 100
+        while data is not None and data.get('prev_id') and limit > 0:
+            prev_id = data['prev_id']
+            data = await self.open(prev_id)
+            if data is None:
+                raise QueryPersistenceRecNotFound(f'no data found for query "{prev_id}"')
+            else:
+                ans.insert(0, await fn(data['id'], data))
+            limit -= 1
+        if limit == 0:
+            logging.getLogger(__name__).warning(
+                'Reached hard limit when loading query pipeline {0}'.format(last_id))
+        return ans
+
+
     async def load_pipeline_ops(
             self, plugin_ctx: PluginCtx, last_id: str,
             conc_form_args_factory: ConcFormArgsFactory) -> List[ConcFormArgs]:
@@ -182,26 +213,11 @@ class AbstractQueryPersistence(abc.ABC):
         corpus - so it is not possible to load an operation pipeline
         form a corpus Foo while using corpus Bar.
         """
-        ans = []
-        attr_list = plugin_ctx.current_corpus.get_posattrs()
-        data = await self.open(last_id)
-        if data is not None:
+        async def map_fn(op_id: str, data: Dict) -> ConcFormArgs:
             form_data = upgrade_stored_record(data.get('lastop_form', {}), attr_list)
-            ans.append(await conc_form_args_factory(
-                plugin_ctx, data.get('corpora', []), form_data, data['id']))
-        limit = 100
-        while data is not None and data.get('prev_id') and limit > 0:
-            prev_id = data['prev_id']
-            data = await self.open(prev_id)
-            if data is None:
-                raise QueryPersistenceRecNotFound(f'no data found for query "{prev_id}"')
-            else:
-                form_data = upgrade_stored_record(data.get('lastop_form', {}), attr_list)
-                ans.insert(0, await conc_form_args_factory(
-                    plugin_ctx, data.get('corpora', []), form_data, data['id']))
-            limit -= 1
-            if limit == 0:
-                logging.getLogger(__name__).warning('Reached hard limit when loading query pipeline {0}'.format(
-                    last_id))
+            return await conc_form_args_factory(plugin_ctx, data.get('corpora', []), form_data, op_id)
+
+        attr_list = plugin_ctx.current_corpus.get_posattrs()
+        ans = await self.map_pipeline_ops(last_id, map_fn)
         logging.getLogger(__name__).debug('load pipeline ops: {}'.format(ans))
         return ans

@@ -68,11 +68,6 @@ export class Actions {
         name: 'MAIN_MENU_OVERVIEW_SHOW_QUERY_INFO_DONE'
     }
 
-    static ShowSaveQueryAsForm:Action<{
-    }> = {
-        name: 'MAIN_MENU_SHOW_SAVE_QUERY_AS_FORM'
-    }
-
     static MakeConcLinkPersistent:Action<{
     }> = {
         name: 'MAIN_MENU_MAKE_CONC_LINK_PERSISTENT'

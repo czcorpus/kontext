@@ -273,7 +273,6 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
             Actions.ApplyShuffle.name,
             Actions.ShowSample.name,
             Actions.OverviewShowQueryInfo.name,
-            Actions.ShowSaveQueryAsForm.name,
             Actions.MakeConcLinkPersistent.name,
             Actions.UndoLastQueryOp.name,
             Actions.FilterApplySubhitsRemove.name,

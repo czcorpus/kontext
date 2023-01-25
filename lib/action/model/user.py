@@ -396,7 +396,6 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
         await self.export_optional_plugins_conf(result)
         self.configure_auth_urls(result)
         result['conc_url_ttl_days'] = None
-        result['explicit_conc_persistence_ui'] = False
         result['corpus_ident'] = {}
         result['corp_sample_size'] = None
         result['Globals'] = {}

@@ -22,7 +22,6 @@ import * as React from 'react';
 import { IActionDispatcher, BoundWithProps, IModel, Bound } from 'kombo';
 import { List, tuple } from 'cnc-tskit';
 
-import { init as saveViewInit } from '../save';
 import { init as basicOverviewInit } from '../basicOverview';
 import * as Kontext from '../../../types/kontext';
 import { QueryReplayModelState, QueryReplayModel } from '../../../models/query/replay';
@@ -122,7 +121,6 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                       mainMenuModel, querySaveAsModel}:OverviewModuleArgs):OverviewViews {
 
     const layoutViews = he.getLayoutViews();
-    const saveViews = saveViewInit(dispatcher, he, querySaveAsModel);
     const basicOverviewViews = basicOverviewInit(dispatcher, he, mainMenuModel);
 
 
@@ -807,8 +805,6 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         _renderSaveForm() {
             if (this.props.activeItem) {
                 switch (this.props.activeItem.actionName) {
-                    case MainMenuActions.ShowSaveQueryAsForm.name:
-                        return <saveViews.QuerySaveAsForm />;
                     case MainMenuActions.MakeConcLinkPersistent.name:
                         return <BoundPersistentConcordanceForm />;
                 }
