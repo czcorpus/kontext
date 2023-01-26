@@ -58,10 +58,21 @@ interface AbstractQueryHistoryItem {
 }
 
 export interface ConcQueryHistoryItem extends AbstractQueryHistoryItem {
+
     q_supertype:'conc';
+
+    /**
+     * lastop_query_id refers to the last operation in chain starting with
+     * the ID stored as a query history record
+     */
+    lastop_query_id:string;
+
     lpos:string;
+
     qmcase:string;
+
     pcq_pos_neg:string;
+
     default_attr:string;
 
     /**
