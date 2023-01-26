@@ -42,6 +42,7 @@ import { fetchQueryFormArgs } from '../models/query/first';
 import { ServerWithinSelection } from '../models/subcorp/common';
 import { Root } from 'react-dom/client';
 import { PageMount } from '../app/mounts';
+import { Ident } from 'cnc-tskit';
 
 
 interface TTProps {
@@ -236,6 +237,7 @@ export class SubcorpForm {
             this.initCorpusInfo();
 
             const corplistWidget = this.corparchPlugin.createWidget(
+                Ident.puid(),
                 'subcorpus/new',
                 (corpora:Array<string>, subcorpId:string) => {
                     this.layoutModel.dispatcher.dispatch<typeof GlobalActions.SwitchCorpus>({

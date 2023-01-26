@@ -27,7 +27,7 @@ import { PqueryFormModel } from '../models/pquery/form';
 import * as PluginInterfaces from '../types/plugins';
 import corplistComponent from 'plugins/corparch/init';
 import { Actions as GlobalActions } from '../models/common/actions';
-import { tuple } from 'cnc-tskit';
+import { Ident, tuple } from 'cnc-tskit';
 import { init as queryOverviewInit } from '../views/pquery/overview';
 import { FreqIntersectionArgs, importConcQueries, newModelState, InvolvedConcFormArgs,
     storedQueryToModel } from '../models/pquery/common';
@@ -55,6 +55,7 @@ class ParadigmaticQueryPage {
         const plg = corplistComponent(this.layoutModel.pluginApi());
         return tuple(
             plg.createWidget(
+                Ident.puid(),
                 'pquery/index',
                 (corpora:Array<string>, subcorpId:string) => {
                     this.layoutModel.dispatcher.dispatch<typeof GlobalActions.SwitchCorpus>({

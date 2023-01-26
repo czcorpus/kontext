@@ -437,7 +437,8 @@ export class ViewPage {
         this.queryFormViews = queryFormInit({
             dispatcher: this.layoutModel.dispatcher,
             he: this.layoutModel.getComponentHelpers(),
-            CorparchWidget: null, // no corpus selection widget here
+            CorparchWidget: null, // no corpus selection widget here,
+            corparchWidgetId: null, // dtto
             queryModel: this.queryModels.queryModel,
             textTypesModel: this.queryModels.textTypesModel,
             quickSubcorpModel: undefined,

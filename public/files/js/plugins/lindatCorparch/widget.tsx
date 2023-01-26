@@ -29,7 +29,7 @@ import * as S from './style';
 
 
 export interface Views {
-    CorptreeWidget:React.ComponentClass<{}>;
+    CorptreeWidget:React.ComponentClass<{widgetId:string}>;
 }
 
 
@@ -148,6 +148,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     // -------------------------------- <CorptreeWidget /> -------------------------------
 
     class CorptreeWidget extends React.Component<{
+        widgetId:string;
     }, {
         active:boolean,
         data:Node,
@@ -215,7 +216,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }
 
     return {
-        CorptreeWidget: CorptreeWidget
+        CorptreeWidget
     };
 
 }

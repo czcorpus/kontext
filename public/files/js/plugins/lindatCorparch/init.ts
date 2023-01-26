@@ -87,9 +87,10 @@ export class Plugin implements PluginInterfaces.Corparch.IPlugin {
     }
 
     createWidget(
+        widgetId:string,
         targetAction:string,
         onCorpusSelection:PluginInterfaces.Corparch.CorpusSelectionHandler
-    ):React.ComponentClass<{}> {
+    ):React.ComponentClass<{widgetId:string}> {
 
         this.treeModel = new TreeWidgetModel(
             this.pluginApi,

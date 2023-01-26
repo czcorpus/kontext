@@ -136,6 +136,7 @@ export interface CorplistWidgetModelArgs {
     dispatcher:IActionDispatcher;
     pluginApi:IPluginApi;
     corpusIdent:Kontext.FullCorpusIdent;
+    widgetId:string;
     anonymousUser:boolean;
     searchEngine:SearchEngine;
     dataFav:Array<common.ServerFavlistItem>;
@@ -168,10 +169,13 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
 
     private trashTimerSubsc:Subscription;
 
+    private readonly widgetId:string;
+
     constructor({
         dispatcher,
         pluginApi,
         corpusIdent,
+        widgetId,
         anonymousUser,
         searchEngine,
         dataFav,
@@ -211,6 +215,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 Array<Kontext.SubcorpListItem>>('SubcorpList') || [],
             focusedRowIdx: -1
         });
+        this.widgetId = widgetId;
         this.pluginApi = pluginApi;
         this.searchEngine = searchEngine;
         this.onItemClick = onItemClick;
