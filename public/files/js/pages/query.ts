@@ -47,7 +47,6 @@ import { importInitialTTData, TTInitialData } from '../models/textTypes/common';
 import { ConcServerArgs } from '../models/concordance/common';
 import { AnyTTSelection, ExportedSelection } from '../types/textTypes';
 import { Root } from 'react-dom/client';
-import { PageMount } from '../app/mounts';
 
 
 /**
