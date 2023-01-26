@@ -98,7 +98,9 @@ export interface CorpusSelectionHandler {
     (corpora:Array<string>, subcorpId:string):void;
 }
 
-export type WidgetView = React.ComponentClass<{}>;
+export type WidgetView = React.ComponentClass<{
+    widgetId:string;
+}>;
 
 /**
  * A factory class for generating corplist page. The page is expected

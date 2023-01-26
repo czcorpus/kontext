@@ -93,7 +93,7 @@ export class QueryPage {
         return this.layoutModel.translate(msg, values);
     }
 
-    private initCorplistComponent(widgetId:string):[React.ComponentClass, PluginInterfaces.Corparch.IPlugin] {
+    private initCorplistComponent(widgetId:string):[PluginInterfaces.Corparch.WidgetView, PluginInterfaces.Corparch.IPlugin] {
         const plg = corplistComponent(this.layoutModel.pluginApi());
         return tuple(
             plg.createWidget(
@@ -258,7 +258,7 @@ export class QueryPage {
 
     private attachQueryForm(
         properties:QueryFormProps,
-        corparchWidget:React.ComponentClass,
+        corparchWidget:PluginInterfaces.Corparch.WidgetView,
         corparchWidgetId:string
 
     ):void {

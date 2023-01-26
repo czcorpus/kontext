@@ -39,6 +39,7 @@ export class Actions {
     };
 
     static KeywordClicked:Action<{
+        widgetId?:string;
         keywordId:string;
         status:boolean;
         attachToCurrent:boolean;
@@ -47,6 +48,7 @@ export class Actions {
     };
 
     static KeywordResetClicked:Action<{
+        widgetId?:string;
     }> = {
         name: 'CORPARCH_KEYWORD_RESET_CLICKED'
     };
@@ -197,7 +199,6 @@ export class Actions {
 
     static WidgetSearchResultItemClickedDone:Action<{
         widgetId:string;
-        itemId:string;
     }> = {
         name: 'DEFAULT_CORPARCH_WIDGET_SEARCH_RESULT_ITEM_CLICKED_DONE'
     };

@@ -107,7 +107,7 @@ function posAttrsCompatibleWithAllAlignedCorpora(attrs:Array<string>, sharedAttr
 export function init({
     dispatcher, he, CorparchWidget, queryModel,
     textTypesModel, quickSubcorpModel, queryHintModel, withinBuilderModel, virtualKeyboardModel,
-    queryContextModel, querySuggest, queryHelpModel, searchHistoryModel}:MainModuleArgs):MainViews {
+    queryContextModel, querySuggest, queryHelpModel, searchHistoryModel, corparchWidgetId}:MainModuleArgs):MainViews {
 
     const inputViews = inputInit({
         dispatcher,
@@ -139,7 +139,7 @@ export function init({
 
         return (
             <div>
-                <props.corparchWidget  />
+                <props.corparchWidget widgetId={corparchWidgetId} />
             </div>
         );
     };

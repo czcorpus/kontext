@@ -381,6 +381,7 @@ export function init({
     // -------------------------- <SearchKeyword /> ---------------------
 
     const SearchKeyword:React.FC<{
+        widgetId:string;
         key:string;
         id:string;
         label:string;
@@ -393,6 +394,7 @@ export function init({
             dispatcher.dispatch<typeof Actions.KeywordClicked>({
                 name: Actions.KeywordClicked.name,
                 payload: {
+                    widgetId: props.widgetId,
                     keywordId: props.id,
                     status: !props.selected,
                     attachToCurrent: evt.ctrlKey || evt.metaKey
@@ -416,11 +418,14 @@ export function init({
 
    // ----------------------------- <ResetKeyword /> ----------------------------------
 
-    const ResetKeyword:React.FC<{}> = (props) => {
+    const ResetKeyword:React.FC<{widgetId:string}> = (props) => {
 
         const handleClick = (evt) => {
             dispatcher.dispatch<typeof Actions.KeywordResetClicked>({
-                name: Actions.KeywordResetClicked.name
+                name: Actions.KeywordResetClicked.name,
+                payload: {
+                    widgetId: props.widgetId
+                }
             });
         };
 
@@ -566,10 +571,10 @@ export function init({
             <div>
                 <div>
                     {List.map(
-                        item => <SearchKeyword key={item.id} {...item} />,
+                        item => <SearchKeyword widgetId={props.widgetId} key={item.id} {...item} />,
                         props.availSearchKeywords
                     )}
-                    {props.hasSelectedKeywords ? <ResetKeyword /> : null}
+                    {props.hasSelectedKeywords ? <ResetKeyword widgetId={props.widgetId}/> : null}
                     <div className="labels-hint">
                         {util.translate('defaultCorparch__hold_ctrl_for_multiple')}
                     </div>
@@ -696,13 +701,19 @@ export function init({
 
         _handleOnShow() {
             dispatcher.dispatch<typeof Actions.WidgetShow>({
-                name: Actions.WidgetShow.name
+                name: Actions.WidgetShow.name,
+                payload: {
+                    widgetId: this.props.widgetId
+                }
             });
         }
 
         _handleCloseClick() {
             dispatcher.dispatch<typeof Actions.WidgetHide>({
-                name: Actions.WidgetHide.name
+                name: Actions.WidgetHide.name,
+                payload: {
+                    widgetId: this.props.widgetId
+                }
             });
         }
 

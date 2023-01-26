@@ -118,7 +118,7 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
                     state.isBusy = true;
                 });
                 forkJoin([
-                    this.suspendWithTimeout(
+                    this.waitForActionWithTimeout(
                         5000,
                         pipe(
                             this.allRegisteredIds(),
