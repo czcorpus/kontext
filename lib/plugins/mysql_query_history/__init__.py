@@ -229,6 +229,8 @@ class MySqlQueryHistory(AbstractQueryHistory):
                 q_supertype = item['q_supertype']
                 if q_id not in qdata_map:
                     logging.getLogger(__name__).warning(f'Missing conc data for query {q_id}')
+                    logging.getLogger(__name__).warning(
+                        'Missing subc data for query {}'.format(q_id))
                     continue
                 qdata = qdata_map[q_id]
                 if q_supertype == 'conc':
