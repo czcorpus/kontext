@@ -28,7 +28,6 @@ services:
       # we need to share dist files with nginx
       - dist:/opt/kontext/public/files/dist
       - ./public/app.py:/opt/kontext/public/app.py
-      - ./public/ws_app.py:/opt/kontext/public/ws_app.py
       - ./public/files/css:/opt/kontext/public/files/css
       - ./public/files/html:/opt/kontext/public/files/html
       - ./public/files/img:/opt/kontext/public/files/img

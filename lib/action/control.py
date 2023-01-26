@@ -32,12 +32,12 @@ from action.model.abstract import AbstractPageModel, AbstractUserModel
 from action.model.base import BaseActionModel
 from action.model.user import UserActionModel
 from action.props import ActionProps
-from action.result.base import BaseResult
 from action.response import KResponse
+from action.result.base import BaseResult
 from action.templating import CustomJSONEncoder, ResultType, TplEngine
 from action.theme import apply_theme
 from dataclasses_json import DataClassJsonMixin
-from sanic import HTTPResponse, Sanic, response
+from sanic import HTTPResponse, Sanic, Websocket, response
 from sanic.request import Request
 from templating import Type2XML
 
@@ -213,7 +213,8 @@ def http_action(
                     await amodel.pre_dispatch(None)
                     ans = await func(amodel, req, resp)
                     if resp.result and ans:
-                        raise RuntimeError('Cannot use both KResponse result container and legacy result return')
+                        raise RuntimeError(
+                            'Cannot use both KResponse result container and legacy result return')
                     elif ans is not None:
                         resp.set_result(ans)
                     await amodel.post_dispatch(aprops, resp, None)
