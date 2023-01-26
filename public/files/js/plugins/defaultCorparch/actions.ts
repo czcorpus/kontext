@@ -199,6 +199,7 @@ export class Actions {
 
     static WidgetSearchResultItemClickedDone:Action<{
         widgetId:string;
+        itemId:string;
     }> = {
         name: 'DEFAULT_CORPARCH_WIDGET_SEARCH_RESULT_ITEM_CLICKED_DONE'
     };

@@ -28,6 +28,7 @@ import { KeywordsFormModel, KeywordsFormModelArgs } from '../models/keywords/for
 import { init as viewInit } from '../views/keywords/form';
 import { Actions as GlobalActions } from '../models/common/actions';
 import { Root } from 'react-dom/client';
+import { Ident } from 'cnc-tskit';
 
 
 /**
@@ -49,6 +50,7 @@ export class KeywordsFormPage {
 
     private initCorparchWidget(plg:PluginInterfaces.Corparch.IPlugin):PluginInterfaces.Corparch.WidgetView {
         return plg.createWidget(
+            Ident.puid(),
             'keywords/form',
             (corpora:Array<string>, subcorpId:string) => {
                 this.layoutModel.dispatcher.dispatch<typeof GlobalActions.SwitchCorpus>({
