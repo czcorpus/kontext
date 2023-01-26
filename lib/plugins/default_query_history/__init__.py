@@ -22,6 +22,7 @@ from datetime import datetime
 import time
 import random
 import logging
+from typing import Dict, Tuple
 
 from plugins.abstract.query_history import AbstractQueryHistory
 from plugins import inject
@@ -140,8 +141,23 @@ class QueryHistory(AbstractQueryHistory):
         return self._query_persistence.open(q_id) is not None
 
     def _merge_conc_data(self, data):
+
+        def extract_id(item_id: str, item_data: Dict) -> Tuple[str, Dict]:
+            return item_id, item_data
+
         q_id = data['query_id']
+        lastop_qid = q_id
         edata = self._query_persistence.open(q_id)
+        if edata:
+            # test we have actually the 'query' or 'filter' type and if not then move
+            # to the first query in chain (this fixes possibly broken query history records)
+            form_type = edata.get('lastop_form', {}).get('form_type', None)
+            if form_type not in ('query', 'filter'):
+                logging.getLogger(__name__).warning(
+                    f'Fixing broken query history record {q_id} of invalid type {form_type}')
+                ops = self._query_persistence.map_pipeline_ops(q_id, extract_id)
+                q_id, edata = ops[0]
+                data['query_id'] = q_id
 
         def get_ac_val(data, name, corp): return data[name][corp] if name in data else None
 
@@ -151,6 +167,7 @@ class QueryHistory(AbstractQueryHistory):
             form_data = edata['lastop_form']
             main_corp = edata['corpora'][0]
             if form_data['form_type'] == 'query':
+                ans['lastop_query_id'] = lastop_qid
                 ans['query_type'] = form_data['curr_query_types'][main_corp]
                 ans['query'] = form_data['curr_queries'][main_corp]
                 ans['corpname'] = main_corp
@@ -162,16 +179,15 @@ class QueryHistory(AbstractQueryHistory):
                 ans['selected_text_types'] = form_data.get('selected_text_types', {})
                 ans['aligned'] = []
                 for aitem in edata['corpora'][1:]:
-                    ans['aligned'].append(dict(corpname=aitem,
-                                               query=form_data['curr_queries'].get(aitem),
-                                               query_type=form_data['curr_query_types'].get(aitem),
-                                               default_attr=form_data['curr_default_attr_values'].get(
-                                                   aitem),
-                                               lpos=form_data['curr_lpos_values'].get(aitem),
-                                               qmcase=form_data['curr_qmcase_values'].get(aitem),
-                                               pcq_pos_neg=form_data['curr_pcq_pos_neg_values'].get(
-                                                   aitem),
-                                               include_empty=get_ac_val(form_data, 'curr_include_empty_values', aitem)))
+                    ans['aligned'].append(dict(
+                        corpname=aitem,
+                        query=form_data['curr_queries'].get(aitem),
+                        query_type=form_data['curr_query_types'].get(aitem),
+                        default_attr=form_data['curr_default_attr_values'].get(aitem),
+                        lpos=form_data['curr_lpos_values'].get(aitem),
+                        qmcase=form_data['curr_qmcase_values'].get(aitem),
+                        pcq_pos_neg=form_data['curr_pcq_pos_neg_values'].get(aitem),
+                        include_empty=get_ac_val(form_data, 'curr_include_empty_values', aitem)))
             elif form_data['form_type'] == 'filter':
                 ans.update(form_data)
                 ans['corpname'] = main_corp

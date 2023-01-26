@@ -330,11 +330,12 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
 
     private deleteItem(itemIdx:number):Observable<GetHistoryResponse> {
         const item = this.state.data[itemIdx];
+        const query_id = isConcQueryHistoryItem(item) ? item.lastop_query_id : item.query_id;
         return this.pageModel.ajax$<any>(
             HTTP.Method.POST,
             this.pageModel.createActionUrl('delete_query'),
             {
-                query_id: item.query_id,
+                query_id,
                 created: item.created
             },
             {contentType: 'application/json'}
@@ -355,12 +356,13 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
     private saveItem(itemIdx:number, saveName:string|null):Observable<string> {
         return (() => {
             const item = this.state.data[itemIdx];
+            const query_id = isConcQueryHistoryItem(item) ? item.lastop_query_id : item.query_id;
             if (saveName) {
                 return this.pageModel.ajax$<SaveItemResponse>(
                     HTTP.Method.POST,
                     this.pageModel.createActionUrl('save_query'),
                     {
-                        query_id: item.query_id,
+                        query_id,
                         created: item.created,
                         name: saveName
                     },
@@ -375,7 +377,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                     HTTP.Method.POST,
                     this.pageModel.createActionUrl('unsave_query'),
                     {
-                        query_id: item.query_id,
+                        query_id,
                         created: item.created,
                         name: item.name // sending old name for identification
                     },

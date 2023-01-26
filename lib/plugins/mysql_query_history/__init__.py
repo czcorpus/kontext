@@ -141,6 +141,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
             return item_id, item_data
 
         q_id = data['query_id']
+        lastop_qid = q_id
         edata = self._query_persistence.open(q_id)
         if edata:
             # test we have actually the 'query' or 'filter' type and if not then move
@@ -161,6 +162,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
             form_data = edata['lastop_form']
             main_corp = edata['corpora'][0]
             if form_data['form_type'] == 'query':
+                ans['lastop_query_id'] = lastop_qid
                 ans['query_type'] = form_data['curr_query_types'][main_corp]
                 ans['query'] = form_data['curr_queries'][main_corp]
                 ans['corpname'] = main_corp
