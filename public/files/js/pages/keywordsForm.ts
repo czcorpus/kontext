@@ -49,17 +49,15 @@ export class KeywordsFormPage {
 
     private initCorparchWidget(plg:PluginInterfaces.Corparch.IPlugin):PluginInterfaces.Corparch.WidgetView {
         return plg.createWidget(
-            'keywords_form',
-            {
-                itemClickAction: (corpora:Array<string>, subcorpId:string) => {
-                    this.layoutModel.dispatcher.dispatch<typeof GlobalActions.SwitchCorpus>({
-                        name: GlobalActions.SwitchCorpus.name,
-                        payload: {
-                            corpora: corpora,
-                            subcorpus: subcorpId
-                        }
-                    });
-                }
+            'keywords/form',
+            (corpora:Array<string>, subcorpId:string) => {
+                this.layoutModel.dispatcher.dispatch<typeof GlobalActions.SwitchCorpus>({
+                    name: GlobalActions.SwitchCorpus.name,
+                    payload: {
+                        corpora,
+                        subcorpus: subcorpId
+                    }
+                });
             }
         );
     }
@@ -77,7 +75,7 @@ export class KeywordsFormPage {
                 dispatcher: this.layoutModel.dispatcher,
                 he: this.layoutModel.getComponentHelpers(),
                 keywordsFormModel: this.formModel,
-                CorparchWidget: this.initCorparchWidget(this.corparchPlugin)
+                CorparchWidget: this.initCorparchWidget(this.corparchPlugin),
             });
             this.reactRoot = this.layoutModel.renderReactComponent(
                 view,
