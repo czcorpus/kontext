@@ -25,12 +25,10 @@ from .model import (
 
 
 def _create_archive_conc_item(args):
-    if args['explicit_conc_persistence_ui']:
-        return EventTriggeringItem(MainMenu.CONCORDANCE('archive-conc'),
-                                   'Permanent link', 'MAIN_MENU_MAKE_CONC_LINK_PERSISTENT'
-                                   ).mark_indirect().enable_if(lambda d: d.get('user_owns_conc', False))
-    else:
-        return None
+    return EventTriggeringItem(
+        MainMenu.CONCORDANCE('archive-conc'),
+        'Permanent link', 'MAIN_MENU_MAKE_CONC_LINK_PERSISTENT'
+    ).mark_indirect().enable_if(lambda d: d.get('user_owns_conc', False))
 
 
 @dataclass
@@ -57,13 +55,6 @@ class ConcordanceDefault:
     query_overview: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
             MainMenu.CONCORDANCE('query-overview'), 'Query overview', 'MAIN_MENU_OVERVIEW_SHOW_QUERY_INFO'))
-
-    query_save_as: EventTriggeringItem = field(
-        default_factory=lambda: EventTriggeringItem(
-            MainMenu.CONCORDANCE(
-                'query-save-as'), 'Archive query', 'MAIN_MENU_SHOW_SAVE_QUERY_AS_FORM'
-        ).mark_indirect().enable_if(lambda d: d.get('user_owns_conc', False))
-    )
 
     # we need lazy evaluation for archive_conc (all the result args must be ready)
     archive_conc: Callable[[OutData], Optional[EventTriggeringItem]] = field(

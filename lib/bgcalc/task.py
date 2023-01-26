@@ -69,3 +69,8 @@ class AsyncTaskStatus:
         to serialize instances to session.
         """
         return asdict(self)
+
+    def __eq__(self, __o: 'AsyncTaskStatus') -> bool:
+        if self.ident != __o.ident:
+            raise TypeError('Comparing tasks with different IDs')
+        return self.label == __o.label and self.status == __o.status and self.error == __o.error and self.url == __o.url

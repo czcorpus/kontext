@@ -31,7 +31,7 @@ configuration.
 
 import logging
 from datetime import datetime
-from typing import Callable
+from typing import Dict, Tuple
 
 import plugins
 from corplib.abstract import AbstractKCorpus
@@ -137,7 +137,6 @@ class MySqlQueryHistory(AbstractQueryHistory):
         return await self._query_persistence.open(q_id) is not None
 
     async def _merge_conc_data(self, data, qdata):
-
         def get_ac_val(data, name, corp): return data[name][corp] if name in data else None
 
         if qdata and 'lastop_form' in qdata:
@@ -187,6 +186,9 @@ class MySqlQueryHistory(AbstractQueryHistory):
         see the super-class
         """
 
+        async def extract_id(item_id: str, item_data: Dict) -> Tuple[str, Dict]:
+            return item_id, item_data
+
         where_dict = {
             'user_id = %s': user_id,
             'created >= %s': from_date if from_date else None,
@@ -226,11 +228,21 @@ class MySqlQueryHistory(AbstractQueryHistory):
                 q_id = item['query_id']
                 q_supertype = item['q_supertype']
                 if q_id not in qdata_map:
+                    logging.getLogger(__name__).warning(f'Missing conc data for query {q_id}')
                     logging.getLogger(__name__).warning(
                         'Missing subc data for query {}'.format(q_id))
                     continue
                 qdata = qdata_map[q_id]
                 if q_supertype == 'conc':
+                    # test we have actually the 'query' or 'filter' type and if not then move
+                    # to the first query in chain (this fixes possibly broken query history records)
+                    form_type = qdata.get('lastop_form', {}).get('form_type', None)
+                    if form_type not in ('query', 'filter'):
+                        ops = await self._query_persistence.map_pipeline_ops(q_id, extract_id)
+                        logging.getLogger(__name__).warning(
+                            f'Fixing broken query history record {q_id} of invalid type "{form_type}" (proper id: {ops[0][0]})')
+                        q_id, qdata = ops[0]
+                        qdata['query_id'], item['query_id'] = q_id, q_id
                     tmp = await self._merge_conc_data(item, qdata)
                     if not tmp:
                         continue

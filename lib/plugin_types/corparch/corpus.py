@@ -205,7 +205,7 @@ class CorpusInfo:
     speech_overlap_attr: Optional[str] = None
     speech_overlap_val: Optional[str] = None
     bib_struct: Optional[str] = None
-    sample_size: int = 10_000_000
+    sample_size: int = -1
     featured: bool = False
     _collator_locale: str = 'en_US'  # this does not apply for Manatee functions
     use_safe_font: bool = False

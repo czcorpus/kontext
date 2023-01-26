@@ -223,4 +223,10 @@ export class Actions {
     }> = {
         name: 'DEFAULT_CORPARCH_SEARCH_DONE'
     };
+
+    static SubcorpusSelected:Action<{
+        subcorpus:string;
+    }> = {
+        name: 'DEFAULT_CORPARCH_SUBCORPUS_SELECTED'
+    }
 }

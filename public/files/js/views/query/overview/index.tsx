@@ -22,7 +22,6 @@ import * as React from 'react';
 import { IActionDispatcher, BoundWithProps, IModel, Bound } from 'kombo';
 import { List, tuple } from 'cnc-tskit';
 
-import { init as saveViewInit } from '../save';
 import { init as basicOverviewInit } from '../basicOverview';
 import * as Kontext from '../../../types/kontext';
 import { QueryReplayModelState, QueryReplayModel } from '../../../models/query/replay';
@@ -122,7 +121,6 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                       mainMenuModel, querySaveAsModel}:OverviewModuleArgs):OverviewViews {
 
     const layoutViews = he.getLayoutViews();
-    const saveViews = saveViewInit(dispatcher, he, querySaveAsModel);
     const basicOverviewViews = basicOverviewInit(dispatcher, he, mainMenuModel);
 
 
@@ -371,10 +369,10 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
         const showSize = () => {
             if (props.item.fullSize > props.item.size) {
-                return he.translate('query__overview_using_implicit_sample_{size}', {size: props.item.size});
+                return `(${he.translate('query__overview_using_implicit_sample_{size}', {size: props.item.size})})`;
 
             } else if (props.item.size) {
-                return he.translate('query__overview_hits_{num_hits}', {num_hits: props.item.size});
+                return `(${he.translate('query__overview_hits_{num_hits}', {num_hits: props.item.size})})`;
             }
             return null;
         };
@@ -389,7 +387,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                     : (<a className="args" onClick={props.clickHandler} title={he.translate('query__click_to_edit_the_op')}>
                         {'\u2713'}</a>)
                     }
-                {'\u00a0'}({showSize()})
+                {'\u00a0'}{showSize()}
                 {props.hasOpenEditor ?
                     <QueryEditor
                         corpname={props.corpname}
@@ -807,8 +805,6 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         _renderSaveForm() {
             if (this.props.activeItem) {
                 switch (this.props.activeItem.actionName) {
-                    case MainMenuActions.ShowSaveQueryAsForm.name:
-                        return <saveViews.QuerySaveAsForm />;
                     case MainMenuActions.MakeConcLinkPersistent.name:
                         return <BoundPersistentConcordanceForm />;
                 }

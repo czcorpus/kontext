@@ -99,16 +99,14 @@ export class QueryPage {
         return tuple(
             plg.createWidget(
                 'query',
-                {
-                    itemClickAction: (corpora:Array<string>, subcorpId:string) => {
-                        this.layoutModel.dispatcher.dispatch<typeof GlobalActions.SwitchCorpus>({
-                            name: GlobalActions.SwitchCorpus.name,
-                            payload: {
-                                corpora,
-                                subcorpus: subcorpId
-                            }
-                        });
-                    }
+                (corpora:Array<string>, subcorpId:string) => {
+                    this.layoutModel.dispatcher.dispatch<typeof GlobalActions.SwitchCorpus>({
+                        name: GlobalActions.SwitchCorpus.name,
+                        payload: {
+                            corpora,
+                            subcorpus: subcorpId
+                        }
+                    });
                 }
             ),
             plg

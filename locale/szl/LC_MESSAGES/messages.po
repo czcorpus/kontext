@@ -386,9 +386,6 @@ msgstr "Wzjymnŏ zależność dwōch atrybutōw"
 msgid "Frequency list"
 msgstr "Lista frekwyncyjnŏ"
 
-msgid "Archive query"
-msgstr "Archiwuj zapytanie"
-
 msgid "Cannot calculate yet - source concordance not finished. Please try again later."
 msgstr ""
 "Niy idzie jeszcze porachować - kōnkordancyjŏ zdrzōdła jeszcze sie niy skōńczyła. Sprōbuj niyskorzij."

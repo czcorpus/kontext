@@ -393,7 +393,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         return (
-            <S.SavedNameInfoSpan>
+            <S.SavedNameInfo>
                 {props.editingQueryName && !props.hasEditor ?
                     <button className="util-button" onClick={handleDoNotSaveClick}>
                         {he.translate('query__save_as_transient')}
@@ -405,7 +405,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         </button>
                 }
 
-            </S.SavedNameInfoSpan>
+            </S.SavedNameInfo>
         );
     }
 
@@ -464,12 +464,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     <img src={he.createStaticUrl('img/close-icon.svg')} alt={he.translate('global__close')}
                                 style={{width: '1em', verticalAlign: 'middle'}} />
                 </a>
-                {'\u00a0'}{he.translate('query__save_as_keep_archived')}:{'\u00a0'}
-                <input type="text" style={{width: '15em'}}
-                        value={props.name}
-                        onChange={handleInputChange}
-                        ref={item => item ? item.focus() : null} />
-                {'\u00a0'}
+                <label>
+                    <span>{he.translate('query__save_as_keep_archived')}:</span>
+                    <input type="text" style={{width: '15em'}}
+                            value={props.name}
+                            onChange={handleInputChange}
+                            ref={item => item ? item.focus() : null} />
+                    </label>
                 <button type="button" className="default-button"
                         onClick={handleSubmitClick}>
                     {he.translate('global__ok')}
@@ -510,8 +511,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         name:string;
         nameEditorVisible:boolean;
 
-    }> = (props) => {
-        return <>
+    }> = (props) => (
+        <S.RowToolbar>
             <RemoveFromHistoryButton itemIdx={props.itemIdx} />
             <span>
                 {props.queryId ?
@@ -522,8 +523,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         null /* legacy query history record cannot be archived  */
                 }
             </span>
-        </>
-    }
+        </S.RowToolbar>
+    );
 
     // -------------------- <DataRowActions /> ------------------------
 
@@ -562,7 +563,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         null
                     }
                     <a onClick={handleRowToolbarClick}>
-                        <layoutViews.ImgWithMouseover src={gearIcon} src2={gearIconS} alt="edit" />
+                        {props.toolbarVisible ?
+                            <layoutViews.ImgWithMouseover src={gearIconS} src2={gearIcon} alt="close edit" /> :
+                            <layoutViews.ImgWithMouseover src={gearIcon} src2={gearIconS} alt="edit" />
+                        }
                     </a>
                 </span>
             </S.ActionsDiv>

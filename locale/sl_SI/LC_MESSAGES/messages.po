@@ -566,9 +566,6 @@ msgstr "Obvestilo o kompatibilnosti"
 msgid "Positive"
 msgstr "Pozitivni"
 
-msgid "Archive query"
-msgstr "Arhiviraj poizvedbo"
-
 msgid "KonText feedback from user {0}"
 msgstr "Povratna informacija o KonTextu uporabnika {0}"
 

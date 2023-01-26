@@ -48,12 +48,12 @@ export class TreeWidgetModel extends StatelessModel<TreeWidgetModelState>
 
     protected pluginApi:IPluginApi;
 
-    private corpusClickHandler:PluginInterfaces.Corparch.CorplistItemClick;
+    private corpusClickHandler:PluginInterfaces.Corparch.CorpusSelectionHandler;
 
     constructor(
         pluginApi:IPluginApi,
         corpusIdent:Kontext.FullCorpusIdent,
-        corpusClickHandler:PluginInterfaces.Corparch.CorplistItemClick
+        corpusClickHandler:PluginInterfaces.Corparch.CorpusSelectionHandler
     ) {
         super(
             pluginApi.dispatcher(),
@@ -219,11 +219,14 @@ class Plugin {
      * @param targetAction - ignored here
      * @param options A configuration of the widget
      */
-    createWidget(targetAction:string, options:Kontext.GeneralProps):React.ComponentClass {
+    createWidget(
+        _:string,
+        onCorpusSelection:PluginInterfaces.Corparch.CorpusSelectionHandler
+    ):React.ComponentClass {
         this.treeModel = new TreeWidgetModel(
             this.pluginApi,
             this.pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
-            options.itemClickAction
+            onCorpusSelection
         );
         return viewInit(
             this.pluginApi.dispatcher(),

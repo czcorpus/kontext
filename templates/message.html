@@ -21,6 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 {% block bodyonload %}
 __conf.LastUsedCorp = {{ last_used_corp|to_json }};
+__conf.anonymousUser = {% if _anonymous %}true{% else %}false{% endif %};
 messagePage.init(__conf);
 {% endblock %}
 
