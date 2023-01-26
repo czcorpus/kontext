@@ -61,8 +61,8 @@ export class ComponentTools {
         return this.pageModel.translate(s, values);
     }
 
-    createActionLink<T>(path:string, args?:T):string {
-        return this.pageModel.createActionUrl(path, args);
+    createActionLink<T>(path:string, args?:T, websocket?:boolean):string {
+        return this.pageModel.createActionUrl(path, args, websocket);
     }
 
     createStaticUrl(path:string):string {

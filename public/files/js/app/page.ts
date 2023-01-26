@@ -505,8 +505,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      * Undefined/null/empty string values and their respective names
      * are left out.
      */
-    createActionUrl<T>(path:string, args?:T):string {
-        return this.appNavig.createActionUrl(path, args);
+    createActionUrl<T>(path:string, args?:T, websocket?:boolean):string {
+        return this.appNavig.createActionUrl(path, args, websocket);
     }
 
     /**
@@ -745,14 +745,14 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
     }
 
     supportsWebSocket():boolean {
-        return window['WebSocket'] !== undefined && this.getConf('jobStatusServiceUrl');
+        return window['WebSocket'] !== undefined && this.getConf('enabledWebsockets');
     }
 
     openWebSocket<T, U>(path:string='', args?:{}):[Subject<T>, Observable<U>] {
         const params = args ?
-                '?' + pipe(args, CURL.valueToPairs(), List.map(([k, v]) => `${k}=${v}`)) :
+                '?' + pipe(args, CURL.valueToPairs(), List.map(([k, v]) => `${k}=${v}`)).join('&') :
                 '';
-        const url = new URL(path + params, this.getConf<string>('jobStatusServiceUrl'));
+        const url = new URL(path + params);
         const ws = webSocket<any>(url.href);
         const input = new Subject<T>();
         input.subscribe(ws);

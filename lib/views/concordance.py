@@ -163,10 +163,7 @@ async def query_submit(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     return ans
 
 
-@bp.route('/get_conc_cache_status')
-@http_action(return_type='json', action_model=ConcActionModel)
-async def get_conc_cache_status(amodel: ConcActionModel, req: KRequest, resp: KResponse):
-    resp.set_header('Content-Type', 'text/plain')
+async def _get_conc_cache_status(amodel: ConcActionModel):
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(amodel.corp)
     q = tuple(amodel.args.q)
     corp_cache_key = amodel.corp.cache_key
@@ -194,6 +191,12 @@ async def get_conc_cache_status(amodel: ConcActionModel, req: KRequest, resp: KR
     except Exception as ex:
         await cancel_conc_task(cache_map, corp_cache_key, q)
         raise ex
+
+
+@bp.route('/get_conc_cache_status')
+@http_action(return_type='json', action_model=ConcActionModel)
+async def get_conc_cache_status(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    return _get_conc_cache_status(amodel)
 
 
 async def view_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse, asnc: bool, user_id: int):

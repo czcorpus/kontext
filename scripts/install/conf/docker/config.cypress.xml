@@ -40,6 +40,7 @@
         </conc_dashboard_modules>
         <integration_testing_env>true</integration_testing_env>
         <jwt_secret>cypress_testing_secret</jwt_secret>
+        <enabled_websockets>0</enabled_websockets>
     </global>
     <calc_backend>
         <type>rq</type>
@@ -48,7 +49,6 @@
         <rq_redis_port>6379</rq_redis_port>
         <rq_redis_db>2</rq_redis_db>
         <rq_log_path>/var/log/rq/worker.log</rq_log_path>
-        <status_service_url />
     </calc_backend>
     <job_scheduler>
         <type>rq</type>

@@ -36,7 +36,6 @@ CELERY_CONFIG = """
 <calc_backend>
     <type>celery</type>
     <task_time_limit>300</task_time_limit>
-    <status_service_url />
     <celery_broker_url>redis://127.0.0.1:6379/2</celery_broker_url>
     <celery_result_backend>redis://127.0.0.1:6379/2</celery_result_backend>
     <celery_task_serializer>json</celery_task_serializer>

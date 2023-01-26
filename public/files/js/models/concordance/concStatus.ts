@@ -24,6 +24,7 @@ import { HTTP } from 'cnc-tskit';
 import { PageModel } from "../../app/page";
 import { Actions } from './actions';
 import * as Kontext from '../../types/kontext';
+import { ConcServerArgs } from './common';
 
 
 export interface ConcStatus extends Kontext.AjaxResponse {
@@ -57,9 +58,9 @@ export class HitReloader {
     init():void {
         const linesPerPage = this.layoutModel.getConf<number>('ItemsPerPage');
         const applyData = (data:ConcStatus) => {
-            this.layoutModel.dispatcher.dispatch<typeof Actions.AsyncCalculationUpdated>({
-                name: Actions.AsyncCalculationUpdated.name,
-                payload: {
+            this.layoutModel.dispatcher.dispatch(
+                Actions.AsyncCalculationUpdated,
+                {
                     finished: !!data.finished,
                     concsize: data.concsize,
                     relconcsize: data.relconcsize,
@@ -67,32 +68,31 @@ export class HitReloader {
                     fullsize: data.fullsize,
                     availPages: Math.ceil(data.concsize / linesPerPage)
                 }
-            });
+            );
         };
 
         if (this.layoutModel.supportsWebSocket()) {
-            const [checkConc$, concCacheStatusSocket] = this.layoutModel.openWebSocket<{
-                user_id:number;
-                corp_id:string;
-                subc_path:string;
-                conc_id:string}, ConcStatus>('conc_cache_status');
+            const args = this.layoutModel.getConcArgs();
+            const [_, concCacheStatusSocket] = this.layoutModel.openWebSocket<undefined, ConcStatus>(
+                this.layoutModel.createActionUrl<ConcServerArgs>('ws/conc_cache_status', args, true)
+            );
             concCacheStatusSocket.subscribe({
                 next: response => {
+                    console.log(response);
+
                     applyData(response);
                 },
                 error: err => {
-                    this.layoutModel.dispatcher.dispatch<typeof Actions.AsyncCalculationFailed>({
-                        name: Actions.AsyncCalculationFailed.name,
-                        payload: {}
-                    });
-                    this.layoutModel.showMessage('error', err);
-                }
-            });
-            checkConc$.next({
-                user_id: this.layoutModel.getConf<number>('userId'),
-                corp_id: this.layoutModel.getCorpusIdent().id,
-                subc_path: this.layoutModel.getCorpusIdent().usesubcorp,
-                conc_id: this.layoutModel.getConf<string>('concPersistenceOpId')
+                    if (err instanceof CloseEvent) {
+                        if (err.code > 1001) {
+                            this.layoutModel.showMessage('error', err.reason);
+                            this.layoutModel.dispatcher.dispatch(Actions.AsyncCalculationFailed);
+                        }
+                    } else {
+                        this.layoutModel.showMessage('error', err);
+                        this.layoutModel.dispatcher.dispatch(Actions.AsyncCalculationFailed);
+                    }
+                },
             });
 
         } else {
@@ -122,10 +122,7 @@ export class HitReloader {
                     applyData(response);
                 },
                 error: (err) => {
-                    this.layoutModel.dispatcher.dispatch<typeof Actions.AsyncCalculationFailed>({
-                        name: Actions.AsyncCalculationFailed.name,
-                        payload: {}
-                    });
+                    this.layoutModel.dispatcher.dispatch(Actions.AsyncCalculationFailed);
                     this.layoutModel.showMessage('error', err);
                 }
             });

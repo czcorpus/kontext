@@ -326,7 +326,19 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
 
     private checkCurrentTasks():void {
         if (this.pageModel.supportsWebSocket()) {
-            const [checkTasks$, statusSocket] = this.pageModel.openWebSocket<Array<string>, Array<Kontext.AsyncTaskInfo>>('job_status');
+            const tasks = pipe(
+                this.state.asyncTasks,
+                // exclude download tasks
+                List.filter(v => !Dict.hasValue(v.category, DownloadType)),
+                List.map(item => item.ident),
+            );
+            const [_, statusSocket] = this.pageModel.openWebSocket<undefined, Array<Kontext.AsyncTaskInfo>>(
+                this.pageModel.createActionUrl<{taskId: Array<string>}>(
+                    'ws/task_status',
+                    {taskId: tasks},
+                    true,
+                )
+            );
             statusSocket.subscribe({
                 next: data => {
                     this.changeState(state => {
@@ -336,26 +348,22 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                                 item(finished);
                             });
                         }
-                        this.dispatchSideEffect<typeof Actions.AsyncTasksChecked>({
-                            name: Actions.AsyncTasksChecked.name,
-                            payload: {
-                                tasks: state.asyncTasks
-                            }
-                        });
+                        this.dispatchSideEffect(
+                            Actions.AsyncTasksChecked,
+                            {tasks: state.asyncTasks},
+                        );
                     });
                 },
-                error: error => {
-                    console.log('error: ', error);
+                error: err => {
+                    if (err instanceof CloseEvent) {
+                        if (err.code > 1001) {
+                            this.pageModel.showMessage('error', err.reason);
+                        }
+                    } else {
+                        this.pageModel.showMessage('error', err);
+                    }
                 }
             });
-            checkTasks$.next(
-                pipe(
-                    this.state.asyncTasks,
-                    // exclude download tasks
-                    List.filter(v => !Dict.hasValue(v.category, DownloadType)),
-                    List.map(item => item.ident),
-                )
-            );
 
         } else { // the ajax way
 

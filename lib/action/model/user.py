@@ -434,8 +434,7 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
         result['help_links'] = settings.get_help_links(self._req.ui_lang)
         result['integration_testing_env'] = settings.get_bool(
             'global', 'integration_testing_env', '0')
-        result['job_status_service_url'] = os.environ.get(
-            'STATUS_SERVICE_URL', settings.get('calc_backend', 'status_service_url', None))
+        result['enabled_websockets'] = settings.get_bool('global', 'enabled_websockets', '0')
 
         result['issue_reporting_action'] = None
         with plugins.runtime.ISSUE_REPORTING as irp:
