@@ -27,8 +27,9 @@ import createCorparch from 'plugins/corparch/init';
 import { KeywordsFormModel, KeywordsFormModelArgs } from '../models/keywords/form';
 import { init as viewInit } from '../views/keywords/form';
 import { Actions as GlobalActions } from '../models/common/actions';
+import { Actions } from '../models/keywords/actions';
 import { Root } from 'react-dom/client';
-import { Ident } from 'cnc-tskit';
+import { Ident, List } from 'cnc-tskit';
 
 
 /**
@@ -48,9 +49,9 @@ export class KeywordsFormPage {
         this.layoutModel = layoutModel;
     }
 
-    private initCorparchWidget(plg:PluginInterfaces.Corparch.IPlugin):PluginInterfaces.Corparch.WidgetView {
+    private initFocusCorpWidget(plg:PluginInterfaces.Corparch.IPlugin, widgetId:string):PluginInterfaces.Corparch.WidgetView {
         return plg.createWidget(
-            Ident.puid(),
+            widgetId,
             'keywords/form',
             (corpora:Array<string>, subcorpId:string) => {
                 this.layoutModel.dispatcher.dispatch<typeof GlobalActions.SwitchCorpus>({
@@ -64,6 +65,23 @@ export class KeywordsFormPage {
         );
     }
 
+    private initRefCorpWidget(plg:PluginInterfaces.Corparch.IPlugin, widgetId:string):PluginInterfaces.Corparch.WidgetView {
+        return plg.createWidget(
+            widgetId,
+            'keywords/form',
+            (corpora:Array<string>, subcorpId:string) => {
+                this.layoutModel.dispatcher.dispatch(
+                    Actions.SetRefCorp,
+                    {value: List.head(corpora)}
+                );
+                this.layoutModel.dispatcher.dispatch(
+                    Actions.SetRefSubcorp,
+                    {value: subcorpId}
+                );
+            }
+        );
+    }
+
     init():void {
         this.layoutModel.init(true, [], () => {
             const kwForm = this.layoutModel.getConf<KeywordsFormModelArgs["initialArgs"]>('FormData');
@@ -73,11 +91,16 @@ export class KeywordsFormPage {
                 initialArgs: kwForm,
             });
             this.corparchPlugin = createCorparch(this.layoutModel.pluginApi());
+            const focusCorpWidgetId = Ident.puid();
+            const refCorpWidgetId = Ident.puid();
             const view = viewInit({
                 dispatcher: this.layoutModel.dispatcher,
                 he: this.layoutModel.getComponentHelpers(),
                 keywordsFormModel: this.formModel,
-                CorparchWidget: this.initCorparchWidget(this.corparchPlugin),
+                FocusCorpWidget: this.initFocusCorpWidget(this.corparchPlugin, focusCorpWidgetId),
+                focusCorpWidgetId,
+                RefCorpWidget: this.initRefCorpWidget(this.corparchPlugin, refCorpWidgetId),
+                refCorpWidgetId,
             });
             this.reactRoot = this.layoutModel.renderReactComponent(
                 view,
