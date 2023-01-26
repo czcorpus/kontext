@@ -142,15 +142,16 @@ class MySqlQueryHistory(AbstractQueryHistory):
 
         q_id = data['query_id']
         edata = self._query_persistence.open(q_id)
-        # test we have actually the 'query' or 'filter' type and if not then move
-        # to the first query in chain (this fixes possibly broken query history records)
-        form_type = edata.get('lastop_form', {}).get('form_type', None)
-        if form_type not in ('query', 'filter'):
-            logging.getLogger(__name__).warning(
-                f'Fixing broken query history record {q_id} of invalid type {form_type}')
-            ops = self._query_persistence.map_pipeline_ops(q_id, extract_id)
-            q_id, edata = ops[0]
-            data['query_id'] = q_id
+        if edata:
+            # test we have actually the 'query' or 'filter' type and if not then move
+            # to the first query in chain (this fixes possibly broken query history records)
+            form_type = edata.get('lastop_form', {}).get('form_type', None)
+            if form_type not in ('query', 'filter'):
+                logging.getLogger(__name__).warning(
+                    f'Fixing broken query history record {q_id} of invalid type {form_type}')
+                ops = self._query_persistence.map_pipeline_ops(q_id, extract_id)
+                q_id, edata = ops[0]
+                data['query_id'] = q_id
 
         def get_ac_val(data, name, corp): return data[name][corp] if name in data else None
 
