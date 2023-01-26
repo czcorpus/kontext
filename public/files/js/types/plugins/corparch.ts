@@ -19,7 +19,6 @@
  */
 
 import { IUnregistrable } from '../../models/common/common';
-import { GeneralProps } from '../kontext';
 import { BasePlugin, IPluginApi } from './common';
 
 // ------------------------------------------------------------------------
@@ -95,7 +94,7 @@ export interface CorpusInfo {
 /**
  * A general click action performed on featured/favorite/searched item
  */
-export interface CorplistItemClick {
+export interface CorpusSelectionHandler {
     (corpora:Array<string>, subcorpId:string):void;
 }
 
@@ -118,10 +117,20 @@ export interface ICorplistPage {
 export interface IPlugin extends IUnregistrable, BasePlugin {
 
     /**
-     * Create a corpus selection widget used on the query page
+     * Create a corpus and subcorpus selection widget used on the query page.
+     *
+     * @param serverAction should specify action name (= part of URL
+     * path following the root URL (e.g. 'wordlist_form')). This may
+     * or may not be used as some implementations do not rely on full
+     * page reload and thus do not need to know the actual URL.
+     *
+     * @param onCorpusSelection is a callback to handle clicking on
+     * favorite corpora, featured corpora, searched corpora and subcorpora
      */
-    createWidget(targetAction:string,
-        options:GeneralProps):React.ComponentClass<{}>;
+    createWidget(
+        serverAction:string,
+        onCorpusSelection:CorpusSelectionHandler
+    ):React.ComponentClass<{}>;
 
     initCorplistPageComponents(initialData:any):ICorplistPage;
 }

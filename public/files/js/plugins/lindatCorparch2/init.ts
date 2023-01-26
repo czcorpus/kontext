@@ -56,7 +56,10 @@ export class Plugin implements PluginInterfaces.Corparch.IPlugin {
      * @param selectElm A HTML SELECT element for default (= non JS) corpus selection we want to be replaced by this widget
      * @param options A configuration for the widget
      */
-    createWidget(targetAction:string, options:Kontext.GeneralProps):React.ComponentClass<{}> { // TODO opts type
+    createWidget(
+        targetAction:string,
+        onCorpusSelection:PluginInterfaces.Corparch.CorpusSelectionHandler
+    ):React.ComponentClass<{}> { // TODO opts type
 
         const pluginData = this.pluginApi.getConf<any>('pluginData')['corparch'] || {}; // TODO type
         const favData:Array<common.ServerFavlistItem> = pluginData['favorite'] || [];
@@ -77,7 +80,7 @@ export class Plugin implements PluginInterfaces.Corparch.IPlugin {
             searchEngine: searchEngine,
             dataFav: favData,
             dataFeat: featData,
-            onItemClick: options.itemClickAction,
+            onItemClick: onCorpusSelection,
             corporaLabels: corporaLabels
         });
         return widgetInit({

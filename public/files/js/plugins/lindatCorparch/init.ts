@@ -72,7 +72,7 @@ export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage  {
 }
 
 
-export class Plugin {
+export class Plugin implements PluginInterfaces.Corparch.IPlugin {
 
     protected pluginApi:IPluginApi;
 
@@ -86,7 +86,10 @@ export class Plugin {
         return true;
     }
 
-    createWidget(targetAction:string, options:Kontext.GeneralProps):React.ComponentClass<{}> {
+    createWidget(
+        targetAction:string,
+        onCorpusSelection:PluginInterfaces.Corparch.CorpusSelectionHandler
+    ):React.ComponentClass<{}> {
 
         this.treeModel = new TreeWidgetModel(
             this.pluginApi,

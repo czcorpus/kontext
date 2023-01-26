@@ -236,17 +236,15 @@ export class SubcorpForm {
             this.initCorpusInfo();
 
             const corplistWidget = this.corparchPlugin.createWidget(
-                this.layoutModel.createActionUrl('subcorpus/subcorp_form'),
-                {
-                    itemClickAction: (corpora:Array<string>, subcorpId:string) => {
-                        this.layoutModel.dispatcher.dispatch<typeof GlobalActions.SwitchCorpus>({
-                            name: GlobalActions.SwitchCorpus.name,
-                            payload: {
-                                corpora: corpora,
-                                subcorpus: subcorpId
-                            }
-                        });
-                    }
+                'subcorpus/new',
+                (corpora:Array<string>, subcorpId:string) => {
+                    this.layoutModel.dispatcher.dispatch<typeof GlobalActions.SwitchCorpus>({
+                        name: GlobalActions.SwitchCorpus.name,
+                        payload: {
+                            corpora: corpora,
+                            subcorpus: subcorpId
+                        }
+                    });
                 }
             );
 
