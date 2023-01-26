@@ -57,17 +57,15 @@ class WordlistFormPage {
 
     private initCorparchWidget(plg:PluginInterfaces.Corparch.IPlugin):PluginInterfaces.Corparch.WidgetView {
         return plg.createWidget(
-            'wordlist_form',
-            {
-                itemClickAction: (corpora:Array<string>, subcorpId:string) => {
-                    this.layoutModel.dispatcher.dispatch<typeof GlobalActions.SwitchCorpus>({
-                        name: GlobalActions.SwitchCorpus.name,
-                        payload: {
-                            corpora: corpora,
-                            subcorpus: subcorpId
-                        }
-                    });
-                }
+            'wordlist/form',
+            (corpora:Array<string>, subcorpId:string) => {
+                this.layoutModel.dispatcher.dispatch<typeof GlobalActions.SwitchCorpus>({
+                    name: GlobalActions.SwitchCorpus.name,
+                    payload: {
+                        corpora: corpora,
+                        subcorpus: subcorpId
+                    }
+                });
             }
         );
     }

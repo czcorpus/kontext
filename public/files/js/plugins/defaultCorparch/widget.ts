@@ -32,7 +32,6 @@ import { Actions as GlobalActions } from '../../models/common/actions';
 import { Actions as QueryActions } from '../../models/query/actions';
 import { IUnregistrable } from '../../models/common/common';
 import { IPluginApi } from '../../types/plugins/common';
-import { highlightSyntax } from '../../models/cqleditor/parser';
 
 /**
  *
@@ -46,7 +45,7 @@ export interface Options  {
      * which means formTarget and submitMethod options have no effect unless you use
      * them directly in some way.
      */
-    itemClickAction?:PluginInterfaces.Corparch.CorplistItemClick;
+    itemClickAction?:PluginInterfaces.Corparch.CorpusSelectionHandler;
 }
 
 /**
@@ -141,7 +140,7 @@ export interface CorplistWidgetModelArgs {
     searchEngine:SearchEngine;
     dataFav:Array<common.ServerFavlistItem>;
     dataFeat:Array<common.CorplistItem>;
-    onItemClick:PluginInterfaces.Corparch.CorplistItemClick;
+    onItemClick:PluginInterfaces.Corparch.CorpusSelectionHandler;
     corporaLabels:Array<[string, string, string]>;
 }
 
@@ -155,22 +154,31 @@ export interface CorplistWidgetModelCorpusSwitchPreserve {
 export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState>
         implements IUnregistrable {
 
-    private pluginApi:IPluginApi;
+    private readonly pluginApi:IPluginApi;
 
-    private searchEngine:SearchEngine;
+    private readonly searchEngine:SearchEngine;
 
-    private onItemClick:PluginInterfaces.Corparch.CorplistItemClick;
+    private readonly onItemClick:PluginInterfaces.Corparch.CorpusSelectionHandler;
 
     private inputThrottleTimer:number;
 
-    private static MIN_SEARCH_PHRASE_ACTIVATION_LENGTH = 3;
+    private static readonly MIN_SEARCH_PHRASE_ACTIVATION_LENGTH = 3;
 
-    private static TRASH_TTL_TICKS = 20;
+    private static readonly TRASH_TTL_TICKS = 20;
 
     private trashTimerSubsc:Subscription;
 
-    constructor({dispatcher, pluginApi, corpusIdent, anonymousUser, searchEngine,
-            dataFav, dataFeat, onItemClick, corporaLabels}:CorplistWidgetModelArgs) {
+    constructor({
+        dispatcher,
+        pluginApi,
+        corpusIdent,
+        anonymousUser,
+        searchEngine,
+        dataFav,
+        dataFeat,
+        onItemClick,
+        corporaLabels
+    }:CorplistWidgetModelArgs) {
         const dataFavImp = importServerFavitems(dataFav);
         const currCorp = pluginApi.getCorpusIdent();
         super(dispatcher, {
@@ -208,30 +216,37 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         this.onItemClick = onItemClick;
         this.inputThrottleTimer = null;
 
-        this.addActionHandler<typeof Actions.WidgetShow>(
-            Actions.WidgetShow.name,
+        this.addActionHandler(
+            Actions.WidgetShow,
             (state, action) => {
                 state.isVisible = true;
             }
         );
 
-        this.addActionHandler<typeof Actions.WidgetHide>(
-            Actions.WidgetHide.name,
+        this.addActionHandler(
+            Actions.WidgetHide,
             (state, action) => {
                 state.activeTab = 0;
                 state.isVisible = false;
             }
         );
 
-        this.addActionHandler<typeof Actions.SetActiveTab>(
-            Actions.SetActiveTab.name,
+        this.addActionHandler(
+            Actions.SetActiveTab,
             (state, action) => {
                 state.activeTab = action.payload.value;
             }
         );
 
-        this.addActionHandler<typeof Actions.FavItemClick>(
-            Actions.FavItemClick.name,
+        this.addActionHandler(
+            Actions.SubcorpusSelected,
+            (state, action) => {
+                this.onItemClick([state.corpusIdent.id], action.payload.subcorpus);
+            }
+        )
+
+        this.addActionHandler(
+            Actions.FavItemClick,
             (state, action) => {
                 state.isBusy = true;
             },
@@ -243,15 +258,15 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler<typeof Actions.FavItemClickDone>(
-            Actions.FavItemClickDone.name,
+        this.addActionHandler(
+            Actions.FavItemClickDone,
             (state, action) => {
                 state.isBusy = false;
             }
         );
 
-        this.addActionHandler<typeof Actions.FeatItemClick>(
-            Actions.FeatItemClick.name,
+        this.addActionHandler(
+            Actions.FeatItemClick,
             (state, action) => {
                 state.isBusy = true;
             },
@@ -263,15 +278,15 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler<typeof Actions.FeatItemClickDone>(
-            Actions.FeatItemClickDone.name,
+        this.addActionHandler(
+            Actions.FeatItemClickDone,
             (state, action) => {
                 state.isBusy = false;
             }
         );
 
-        this.addActionHandler<typeof Actions.SearchResultItemClicked>(
-            Actions.SearchResultItemClicked.name,
+        this.addActionHandler(
+            Actions.SearchResultItemClicked,
             (state, action) => {
                 state.isBusy = true;
             },
@@ -283,16 +298,16 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler<typeof Actions.SearchResultItemClickedDone>(
-            Actions.SearchResultItemClickedDone.name,
+        this.addActionHandler(
+            Actions.SearchResultItemClickedDone,
             (state, action) => {
                 state.focusedRowIdx = -1;
                 state.isBusy = false;
             }
         );
 
-        this.addActionHandler<typeof Actions.FavItemAdd>(
-            Actions.FavItemAdd.name,
+        this.addActionHandler(
+            Actions.FavItemAdd,
             (state, action) => {
                 state.isBusy = true;
                 const idx = List.findIndex(x => x.id === action.payload.itemId, state.dataFav);
@@ -301,8 +316,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 }
             },
             (state, action, dispatch) => {
-                this.removeItemFromTrash(state, action.payload.itemId).subscribe(
-                    (response) => {
+                this.removeItemFromTrash(state, action.payload.itemId).subscribe({
+                    next: response => {
                         dispatch<typeof Actions.FavItemAddDone>({
                             name: Actions.FavItemAddDone.name,
                             payload: {
@@ -322,19 +337,19 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                             }
                         });
                     },
-                    (err) => {
-                        this.pluginApi.showMessage('error', err);
+                    error: error => {
+                        this.pluginApi.showMessage('error', error);
                         dispatch<typeof Actions.FavItemAddDone>({
                             name: Actions.FavItemAddDone.name,
-                            error: err
+                            error
                         });
                     }
-                );
+                });
             }
         );
 
-        this.addActionHandler<typeof Actions.FavItemAddDone>(
-            Actions.FavItemAddDone.name,
+        this.addActionHandler(
+            Actions.FavItemAddDone,
             (state, action) => {
                 state.isBusy = false;
                 if (!action.error) {
@@ -360,8 +375,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler<typeof Actions.FavItemRemove>(
-            Actions.FavItemRemove.name,
+        this.addActionHandler(
+            Actions.FavItemRemove,
             (state, action) => {
                 this.moveItemToTrash(state, action.payload.itemId);
             },
@@ -373,26 +388,25 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                         if (this.trashTimerSubsc) {
                             this.trashTimerSubsc.unsubscribe();
                         }
-                        this.trashTimerSubsc = src.subscribe(
-                            () => {
+                        this.trashTimerSubsc = src.subscribe({
+                            next: () => {
                                 dispatch<typeof Actions.CheckTrashedItems>({
                                     name: Actions.CheckTrashedItems.name
                                 });
                             },
-                            (_) => undefined,
-                            () => {
+                            complete: () => {
                                 dispatch<typeof Actions.CheckTrashedItems>({
                                     name: Actions.CheckTrashedItems.name
                                 });
                             }
-                        );
+                        });
                     }
                 );
             }
         );
 
-        this.addActionHandler<typeof Actions.FavItemRemoveDone>(
-            Actions.FavItemRemoveDone.name,
+        this.addActionHandler(
+            Actions.FavItemRemoveDone,
             (state, action) => {
                 if (!action.error) {
                     const idx = List.findIndex(v => v.id === action.payload.itemId, state.dataFav);
@@ -403,15 +417,15 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler<typeof Actions.CheckTrashedItems>(
-            Actions.CheckTrashedItems.name,
+        this.addActionHandler(
+            Actions.CheckTrashedItems,
             (state, action) => {
                 this.checkTrashedItems(state);
             }
         );
 
-        this.addActionHandler<typeof Actions.StarIconClick>(
-            Actions.StarIconClick.name,
+        this.addActionHandler(
+            Actions.StarIconClick,
             (state, action) => {
                 state.isBusy = true;
             },
@@ -437,8 +451,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler<typeof Actions.StarIconClickDone>(
-            Actions.StarIconClickDone.name,
+        this.addActionHandler(
+            Actions.StarIconClickDone,
             (state, action) => {
                 state.isBusy = false;
                 if (!action.error) {
@@ -451,8 +465,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler<typeof Actions.KeywordResetClicked>(
-            Actions.KeywordResetClicked.name,
+        this.addActionHandler(
+            Actions.KeywordResetClicked,
             (state, action) => {
                 state.isBusy = true;
                 this.resetKeywordSelectStatus(state);
@@ -460,21 +474,21 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 state.focusedRowIdx = -1;
             },
             (state, action, dispatch) => {
-                this.searchDelayed(state).subscribe(
-                    (data) => {
+                this.searchDelayed(state).subscribe({
+                    next: data => {
                         dispatch<typeof Actions.SearchDone>({
                             name: Actions.SearchDone.name,
                             payload: {data}
                         });
                     },
-                    (err) => {
+                    error: error => {
                         dispatch<typeof Actions.SearchDone>({
                             name: Actions.SearchDone.name,
-                            error: err
+                            error
                         });
-                        this.pluginApi.showMessage('error', err);
+                        this.pluginApi.showMessage('error', error);
                     }
-                );
+                });
             }
         ).sideEffectAlsoOn(
             Actions.KeywordResetClicked.name,
@@ -482,8 +496,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             Actions.KeywordClicked.name
         )
 
-        this.addActionHandler<typeof Actions.KeywordClicked>(
-            Actions.KeywordClicked.name,
+        this.addActionHandler(
+            Actions.KeywordClicked,
             (state, action) => {
                 state.isBusy = true;
                 state.focusedRowIdx = -1;
@@ -496,8 +510,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler<typeof Actions.SearchDone>(
-            Actions.SearchDone.name,
+        this.addActionHandler(
+            Actions.SearchDone,
             (state, action) => {
                 state.isBusy = false;
                 state.focusedRowIdx = -1;
@@ -507,8 +521,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler<typeof Actions.SearchInputChanged>(
-            Actions.SearchInputChanged.name,
+        this.addActionHandler(
+            Actions.SearchInputChanged,
             (state, action) => {
                 state.currSearchPhrase = action.payload.value;
                 state.currSearchResult = [];
@@ -516,8 +530,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler<typeof Actions.FocusSearchRow>(
-            Actions.FocusSearchRow.name,
+        this.addActionHandler(
+            Actions.FocusSearchRow,
             (state, action) => {
                 if (state.currSearchResult.length > 0) {
                     const inc = action.payload.inc;
@@ -527,8 +541,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler<typeof Actions.FocusedItemSelect>(
-            Actions.FocusedItemSelect.name,
+        this.addActionHandler(
+            Actions.FocusedItemSelect,
             (state, action) => {
                 state.isBusy = true;
             },
@@ -545,8 +559,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler<typeof GlobalActions.SwitchCorpus>(
-            GlobalActions.SwitchCorpus.name,
+        this.addActionHandler(
+            GlobalActions.SwitchCorpus,
             null,
             (state, action, dispatch) => {
                 dispatch<typeof GlobalActions.SwitchCorpusReady>({
@@ -559,8 +573,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler<typeof GlobalActions.CorpusSwitchModelRestore>(
-            GlobalActions.CorpusSwitchModelRestore.name,
+        this.addActionHandler(
+            GlobalActions.CorpusSwitchModelRestore,
             (state, action) => {
                 if (!action.error) {
                     const storedData:CorplistWidgetModelCorpusSwitchPreserve = action.payload.data[
@@ -581,8 +595,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler<typeof Actions.MoveFocusToNextListItem>(
-            Actions.MoveFocusToNextListItem.name,
+        this.addActionHandler(
+            Actions.MoveFocusToNextListItem,
             (state, action) => {
                 const [colInc, rowInc] = action.payload.change;
                 const [col, row] = state.activeListItem;
@@ -601,8 +615,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler<typeof Actions.EnterOnActiveListItem>(
-            Actions.EnterOnActiveListItem.name,
+        this.addActionHandler(
+            Actions.EnterOnActiveListItem,
             (state, action) => {
                 state.isBusy = false;
             },
@@ -627,8 +641,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler<typeof QueryActions.QueryAddSubcorp>(
-            QueryActions.QueryAddSubcorp.name,
+        this.addActionHandler(
+            QueryActions.QueryAddSubcorp,
             (state, action) => {
                 state.availableSubcorpora.push(action.payload);
             }
@@ -762,15 +776,15 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                         state.currSearchPhrase,
                         state.availSearchKeywords
 
-                    ).subscribe(
-                        (data) => {
+                    ).subscribe({
+                        next: data => {
                             observer.next(data);
                             observer.complete();
                         },
-                        (err) => {
-                            observer.error(err);
+                        error: error => {
+                            observer.error(error);
                         }
-                    );
+                    });
                 }, 350);
             });
 
@@ -782,7 +796,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
     private handleFavItemClick(state:CorplistWidgetModelState, itemId:string):void {
         const item = state.dataFav.find(item => item.id === itemId);
         if (item !== undefined) {
-            this.onItemClick(item.corpora.map(x => x.id), item.subcorpus_id);
+            this.onItemClick(List.map(x => x.id, item.corpora), item.subcorpus_id);
 
         } else {
             throw new Error(`Favorite item ${itemId} not found`);

@@ -45,7 +45,7 @@ export interface Options  {
      * which means formTarget and submitMethod options have no effect unless you use
      * them directly in some way.
      */
-    itemClickAction?:PluginInterfaces.Corparch.CorplistItemClick;
+    itemClickAction?:PluginInterfaces.Corparch.CorpusSelectionHandler;
 }
 
 /**
@@ -153,7 +153,7 @@ export interface CorplistWidgetModelArgs {
     searchEngine:SearchEngine;
     dataFav:Array<common.ServerFavlistItem>;
     dataFeat:Array<common.CorplistItem>;
-    onItemClick:PluginInterfaces.Corparch.CorplistItemClick;
+    onItemClick:PluginInterfaces.Corparch.CorpusSelectionHandler;
     corporaLabels:Array<[string, string, string]>;
 }
 
@@ -168,7 +168,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
 
     private searchEngine:SearchEngine;
 
-    private onItemClick:PluginInterfaces.Corparch.CorplistItemClick;
+    private onItemClick:PluginInterfaces.Corparch.CorpusSelectionHandler;
 
     private inputThrottleTimer:number;
 

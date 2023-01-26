@@ -31,6 +31,7 @@ import { Actions as GlobalActions } from '../../../models/common/actions';
 import { CorpusSwitchModel, CorpusSwitchModelState } from '../../../models/common/corpusSwitch';
 import * as S from './style';
 import * as S2 from '../commonStyle';
+import { CorpusSelectionHandler } from '../../../types/plugins/corparch';
 
 
 export interface WidgetViewModuleArgs {
@@ -624,13 +625,12 @@ export function init({
                 x => x.v === evt.target.value,
                 props.availSubcorpora
             );
-            dispatcher.dispatch<typeof GlobalActions.SwitchCorpus>({
-                name: GlobalActions.SwitchCorpus.name,
-                payload: {
-                    corpora: [props.corpusName],
+            dispatcher.dispatch(
+                Actions.SubcorpusSelected,
+                {
                     subcorpus: srch.v
                 }
-            });
+            );
         };
 
         return (
