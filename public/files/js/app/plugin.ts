@@ -70,8 +70,8 @@ export class PluginApi implements IPluginApi {
         return this.pageModel.createStaticUrl(path);
     }
 
-    createActionUrl<T>(path:string, args?:T):string {
-        return this.pageModel.createActionUrl(path, args);
+    createActionUrl<T>(path:string, args?:T, websocket?:boolean):string {
+        return this.pageModel.createActionUrl(path, args, websocket);
     }
 
     ajax$<T>(method:string, url:string, args:any, options:Kontext.AjaxOptions):Observable<T> {

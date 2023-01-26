@@ -505,8 +505,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      * Undefined/null/empty string values and their respective names
      * are left out.
      */
-    createActionUrl<T>(path:string, args?:T):string {
-        return this.appNavig.createActionUrl(path, args);
+    createActionUrl<T>(path:string, args?:T, websocket?:boolean):string {
+        return this.appNavig.createActionUrl(path, args, websocket);
     }
 
     /**
@@ -752,8 +752,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
         const params = args ?
                 '?' + pipe(args, CURL.valueToPairs(), List.map(([k, v]) => `${k}=${v}`)).join('&') :
                 '';
-        // TODO make creating ws url nicer
-        const url = new URL(path + params, this.createActionUrl(`ws/${path}`).replace('https', 'ws').replace('http', 'ws'));
+        const url = new URL(path + params);
         const ws = webSocket<any>(url.href);
         const input = new Subject<T>();
         input.subscribe(ws);
