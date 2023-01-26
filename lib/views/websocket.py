@@ -15,19 +15,14 @@
 import asyncio
 from typing import Type, TypeVar
 
-import plugins
 import settings
 import ujson as json
-from action.errors import NotFoundException
 from action.krequest import KRequest
 from action.model import ModelsSharedData
 from action.model.abstract import AbstractPageModel, AbstractUserModel
 from action.model.concordance import ConcActionModel
 from action.model.user import UserActionModel
 from action.props import ActionProps
-from bgcalc import calc_backend_client
-from bgcalc.errors import CalcTaskNotFoundError
-from conclib.calc import cancel_conc_task
 from sanic import Blueprint, Request, Sanic, Websocket
 from views.concordance import _get_conc_cache_status
 from views.root import _check_tasks_status
@@ -36,12 +31,16 @@ bp = Blueprint('websocket', 'ws')
 
 T = TypeVar('T')
 
+# intervals in seconds
+WEBSOCKET_TASK_CHECK_INTERVAL = 1
+WEBSOCKET_CONC_CHECK_INTERVAL = 1
+
 
 def _is_authorized_to_execute_action(amodel: AbstractPageModel, aprops: ActionProps):
     return not isinstance(amodel, AbstractUserModel) or aprops.access_level <= 1 or not amodel.user_is_anonymous()
 
 
-async def _init_action_model(req: Request, action_model: Type[T], access_level:int) -> T:
+async def _init_action_model(req: Request, action_model: Type[T], access_level: int) -> T:
     application = Sanic.get_app('kontext')
     app_url_prefix = application.config['action_path_prefix']
     if req.path.startswith(app_url_prefix):
@@ -90,7 +89,7 @@ async def check_tasks_status(req: Request, ws: Websocket):
     await ws.send(json.dumps([v.to_dict() for v in tasks.values()]))
     watched_tasks = [x for x in watched_tasks if x in tasks]  # TODO remove?
     while watched_tasks:
-        await asyncio.sleep(1)  # TODO move constant to settings or something
+        await asyncio.sleep(WEBSOCKET_TASK_CHECK_INTERVAL)
         changed = []
         for t in await _check_tasks_status(amodel, req, None):
             # AsyncTaskStatus has defined __eq__ method to check change
@@ -116,4 +115,4 @@ async def conc_cache_status(req: Request, ws: Websocket):
         if response['finished']:
             await ws.close()
         else:
-            await asyncio.sleep(1)  # TODO move constant to settings or something
+            await asyncio.sleep(WEBSOCKET_CONC_CHECK_INTERVAL)
