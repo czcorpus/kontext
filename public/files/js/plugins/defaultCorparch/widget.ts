@@ -244,15 +244,17 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler(
+        this.addActionSubtypeHandler(
             Actions.WidgetSetActiveTab,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.activeTab = action.payload.value;
             }
         );
 
-        this.addActionHandler(
+        this.addActionSubtypeHandler(
             Actions.WidgetSubcorpusSelected,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 if (this.onItemClickDefined()) {
                     this.onItemClick([state.corpusIdent.id], action.payload.subcorpus);
@@ -265,63 +267,63 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         )
 
-        this.addActionHandler(
+        this.addActionSubtypeHandler(
             Actions.WidgetFavItemClick,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                dispatch<typeof Actions.WidgetFavItemClickDone>({
-                    name: Actions.WidgetFavItemClickDone.name
-                });
+                dispatch(Actions.WidgetFavItemClickDone, {widgetId: this.widgetId});
                 this.handleFavItemClick(state, action.payload.itemId);
             }
         );
 
-        this.addActionHandler(
+        this.addActionSubtypeHandler(
             Actions.WidgetFavItemClickDone,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusy = false;
                 state.isVisible = false;
             }
         );
 
-        this.addActionHandler(
+        this.addActionSubtypeHandler(
             Actions.WidgetFeatItemClick,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                dispatch<typeof Actions.WidgetFeatItemClickDone>({
-                    name: Actions.WidgetFeatItemClickDone.name
-                });
+                dispatch(Actions.WidgetFeatItemClickDone, {widgetId: this.widgetId});
                 this.handleFeatItemClick(state, action.payload.itemId);
             }
         );
 
-        this.addActionHandler(
+        this.addActionSubtypeHandler(
             Actions.WidgetFeatItemClickDone,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusy = false;
                 state.isVisible = false;
             }
         );
 
-        this.addActionHandler(
+        this.addActionSubtypeHandler(
             Actions.WidgetSearchResultItemClicked,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                dispatch<typeof Actions.WidgetSearchResultItemClickedDone>({
-                    name: Actions.WidgetSearchResultItemClickedDone.name
-                });
+                dispatch(Actions.WidgetSearchResultItemClickedDone, {widgetId: this.widgetId});
                 this.handleSearchItemClick(state, action.payload.itemId);
             }
         );
 
-        this.addActionHandler(
+        this.addActionSubtypeHandler(
             Actions.WidgetSearchResultItemClickedDone,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.focusedRowIdx = -1;
                 state.isBusy = false;
@@ -329,8 +331,9 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler(
+        this.addActionSubtypeHandler(
             Actions.WidgetFavItemAdd,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusy = true;
                 const idx = List.findIndex(x => x.id === action.payload.itemId, state.dataFav);
@@ -372,8 +375,9 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler(
+        this.addActionSubtypeHandler(
             Actions.WidgetFavItemAddDone,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusy = false;
                 if (!action.error) {
@@ -399,8 +403,9 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler(
+        this.addActionSubtypeHandler(
             Actions.WidgetFavItemRemove,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 this.moveItemToTrash(state, action.payload.itemId);
             },
@@ -414,14 +419,10 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                         }
                         this.trashTimerSubsc = src.subscribe({
                             next: () => {
-                                dispatch<typeof Actions.WidgetCheckTrashedItems>({
-                                    name: Actions.WidgetCheckTrashedItems.name
-                                });
+                                dispatch(Actions.WidgetCheckTrashedItems, {widgetId: this.widgetId});
                             },
                             complete: () => {
-                                dispatch<typeof Actions.WidgetCheckTrashedItems>({
-                                    name: Actions.WidgetCheckTrashedItems.name
-                                });
+                                dispatch(Actions.WidgetCheckTrashedItems, {widgetId: this.widgetId});
                             }
                         });
                     }
@@ -429,8 +430,9 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler(
+        this.addActionSubtypeHandler(
             Actions.WidgetFavItemRemoveDone,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 if (!action.error) {
                     const idx = List.findIndex(v => v.id === action.payload.itemId, state.dataFav);
@@ -441,15 +443,17 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler(
+        this.addActionSubtypeHandler(
             Actions.WidgetCheckTrashedItems,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 this.checkTrashedItems(state);
             }
         );
 
-        this.addActionHandler(
+        this.addActionSubtypeHandler(
             Actions.WidgetStarIconClick,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusy = true;
             },
@@ -478,8 +482,9 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler(
+        this.addActionSubtypeHandler(
             Actions.WidgetStarIconClickDone,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusy = false;
                 if (!action.error) {
@@ -542,8 +547,9 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler(
+        this.addActionSubtypeHandler(
             Actions.WidgetSearchDone,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusy = false;
                 state.focusedRowIdx = -1;
@@ -553,8 +559,9 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler(
+        this.addActionSubtypeHandler(
             Actions.WidgetSearchInputChanged,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.currSearchPhrase = action.payload.value;
                 state.currSearchResult = [];
@@ -562,8 +569,9 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler(
+        this.addActionSubtypeHandler(
             Actions.WidgetFocusSearchRow,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 if (state.currSearchResult.length > 0) {
                     const inc = action.payload.inc;
@@ -573,16 +581,15 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler(
+        this.addActionSubtypeHandler(
             Actions.WidgetFocusedItemSelect,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
                 if (state.focusedRowIdx > -1) {
-                    dispatch<typeof Actions.WidgetSearchResultItemClickedDone>({
-                        name: Actions.WidgetSearchResultItemClickedDone.name
-                    });
+                    dispatch(Actions.WidgetSearchResultItemClickedDone, {widgetId: this.widgetId});
                     this.handleSearchItemClick(
                         dispatch,
                         state,
@@ -628,8 +635,9 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler(
+        this.addActionSubtypeHandler(
             Actions.WidgetMoveFocusToNextListItem,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 const [colInc, rowInc] = action.payload.change;
                 const [col, row] = state.activeListItem;
@@ -648,25 +656,22 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler(
+        this.addActionSubtypeHandler(
             Actions.WidgetEnterOnActiveListItem,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusy = false;
             },
             (state, action, dispatch) => {
                 if (state.activeListItem[0] === 0) {
-                    dispatch<typeof Actions.WidgetFavItemClickDone>({
-                        name: Actions.WidgetFavItemClickDone.name
-                    });
+                    dispatch(Actions.WidgetFavItemClickDone, {widgetId: this.widgetId});
                     this.handleFavItemClick(
                         dispatch, state, state.dataFav[state.activeListItem[1]].id
                     );
 
 
                 } else {
-                    dispatch<typeof Actions.WidgetFeatItemClickDone>({
-                        name: Actions.WidgetFeatItemClickDone.name
-                    });
+                    dispatch(Actions.WidgetFeatItemClickDone, {widgetId: this.widgetId});
                     this.handleFeatItemClick(
                         dispatch, state, state.dataFeat[state.activeListItem[1]].id
                     );

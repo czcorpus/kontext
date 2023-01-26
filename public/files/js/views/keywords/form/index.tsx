@@ -33,7 +33,10 @@ import { KeywordsFormModel, KeywordsFormState } from '../../../models/keywords/f
 export interface KeywordsFormViewArgs {
     dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
-    CorparchWidget:PluginInterfaces.Corparch.WidgetView;
+    FocusCorpWidget:PluginInterfaces.Corparch.WidgetView;
+    focusCorpWidgetId:string;
+    RefCorpWidget:PluginInterfaces.Corparch.WidgetView;
+    refCorpWidgetId:string;
     keywordsFormModel:KeywordsFormModel;
 }
 
@@ -41,26 +44,16 @@ export interface KeywordsFormViewArgs {
 export function init({
     dispatcher,
     he,
-    CorparchWidget,
-    keywordsFormModel
+    FocusCorpWidget,
+    focusCorpWidgetId,
+    RefCorpWidget,
+    refCorpWidgetId,
+    keywordsFormModel,
 }:KeywordsFormViewArgs):React.ComponentClass<{}> {
 
     const layoutViews = he.getLayoutViews();
 
     const KeywordsForm:React.FC<KeywordsFormState> = (props) => {
-        const handleRefCorpChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
-            dispatcher.dispatch(
-                Actions.SetRefCorp,
-                {value: evt.target.value}
-            );
-        }
-
-        const handleRefSubcorpChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
-            dispatcher.dispatch(
-                Actions.SetRefSubcorp,
-                {value: evt.target.value}
-            );
-        }
 
         const handleAttrChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
             dispatcher.dispatch(
@@ -82,12 +75,11 @@ export function init({
 
         return (
             <S.KeywordsForm>
-                {CorparchWidget ? <CorparchWidget /> : null}
+                <label>Focus corp</label>
+                {FocusCorpWidget ? <FocusCorpWidget widgetId={focusCorpWidgetId} /> : null}
+                <label>Reference corp</label>
+                {RefCorpWidget ? <RefCorpWidget widgetId={refCorpWidgetId} /> : null}
                 <S.MainFieldset>
-                    <label>Reference corp</label>
-                    <input onChange={handleRefCorpChange} type='text' value={props.refCorp}/>
-                    <label>Reference subcorp</label>
-                    <input onChange={handleRefSubcorpChange} type='text' value={props.refSubcorp}/>
                     <label>Attr</label>
                     <input onChange={handleAttrChange} type='text' value={props.attr}/>
                     <label>Pattern</label>
