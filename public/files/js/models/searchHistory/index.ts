@@ -190,20 +190,20 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         this.addActionHandler(
             Actions.HistoryDoNotArchive,
             action => {
-                this.saveItem(action.payload.itemIdx, null).subscribe(
-                    (msg) => {
+                this.saveItem(action.payload.itemIdx, null).subscribe({
+                    next: msg => {
                         this.changeState(state => {
                             state.isBusy = false;
                         });
                         this.pageModel.showMessage('info', msg);
                     },
-                    (err) => {
+                    error: error => {
                         this.changeState(state => {
                             state.isBusy = false;
                         });
-                        this.pageModel.showMessage('error', err);
+                        this.pageModel.showMessage('error', error);
                     }
-                );
+                });
             }
         );
 
@@ -360,12 +360,13 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
     private saveItem(itemIdx:number, saveName:string|null):Observable<string> {
         return (() => {
             const item = this.state.data[itemIdx];
+            const query_id = isConcQueryHistoryItem(item) ? item.lastop_query_id : item.query_id;
             if (saveName) {
                 return this.pageModel.ajax$<SaveItemResponse>(
                     HTTP.Method.POST,
                     this.pageModel.createActionUrl('save_query'),
                     {
-                        query_id: item.query_id,
+                        query_id,
                         created: item.created,
                         name: saveName
                     },
@@ -380,7 +381,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                     HTTP.Method.POST,
                     this.pageModel.createActionUrl('unsave_query'),
                     {
-                        query_id: item.query_id,
+                        query_id,
                         created: item.created,
                         name: item.name // sending old name for identification
                     },
