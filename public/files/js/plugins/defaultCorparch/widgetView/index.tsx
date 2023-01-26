@@ -51,7 +51,7 @@ export function init({
     util,
     widgetModel,
     corpusSwitchModel}:WidgetViewModuleArgs
-):React.ComponentClass<{}, CorplistWidgetModelState> {
+):React.ComponentClass<{widgetId:string}, CorplistWidgetModelState> {
 
     const layoutViews = util.getLayoutViews();
 
@@ -648,7 +648,7 @@ export function init({
 
     // ------------------------- <CorplistWidget /> -------------------------------
 
-    class CorplistWidget extends React.PureComponent<CorplistWidgetModelState> {
+    class CorplistWidget extends React.PureComponent<{widgetId:string} & CorplistWidgetModelState> {
 
         constructor(props) {
             super(props);
@@ -779,6 +779,6 @@ export function init({
     }
 
 
-    return Bound(CorplistWidget, widgetModel);
+    return BoundWithProps<{widgetId:string}, CorplistWidgetModelState>(CorplistWidget, widgetModel);
 
 }

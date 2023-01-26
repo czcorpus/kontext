@@ -50,6 +50,7 @@ export interface MainModuleArgs {
     dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
     CorparchWidget:PluginInterfaces.Corparch.WidgetView;
+    corparchWidgetId:string;
     queryModel:FirstQueryFormModel;
     textTypesModel: TextTypesModel;
     quickSubcorpModel:QuickSubcorpModel;

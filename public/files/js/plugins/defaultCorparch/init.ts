@@ -51,9 +51,10 @@ export class Plugin implements PluginInterfaces.Corparch.IPlugin {
      *  2) corpus search tool
      */
     createWidget(
+        widgetId:string,
         _:string,
         onCorpusSelection:PluginInterfaces.Corparch.CorpusSelectionHandler
-    ):React.ComponentClass<{}> {
+    ):React.ComponentClass<{widgetId:string}> {
 
         const pluginData = this.pluginApi.getConf<any>('pluginData')['corparch'] || {}; // TODO type
         const favData:Array<ServerFavlistItem> = pluginData['favorite'] || [];
@@ -70,6 +71,7 @@ export class Plugin implements PluginInterfaces.Corparch.IPlugin {
             dispatcher: this.pluginApi.dispatcher(),
             pluginApi: this.pluginApi,
             corpusIdent: this.pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
+            widgetId,
             anonymousUser: this.pluginApi.getConf<boolean>('anonymousUser'),
             searchEngine: searchEngine,
             dataFav: favData,

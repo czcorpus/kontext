@@ -220,9 +220,10 @@ class Plugin {
      * @param options A configuration of the widget
      */
     createWidget(
+        widgetId:string,
         _:string,
         onCorpusSelection:PluginInterfaces.Corparch.CorpusSelectionHandler
-    ):React.ComponentClass {
+    ):React.ComponentClass<{widgetId:string}> {
         this.treeModel = new TreeWidgetModel(
             this.pluginApi,
             this.pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),

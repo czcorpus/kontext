@@ -128,9 +128,10 @@ export interface IPlugin extends IUnregistrable, BasePlugin {
      * favorite corpora, featured corpora, searched corpora and subcorpora
      */
     createWidget(
+        widgetId:string,
         serverAction:string,
         onCorpusSelection:CorpusSelectionHandler
-    ):React.ComponentClass<{}>;
+    ):React.ComponentClass<{widgetId:string}>;
 
     initCorplistPageComponents(initialData:any):ICorplistPage;
 }

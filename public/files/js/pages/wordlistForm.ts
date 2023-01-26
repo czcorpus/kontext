@@ -29,6 +29,7 @@ import { WlnumsTypes } from '../models/wordlist/common';
 import { Actions as GlobalActions } from '../models/common/actions';
 import createCorparch from 'plugins/corparch/init';
 import { Root } from 'react-dom/client';
+import { Ident } from 'cnc-tskit';
 
 
 /**
@@ -57,6 +58,7 @@ class WordlistFormPage {
 
     private initCorparchWidget(plg:PluginInterfaces.Corparch.IPlugin):PluginInterfaces.Corparch.WidgetView {
         return plg.createWidget(
+            Ident.puid(),
             'wordlist/form',
             (corpora:Array<string>, subcorpId:string) => {
                 this.layoutModel.dispatcher.dispatch<typeof GlobalActions.SwitchCorpus>({

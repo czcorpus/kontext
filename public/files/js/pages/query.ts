@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Dict, List, pipe, tuple } from 'cnc-tskit';
+import { Dict, Ident, List, pipe, tuple } from 'cnc-tskit';
 
 import * as Kontext from '../types/kontext';
 import { PageModel } from '../app/page';
@@ -94,10 +94,11 @@ export class QueryPage {
         return this.layoutModel.translate(msg, values);
     }
 
-    private initCorplistComponent():[React.ComponentClass, PluginInterfaces.Corparch.IPlugin] {
+    private initCorplistComponent(widgetId:string):[React.ComponentClass, PluginInterfaces.Corparch.IPlugin] {
         const plg = corplistComponent(this.layoutModel.pluginApi());
         return tuple(
             plg.createWidget(
+                widgetId,
                 'query',
                 (corpora:Array<string>, subcorpId:string) => {
                     this.layoutModel.dispatcher.dispatch<typeof GlobalActions.SwitchCorpus>({
@@ -257,13 +258,15 @@ export class QueryPage {
 
     private attachQueryForm(
         properties:QueryFormProps,
-        corparchWidget:React.ComponentClass
+        corparchWidget:React.ComponentClass,
+        corparchWidgetId:string
 
     ):void {
         const queryFormComponents = queryFormInit({
             dispatcher: this.layoutModel.dispatcher,
             he: this.layoutModel.getComponentHelpers(),
             CorparchWidget: corparchWidget,
+            corparchWidgetId,
             queryModel: this.queryModel,
             textTypesModel: this.textTypesModel,
             quickSubcorpModel: this.quickSubcorpModel,
@@ -383,10 +386,12 @@ export class QueryPage {
                 textTypesData.id_attr,
                 textTypesData.bib_attr
             );
-            const [corparchWidget, corparchPlg]  = this.initCorplistComponent();
+            const corparchWidgetId = Ident.puid()
+            const [corparchWidget, corparchPlg]  = this.initCorplistComponent(corparchWidgetId);
             this.attachQueryForm(
                 ttAns,
-                corparchWidget
+                corparchWidget,
+                corparchWidgetId
             );
             this.initCorpnameLink();
             // all the models must be unregistered and components must

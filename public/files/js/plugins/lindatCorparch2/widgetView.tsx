@@ -25,11 +25,9 @@ import { SearchKeyword, SearchResultRow } from './search';
 import { IActionDispatcher, BoundWithProps, Bound } from 'kombo';
 import { Actions } from './actions';
 import { Actions as GlobalActions } from '../../models/common/actions';
-import { Actions as QueryActions } from '../../models/query/actions';
 import { CorpusSwitchModel, CorpusSwitchModelState } from '../../models/common/corpusSwitch';
 
 import * as S from './style';
-import { Action } from 'rxjs/internal/scheduler/Action';
 
 
 export interface WidgetViewModuleArgs {
@@ -44,7 +42,7 @@ export function init({
     util,
     widgetModel,
     corpusSwitchModel}:WidgetViewModuleArgs
-):React.ComponentClass<{}> {
+):React.ComponentClass<{widgetId:string}> {
 
     const layoutViews = util.getLayoutViews();
 
@@ -617,7 +615,7 @@ export function init({
 
     // ------------------------- <CorplistWidget /> -------------------------------
 
-    class CorplistWidget extends React.PureComponent<CorplistWidgetModelState> {
+    class CorplistWidget extends React.PureComponent<{widgetId:string} & CorplistWidgetModelState> {
 
         constructor(props) {
             super(props);
@@ -749,6 +747,6 @@ export function init({
     }
 
 
-    return Bound(CorplistWidget, widgetModel);
+    return BoundWithProps<{widgetId:string}, CorplistWidgetModelState>(CorplistWidget, widgetModel);
 
 }
