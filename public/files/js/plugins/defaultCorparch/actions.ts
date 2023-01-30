@@ -22,6 +22,7 @@ import { Action } from 'kombo';
 import { CorpusInfo } from '../../models/common/corpusInfo';
 import { CorplistDataResponse, Filters, ServerFavlistItem } from './common';
 import { SearchResultRow } from './search';
+import { FullCorpusIdent, SubcorpListItem } from '../../types/kontext';
 
 
 export class Actions {
@@ -250,5 +251,13 @@ export class Actions {
         subcorpus:string;
     }> = {
         name: 'DEFAULT_CORPARCH_WIDGET_SUBCORPUS_SELECTED'
+    }
+
+    static WidgetChangeCorpus:Action<{
+        widgetId:string;
+        corpusIdent:FullCorpusIdent;
+        availableSubcorpora:Array<SubcorpListItem>;
+    }> = {
+        name: 'DEFAULT_CORPARCH_WIDGET_CHANGE_CORPUS'
     }
 }
