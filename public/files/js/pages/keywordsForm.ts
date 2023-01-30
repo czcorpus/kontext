@@ -41,7 +41,9 @@ export class KeywordsFormPage {
 
     private formModel:KeywordsFormModel;
 
-    private corparchPlugin:PluginInterfaces.Corparch.IPlugin;
+    private focusCorparchPlugin:PluginInterfaces.Corparch.IPlugin;
+
+    private refCorparchPlugin:PluginInterfaces.Corparch.IPlugin;
 
     private reactRoot:Root;
 
@@ -84,22 +86,23 @@ export class KeywordsFormPage {
 
     init():void {
         this.layoutModel.init(true, [], () => {
-            const kwForm = this.layoutModel.getConf<KeywordsFormModelArgs["initialArgs"]>('FormData');
+            const kwForm = this.layoutModel.getConf<KeywordsFormModelArgs['initialArgs']>('FormData');
             this.formModel = new KeywordsFormModel({
                 dispatcher: this.layoutModel.dispatcher,
                 layoutModel: this.layoutModel,
                 initialArgs: kwForm,
             });
-            this.corparchPlugin = createCorparch(this.layoutModel.pluginApi());
+            this.focusCorparchPlugin = createCorparch(this.layoutModel.pluginApi());
+            this.refCorparchPlugin = createCorparch(this.layoutModel.pluginApi());
             const focusCorpWidgetId = Ident.puid();
             const refCorpWidgetId = Ident.puid();
             const view = viewInit({
                 dispatcher: this.layoutModel.dispatcher,
                 he: this.layoutModel.getComponentHelpers(),
                 keywordsFormModel: this.formModel,
-                FocusCorpWidget: this.initFocusCorpWidget(this.corparchPlugin, focusCorpWidgetId),
+                FocusCorpWidget: this.initFocusCorpWidget(this.focusCorparchPlugin, focusCorpWidgetId),
                 focusCorpWidgetId,
-                RefCorpWidget: this.initRefCorpWidget(this.corparchPlugin, refCorpWidgetId),
+                RefCorpWidget: this.initRefCorpWidget(this.refCorparchPlugin, refCorpWidgetId),
                 refCorpWidgetId,
             });
             this.reactRoot = this.layoutModel.renderReactComponent(
@@ -112,7 +115,8 @@ export class KeywordsFormPage {
                     this.init();
                 },
                 this.formModel,
-                this.corparchPlugin
+                this.focusCorparchPlugin,
+                this.refCorparchPlugin,
             );
         });
     }
