@@ -635,6 +635,7 @@ export function init({
     // ------------------------------- <SubcorpSelection /> -----------------------------
 
     const SubcorpSelection:React.FC<{
+        widgetId:string;
         corpusName:string;
         currSubcorpus:string;
         origSubcorpName:string;
@@ -650,7 +651,8 @@ export function init({
             dispatcher.dispatch(
                 Actions.WidgetSubcorpusSelected,
                 {
-                    subcorpus: srch.v
+                    widgetId: props.widgetId,
+                    subcorpus: srch.v,
                 }
             );
         };
@@ -793,6 +795,7 @@ export function init({
                             (<span>
                                 <strong className="subc-separator">{'\u00a0/\u00a0'}</strong>
                                 <SubcorpSelection
+                                    widgetId={this.props.widgetId}
                                     corpusName={this.props.corpusIdent.id}
                                     currSubcorpus={this.props.corpusIdent.usesubcorp}
                                     origSubcorpName={this.props.corpusIdent.origSubcorpName}

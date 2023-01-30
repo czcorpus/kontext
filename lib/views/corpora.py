@@ -26,9 +26,10 @@ from action.model.corpus import CorpusActionModel
 from action.model.user import UserActionModel
 from action.response import KResponse
 from dataclasses_json import LetterCase, dataclass_json
-from plugin_types.corparch import (AbstractSearchableCorporaArchive,
-                                   SimpleCorporaArchive)
+from plugin_types.corparch import (
+    AbstractSearchableCorporaArchive, SimpleCorporaArchive)
 from plugin_types.corparch.corpus import CitationInfo, TagsetInfo
+from plugin_types.subc_storage import SubcListFilterArgs
 from sanic import Blueprint
 
 
@@ -160,3 +161,27 @@ async def ajax_get_structattrs_details(amodel: UserActionModel, req: KRequest, r
 async def bibliography(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.LIVE_ATTRIBUTES as liveatt:
         return dict(bib_data=await liveatt.get_bibliography(amodel.plugin_ctx, amodel.corp, item_id=req.args.get('id')))
+
+
+@bp.route('/ajax_get_corparch_item')
+@http_action(action_model=CorpusActionModel, return_type='json')
+async def ajax_get_corp_details(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
+    corpname = getattr(amodel.args, 'corpname')
+    user_id = amodel.session_get('user', 'id')
+
+    corpus_ident = dict(
+        id=corpname,
+        variant=amodel._corpus_variant,
+        name=amodel.corp.human_readable_corpname,
+        usesubcorp=amodel.corp.subcorpus_id,
+        origSubcorpName=amodel.corp.subcorpus_name,
+        foreignSubcorp=user_id != amodel.corp.author_id,
+        size=amodel.corp.size,
+        searchSize=amodel.corp.search_size,
+    )
+    out = {}
+    await amodel.export_subcorpora_list(out)
+    return {
+        'corpusIdent': corpus_ident,
+        'availableSubcorpora': out['SubcorpList'],
+    }

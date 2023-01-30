@@ -29,6 +29,9 @@ import { CorplistTableModel } from './corplist';
 import { SearchEngine } from './search';
 import { ServerFavlistItem } from './common';
 import { IPluginApi } from '../../types/plugins/common';
+import { HTTP } from 'cnc-tskit';
+import { Actions } from './actions';
+import { IActionDispatcher } from 'kombo';
 
 
 export class Plugin implements PluginInterfaces.Corparch.IPlugin {

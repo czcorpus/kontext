@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { IActionDispatcher, StatelessModel } from 'kombo';
+import { IActionDispatcher, SEDispatcher, StatelessModel } from 'kombo';
 import { Subscription, timer as rxTimer, Observable, of as rxOf } from 'rxjs';
 import { take, tap, map, concatMap } from 'rxjs/operators';
 import { List, tuple, HTTP, pipe } from 'cnc-tskit';
@@ -141,7 +141,7 @@ export interface CorplistWidgetModelArgs {
     searchEngine:SearchEngine;
     dataFav:Array<common.ServerFavlistItem>;
     dataFeat:Array<common.CorplistItem>;
-    onItemClick:PluginInterfaces.Corparch.CorpusSelectionHandler;
+    onItemClick?:PluginInterfaces.Corparch.CorpusSelectionHandler;
     corporaLabels:Array<[string, string, string]>;
 }
 
@@ -159,7 +159,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
 
     private readonly searchEngine:SearchEngine;
 
-    private readonly onItemClick:PluginInterfaces.Corparch.CorpusSelectionHandler;
+    private readonly onItemClick?:PluginInterfaces.Corparch.CorpusSelectionHandler;
 
     private inputThrottleTimer:number;
 
@@ -254,8 +254,14 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             Actions.WidgetSubcorpusSelected,
             action => action.payload.widgetId === this.widgetId,
             (state, action) => {
-                state.isVisible = false;
-                this.onItemClick([state.corpusIdent.id], action.payload.subcorpus);
+                if (this.onItemClickDefined()) {
+                    this.onItemClick([state.corpusIdent.id], action.payload.subcorpus);
+                }
+            },
+            (state, action, dispatch) => {
+                if (!this.onItemClickDefined()) {
+                    this.defaultOnItemClick(dispatch, [state.corpusIdent.id], action.payload.subcorpus);
+                }
             }
         )
 
@@ -267,7 +273,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             },
             (state, action, dispatch) => {
                 dispatch(Actions.WidgetFavItemClickDone, {widgetId: this.widgetId});
-                this.handleFavItemClick(state, action.payload.itemId);
+                this.handleFavItemClick(dispatch, state, action.payload.itemId);
             }
         );
 
@@ -288,7 +294,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             },
             (state, action, dispatch) => {
                 dispatch(Actions.WidgetFeatItemClickDone, {widgetId: this.widgetId});
-                this.handleFeatItemClick(state, action.payload.itemId);
+                this.handleFeatItemClick(dispatch, state, action.payload.itemId);
             }
         );
 
@@ -309,7 +315,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             },
             (state, action, dispatch) => {
                 dispatch(Actions.WidgetSearchResultItemClickedDone, {widgetId: this.widgetId});
-                this.handleSearchItemClick(state, action.payload.itemId);
+                this.handleSearchItemClick(dispatch, state, action.payload.itemId);
             }
         );
 
@@ -589,6 +595,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 if (state.focusedRowIdx > -1) {
                     dispatch(Actions.WidgetSearchResultItemClickedDone, {widgetId: this.widgetId});
                     this.handleSearchItemClick(
+                        dispatch,
                         state,
                         state.currSearchResult[state.focusedRowIdx].id
                     );
@@ -663,14 +670,14 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 if (state.activeListItem[0] === 0) {
                     dispatch(Actions.WidgetFavItemClickDone, {widgetId: this.widgetId});
                     this.handleFavItemClick(
-                        state, state.dataFav[state.activeListItem[1]].id
+                        dispatch, state, state.dataFav[state.activeListItem[1]].id
                     );
 
 
                 } else {
                     dispatch(Actions.WidgetFeatItemClickDone, {widgetId: this.widgetId});
                     this.handleFeatItemClick(
-                        state, state.dataFeat[state.activeListItem[1]].id
+                        dispatch, state, state.dataFeat[state.activeListItem[1]].id
                     );
                 }
             }
@@ -680,6 +687,18 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             QueryActions.QueryAddSubcorp,
             (state, action) => {
                 state.availableSubcorpora.push(action.payload);
+            }
+        );
+
+        this.addActionSubtypeHandler(
+            Actions.WidgetChangeCorpus,
+            action => action.payload.widgetId === this.widgetId,
+            (state, action) => {
+                state.isBusy = false;
+                if (!action.error) {
+                    state.corpusIdent = action.payload.corpusIdent;
+                    state.availableSubcorpora = action.payload.availableSubcorpora;
+                }
             }
         );
 
@@ -828,30 +847,43 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         }
     }
 
-    private handleFavItemClick(state:CorplistWidgetModelState, itemId:string):void {
+    private handleFavItemClick(dispatch:SEDispatcher, state:CorplistWidgetModelState, itemId:string):void {
         const item = state.dataFav.find(item => item.id === itemId);
         if (item !== undefined) {
-            this.onItemClick(List.map(x => x.id, item.corpora), item.subcorpus_id);
+            const corpora = List.map(x => x.id, item.corpora);
+            if (this.onItemClickDefined()) {
+                this.onItemClick(corpora, item.subcorpus_id);
+            } else {
+                this.defaultOnItemClick(dispatch, corpora, item.subcorpus_id);
+            }
 
         } else {
             throw new Error(`Favorite item ${itemId} not found`);
         }
     }
 
-    private handleFeatItemClick(state:CorplistWidgetModelState, itemId:string):void {
+    private handleFeatItemClick(dispatch:SEDispatcher, state:CorplistWidgetModelState, itemId:string):void {
         const item = state.dataFeat.find(item => item.id === itemId);
         if (item !== undefined) {
-            this.onItemClick([item.corpus_id], item.subcorpus_id);
+            if (this.onItemClickDefined()) {
+                this.onItemClick([item.corpus_id], item.subcorpus_id);
+            } else {
+                this.defaultOnItemClick(dispatch, [item.corpus_id], item.subcorpus_id);
+            }
 
         } else {
             throw new Error(`Featured item ${itemId} not found`);
         }
     }
 
-    private handleSearchItemClick(state:CorplistWidgetModelState, itemId:string):void {
+    private handleSearchItemClick(dispatch:SEDispatcher, state:CorplistWidgetModelState, itemId:string):void {
         const item = state.currSearchResult.find(item => item.id === itemId);
         if (item !== undefined) {
-            this.onItemClick([item.id], '');
+            if (this.onItemClickDefined()) {
+                this.onItemClick([item.id], '');
+            } else {
+                this.defaultOnItemClick(dispatch, [item.id], null);
+            }
 
         } else {
             throw new Error(`Clicked item ${itemId} not found in search results`);
@@ -922,5 +954,44 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         } else {
             throw new Error(`Cannot change label status - label ${id} not found`);
         }
+    }
+
+    private defaultOnItemClick(dispatch:SEDispatcher, corpora:Array<string>, usesubcorp:string) {
+        const args = {corpname: List.head(corpora)};
+        if (usesubcorp) {
+            args['usesubcorp'] = usesubcorp;
+        }
+        this.pluginApi.ajax$<{corpusIdent:Kontext.FullCorpusIdent, availableSubcorpora:Array<Kontext.SubcorpListItem>}>(
+            HTTP.Method.GET,
+            this.pluginApi.createActionUrl('corpora/ajax_get_corparch_item'),
+            args,
+        ).subscribe({
+            next: data => {
+                dispatch(
+                    Actions.WidgetChangeCorpus,
+                    {
+                        widgetId: this.widgetId,
+                        corpusIdent: data.corpusIdent,
+                        availableSubcorpora: data.availableSubcorpora,
+                    }
+                );
+            },
+            error: err => {
+                this.pluginApi.showMessage('error', err);
+                dispatch(
+                    Actions.WidgetChangeCorpus,
+                    {
+                        widgetId: this.widgetId,
+                        corpusIdent: undefined,
+                        availableSubcorpora: undefined,
+                    },
+                    err,
+                );
+            }
+        });
+    }
+
+    private onItemClickDefined():boolean {
+        return this.onItemClick !== undefined;
     }
 }
