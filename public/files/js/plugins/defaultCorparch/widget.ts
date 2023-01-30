@@ -254,6 +254,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             Actions.WidgetSubcorpusSelected,
             action => action.payload.widgetId === this.widgetId,
             (state, action) => {
+                state.isVisible = false;
                 this.onItemClick([state.corpusIdent.id], action.payload.subcorpus);
             }
         )
@@ -275,6 +276,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusy = false;
+                state.isVisible = false;
             }
         );
 
@@ -295,6 +297,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusy = false;
+                state.isVisible = false;
             }
         );
 
@@ -316,6 +319,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             (state, action) => {
                 state.focusedRowIdx = -1;
                 state.isBusy = false;
+                state.isVisible = false;
             }
         );
 
@@ -407,10 +411,16 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                         }
                         this.trashTimerSubsc = src.subscribe({
                             next: () => {
-                                dispatch(Actions.WidgetCheckTrashedItems, {widgetId: this.widgetId});
+                                dispatch(
+                                    Actions.WidgetCheckTrashedItems,
+                                    {widgetId: this.widgetId},
+                                );
                             },
                             complete: () => {
-                                dispatch(Actions.WidgetCheckTrashedItems, {widgetId: this.widgetId});
+                                dispatch(
+                                    Actions.WidgetCheckTrashedItems,
+                                    {widgetId: this.widgetId},
+                                );
                             }
                         });
                     }
