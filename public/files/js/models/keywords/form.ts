@@ -26,7 +26,7 @@ import { IUnregistrable } from '../common/common';
 import { Actions } from './actions';
 import { Actions as GlobalActions } from '../common/actions';
 import { KeywordsSubmitArgs, KeywordsSubmitResponse } from './common';
-import { WlnumsTypes, WlTypes } from '../wordlist/common';
+import { WlnumsTypes } from '../wordlist/common';
 
 
 
@@ -99,20 +99,6 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
                         data: this.serialize(state)
                     }
                 });
-            }
-        );
-
-        this.addActionHandler(
-            Actions.SetRefCorp,
-            (state, action) => {
-                state.refCorp = action.payload.value;
-            }
-        );
-
-        this.addActionHandler(
-            Actions.SetRefSubcorp,
-            (state, action) => {
-                state.refSubcorp = action.payload.value;
             }
         );
 

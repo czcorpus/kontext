@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { IActionDispatcher } from 'kombo';
 import { IUnregistrable } from '../../models/common/common';
 import { BasePlugin, IPluginApi } from './common';
 import { FullCorpusIdent, SubcorpListItem } from '../../types/kontext';
@@ -140,8 +141,7 @@ export interface IPlugin extends IUnregistrable, BasePlugin {
     createWidget(
         widgetId:string,
         serverAction:string,
-        onCorpusSelection?:CorpusSelectionHandler,
-        initialData?:InitialWidgetData,
+        onCorpusSelection?:CorpusSelectionHandler
     ):React.ComponentClass<{widgetId:string}>;
 
     initCorplistPageComponents(initialData:any):ICorplistPage;

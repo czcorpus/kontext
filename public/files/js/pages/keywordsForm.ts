@@ -27,7 +27,6 @@ import createCorparch from 'plugins/corparch/init';
 import { KeywordsFormModel, KeywordsFormModelArgs } from '../models/keywords/form';
 import { init as viewInit } from '../views/keywords/form';
 import { Actions as GlobalActions } from '../models/common/actions';
-import { Actions } from '../models/keywords/actions';
 import { Root } from 'react-dom/client';
 import { Ident, List } from 'cnc-tskit';
 
@@ -67,23 +66,6 @@ export class KeywordsFormPage {
         );
     }
 
-    private initRefCorpWidget(plg:PluginInterfaces.Corparch.IPlugin, widgetId:string):PluginInterfaces.Corparch.WidgetView {
-        return plg.createWidget(
-            widgetId,
-            'keywords/form',
-            (corpora:Array<string>, subcorpId:string) => {
-                this.layoutModel.dispatcher.dispatch(
-                    Actions.SetRefCorp,
-                    {value: List.head(corpora)}
-                );
-                this.layoutModel.dispatcher.dispatch(
-                    Actions.SetRefSubcorp,
-                    {value: subcorpId}
-                );
-            }
-        );
-    }
-
     init():void {
         this.layoutModel.init(true, [], () => {
             const kwForm = this.layoutModel.getConf<KeywordsFormModelArgs['initialArgs']>('FormData');
@@ -102,7 +84,7 @@ export class KeywordsFormPage {
                 keywordsFormModel: this.formModel,
                 FocusCorpWidget: this.initFocusCorpWidget(this.focusCorparchPlugin, focusCorpWidgetId),
                 focusCorpWidgetId,
-                RefCorpWidget: this.initRefCorpWidget(this.refCorparchPlugin, refCorpWidgetId),
+                RefCorpWidget: this.refCorparchPlugin.createWidget(refCorpWidgetId, 'keywords/form'),
                 refCorpWidgetId,
             });
             this.reactRoot = this.layoutModel.renderReactComponent(

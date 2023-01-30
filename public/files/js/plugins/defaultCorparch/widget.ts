@@ -275,7 +275,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             },
             (state, action, dispatch) => {
                 dispatch(Actions.WidgetFavItemClickDone, {widgetId: this.widgetId});
-                this.handleFavItemClick(state, action.payload.itemId);
+                this.handleFavItemClick(dispatch, state, action.payload.itemId);
             }
         );
 
@@ -296,7 +296,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             },
             (state, action, dispatch) => {
                 dispatch(Actions.WidgetFeatItemClickDone, {widgetId: this.widgetId});
-                this.handleFeatItemClick(state, action.payload.itemId);
+                this.handleFeatItemClick(dispatch, state, action.payload.itemId);
             }
         );
 
@@ -317,7 +317,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             },
             (state, action, dispatch) => {
                 dispatch(Actions.WidgetSearchResultItemClickedDone, {widgetId: this.widgetId});
-                this.handleSearchItemClick(state, action.payload.itemId);
+                this.handleSearchItemClick(dispatch, state, action.payload.itemId);
             }
         );
 
@@ -687,7 +687,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         );
 
         this.addActionSubtypeHandler(
-            CorparchActions.WidgetCorpusChange,
+            Actions.WidgetChangeCorpus,
             action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusy = false;
@@ -964,7 +964,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         ).subscribe({
             next: data => {
                 dispatch(
-                    CorparchActions.WidgetCorpusChange,
+                    Actions.WidgetChangeCorpus,
                     {
                         widgetId: this.widgetId,
                         corpusIdent: data.corpusIdent,
@@ -975,7 +975,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             error: err => {
                 this.pluginApi.showMessage('error', err);
                 dispatch(
-                    CorparchActions.WidgetCorpusChange,
+                    Actions.WidgetChangeCorpus,
                     {
                         widgetId: this.widgetId,
                         corpusIdent: undefined,
