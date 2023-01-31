@@ -39,7 +39,6 @@ from action.argmapping.conc.filter import (
     SubHitsFilterFormArgs)
 from action.argmapping.conc.other import (
     KwicSwitchArgs, LgroupOpArgs, LockedOpFormsArgs, SampleFormArgs)
-from action.result.concordance import QueryAction
 from action.argmapping.conc.sort import SortFormArgs
 from action.control import http_action
 from action.errors import NotFoundException, UserReadableException
@@ -50,6 +49,7 @@ from action.model.concordance.linesel import LinesGroups
 from action.model.corpus import CorpusActionModel
 from action.model.user import UserActionModel
 from action.response import KResponse
+from action.result.concordance import QueryAction
 from bgcalc import calc_backend_client
 from bgcalc.errors import CalcTaskNotFoundError
 from conclib.calc import cancel_conc_task
@@ -113,6 +113,45 @@ async def query(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     await amodel.attach_aligned_query_params(out)
     await amodel.export_subcorpora_list(out)
     resp.set_result(out)
+
+
+@bp.route('/preflight', methods=['POST'])
+@http_action(return_type='json', action_model=ConcActionModel)
+async def preflight(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    ans = {}
+    amodel.clear_prev_conc_params()
+    # 1) store query forms arguments for later reuse on client-side
+    corpora = amodel.select_current_aligned_corpora(active_only=True)
+    corpus_info = await amodel.get_corpus_info(corpora[0])
+    qinfo = await QueryFormArgs.create(plugin_ctx=amodel.plugin_ctx, corpora=corpora, persist=True)
+    qinfo.update_by_user_query(
+        req.json, await amodel.get_tt_bib_mapping(req.json.get('text_types', {})))
+    amodel.add_conc_form_args(qinfo)
+    # 2) process the query
+    try:
+        # TODO preflight subcorpus dependent on corpus
+        preflight_subcorp = SubcorpusIdent('z8QqQMYY', corpora[0])
+        corp = await amodel.plugin_ctx.corpus_factory.get_corpus(preflight_subcorp)
+
+        await amodel.set_first_query(
+            [q['corpname'] for q in req.json['queries']], qinfo, corpus_info)
+        logging.getLogger(__name__).debug('query: {}'.format(amodel.args.q))
+        conc = await get_conc(
+            corp=corp, user_id=amodel.session_get('user', 'id'), q=amodel.args.q,
+            fromp=amodel.args.fromp, pagesize=amodel.args.pagesize, asnc=qinfo.data.asnc,
+            samplesize=corpus_info.sample_size)
+        resp.set_http_status(201)
+    except (ConcordanceException, ConcCacheStatusException) as ex:
+        if isinstance(ex, ConcordanceSpecificationError):
+            raise UserReadableException(ex, code=422)
+        else:
+            raise ex
+
+    ans['concSize'] = conc.size()
+    ans['totalSize'] = corp.search_size
+    ans['sizePerc'] = 100 * conc.size() / corp.search_size
+    ans['preflightId'] = 'TODO'
+    return ans
 
 
 @bp.route('/query_submit', methods=['POST'])

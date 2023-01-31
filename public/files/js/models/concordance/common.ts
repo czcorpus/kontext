@@ -300,6 +300,11 @@ export interface ConcQueryResponse extends Kontext.AjaxResponse {
     size:number;
 }
 
+export interface PreflightResponse extends Kontext.AjaxResponse {
+    sizePerc:number;
+    preflightId:string;
+}
+
 /**
  * AjaxConcResponse defines a server response when
  * providing a concordance.

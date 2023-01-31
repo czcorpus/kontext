@@ -38,7 +38,7 @@ import { Actions as GlobalActions } from '../common/actions';
 import { Actions as QuickSubcorpActions } from '../subcorp/actions';
 import { IUnregistrable } from '../common/common';
 import * as PluginInterfaces from '../../types/plugins';
-import { ConcQueryResponse, ConcServerArgs } from '../concordance/common';
+import { ConcQueryResponse, ConcServerArgs, PreflightResponse } from '../concordance/common';
 import { AdvancedQuery, advancedToSimpleQuery, AnyQuery, AnyQuerySubmit, parseSimpleQuery, isAdvancedQuery,
     QueryType, SimpleQuery, simpleToAdvancedQuery} from './query';
 import { ajaxErrorMapped } from '../../app/navigation';
@@ -517,6 +517,16 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                             if (err !== null) {
                                 throw err;
                             }
+                            return this.submitPreflight(contextData, true, ttSelections);
+                        }
+                    ),
+                    concatMap(
+                        ({ttSelections, contextData}) => {
+                            let err:Error;
+                            err = this.testQueryTypeMismatch();
+                            if (err !== null) {
+                                throw err;
+                            }
                             return this.submitQuery(contextData, true, ttSelections);
                         }
                     )
@@ -984,6 +994,34 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         );
     }
 
+    submitPreflight(
+        contextData:QueryContextArgs,
+        async:boolean,
+        ttSelections:TextTypes.ExportedSelection,
+        noQueryHistory?:boolean
+    ):Observable<{ttSelections:TextTypes.ExportedSelection; contextData:QueryContextArgs;}> {
+
+        return this.pageModel.ajax$<PreflightResponse>(
+            HTTP.Method.POST,
+            this.pageModel.createActionUrl(
+                'preflight',
+                {format: 'json'}
+            ),
+            this.createSubmitArgs(contextData, async, ttSelections, noQueryHistory),
+            {
+                contentType: 'application/json'
+            }
+        ).pipe(
+            map(
+                ans => {
+                    if (ans.sizePerc >= 50 && !window.confirm("Concordance might take a while to compute. Do you want to continue?")) {
+                        throw "Query cancelled";
+                    }
+                    return {ttSelections, contextData}
+                }
+            )
+        );
+    }
 
     submitQuery(
         contextFormArgs:QueryContextArgs,
