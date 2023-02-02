@@ -19,8 +19,8 @@
  */
 
 import * as React from 'react';
-import { Actions } from '../../models/subcorp/actions';
 
+import { Actions } from '../../models/subcorp/actions';
 import * as Kontext from '../../types/kontext';
 import { SubcorpusEditModel, SubcorpusEditModelState } from '../../models/subcorp/edit';
 import { BoundWithProps, IActionDispatcher } from 'kombo';
@@ -112,18 +112,6 @@ export function init(
             }
         };
 
-        const handleSave = () => {
-            dispatcher.dispatch<typeof Actions.ReuseQuery>({
-                name: Actions.ReuseQuery.name,
-                payload: {
-                    selectionType: props.selectionType,
-                    newName: props.data.name,
-                    usesubcorp: props.data.usesubcorp,
-                    asDraft: true,
-                }
-            });
-        };
-
         const handleCreate = () => {
             dispatcher.dispatch<typeof Actions.ReuseQuery>({
                 name: Actions.ReuseQuery.name,
@@ -175,6 +163,7 @@ export function init(
     const FormActionFile:React.FC<{
         data:SubcorpusRecord;
         userId:number;
+        inputMode:FormType;
     }> = (props) => {
 
         const handleArchive = () => {
@@ -201,15 +190,16 @@ export function init(
             }
         };
 
-        const handleSaveDraftClick = () => {
-            dispatcher.dispatch<typeof Actions.FormSubmit>({
-                name: Actions.FormSubmit.name,
+        const handleFinalize = () => {
+            dispatcher.dispatch<typeof Actions.ReuseQuery>({
+                name: Actions.ReuseQuery.name,
                 payload: {
-                    selectionType: this.props.inputMode,
-                    asDraft: true,
+                    selectionType: props.inputMode,
+                    newName: props.data.name,
+                    usesubcorp: props.data.usesubcorp
                 }
             });
-        }
+        };
 
         return (
             <TabContentWrapper>
@@ -217,7 +207,7 @@ export function init(
                 <hr />
                 <S.RestoreTabContentWrapper>
                     {props.data.isDraft ?
-                        <button type="button" className="default-button" onClick={handleSaveDraftClick}>
+                        <button type="button" className="default-button" onClick={handleFinalize}>
                             {he.translate('subcform__finalize_subcorpus')}
                         </button> :
                         null
@@ -377,6 +367,7 @@ export function init(
                     <>
                         <layoutViews.TabView className="ActionMenu" items={items} >
                             <FormActionFile key="restore" data={props.data}
+                                inputMode={getFormTypeFromSelection(props.data.selections)}
                                 userId={props.userId} />
                             <FormActionReuse
                                 key="action-reuse"
