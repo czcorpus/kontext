@@ -301,8 +301,9 @@ export interface ConcQueryResponse extends Kontext.AjaxResponse {
 }
 
 export interface PreflightResponse extends Kontext.AjaxResponse {
-    sizePerc:number;
+    sizeIpm:number;
     preflightId:string;
+    isLargeCorpus:boolean;
 }
 
 /**

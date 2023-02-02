@@ -120,37 +120,32 @@ async def query(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 async def preflight(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     ans = {}
     amodel.clear_prev_conc_params()
-    # 1) store query forms arguments for later reuse on client-side
     corpora = amodel.select_current_aligned_corpora(active_only=True)
     corpus_info = await amodel.get_corpus_info(corpora[0])
     qinfo = await QueryFormArgs.create(plugin_ctx=amodel.plugin_ctx, corpora=corpora, persist=True)
     qinfo.update_by_user_query(
         req.json, await amodel.get_tt_bib_mapping(req.json.get('text_types', {})))
-    amodel.add_conc_form_args(qinfo)
-    # 2) process the query
     try:
-        # TODO preflight subcorpus dependent on corpus
-        preflight_subcorp = SubcorpusIdent('z8QqQMYY', corpora[0])
+        preflight_subcorp = SubcorpusIdent(corpus_info.preflight_subcorpus, corpora[0])
         corp = await amodel.plugin_ctx.corpus_factory.get_corpus(preflight_subcorp)
-
         await amodel.set_first_query(
             [q['corpname'] for q in req.json['queries']], qinfo, corpus_info)
-        logging.getLogger(__name__).debug('query: {}'.format(amodel.args.q))
         conc = await get_conc(
             corp=corp, user_id=amodel.session_get('user', 'id'), q=amodel.args.q,
-            fromp=amodel.args.fromp, pagesize=amodel.args.pagesize, asnc=qinfo.data.asnc,
+            fromp=amodel.args.fromp, pagesize=amodel.args.pagesize, asnc=False,
             samplesize=corpus_info.sample_size)
-        resp.set_http_status(201)
     except (ConcordanceException, ConcCacheStatusException) as ex:
         if isinstance(ex, ConcordanceSpecificationError):
             raise UserReadableException(ex, code=422)
         else:
             raise ex
-
+    size_ipm = round(1_000_000 * conc.size() / corp.search_size)
+    with plugins.runtime.QUERY_PERSISTENCE as qp:
+        await qp.update_preflight_stats(
+            amodel.plugin_ctx, amodel.preflight_id, amodel.corp.corpname, preflight_subcorp.id, size_ipm, None)
     ans['concSize'] = conc.size()
-    ans['totalSize'] = corp.search_size
-    ans['sizePerc'] = 100 * conc.size() / corp.search_size
-    ans['preflightId'] = 'TODO'
+    ans['isLargeCorpus'] = corp.search_size > 10_000_000  # TODO
+    ans['sizeIpm'] = size_ipm
     return ans
 
 
@@ -188,6 +183,15 @@ async def query_submit(amodel: ConcActionModel, req: KRequest, resp: KResponse):
             samplesize=corpus_info.sample_size)
         ans['size'] = conc.size()
         ans['finished'] = conc.finished()
+        if corpus_info.preflight_subcorpus and conc.finished():
+            with plugins.runtime.QUERY_PERSISTENCE as qp:
+                await qp.update_preflight_stats(
+                    amodel.plugin_ctx,
+                    amodel.preflight_id,
+                    amodel.corp.corpname,
+                    corpus_info.preflight_subcorpus,
+                    None,
+                    round(conc.size() / amodel.corp.search_size * 1_000_000))
         amodel.on_query_store(store_last_op)
         resp.set_http_status(201)
     except (ConcordanceException, ConcCacheStatusException) as ex:
@@ -206,6 +210,7 @@ async def _get_conc_cache_status(amodel: ConcActionModel):
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(amodel.corp)
     q = tuple(amodel.args.q)
     corp_cache_key = amodel.corp.cache_key
+    corpus_info = await amodel.get_corpus_info(amodel.corp.corpname)
 
     try:
         cache_status = await cache_map.get_calc_status(corp_cache_key, q)
@@ -218,6 +223,15 @@ async def _get_conc_cache_status(amodel: ConcActionModel):
             err = worker.get_task_error(cache_status.task_id)
             if err is not None:
                 raise err
+        if corpus_info.preflight_subcorpus and cache_status.finished:
+            with plugins.runtime.QUERY_PERSISTENCE as qp:
+                await qp.update_preflight_stats(
+                    amodel.plugin_ctx,
+                    amodel.preflight_id,
+                    amodel.corp.corpname,
+                    corpus_info.preflight_subcorpus,
+                    None,
+                    cache_status.concsize)
         return dict(
             finished=cache_status.finished,
             concsize=cache_status.concsize,
@@ -235,7 +249,7 @@ async def _get_conc_cache_status(amodel: ConcActionModel):
 @bp.route('/get_conc_cache_status')
 @http_action(return_type='json', action_model=ConcActionModel)
 async def get_conc_cache_status(amodel: ConcActionModel, req: KRequest, resp: KResponse):
-    return _get_conc_cache_status(amodel)
+    return await _get_conc_cache_status(amodel)
 
 
 async def view_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse, asnc: bool, user_id: int):

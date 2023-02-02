@@ -21,7 +21,7 @@
 /// <reference path="../../vendor.d.ts/cqlParser.d.ts" />
 
 import { IFullActionControl } from 'kombo';
-import { Observable } from 'rxjs';
+import { Observable, of as rxOf } from 'rxjs';
 import { tap, map, concatMap, reduce } from 'rxjs/operators';
 import { Dict, tuple, List, pipe, HTTP } from 'cnc-tskit';
 
@@ -81,6 +81,7 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
     simpleQueryDefaultAttrs:{[corpname:string]:Array<string|Array<string>>};
     concViewPosAttrs:Array<string>;
     alignCommonPosAttrs:Array<string>;
+    corpusPreflightSubc:string|null;
 }
 
 export interface QueryInputSetQueryProps {
@@ -294,6 +295,8 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
      concViewPosAttrs:Array<string>;
 
      alignCommonPosAttrs:Array<string>;
+
+     corpusPreflightSubc:string|null;
 }
 
 
@@ -436,7 +439,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 quickSubcorpActive,
                 concViewPosAttrs: props.concViewPosAttrs,
                 alignCommonPosAttrs: props.alignCommonPosAttrs,
-                compositionModeOn: false
+                compositionModeOn: false,
+                corpusPreflightSubc: props.corpusPreflightSubc
         });
 
         this.addActionSubtypeHandler(
@@ -517,7 +521,9 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                             if (err !== null) {
                                 throw err;
                             }
-                            return this.submitPreflight(contextData, true, ttSelections);
+                            return this.state.corpusPreflightSubc ?
+                                this.submitPreflight(contextData, true, ttSelections) :
+                                rxOf({contextData, ttSelections, preflightId: null});
                         }
                     ),
                     concatMap(
@@ -999,7 +1005,10 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         async:boolean,
         ttSelections:TextTypes.ExportedSelection,
         noQueryHistory?:boolean
-    ):Observable<{ttSelections:TextTypes.ExportedSelection; contextData:QueryContextArgs;}> {
+    ):Observable<{
+        contextData:QueryContextArgs;
+        ttSelections:TextTypes.ExportedSelection;
+    }> {
 
         return this.pageModel.ajax$<PreflightResponse>(
             HTTP.Method.POST,
@@ -1014,10 +1023,13 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         ).pipe(
             map(
                 ans => {
-                    if (ans.sizePerc >= 50 && !window.confirm("Concordance might take a while to compute. Do you want to continue?")) {
+                    if (ans.sizeIpm >= 100000 && !window.confirm("Concordance might take a while to compute. Do you want to continue?")) {
                         throw "Query cancelled";
                     }
-                    return {ttSelections, contextData}
+                    return {
+                        contextData,
+                        ttSelections
+                    }
                 }
             )
         );
@@ -1036,7 +1048,12 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 'query_submit',
                 {format: 'json'}
             ),
-            this.createSubmitArgs(contextFormArgs, async, ttSelection, noQueryHistory),
+            this.createSubmitArgs(
+                contextFormArgs,
+                async,
+                ttSelection,
+                noQueryHistory
+            ),
             {
                 contentType: 'application/json'
             }

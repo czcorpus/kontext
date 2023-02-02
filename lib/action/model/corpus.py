@@ -474,6 +474,7 @@ class CorpusActionModel(UserActionModel):
         result['bib_conf'] = corp_info.metadata
         result['simple_query_default_attrs'] = corp_info.simple_query_default_attrs
         result['corp_sample_size'] = corp_info.sample_size
+        result['corp_preflight_subc'] = corp_info.preflight_subcorpus
 
         poslist = []
         for tagset in corp_info.tagsets:

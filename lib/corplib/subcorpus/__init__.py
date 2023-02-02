@@ -28,7 +28,7 @@ from manatee import Concordance, Corpus, SubCorpus
 from manatee import create_subcorpus as m_create_subcorpus
 
 from ..abstract import SubcorpusIdent
-from ..corpus import KCorpus
+from ..corpus import KCorpus, AbstractKCorpus
 from ..errors import (
     CorpusInstantiationError, InvalidSubCorpFreqFileType,
     SubcorpusAlreadyExistsError)
@@ -224,7 +224,7 @@ class KSubcorpus(KCorpus):
 
 async def create_subcorpus(
         path: str,
-        corpus: KCorpus,
+        corpus: AbstractKCorpus,
         structname: str,
         subquery: str) -> SubCorpus:
     """

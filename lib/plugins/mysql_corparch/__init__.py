@@ -163,6 +163,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
             ans.manatee.name = row['name']
             ans.part_of_ml_corpus = row['part_of_ml_corpus']
             ans.ml_position_filter = MLPositionFilter(row['ml_position_filter'])
+            ans.preflight_subcorpus = row['preflight_subc']
             return ans
         return None
 

@@ -421,7 +421,8 @@ export class ViewPage {
                 Dict.fromEntries()
             ),
             concViewPosAttrs: this.layoutModel.getConf<ConcServerArgs>('currentArgs').attrs,
-            alignCommonPosAttrs: this.layoutModel.getConf<Array<string>>('AlignCommonPosAttrs')
+            alignCommonPosAttrs: this.layoutModel.getConf<Array<string>>('AlignCommonPosAttrs'),
+            corpusPreflightSubc: this.layoutModel.getConf<string|null>('corpusPreflightSubc')
         };
 
         this.queryModels.queryModel = new FirstQueryFormModel({

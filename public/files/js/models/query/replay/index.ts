@@ -604,7 +604,8 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                             )
 
                         } else {
-                            return this.queryModel.submitQuery(queryContext, false, ttSelection, true);
+                            return this.queryModel.submitQuery(
+                                queryContext, false, ttSelection, true);
                         }
                     }
                 ),

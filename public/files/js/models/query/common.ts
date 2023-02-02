@@ -85,6 +85,7 @@ export interface ConcQueryArgs {
     context:QueryContextArgs;
     async:boolean;
     no_query_history?:boolean;
+    preflight_id?:string;
     type:'concQueryArgs';
 }
 

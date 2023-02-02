@@ -30,6 +30,7 @@ __conf.anonymousUserConcLoginPrompt = {{ anonymous_user_conc_login_prompt|to_jso
 __conf.userFullname = {{ user_info.fullname|to_json }};
 __conf.corpusIdent = {{ corpus_ident|to_json }};
 __conf.corpusSampleSize = {{ corp_sample_size|to_json }};
+__conf.corpusPreflightSubc = {{ corp_preflight_subc|default(None, true)|to_json }};
 __conf.baseAttr = {{ base_attr|to_json }};
 __conf.currentArgs = {{ Globals|to_json }};
 __conf.concUrlTTLDays = {{ conc_url_ttl_days|to_json }};
