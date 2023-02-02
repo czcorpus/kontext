@@ -714,7 +714,10 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
             info = await sr.get_info(corp_ident.id)
             if info.text_types:
                 subcorp_tt_structure = info.text_types
-
+    if corpus_info.preflight_subcorpus:
+        preflight_conf = dict(subc=corpus_info.preflight_subcorpus, threshold_ipm=PREFLIGHT_THRESHOLD_IPM)
+    else:
+        preflight_conf = None
     ans = dict(
         corpname=amodel.args.corpname,
         subcorpname=amodel.corp.subcorpus_id,
@@ -751,7 +754,7 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
         SimpleQueryDefaultAttrs=corpus_info.simple_query_default_attrs,
         QSEnabled=amodel.args.qs_enabled,
         SubcorpTTStructure=subcorp_tt_structure,
-        concPreflight=dict(subc=corpus_info.preflight_subcorpus, threshold_ipm=PREFLIGHT_THRESHOLD_IPM)
+        concPreflight=preflight_conf
     )
     await amodel.attach_plugin_exports(ans, direct=True)
     amodel.configure_auth_urls(ans)
