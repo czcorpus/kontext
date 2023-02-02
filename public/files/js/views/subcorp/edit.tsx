@@ -153,23 +153,18 @@ export function init(
                     {isTTSelection(props.data.selections) ?
                         <ttViews.TextTypesPanel LiveAttrsCustomTT={props.liveAttrsEnabled ? liveAttrsViews.LiveAttrsCustomTT : null} LiveAttrsView={props.liveAttrsEnabled ? liveAttrsViews.LiveAttrsView : null} /> :
                         null}
-                    {
-                        props.data.isDraft ?
                         <p className='submit-buttons'>
-                            <button type="button" className="default-button"
-                                    onClick={handleSave}>
-                                {he.translate('subcform__save_draft')}
-                            </button>
-                            <button type="button" className="default-button"
-                                    onClick={handleCreate}>
-                                {he.translate('subcform__create_subcorpus')}
-                            </button>
-                        </p> :
-                        <button type="button" className="default-button"
-                                    onClick={handleReuse}>
-                                {he.translate('subclist__action_reuse')}
-                        </button>
-                    }
+                            {props.data.isDraft ?
+                                <button type="button" className="default-button"
+                                        onClick={handleCreate}>
+                                    {he.translate('subcform__create_subcorpus')}
+                                </button> :
+                                <button type="button" className="default-button"
+                                        onClick={handleReuse}>
+                                    {he.translate('subclist__action_reuse')}
+                                </button>
+                            }
+                        </p>
                 </S.ReuseTabContentWrapper>
             </TabContentWrapper>
         );
@@ -206,11 +201,27 @@ export function init(
             }
         };
 
+        const handleSaveDraftClick = () => {
+            dispatcher.dispatch<typeof Actions.FormSubmit>({
+                name: Actions.FormSubmit.name,
+                payload: {
+                    selectionType: this.props.inputMode,
+                    asDraft: true,
+                }
+            });
+        }
+
         return (
             <TabContentWrapper>
                 <SubcOverview data={props.data} userId={props.userId} standalone={false} />
                 <hr />
                 <S.RestoreTabContentWrapper>
+                    {props.data.isDraft ?
+                        <button type="button" className="default-button" onClick={handleSaveDraftClick}>
+                            {he.translate('subcform__finalize_subcorpus')}
+                        </button> :
+                        null
+                    }
                     {props.data.archived ?
                         <button type="button" className="default-button"
                                 onClick={handleRestore}>
@@ -334,9 +345,19 @@ export function init(
     }> = (props) => {
 
         const items:Array<{id:string, label:string, isDisabled?: boolean}> = [
-            {id: 'restore', label: he.translate('subclist__action_file')},
-            {id: 'structure', label: he.translate('subclist__action_structure'), isDisabled: props.data?.selections === undefined},
-            {id: 'pub', label: he.translate('subclist__public_description_btn')}
+            {
+                id: 'restore',
+                label: he.translate('subclist__action_file')
+            },
+            {
+                id: 'structure',
+                label: he.translate('subclist__action_structure'),
+                isDisabled: props.data?.selections === undefined
+            },
+            {
+                id: 'pub',
+                label: he.translate('subclist__public_description_btn')
+            }
         ];
 
         React.useEffect(

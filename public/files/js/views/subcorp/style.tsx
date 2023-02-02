@@ -39,6 +39,9 @@ export const SubcorpForm = styled.form`
     }
 
     .submit-buttons {
+
+        padding-top: 1em;
+
         > *:not(:first-child) {
             margin-left: 0.7em;
         }
@@ -358,7 +361,11 @@ export const RestoreTabContentWrapper = styled.div`
 // ---------------- <ReuseTabContentWrapper /> --------------------------------
 
 export const ReuseTabContentWrapper = styled.div`
+
     .submit-buttons {
+
+        padding-top: 1em;
+
         > *:not(:first-child) {
             margin-left: 0.7em;
         }
@@ -570,5 +577,16 @@ export const LineSelectionOps = styled.div`
 
     > *:not(:first-child) {
         margin-left: 0.7em;
+    }
+`;
+
+
+// ------------------ <DataLineTr /> ------------------------------------
+
+export const DataLineTr = styled.tr`
+
+    .draft {
+        font-style: italic;
+        color: ${theme.colorLightText};
     }
 `;

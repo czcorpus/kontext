@@ -105,111 +105,88 @@ export function init({
     /**
      *
      */
-    class SubcorpForm extends React.Component<SubcorpFormProps & SubcorpFormModelState> {
+    const SubcorpForm:React.FC<SubcorpFormProps & SubcorpFormModelState> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._handleInputModeChange = this._handleInputModeChange.bind(this);
-            this._handleCreateClick = this._handleCreateClick.bind(this);
-            this._handleSaveDraftClick = this._handleSaveDraftClick.bind(this);
-        }
-
-        _handleInputModeChange(v) {
+        const handleInputModeChange = (v) => {
             dispatcher.dispatch<typeof Actions.FormSetInputMode>({
                 name: Actions.FormSetInputMode.name,
                 payload: {
                     value: v
                 }
             });
-        }
+        };
 
-        _handleSaveDraftClick() {
+        const handleCreateClick = () => {
             dispatcher.dispatch<typeof Actions.FormSubmit>({
                 name: Actions.FormSubmit.name,
                 payload: {
-                    selectionType: this.props.inputMode,
-                    asDraft: true,
-                }
-            });
-        }
-
-        _handleCreateClick() {
-            dispatcher.dispatch<typeof Actions.FormSubmit>({
-                name: Actions.FormSubmit.name,
-                payload: {
-                    selectionType: this.props.inputMode,
+                    selectionType: props.inputMode,
                     asDraft: false,
                 }
             });
-        }
+        };
 
-        render() {
-            return (
-                <S.SubcorpForm>
-                    <table className="form">
-                        <tbody>
-                            <tr>
-                                <th>
-                                    {he.translate('global__corpus')}:
-                                </th>
-                                <td>
-                                    <CorparchComponent />
-                                    <div className="starred"></div>
-                                </td>
-                            </tr>
-                            <tr className="required">
-                                <th style={{width: '20%'}}>
-                                    {he.translate('global__new_subcorpus_name_lab')}:
-                                </th>
-                                <td style={{width: '80%'}}>
-                                    <SubcNameInput value={this.props.subcname} />
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>{he.translate('subcform__public_description')}:</th>
-                                <td>
-                                    <SubcDescription value={this.props.description} />
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <div className="data-sel">
-                        <layoutViews.TabView
-                                className="FreqFormSelector"
-                                defaultId={this.props.inputMode}
-                                callback={this._handleInputModeChange}
-                                items={[
-                                    {
-                                        id: 'tt-sel',
-                                        label: he.translate('subcform__mode_attr_list')
-                                    },
-                                    {
-                                        id: 'within',
-                                        label: he.translate('subcform__mode_raw_within')
-                                    }]}>
-                            <this.props.ttComponent {...this.props.ttProps} />
-                            <WithinForm />
-                        </layoutViews.TabView>
-                        <div id="subc-mixer-row">
-                            <div className="widget"></div>
-                        </div>
+        return (
+            <S.SubcorpForm>
+                <table className="form">
+                    <tbody>
+                        <tr>
+                            <th>
+                                {he.translate('global__corpus')}:
+                            </th>
+                            <td>
+                                <CorparchComponent />
+                                <div className="starred"></div>
+                            </td>
+                        </tr>
+                        <tr className="required">
+                            <th style={{width: '20%'}}>
+                                {he.translate('global__new_subcorpus_name_lab')}:
+                            </th>
+                            <td style={{width: '80%'}}>
+                                <SubcNameInput value={props.subcname} />
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>{he.translate('subcform__public_description')}:</th>
+                            <td>
+                                <SubcDescription value={props.description} />
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div className="data-sel">
+                    <layoutViews.TabView
+                            className="FreqFormSelector"
+                            defaultId={props.inputMode}
+                            callback={handleInputModeChange}
+                            items={[
+                                {
+                                    id: 'tt-sel',
+                                    label: he.translate('subcform__mode_attr_list')
+                                },
+                                {
+                                    id: 'within',
+                                    label: he.translate('subcform__mode_raw_within')
+                                }]}>
+                        <props.ttComponent {...props.ttProps} />
+                        <WithinForm />
+                    </layoutViews.TabView>
+                    <div id="subc-mixer-row">
+                        <div className="widget"></div>
                     </div>
-                    {this.props.isBusy ?
-                        <layoutViews.AjaxLoaderBarImage /> :
-                        <p className='submit-buttons'>
-                            <button className="default-button" type="button"
-                                    onClick={this._handleSaveDraftClick}>
-                                {he.translate('subcform__save_draft')}
-                            </button>
-                            <button className="default-button" type="button"
-                                    onClick={this._handleCreateClick}>
-                                {he.translate('subcform__create_subcorpus')}
-                            </button>
-                        </p>
-                    }
-                </S.SubcorpForm>
-            );
-        }
+                </div>
+                {props.isBusy ?
+                    <layoutViews.AjaxLoaderBarImage /> :
+                    <p className='submit-buttons'>
+                        <button className="default-button" type="button"
+                                onClick={handleCreateClick}>
+                            {he.translate('subcform__create_subcorpus')}
+                        </button>
+                    </p>
+                }
+            </S.SubcorpForm>
+        );
     }
 
     return {
