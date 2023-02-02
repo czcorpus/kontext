@@ -476,7 +476,10 @@ class CorpusActionModel(UserActionModel):
         result['bib_conf'] = corp_info.metadata
         result['simple_query_default_attrs'] = corp_info.simple_query_default_attrs
         result['corp_sample_size'] = corp_info.sample_size
-        result['conc_preflight'] = dict(subc=corp_info.preflight_subcorpus, threshold_ipm=PREFLIGHT_THRESHOLD_IPM)
+        if corp_info.preflight_subcorpus:
+            result['conc_preflight'] = dict(subc=corp_info.preflight_subcorpus, threshold_ipm=PREFLIGHT_THRESHOLD_IPM)
+        else:
+            result['conc_preflight'] = None
 
         poslist = []
         for tagset in corp_info.tagsets:
