@@ -477,7 +477,10 @@ class CorpusActionModel(UserActionModel):
         result['simple_query_default_attrs'] = corp_info.simple_query_default_attrs
         result['corp_sample_size'] = corp_info.sample_size
         if corp_info.preflight_subcorpus:
-            result['conc_preflight'] = dict(subc=corp_info.preflight_subcorpus, threshold_ipm=PREFLIGHT_THRESHOLD_IPM)
+            result['conc_preflight'] = dict(
+                corpname=corp_info.preflight_subcorpus.corpus_name,
+                subc=corp_info.preflight_subcorpus.id,
+                threshold_ipm=PREFLIGHT_THRESHOLD_IPM)
         else:
             result['conc_preflight'] = None
 
