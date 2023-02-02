@@ -24,11 +24,12 @@ import { PageModel } from '../app/page';
 import { KontextPage } from '../app/main';
 import * as PluginInterfaces from '../types/plugins';
 import createCorparch from 'plugins/corparch/init';
-import { KeywordsFormModel, KeywordsFormModelArgs } from '../models/keywords/form';
+import { KeywordsFormModel } from '../models/keywords/form';
 import { init as viewInit } from '../views/keywords/form';
 import { Actions as GlobalActions } from '../models/common/actions';
 import { Root } from 'react-dom/client';
-import { Ident, List } from 'cnc-tskit';
+import { Ident } from 'cnc-tskit';
+import { KeywordsSubmitArgs } from '../models/keywords/common';
 
 
 /**
@@ -59,7 +60,7 @@ export class KeywordsFormPage {
                     name: GlobalActions.SwitchCorpus.name,
                     payload: {
                         corpora,
-                        subcorpus: subcorpId
+                        subcorpus: subcorpId,
                     }
                 });
             }
@@ -68,23 +69,33 @@ export class KeywordsFormPage {
 
     init():void {
         this.layoutModel.init(true, [], () => {
-            const kwForm = this.layoutModel.getConf<KeywordsFormModelArgs['initialArgs']>('FormData');
-            this.formModel = new KeywordsFormModel({
-                dispatcher: this.layoutModel.dispatcher,
-                layoutModel: this.layoutModel,
-                initialArgs: kwForm,
-            });
             this.focusCorparchPlugin = createCorparch(this.layoutModel.pluginApi());
             this.refCorparchPlugin = createCorparch(this.layoutModel.pluginApi());
             const focusCorpWidgetId = Ident.puid();
             const refCorpWidgetId = Ident.puid();
+
+            const kwForm = this.layoutModel.getConf<KeywordsSubmitArgs>('FormData');
+            this.formModel = new KeywordsFormModel({
+                dispatcher: this.layoutModel.dispatcher,
+                layoutModel: this.layoutModel,
+                initialArgs: kwForm,
+                refWidgetId: refCorpWidgetId,
+            });
             const view = viewInit({
                 dispatcher: this.layoutModel.dispatcher,
                 he: this.layoutModel.getComponentHelpers(),
                 keywordsFormModel: this.formModel,
                 FocusCorpWidget: this.initFocusCorpWidget(this.focusCorparchPlugin, focusCorpWidgetId),
                 focusCorpWidgetId,
-                RefCorpWidget: this.refCorparchPlugin.createWidget(refCorpWidgetId, 'keywords/form'),
+                RefCorpWidget: this.refCorparchPlugin.createWidget(
+                    refCorpWidgetId,
+                    'keywords/form',
+                    undefined,
+                    {
+                        corpusIdent: this.layoutModel.getConf<Kontext.FullCorpusIdent>('refCorpusIdent'),
+                        availableSubcorpora: this.layoutModel.getConf<Array<Kontext.SubcorpListItem>>('availableRefSubcorpora'),
+                    }
+                ),
                 refCorpWidgetId,
             });
             this.reactRoot = this.layoutModel.renderReactComponent(

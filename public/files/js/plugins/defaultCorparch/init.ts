@@ -29,9 +29,7 @@ import { CorplistTableModel } from './corplist';
 import { SearchEngine } from './search';
 import { ServerFavlistItem } from './common';
 import { IPluginApi } from '../../types/plugins/common';
-import { HTTP } from 'cnc-tskit';
-import { Actions } from './actions';
-import { IActionDispatcher } from 'kombo';
+import { InitialWidgetData } from '../../types/plugins/corparch';
 
 
 export class Plugin implements PluginInterfaces.Corparch.IPlugin {
