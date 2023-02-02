@@ -169,7 +169,8 @@ async def ajax_get_corparch_item(amodel: CorpusActionModel, req: KRequest, resp:
     corpname = getattr(amodel.args, 'corpname')
     user_id = amodel.session_get('user', 'id')
 
-    corpus_ident = dict(
+    out = {}
+    out['corpusIdent'] = dict(
         id=corpname,
         variant=amodel._corpus_variant,
         name=amodel.corp.human_readable_corpname,
@@ -179,9 +180,5 @@ async def ajax_get_corparch_item(amodel: CorpusActionModel, req: KRequest, resp:
         size=amodel.corp.size,
         searchSize=amodel.corp.search_size,
     )
-    out = {}
-    await amodel.export_subcorpora_list(out)
-    return {
-        'corpusIdent': corpus_ident,
-        'availableSubcorpora': out['SubcorpList'],
-    }
+    out['availableSubcorpora'] = await amodel.get_subcorpora_list(amodel.corp)
+    return out
