@@ -40,7 +40,6 @@ from action.req_args import JSONRequestArgsProxy, RequestArgsProxy
 from action.response import KResponse
 from corplib.abstract import AbstractKCorpus
 from corplib.corpus import KCorpus
-from corplib.subcorpus import SubcorpusRecord
 from corplib.fallback import EmptyCorpus, ErrorCorpus
 from main_menu.model import EventTriggeringItem, MainMenu
 from plugin_types.corparch.corpus import (
@@ -49,6 +48,9 @@ from texttypes.model import TextTypes
 from action.model import ModelsSharedData
 
 T = TypeVar('T')
+
+PREFLIGHT_THRESHOLD_IPM = 50_000
+PREFLIGHT_MIN_LARGE_CORPUS = 100_000_00
 
 
 class CorpusActionModel(UserActionModel):
@@ -474,6 +476,7 @@ class CorpusActionModel(UserActionModel):
         result['bib_conf'] = corp_info.metadata
         result['simple_query_default_attrs'] = corp_info.simple_query_default_attrs
         result['corp_sample_size'] = corp_info.sample_size
+        result['conc_preflight'] = dict(subc=corp_info.preflight_subcorpus, threshold_ipm=PREFLIGHT_THRESHOLD_IPM)
 
         poslist = []
         for tagset in corp_info.tagsets:

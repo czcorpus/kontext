@@ -250,7 +250,8 @@ export class QueryPage {
                     Dict.fromEntries()
                 ),
                 concViewPosAttrs: this.getConf<ConcServerArgs>('currentArgs').attrs,
-                alignCommonPosAttrs: this.getConf<Array<string>>('AlignCommonPosAttrs')
+                alignCommonPosAttrs: this.getConf<Array<string>>('AlignCommonPosAttrs'),
+                concPreflight: this.getConf<Kontext.PreflightConf|null>('concPreflight')
             }
         });
     }

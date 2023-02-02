@@ -21,6 +21,7 @@ import os
 import re
 import urllib.parse
 from typing import Any, Dict, List, Optional, Tuple, Union
+import hashlib
 
 import conclib
 import plugins
@@ -612,6 +613,14 @@ class ConcActionModel(CorpusActionModel):
                 args.append((k, val))
         args.append(('next', return_action))
         raise ImmediateRedirectException(self._req.create_url('restore_conc', args))
+
+    @property
+    def preflight_id(self):
+        """
+        Return an identifier for storing both preflight and regular query
+        under the same key for further analysis and processing.
+        """
+        return hashlib.sha1('#'.join(self.args.q).encode('utf-8')).hexdigest()
 
 
 class ConcPluginCtx(CorpusPluginCtx):
