@@ -215,7 +215,7 @@ class Backend(DatabaseBackend):
             'c.default_virt_keyboard as default_virt_keyboard, '
             'c.default_view_opts, c.default_tagset, '
             'c.part_of_ml_corpus, c.ml_position_filter, '
-            'kps.id AS preflight_subc '
+            'kps.id AS preflight_subc, kps.corpus_name AS preflight_corpus '
             f'FROM {self._corp_table} AS c '
             'LEFT JOIN kontext_keyword_corpus AS kc ON kc.corpus_name = c.name '
             'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '

@@ -25,6 +25,7 @@ from typing import Any, Dict, List, NamedTuple, Optional, Tuple
 from corplib.abstract import AbstractKCorpus
 from dataclasses_json import dataclass_json
 from dataclasses_json.api import LetterCase
+from corplib.abstract import SubcorpusIdent
 
 
 @dataclass_json
@@ -184,7 +185,7 @@ class CorpusInfo:
     In terms of l10n, this is kind of a hybrid as it
     is expected that it stores localized information
     but at the same time, for some items (description)
-    it must also store i18n values so we can create
+    it must also store i18n values, so we can create
     localized copies for different languages.
     (see _localize_corpus_info in different corparch
     plug-ins).
@@ -219,7 +220,7 @@ class CorpusInfo:
     simple_query_default_attrs: List[str] = field(default_factory=list)
     part_of_ml_corpus: bool = False
     ml_position_filter: MLPositionFilter = MLPositionFilter.none
-    preflight_subcorpus: Optional[str] = None
+    preflight_subcorpus: Optional[SubcorpusIdent] = None
 
     def localized_desc(self, lang) -> str:
         if lang.split('_')[0] == 'cs':

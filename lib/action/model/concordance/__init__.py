@@ -615,12 +615,14 @@ class ConcActionModel(CorpusActionModel):
         raise ImmediateRedirectException(self._req.create_url('restore_conc', args))
 
     @property
-    def preflight_id(self):
+    def preflight_id(self) -> Optional[str]:
         """
         Return an identifier for storing both preflight and regular query
         under the same key for further analysis and processing.
         """
-        return hashlib.sha1('#'.join(self.args.q).encode('utf-8')).hexdigest()
+        if len(self.args.q) > 0:
+            return hashlib.sha1(self.args.q[0].encode('utf-8')).hexdigest()
+        return None
 
 
 class ConcPluginCtx(CorpusPluginCtx):

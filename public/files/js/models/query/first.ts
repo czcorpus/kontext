@@ -522,7 +522,10 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                                 throw err;
                             }
                             return this.state.concPreflight ?
-                                this.submitPreflight(contextData, true, ttSelections) :
+                                this.submitPreflight(
+                                    contextData,
+                                    ttSelections,
+                                    this.state.concPreflight) :
                                 rxOf({contextData, ttSelections, preflightId: null});
                         }
                     ),
@@ -987,6 +990,40 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         return args;
     }
 
+    createPreflightArgs(
+        contextFormArgs:QueryContextArgs,
+        ttSelection:TextTypes.ExportedSelection,
+        preflightSubc:Kontext.PreflightConf
+    ):ConcQueryArgs {
+
+        const currArgs = this.pageModel.getConcArgs();
+        const args:ConcQueryArgs = {
+            type: 'concQueryArgs',
+            usesubcorp: preflightSubc.subc,
+            viewmode: 'kwic',
+            pagesize: currArgs.pagesize,
+            attrs: currArgs.attrs,
+            attr_vmode: currArgs.attr_vmode,
+            base_viewattr: currArgs.base_viewattr,
+            ctxattrs: currArgs.ctxattrs,
+            structs: currArgs.structs,
+            refs: currArgs.refs,
+            fromp: currArgs.fromp || 0,
+            shuffle: this.state.shuffleConcByDefault && !this.state.shuffleForbidden ? 1 : 0,
+            queries: [],
+            text_types: this.disableRestrictSearch(this.state) ? {} : ttSelection,
+            context: contextFormArgs,
+            async: false
+        };
+        args.queries = [
+            this.exportQuery({
+                ...this.state.queries[this.state.corpora[0]],
+                corpname: preflightSubc.corpname
+            })
+        ];
+        return args;
+    }
+
 
     createViewUrl(concId:string, args:ConcServerArgs, retJson:boolean, async:boolean):string {
         return this.pageModel.createActionUrl(
@@ -1002,9 +1039,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
 
     submitPreflight(
         contextData:QueryContextArgs,
-        async:boolean,
         ttSelections:TextTypes.ExportedSelection,
-        noQueryHistory?:boolean
+        preflightSubc:Kontext.PreflightConf
     ):Observable<{
         contextData:QueryContextArgs;
         ttSelections:TextTypes.ExportedSelection;
@@ -1016,15 +1052,16 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 'preflight',
                 {format: 'json'}
             ),
-            this.createSubmitArgs(contextData, async, ttSelections, noQueryHistory),
+            this.createPreflightArgs(contextData, ttSelections, preflightSubc),
             {
                 contentType: 'application/json'
             }
         ).pipe(
             map(
                 ans => {
-                    if (ans.sizeIpm >= 100000 && !window.confirm("Concordance might take a while to compute. Do you want to continue?")) {
-                        throw "Query cancelled";
+                    if (ans.sizeIpm >= preflightSubc.threshold_ipm &&
+                            !window.confirm('Concordance might take a while to compute. Do you want to continue?')) {
+                        throw 'Query cancelled';
                     }
                     return {
                         contextData,
