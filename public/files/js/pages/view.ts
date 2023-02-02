@@ -422,7 +422,7 @@ export class ViewPage {
             ),
             concViewPosAttrs: this.layoutModel.getConf<ConcServerArgs>('currentArgs').attrs,
             alignCommonPosAttrs: this.layoutModel.getConf<Array<string>>('AlignCommonPosAttrs'),
-            corpusPreflightSubc: this.layoutModel.getConf<string|null>('corpusPreflightSubc')
+            concPreflight: this.layoutModel.getConf<Kontext.PreflightConf|null>('concPreflight')
         };
 
         this.queryModels.queryModel = new FirstQueryFormModel({

@@ -251,7 +251,7 @@ export class QueryPage {
                 ),
                 concViewPosAttrs: this.getConf<ConcServerArgs>('currentArgs').attrs,
                 alignCommonPosAttrs: this.getConf<Array<string>>('AlignCommonPosAttrs'),
-                corpusPreflightSubc: this.getConf<string|null>('corpusPreflightSubc')
+                concPreflight: this.getConf<Kontext.PreflightConf|null>('concPreflight')
             }
         });
     }

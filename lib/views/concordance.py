@@ -46,7 +46,7 @@ from action.krequest import KRequest
 from action.model.base import BaseActionModel
 from action.model.concordance import ConcActionModel
 from action.model.concordance.linesel import LinesGroups
-from action.model.corpus import CorpusActionModel
+from action.model.corpus import CorpusActionModel, PREFLIGHT_THRESHOLD_IPM, PREFLIGHT_MIN_LARGE_CORPUS
 from action.model.user import UserActionModel
 from action.response import KResponse
 from action.result.concordance import QueryAction
@@ -144,7 +144,7 @@ async def preflight(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         await qp.update_preflight_stats(
             amodel.plugin_ctx, amodel.preflight_id, amodel.corp.corpname, preflight_subcorp.id, size_ipm, None)
     ans['concSize'] = conc.size()
-    ans['isLargeCorpus'] = corp.search_size > 10_000_000  # TODO
+    ans['isLargeCorpus'] = corp.search_size > PREFLIGHT_MIN_LARGE_CORPUS
     ans['sizeIpm'] = size_ipm
     return ans
 
@@ -231,7 +231,7 @@ async def _get_conc_cache_status(amodel: ConcActionModel):
                     amodel.corp.corpname,
                     corpus_info.preflight_subcorpus,
                     None,
-                    cache_status.concsize)
+                    round(cache_status.concsize / amodel.corp.search_size * 1_000_000))
         return dict(
             finished=cache_status.finished,
             concsize=cache_status.concsize,
@@ -751,7 +751,7 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
         SimpleQueryDefaultAttrs=corpus_info.simple_query_default_attrs,
         QSEnabled=amodel.args.qs_enabled,
         SubcorpTTStructure=subcorp_tt_structure,
-        corpusPreflightSubc=corpus_info.preflight_subcorpus
+        concPreflight=dict(subc=corpus_info.preflight_subcorpus, threshold_ipm=PREFLIGHT_THRESHOLD_IPM)
     )
     await amodel.attach_plugin_exports(ans, direct=True)
     amodel.configure_auth_urls(ans)

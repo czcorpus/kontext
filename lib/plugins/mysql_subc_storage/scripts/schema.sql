@@ -41,6 +41,11 @@ CREATE TABLE kontext_preflight_stats (
     CONSTRAINT kontext_preflight_stats_id_fk FOREIGN KEY (subc_id) REFERENCES kontext_subcorpus(id)
 );
 
+CREATE VIEW kontext_preflight_subc_evaluation AS
+SELECT corpus_name, subc_id, AVG(ABS(estimated_size - actual_size)) AS avg_error
+FROM kontext_preflight_stats
+GROUP BY corpus_name, subc_id
+
 -- for CNC, use:
 -- CONSTRAINT kontext_kontext_subcorpus_corpus_name_fk FOREIGN KEY (corpus_name) REFERENCES corpora(name),
 -- CONSTRAINT kontext_kontext_subcorpus_user_id_fk FOREIGN KEY (user_id) REFERENCES `user`(id),

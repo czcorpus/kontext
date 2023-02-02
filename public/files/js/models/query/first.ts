@@ -81,7 +81,7 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
     simpleQueryDefaultAttrs:{[corpname:string]:Array<string|Array<string>>};
     concViewPosAttrs:Array<string>;
     alignCommonPosAttrs:Array<string>;
-    corpusPreflightSubc:string|null;
+    concPreflight:Kontext.PreflightConf|null;
 }
 
 export interface QueryInputSetQueryProps {
@@ -296,7 +296,7 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
 
      alignCommonPosAttrs:Array<string>;
 
-     corpusPreflightSubc:string|null;
+     concPreflight:Kontext.PreflightConf|null;
 }
 
 
@@ -440,7 +440,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 concViewPosAttrs: props.concViewPosAttrs,
                 alignCommonPosAttrs: props.alignCommonPosAttrs,
                 compositionModeOn: false,
-                corpusPreflightSubc: props.corpusPreflightSubc
+                concPreflight: props.concPreflight
         });
 
         this.addActionSubtypeHandler(
@@ -521,7 +521,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                             if (err !== null) {
                                 throw err;
                             }
-                            return this.state.corpusPreflightSubc ?
+                            return this.state.concPreflight ?
                                 this.submitPreflight(contextData, true, ttSelections) :
                                 rxOf({contextData, ttSelections, preflightId: null});
                         }
