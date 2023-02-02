@@ -18,9 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { IActionDispatcher } from 'kombo';
 import { IUnregistrable } from '../../models/common/common';
 import { BasePlugin, IPluginApi } from './common';
+import { FullCorpusIdent, SubcorpListItem } from '../../types/kontext';
+import { Action } from 'kombo';
+import * as Kontext from '../kontext';
 
 // ------------------------------------------------------------------------
 // ------------------------ [corparch] plug-in ----------------------------
@@ -117,6 +119,11 @@ export interface ICorplistPage {
     getList():React.ComponentClass|React.FC<{}>;
 }
 
+export interface InitialWidgetData {
+    corpusIdent:Kontext.FullCorpusIdent,
+    availableSubcorpora:Array<Kontext.SubcorpListItem>,
+}
+
 export interface IPlugin extends IUnregistrable, BasePlugin {
 
     /**
@@ -133,10 +140,21 @@ export interface IPlugin extends IUnregistrable, BasePlugin {
     createWidget(
         widgetId:string,
         serverAction:string,
-        onCorpusSelection?:CorpusSelectionHandler
+        onCorpusSelection?:CorpusSelectionHandler,
+        initialData?:InitialWidgetData,
     ):React.ComponentClass<{widgetId:string}>;
 
     initCorplistPageComponents(initialData:any):ICorplistPage;
+}
+
+export class Actions {
+    static WidgetCorpusChange:Action<{
+        widgetId:string;
+        corpusIdent:FullCorpusIdent;
+        availableSubcorpora:Array<SubcorpListItem>;
+    }> = {
+        name: 'DEFAULT_CORPARCH_WIDGET_CORPUS_CHANGE'
+    };
 }
 
 export interface Factory {
