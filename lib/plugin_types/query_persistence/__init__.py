@@ -227,13 +227,15 @@ class AbstractQueryPersistence(abc.ABC):
             preflight_id: str,
             corpus: str,
             subc_id: str,
+            query_cql: Optional[str],
+            has_checked_tt: Optional[bool],
             estimated_size: Optional[int],
             actual_size: Optional[int]):
         """
         Store information about preflight request accuracy.
         In case preflight_id and corpus are the same, the method
         should update other values. E.g.
-        1st call: (foo, syn2020, afac, 2500, None) will create a record without actual_size
-        2nd call: (foo, syn2020, afac, None, 4100) will update existing record with actual_size
+        1st call: (foo, syn2020, afac, [word="foo"], False, 2500, None) will create a record without actual_size
+        2nd call: (foo, syn2020, afac, None,         None,  None, 4100) will update existing record with actual_size
         """
         pass

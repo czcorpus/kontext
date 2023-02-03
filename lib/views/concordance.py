@@ -144,7 +144,11 @@ async def preflight(amodel: ConcActionModel, req: KRequest, resp: KResponse):
             amodel.plugin_ctx,
             amodel.preflight_id,
             target_corpname,
-            corpus_info.preflight_subcorpus.id, size_ipm, None)
+            corpus_info.preflight_subcorpus.id,
+            amodel.args.q[0],
+            len(qinfo.data.selected_text_types) > 0,
+            size_ipm,
+            None)
     ans['concSize'] = conc.size()
     ans['isLargeCorpus'] = amodel.corp.search_size > PREFLIGHT_MIN_LARGE_CORPUS
     ans['sizeIpm'] = size_ipm
@@ -193,6 +197,8 @@ async def query_submit(amodel: ConcActionModel, req: KRequest, resp: KResponse):
                     amodel.corp.corpname,
                     corpus_info.preflight_subcorpus.id,
                     None,
+                    None,
+                    None,
                     round(conc.size() / amodel.corp.search_size * 1_000_000))
         amodel.on_query_store(store_last_op)
         resp.set_http_status(201)
@@ -232,6 +238,8 @@ async def _get_conc_cache_status(amodel: ConcActionModel):
                     amodel.preflight_id,
                     amodel.corp.corpname,
                     corpus_info.preflight_subcorpus.id,
+                    None,
+                    None,
                     None,
                     round(cache_status.concsize / amodel.corp.search_size * 1_000_000))
         return dict(

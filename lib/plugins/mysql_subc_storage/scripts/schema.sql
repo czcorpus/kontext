@@ -34,6 +34,8 @@ CREATE TABLE kontext_preflight_stats (
     id VARCHAR(40) NOT NULL,
     corpus_name VARCHAR(63) NOT NULL,
     subc_id VARCHAR(64),
+    query_cql TEXT,
+    has_checked_tt TINYINT(1) NOT NULL DEFAULT 0,
     estimated_size INT,
     actual_size INT,
     PRIMARY KEY(id, corpus_name, subc_id),
