@@ -226,7 +226,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             (state, action) => {
                 if (state.isActive) {
                     copy(this.getShareLink(state, action.payload.sourceId));
-                    this.pageModel.showMessage('info', 'Chart link copied to clipboard') // TODO translation
+                    this.pageModel.showMessage('info', this.pageModel.translate('global__link_copied_to_clipboard'));
                 }
             }
         );
