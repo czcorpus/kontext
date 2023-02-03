@@ -280,9 +280,9 @@ export function init(
 
     }> = (props) => {
 
-        const showShare = () => {
-            dispatcher.dispatch<typeof Actions.ResultShowShareLink>({
-                name: Actions.ResultShowShareLink.name,
+        const copyToClipboard = () => {
+            dispatcher.dispatch<typeof Actions.ResultLinkCopyToClipboard>({
+                name: Actions.ResultLinkCopyToClipboard.name,
                 payload: {sourceId: props.sourceId}
             });
         }
@@ -307,7 +307,7 @@ export function init(
                             <img src={he.createStaticUrl('img/ajax-loader-bar.gif')} alt={he.translate('global__loading')} /> :
                             null}
                         <label>{he.translate('freq__share_chart')}:</label>
-                        <a onClick={showShare}>
+                        <a onClick={copyToClipboard}>
                             <img className="over-img" style={{width: '1em', verticalAlign: 'middle'}} src={he.createStaticUrl('img/share.svg')}
                                     alt={he.translate('freq__share_chart')} title={he.translate('freq__share_chart')} />
                         </a>

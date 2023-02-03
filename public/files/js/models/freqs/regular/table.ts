@@ -34,6 +34,7 @@ import { Block, FreqResultResponse } from '../common';
 import { Actions as GeneralOptsActions } from '../../options/actions';
 import { AttrItem, BasicFreqModuleType } from '../../../types/kontext';
 import { validateGzNumber } from '../../base';
+import copy from 'copy-to-clipboard';
 
 
 export interface FreqDataRowsModelArgs {
@@ -230,6 +231,14 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         this.addActionHandler(
             Actions.ResultHideShareLink,
             (state, action) => {
+                state.shareLink = null;
+            }
+        );
+
+        this.addActionHandler(
+            Actions.ResultLinkCopyToClipboard,
+            (state, action) => {
+
                 state.shareLink = null;
             }
         );
