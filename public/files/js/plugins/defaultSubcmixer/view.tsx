@@ -37,16 +37,21 @@ export interface WidgetProps {
     isActive:boolean;
 }
 
-export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
-            subcMixerModel:SubcMixerModel):React.ComponentClass<WidgetProps, SubcMixerModelState> {
+export function init(
+    dispatcher:IActionDispatcher,
+    he:Kontext.ComponentHelpers,
+    subcMixerModel:SubcMixerModel,
+    corparchWidgetId:string
+):React.ComponentClass<WidgetProps, SubcMixerModelState> {
 
     const layoutViews = he.getLayoutViews();
     const subcFormViews = subcorpViewsInit({
-        dispatcher: dispatcher,
-        he: he,
+        dispatcher,
+        he,
         CorparchComponent: null,
         subcorpFormModel: null,
-        subcorpWithinFormModel: null
+        subcorpWithinFormModel: null,
+        corparchWidgetId
     });
 
     // ------------ <CalculatedRatio /> -------------------------------------

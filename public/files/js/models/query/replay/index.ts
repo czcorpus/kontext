@@ -596,10 +596,10 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
 
                             ).pipe(
                                 map(
-                                    resp => tuple(
-                                        resp,
-                                        resp.messages || []
-                                    )
+                                    response => ({
+                                        response,
+                                        messages: response.messages || []
+                                    })
                                 )
                             )
 
@@ -610,11 +610,11 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                     }
                 ),
                 concatMap(
-                    ([data,]) => this.pageModel.ajax$<AjaxConcResponse>(
+                    ({response}) => this.pageModel.ajax$<AjaxConcResponse>(
                         HTTP.Method.GET,
                         this.queryModel.createViewUrl(
-                            data.conc_persistence_op_id,
-                            data.conc_args,
+                            response.conc_persistence_op_id,
+                            response.conc_args,
                             true,
                             false
                         ),

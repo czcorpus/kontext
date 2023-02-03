@@ -56,9 +56,13 @@ class WordlistFormPage {
         this.layoutModel = layoutModel;
     }
 
-    private initCorparchWidget(plg:PluginInterfaces.Corparch.IPlugin):PluginInterfaces.Corparch.WidgetView {
+    private initCorparchWidget(
+        plg:PluginInterfaces.Corparch.IPlugin,
+        corparchWidgetId:string
+    ):PluginInterfaces.Corparch.WidgetView {
+
         return plg.createWidget(
-            Ident.puid(),
+            corparchWidgetId,
             'wordlist/form',
             (corpora:Array<string>, subcorpId:string) => {
                 this.layoutModel.dispatcher.dispatch<typeof GlobalActions.SwitchCorpus>({
@@ -115,11 +119,13 @@ class WordlistFormPage {
                 initialArgs: this.getInitialArgs(wlForm)
             });
             this.corparchPlugin = createCorparch(this.layoutModel.pluginApi());
+            const corparchWidgetId = Ident.puid();
             this.views = wordlistFormInit({
                 dispatcher: this.layoutModel.dispatcher,
                 he: this.layoutModel.getComponentHelpers(),
-                CorparchWidget: this.initCorparchWidget(this.corparchPlugin),
-                wordlistFormModel: this.wordlistFormModel
+                CorparchWidget: this.initCorparchWidget(this.corparchPlugin, corparchWidgetId),
+                wordlistFormModel: this.wordlistFormModel,
+                corparchWidgetId
             });
 
             const queryOverviewViews = basicOverviewViewsInit(

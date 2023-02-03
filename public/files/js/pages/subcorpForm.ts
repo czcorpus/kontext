@@ -236,8 +236,9 @@ export class SubcorpForm {
 
             this.initCorpusInfo();
 
+            const corparchWidgetId = Ident.puid();
             const corplistWidget = this.corparchPlugin.createWidget(
-                Ident.puid(),
+                corparchWidgetId,
                 'subcorpus/new',
                 (corpora:Array<string>, subcorpId:string) => {
                     this.layoutModel.dispatcher.dispatch<typeof GlobalActions.SwitchCorpus>({
@@ -255,7 +256,8 @@ export class SubcorpForm {
                 he: this.layoutModel.getComponentHelpers(),
                 CorparchComponent: corplistWidget,
                 subcorpFormModel: this.subcorpFormModel,
-                subcorpWithinFormModel: this.subcorpWithinFormModel
+                subcorpWithinFormModel: this.subcorpWithinFormModel,
+                corparchWidgetId
             });
             this.initSubcorpForm(ttComponent.component, ttComponent.props);
         });
