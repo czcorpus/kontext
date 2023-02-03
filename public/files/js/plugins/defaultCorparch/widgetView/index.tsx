@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { IActionDispatcher, Bound, BoundWithProps } from 'kombo';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
 
 import * as Kontext from '../../../types/kontext';
 import { CorplistWidgetModel, FavListItem, CorplistWidgetModelState } from '../widget';
@@ -27,11 +27,9 @@ import { CorplistItem } from '../common';
 import { SearchKeyword, SearchResultRow } from '../search';
 import { Actions } from '../actions';
 import { Keyboard, Strings, List } from 'cnc-tskit';
-import { Actions as GlobalActions } from '../../../models/common/actions';
 import { CorpusSwitchModel, CorpusSwitchModelState } from '../../../models/common/corpusSwitch';
 import * as S from './style';
 import * as S2 from '../commonStyle';
-import { CorpusSelectionHandler } from '../../../types/plugins/corparch';
 
 
 export interface WidgetViewModuleArgs {
@@ -58,6 +56,7 @@ export function init({
     // ----------------------- <FavStar /> --------------------------------------
 
     const FavStar:React.FC<{
+        widgetId:string;
         ident:string;
         trashTTL:number;
 
@@ -65,17 +64,19 @@ export function init({
 
         const handleRemoveClick = () => {
             if (props.trashTTL === null) {
-                dispatcher.dispatch<typeof Actions.FavItemRemove>({
-                    name: Actions.FavItemRemove.name,
+                dispatcher.dispatch<typeof Actions.WidgetFavItemRemove>({
+                    name: Actions.WidgetFavItemRemove.name,
                     payload: {
+                        widgetId: props.widgetId,
                         itemId: props.ident
                     }
                 });
 
             } else {
-                dispatcher.dispatch<typeof Actions.FavItemAdd>({
-                    name: Actions.FavItemAdd.name,
+                dispatcher.dispatch<typeof Actions.WidgetFavItemAdd>({
+                    name: Actions.WidgetFavItemAdd.name,
                     payload: {
+                        widgetId: props.widgetId,
                         itemId: props.ident
                     }
                 });
@@ -99,15 +100,17 @@ export function init({
     // -------------------------- <TRFavoriteItem /> ----------------------------------
 
     const TRFavoriteItem:React.FC<{
+        widgetId:string;
         data:FavListItem;
         isActive:boolean;
 
     }> = (props) => {
 
         const handleItemClick = () => {
-            dispatcher.dispatch<typeof Actions.FavItemClick>({
-                name: Actions.FavItemClick.name,
+            dispatcher.dispatch<typeof Actions.WidgetFavItemClick>({
+                name: Actions.WidgetFavItemClick.name,
                 payload: {
+                    widgetId: props.widgetId,
                     itemId: props.data.id
                 }
             });
@@ -139,7 +142,7 @@ export function init({
                     {props.data.size_info}
                 </td>
                 <td className="tools">
-                    <FavStar ident={props.data.id} trashTTL={props.data.trashTTL} />
+                    <FavStar widgetId={props.widgetId} ident={props.data.id} trashTTL={props.data.trashTTL} />
                 </td>
             </tr>
         );
@@ -148,6 +151,7 @@ export function init({
     // -------------------------- <FavoritesBox /> ---------------------
 
     const FavoritesBox:React.FC<{
+        widgetId: string;
         data:Array<FavListItem>;
         anonymousUser:boolean;
         activeIdx:number;
@@ -172,7 +176,7 @@ export function init({
                         </tr> :
                         List.map(
                             (item, i) => (
-                                <TRFavoriteItem key={item.id} data={item}
+                                <TRFavoriteItem widgetId={props.widgetId} key={item.id} data={item}
                                         isActive={i === props.activeIdx} />
                             ),
                             props.data
@@ -187,15 +191,17 @@ export function init({
     // --------------------------- <TRFeaturedItem /> --------------------------------
 
     const TRFeaturedItem:React.FC<{
+        widgetId:string;
         data:CorplistItem;
         isActive:boolean;
 
     }> = (props) => {
 
         const handleItemClick = () => {
-            dispatcher.dispatch<typeof Actions.FeatItemClick>({
-                name: Actions.FeatItemClick.name,
+            dispatcher.dispatch<typeof Actions.WidgetFeatItemClick>({
+                name: Actions.WidgetFeatItemClick.name,
                 payload: {
+                    widgetId: props.widgetId,
                     itemId: props.data.id
                 }
             });
@@ -220,6 +226,7 @@ export function init({
     // ---------------------------------- <FeaturedBox /> --------------------------------
 
     const FeaturedBox:React.FC<{
+        widgetId:string;
         data:Array<CorplistItem>;
         activeIdx:number;
 
@@ -233,7 +240,7 @@ export function init({
                         </th>
                     </tr>
                     {props.data.map((item, i) =>
-                            <TRFeaturedItem key={item.id} data={item}
+                            <TRFeaturedItem widgetId={props.widgetId} key={item.id} data={item}
                                     isActive={i === props.activeIdx} />)}
                 </tbody>
             </table>
@@ -243,6 +250,7 @@ export function init({
     // ------------------------- <StarComponent /> ------------------------
 
     const StarComponent:React.FC<{
+        widgetId:string;
         currFavitemId:string;
 
     }> = (props) => {
@@ -264,9 +272,10 @@ export function init({
         };
 
         const handleStarClick = () => {
-            dispatcher.dispatch<typeof Actions.StarIconClick>({
-                name: Actions.StarIconClick.name,
+            dispatcher.dispatch<typeof Actions.WidgetStarIconClick>({
+                name: Actions.WidgetStarIconClick.name,
                 payload: {
+                    widgetId: props.widgetId,
                     status: props.currFavitemId ? false : true,
                     itemId: props.currFavitemId
                 }
@@ -315,6 +324,7 @@ export function init({
     // ----------------------------- <ListsTab /> -------------------------------
 
     const ListsTab:React.FC<{
+        widgetId:string;
         dataFav:Array<FavListItem>;
         dataFeat:Array<CorplistItem>;
         anonymousUser:boolean;
@@ -334,9 +344,10 @@ export function init({
                 case Keyboard.Value.UP_ARROW:
                 case Keyboard.Value.LEFT_ARROW:
                 case Keyboard.Value.RIGHT_ARROW:
-                    dispatcher.dispatch<typeof Actions.MoveFocusToNextListItem>({
-                        name: Actions.MoveFocusToNextListItem.name,
+                    dispatcher.dispatch<typeof Actions.WidgetMoveFocusToNextListItem>({
+                        name: Actions.WidgetMoveFocusToNextListItem.name,
                         payload: {
+                            widgetId: props.widgetId,
                             change: argMap[evt.key]
                         }
                     });
@@ -344,8 +355,8 @@ export function init({
                     evt.stopPropagation();
                 break;
                 case Keyboard.Value.ENTER:
-                    dispatcher.dispatch<typeof Actions.EnterOnActiveListItem>({
-                        name: Actions.EnterOnActiveListItem.name
+                    dispatcher.dispatch<typeof Actions.WidgetEnterOnActiveListItem>({
+                        name: Actions.WidgetEnterOnActiveListItem.name
                     });
                     evt.preventDefault();
                     evt.stopPropagation();
@@ -356,11 +367,11 @@ export function init({
         return (
             <div className="tables" onKeyDown={handleKeyDown}
                     tabIndex={-1} ref={item => item ? item.focus() : null}>
-                <FavoritesBox data={props.dataFav}
+                <FavoritesBox widgetId={props.widgetId} data={props.dataFav}
                         anonymousUser={props.anonymousUser}
                         activeIdx={props.activeListItem[0] === 0 ?
                             props.activeListItem[1] : null} />
-                <FeaturedBox data={props.dataFeat}
+                <FeaturedBox widgetId={props.widgetId} data={props.dataFeat}
                         activeIdx={props.activeListItem[0] === 1 ?
                             props.activeListItem[1] : null} />
             </div>
@@ -370,6 +381,7 @@ export function init({
     // -------------------------- <SearchKeyword /> ---------------------
 
     const SearchKeyword:React.FC<{
+        widgetId:string;
         key:string;
         id:string;
         label:string;
@@ -382,6 +394,7 @@ export function init({
             dispatcher.dispatch<typeof Actions.KeywordClicked>({
                 name: Actions.KeywordClicked.name,
                 payload: {
+                    widgetId: props.widgetId,
                     keywordId: props.id,
                     status: !props.selected,
                     attachToCurrent: evt.ctrlKey || evt.metaKey
@@ -405,11 +418,14 @@ export function init({
 
    // ----------------------------- <ResetKeyword /> ----------------------------------
 
-    const ResetKeyword:React.FC<{}> = (props) => {
+    const ResetKeyword:React.FC<{widgetId:string}> = (props) => {
 
         const handleClick = (evt) => {
             dispatcher.dispatch<typeof Actions.KeywordResetClicked>({
-                name: Actions.KeywordResetClicked.name
+                name: Actions.KeywordResetClicked.name,
+                payload: {
+                    widgetId: props.widgetId
+                }
             });
         };
 
@@ -425,15 +441,17 @@ export function init({
     // ------------------------- <SearchInput /> ---------------------------------------
 
     const SearchInput:React.FC<{
+        widgetId:string;
         value:string;
         handleTab:()=>void;
 
     }> = (props) => {
 
         const handleInput = (evt) => {
-            dispatcher.dispatch<typeof Actions.SearchInputChanged>({
-                name: Actions.SearchInputChanged.name,
+            dispatcher.dispatch<typeof Actions.WidgetSearchInputChanged>({
+                name: Actions.WidgetSearchInputChanged.name,
                 payload: {
+                    widgetId: props.widgetId,
                     value: evt.target.value
                 }
             });
@@ -444,9 +462,10 @@ export function init({
             switch (evt.key) {
                 case Keyboard.Value.DOWN_ARROW:
                 case Keyboard.Value.UP_ARROW:
-                    dispatcher.dispatch<typeof Actions.FocusSearchRow>({
-                        name: Actions.FocusSearchRow.name,
+                    dispatcher.dispatch<typeof Actions.WidgetFocusSearchRow>({
+                        name: Actions.WidgetFocusSearchRow.name,
                         payload: {
+                            widgetId: props.widgetId,
                             inc: evt.key === Keyboard.Value.DOWN_ARROW ? 1 : -1
                         }
                     });
@@ -454,8 +473,8 @@ export function init({
                     evt.preventDefault();
                 break;
                 case Keyboard.Value.ENTER:
-                    dispatcher.dispatch<typeof Actions.FocusedItemSelect>({
-                        name: Actions.FocusedItemSelect.name
+                    dispatcher.dispatch<typeof Actions.WidgetFocusedItemSelect>({
+                        name: Actions.WidgetFocusedItemSelect.name
                     });
                     evt.stopPropagation();
                     evt.preventDefault();
@@ -478,16 +497,18 @@ export function init({
     // ------------------------- <SearchResultRow /> ------------------------
 
     const SearchResultRow:React.FC<{
+        widgetId:string;
         data:SearchResultRow;
         hasFocus:boolean;
 
     }> = (props) => {
 
         const handleClick = (evt) => {
-            dispatcher.dispatch<typeof Actions.SearchResultItemClicked>({
-                name: Actions.SearchResultItemClicked.name,
+            dispatcher.dispatch<typeof Actions.WidgetSearchResultItemClicked>({
+                name: Actions.WidgetSearchResultItemClicked.name,
                 payload: {
-                    itemId: props.data.id
+                    widgetId: props.widgetId,
+                    itemId: props.data.id,
                 }
             });
             evt.stopPropagation();
@@ -536,6 +557,7 @@ export function init({
     // ---------------------------- <SearchTab /> -----------------------------------
 
     const SearchTab:React.FC<{
+        widgetId:string;
         availSearchKeywords:Array<SearchKeyword>;
         isWaitingForSearchResults:boolean;
         currSearchResult:Array<SearchResultRow>;
@@ -549,21 +571,21 @@ export function init({
             <div>
                 <div>
                     {List.map(
-                        item => <SearchKeyword key={item.id} {...item} />,
+                        item => <SearchKeyword widgetId={props.widgetId} key={item.id} {...item} />,
                         props.availSearchKeywords
                     )}
-                    {props.hasSelectedKeywords ? <ResetKeyword /> : null}
+                    {props.hasSelectedKeywords ? <ResetKeyword widgetId={props.widgetId}/> : null}
                     <div className="labels-hint">
                         {util.translate('defaultCorparch__hold_ctrl_for_multiple')}
                     </div>
                 </div>
                 <div className="autocomplete-wrapper">
-                    <SearchInput value={props.currSearchPhrase} handleTab={props.handleTab} />
+                    <SearchInput widgetId={props.widgetId} value={props.currSearchPhrase} handleTab={props.handleTab} />
                     <SearchLoaderBar isActive={props.isWaitingForSearchResults} />
                     {props.currSearchResult.length > 0 ?
                         <S.TTMenu>
                             {props.currSearchResult.map((item, i) =>
-                                    <SearchResultRow key={item.id} data={item}
+                                    <SearchResultRow widgetId={props.widgetId} key={item.id} data={item}
                                             hasFocus={i === props.focusedRowIdx} />)}
                         </S.TTMenu> :
                         null
@@ -613,6 +635,7 @@ export function init({
     // ------------------------------- <SubcorpSelection /> -----------------------------
 
     const SubcorpSelection:React.FC<{
+        widgetId:string;
         corpusName:string;
         currSubcorpus:string;
         origSubcorpName:string;
@@ -626,9 +649,10 @@ export function init({
                 props.availSubcorpora
             );
             dispatcher.dispatch(
-                Actions.SubcorpusSelected,
+                Actions.WidgetSubcorpusSelected,
                 {
-                    subcorpus: srch.v
+                    widgetId: props.widgetId,
+                    subcorpus: srch.v,
                 }
             );
         };
@@ -679,13 +703,19 @@ export function init({
 
         _handleOnShow() {
             dispatcher.dispatch<typeof Actions.WidgetShow>({
-                name: Actions.WidgetShow.name
+                name: Actions.WidgetShow.name,
+                payload: {
+                    widgetId: this.props.widgetId
+                }
             });
         }
 
         _handleCloseClick() {
             dispatcher.dispatch<typeof Actions.WidgetHide>({
-                name: Actions.WidgetHide.name
+                name: Actions.WidgetHide.name,
+                payload: {
+                    widgetId: this.props.widgetId
+                }
             });
         }
 
@@ -699,19 +729,21 @@ export function init({
         }
 
         _handleTabSwitch(v:number) {
-            dispatcher.dispatch<typeof Actions.SetActiveTab>({
-                name: Actions.SetActiveTab.name,
+            dispatcher.dispatch<typeof Actions.WidgetSetActiveTab>({
+                name: Actions.WidgetSetActiveTab.name,
                 payload: {
-                    value: v
+                    widgetId: this.props.widgetId,
+                    value: v,
                 }
             });
         }
 
         _handleAreaClick() {
-            dispatcher.dispatch<typeof Actions.SetActiveTab>({
-                name: Actions.SetActiveTab.name,
+            dispatcher.dispatch<typeof Actions.WidgetSetActiveTab>({
+                name: Actions.WidgetSetActiveTab.name,
                 payload: {
-                    value: this.props.activeTab
+                    widgetId: this.props.widgetId,
+                    value: this.props.activeTab,
                 }
             });
         }
@@ -725,10 +757,12 @@ export function init({
                     <TabMenu onItemClick={this._handleTabSwitch} activeTab={this.props.activeTab}
                                 onEscKey={this._handleCloseClick} />
                     {this.props.activeTab === 0 ?
-                        <ListsTab dataFav={this.props.dataFav} dataFeat={this.props.dataFeat}
+                        <ListsTab widgetId={this.props.widgetId}
+                                dataFav={this.props.dataFav} dataFeat={this.props.dataFeat}
                                 anonymousUser={this.props.anonymousUser}
                                 activeListItem={this.props.activeListItem} /> :
-                        <SearchTab availSearchKeywords={this.props.availSearchKeywords}
+                        <SearchTab widgetId={this.props.widgetId}
+                                availSearchKeywords={this.props.availSearchKeywords}
                                 isWaitingForSearchResults={this.props.isWaitingForSearchResults}
                                 currSearchResult={this.props.currSearchResult}
                                 currSearchPhrase={this.props.currSearchPhrase}
@@ -761,6 +795,7 @@ export function init({
                             (<span>
                                 <strong className="subc-separator">{'\u00a0/\u00a0'}</strong>
                                 <SubcorpSelection
+                                    widgetId={this.props.widgetId}
                                     corpusName={this.props.corpusIdent.id}
                                     currSubcorpus={this.props.corpusIdent.usesubcorp}
                                     origSubcorpName={this.props.corpusIdent.origSubcorpName}
@@ -769,7 +804,7 @@ export function init({
                             null
                         }
                         {!this.props.anonymousUser ?
-                            <StarComponent currFavitemId={this.props.currFavitemId} /> :
+                            <StarComponent widgetId={this.props.widgetId} currFavitemId={this.props.currFavitemId} /> :
                             null
                         }
                     </div>

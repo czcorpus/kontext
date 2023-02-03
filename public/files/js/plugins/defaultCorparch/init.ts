@@ -29,6 +29,7 @@ import { CorplistTableModel } from './corplist';
 import { SearchEngine } from './search';
 import { ServerFavlistItem } from './common';
 import { IPluginApi } from '../../types/plugins/common';
+import { InitialWidgetData } from '../../types/plugins/corparch';
 
 
 export class Plugin implements PluginInterfaces.Corparch.IPlugin {
@@ -53,7 +54,8 @@ export class Plugin implements PluginInterfaces.Corparch.IPlugin {
     createWidget(
         widgetId:string,
         _:string,
-        onCorpusSelection:PluginInterfaces.Corparch.CorpusSelectionHandler
+        onCorpusSelection?:PluginInterfaces.Corparch.CorpusSelectionHandler,
+        initialData?:InitialWidgetData,
     ):React.ComponentClass<{widgetId:string}> {
 
         const pluginData = this.pluginApi.getConf<any>('pluginData')['corparch'] || {}; // TODO type
@@ -70,14 +72,16 @@ export class Plugin implements PluginInterfaces.Corparch.IPlugin {
         this.model = new CorplistWidgetModel({
             dispatcher: this.pluginApi.dispatcher(),
             pluginApi: this.pluginApi,
-            corpusIdent: this.pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
+            corpusIdent: initialData ? initialData.corpusIdent : this.pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
             widgetId,
             anonymousUser: this.pluginApi.getConf<boolean>('anonymousUser'),
             searchEngine: searchEngine,
             dataFav: favData,
             dataFeat: featData,
             onItemClick: onCorpusSelection,
-            corporaLabels: corporaLabels
+            corporaLabels: corporaLabels,
+            availableSubcorpora: initialData ? initialData.availableSubcorpora : this.pluginApi.getConf<
+                Array<Kontext.SubcorpListItem>>('SubcorpList') || []
         });
         return widgetInit({
             dispatcher: this.pluginApi.dispatcher(),

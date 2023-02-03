@@ -20,6 +20,9 @@
 
 import { IUnregistrable } from '../../models/common/common';
 import { BasePlugin, IPluginApi } from './common';
+import { FullCorpusIdent, SubcorpListItem } from '../../types/kontext';
+import { Action } from 'kombo';
+import * as Kontext from '../kontext';
 
 // ------------------------------------------------------------------------
 // ------------------------ [corparch] plug-in ----------------------------
@@ -98,7 +101,9 @@ export interface CorpusSelectionHandler {
     (corpora:Array<string>, subcorpId:string):void;
 }
 
-export type WidgetView = React.ComponentClass<{}>;
+export type WidgetView = React.ComponentClass<{
+    widgetId:string;
+}>;
 
 /**
  * A factory class for generating corplist page. The page is expected
@@ -112,6 +117,11 @@ export interface ICorplistPage {
     getForm():React.ComponentClass|React.FC<{}>;
 
     getList():React.ComponentClass|React.FC<{}>;
+}
+
+export interface InitialWidgetData {
+    corpusIdent:Kontext.FullCorpusIdent,
+    availableSubcorpora:Array<Kontext.SubcorpListItem>,
 }
 
 export interface IPlugin extends IUnregistrable, BasePlugin {
@@ -130,10 +140,21 @@ export interface IPlugin extends IUnregistrable, BasePlugin {
     createWidget(
         widgetId:string,
         serverAction:string,
-        onCorpusSelection:CorpusSelectionHandler
+        onCorpusSelection?:CorpusSelectionHandler,
+        initialData?:InitialWidgetData,
     ):React.ComponentClass<{widgetId:string}>;
 
     initCorplistPageComponents(initialData:any):ICorplistPage;
+}
+
+export class Actions {
+    static WidgetCorpusChange:Action<{
+        widgetId:string;
+        corpusIdent:FullCorpusIdent;
+        availableSubcorpora:Array<SubcorpListItem>;
+    }> = {
+        name: 'DEFAULT_CORPARCH_WIDGET_CORPUS_CHANGE'
+    };
 }
 
 export interface Factory {
