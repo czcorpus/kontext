@@ -118,6 +118,7 @@ async def query(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 @bp.route('/preflight', methods=['POST'])
 @http_action(return_type='json', action_model=ConcActionModel)
 async def preflight(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    target_corpname = req.args.get('target_corpname')
     ans = {}
     amodel.clear_prev_conc_params()
     corpora = amodel.select_current_aligned_corpora(active_only=True)
@@ -142,7 +143,7 @@ async def preflight(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         await qp.update_preflight_stats(
             amodel.plugin_ctx,
             amodel.preflight_id,
-            amodel.corp.corpname,
+            target_corpname,
             corpus_info.preflight_subcorpus.id, size_ipm, None)
     ans['concSize'] = conc.size()
     ans['isLargeCorpus'] = amodel.corp.search_size > PREFLIGHT_MIN_LARGE_CORPUS

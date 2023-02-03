@@ -1050,7 +1050,10 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             HTTP.Method.POST,
             this.pageModel.createActionUrl(
                 'preflight',
-                {format: 'json'}
+                {
+                    target_corpname: List.head(this.state.corpora),
+                    format: 'json'
+                }
             ),
             this.createPreflightArgs(contextData, ttSelections, preflightSubc),
             {
