@@ -144,6 +144,8 @@ export const TEXT_INPUT_WRITE_THROTTLE_INTERVAL_MS = 400;
 
 export type UserMessageTypes = 'info'|'warning'|'error'|'mail'|'plain';
 
+export type ResponseMessage = [UserMessageTypes, string];
+
 
 export interface UserCredentials {
     id:number;

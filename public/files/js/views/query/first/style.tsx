@@ -147,3 +147,18 @@ export const QueryHelp = styled.div`
         }
     }
 `;
+
+// ---------------- <CutOffBox /> --------------------------
+
+export const CutOffBox = styled.div`
+
+    .message {
+        display: flex;
+        align-items: center;
+
+        p {
+            padding-top: 0;
+            padding-left: 1em;
+        }
+    }
+`;
