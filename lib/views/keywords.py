@@ -67,7 +67,6 @@ async def form(amodel: KeywordsActionModel, _: KRequest, __: KResponse):
         searchSize=ref_corp.search_size,
     )
     out['available_ref_subcorpora'] = await amodel.get_subcorpora_list(ref_corp)
-
     return out
 
 
