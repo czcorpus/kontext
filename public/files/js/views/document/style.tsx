@@ -432,7 +432,7 @@ export const ValidatedItem = styled.span`
 
     .error-desc {
         font-size: 80%;
-        background-color: ${theme.colorDefaultText};
+        background-color: #444444;
         color: #ffb4b4;
         padding: 0.2em 2em;
         border-radius: ${theme.inputBorderRadius};

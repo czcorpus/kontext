@@ -186,7 +186,7 @@ async def query_submit(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         conc = await get_conc(
             corp=amodel.corp, user_id=amodel.session_get('user', 'id'), q=amodel.args.q,
             fromp=amodel.args.fromp, pagesize=amodel.args.pagesize, asnc=qinfo.data.asnc,
-            samplesize=corpus_info.sample_size)
+            samplesize=qinfo.data.sample_size if qinfo.data.sample_size else corpus_info.sample_size)
         ans['size'] = conc.size()
         ans['finished'] = conc.finished()
         if corpus_info.preflight_subcorpus and conc.finished():
@@ -591,6 +591,7 @@ async def concdesc_json(amodel: ConcActionModel, req: KRequest, resp: KResponse)
     for i, cd_item in enumerate(conc_desc):
         form = pipeline[i]
         if isinstance(form, QueryFormArgs):
+            cd_item.sample_size = form.data.sample_size
             if len(form.data.curr_queries) == 1:
                 cd_item.nicearg = list(form.data.curr_queries.values())[0]
             else:
