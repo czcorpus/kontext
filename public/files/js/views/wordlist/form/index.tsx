@@ -35,7 +35,8 @@ export interface WordlistFormViewArgs {
     dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
     CorparchWidget:PluginInterfaces.Corparch.WidgetView;
-    wordlistFormModel:WordlistFormModel
+    wordlistFormModel:WordlistFormModel;
+    corparchWidgetId:string;
 }
 
 export interface WordlistFormExportViews {
@@ -43,7 +44,13 @@ export interface WordlistFormExportViews {
 }
 
 
-export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:WordlistFormViewArgs):WordlistFormExportViews {
+export function init({
+    dispatcher,
+    he,
+    CorparchWidget,
+    wordlistFormModel,
+    corparchWidgetId
+}:WordlistFormViewArgs):WordlistFormExportViews {
 
     const layoutViews = he.getLayoutViews();
 
@@ -753,7 +760,10 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                         null
                     }
                     <div>
-                        {CorparchWidget ? <CorparchWidget /> : null}
+                        {CorparchWidget ?
+                            <CorparchWidget widgetId={corparchWidgetId} /> :
+                            null
+                        }
                     </div>
                     <S.MainFieldset>
                         <AttrSelector attrList={this.props.attrList}
