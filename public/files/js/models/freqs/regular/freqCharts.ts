@@ -37,6 +37,7 @@ import {
     BasicFreqModuleType
 } from '../../../types/kontext';
 import { validateGzNumber } from '../../base';
+import * as copy from 'copy-to-clipboard';
 
 
 
@@ -188,7 +189,6 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     Dict.fromEntries()
                 ),
                 saveFormActive: false,
-                shareLink: null,
                 flimit: parseInt(formProps.flimit) || 0
             }
         );
@@ -222,19 +222,12 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
         );
 
         this.addActionHandler(
-            Actions.ResultShowShareLink,
+            Actions.ResultLinkCopyToClipboard,
             (state, action) => {
-                state.shareLink = {
-                    sourceId: action.payload.sourceId,
-                    url: this.getShareLink(state, action.payload.sourceId),
+                if (state.isActive) {
+                    copy(this.getShareLink(state, action.payload.sourceId));
+                    this.pageModel.showMessage('info', 'Chart link copied to clipboard') // TODO translation
                 }
-            }
-        );
-
-        this.addActionHandler(
-            Actions.ResultHideShareLink,
-            (state, action) => {
-                state.shareLink = null;
             }
         );
 
@@ -277,7 +270,6 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     state.isError = storedState.isError;
                     state.alphaLevel = storedState.alphaLevel;
                     state.saveFormActive = storedState.saveFormActive;
-                    state.shareLink = storedState.shareLink;
                     state.type = storedState.type;
                     state.dataKey = storedState.dataKey;
                     state.fmaxitems = storedState.fmaxitems;

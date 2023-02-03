@@ -37,6 +37,7 @@ export class Actions {
     };
 
     static ResultLinkCopyToClipboard:Action<{
+        sourceId:string;
     }> = {
         name: 'FREQ_RESULT_LINK_COPY_TO_CLIPBOARD'
     };

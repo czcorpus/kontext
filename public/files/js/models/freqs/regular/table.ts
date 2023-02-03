@@ -34,7 +34,7 @@ import { Block, FreqResultResponse } from '../common';
 import { Actions as GeneralOptsActions } from '../../options/actions';
 import { AttrItem, BasicFreqModuleType } from '../../../types/kontext';
 import { validateGzNumber } from '../../base';
-import copy from 'copy-to-clipboard';
+import * as copy from 'copy-to-clipboard';
 
 
 export interface FreqDataRowsModelArgs {
@@ -199,7 +199,6 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 saveFormActive: false,
                 alphaLevel: alphaLevel,
                 displayConfidence: false,
-                shareLink: null,
                 flimit: parseInt(formProps.flimit) || 0
             }
         );
@@ -219,27 +218,12 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         );
 
         this.addActionHandler(
-            Actions.ResultShowShareLink,
-            (state, action) => {
-                state.shareLink = {
-                    sourceId: action.payload.sourceId,
-                    url: this.getShareLink(state, action.payload.sourceId),
-                }
-            }
-        );
-
-        this.addActionHandler(
-            Actions.ResultHideShareLink,
-            (state, action) => {
-                state.shareLink = null;
-            }
-        );
-
-        this.addActionHandler(
             Actions.ResultLinkCopyToClipboard,
             (state, action) => {
-
-                state.shareLink = null;
+                if (state.isActive) {
+                    copy(this.getShareLink(state, action.payload.sourceId));
+                    this.pageModel.showMessage('info', 'Table link copied to clipboard') // TODO translation
+                }
             }
         );
 
@@ -399,7 +383,6 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                     state.isError = storedState.isError;
                     state.alphaLevel = storedState.alphaLevel;
                     state.saveFormActive = storedState.saveFormActive;
-                    state.shareLink = storedState.shareLink;
                     state.displayConfidence = storedState.displayConfidence;
                 }
             },

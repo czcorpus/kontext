@@ -64,7 +64,6 @@ export function init(
         totalPages:number;
         totalItems:number;
         sourceId:string;
-        shareLink:string|null;
     }
 
     const Paginator:React.FC<PaginatorProps> = (props) => {
@@ -79,16 +78,10 @@ export function init(
             });
         };
 
-        const showShare = () => {
-            dispatcher.dispatch<typeof Actions.ResultShowShareLink>({
-                name: Actions.ResultShowShareLink.name,
+        const copyToClipboard = () => {
+            dispatcher.dispatch<typeof Actions.ResultLinkCopyToClipboard>({
+                name: Actions.ResultLinkCopyToClipboard.name,
                 payload: {sourceId: props.sourceId}
-            });
-        }
-
-        const hideShare = () => {
-            dispatcher.dispatch<typeof Actions.ResultHideShareLink>({
-                name: Actions.ResultHideShareLink.name
             });
         }
 
@@ -105,20 +98,11 @@ export function init(
                 </div>
                 <div className="share">
                     <label>{he.translate('freq__share_table')}: </label>
-                    <a onClick={showShare}>
+                    <a onClick={copyToClipboard}>
                         <img className="over-img" style={{width: '1em', verticalAlign: 'middle'}} src={he.createStaticUrl('img/share.svg')}
                                 alt={he.translate('freq__share_table')} title={he.translate('freq__share_table')} />
                     </a>
                 </div>
-                { props.shareLink ?
-                    <globalComponents.ModalOverlay onCloseKey={hideShare}>
-                        <globalComponents.CloseableFrame onCloseClick={hideShare} label={he.translate('freq__share_table')}>
-                            <input className="share-link" type="text" readOnly={true}
-                                onClick={(e)=> (e.target as HTMLInputElement).select()}
-                                value={props.shareLink} />
-                        </globalComponents.CloseableFrame>
-                    </globalComponents.ModalOverlay> : null
-                }
             </S.FreqPaginator>
         );
     };
@@ -285,8 +269,7 @@ export function init(
                                             sourceId={sourceId}
                                             totalPages={block.TotalPages}
                                             isLoading={props.isBusy[sourceId]}
-                                            totalItems={block.Total}
-                                            shareLink={props.shareLink && sourceId === props.shareLink.sourceId ? props.shareLink.url : null}/>
+                                            totalItems={block.Total} />
                                     <div>
                                         <drViews.DataTable head={block.Head}
                                                 sortColumn={props.sortColumn[sourceId]}
