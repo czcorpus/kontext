@@ -219,6 +219,7 @@
         "global__last_page_btn": "Zadnja stran",
         "global__prev_page_btn": "Prejšnja stran",
         "global__first_page_btn": "Prva stran",
+        "global__link_copied_to_clipboard": "Link copied to clipboard UNTRANSLATED",
         "linesel__remove_selected_lines": "Odstrani izbrane vrstice",
         "linesel__remove_all_but_selected_lines": "Obdrži samo izbrane vrstice",
         "linesel__clear_the_selection": "Počisti izbor",

@@ -34,6 +34,7 @@ import { Block, FreqResultResponse } from '../common';
 import { Actions as GeneralOptsActions } from '../../options/actions';
 import { AttrItem, BasicFreqModuleType } from '../../../types/kontext';
 import { validateGzNumber } from '../../base';
+import * as copy from 'copy-to-clipboard';
 
 
 export interface FreqDataRowsModelArgs {
@@ -198,7 +199,6 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 saveFormActive: false,
                 alphaLevel: alphaLevel,
                 displayConfidence: false,
-                shareLink: null,
                 flimit: parseInt(formProps.flimit) || 0
             }
         );
@@ -218,19 +218,12 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         );
 
         this.addActionHandler(
-            Actions.ResultShowShareLink,
+            Actions.ResultLinkCopyToClipboard,
             (state, action) => {
-                state.shareLink = {
-                    sourceId: action.payload.sourceId,
-                    url: this.getShareLink(state, action.payload.sourceId),
+                if (state.isActive) {
+                    copy(this.getShareLink(state, action.payload.sourceId));
+                    this.pageModel.showMessage('info', this.pageModel.translate('global__link_copied_to_clipboard'));
                 }
-            }
-        );
-
-        this.addActionHandler(
-            Actions.ResultHideShareLink,
-            (state, action) => {
-                state.shareLink = null;
             }
         );
 
@@ -390,7 +383,6 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                     state.isError = storedState.isError;
                     state.alphaLevel = storedState.alphaLevel;
                     state.saveFormActive = storedState.saveFormActive;
-                    state.shareLink = storedState.shareLink;
                     state.displayConfidence = storedState.displayConfidence;
                 }
             },

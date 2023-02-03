@@ -36,15 +36,10 @@ export class Actions {
         name: 'FREQ_RESULT_SET_ACTIVE_TAB'
     };
 
-    static ResultShowShareLink:Action<{
-        sourceId: string;
+    static ResultLinkCopyToClipboard:Action<{
+        sourceId:string;
     }> = {
-        name: 'FREQ_RESULT_SHOW_SHARE_LINK'
-    };
-
-    static ResultHideShareLink:Action<{
-    }> = {
-        name: 'FREQ_RESULT_HIDE_SHARE_LINK'
+        name: 'FREQ_RESULT_LINK_COPY_TO_CLIPBOARD'
     };
 
     static ResultSetMinFreqVal:Action<{

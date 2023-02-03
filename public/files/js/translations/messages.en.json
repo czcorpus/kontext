@@ -219,6 +219,7 @@
         "global__last_page_btn": "Last page",
         "global__prev_page_btn": "Previous page",
         "global__first_page_btn": "First page",
+        "global__link_copied_to_clipboard": "Link copied to clipboard",
         "linesel__remove_selected_lines": "Remove selected lines",
         "linesel__remove_all_but_selected_lines": "Keep only selected lines",
         "linesel__clear_the_selection": "Clear the selection",

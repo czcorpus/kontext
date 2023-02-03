@@ -280,9 +280,9 @@ export function init(
 
     }> = (props) => {
 
-        const showShare = () => {
-            dispatcher.dispatch<typeof Actions.ResultShowShareLink>({
-                name: Actions.ResultShowShareLink.name,
+        const copyToClipboard = () => {
+            dispatcher.dispatch<typeof Actions.ResultLinkCopyToClipboard>({
+                name: Actions.ResultLinkCopyToClipboard.name,
                 payload: {sourceId: props.sourceId}
             });
         }
@@ -307,7 +307,7 @@ export function init(
                             <img src={he.createStaticUrl('img/ajax-loader-bar.gif')} alt={he.translate('global__loading')} /> :
                             null}
                         <label>{he.translate('freq__share_chart')}:</label>
-                        <a onClick={showShare}>
+                        <a onClick={copyToClipboard}>
                             <img className="over-img" style={{width: '1em', verticalAlign: 'middle'}} src={he.createStaticUrl('img/share.svg')}
                                     alt={he.translate('freq__share_chart')} title={he.translate('freq__share_chart')} />
                         </a>
@@ -330,7 +330,6 @@ export function init(
         fmaxitems:Kontext.FormValue<string>;
         sortColumn:FreqChartsAvailableOrder;
         downloadFormat:Kontext.ChartExportFormat;
-        shareLink:string|null;
     }> = (props) => {
 
         const ref = React.useRef(null);
@@ -392,10 +391,6 @@ export function init(
                     blankWindow: false,
                 }
             });
-        }
-
-        const hideShare = () => {
-            dispatcher.dispatch(Actions.ResultHideShareLink);
         }
 
         const handleBarChartFilter = (data) => _dispatchFilter(data['activePayload'][0]['payload']['pfilter']);
@@ -492,15 +487,6 @@ export function init(
                 <h3>
                     {pipe(props.data.Head, List.filter(v => v.s !== 'freq' && v.s !== 'rel'), List.map(v => v.n)).join(' | ')}
                 </h3>
-                { props.shareLink ?
-                    <globalComponents.ModalOverlay onCloseKey={hideShare}>
-                        <globalComponents.CloseableFrame onCloseClick={hideShare} label={he.translate('freq__share_chart')}>
-                            <input className="share-link" type="text" readOnly={true}
-                                onClick={(e)=> (e.target as HTMLInputElement).select()}
-                                value={props.shareLink} />
-                        </globalComponents.CloseableFrame>
-                    </globalComponents.ModalOverlay> : null
-                }
                 <FreqChartsParams sourceId={props.sourceId} data={props.data} type={props.type}
                         dataKey={props.dataKey} isBusy={props.isBusy} dtFormat={props.dtFormat}
                         fmaxitems={props.fmaxitems} sortColumn={props.sortColumn} handleDownload={handleDownload}
@@ -592,8 +578,7 @@ export function init(
                                         isBusy={props.isBusy[sourceId]}
                                         dtFormat={props.dtFormat[sourceId]} fmaxitems={props.fmaxitems[sourceId]}
                                         sortColumn={props.sortColumn[sourceId]}
-                                        downloadFormat={props.downloadFormat[sourceId]}
-                                        shareLink={props.shareLink && sourceId === props.shareLink.sourceId ? props.shareLink.url : null} />
+                                        downloadFormat={props.downloadFormat[sourceId]} />
                         )
                     )
                 )}

@@ -101,7 +101,6 @@ export interface BaseFreqModelState {
     isError:{[sourceId:string]:Error};
     alphaLevel:Maths.AlphaLevel;
     saveFormActive:boolean;
-    shareLink:{sourceId:string, url:string} | null;
     /**
      * flimit is a derived value from TabWrapperModel
      */
