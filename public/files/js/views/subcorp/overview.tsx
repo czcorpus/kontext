@@ -78,7 +78,7 @@ export function init(he:Kontext.ComponentHelpers) {
                         <StatusDisplay isArchived={!!props.data.archived} isDraft={props.data.isDraft} />
                     </dd>
                     <dt>{he.translate('global__size_in_tokens')}:</dt>
-                    <dd>{he.formatNumber(props.data.size)}</dd>
+                    <dd>{props.data.isDraft ? '--' : he.formatNumber(props.data.size)}</dd>
                     <dt>{he.translate('pubsubclist__author')}:</dt>
                     <dd>{props.data.authorFullname}</dd>
                     <dt>{he.translate('global__subcorp_created_at')}:</dt>

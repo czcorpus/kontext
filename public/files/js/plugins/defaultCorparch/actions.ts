@@ -39,6 +39,7 @@ export class Actions {
     };
 
     static KeywordClicked:Action<{
+        widgetId?:string;
         keywordId:string;
         status:boolean;
         attachToCurrent:boolean;
@@ -47,6 +48,7 @@ export class Actions {
     };
 
     static KeywordResetClicked:Action<{
+        widgetId?:string;
     }> = {
         name: 'CORPARCH_KEYWORD_RESET_CLICKED'
     };
@@ -96,137 +98,157 @@ export class Actions {
     };
 
     static WidgetShow:Action<{
+        widgetId:string;
     }> = {
         name: 'DEFAULT_CORPARCH_WIDGET_SHOW'
     };
 
     static WidgetHide:Action<{
+        widgetId:string;
     }> = {
         name: 'DEFAULT_CORPARCH_WIDGET_HIDE'
     };
 
-    static SetActiveTab:Action<{
+    static WidgetSetActiveTab:Action<{
+        widgetId:string;
         value:number;
     }> = {
-        name: 'DEFAULT_CORPARCH_SET_ACTIVE_TAB'
+        name: 'DEFAULT_CORPARCH_WIDGET_SET_ACTIVE_TAB'
     };
 
-    static FavItemClick:Action<{
+    static WidgetFavItemClick:Action<{
+        widgetId:string;
         itemId:string;
     }> = {
-        name: 'DEFAULT_CORPARCH_FAV_ITEM_CLICK'
+        name: 'DEFAULT_CORPARCH_WIDGET_FAV_ITEM_CLICK'
     };
 
-    static FavItemClickDone:Action<{
+    static WidgetFavItemClickDone:Action<{
+        widgetId:string;
     }> = {
-        name: 'DEFAULT_CORPARCH_FAV_ITEM_CLICK_DONE'
+        name: 'DEFAULT_CORPARCH_WIDGET_FAV_ITEM_CLICK_DONE'
     };
 
-    static FeatItemClick:Action<{
+    static WidgetFeatItemClick:Action<{
+        widgetId:string;
         itemId:string;
     }> = {
-        name: 'DEFAULT_CORPARCH_FEAT_ITEM_CLICK'
+        name: 'DEFAULT_CORPARCH_WIDGET_FEAT_ITEM_CLICK'
     };
 
-    static FeatItemClickDone:Action<{
+    static WidgetFeatItemClickDone:Action<{
+        widgetId:string;
     }> = {
-        name: 'DEFAULT_CORPARCH_FEAT_ITEM_CLICK_DONE'
+        name: 'DEFAULT_CORPARCH_WIDGET_FEAT_ITEM_CLICK_DONE'
     };
 
-    static StarIconClick:Action<{
+    static WidgetStarIconClick:Action<{
+        widgetId:string;
         itemId:string;
         status:boolean;
     }> = {
-        name: 'DEFAULT_CORPARCH_STAR_ICON_CLICK'
+        name: 'DEFAULT_CORPARCH_WIDGET_STAR_ICON_CLICK'
     };
 
-    static StarIconClickDone:Action<{
+    static WidgetStarIconClickDone:Action<{
+        widgetId:string;
         data:Array<ServerFavlistItem>;
     }> = {
-        name: 'DEFAULT_CORPARCH_STAR_ICON_CLICK_DONE'
+        name: 'DEFAULT_CORPARCH_WIDGET_STAR_ICON_CLICK_DONE'
     };
 
-    static MoveFocusToNextListItem:Action<{
+    static WidgetMoveFocusToNextListItem:Action<{
+        widgetId:string;
         change:Array<number>;
     }> = {
-        name: 'DEFAULT_CORPARCH_MOVE_FOCUS_TO_NEXT_LISTITEM'
+        name: 'DEFAULT_CORPARCH_WIDGET_MOVE_FOCUS_TO_NEXT_LISTITEM'
     };
 
-    static EnterOnActiveListItem:Action<{
-
+    static WidgetEnterOnActiveListItem:Action<{
+        widgetId:string;
     }> = {
-        name: 'DEFAULT_CORPARCH_ENTER_ON_ACTIVE_LISTITEM'
+        name: 'DEFAULT_CORPARCH_WIDGET_ENTER_ON_ACTIVE_LISTITEM'
     };
 
-    static SearchInputChanged:Action<{
+    static WidgetSearchInputChanged:Action<{
+        widgetId:string;
         value:string;
     }> = {
-        name: 'DEFAULT_CORPARCH_SEARCH_INPUT_CHANGED'
+        name: 'DEFAULT_CORPARCH_WIDGET_SEARCH_INPUT_CHANGED'
     };
 
-    static FocusSearchRow:Action<{
+    static WidgetFocusSearchRow:Action<{
+        widgetId:string;
         inc:number;
     }> = {
-        name: 'DEFAULT_CORPARCH_FOCUS_SEARCH_ROW'
+        name: 'DEFAULT_CORPARCH_WIDGET_FOCUS_SEARCH_ROW'
     };
 
-    static FocusedItemSelect:Action<{
-
+    static WidgetFocusedItemSelect:Action<{
+        widgetId:string;
     }> = {
-        name: 'DEFAULT_CORPARCH_FOCUSED_ITEM_SELECT'
+        name: 'DEFAULT_CORPARCH_WIDGET_FOCUSED_ITEM_SELECT'
     };
 
-    static SearchResultItemClicked:Action<{
+    static WidgetSearchResultItemClicked:Action<{
+        widgetId:string;
         itemId:string;
     }> = {
-        name: 'DEFAULT_CORPARCH_SEARCH_RESULT_ITEM_CLICKED'
+        name: 'DEFAULT_CORPARCH_WIDGET_SEARCH_RESULT_ITEM_CLICKED'
     };
 
-    static SearchResultItemClickedDone:Action<{
+    static WidgetSearchResultItemClickedDone:Action<{
+        widgetId:string;
+    }> = {
+        name: 'DEFAULT_CORPARCH_WIDGET_SEARCH_RESULT_ITEM_CLICKED_DONE'
+    };
+
+    static WidgetFavItemRemove:Action<{
+        widgetId:string;
         itemId:string;
     }> = {
-        name: 'DEFAULT_CORPARCH_SEARCH_RESULT_ITEM_CLICKED_DONE'
+        name: 'DEFAULT_CORPARCH_WIDGET_FAV_ITEM_REMOVE'
     };
 
-    static FavItemRemove:Action<{
+    static WidgetFavItemRemoveDone:Action<{
+        widgetId:string;
         itemId:string;
     }> = {
-        name: 'DEFAULT_CORPARCH_FAV_ITEM_REMOVE'
+        name: 'DEFAULT_CORPARCH_WIDGET_FAV_ITEM_REMOVE_DONE'
     };
 
-    static FavItemRemoveDone:Action<{
+    static WidgetFavItemAdd:Action<{
+        widgetId:string;
         itemId:string;
     }> = {
-        name: 'DEFAULT_CORPARCH_FAV_ITEM_REMOVE_DONE'
+        name: 'DEFAULT_CORPARCH_WIDGET_FAV_ITEM_ADD'
     };
 
-    static FavItemAdd:Action<{
-        itemId:string;
-    }> = {
-        name: 'DEFAULT_CORPARCH_FAV_ITEM_ADD'
-    };
-
-    static FavItemAddDone:Action<{
+    static WidgetFavItemAddDone:Action<{
+        widgetId:string;
         trashedItemId:string;
         rescuedItem:ServerFavlistItem;
     }> = {
-        name: 'DEFAULT_CORPARCH_FAV_ITEM_ADD_DONE'
+        name: 'DEFAULT_CORPARCH_WIDGET_FAV_ITEM_ADD_DONE'
     };
 
-    static CheckTrashedItems:Action<{
+    static WidgetCheckTrashedItems:Action<{
+        widgetId:string;
     }> = {
-        name: 'DEFAULT_CORPARCH_CHECK_TRASHED_ITEMS'
+        name: 'DEFAULT_CORPARCH_WIDGET_CHECK_TRASHED_ITEMS'
     };
 
-    static SearchDone:Action<{
+    static WidgetSearchDone:Action<{
+        widgetId:string;
         data:Array<SearchResultRow>|null;
     }> = {
-        name: 'DEFAULT_CORPARCH_SEARCH_DONE'
+        name: 'DEFAULT_CORPARCH_WIDGET_SEARCH_DONE'
     };
 
-    static SubcorpusSelected:Action<{
+    static WidgetSubcorpusSelected:Action<{
+        widgetId:string;
         subcorpus:string;
     }> = {
-        name: 'DEFAULT_CORPARCH_SUBCORPUS_SELECTED'
+        name: 'DEFAULT_CORPARCH_WIDGET_SUBCORPUS_SELECTED'
     }
 }

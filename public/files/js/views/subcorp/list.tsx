@@ -152,7 +152,7 @@ export function init(
                             usesubcorp: item.id
                         }
                     );
-                    return <i><a title={title} href={href}>{item.name}</a></i>;
+                    return <a title={title} href={href} className="draft">{item.name}</a>;
                 }
                 return <span>{props.item.name}</span>;
             }
@@ -170,7 +170,7 @@ export function init(
         }
 
         return (
-            <tr>
+            <S.DataLineTr>
                 <td>
                     {renderLabel()}
                 </td>
@@ -188,7 +188,7 @@ export function init(
                         <PropertiesButton onClick={()=>props.actionButtonHandle(props.idx)} />
                 </td>
                 <TDSelectLine selectId={props.selectId} selected={props.selected} />
-            </tr>
+            </S.DataLineTr>
         );
     };
 

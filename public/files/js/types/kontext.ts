@@ -508,3 +508,10 @@ export enum ConcFormTypes {
 
 // structured as `{file format}-{subformat}`
 export type ChartExportFormat = 'png' | 'svg' | 'png-print' | 'pdf';
+
+
+export interface PreflightConf {
+    corpname:string;
+    subc:string;
+    threshold_ipm:number;
+}

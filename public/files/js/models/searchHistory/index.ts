@@ -29,8 +29,12 @@ import { Actions } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { QueryType } from '../query/query';
 import { PageModel } from '../../app/page';
-import { GetHistoryResponse, SaveItemResponse, SearchHistoryModelState,
-    QueryHistoryItem, isConcQueryHistoryItem } from './common';
+import {
+    GetHistoryResponse,
+    SaveItemResponse,
+    SearchHistoryModelState,
+    QueryHistoryItem,
+    isConcQueryHistoryItem } from './common';
 
 
 
@@ -83,13 +87,13 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         );
         this.pageModel = pageModel;
 
-        this.addActionHandler<typeof Actions.SelectItem>(
-            Actions.SelectItem.name,
+        this.addActionHandler(
+            Actions.SelectItem,
             action => {this.changeState(state => {state.currentItem = action.payload.value})}
         );
 
-        this.addActionHandler<typeof Actions.HistorySetCurrentCorpusOnly>(
-            Actions.HistorySetCurrentCorpusOnly.name,
+        this.addActionHandler(
+            Actions.HistorySetCurrentCorpusOnly,
             action => {
                 this.changeState(state => {
                     state.isBusy = true;
@@ -99,8 +103,8 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.HistorySetArchivedOnly>(
-            Actions.HistorySetArchivedOnly.name,
+        this.addActionHandler(
+            Actions.HistorySetArchivedOnly,
             action => {
                 this.changeState(state => {
                     state.isBusy = true;
@@ -110,8 +114,8 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.HistorySetQuerySupertype>(
-            Actions.HistorySetQuerySupertype.name,
+        this.addActionHandler(
+            Actions.HistorySetQuerySupertype,
             action => {
                 this.changeState(state => {
                     state.querySupertype = action.payload.value;
@@ -120,8 +124,8 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.HistoryLoadMore>(
-            Actions.HistoryLoadMore.name,
+        this.addActionHandler(
+            Actions.HistoryLoadMore,
             action => {
                 this.changeState(state => {
                     state.isBusy = true;
@@ -131,8 +135,8 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.ToggleQueryHistoryWidget, typeof MainMenuActions.ShowQueryHistory>(
-            [Actions.ToggleQueryHistoryWidget.name, MainMenuActions.ShowQueryHistory.name],
+        this.addActionHandler(
+            [Actions.ToggleQueryHistoryWidget, MainMenuActions.ShowQueryHistory],
             action => {
                 this.changeState(state => {
                     state.isBusy = true
@@ -145,16 +149,16 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.HistoryOpenQueryForm>(
-            Actions.HistoryOpenQueryForm.name,
+        this.addActionHandler(
+            Actions.HistoryOpenQueryForm,
             action => {
                 this.openQueryForm(action.payload.idx);
                 // page leaves here
             }
         );
 
-        this.addActionHandler<typeof Actions.HistorySetEditedItem>(
-            Actions.HistorySetEditedItem.name,
+        this.addActionHandler(
+            Actions.HistorySetEditedItem,
             action => {
                 this.changeState(state => {
                     state.itemsToolbars[action.payload.itemIdx] = tuple(true, true);
@@ -165,8 +169,8 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.HistoryCloseEditedItem>(
-            Actions.HistoryCloseEditedItem.name,
+        this.addActionHandler(
+            Actions.HistoryCloseEditedItem,
             action => {
                 this.changeState(state => {
                     state.itemsToolbars[action.payload.itemIdx] = tuple(true, false);
@@ -174,8 +178,8 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.HistoryEditorSetName>(
-            Actions.HistoryEditorSetName.name,
+        this.addActionHandler(
+            Actions.HistoryEditorSetName,
             action => {
                 this.changeState(state => {
                     state.data[action.payload.itemIdx].name = action.payload.value;
@@ -183,28 +187,28 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.HistoryDoNotArchive>(
-            Actions.HistoryDoNotArchive.name,
+        this.addActionHandler(
+            Actions.HistoryDoNotArchive,
             action => {
-                this.saveItem(action.payload.itemIdx, null).subscribe(
-                    (msg) => {
+                this.saveItem(action.payload.itemIdx, null).subscribe({
+                    next: msg => {
                         this.changeState(state => {
                             state.isBusy = false;
                         });
                         this.pageModel.showMessage('info', msg);
                     },
-                    (err) => {
+                    error: error => {
                         this.changeState(state => {
                             state.isBusy = false;
                         });
-                        this.pageModel.showMessage('error', err);
+                        this.pageModel.showMessage('error', error);
                     }
-                );
+                });
             }
         );
 
-        this.addActionHandler<typeof Actions.HistoryEditorClickSave>(
-            Actions.HistoryEditorClickSave.name,
+        this.addActionHandler(
+            Actions.HistoryEditorClickSave,
             action => {
                 const item = this.state.data[action.payload.itemIdx];
                 if (!item.name) {
@@ -227,8 +231,8 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.ToggleRowToolbar>(
-            Actions.ToggleRowToolbar.name,
+        this.addActionHandler(
+            Actions.ToggleRowToolbar,
             action => {
                 this.changeState(state => {
                     const [status,] = state.itemsToolbars[action.payload.rowIdx];
@@ -242,8 +246,8 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.RemoveItemFromList>(
-            Actions.RemoveItemFromList.name,
+        this.addActionHandler(
+            Actions.RemoveItemFromList,
             action => {
                 this.changeState(state => {
                     state.isBusy = true;
@@ -331,11 +335,12 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
 
     private deleteItem(itemIdx:number):Observable<GetHistoryResponse> {
         const item = this.state.data[itemIdx];
+        const query_id = isConcQueryHistoryItem(item) ? item.lastop_query_id : item.query_id;
         return this.pageModel.ajax$<any>(
             HTTP.Method.POST,
             this.pageModel.createActionUrl('delete_query'),
             {
-                query_id: item.query_id,
+                query_id,
                 created: item.created
             },
             {contentType: 'application/json'}
@@ -356,12 +361,13 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
     private saveItem(itemIdx:number, saveName:string|null):Observable<string> {
         return (() => {
             const item = this.state.data[itemIdx];
+            const query_id = isConcQueryHistoryItem(item) ? item.lastop_query_id : item.query_id;
             if (saveName) {
                 return this.pageModel.ajax$<SaveItemResponse>(
                     HTTP.Method.POST,
                     this.pageModel.createActionUrl('save_query'),
                     {
-                        query_id: item.query_id,
+                        query_id,
                         created: item.created,
                         name: saveName
                     },
@@ -376,7 +382,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                     HTTP.Method.POST,
                     this.pageModel.createActionUrl('unsave_query'),
                     {
-                        query_id: item.query_id,
+                        query_id,
                         created: item.created,
                         name: item.name // sending old name for identification
                     },

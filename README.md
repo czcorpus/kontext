@@ -88,7 +88,7 @@ docker-compose -f docker-compose.yml -f docker-compose.mysql.yml --env-file .env
 #### Key requirements
 
 * Python *3.6* (or newer)
-* [Manatee](http://nlp.fi.muni.cz/trac/noske) corpus search engine - version *2.167.8* and onwards
+* [Manatee](http://nlp.fi.muni.cz/trac/noske) corpus search engine - version *2.167.8* and onwards (for KonText *v0.17*, Manatee *v2.2xx* is recommended)
 * a key-value storage
     * [Redis](http://redis.io/) (recommended), [SQLite](https://sqlite.org/) (supported), custom implementations possible
 * a task queue - [Rq](https://python-rq.org/) (recommended), [Celery task queue](http://www.celeryproject.org/) (supported)

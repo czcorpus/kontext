@@ -31,18 +31,6 @@ export class Actions {
         name: 'KEYWORDS_SUBMIT_QUERY_DONE'
     };
 
-    static SetRefCorp:Action<{
-        value: string
-    }> = {
-        name: 'KEYWORDS_SET_REF_CORP'
-    };
-
-    static SetRefSubcorp:Action<{
-        value: string
-    }> = {
-        name: 'KEYWORDS_SET_REF_SUBCORP'
-    };
-
     static SetAttr:Action<{
         value: string
     }> = {

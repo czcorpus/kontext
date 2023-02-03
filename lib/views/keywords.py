@@ -45,6 +45,28 @@ async def form(amodel: KeywordsActionModel, _: KRequest, __: KResponse):
     out = {}
     await amodel.export_subcorpora_list(out)
     amodel.export_form_args(out)
+
+    # initial reference corpus data
+    if out['keywords_form'] is not None and out['keywords_form']['ref_corpname']:
+        if out['keywords_form']['ref_usesubcorp']:
+            ref_corp_id = SubcorpusIdent(
+                out['keywords_form']['ref_usesubcorp'], out['keywords_form']['ref_corpname'])
+        else:
+            ref_corp_id = out['keywords_form']['ref_corpname']
+    else:
+        ref_corp_id = amodel.corp.corpname
+    ref_corp = await amodel.plugin_ctx.corpus_factory.get_corpus(ref_corp_id)
+    out['ref_corpus_ident'] = dict(
+        id=ref_corp.corpname,
+        variant='',
+        name=ref_corp.human_readable_corpname,
+        usesubcorp=ref_corp.subcorpus_id,
+        origSubcorpName=ref_corp.subcorpus_name,
+        foreignSubcorp=amodel.session_get('user', 'id') != ref_corp.author_id,
+        size=ref_corp.size,
+        searchSize=ref_corp.search_size,
+    )
+    out['available_ref_subcorpora'] = await amodel.get_subcorpora_list(ref_corp)
     return out
 
 

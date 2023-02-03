@@ -145,6 +145,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
             form_data = qdata['lastop_form']
             main_corp = qdata['corpora'][0]
             if form_data['form_type'] == 'query':
+                ans['lastop_query_id'] = qdata['lastop_query_id']
                 ans['query_type'] = form_data['curr_query_types'][main_corp]
                 ans['query'] = form_data['curr_queries'][main_corp]
                 ans['corpname'] = main_corp
@@ -229,8 +230,6 @@ class MySqlQueryHistory(AbstractQueryHistory):
                 q_supertype = item['q_supertype']
                 if q_id not in qdata_map:
                     logging.getLogger(__name__).warning(f'Missing conc data for query {q_id}')
-                    logging.getLogger(__name__).warning(
-                        'Missing subc data for query {}'.format(q_id))
                     continue
                 qdata = qdata_map[q_id]
                 if q_supertype == 'conc':
@@ -240,9 +239,14 @@ class MySqlQueryHistory(AbstractQueryHistory):
                     if form_type not in ('query', 'filter'):
                         ops = await self._query_persistence.map_pipeline_ops(q_id, extract_id)
                         logging.getLogger(__name__).warning(
-                            f'Fixing broken query history record {q_id} of invalid type "{form_type}" (proper id: {ops[0][0]})')
+                            'Runtime patching broken query history record '
+                            f'{q_id} of invalid type "{form_type}" (proper id: {ops[0][0]})')
+                        lastop_qid = q_id
                         q_id, qdata = ops[0]
                         qdata['query_id'], item['query_id'] = q_id, q_id
+                        qdata['lastop_query_id'] = lastop_qid
+                    else:
+                        qdata['lastop_query_id'] = q_id
                     tmp = await self._merge_conc_data(item, qdata)
                     if not tmp:
                         continue

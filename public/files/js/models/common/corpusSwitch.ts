@@ -73,6 +73,7 @@ export interface CorpusSwitchResponse extends AjaxConcResponse {
     QSEnabled:boolean;
     ShuffleConcByDefault:number;
     SubcorpTTStructure:ExportedSelection;
+    concPreflight:Kontext.PreflightConf;
 }
 
 
@@ -117,7 +118,7 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
                     state.isBusy = true;
                 });
                 forkJoin([
-                    this.suspendWithTimeout(
+                    this.waitForActionWithTimeout(
                         5000,
                         pipe(
                             this.allRegisteredIds(),
@@ -193,6 +194,7 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
                             this.conf.setConf<boolean>('QSEnabled', data.QSEnabled);
                             this.conf.setConf<number>('ShuffleConcByDefault', data.ShuffleConcByDefault);
                             this.conf.setConf<ExportedSelection>('SubcorpTTStructure', data.SubcorpTTStructure);
+                            this.conf.setConf<Kontext.PreflightConf>('concPreflight', data.concPreflight)
                         }
                     )
 

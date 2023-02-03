@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { IActionDispatcher, StatelessModel } from 'kombo';
+import { IActionDispatcher, SEDispatcher, StatelessModel } from 'kombo';
 import { Subscription, timer as rxTimer, Observable, of as rxOf } from 'rxjs';
 import { take, tap, map, concatMap } from 'rxjs/operators';
 import { List, tuple, HTTP, pipe } from 'cnc-tskit';
@@ -28,6 +28,7 @@ import * as common from './common';
 import * as PluginInterfaces from '../../types/plugins';
 import { SearchEngine, SearchKeyword, SearchResultRow} from './search';
 import { Actions } from './actions';
+import { Actions as CorparchActions } from '../../types/plugins/corparch';
 import { Actions as GlobalActions } from '../../models/common/actions';
 import { Actions as QueryActions } from '../../models/query/actions';
 import { IUnregistrable } from '../../models/common/common';
@@ -136,12 +137,14 @@ export interface CorplistWidgetModelArgs {
     dispatcher:IActionDispatcher;
     pluginApi:IPluginApi;
     corpusIdent:Kontext.FullCorpusIdent;
+    widgetId:string;
     anonymousUser:boolean;
     searchEngine:SearchEngine;
     dataFav:Array<common.ServerFavlistItem>;
     dataFeat:Array<common.CorplistItem>;
-    onItemClick:PluginInterfaces.Corparch.CorpusSelectionHandler;
+    onItemClick?:PluginInterfaces.Corparch.CorpusSelectionHandler;
     corporaLabels:Array<[string, string, string]>;
+    availableSubcorpora:Array<Kontext.SubcorpListItem>;
 }
 
 export interface CorplistWidgetModelCorpusSwitchPreserve {
@@ -158,7 +161,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
 
     private readonly searchEngine:SearchEngine;
 
-    private readonly onItemClick:PluginInterfaces.Corparch.CorpusSelectionHandler;
+    private readonly onItemClick?:PluginInterfaces.Corparch.CorpusSelectionHandler;
 
     private inputThrottleTimer:number;
 
@@ -168,16 +171,20 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
 
     private trashTimerSubsc:Subscription;
 
+    private readonly widgetId:string;
+
     constructor({
         dispatcher,
         pluginApi,
         corpusIdent,
+        widgetId,
         anonymousUser,
         searchEngine,
         dataFav,
         dataFeat,
         onItemClick,
-        corporaLabels
+        corporaLabels,
+        availableSubcorpora,
     }:CorplistWidgetModelArgs) {
         const dataFavImp = importServerFavitems(dataFav);
         const currCorp = pluginApi.getCorpusIdent();
@@ -207,10 +214,10 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 item => ({id: item[0], label: item[1], color: item[2], selected:false}),
                 corporaLabels
             ),
-            availableSubcorpora: pluginApi.getConf<
-                Array<Kontext.SubcorpListItem>>('SubcorpList') || [],
+            availableSubcorpora: availableSubcorpora,
             focusedRowIdx: -1
         });
+        this.widgetId = widgetId;
         this.pluginApi = pluginApi;
         this.searchEngine = searchEngine;
         this.onItemClick = onItemClick;
@@ -219,95 +226,114 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         this.addActionHandler(
             Actions.WidgetShow,
             (state, action) => {
-                state.isVisible = true;
+                if (action.payload.widgetId === this.widgetId) {
+                    state.isVisible = true;
+                } else {
+                    state.isVisible = false;
+                    state.activeTab = 0;
+                }
             }
         );
 
-        this.addActionHandler(
+        this.addActionSubtypeHandler(
             Actions.WidgetHide,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.activeTab = 0;
                 state.isVisible = false;
             }
         );
 
-        this.addActionHandler(
-            Actions.SetActiveTab,
+        this.addActionSubtypeHandler(
+            Actions.WidgetSetActiveTab,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.activeTab = action.payload.value;
             }
         );
 
-        this.addActionHandler(
-            Actions.SubcorpusSelected,
+        this.addActionSubtypeHandler(
+            Actions.WidgetSubcorpusSelected,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
-                this.onItemClick([state.corpusIdent.id], action.payload.subcorpus);
+                if (this.onItemClickDefined()) {
+                    this.onItemClick([state.corpusIdent.id], action.payload.subcorpus);
+                }
+            },
+            (state, action, dispatch) => {
+                if (!this.onItemClickDefined()) {
+                    this.defaultOnItemClick(dispatch, [state.corpusIdent.id], action.payload.subcorpus);
+                }
             }
         )
 
-        this.addActionHandler(
-            Actions.FavItemClick,
+        this.addActionSubtypeHandler(
+            Actions.WidgetFavItemClick,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                dispatch<typeof Actions.FavItemClickDone>({
-                    name: Actions.FavItemClickDone.name
-                });
-                this.handleFavItemClick(state, action.payload.itemId);
+                dispatch(Actions.WidgetFavItemClickDone, {widgetId: this.widgetId});
+                this.handleFavItemClick(dispatch, state, action.payload.itemId);
             }
         );
 
-        this.addActionHandler(
-            Actions.FavItemClickDone,
+        this.addActionSubtypeHandler(
+            Actions.WidgetFavItemClickDone,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusy = false;
+                state.isVisible = false;
             }
         );
 
-        this.addActionHandler(
-            Actions.FeatItemClick,
+        this.addActionSubtypeHandler(
+            Actions.WidgetFeatItemClick,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                dispatch<typeof Actions.FeatItemClickDone>({
-                    name: Actions.FeatItemClickDone.name
-                });
-                this.handleFeatItemClick(state, action.payload.itemId);
+                dispatch(Actions.WidgetFeatItemClickDone, {widgetId: this.widgetId});
+                this.handleFeatItemClick(dispatch, state, action.payload.itemId);
             }
         );
 
-        this.addActionHandler(
-            Actions.FeatItemClickDone,
+        this.addActionSubtypeHandler(
+            Actions.WidgetFeatItemClickDone,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusy = false;
+                state.isVisible = false;
             }
         );
 
-        this.addActionHandler(
-            Actions.SearchResultItemClicked,
+        this.addActionSubtypeHandler(
+            Actions.WidgetSearchResultItemClicked,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                dispatch<typeof Actions.SearchResultItemClickedDone>({
-                    name: Actions.SearchResultItemClickedDone.name
-                });
-                this.handleSearchItemClick(state, action.payload.itemId);
+                dispatch(Actions.WidgetSearchResultItemClickedDone, {widgetId: this.widgetId});
+                this.handleSearchItemClick(dispatch, state, action.payload.itemId);
             }
         );
 
-        this.addActionHandler(
-            Actions.SearchResultItemClickedDone,
+        this.addActionSubtypeHandler(
+            Actions.WidgetSearchResultItemClickedDone,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.focusedRowIdx = -1;
                 state.isBusy = false;
+                state.isVisible = false;
             }
         );
 
-        this.addActionHandler(
-            Actions.FavItemAdd,
+        this.addActionSubtypeHandler(
+            Actions.WidgetFavItemAdd,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusy = true;
                 const idx = List.findIndex(x => x.id === action.payload.itemId, state.dataFav);
@@ -318,9 +344,10 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             (state, action, dispatch) => {
                 this.removeItemFromTrash(state, action.payload.itemId).subscribe({
                     next: response => {
-                        dispatch<typeof Actions.FavItemAddDone>({
-                            name: Actions.FavItemAddDone.name,
+                        dispatch<typeof Actions.WidgetFavItemAddDone>({
+                            name: Actions.WidgetFavItemAddDone.name,
                             payload: {
+                                widgetId: this.widgetId,
                                 trashedItemId: action.payload.itemId,
                                 rescuedItem: {
                                     id: response.id, // might be regenerated
@@ -339,8 +366,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                     },
                     error: error => {
                         this.pluginApi.showMessage('error', error);
-                        dispatch<typeof Actions.FavItemAddDone>({
-                            name: Actions.FavItemAddDone.name,
+                        dispatch<typeof Actions.WidgetFavItemAddDone>({
+                            name: Actions.WidgetFavItemAddDone.name,
                             error
                         });
                     }
@@ -348,8 +375,9 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler(
-            Actions.FavItemAddDone,
+        this.addActionSubtypeHandler(
+            Actions.WidgetFavItemAddDone,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusy = false;
                 if (!action.error) {
@@ -375,8 +403,9 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler(
-            Actions.FavItemRemove,
+        this.addActionSubtypeHandler(
+            Actions.WidgetFavItemRemove,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 this.moveItemToTrash(state, action.payload.itemId);
             },
@@ -390,14 +419,10 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                         }
                         this.trashTimerSubsc = src.subscribe({
                             next: () => {
-                                dispatch<typeof Actions.CheckTrashedItems>({
-                                    name: Actions.CheckTrashedItems.name
-                                });
+                                dispatch(Actions.WidgetCheckTrashedItems, {widgetId: this.widgetId});
                             },
                             complete: () => {
-                                dispatch<typeof Actions.CheckTrashedItems>({
-                                    name: Actions.CheckTrashedItems.name
-                                });
+                                dispatch(Actions.WidgetCheckTrashedItems, {widgetId: this.widgetId});
                             }
                         });
                     }
@@ -405,8 +430,9 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler(
-            Actions.FavItemRemoveDone,
+        this.addActionSubtypeHandler(
+            Actions.WidgetFavItemRemoveDone,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 if (!action.error) {
                     const idx = List.findIndex(v => v.id === action.payload.itemId, state.dataFav);
@@ -417,15 +443,17 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler(
-            Actions.CheckTrashedItems,
+        this.addActionSubtypeHandler(
+            Actions.WidgetCheckTrashedItems,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 this.checkTrashedItems(state);
             }
         );
 
-        this.addActionHandler(
-            Actions.StarIconClick,
+        this.addActionSubtypeHandler(
+            Actions.WidgetStarIconClick,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusy = true;
             },
@@ -435,15 +463,18 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                     this.unsetFavItem(action.payload.itemId)
                 ).subscribe({
                     next: data => {
-                        dispatch<typeof Actions.StarIconClickDone>({
-                            name: Actions.StarIconClickDone.name,
-                            payload: {data}
+                        dispatch<typeof Actions.WidgetStarIconClickDone>({
+                            name: Actions.WidgetStarIconClickDone.name,
+                            payload: {
+                                widgetId: this.widgetId,
+                                data
+                            }
                         });
                     },
                     error: error => {
                         this.pluginApi.showMessage('error', error);
-                        dispatch<typeof Actions.StarIconClickDone>({
-                            name: Actions.StarIconClickDone.name,
+                        dispatch<typeof Actions.WidgetStarIconClickDone>({
+                            name: Actions.WidgetStarIconClickDone.name,
                             error
                         });
                     }
@@ -451,8 +482,9 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler(
-            Actions.StarIconClickDone,
+        this.addActionSubtypeHandler(
+            Actions.WidgetStarIconClickDone,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusy = false;
                 if (!action.error) {
@@ -465,8 +497,9 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler(
+        this.addActionSubtypeHandler(
             Actions.KeywordResetClicked,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusy = true;
                 this.resetKeywordSelectStatus(state);
@@ -476,14 +509,17 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             (state, action, dispatch) => {
                 this.searchDelayed(state).subscribe({
                     next: data => {
-                        dispatch<typeof Actions.SearchDone>({
-                            name: Actions.SearchDone.name,
-                            payload: {data}
+                        dispatch<typeof Actions.WidgetSearchDone>({
+                            name: Actions.WidgetSearchDone.name,
+                            payload: {
+                                widgetId: this.widgetId,
+                                data
+                            }
                         });
                     },
                     error: error => {
-                        dispatch<typeof Actions.SearchDone>({
-                            name: Actions.SearchDone.name,
+                        dispatch<typeof Actions.WidgetSearchDone>({
+                            name: Actions.WidgetSearchDone.name,
                             error
                         });
                         this.pluginApi.showMessage('error', error);
@@ -492,12 +528,13 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         ).sideEffectAlsoOn(
             Actions.KeywordResetClicked.name,
-            Actions.SearchInputChanged.name,
+            Actions.WidgetSearchInputChanged.name,
             Actions.KeywordClicked.name
         )
 
-        this.addActionHandler(
+        this.addActionSubtypeHandler(
             Actions.KeywordClicked,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusy = true;
                 state.focusedRowIdx = -1;
@@ -510,8 +547,9 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler(
-            Actions.SearchDone,
+        this.addActionSubtypeHandler(
+            Actions.WidgetSearchDone,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusy = false;
                 state.focusedRowIdx = -1;
@@ -521,8 +559,9 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler(
-            Actions.SearchInputChanged,
+        this.addActionSubtypeHandler(
+            Actions.WidgetSearchInputChanged,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.currSearchPhrase = action.payload.value;
                 state.currSearchResult = [];
@@ -530,8 +569,9 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler(
-            Actions.FocusSearchRow,
+        this.addActionSubtypeHandler(
+            Actions.WidgetFocusSearchRow,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 if (state.currSearchResult.length > 0) {
                     const inc = action.payload.inc;
@@ -541,17 +581,17 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler(
-            Actions.FocusedItemSelect,
+        this.addActionSubtypeHandler(
+            Actions.WidgetFocusedItemSelect,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
                 if (state.focusedRowIdx > -1) {
-                    dispatch<typeof Actions.SearchResultItemClickedDone>({
-                        name: Actions.SearchResultItemClickedDone.name
-                    });
+                    dispatch(Actions.WidgetSearchResultItemClickedDone, {widgetId: this.widgetId});
                     this.handleSearchItemClick(
+                        dispatch,
                         state,
                         state.currSearchResult[state.focusedRowIdx].id
                     );
@@ -595,8 +635,9 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler(
-            Actions.MoveFocusToNextListItem,
+        this.addActionSubtypeHandler(
+            Actions.WidgetMoveFocusToNextListItem,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 const [colInc, rowInc] = action.payload.change;
                 const [col, row] = state.activeListItem;
@@ -615,27 +656,24 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler(
-            Actions.EnterOnActiveListItem,
+        this.addActionSubtypeHandler(
+            Actions.WidgetEnterOnActiveListItem,
+            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusy = false;
             },
             (state, action, dispatch) => {
                 if (state.activeListItem[0] === 0) {
-                    dispatch<typeof Actions.FavItemClickDone>({
-                        name: Actions.FavItemClickDone.name
-                    });
+                    dispatch(Actions.WidgetFavItemClickDone, {widgetId: this.widgetId});
                     this.handleFavItemClick(
-                        state, state.dataFav[state.activeListItem[1]].id
+                        dispatch, state, state.dataFav[state.activeListItem[1]].id
                     );
 
 
                 } else {
-                    dispatch<typeof Actions.FeatItemClickDone>({
-                        name: Actions.FeatItemClickDone.name
-                    });
+                    dispatch(Actions.WidgetFeatItemClickDone, {widgetId: this.widgetId});
                     this.handleFeatItemClick(
-                        state, state.dataFeat[state.activeListItem[1]].id
+                        dispatch, state, state.dataFeat[state.activeListItem[1]].id
                     );
                 }
             }
@@ -648,10 +686,22 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
+        this.addActionSubtypeHandler(
+            CorparchActions.WidgetCorpusChange,
+            action => action.payload.widgetId === this.widgetId,
+            (state, action) => {
+                state.isBusy = false;
+                if (!action.error) {
+                    state.corpusIdent = action.payload.corpusIdent;
+                    state.availableSubcorpora = action.payload.availableSubcorpora;
+                }
+            }
+        );
+
     }
 
     getRegistrationId():string {
-        return 'default-corparch-widget';
+        return `default-corparch-widget-${this.widgetId}`;
     }
 
     serialize(state:CorplistWidgetModelState):CorplistWidgetModelCorpusSwitchPreserve {
@@ -793,30 +843,43 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         }
     }
 
-    private handleFavItemClick(state:CorplistWidgetModelState, itemId:string):void {
+    private handleFavItemClick(dispatch:SEDispatcher, state:CorplistWidgetModelState, itemId:string):void {
         const item = state.dataFav.find(item => item.id === itemId);
         if (item !== undefined) {
-            this.onItemClick(List.map(x => x.id, item.corpora), item.subcorpus_id);
+            const corpora = List.map(x => x.id, item.corpora);
+            if (this.onItemClickDefined()) {
+                this.onItemClick(corpora, item.subcorpus_id);
+            } else {
+                this.defaultOnItemClick(dispatch, corpora, item.subcorpus_id);
+            }
 
         } else {
             throw new Error(`Favorite item ${itemId} not found`);
         }
     }
 
-    private handleFeatItemClick(state:CorplistWidgetModelState, itemId:string):void {
+    private handleFeatItemClick(dispatch:SEDispatcher, state:CorplistWidgetModelState, itemId:string):void {
         const item = state.dataFeat.find(item => item.id === itemId);
         if (item !== undefined) {
-            this.onItemClick([item.corpus_id], item.subcorpus_id);
+            if (this.onItemClickDefined()) {
+                this.onItemClick([item.corpus_id], item.subcorpus_id);
+            } else {
+                this.defaultOnItemClick(dispatch, [item.corpus_id], item.subcorpus_id);
+            }
 
         } else {
             throw new Error(`Featured item ${itemId} not found`);
         }
     }
 
-    private handleSearchItemClick(state:CorplistWidgetModelState, itemId:string):void {
+    private handleSearchItemClick(dispatch:SEDispatcher, state:CorplistWidgetModelState, itemId:string):void {
         const item = state.currSearchResult.find(item => item.id === itemId);
         if (item !== undefined) {
-            this.onItemClick([item.id], '');
+            if (this.onItemClickDefined()) {
+                this.onItemClick([item.id], '');
+            } else {
+                this.defaultOnItemClick(dispatch, [item.id], null);
+            }
 
         } else {
             throw new Error(`Clicked item ${itemId} not found in search results`);
@@ -887,5 +950,44 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         } else {
             throw new Error(`Cannot change label status - label ${id} not found`);
         }
+    }
+
+    private defaultOnItemClick(dispatch:SEDispatcher, corpora:Array<string>, usesubcorp:string) {
+        const args = {corpname: List.head(corpora)};
+        if (usesubcorp) {
+            args['usesubcorp'] = usesubcorp;
+        }
+        this.pluginApi.ajax$<{corpusIdent:Kontext.FullCorpusIdent, availableSubcorpora:Array<Kontext.SubcorpListItem>}>(
+            HTTP.Method.GET,
+            this.pluginApi.createActionUrl('corpora/ajax_get_corparch_item'),
+            args,
+        ).subscribe({
+            next: data => {
+                dispatch(
+                    CorparchActions.WidgetCorpusChange,
+                    {
+                        widgetId: this.widgetId,
+                        corpusIdent: data.corpusIdent,
+                        availableSubcorpora: data.availableSubcorpora,
+                    }
+                );
+            },
+            error: err => {
+                this.pluginApi.showMessage('error', err);
+                dispatch(
+                    CorparchActions.WidgetCorpusChange,
+                    {
+                        widgetId: this.widgetId,
+                        corpusIdent: undefined,
+                        availableSubcorpora: undefined,
+                    },
+                    err,
+                );
+            }
+        });
+    }
+
+    private onItemClickDefined():boolean {
+        return this.onItemClick !== undefined;
     }
 }

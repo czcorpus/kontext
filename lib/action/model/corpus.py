@@ -31,8 +31,10 @@ import settings
 from action.argmapping import Args, ConcArgsMapping
 from action.argmapping.conc.query import ConcFormArgs
 from action.errors import (
-    AlignedCorpusForbiddenException, ImmediateRedirectException, NotFoundException, UserReadableException)
+    AlignedCorpusForbiddenException, ImmediateRedirectException,
+    NotFoundException, UserReadableException)
 from action.krequest import KRequest
+from action.model import ModelsSharedData
 from action.model.user import UserActionModel, UserPluginCtx
 from action.plugin.ctx import AbstractCorpusPluginCtx
 from action.props import ActionProps
@@ -40,15 +42,17 @@ from action.req_args import JSONRequestArgsProxy, RequestArgsProxy
 from action.response import KResponse
 from corplib.abstract import AbstractKCorpus
 from corplib.corpus import KCorpus
-from corplib.subcorpus import SubcorpusRecord
 from corplib.fallback import EmptyCorpus, ErrorCorpus
+from corplib.subcorpus import SubcorpusRecord
 from main_menu.model import EventTriggeringItem, MainMenu
 from plugin_types.corparch.corpus import (
     BrokenCorpusInfo, CorpusInfo, StructAttrInfo)
 from texttypes.model import TextTypes
-from action.model import ModelsSharedData
 
 T = TypeVar('T')
+
+PREFLIGHT_THRESHOLD_IPM = 50_000
+PREFLIGHT_MIN_LARGE_CORPUS = 100_000_00
 
 
 class CorpusActionModel(UserActionModel):
@@ -474,6 +478,13 @@ class CorpusActionModel(UserActionModel):
         result['bib_conf'] = corp_info.metadata
         result['simple_query_default_attrs'] = corp_info.simple_query_default_attrs
         result['corp_sample_size'] = corp_info.sample_size
+        if corp_info.preflight_subcorpus:
+            result['conc_preflight'] = dict(
+                corpname=corp_info.preflight_subcorpus.corpus_name,
+                subc=corp_info.preflight_subcorpus.id,
+                threshold_ipm=PREFLIGHT_THRESHOLD_IPM)
+        else:
+            result['conc_preflight'] = None
 
         poslist = []
         for tagset in corp_info.tagsets:
@@ -610,26 +621,29 @@ class CorpusActionModel(UserActionModel):
         arguments:
         out -- a dictionary used by templating system
         """
+        subcorp_list = await self.get_subcorpora_list(self.corp)
+        if out.get('SubcorpList', None) is None:
+            out['SubcorpList'] = []
+        out['SubcorpList'].extend(subcorp_list)
+
+    async def get_subcorpora_list(self, corp: AbstractKCorpus):
         subcorp_list = l10n.sort(
-            await self.user_subc_names(self.corp.corpname), loc=self._req.ui_lang, key=lambda x: x.name)
+            await self.user_subc_names(corp.corpname), loc=self._req.ui_lang, key=lambda x: x.name)
         if (
-                self.corp.subcorpus_id and
-                self.corp.author_id is not None and
-                self.corp.author_id != self._req.session_get('user', 'id')):
+                corp.subcorpus_id and
+                corp.author_id is not None and
+                corp.author_id != self._req.session_get('user', 'id')):
             try:
-                srch = next((x for x in subcorp_list if x.id == self.corp.subcorpus_id))
+                srch = next((x for x in subcorp_list if x.id == corp.subcorpus_id))
             except StopIteration:
                 srch = None
             if srch is None:
-                subcorp_list.insert(0, self.corp.portable_ident)
+                subcorp_list.insert(0, corp.portable_ident)
         if len(subcorp_list) > 0:
             subcorp_list = (
                 [{'n': '--{}--'.format(self._req.translate('whole corpus')), 'v': ''}] +
                 [{'n': item.name, 'v': item.id} for item in subcorp_list])
-
-        if out.get('SubcorpList', None) is None:
-            out['SubcorpList'] = []
-        out['SubcorpList'].extend(subcorp_list)
+        return subcorp_list
 
     def store_last_search(self, op_type: str, conc_id: str):
         """

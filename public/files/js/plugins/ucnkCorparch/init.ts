@@ -67,10 +67,11 @@ class Plugin extends DCPlugin {
      * @param options
      */
     createWidget(
+        widgetId:string,
         targetAction:string,
         onCorpusSelection:PluginInterfaces.Corparch.CorpusSelectionHandler
-    ):React.ComponentClass {
-        return super.createWidget(targetAction, onCorpusSelection);
+    ):React.ComponentClass<{widgetId:string}> {
+        return super.createWidget(widgetId, targetAction, onCorpusSelection);
     }
 }
 

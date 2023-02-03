@@ -19,8 +19,8 @@
  */
 
 import * as React from 'react';
-import { Actions } from '../../models/subcorp/actions';
 
+import { Actions } from '../../models/subcorp/actions';
 import * as Kontext from '../../types/kontext';
 import { SubcorpusEditModel, SubcorpusEditModelState } from '../../models/subcorp/edit';
 import { BoundWithProps, IActionDispatcher } from 'kombo';
@@ -112,18 +112,6 @@ export function init(
             }
         };
 
-        const handleSave = () => {
-            dispatcher.dispatch<typeof Actions.ReuseQuery>({
-                name: Actions.ReuseQuery.name,
-                payload: {
-                    selectionType: props.selectionType,
-                    newName: props.data.name,
-                    usesubcorp: props.data.usesubcorp,
-                    asDraft: true,
-                }
-            });
-        };
-
         const handleCreate = () => {
             dispatcher.dispatch<typeof Actions.ReuseQuery>({
                 name: Actions.ReuseQuery.name,
@@ -153,23 +141,18 @@ export function init(
                     {isTTSelection(props.data.selections) ?
                         <ttViews.TextTypesPanel LiveAttrsCustomTT={props.liveAttrsEnabled ? liveAttrsViews.LiveAttrsCustomTT : null} LiveAttrsView={props.liveAttrsEnabled ? liveAttrsViews.LiveAttrsView : null} /> :
                         null}
-                    {
-                        props.data.isDraft ?
                         <p className='submit-buttons'>
-                            <button type="button" className="default-button"
-                                    onClick={handleSave}>
-                                {he.translate('subcform__save_draft')}
-                            </button>
-                            <button type="button" className="default-button"
-                                    onClick={handleCreate}>
-                                {he.translate('subcform__create_subcorpus')}
-                            </button>
-                        </p> :
-                        <button type="button" className="default-button"
-                                    onClick={handleReuse}>
-                                {he.translate('subclist__action_reuse')}
-                        </button>
-                    }
+                            {props.data.isDraft ?
+                                <button type="button" className="default-button"
+                                        onClick={handleCreate}>
+                                    {he.translate('subcform__create_subcorpus')}
+                                </button> :
+                                <button type="button" className="default-button"
+                                        onClick={handleReuse}>
+                                    {he.translate('subclist__action_reuse')}
+                                </button>
+                            }
+                        </p>
                 </S.ReuseTabContentWrapper>
             </TabContentWrapper>
         );
@@ -180,6 +163,7 @@ export function init(
     const FormActionFile:React.FC<{
         data:SubcorpusRecord;
         userId:number;
+        inputMode:FormType;
     }> = (props) => {
 
         const handleArchive = () => {
@@ -206,11 +190,28 @@ export function init(
             }
         };
 
+        const handleFinalize = () => {
+            dispatcher.dispatch<typeof Actions.ReuseQuery>({
+                name: Actions.ReuseQuery.name,
+                payload: {
+                    selectionType: props.inputMode,
+                    newName: props.data.name,
+                    usesubcorp: props.data.usesubcorp
+                }
+            });
+        };
+
         return (
             <TabContentWrapper>
                 <SubcOverview data={props.data} userId={props.userId} standalone={false} />
                 <hr />
                 <S.RestoreTabContentWrapper>
+                    {props.data.isDraft ?
+                        <button type="button" className="default-button" onClick={handleFinalize}>
+                            {he.translate('subcform__finalize_subcorpus')}
+                        </button> :
+                        null
+                    }
                     {props.data.archived ?
                         <button type="button" className="default-button"
                                 onClick={handleRestore}>
@@ -334,9 +335,19 @@ export function init(
     }> = (props) => {
 
         const items:Array<{id:string, label:string, isDisabled?: boolean}> = [
-            {id: 'restore', label: he.translate('subclist__action_file')},
-            {id: 'structure', label: he.translate('subclist__action_structure'), isDisabled: props.data?.selections === undefined},
-            {id: 'pub', label: he.translate('subclist__public_description_btn')}
+            {
+                id: 'restore',
+                label: he.translate('subclist__action_file')
+            },
+            {
+                id: 'structure',
+                label: he.translate('subclist__action_structure'),
+                isDisabled: props.data?.selections === undefined
+            },
+            {
+                id: 'pub',
+                label: he.translate('subclist__public_description_btn')
+            }
         ];
 
         React.useEffect(
@@ -356,6 +367,7 @@ export function init(
                     <>
                         <layoutViews.TabView className="ActionMenu" items={items} >
                             <FormActionFile key="restore" data={props.data}
+                                inputMode={getFormTypeFromSelection(props.data.selections)}
                                 userId={props.userId} />
                             <FormActionReuse
                                 key="action-reuse"

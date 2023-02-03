@@ -24,10 +24,12 @@ import { PageModel } from '../app/page';
 import { KontextPage } from '../app/main';
 import * as PluginInterfaces from '../types/plugins';
 import createCorparch from 'plugins/corparch/init';
-import { KeywordsFormModel, KeywordsFormModelArgs } from '../models/keywords/form';
+import { KeywordsFormModel } from '../models/keywords/form';
 import { init as viewInit } from '../views/keywords/form';
 import { Actions as GlobalActions } from '../models/common/actions';
 import { Root } from 'react-dom/client';
+import { Ident } from 'cnc-tskit';
+import { KeywordsSubmitArgs } from '../models/keywords/common';
 
 
 /**
@@ -39,7 +41,9 @@ export class KeywordsFormPage {
 
     private formModel:KeywordsFormModel;
 
-    private corparchPlugin:PluginInterfaces.Corparch.IPlugin;
+    private focusCorparchPlugin:PluginInterfaces.Corparch.IPlugin;
+
+    private refCorparchPlugin:PluginInterfaces.Corparch.IPlugin;
 
     private reactRoot:Root;
 
@@ -47,15 +51,16 @@ export class KeywordsFormPage {
         this.layoutModel = layoutModel;
     }
 
-    private initCorparchWidget(plg:PluginInterfaces.Corparch.IPlugin):PluginInterfaces.Corparch.WidgetView {
+    private initFocusCorpWidget(plg:PluginInterfaces.Corparch.IPlugin, widgetId:string):PluginInterfaces.Corparch.WidgetView {
         return plg.createWidget(
+            widgetId,
             'keywords/form',
             (corpora:Array<string>, subcorpId:string) => {
                 this.layoutModel.dispatcher.dispatch<typeof GlobalActions.SwitchCorpus>({
                     name: GlobalActions.SwitchCorpus.name,
                     payload: {
                         corpora,
-                        subcorpus: subcorpId
+                        subcorpus: subcorpId,
                     }
                 });
             }
@@ -64,18 +69,34 @@ export class KeywordsFormPage {
 
     init():void {
         this.layoutModel.init(true, [], () => {
-            const kwForm = this.layoutModel.getConf<KeywordsFormModelArgs["initialArgs"]>('FormData');
+            this.focusCorparchPlugin = createCorparch(this.layoutModel.pluginApi());
+            this.refCorparchPlugin = createCorparch(this.layoutModel.pluginApi());
+            const focusCorpWidgetId = Ident.puid();
+            const refCorpWidgetId = Ident.puid();
+
+            const kwForm = this.layoutModel.getConf<KeywordsSubmitArgs>('FormData');
             this.formModel = new KeywordsFormModel({
                 dispatcher: this.layoutModel.dispatcher,
                 layoutModel: this.layoutModel,
                 initialArgs: kwForm,
+                refWidgetId: refCorpWidgetId,
             });
-            this.corparchPlugin = createCorparch(this.layoutModel.pluginApi());
             const view = viewInit({
                 dispatcher: this.layoutModel.dispatcher,
                 he: this.layoutModel.getComponentHelpers(),
                 keywordsFormModel: this.formModel,
-                CorparchWidget: this.initCorparchWidget(this.corparchPlugin),
+                FocusCorpWidget: this.initFocusCorpWidget(this.focusCorparchPlugin, focusCorpWidgetId),
+                focusCorpWidgetId,
+                RefCorpWidget: this.refCorparchPlugin.createWidget(
+                    refCorpWidgetId,
+                    'keywords/form',
+                    undefined,
+                    {
+                        corpusIdent: this.layoutModel.getConf<Kontext.FullCorpusIdent>('refCorpusIdent'),
+                        availableSubcorpora: this.layoutModel.getConf<Array<Kontext.SubcorpListItem>>('availableRefSubcorpora'),
+                    }
+                ),
+                refCorpWidgetId,
             });
             this.reactRoot = this.layoutModel.renderReactComponent(
                 view,
@@ -87,7 +108,8 @@ export class KeywordsFormPage {
                     this.init();
                 },
                 this.formModel,
-                this.corparchPlugin
+                this.focusCorparchPlugin,
+                this.refCorparchPlugin,
             );
         });
     }

@@ -25,8 +25,9 @@ import { PageModel } from '../../app/page';
 import { IUnregistrable } from '../common/common';
 import { Actions } from './actions';
 import { Actions as GlobalActions } from '../common/actions';
+import { Actions as CorparchActions } from '../../types/plugins/corparch';
 import { KeywordsSubmitArgs, KeywordsSubmitResponse } from './common';
-import { WlnumsTypes, WlTypes } from '../wordlist/common';
+import { WlnumsTypes } from '../wordlist/common';
 
 
 
@@ -44,6 +45,7 @@ export interface KeywordsFormCorpSwitchPreserve {
 export interface KeywordsFormModelArgs {
     dispatcher:IActionDispatcher;
     layoutModel:PageModel;
+    refWidgetId:string;
     initialArgs:{
         ref_corpname:string;
         ref_usesubcorp:string;
@@ -59,22 +61,26 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
 
     private readonly layoutModel:PageModel;
 
+    private readonly refWidgetId:string;
+
     constructor({
         dispatcher,
         layoutModel,
         initialArgs,
+        refWidgetId,
     }:KeywordsFormModelArgs) {
         super(
             dispatcher,
             {
                 isBusy: false,
-                refCorp: initialArgs ? initialArgs.ref_corpname : layoutModel.getNestedConf('corpusIdent', 'name'),
-                refSubcorp: initialArgs ? initialArgs.ref_usesubcorp : '',
+                refCorp: initialArgs ? initialArgs.ref_corpname : layoutModel.getNestedConf('refCorpusIdent', 'name'),
+                refSubcorp: initialArgs ? initialArgs.ref_usesubcorp : layoutModel.getNestedConf('refCorpusIdent', 'usesubcorp'),
                 attr: initialArgs ? initialArgs.wlattr : 'lemma',
                 pattern: initialArgs ? initialArgs.wlpat : '.*',
             }
         );
         this.layoutModel = layoutModel;
+        this.refWidgetId = refWidgetId;
 
         this.addActionHandler(
             GlobalActions.CorpusSwitchModelRestore,
@@ -99,20 +105,6 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
                         data: this.serialize(state)
                     }
                 });
-            }
-        );
-
-        this.addActionHandler(
-            Actions.SetRefCorp,
-            (state, action) => {
-                state.refCorp = action.payload.value;
-            }
-        );
-
-        this.addActionHandler(
-            Actions.SetRefSubcorp,
-            (state, action) => {
-                state.refSubcorp = action.payload.value;
             }
         );
 
@@ -144,6 +136,15 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
             Actions.SubmitQueryDone,
             (state, action) => {
                 state.isBusy = false;
+            }
+        );
+
+        this.addActionSubtypeHandler(
+            CorparchActions.WidgetCorpusChange,
+            action => action.payload.widgetId === this.refWidgetId,
+            (state, action) => {
+                state.refCorp = action.payload.corpusIdent.id;
+                state.refSubcorp = action.payload.corpusIdent.usesubcorp;
             }
         );
     }

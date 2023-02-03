@@ -39,7 +39,6 @@ from action.argmapping.conc.filter import (
     SubHitsFilterFormArgs)
 from action.argmapping.conc.other import (
     KwicSwitchArgs, LgroupOpArgs, LockedOpFormsArgs, SampleFormArgs)
-from action.result.concordance import QueryAction
 from action.argmapping.conc.sort import SortFormArgs
 from action.control import http_action
 from action.errors import NotFoundException, UserReadableException
@@ -47,9 +46,10 @@ from action.krequest import KRequest
 from action.model.base import BaseActionModel
 from action.model.concordance import ConcActionModel
 from action.model.concordance.linesel import LinesGroups
-from action.model.corpus import CorpusActionModel
+from action.model.corpus import CorpusActionModel, PREFLIGHT_THRESHOLD_IPM, PREFLIGHT_MIN_LARGE_CORPUS
 from action.model.user import UserActionModel
 from action.response import KResponse
+from action.result.concordance import QueryAction
 from bgcalc import calc_backend_client
 from bgcalc.errors import CalcTaskNotFoundError
 from conclib.calc import cancel_conc_task
@@ -115,6 +115,46 @@ async def query(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     resp.set_result(out)
 
 
+@bp.route('/preflight', methods=['POST'])
+@http_action(return_type='json', action_model=ConcActionModel)
+async def preflight(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    target_corpname = req.args.get('target_corpname')
+    ans = {}
+    amodel.clear_prev_conc_params()
+    corpora = amodel.select_current_aligned_corpora(active_only=True)
+    corpus_info = await amodel.get_corpus_info(corpora[0])
+    qinfo = await QueryFormArgs.create(plugin_ctx=amodel.plugin_ctx, corpora=corpora, persist=True)
+    qinfo.update_by_user_query(
+        req.json, await amodel.get_tt_bib_mapping(req.json.get('text_types', {})))
+    try:
+        await amodel.set_first_query(
+            [q['corpname'] for q in req.json['queries']], qinfo, corpus_info)
+        conc = await get_conc(
+            corp=amodel.corp, user_id=amodel.session_get('user', 'id'), q=amodel.args.q,
+            fromp=amodel.args.fromp, pagesize=amodel.args.pagesize, asnc=False,
+            samplesize=corpus_info.sample_size)
+    except (ConcordanceException, ConcCacheStatusException) as ex:
+        if isinstance(ex, ConcordanceSpecificationError):
+            raise UserReadableException(ex, code=422)
+        else:
+            raise ex
+    size_ipm = round(1_000_000 * conc.size() / amodel.corp.search_size)
+    with plugins.runtime.QUERY_PERSISTENCE as qp:
+        await qp.update_preflight_stats(
+            amodel.plugin_ctx,
+            amodel.preflight_id,
+            target_corpname,
+            corpus_info.preflight_subcorpus.id,
+            amodel.args.q[0],
+            len(qinfo.data.selected_text_types) > 0,
+            size_ipm,
+            None)
+    ans['concSize'] = conc.size()
+    ans['isLargeCorpus'] = amodel.corp.search_size > PREFLIGHT_MIN_LARGE_CORPUS
+    ans['sizeIpm'] = size_ipm
+    return ans
+
+
 @bp.route('/query_submit', methods=['POST'])
 @http_action(
     mutates_result=True, action_log_mapper=log_mapping.query_submit, return_type='json', action_model=ConcActionModel)
@@ -149,6 +189,17 @@ async def query_submit(amodel: ConcActionModel, req: KRequest, resp: KResponse):
             samplesize=corpus_info.sample_size)
         ans['size'] = conc.size()
         ans['finished'] = conc.finished()
+        if corpus_info.preflight_subcorpus and conc.finished():
+            with plugins.runtime.QUERY_PERSISTENCE as qp:
+                await qp.update_preflight_stats(
+                    amodel.plugin_ctx,
+                    amodel.preflight_id,
+                    amodel.corp.corpname,
+                    corpus_info.preflight_subcorpus.id,
+                    None,
+                    None,
+                    None,
+                    round(conc.size() / amodel.corp.search_size * 1_000_000))
         amodel.on_query_store(store_last_op)
         resp.set_http_status(201)
     except (ConcordanceException, ConcCacheStatusException) as ex:
@@ -167,6 +218,7 @@ async def _get_conc_cache_status(amodel: ConcActionModel):
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(amodel.corp)
     q = tuple(amodel.args.q)
     corp_cache_key = amodel.corp.cache_key
+    corpus_info = await amodel.get_corpus_info(amodel.corp.corpname)
 
     try:
         cache_status = await cache_map.get_calc_status(corp_cache_key, q)
@@ -179,6 +231,17 @@ async def _get_conc_cache_status(amodel: ConcActionModel):
             err = worker.get_task_error(cache_status.task_id)
             if err is not None:
                 raise err
+        if corpus_info.preflight_subcorpus and cache_status.finished:
+            with plugins.runtime.QUERY_PERSISTENCE as qp:
+                await qp.update_preflight_stats(
+                    amodel.plugin_ctx,
+                    amodel.preflight_id,
+                    amodel.corp.corpname,
+                    corpus_info.preflight_subcorpus.id,
+                    None,
+                    None,
+                    None,
+                    round(cache_status.concsize / amodel.corp.search_size * 1_000_000))
         return dict(
             finished=cache_status.finished,
             concsize=cache_status.concsize,
@@ -196,7 +259,7 @@ async def _get_conc_cache_status(amodel: ConcActionModel):
 @bp.route('/get_conc_cache_status')
 @http_action(return_type='json', action_model=ConcActionModel)
 async def get_conc_cache_status(amodel: ConcActionModel, req: KRequest, resp: KResponse):
-    return _get_conc_cache_status(amodel)
+    return await _get_conc_cache_status(amodel)
 
 
 async def view_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse, asnc: bool, user_id: int):
@@ -661,7 +724,13 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
             info = await sr.get_info(corp_ident.id)
             if info.text_types:
                 subcorp_tt_structure = info.text_types
-
+    if corpus_info.preflight_subcorpus:
+        preflight_conf = dict(
+            subc=corpus_info.preflight_subcorpus.id,
+            corpname=corpus_info.preflight_subcorpus.corpus_name,
+            threshold_ipm=PREFLIGHT_THRESHOLD_IPM)
+    else:
+        preflight_conf = None
     ans = dict(
         corpname=amodel.args.corpname,
         subcorpname=amodel.corp.subcorpus_id,
@@ -698,6 +767,7 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
         SimpleQueryDefaultAttrs=corpus_info.simple_query_default_attrs,
         QSEnabled=amodel.args.qs_enabled,
         SubcorpTTStructure=subcorp_tt_structure,
+        concPreflight=preflight_conf
     )
     await amodel.attach_plugin_exports(ans, direct=True)
     amodel.configure_auth_urls(ans)

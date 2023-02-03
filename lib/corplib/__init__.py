@@ -97,14 +97,16 @@ class CorpusFactory:
     async def get_corpus(
             self,
             corp_ident: Union[str, SubcorpusIdent, SubcorpusRecord],
-            corp_variant: str = '') -> AbstractKCorpus:
+            corp_variant: str = '',
+            no_cache_read: bool = False) -> AbstractKCorpus:
         """
         Args:
             corp_ident: an ID (= registry file name) of a subcorpus or a subcorpus identification record
             corp_variant: a registry file path prefix for (typically) limited variant of a corpus;
                 please note that in many cases this can be omitted as only in case user wants to see
                 a continuous text (e.g. kwic context) we must make sure they see only a 'legal' chunk.
-            translate: a function providing translation of misc. corpus metadata
+            no_cache_read: if True then cached corpus will be ignored, new instance
+                will be created and cached
         """
         if isinstance(corp_ident, SubcorpusIdent) and self.subcpath is None:
             raise CorpusInstantiationError(
@@ -113,7 +115,7 @@ class CorpusFactory:
         subc_id = corp_ident.id if isinstance(corp_ident, SubcorpusIdent) else ''
         registry_file = await self._ensure_reg_file(corpname, corp_variant)
         cache_key = (registry_file, subc_id)
-        if cache_key in self._cache:
+        if cache_key in self._cache and not no_cache_read:
             return self._cache[cache_key]
 
         corp = manatee.Corpus(registry_file)

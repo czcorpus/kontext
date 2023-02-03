@@ -21,6 +21,7 @@ import logging
 import re
 from collections import OrderedDict, defaultdict
 from typing import Any, Dict, Iterable, List, Optional, Tuple
+from sanic.blueprints import Blueprint
 
 import plugins
 import ujson as json
@@ -43,7 +44,8 @@ from plugins.mysql_corparch.backend import Backend
 from plugins.mysql_corparch.corplist import (
     DefaultCorplistProvider, parse_query)
 from plugins.mysql_integration_db import MySqlIntegrationDb
-from sanic.blueprints import Blueprint
+from corplib.abstract import SubcorpusIdent
+
 
 try:
     from markdown import markdown
@@ -163,6 +165,8 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
             ans.manatee.name = row['name']
             ans.part_of_ml_corpus = row['part_of_ml_corpus']
             ans.ml_position_filter = MLPositionFilter(row['ml_position_filter'])
+            if row['preflight_subc']:
+                ans.preflight_subcorpus = SubcorpusIdent(id=row['preflight_subc'], corpus_name=row['preflight_corpus'])
             return ans
         return None
 

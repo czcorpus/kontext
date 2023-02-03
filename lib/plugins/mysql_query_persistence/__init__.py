@@ -311,6 +311,27 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
                     return not rec.get('revoke')
         return None
 
+    async def update_preflight_stats(
+            self,
+            plugin_ctx,
+            preflight_id,
+            corpus,
+            subc_id,
+            query_cql,
+            has_checked_tt,
+            estimated_size,
+            actual_size):
+        async with self._archive.cursor() as cursor:
+            await cursor.execute(
+                'INSERT INTO kontext_preflight_stats '
+                '(id, corpus_name, subc_id, query_cql, has_checked_tt, estimated_size, actual_size) '
+                'VALUES (%s, %s, %s, %s, %s, %s, %s) '
+                'ON DUPLICATE KEY UPDATE '
+                'estimated_size = IFNULL(%s, estimated_size), '
+                'actual_size = IFNULL(%s, actual_size) ',
+                (preflight_id, corpus, subc_id, query_cql, 1 if has_checked_tt else 0,
+                 estimated_size, actual_size, estimated_size, actual_size))
+
     def export_tasks(self):
         """
         Export tasks for async queue worker(s)

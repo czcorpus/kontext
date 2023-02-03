@@ -421,7 +421,8 @@ export class ViewPage {
                 Dict.fromEntries()
             ),
             concViewPosAttrs: this.layoutModel.getConf<ConcServerArgs>('currentArgs').attrs,
-            alignCommonPosAttrs: this.layoutModel.getConf<Array<string>>('AlignCommonPosAttrs')
+            alignCommonPosAttrs: this.layoutModel.getConf<Array<string>>('AlignCommonPosAttrs'),
+            concPreflight: this.layoutModel.getConf<Kontext.PreflightConf|null>('concPreflight')
         };
 
         this.queryModels.queryModel = new FirstQueryFormModel({
@@ -437,7 +438,8 @@ export class ViewPage {
         this.queryFormViews = queryFormInit({
             dispatcher: this.layoutModel.dispatcher,
             he: this.layoutModel.getComponentHelpers(),
-            CorparchWidget: null, // no corpus selection widget here
+            CorparchWidget: null, // no corpus selection widget here,
+            corparchWidgetId: null, // dtto
             queryModel: this.queryModels.queryModel,
             textTypesModel: this.queryModels.textTypesModel,
             quickSubcorpModel: undefined,

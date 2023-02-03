@@ -26,7 +26,7 @@ import { List } from 'cnc-tskit';
 import * as S from './style';
 
 export interface CorptreeWidgetProps {
-
+    widgetId:string;
 }
 
 
@@ -195,7 +195,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     return {
         CorptreeWidget: BoundWithProps<CorptreeWidgetProps, TreeWidgetModelState>(CorptreeWidget, treeModel),
-        CorptreePageComponent: BoundWithProps<CorptreeWidgetProps, TreeWidgetModelState>(CorptreePageComponent, treeModel),
+        CorptreePageComponent: BoundWithProps<CorptreePageComponentProps, TreeWidgetModelState>(CorptreePageComponent, treeModel),
         FilterPageComponent: FilterPageComponent
     };
 }
