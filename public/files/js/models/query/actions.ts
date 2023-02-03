@@ -439,6 +439,27 @@ export class Actions {
         name: 'QUERY_INPUT_HIDE_QUERY_STRUCTURE_WIDGET'
     };
 
+    static ShowCutOffRequired: Action<{
+    }> = {
+        name: 'QUERY_INPUT_SHOW_CUTOFF_REQUIRED'
+    };
+
+    static CloseCutOffRequired: Action<{
+    }> = {
+        name: 'QUERY_INPUT_CLOSE_CUTOFF_REQUIRED'
+    };
+
+    static CutOffInputSet: Action<{
+        value:string;
+    }> = {
+        name: 'QUERY_INPUT_CUTOFF_INPUT_SET'
+    };
+
+    static SubmitWithCutOff: Action<{
+    }> = {
+        name: 'QUERY_INPUT_SUBMIT_WITH_CUTOFF'
+    };
+
     static SampleFormSetRlines: Action<{
         value:string;
         sampleId:string;

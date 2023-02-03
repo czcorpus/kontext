@@ -49,7 +49,7 @@ from action.model import ModelsSharedData
 
 T = TypeVar('T')
 
-PREFLIGHT_THRESHOLD_IPM = 50_000
+PREFLIGHT_THRESHOLD_IPM = 5_000
 PREFLIGHT_MIN_LARGE_CORPUS = 100_000_00
 
 

@@ -65,6 +65,7 @@ class ConcDescJsonItem:
     tourl: str
     size: int
     fullsize: int
+    sample_size: Optional[int] = None
 
 
 async def get_conc_desc(corpus: AbstractKCorpus, q=None, translate=True, skip_internals=True, translator=lambda x: x):

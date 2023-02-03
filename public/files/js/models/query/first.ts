@@ -23,7 +23,7 @@
 import { IFullActionControl } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap, map, concatMap, reduce } from 'rxjs/operators';
-import { Dict, tuple, List, pipe, HTTP } from 'cnc-tskit';
+import { Dict, tuple, List, pipe, HTTP, Rx } from 'cnc-tskit';
 
 import * as Kontext from '../../types/kontext';
 import * as TextTypes from '../../types/textTypes';
@@ -46,6 +46,7 @@ import { AttrHelper } from '../cqleditor/attrs';
 import { highlightSyntaxStatic } from '../cqleditor/parser';
 import { ConcFormArgs, QueryFormArgs, QueryFormArgsResponse, SubmitEncodedSimpleTokens } from './formArgs';
 import { PluginName } from '../../app/plugin';
+import { validateGzNumber } from '../base';
 
 
 export interface QueryFormUserEntries {
@@ -87,6 +88,11 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
 export interface QueryInputSetQueryProps {
     sourceId:string;
     query:string;
+}
+
+export interface SubmitQueryResult {
+    response:ConcQueryResponse|null;
+    messages:Array<Kontext.ResponseMessage>;
 }
 
 /**
@@ -297,6 +303,10 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
      alignCommonPosAttrs:Array<string>;
 
      concPreflight:Kontext.PreflightConf|null;
+
+     cutOffWarningVisible:boolean;
+
+     cutOffSize:Kontext.FormValue<string>;
 }
 
 
@@ -440,7 +450,9 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 concViewPosAttrs: props.concViewPosAttrs,
                 alignCommonPosAttrs: props.alignCommonPosAttrs,
                 compositionModeOn: false,
-                concPreflight: props.concPreflight
+                concPreflight: props.concPreflight,
+                cutOffWarningVisible: false,
+                cutOffSize: Kontext.newFormValue<string>('', true)
         });
 
         this.addActionSubtypeHandler(
@@ -470,6 +482,51 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 });
             }
         );
+
+        this.addActionHandler(
+            Actions.ShowCutOffRequired,
+            action => {
+                this.changeState(
+                    state => {
+                        state.isBusy = false;
+                        state.cutOffWarningVisible = true;
+                        state.cutOffSize.value = '10000000';
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            Actions.CloseCutOffRequired,
+            action => {
+                this.changeState(
+                    state => {
+                        state.cutOffWarningVisible = false;
+                    }
+                );
+            }
+        )
+
+        this.addActionHandler(
+            Actions.CutOffInputSet,
+            action => {
+                this.changeState(
+                    state => {
+                        state.cutOffSize.value = action.payload.value;
+                        if (validateGzNumber(state.cutOffSize.value)) {
+                            state.cutOffSize.isInvalid = false;
+                            state.cutOffSize.errorDesc = undefined;
+
+                        } else {
+                            state.cutOffSize.isInvalid = true;
+                            state.cutOffSize.errorDesc = this.pageModel.translate(
+                                'concview__save_form_line_from_err_msg_{value}',
+                                {value: 10000000});
+                        }
+                    }
+                )
+            }
+        )
 
         this.addActionHandler(
             Actions.QuerySubmit,
@@ -521,28 +578,43 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                             if (err !== null) {
                                 throw err;
                             }
-                            return this.state.concPreflight ?
+                            return this.state.concPreflight && this.state.cutOffSize.value === '' ?
                                 this.submitPreflight(
                                     contextData,
                                     ttSelections,
-                                    this.state.concPreflight) :
-                                rxOf({contextData, ttSelections, preflightId: null});
+                                    this.state.concPreflight
+                                ) :
+                                rxOf({
+                                    contextData,
+                                    ttSelections,
+                                    cutOffRequired: false,
+                                });
                         }
                     ),
                     concatMap(
-                        ({ttSelections, contextData}) => {
+                        ({ttSelections, contextData, cutOffRequired}) => {
                             let err:Error;
                             err = this.testQueryTypeMismatch();
                             if (err !== null) {
                                 throw err;
                             }
-                            return this.submitQuery(contextData, true, ttSelections);
+                            return Rx.zippedWith(
+                                cutOffRequired,
+                                cutOffRequired ?
+                                    rxOf({ response: null, messages: [] }) :
+                                    this.submitQuery(contextData, true, ttSelections)
+                            );
                         }
                     )
 
                 ).subscribe({
-                    next: ([data, messages]) => {
-                        if (data === null) {
+                    next: ([{response, messages}, cutOffRequired]) => {
+                        if (cutOffRequired) {
+                            this.dispatchSideEffect(
+                                Actions.ShowCutOffRequired
+                            )
+
+                        } else if (response === null) {
                             if (!List.empty(messages)) {
                                 List.forEach(
                                     ([msgType, msg]) => {
@@ -564,8 +636,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
 
                         } else {
                             window.location.href = this.createViewUrl(
-                                data.conc_persistence_op_id,
-                                data.conc_args,
+                                response.conc_persistence_op_id,
+                                response.conc_args,
                                 false,
                                 true
                             );
@@ -975,7 +1047,10 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             text_types: this.disableRestrictSearch(this.state) ? {} : ttSelection,
             context: contextFormArgs,
             async,
-            no_query_history: noQueryHistory
+            no_query_history: noQueryHistory,
+            sample_size: this.state.cutOffSize.value ?
+                parseInt(this.state.cutOffSize.value) :
+                undefined
         };
 
         if (this.state.corpora.length > 1) {
@@ -1044,6 +1119,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
     ):Observable<{
         contextData:QueryContextArgs;
         ttSelections:TextTypes.ExportedSelection;
+        cutOffRequired:boolean;
     }> {
 
         return this.pageModel.ajax$<PreflightResponse>(
@@ -1061,16 +1137,11 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         ).pipe(
             map(
-                ans => {
-                    if (ans.sizeIpm >= preflightSubc.threshold_ipm &&
-                            !window.confirm('Concordance might take a while to compute. Do you want to continue?')) {
-                        throw 'Query cancelled';
-                    }
-                    return {
-                        contextData,
-                        ttSelections
-                    }
-                }
+                ans => ({
+                    contextData,
+                    ttSelections,
+                    cutOffRequired: ans.sizeIpm >= preflightSubc.threshold_ipm
+                })
             )
         );
     }
@@ -1080,7 +1151,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         async:boolean,
         ttSelection:TextTypes.ExportedSelection,
         noQueryHistory?:boolean
-    ):Observable<[ConcQueryResponse|null, Array<[Kontext.UserMessageTypes, string]>]> {
+    ):Observable<SubmitQueryResult> {
 
         return this.pageModel.ajax$<ConcQueryResponse>(
             HTTP.Method.POST,
@@ -1102,10 +1173,10 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 502: this.pageModel.translate('global__human_readable_502')
             }),
             map(
-                ans => tuple(
-                    ans.finished !== true || ans.size > 0 ? ans : null,
-                    ans.messages || []
-                )
+                ans => ({
+                    response: ans.finished !== true || ans.size > 0 ? ans : null,
+                    messages: ans.messages || []
+                })
             )
         );
     }
