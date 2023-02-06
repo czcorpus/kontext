@@ -526,7 +526,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                     }
                 )
             }
-        )
+        );
 
         this.addActionHandler(
             Actions.QuerySubmit,
@@ -1028,7 +1028,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         ttSelection:TextTypes.ExportedSelection,
         noQueryHistory:boolean
     ):ConcQueryArgs {
-
         const currArgs = this.pageModel.getConcArgs();
         const args:ConcQueryArgs = {
             type: 'concQueryArgs',
@@ -1048,7 +1047,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             context: contextFormArgs,
             async,
             no_query_history: noQueryHistory,
-            sample_size: this.state.cutOffSize.value ?
+            cutoff: this.state.cutOffSize.value ?
                 parseInt(this.state.cutOffSize.value) :
                 undefined
         };

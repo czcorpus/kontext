@@ -55,18 +55,18 @@ class CollCalcArgs:
     subcorpus_id: Optional[str]
     subcorpora_dir: Optional[str]
     cache_path: Optional[str] = field(default=None)
-    samplesize: int = field(default=0)
+    cutoff: int = field(default=0)
 
 
 class CollCalcCache(object):
 
-    def __init__(self, corpname, subcname, subcpath, user_id, q, samplesize=0):
+    def __init__(self, corpname, subcname, subcpath, user_id, q, cutoff=0):
         self._corpname = corpname
         self._subcname = subcname
         self._subcpath = subcpath
         self._user_id = user_id
         self._q = q
-        self._samplesize = samplesize
+        self.cutoff = cutoff
 
     def _cache_file_path(self, cattr, csortfn, cbgrfns, cfromw, ctow, cminbgr, cminfreq):
         v = f'{self._corpname}{self._subcname}{self._user_id}{"".join(self._q)}{cattr}{csortfn}{cbgrfns}{cfromw}{ctow}{cminbgr}{cminbgr}{cminfreq}'
@@ -152,7 +152,7 @@ async def calculate_colls(coll_args: CollCalcArgs) -> CalculateCollsResult:
     collend = collstart + coll_args.citemsperpage
     cache = CollCalcCache(
         corpname=coll_args.corpname, subcname=coll_args.subcorpus_id, subcpath=coll_args.subcorpora_dir,
-        user_id=coll_args.user_id, q=coll_args.q, samplesize=coll_args.samplesize)
+        user_id=coll_args.user_id, q=coll_args.q, cutoff=coll_args.cutoff)
     collocs, cache_path = await cache.get(
         cattr=coll_args.cattr, csortfn=coll_args.csortfn, cbgrfns=coll_args.cbgrfns,
         cfromw=coll_args.cfromw, ctow=coll_args.ctow, cminbgr=coll_args.cminbgr,

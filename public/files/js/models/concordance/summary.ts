@@ -42,7 +42,7 @@ export interface ConcSummaryModelState {
     corpusIpm:number; // ipm related to the whole corpus or a named subcorpus
     ipm:number|null;
     baseCorpusSize:number;
-    corpusSampleSize:number;
+    cutoff:number;
     queryChainSize:number;
     concSize:number;
     fullSize:number; // TODO explain

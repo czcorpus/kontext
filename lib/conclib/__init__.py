@@ -65,10 +65,11 @@ class ConcDescJsonItem:
     tourl: str
     size: int
     fullsize: int
-    sample_size: Optional[int] = None
+    conc_persistence_op_id: Optional[str] = None
 
 
-async def get_conc_desc(corpus: AbstractKCorpus, q=None, translate=True, skip_internals=True, translator=lambda x: x):
+async def get_conc_desc(
+        corpus: AbstractKCorpus, q=None, cutoff=0, translate=True, skip_internals=True, translator=lambda x: x):
     """
     arguments:
     corpus -- a KCorpus instance
@@ -80,7 +81,7 @@ async def get_conc_desc(corpus: AbstractKCorpus, q=None, translate=True, skip_in
     q = tuple(q)
 
     async def get_size(pos):
-        return await cache_map.get_stored_size(corpus.cache_key, q[:pos + 1])
+        return await cache_map.get_stored_size(corpus.cache_key, q[:pos + 1], cutoff)
 
     def is_aligned_op(query_items, pos):
         return (query_items[pos].startswith('x-') and query_items[pos + 1] == 'p0 0 1 []' and

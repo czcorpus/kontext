@@ -20,7 +20,7 @@ import logging
 import os
 import re
 from sys import stderr
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 import l10n
 import manatee

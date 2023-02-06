@@ -110,6 +110,5 @@ async def index(amodel: ConcActionModel, req: KRequest, response: KResponse):
         'dispersion_resolution': resolution,
         'initial_data': _get_freq_dispersion(conc, resolution),
     }
-    await amodel.attach_query_params(result)
-    await amodel.attach_query_overview(result)
+    await amodel.export_query_forms(result)
     return result

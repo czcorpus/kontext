@@ -34,7 +34,7 @@ import { Block, FreqResultResponse } from '../common';
 import { Actions as GeneralOptsActions } from '../../options/actions';
 import { AttrItem, BasicFreqModuleType } from '../../../types/kontext';
 import { validateGzNumber } from '../../base';
-import * as copy from 'copy-to-clipboard';
+// !!! import * as copy from 'copy-to-clipboard';
 
 
 export interface FreqDataRowsModelArgs {
@@ -221,7 +221,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             Actions.ResultLinkCopyToClipboard,
             (state, action) => {
                 if (state.isActive) {
-                    copy(this.getShareLink(state, action.payload.sourceId));
+                    // !!! copy(this.getShareLink(state, action.payload.sourceId));
                     this.pageModel.showMessage('info', this.pageModel.translate('global__link_copied_to_clipboard'));
                 }
             }

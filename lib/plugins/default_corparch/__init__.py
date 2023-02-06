@@ -470,7 +470,6 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         ans.speech_overlap_val = node.attrib.get('speech_overlap_val', None)
         ans.bib_struct = node.attrib.get('bib_struct', None)
         ans.collator_locale = node.attrib.get('collator_locale', 'en_US')
-        ans.sample_size = node.attrib.get('sample_size', -1)
         ans.use_safe_font = self._decode_bool(node.attrib.get('use_safe_font', 'false'))
 
         ref_elm = node.find('reference')

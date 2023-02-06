@@ -454,6 +454,11 @@ export interface QueryOperation {
      * size.
      */
      fullsize:number;
+
+     /**
+      * A persistent key of the operation
+      */
+     conc_persistence_op_id:string;
 }
 
 export type VirtualKeys = Array<Array<[string, string]>>;

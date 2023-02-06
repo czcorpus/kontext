@@ -228,6 +228,7 @@ export interface ConcServerArgs {
     refs:Array<string>;
     fromp:number;
     q:Array<string>;
+    cutoff:number;
 }
 
 /**

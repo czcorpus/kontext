@@ -158,8 +158,7 @@ async def viewattrsx(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
         'widectx_globals': amodel.get_mapped_attrs(
             WidectxArgsMapping,
             {'structs': amodel.get_struct_opts()}
-        ),
-        'conc_args': amodel.get_curr_conc_args()
+        )
     }
 
 

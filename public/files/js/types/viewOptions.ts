@@ -98,6 +98,4 @@ export interface LoadOptionsResponse extends Kontext.AjaxResponse {
 
 export interface SaveViewAttrsOptionsResponse extends Kontext.AjaxResponse {
     widectx_globals:WideCtxArgs;
-    conc_persistence_op_id:string|null;
-    conc_args:Array<[string, string]>;
 }

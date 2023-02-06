@@ -38,7 +38,7 @@ class FreqCalcArgs:
     subcname: Optional[str] = None
     subcpath: Optional[str] = None
     fpage: Optional[int] = 1  # ??
-    samplesize: Optional[int] = 0
+    cutoff: Optional[int] = 0
     q: Optional[List[str]] = field(default_factory=list)
 
 

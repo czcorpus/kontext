@@ -443,15 +443,27 @@ export function init({
         };
 
         const onSubmit = () => {
-            dispatcher.dispatch<typeof Actions.QuerySubmit>({
-                name: Actions.QuerySubmit.name
-            });
+            dispatcher.dispatch(
+                Actions.QuerySubmit
+            );
+        };
+
+        const keyEventHandler = (evt) => {
+            if (evt.key === Keyboard.Value.ENTER && !evt.shiftKey) {
+                if (!evt.ctrlKey && !evt.shiftKey) {
+                    dispatcher.dispatch(
+                        Actions.QuerySubmit
+                    );
+                }
+                evt.stopPropagation();
+                evt.preventDefault();
+            }
         };
 
         return (
             <layoutViews.ModalOverlay onCloseKey={onClose}>
                 <layoutViews.CloseableFrame onCloseClick={onClose} label={he.translate('query__cutoff_heading')}>
-                    <S.CutOffBox>
+                    <S.CutOffBox onKeyDown={keyEventHandler}>
                         <div className="message">
                             <layoutViews.StatusIcon status="warning" />
                             <p>

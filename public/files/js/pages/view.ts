@@ -1018,10 +1018,10 @@ export class ViewPage {
                 origSubcorpName: lineViewProps.origSubCorpName,
                 providesAdHocIpm: !Dict.empty(queryFormArgs.selected_text_types),
                 baseCorpusSize: lineViewProps.concSummary.fullSize,
-                corpusSampleSize: this.layoutModel.getConf<number>('corpusSampleSize'),
                 queryChainSize: List.size(
                         this.layoutModel.getConf<Array<Kontext.QueryOperation>>(
                             'queryOverview') || []),
+                cutoff: this.layoutModel.getConcArgs().cutoff,
                 isBusy: false
             }
         );

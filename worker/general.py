@@ -154,7 +154,7 @@ async def _compile_frq(corp: KCorpus, attr, logfile):
 # ----------------------------- CONCORDANCE -----------------------------------
 
 
-async def conc_register(self, user_id, corpus_ident: Union[str, SubcorpusRecord], corp_cache_key, query, samplesize, time_limit, worker):
+async def conc_register(self, user_id, corpus_ident: Union[str, SubcorpusRecord], corp_cache_key, query, cutoff, time_limit, worker):
     """
     Register concordance calculation and initiate the calculation.
 
@@ -162,24 +162,25 @@ async def conc_register(self, user_id, corpus_ident: Union[str, SubcorpusRecord]
     user_id -- an identifier of the user who entered the query (used to specify subc. directory if needed)
     corpus_ident -- a corpus identifier (either a corpus name or data for a subcorpus)
     query -- a query tuple
-    samplesize -- a row number limit (if 0 then unlimited - see Manatee API)
+    cutoff -- a row number limit (if 0 then unlimited - see Manatee API)
     time_limit -- a time limit (in seconds) for the main conc. task
 
     returns:
     a dict(cachefile=..., pidfile=..., stored_pidfile=...)
     """
     task = conclib.calc.base.TaskRegistration(task_id=self.request.id)
-    initial_args = await task.run(corpus_ident, corp_cache_key, query, samplesize)
+    initial_args = await task.run(corpus_ident, corp_cache_key, query, cutoff)
     if not initial_args['already_running']:   # we are first trying to calc this
         worker.send_task_sync(
             'conc_calculate', object.__class__,
-            args=(initial_args, user_id, corpus_ident, corp_cache_key, query, samplesize),
+            args=(initial_args, user_id, corpus_ident, corp_cache_key, query, cutoff),
             soft_time_limit=time_limit)
         # there is no return from the send_task as we obtain the status via conc cache map
     return initial_args
 
 
-async def conc_calculate(self, initial_args, user_id, corpus_ident: Union[str, SubcorpusRecord], corp_cache_key, query, samplesize):
+async def conc_calculate(
+        self, initial_args, user_id, corpus_ident: Union[str, SubcorpusRecord], corp_cache_key, query, cutoff):
     """
     Perform actual concordance calculation.
     This is called automatically by the 'register()' function above.
@@ -191,14 +192,14 @@ async def conc_calculate(self, initial_args, user_id, corpus_ident: Union[str, S
     subc_name -- a sub-corpus identifier (None if not used)
     corp_cache_key -- a MD5 checksum of the sub-corpus data file
     query -- a query tuple
-    samplesize -- a row number limit (if 0 then unlimited - see Manatee API)
+    cutoff -- a row number limit (if 0 then unlimited - see Manatee API)
     """
     task = conclib.calc.ConcCalculation(task_id=self.request.id)
     return await task.run(
-        initial_args, settings.get('corpora', 'subcorpora_dir'), corpus_ident, corp_cache_key, query, samplesize)
+        initial_args, settings.get('corpora', 'subcorpora_dir'), corpus_ident, corp_cache_key, query, cutoff)
 
 
-async def conc_sync_calculate(self, user_id, corpus_name, subc_name, corp_cache_key, query, samplesize):
+async def conc_sync_calculate(self, user_id, corpus_name, subc_name, corp_cache_key, query, cutoff):
     conc_dir = os.path.join(settings.get('corpora', 'conc_dir'), str(user_id))
     task = conclib.calc.ConcSyncCalculation(
         task_id=self.request.id, cache_factory=None,
@@ -206,7 +207,7 @@ async def conc_sync_calculate(self, user_id, corpus_name, subc_name, corp_cache_
         corpus_ident=SubcorpusIdent(
             id=subc_name, corpus_name=corpus_name) if subc_name else corpus_name,
         conc_dir=conc_dir)
-    return await task.run(corp_cache_key, query, samplesize)
+    return await task.run(corp_cache_key, query, cutoff)
 
 
 # ----------------------------- COLLOCATIONS ----------------------------------
