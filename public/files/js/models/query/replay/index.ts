@@ -866,6 +866,9 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
         opIdx:number
     ):Observable<QueryFormArgs> {
         const queryKey = this.getOpCacheKey(state, opIdx);
+        console.log('query key = ', queryKey);
+        console.log('state.operations: ', state.operations);
+        console.log('conc args cache: ', state.concArgsCache)
         return (queryKey !== undefined ?
             // cache hit
             this.queryModel.syncFrom(

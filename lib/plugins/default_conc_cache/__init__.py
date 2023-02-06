@@ -44,20 +44,21 @@ from plugin_types.general_storage import KeyValueStorage
 from plugins import inject
 
 
-def _uniqname(corp_cache_key: Optional[str], query: Tuple[str, ...]):
+def _uniqname(corp_cache_key: Optional[str], query: Tuple[str, ...], cutoff: int):
     """
-    Returns an unique hash based on subcorpus identifier/hash and a CQL query
+    Returns a unique hash based on subcorpus identifier/hash and a CQL query
 
     arguments:
     conc_cache_key -- a unique identifier of a corpus (actually any unique string is ok here); can be None too
     query -- a list/tuple containing CQL query elements (base query, filters, aligned corpora etc.)
+    cutoff -- a limit applied to a respective concordance size
 
     returns:
-    an md5 hexadecimal digest of passed data
+    a hash string representing all the cache entry identifiers (= all the input args)
     """
     if corp_cache_key is None:
         corp_cache_key = ''
-    return hashlib.md5(('#'.join([q for q in query]) + corp_cache_key).encode('utf-8')).hexdigest()
+    return hashlib.sha1(('#'.join([q for q in query]) + corp_cache_key + str(cutoff)).encode('utf-8')).hexdigest()
 
 
 class DefaultCacheMapping(AbstractConcCache):
@@ -76,23 +77,24 @@ class DefaultCacheMapping(AbstractConcCache):
         self._corpus = corpus
         self._db = db
 
-    async def _get_entry(self, corp_cache_key, q) -> Union[ConcCacheStatus, None]:
-        val = await self._db.hash_get(self._mk_key(), _uniqname(corp_cache_key, q))
+    async def _get_entry(self, corp_cache_key, q, cutoff) -> Union[ConcCacheStatus, None]:
+        val = await self._db.hash_get(self._mk_key(), _uniqname(corp_cache_key, q, cutoff))
         if val and type(val) is dict:
             return ConcCacheStatus.from_storage(**val)
         return None
 
-    async def _set_entry(self, corp_cache_key, q, data: ConcCacheStatus):
-        await self._db.hash_set(self._mk_key(), _uniqname(corp_cache_key, q), data.to_dict())
+    async def _set_entry(self, corp_cache_key, q, cutoff, data: ConcCacheStatus):
+        await self._db.hash_set(self._mk_key(), _uniqname(corp_cache_key, q, cutoff), data.to_dict())
 
     def _mk_key(self) -> str:
         return DefaultCacheMapping.KEY_TEMPLATE.format(self._corpus.corpname.lower())
 
-    async def get_stored_calc_status(self, corp_cache_key: Optional[str], q: Tuple[str, ...]) -> Union[ConcCacheStatus, None]:
-        return await self._get_entry(corp_cache_key, q)
+    async def get_stored_calc_status(
+            self, corp_cache_key: Optional[str], q: Tuple[str, ...], cutoff: int) -> Union[ConcCacheStatus, None]:
+        return await self._get_entry(corp_cache_key, q, cutoff)
 
-    async def get_stored_size(self, corp_cache_key, q):
-        val = await self._get_entry(corp_cache_key, q)
+    async def get_stored_size(self, corp_cache_key, q, cutoff):
+        val = await self._get_entry(corp_cache_key, q, cutoff)
         if val:
             return val.concsize, val.fullsize
         return None, None
@@ -106,40 +108,40 @@ class DefaultCacheMapping(AbstractConcCache):
     def _cache_dir_path(self) -> str:
         return os.path.join(self._cache_root_dir, self._corpus.corpname.lower())
 
-    def _create_cache_file_path(self, corp_cache_key: Optional[str], q: Tuple[str, ...]) -> str:
-        return os.path.normpath('%s/%s.conc' % (self._cache_dir_path(), _uniqname(corp_cache_key, q)))
+    def _create_cache_file_path(self, corp_cache_key: Optional[str], q: Tuple[str, ...], cutoff: int) -> str:
+        return os.path.normpath('{}/{}.conc'.format(self._cache_dir_path(), _uniqname(corp_cache_key, q, cutoff)))
 
-    async def readable_cache_path(self, corp_cache_key, q) -> Optional[str]:
-        val = await self._get_entry(corp_cache_key, q)
-        return val.cachefile if val and val.readable else None
+    async def readable_cache_path(self, corp_cache_key, q, cutoff) -> Optional[str]:
+        val = await self._get_entry(corp_cache_key, q, cutoff)
+        return val.cachefile if val and val.readable and os.path.isfile(val.cachefile) else None
 
-    async def add_to_map(self, corp_cache_key: Optional[str], query: Tuple[str, ...], calc_status: ConcCacheStatus,
-                         overwrite: bool = False) -> ConcCacheStatus:
+    async def add_to_map(self, corp_cache_key, query, cutoff, calc_status, overwrite=False) -> ConcCacheStatus:
         """
         return:
         path to a created cache file
         """
-        prev_status = await self._get_entry(corp_cache_key, query)
+        prev_status = await self._get_entry(corp_cache_key, query, cutoff)
         if prev_status and not overwrite:
             return prev_status
-        calc_status.q0hash = _uniqname(corp_cache_key, query[:1])
-        calc_status.cachefile = self._create_cache_file_path(corp_cache_key, query)
-        await self._set_entry(corp_cache_key, query, calc_status)
+        calc_status.q0hash = _uniqname(corp_cache_key, query[:1], cutoff)
+        calc_status.cachefile = self._create_cache_file_path(corp_cache_key, query, cutoff)
+        await self._set_entry(corp_cache_key, query, cutoff, calc_status)
         return calc_status
 
-    async def get_calc_status(self, corp_cache_key: Optional[str], query: Tuple[str, ...]) -> Union[ConcCacheStatus, None]:
-        return await self._get_entry(corp_cache_key, query)
+    async def get_calc_status(
+            self, corp_cache_key, query, cutoff) -> Union[ConcCacheStatus, None]:
+        return await self._get_entry(corp_cache_key, query, cutoff)
 
-    async def update_calc_status(self, corp_cache_key: Optional[str], query: Tuple[str, ...], **kw):
-        stored_data = await self._get_entry(corp_cache_key, query)
+    async def update_calc_status(self, corp_cache_key, query, cutoff, **kw):
+        stored_data = await self._get_entry(corp_cache_key, query, cutoff)
         if stored_data:
             stored_data.update(**kw)
-            await self._set_entry(corp_cache_key, query, stored_data)
+            await self._set_entry(corp_cache_key, query, cutoff, stored_data)
 
-    async def del_entry(self, corp_cache_key: Optional[str], q: Tuple[str, ...]):
-        await self._db.hash_del(self._mk_key(), _uniqname(corp_cache_key, q))
+    async def del_entry(self, corp_cache_key, q, cutoff):
+        await self._db.hash_del(self._mk_key(), _uniqname(corp_cache_key, q, cutoff))
 
-    async def del_full_entry(self, corp_cache_key: Optional[str], q: Tuple[str, ...]):
+    async def del_full_entry(self, corp_cache_key, q, cutoff):
         for k, stored in (await self._db.hash_get_all(self._mk_key())).items():
             if stored:
                 if type(stored) is not dict:
@@ -148,7 +150,7 @@ class DefaultCacheMapping(AbstractConcCache):
                     await self._db.hash_del(self._mk_key(), k)
                 else:
                     status = ConcCacheStatus.from_storage(**stored)
-                    if _uniqname(corp_cache_key, q[:1]) == status.q0hash:
+                    if _uniqname(corp_cache_key, q[:1], cutoff) == status.q0hash:
                         # original record's key must be used (k ~ entry_key match can be partial)
                         # must use direct access here (no del_entry())
                         await self._db.hash_del(self._mk_key(), k)

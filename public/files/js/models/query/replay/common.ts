@@ -111,7 +111,7 @@ export function importEncodedOperation(operation:Kontext.QueryOperation):Persist
         opid: operation.opid,
         userEntry: operation.nicearg,
         encodedArgs: operation.arg,
-        concPersistenceId: undefined,
+        concPersistenceId: operation.conc_persistence_op_id,
         size: operation.size,
         fullSize: operation.fullsize,
         formType: mapOpIdToFormType(operation.opid)

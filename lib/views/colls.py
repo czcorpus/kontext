@@ -71,7 +71,6 @@ async def collx(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         ans['save_line_limit'] = amodel.COLLS_QUICK_SAVE_MAX_LINES
         ans['text_types_data'] = await amodel.tt.export_with_norms(ret_nums=True)
         ans['quick_save_row_limit'] = amodel.COLLS_QUICK_SAVE_MAX_LINES
-        await amodel.attach_query_overview(ans)
         return ans
     except ConcNotFoundException:
         amodel.go_to_restore_conc('collx')
@@ -89,7 +88,7 @@ async def _collx(amodel: ConcActionModel, user_id: int, collpage: int, citemsper
         subcorpora_dir=amodel.subcpath,
         user_id=user_id,
         q=amodel.args.q,
-        samplesize=0,  # TODO (check also freqs)
+        cutoff=0,  # TODO (check also freqs)
         cattr=amodel.args.cattr,
         csortfn=amodel.args.csortfn,
         cbgrfns=''.join(amodel.args.cbgrfns),

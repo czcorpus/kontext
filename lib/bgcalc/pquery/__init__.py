@@ -52,7 +52,7 @@ def create_freq_calc_args(
         freq_sort='freq',
         pagesize=10000,  # TODO
         fmaxitems=10000,
-        samplesize=0,
+        cutoff=0,
         flimit=flimit_override if flimit_override is not None else pquery.min_freq,
         q=raw_queries[conc_id],
         collator_locale=collator_locale,

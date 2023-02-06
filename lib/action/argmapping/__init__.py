@@ -216,6 +216,7 @@ class Args(UserActionArgs):
     structs: str = field(default='', metadata=mk_metdata(
         Persistence.PERSISTENT, comma_separated_to_js))
     q: List[str] = field(default_factory=list, metadata=mk_metdata())
+    cutoff: int = field(default=0, metadata=mk_metdata())
     wlsendmail: str = field(default='', metadata=mk_metdata())
     cup_hl: str = field(default='q', metadata=mk_metdata(Persistence.PERSISTENT))
     structattrs: List[str] = field(

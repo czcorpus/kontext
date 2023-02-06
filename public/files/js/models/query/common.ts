@@ -85,7 +85,7 @@ export interface ConcQueryArgs {
     context:QueryContextArgs;
     async:boolean;
     no_query_history?:boolean;
-    sample_size?:number;
+    cutoff?:number;
     type:'concQueryArgs';
 }
 

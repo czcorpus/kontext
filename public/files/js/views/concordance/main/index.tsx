@@ -308,7 +308,7 @@ export function init({
                                 {'\u00a0'}
                                 <span key="hits:4b" id="fullsize" title={String(props.fullSize)}>{he.formatNumber(props.fullSize)}</span>
                             </> :
-                            he.translate('concview__size_with_respect_to_cut_conc_{size}', {size: he.formatNumber(props.corpusSampleSize)})
+                            he.translate('concview__size_with_respect_to_cut_conc_{size}', {size: he.formatNumber(props.cutoff)})
                         }
                     </React.Fragment>
                 );

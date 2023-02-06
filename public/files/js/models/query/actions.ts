@@ -455,11 +455,6 @@ export class Actions {
         name: 'QUERY_INPUT_CUTOFF_INPUT_SET'
     };
 
-    static SubmitWithCutOff: Action<{
-    }> = {
-        name: 'QUERY_INPUT_SUBMIT_WITH_CUTOFF'
-    };
-
     static SampleFormSetRlines: Action<{
         value:string;
         sampleId:string;

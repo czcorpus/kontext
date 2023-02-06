@@ -108,8 +108,8 @@ async def query(amodel: ConcActionModel, req: KRequest, resp: KResponse):
             plugin_ctx=amodel.plugin_ctx,
             corpora=[amodel.args.corpname] + amodel.args.align,
             persist=False)
-    amodel.add_conc_form_args(qf_args)
-    await amodel.attach_query_params(out)
+    amodel.set_curr_conc_form_args(qf_args)
+    await amodel.export_query_forms(out)
     await amodel.attach_aligned_query_params(out)
     await amodel.export_subcorpora_list(out)
     resp.set_result(out)
@@ -131,8 +131,7 @@ async def preflight(amodel: ConcActionModel, req: KRequest, resp: KResponse):
             [q['corpname'] for q in req.json['queries']], qinfo, corpus_info)
         conc = await get_conc(
             corp=amodel.corp, user_id=amodel.session_get('user', 'id'), q=amodel.args.q,
-            fromp=amodel.args.fromp, pagesize=amodel.args.pagesize, asnc=False,
-            samplesize=corpus_info.sample_size)
+            fromp=amodel.args.fromp, pagesize=amodel.args.pagesize, asnc=False)
     except (ConcordanceException, ConcCacheStatusException) as ex:
         if isinstance(ex, ConcordanceSpecificationError):
             raise UserReadableException(ex, code=422)
@@ -172,7 +171,7 @@ async def query_submit(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     qinfo = await QueryFormArgs.create(plugin_ctx=amodel.plugin_ctx, corpora=corpora, persist=True)
     qinfo.update_by_user_query(
         req.json, await amodel.get_tt_bib_mapping(req.json.get('text_types', {})))
-    amodel.add_conc_form_args(qinfo)
+    amodel.set_curr_conc_form_args(qinfo)
     # 2) process the query
     try:
         await amodel.set_first_query(
@@ -186,7 +185,7 @@ async def query_submit(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         conc = await get_conc(
             corp=amodel.corp, user_id=amodel.session_get('user', 'id'), q=amodel.args.q,
             fromp=amodel.args.fromp, pagesize=amodel.args.pagesize, asnc=qinfo.data.asnc,
-            samplesize=qinfo.data.sample_size if qinfo.data.sample_size else corpus_info.sample_size)
+            cutoff=qinfo.data.cutoff)
         ans['size'] = conc.size()
         ans['finished'] = conc.finished()
         if corpus_info.preflight_subcorpus and conc.finished():
@@ -210,7 +209,7 @@ async def query_submit(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         else:
             raise ex
     ans['conc_args'] = amodel.get_mapped_attrs(ConcArgsMapping)
-    await amodel.attach_query_overview(ans)
+    ans['conc_args']['cutoff'] = amodel.args.cutoff
     return ans
 
 
@@ -221,7 +220,7 @@ async def _get_conc_cache_status(amodel: ConcActionModel):
     corpus_info = await amodel.get_corpus_info(amodel.corp.corpname)
 
     try:
-        cache_status = await cache_map.get_calc_status(corp_cache_key, q)
+        cache_status = await cache_map.get_calc_status(corp_cache_key, q, amodel.args.cutoff)
         if cache_status is None:  # conc is not cached nor calculated
             raise NotFoundException('Concordance calculation is lost')
         elif not cache_status.finished and cache_status.task_id:
@@ -249,10 +248,10 @@ async def _get_conc_cache_status(amodel: ConcActionModel):
             relconcsize=cache_status.relconcsize,
             arf=cache_status.arf)
     except CalcTaskNotFoundError as ex:
-        await cancel_conc_task(cache_map, corp_cache_key, q)
+        await cancel_conc_task(cache_map, corp_cache_key, q, cutoff)
         raise NotFoundException(f'Concordance calculation is lost: {ex}')
     except Exception as ex:
-        await cancel_conc_task(cache_map, corp_cache_key, q)
+        await cancel_conc_task(cache_map, corp_cache_key, q, cutoff)
         raise ex
 
 
@@ -296,7 +295,7 @@ async def view_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse, asn
         conc = await get_conc(
             corp=amodel.corp, user_id=user_id, q=amodel.args.q,
             fromp=amodel.args.fromp, pagesize=amodel.args.pagesize, asnc=asnc,
-            samplesize=corpus_info.sample_size)
+            cutoff=amodel.args.cutoff)
         if conc:
             amodel.apply_linegroups(conc)
             conc.switch_aligned(os.path.basename(amodel.args.corpname))
@@ -375,14 +374,11 @@ async def view_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse, asn
 
     # query form data
     out['text_types_data'] = await amodel.tt.export_with_norms(ret_nums=True)
-    qf_args = await amodel.fetch_prev_query('conc:filter')
-    if qf_args and qf_args.data.maincorp != amodel.args.corpname:
-        qf_args = None
-    await amodel.attach_query_params(out, filter=qf_args)
     out['coll_form_args'] = CollFormArgs().update(amodel.args).to_dict()
     out['freq_form_args'] = FreqFormArgs().update(amodel.args).to_dict()
     out['ctfreq_form_args'] = CTFreqFormArgs().update(amodel.args).to_dict()
     await amodel.export_subcorpora_list(out)
+    await amodel.export_query_forms(out)
 
     out['fast_adhoc_ipm'] = await plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(
         amodel.plugin_ctx, [amodel.args.corpname] + amodel.args.align)
@@ -395,7 +391,6 @@ async def view_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse, asn
         out['conc_cache_key'] = os.path.splitext(os.path.basename(conc.get_conc_file()))[0]
     else:
         out['conc_cache_key'] = None
-    await amodel.attach_query_overview(out)
     return out
 
 
@@ -453,7 +448,7 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         conc = await get_conc(
             corp=amodel.corp, user_id=amodel.session_get('user', 'id'), q=amodel.args.q,
             fromp=amodel.args.fromp, pagesize=amodel.args.pagesize, asnc=True,
-            samplesize=corpus_info.sample_size)
+            samplesize=amodel.args.cutoff)
         if conc:
             amodel.apply_linegroups(conc)
             conc.switch_aligned(os.path.basename(amodel.args.corpname))
@@ -591,7 +586,6 @@ async def concdesc_json(amodel: ConcActionModel, req: KRequest, resp: KResponse)
     for i, cd_item in enumerate(conc_desc):
         form = pipeline[i]
         if isinstance(form, QueryFormArgs):
-            cd_item.sample_size = form.data.sample_size
             if len(form.data.curr_queries) == 1:
                 cd_item.nicearg = list(form.data.curr_queries.values())[0]
             else:
@@ -693,13 +687,13 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
         ttcrit_attrs = amodel.corp.get_conf('SUBCORPATTRS')
     tmp_out['ttcrit'] = [f'{a} 0' for a in ttcrit_attrs.replace('|', ',').split(',') if a]
 
-    amodel.add_conc_form_args(
+    amodel.set_curr_conc_form_args(
         await QueryFormArgs.create(
             plugin_ctx=amodel.plugin_ctx,
             corpora=amodel.select_current_aligned_corpora(
                 active_only=False),
             persist=False))
-    await amodel.attach_query_params(tmp_out)
+    await amodel.export_query_forms(tmp_out)
     await amodel.attach_aligned_query_params(tmp_out)
     await amodel.export_subcorpora_list(tmp_out)
     corpus_info = await amodel.get_corpus_info(amodel.args.corpname)
@@ -791,7 +785,7 @@ async def switch_main_corp(amodel: ConcActionModel, req: KRequest, resp: KRespon
     maincorp = req.form.get('maincorp')
     amodel.args.q.append('x-{0}'.format(maincorp))
     ksargs = KwicSwitchArgs(maincorp=maincorp, persist=True)
-    amodel.add_conc_form_args(ksargs)
+    amodel.set_curr_conc_form_args(ksargs)
     return await view_conc(amodel, req, resp, False, req.session_get('user', 'id'))
 
 
@@ -815,7 +809,7 @@ async def filter(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     if err is not None:
         raise UserReadableException(err)
 
-    amodel.add_conc_form_args(ff_args)
+    amodel.set_curr_conc_form_args(ff_args)
     rank = dict(f=1, l=-1).get(ff_args.data.filfl, 1)
     texttypes = TextTypeCollector(amodel.corp, {}).get_query()
     try:
@@ -865,7 +859,7 @@ async def quick_filter(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     op_idx = len(amodel.args.q)
     if len(new_q) > 0:
         ff_args = q_conv(new_q[0])
-        amodel.add_conc_form_args(ff_args)
+        amodel.set_curr_conc_form_args(ff_args)
         amodel.args.q.append(new_q[0])
         op_idx += 1
     for q in new_q[1:]:
@@ -882,7 +876,7 @@ async def filter_subhits(amodel: ConcActionModel, req: KRequest, resp: KResponse
     if len(amodel.lines_groups) > 0:
         raise UserReadableException(
             'Cannot apply the function once a group of lines has been saved')
-    amodel.add_conc_form_args(SubHitsFilterFormArgs(persist=True))
+    amodel.set_curr_conc_form_args(SubHitsFilterFormArgs(persist=True))
     amodel.args.q.append('D')
     return await view_conc(amodel, req, resp, False, req.session_get('user', 'id'))
 
@@ -895,7 +889,7 @@ async def filter_firsthits(amodel: ConcActionModel, req: KRequest, resp: KRespon
             'Cannot apply the function once a group of lines has been saved')
     elif len(amodel.args.align) > 0:
         raise UserReadableException('The function is not supported for aligned corpora')
-    amodel.add_conc_form_args(FirstHitsFilterFormArgs(
+    amodel.set_curr_conc_form_args(FirstHitsFilterFormArgs(
         persist=True, doc_struct=amodel.corp.get_conf('DOCSTRUCTURE')))
     amodel.args.q.append('F{0}'.format(req.args.get('fh_struct')))
     return await view_conc(amodel, req, resp, False, req.session_get('user', 'id'))
@@ -914,7 +908,7 @@ async def sortx(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 
     qinfo = SortFormArgs(persist=True)
     qinfo.update_by_user_query(req.json)
-    amodel.add_conc_form_args(qinfo)
+    amodel.set_curr_conc_form_args(qinfo)
 
     if qinfo.data.skey == 'lc':
         ctx = f'-1<0~-{qinfo.data.spos}<0'
@@ -939,7 +933,7 @@ async def mlsortx(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     """
     qinfo = SortFormArgs(persist=True)
     qinfo.update_by_user_query(req.json)
-    amodel.add_conc_form_args(qinfo)
+    amodel.set_curr_conc_form_args(qinfo)
 
     mlxfcode = 'rc'
     crit = one_level_crit('s', qinfo.data.ml1attr, qinfo.data.ml1ctx, qinfo.data.ml1pos, mlxfcode,
@@ -959,7 +953,7 @@ async def mlsortx(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 async def shuffle(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     if len(amodel.lines_groups) > 0:
         raise UserReadableException('Cannot apply a shuffle once a group of lines has been saved')
-    amodel.add_conc_form_args(ShuffleFormArgs(persist=True))
+    amodel.set_curr_conc_form_args(ShuffleFormArgs(persist=True))
     amodel.args.q.append('f')
     return await view_conc(amodel, req, resp, False, req.session_get('user', 'id'))
 
@@ -969,7 +963,7 @@ async def shuffle(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 async def ajax_apply_lines_groups(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     rows = req.form.get('rows')
     amodel.lines_groups = LinesGroups(data=json.loads(rows))
-    amodel.add_conc_form_args(LgroupOpArgs(persist=True))
+    amodel.set_curr_conc_form_args(LgroupOpArgs(persist=True))
     return {}
 
 
@@ -999,7 +993,7 @@ async def ajax_unset_lines_groups(amodel: ConcActionModel, req: KRequest, resp: 
     amodel.clear_prev_conc_params()  # we do not want to chain next state with the current one
     amodel._lines_groups = LinesGroups(data=[])
     pipeline[i].make_saveable()  # drop old opKey, set as persistent
-    amodel.add_conc_form_args(pipeline[i])
+    amodel.set_curr_conc_form_args(pipeline[i])
     return {}
 
 
@@ -1007,7 +1001,7 @@ async def ajax_unset_lines_groups(amodel: ConcActionModel, req: KRequest, resp: 
 @http_action(return_type='json', mutates_result=True, action_model=ConcActionModel)
 async def ajax_remove_non_group_lines(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     amodel.args.q.append(amodel.filter_lines([(x[0], x[1]) for x in amodel.lines_groups], 'p'))
-    amodel.add_conc_form_args(LgroupOpArgs(persist=True))
+    amodel.set_curr_conc_form_args(LgroupOpArgs(persist=True))
     return {}
 
 
@@ -1015,7 +1009,7 @@ async def ajax_remove_non_group_lines(amodel: ConcActionModel, req: KRequest, re
 @http_action(return_type='json', mutates_result=True, action_model=ConcActionModel)
 async def ajax_sort_group_lines(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     amodel.lines_groups.sorted = True
-    amodel.add_conc_form_args(LgroupOpArgs(persist=True))
+    amodel.set_curr_conc_form_args(LgroupOpArgs(persist=True))
     return {}
 
 
@@ -1026,7 +1020,7 @@ async def ajax_remove_selected_lines(amodel: ConcActionModel, req: KRequest, res
     rows = req.form.get('rows', '')
     data = json.loads(rows)
     amodel.args.q.append(amodel.filter_lines(data, pnfilter))
-    amodel.add_conc_form_args(LockedOpFormsArgs(persist=True))
+    amodel.set_curr_conc_form_args(LockedOpFormsArgs(persist=True))
     return {}
 
 
@@ -1062,7 +1056,7 @@ async def ajax_send_group_selection_link_to_mail(amodel: ConcActionModel, req: K
 async def ajax_reedit_line_selection(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     ans = amodel.lines_groups.as_list()
     amodel.lines_groups = LinesGroups(data=[])
-    amodel.add_conc_form_args(LgroupOpArgs(persist=True))
+    amodel.set_curr_conc_form_args(LgroupOpArgs(persist=True))
     return dict(selection=ans)
 
 
@@ -1073,7 +1067,7 @@ async def ajax_get_first_line_select_page(amodel: ConcActionModel, req: KRequest
     conc = await get_conc(
         corp=amodel.corp, user_id=amodel.session_get('user', 'id'),
         q=amodel.args.q, fromp=amodel.args.fromp, pagesize=amodel.args.pagesize,
-        asnc=False, samplesize=corpus_info.sample_size)
+        asnc=False, cutoff=self.args.cutoff)
     amodel.apply_linegroups(conc)
     kwic = Kwic(amodel.corp, amodel.args.corpname, conc)
     return {'first_page': int((kwic.get_groups_first_line() - 1) / amodel.args.pagesize) + 1}
@@ -1088,7 +1082,7 @@ async def ajax_rename_line_group(amodel: ConcActionModel, req: KRequest, resp: K
     if to_num > 0:
         new_groups = [v if v[2] != from_num else (v[0], v[1], to_num) for v in new_groups]
     amodel.lines_groups = LinesGroups(data=new_groups)
-    amodel.add_conc_form_args(LgroupOpArgs(persist=True))
+    amodel.set_curr_conc_form_args(LgroupOpArgs(persist=True))
     return {}
 
 
@@ -1166,9 +1160,7 @@ async def get_adhoc_subcorp_size(amodel: ConcActionModel, req: KRequest, resp: K
 async def load_query_pipeline(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.QUERY_PERSISTENCE as qp:
         pipeline = await qp.load_pipeline_ops(amodel.plugin_ctx, amodel.q_code, build_conc_form_args)
-    ans = dict(ops=[dict(id=x.op_key, form_args=x.to_dict()) for x in pipeline])
-    await amodel.attach_query_overview(ans)
-    return ans
+    return dict(ops=[dict(id=x.op_key, form_args=x.to_dict()) for x in pipeline])
 
 
 @bp.route('/matching_structattr')
@@ -1227,7 +1219,7 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
 
         conc = await get_conc(
             corp=amodel.corp, user_id=req.session_get('user', 'id'), q=amodel.args.q, fromp=amodel.args.fromp,
-            pagesize=amodel.args.pagesize, asnc=False, samplesize=corpus_info.sample_size)
+            pagesize=amodel.args.pagesize, asnc=False, cutoff=self.args.cutoff)
         amodel.apply_linegroups(conc)
         kwic = Kwic(amodel.corp, amodel.args.corpname, conc)
         conc.switch_aligned(os.path.basename(amodel.args.corpname))
@@ -1280,7 +1272,7 @@ async def reduce(amodel: ConcActionModel, req: KRequest, resp: KResponse):
             'Cannot apply a random sample once a group of lines has been saved')
     qinfo = SampleFormArgs(persist=True)
     qinfo.rlines = amodel.args.rlines
-    amodel.add_conc_form_args(qinfo)
+    amodel.set_curr_conc_form_args(qinfo)
     amodel.args.q.append('r' + amodel.args.rlines)
     return await view_conc(amodel, req, resp, False, req.session_get('user', 'id'))
 

@@ -43,7 +43,6 @@ from action.response import KResponse
 from corplib.abstract import AbstractKCorpus
 from corplib.corpus import KCorpus
 from corplib.fallback import EmptyCorpus, ErrorCorpus
-from corplib.subcorpus import SubcorpusRecord
 from main_menu.model import EventTriggeringItem, MainMenu
 from plugin_types.corparch.corpus import (
     BrokenCorpusInfo, CorpusInfo, StructAttrInfo)
@@ -51,8 +50,8 @@ from texttypes.model import TextTypes
 
 T = TypeVar('T')
 
-PREFLIGHT_THRESHOLD_IPM = 5_000
-PREFLIGHT_MIN_LARGE_CORPUS = 100_000_00
+PREFLIGHT_THRESHOLD_IPM = 200_000
+PREFLIGHT_MIN_LARGE_CORPUS = 100_000_000
 
 
 class CorpusActionModel(UserActionModel):
@@ -219,14 +218,6 @@ class CorpusActionModel(UserActionModel):
 
     def clear_prev_conc_params(self):
         self._active_q_data = None
-
-    def get_curr_conc_args(self):
-        args = self.get_mapped_attrs(ConcArgsMapping)
-        if self._q_code:
-            args['q'] = f'~{self._q_code}'
-        else:
-            args['q'] = [q for q in self.args.q]
-        return args
 
     async def _check_corpus_access(self, req_args: Union[RequestArgsProxy, JSONRequestArgsProxy], action_props: ActionProps) -> Tuple[Union[str, None], str]:
         """
@@ -477,7 +468,6 @@ class CorpusActionModel(UserActionModel):
         corp_info = await self.get_corpus_info(getattr(self.args, 'corpname'))
         result['bib_conf'] = corp_info.metadata
         result['simple_query_default_attrs'] = corp_info.simple_query_default_attrs
-        result['corp_sample_size'] = corp_info.sample_size
         if corp_info.preflight_subcorpus:
             result['conc_preflight'] = dict(
                 corpname=corp_info.preflight_subcorpus.corpus_name,

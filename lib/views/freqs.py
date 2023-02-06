@@ -199,7 +199,7 @@ async def _freqs(
         user_id=req.session_get('user', 'id'),
         q=amodel.args.q,
         pagesize=amodel.args.pagesize,
-        samplesize=0,
+        cutoff=0,
         flimit=flimit,
         fcrit=fcrit,
         freq_sort=freq_sort,
@@ -338,8 +338,7 @@ async def _freqs(
     result['ctfreq_form_args'] = CTFreqFormArgs().update(amodel.args).to_dict()
     result['text_types_data'] = await amodel.tt.export_with_norms(ret_nums=True)
     result['quick_save_row_limit'] = amodel.FREQ_QUICK_SAVE_MAX_LINES
-    await amodel.attach_query_params(result)
-    await amodel.attach_query_overview(result)
+    await amodel.export_query_forms(result)
     return result
 
 
@@ -437,7 +436,7 @@ async def _freqct(amodel: ConcActionModel, req: KRequest, resp: KResponse, max_r
     )
     ans['text_types_data'] = await amodel.tt.export_with_norms(ret_nums=True)
     ans['quick_save_row_limit'] = 0
-    await amodel.attach_query_params(ans)
+    await amodel.export_query_forms(ans)
     return ans
 
 

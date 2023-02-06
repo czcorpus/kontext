@@ -20,7 +20,7 @@
 
 import logging
 import os
-from typing import Callable, List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
 import asyncio
 
 import aiofiles.os
@@ -44,27 +44,28 @@ CONC_BG_SYNC_ALIGNED_CORP_THRESHOLD = 50000000
 CONC_BG_SYNC_SINGLE_CORP_THRESHOLD = 2000000000
 
 
-async def _get_async_conc(corp, user_id, q, corp_cache_key, samplesize, minsize) -> KConc:
+async def _get_async_conc(corp, user_id, q, corp_cache_key, cutoff, minsize) -> KConc:
     """
     """
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
-    status = await cache_map.get_calc_status(corp_cache_key, q)
+    status = await cache_map.get_calc_status(corp_cache_key, q, cutoff)
     if not status or status.error:
         worker = bgcalc.calc_backend_client(settings)
         ans = await worker.send_task(
             'conc_register', object.__class__,
-            (user_id, corp.portable_ident, corp_cache_key, q, samplesize, TASK_TIME_LIMIT),
+            (user_id, corp.portable_ident, corp_cache_key, q, cutoff, TASK_TIME_LIMIT),
             time_limit=CONC_REGISTER_TASK_LIMIT)
         ans.get(timeout=CONC_REGISTER_WAIT_LIMIT)
-    conc_avail = await wait_for_conc(cache_map=cache_map, corp_cache_key=corp_cache_key, q=q, minsize=minsize)
+    conc_avail = await wait_for_conc(
+        cache_map=cache_map, corp_cache_key=corp_cache_key, q=q, cutoff=cutoff, minsize=minsize)
     if conc_avail:
-        return PyConc(corp, 'l', await cache_map.readable_cache_path(corp_cache_key, q))
+        return PyConc(corp, 'l', await cache_map.readable_cache_path(corp_cache_key, q, cutoff))
     else:
-        return InitialConc(corp, await cache_map.readable_cache_path(corp_cache_key, q))
+        return InitialConc(corp, await cache_map.readable_cache_path(corp_cache_key, q, cutoff))
 
 
 async def _get_bg_conc(
-        corp: AbstractKCorpus, user_id: int, q: Tuple[str, ...], corp_cache_key: Optional[str], samplesize: int,
+        corp: AbstractKCorpus, user_id: int, q: Tuple[str, ...], corp_cache_key: Optional[str], cutoff: int,
         calc_from: int, minsize: int) -> KConc:
     """
     arguments:
@@ -72,13 +73,13 @@ async def _get_bg_conc(
     """
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
 
-    status = await cache_map.get_calc_status(corp_cache_key, q)
+    status = await cache_map.get_calc_status(corp_cache_key, q, cutoff)
     if status and not status.finished:  # the calc is already running, the client has to wait and check regularly
         return InitialConc(corp, status.cachefile)
     # let's create cache records of the operations we'll have to perform
     if calc_from < len(q):
         for i in range(calc_from, len(q)):
-            status = await cache_map.add_to_map(corp_cache_key, q[:i + 1], ConcCacheStatus(), overwrite=True)
+            status = await cache_map.add_to_map(corp_cache_key, q[:i + 1], cutoff, ConcCacheStatus(), overwrite=True)
             # the file cannot be valid as otherwise, calc_from would be higher
             if await aiofiles.os.path.isfile(status.cachefile):
                 await del_silent(status.cachefile)
@@ -87,16 +88,17 @@ async def _get_bg_conc(
         worker = bgcalc.calc_backend_client(settings)
         await worker.send_task(
             'conc_sync_calculate', object.__class__,
-            (user_id, corp.corpname, getattr(corp, 'subcname', None), corp_cache_key, q, samplesize),
+            (user_id, corp.corpname, getattr(corp, 'subcname', None), corp_cache_key, q, cutoff),
             time_limit=TASK_TIME_LIMIT)
     # for smaller concordances/corpora there is a chance the data
     # is ready in a few seconds - let's try this:
-    conc_avail = await wait_for_conc(cache_map=cache_map, corp_cache_key=corp_cache_key, q=q, minsize=minsize)
+    conc_avail = await wait_for_conc(
+        cache_map=cache_map, corp_cache_key=corp_cache_key, q=q, cutoff=cutoff, minsize=minsize)
     if conc_avail:
-        return PyConc(corp, 'l', await cache_map.readable_cache_path(corp_cache_key, q))
+        return PyConc(corp, 'l', await cache_map.readable_cache_path(corp_cache_key, q, cutoff))
     else:
         # return empty yet unfinished concordance to make the client watch the calculation
-        return InitialConc(corp, await cache_map.readable_cache_path(corp_cache_key, q))
+        return InitialConc(corp, await cache_map.readable_cache_path(corp_cache_key, q, cutoff))
 
 
 async def _normalize_permissions(path: str):
@@ -104,7 +106,8 @@ async def _normalize_permissions(path: str):
         os.chmod(path, 0o664)
 
 
-async def _get_sync_conc(worker, corp: AbstractKCorpus, q: Tuple[str, ...], corp_cache_key: Optional[str], samplesize: int) -> PyConc:
+async def _get_sync_conc(
+        worker, corp: AbstractKCorpus, q: Tuple[str, ...], corp_cache_key: Optional[str], cutoff: int) -> PyConc:
     """
     Calculate a concordance via a provided worker. On the Manatee side,
     wait until the concordance is complete.
@@ -112,7 +115,7 @@ async def _get_sync_conc(worker, corp: AbstractKCorpus, q: Tuple[str, ...], corp
     status = worker.create_new_calc_status()
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
     try:
-        conc = worker.compute_conc(corp, q, samplesize)
+        conc = worker.compute_conc(corp, q, cutoff)
         conc.sync()  # wait for the computation to finish
         status.finished = True
         status.readable = True
@@ -120,11 +123,11 @@ async def _get_sync_conc(worker, corp: AbstractKCorpus, q: Tuple[str, ...], corp
         status.fullsize = conc.fullsize()
         status.recalc_relconcsize(corp)
         status.arf = round(conc.compute_ARF(), 2) if not corp.subcorpus_id else None
-        status = await cache_map.add_to_map(corp_cache_key, q[:1], status)
+        status = await cache_map.add_to_map(corp_cache_key, q[:1], cutoff, status)
         await _normalize_permissions(status.cachefile)  # in case the file already exists
         conc.save(status.cachefile)
         await _normalize_permissions(status.cachefile)
-        await cache_map.add_to_map(corp_cache_key, q[:1], status, overwrite=True)
+        await cache_map.add_to_map(corp_cache_key, q[:1], cutoff, status, overwrite=True)
         # update size in map file
         return conc
     except Exception as e:
@@ -135,7 +138,7 @@ async def _get_sync_conc(worker, corp: AbstractKCorpus, q: Tuple[str, ...], corp
         status.finished = True
         status.concsize = 0
         status.error = manatee_err if manatee_err else e
-        status = await cache_map.add_to_map(corp_cache_key, q[:1], status, overwrite=True)
+        status = await cache_map.add_to_map(corp_cache_key, q[:1], cutoff, status, overwrite=True)
         raise status.normalized_error
 
 
@@ -153,7 +156,7 @@ async def get_conc(
         fromp: int = 0,
         pagesize: int = 0,
         asnc: int = 0,
-        samplesize: int = 0) -> KConc:
+        cutoff: int = 0) -> KConc:
     """
     Get/calculate a concordance. The function always tries to fetch as complete
     result as possible (related to the 'q' tuple) from cache. The rest is calculated
@@ -171,7 +174,7 @@ async def get_conc(
     pagesize -- a page size (in lines, related to 'fromp')
     asnc -- if 1 then KonText spawns an asynchronous process to calculate the concordance
             and will provide results as they are ready
-    samplesize -- ?
+    cutoff -- max. concordance size (if > 0 then we work only with a respective part of possible full concordance)
     """
     if not q:
         return InitialConc(corp=corp, finished=True)
@@ -189,19 +192,19 @@ async def get_conc(
         # 2nd goes through, but it already finds an open cache entry so it 'wait_for_conc()' inside the lock
         # >= 3 cannot enter but once it can the concordance is already avail. so there is no unnecessary lag here
         # (it doesn't matter whether a coroutine waits here or in 'wait_for_conc()')
-        calc_from, conc = await find_cached_conc_base(corp, corp.cache_key, q, minsize)
+        calc_from, conc = await find_cached_conc_base(corp, q, cutoff, minsize)
     if not conc and q[0][0] == 'R':  # online sample
         q_copy = list(q)
         q_copy[0] = q[0][1:]
         q_copy = tuple(q_copy)
-        await find_cached_conc_base(corp, corp.cache_key, q_copy, -1)
+        await find_cached_conc_base(corp, q_copy, cutoff, -1)
         # TODO this branch has no use (unless we want to revive online sample func)
 
     # move mid-sized aligned corpora or large non-aligned corpora to background
     if _should_be_bg_query(corp, q, asnc):
         minsize = fromp * pagesize
         conc = await _get_bg_conc(
-            corp=corp, user_id=user_id, q=q, corp_cache_key=corp.cache_key, samplesize=samplesize,
+            corp=corp, user_id=user_id, q=q, corp_cache_key=corp.cache_key, cutoff=cutoff,
             calc_from=calc_from, minsize=minsize)
     else:
         worker = GeneralWorker()
@@ -211,32 +214,32 @@ async def get_conc(
             if asnc and len(q) == 1:
                 conc = await _get_async_conc(
                     corp=corp, user_id=user_id, q=q, corp_cache_key=corp.cache_key,
-                    samplesize=samplesize, minsize=minsize)
+                    cutoff=cutoff, minsize=minsize)
 
-            # do the calc here and return (OK for small to mid sized corpora without alignments)
+            # do the calc here and return (OK for small to mid-sized corpora without alignments)
             else:
                 conc = await _get_sync_conc(
-                    worker=worker, corp=corp, q=q, corp_cache_key=corp.cache_key, samplesize=samplesize)
+                    worker=worker, corp=corp, q=q, corp_cache_key=corp.cache_key, cutoff=cutoff)
 
         # save additional concordance actions to cache (e.g. sample)
         for act in range(calc_from, len(q)):
             command, args = q[act][0], q[act][1:]
             conc.exec_command(command, args)
             cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
-            curr_status = await cache_map.get_calc_status(corp.cache_key, q[:act + 1])
+            curr_status = await cache_map.get_calc_status(corp.cache_key, q[:act + 1], cutoff)
             if curr_status and not curr_status.finished:
                 ready = await wait_for_conc(
-                    cache_map=cache_map, corp_cache_key=corp.cache_key, q=q[:act + 1], minsize=-1)
+                    cache_map=cache_map, corp_cache_key=corp.cache_key, q=q[:act + 1], cutoff=cutoff, minsize=-1)
                 if not ready:
                     raise ConcCalculationStatusException(
                         'Wait for concordance operation failed')
             elif not curr_status:
                 calc_status = worker.create_new_calc_status()
                 calc_status.concsize = conc.size()
-                calc_status = await cache_map.add_to_map(corp.cache_key, q[:act + 1], calc_status)
+                calc_status = await cache_map.add_to_map(corp.cache_key, q[:act + 1], cutoff, calc_status)
                 conc.save(calc_status.cachefile)
                 await _normalize_permissions(calc_status.cachefile)
                 # TODO can we be sure here that conc is finished even if its not the first query op.?
                 await cache_map.update_calc_status(
-                    corp.cache_key, q[:act + 1], finished=True, readable=True, concsize=conc.size())
+                    corp.cache_key, q[:act + 1], cutoff, finished=True, readable=True, concsize=conc.size())
     return conc

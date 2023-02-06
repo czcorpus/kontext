@@ -50,7 +50,7 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
             subcpath=[],
             user_id=user_id,
             pagesize=100,
-            samplesize=0,
+            cutoff=0,
             flimit=1,
             fcrit=[fcrit],
             ftt_include_empty=0,

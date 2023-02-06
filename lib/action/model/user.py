@@ -397,7 +397,6 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
         self.configure_auth_urls(result)
         result['conc_url_ttl_days'] = None
         result['corpus_ident'] = {}
-        result['corp_sample_size'] = None
         result['Globals'] = {}
         result['base_attr'] = BaseActionModel.BASE_ATTR
         result['user_info'] = self._req.ctx.session.get('user', {'fullname': None})

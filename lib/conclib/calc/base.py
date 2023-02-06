@@ -59,7 +59,7 @@ class GeneralWorker:
     def create_new_calc_status(self) -> ConcCacheStatus:
         return ConcCacheStatus(task_id=self._task_id)
 
-    async def get_cached_conc_sizes(self, corp: AbstractKCorpus, q: Tuple[str, ...] = None) -> CachedConcSizes:
+    async def get_cached_conc_sizes(self, corp: AbstractKCorpus, q: Tuple[str, ...]=None, cutoff: int=0) -> CachedConcSizes:
         """
         Extract concordance size, ipm etc. from a concordance file (specified by provided corpus and query).
         """
@@ -69,7 +69,7 @@ class GeneralWorker:
             q = ()
         ans = CachedConcSizes()
         cache_map = self._cache_factory.get_mapping(corp)
-        status = await cache_map.get_calc_status(corp.cache_key, q)
+        status = await cache_map.get_calc_status(corp.cache_key, q, cutoff)
         if not status:
             raise ConcCalculationStatusException('Concordance calculation not found', None)
         status.check_for_errors(TASK_TIME_LIMIT)
@@ -101,11 +101,11 @@ class GeneralWorker:
             ans.arf = result_arf
         return ans
 
-    def compute_conc(self, corp: AbstractKCorpus, q: Tuple[str, ...], samplesize: int) -> PyConc:
+    def compute_conc(self, corp: AbstractKCorpus, q: Tuple[str, ...], cutoff: int) -> PyConc:
         start_time = time.time()
         q = tuple(q)
         if q[0][0] != 'R':
-            ans_conc = PyConc(corp, q[0][0], q[0][1:], samplesize)
+            ans_conc = PyConc(corp, q[0][0], q[0][1:], cutoff)
         else:
             raise NotImplementedError('Function "online sample" is not supported')
         logging.getLogger(__name__).debug(
@@ -124,14 +124,14 @@ class TaskRegistration(GeneralWorker):
             corpus_ident: Union[str, SubcorpusRecord],
             corp_cache_key: str,
             query: Tuple[str, ...],
-            samplesize: int) -> Dict[str, Any]:
+            cutoff: int) -> Dict[str, Any]:
         corpus_factory = CorpusFactory(subc_root=settings.get('corpora', 'subcorpora_dir'))
         corpus_obj = await corpus_factory.get_corpus(corpus_ident)
         cache_map = self._cache_factory.get_mapping(corpus_obj)
-        status = await cache_map.get_calc_status(corp_cache_key, query)
+        status = await cache_map.get_calc_status(corp_cache_key, query, cutoff)
         if status is None or status.error:
             status = self.create_new_calc_status()
-            status = await cache_map.add_to_map(corp_cache_key, query, status, overwrite=True)
+            status = await cache_map.add_to_map(corp_cache_key, query, cutoff, status, overwrite=True)
             already_running = False
         else:
             already_running = True
