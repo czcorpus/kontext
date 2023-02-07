@@ -53,6 +53,7 @@ class Freq2DCalcArgs:
     q: List[str]
     user_id: int
     corpname: str
+    cutoff: int
     ctminfreq: int
     ctminfreq_type: str
     fcrit: str
