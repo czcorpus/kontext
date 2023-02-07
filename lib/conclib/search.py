@@ -117,10 +117,11 @@ async def _get_sync_conc(
     try:
         conc = worker.compute_conc(corp, q, cutoff)
         conc.sync()  # wait for the computation to finish
-        status.finished = True
-        status.readable = True
-        status.concsize = conc.size()
-        status.fullsize = conc.fullsize()
+        status.update(
+            finished=True,
+            readable=True,
+            concsize=conc.size(),
+            fullsize=conc.fullsize())
         status.recalc_relconcsize(corp)
         status.arf = round(conc.compute_ARF(), 2) if not corp.subcorpus_id else None
         status = await cache_map.add_to_map(corp_cache_key, q[:1], cutoff, status)
@@ -135,9 +136,10 @@ async def _get_sync_conc(
         # here as this is performed by _get_cached_conc()
         # function in case it detects a problem.
         manatee_err = extract_manatee_error(e)
-        status.finished = True
-        status.concsize = 0
-        status.error = manatee_err if manatee_err else e
+        status.update(
+            finished=True,
+            concsize=0,
+            error=manatee_err if manatee_err else e)
         status = await cache_map.add_to_map(corp_cache_key, q[:1], cutoff, status, overwrite=True)
         raise status.normalized_error
 
