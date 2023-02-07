@@ -180,7 +180,7 @@ async def calculate_freqs_bg(args: FreqCalcArgs) -> FreqCalcResult:
     cm = corplib.CorpusFactory(subc_root=args.subcpath)
     corp = await cm.get_corpus(
         SubcorpusIdent(id=args.subcname, corpus_name=args.corpname) if args.subcname else args.corpname)
-    conc = await require_existing_conc(corp=corp, q=args.q)
+    conc = await require_existing_conc(corp=corp, q=args.q, cutoff=args.cutoff)
     return calculate_freqs_bg_sync(args, conc)
 
 
@@ -342,7 +342,7 @@ class Freq2DCalculation:
         self._corp = await cm.get_corpus(
             SubcorpusIdent(corpus_name=self._args.corpname, id=self._args.subcorpus_id) if self._args.subcorpus_id
             else self._args.corpname)
-        self._conc = await require_existing_conc(corp=self._corp, q=self._args.q)
+        self._conc = await require_existing_conc(corp=self._corp, q=self._args.q, cutoff=self._args.cutoff)
         result = self.ct_dist(
             self._args.fcrit, flimit=self._args.ctminfreq, flimit_type=self._args.ctminfreq_type,
             max_result_size=self._args.max_result_size)

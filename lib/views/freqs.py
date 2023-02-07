@@ -79,7 +79,7 @@ async def freqs(amodel: ConcActionModel, req: KRequest[GeneralFreqArgs], resp: K
     Alternatively, 'freqml', 'freqtt' actions can be used for more high-level access.
     """
     try:
-        await require_existing_conc(amodel.corp, amodel.args.q)
+        await require_existing_conc(amodel.corp, amodel.args.q, amodel.args.cutoff)
         ans = await _freqs(
             amodel,
             req,
@@ -123,7 +123,7 @@ async def shared_freqs(amodel: ConcActionModel, req: KRequest[SharedFreqArgs], r
     Alternatively, 'freqml', 'freqtt' actions can be used for more high-level access.
     """
     try:
-        await require_existing_conc(amodel.corp, amodel.args.q)
+        await require_existing_conc(amodel.corp, amodel.args.q, amodel.args.cutoff)
         ans = await _freqs(
             amodel,
             req,
@@ -374,7 +374,7 @@ async def _freqml(amodel: ConcActionModel, req: KRequest[MLFreqRequestArgs], res
     mapped_args=MLFreqRequestArgs)
 async def freqml(amodel: ConcActionModel, req: KRequest[MLFreqRequestArgs], resp: KResponse):
     try:
-        await require_existing_conc(amodel.corp, amodel.args.q)
+        await require_existing_conc(amodel.corp, amodel.args.q, amodel.args.cutoff)
         return await _freqml(amodel, req, resp)
     except ConcNotFoundException:
         amodel.go_to_restore_conc('freqml')
@@ -414,6 +414,7 @@ async def _freqct(amodel: ConcActionModel, req: KRequest, resp: KResponse, max_r
         subcorpora_dir=amodel.subcpath,
         user_id=req.session_get('user', 'id'),
         q=amodel.args.q,
+        cutoff=amodel.args.cutoff,
         ctminfreq=int(req.args.get('ctminfreq', '1')),
         ctminfreq_type=req.args.get('ctminfreq_type'),
         fcrit=f'{amodel.args.ctfcrit1} {amodel.args.ctfcrit2}',
@@ -448,7 +449,7 @@ async def freqct(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     no_anonym_acc = settings.get_bool('global', 'no_anonymous_access', False)
     max_result_size = CT_MAX_RESULT_SIZE_UNLIMITED if no_anonym_acc else CT_MAX_RESULT_SIZE_LIMITED
     try:
-        await require_existing_conc(amodel.corp, amodel.args.q)
+        await require_existing_conc(amodel.corp, amodel.args.q, amodel.args.cutoff)
         return await _freqct(amodel, req, resp, max_result_size)
     except ConcNotFoundException:
         amodel.go_to_restore_conc('freqct')

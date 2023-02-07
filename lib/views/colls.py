@@ -62,7 +62,7 @@ async def collx(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     await amodel.save_options(amodel.LOCAL_COLL_OPTIONS, amodel.args.corpname)
 
     try:
-        await require_existing_conc(amodel.corp, amodel.args.q)
+        await require_existing_conc(amodel.corp, amodel.args.q, amodel.args.cutoff)
         ans = asdict(await _collx(
             amodel, req.session_get('user', 'id'), amodel.args.collpage, amodel.args.citemsperpage))
         ans['coll_form_args'] = CollFormArgs().update(amodel.args).to_dict()
@@ -118,7 +118,7 @@ async def savecoll(amodel: ConcActionModel, req: KRequest[SavecollArgs], resp: K
     save collocations
     """
     try:
-        await require_existing_conc(amodel.corp, tuple(amodel.args.q))
+        await require_existing_conc(amodel.corp, tuple(amodel.args.q), amodel.args.cutoff)
         from_line = req.mapped_args.from_line
         # 'corp.size' below is just a safe max value for to_line
         to_line = amodel.corp.size if req.mapped_args.to_line < 0 else req.mapped_args.to_line
