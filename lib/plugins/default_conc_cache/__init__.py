@@ -37,9 +37,8 @@ from typing import Optional, Tuple, Union
 
 import aiofiles.os
 import plugins
-from corplib.corpus import KCorpus
-from plugin_types.conc_cache import (AbstractCacheMappingFactory,
-                                     AbstractConcCache, ConcCacheStatus)
+from corplib.corpus import AbstractKCorpus
+from plugin_types.conc_cache import (AbstractCacheMappingFactory, AbstractConcCache, ConcCacheStatus)
 from plugin_types.general_storage import KeyValueStorage
 from plugins import inject
 
@@ -72,10 +71,13 @@ class DefaultCacheMapping(AbstractConcCache):
 
     KEY_TEMPLATE = 'conc_cache:{}'
 
-    def __init__(self, cache_dir: str, corpus: KCorpus, db: KeyValueStorage):
+    DEBUG_KEY_TEMPLATE = 'conc_cache:debug:{}'
+
+    def __init__(self, cache_dir: str, corpus: AbstractKCorpus, db: KeyValueStorage, is_debug: bool):
         self._cache_root_dir = cache_dir
         self._corpus = corpus
         self._db = db
+        self._is_debug = is_debug
 
     async def _get_entry(self, corp_cache_key, q, cutoff) -> Union[ConcCacheStatus, None]:
         val = await self._db.hash_get(self._mk_key(), _uniqname(corp_cache_key, q, cutoff))
@@ -84,10 +86,19 @@ class DefaultCacheMapping(AbstractConcCache):
         return None
 
     async def _set_entry(self, corp_cache_key, q, cutoff, data: ConcCacheStatus):
-        await self._db.hash_set(self._mk_key(), _uniqname(corp_cache_key, q, cutoff), data.to_dict())
+        to_write = data.to_dict()
+        if self._is_debug:
+            await self._db.hash_set(
+                self._mk_debug_key(),
+                _uniqname(corp_cache_key, q, cutoff),
+                dict(corpus=corp_cache_key, q=q, cutoff=cutoff))
+        await self._db.hash_set(self._mk_key(), _uniqname(corp_cache_key, q, cutoff), to_write)
 
     def _mk_key(self) -> str:
         return DefaultCacheMapping.KEY_TEMPLATE.format(self._corpus.corpname.lower())
+
+    def _mk_debug_key(self) -> str:
+        return DefaultCacheMapping.DEBUG_KEY_TEMPLATE.format(self._corpus.corpname.lower())
 
     async def get_stored_calc_status(
             self, corp_cache_key: Optional[str], q: Tuple[str, ...], cutoff: int) -> Union[ConcCacheStatus, None]:
@@ -139,6 +150,8 @@ class DefaultCacheMapping(AbstractConcCache):
             await self._set_entry(corp_cache_key, query, cutoff, stored_data)
 
     async def del_entry(self, corp_cache_key, q, cutoff):
+        if self._is_debug:
+            await self._db.hash_del(self._mk_debug_key(), _uniqname(corp_cache_key, q, cutoff))
         await self._db.hash_del(self._mk_key(), _uniqname(corp_cache_key, q, cutoff))
 
     async def del_full_entry(self, corp_cache_key, q, cutoff):
@@ -148,12 +161,16 @@ class DefaultCacheMapping(AbstractConcCache):
                     logging.getLogger(__name__).warning(
                         'Removed unsupported conc cache value: {}'.format(stored))
                     await self._db.hash_del(self._mk_key(), k)
+                    if self._is_debug:
+                        await self._db.hash_del(self._mk_debug_key(), k)
                 else:
                     status = ConcCacheStatus.from_storage(**stored)
                     if _uniqname(corp_cache_key, q[:1], cutoff) == status.q0hash:
                         # original record's key must be used (k ~ entry_key match can be partial)
                         # must use direct access here (no del_entry())
                         await self._db.hash_del(self._mk_key(), k)
+                        if self._is_debug:
+                            await self._db.hash_del(self._mk_debug_key(), k)
 
 
 class CacheMappingFactory(AbstractCacheMappingFactory):
@@ -163,12 +180,13 @@ class CacheMappingFactory(AbstractCacheMappingFactory):
     cache-control object.
     """
 
-    def __init__(self, cache_dir: str, db: KeyValueStorage):
+    def __init__(self, cache_dir: str, db: KeyValueStorage, is_debug: bool):
         self._cache_dir = cache_dir
         self._db = db
+        self._is_debug = is_debug
 
     def get_mapping(self, corpus):
-        return DefaultCacheMapping(self._cache_dir, corpus, self._db)
+        return DefaultCacheMapping(self._cache_dir, corpus, self._db, self._is_debug)
 
     def export_tasks(self):
         """
@@ -196,15 +214,18 @@ class CacheMappingFactory(AbstractCacheMappingFactory):
             elastic_conf -- a tuple (URL, index, type) containing ElasticSearch server, index and document type
                             configuration for storing monitoring info; if None then the function is disabled
             """
-            return await run_monitor(root_dir=self._cache_dir, db_plugin=self._db,
-                                     entry_key_gen=lambda c: DefaultCacheMapping.KEY_TEMPLATE.format(
-                                         c),
-                                     min_file_age=min_file_age, free_capacity_goal=free_capacity_goal,
-                                     free_capacity_trigger=free_capacity_trigger, elastic_conf=elastic_conf)
+            return await run_monitor(
+                root_dir=self._cache_dir, db_plugin=self._db,
+                entry_key_gen=lambda c: DefaultCacheMapping.KEY_TEMPLATE.format(c),
+                min_file_age=min_file_age, free_capacity_goal=free_capacity_goal,
+                free_capacity_trigger=free_capacity_trigger, elastic_conf=elastic_conf)
 
         return conc_cache_cleanup, conc_cache_monitor
 
 
 @inject(plugins.runtime.DB)
 def create_instance(settings, db):
-    return CacheMappingFactory(cache_dir=settings.get('plugins', 'conc_cache')['cache_dir'], db=db)
+    return CacheMappingFactory(
+        cache_dir=settings.get('plugins', 'conc_cache')['cache_dir'],
+        db=db,
+        is_debug=settings.get_bool('global', 'debug'))

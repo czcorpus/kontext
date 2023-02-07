@@ -29,7 +29,7 @@ import importlib
 import logging
 import os
 import time
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, InitVar
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from corplib.corpus import AbstractKCorpus
@@ -53,7 +53,8 @@ class ConcCacheStatus:
     fullsize: int = field(default=0)
     relconcsize: float = field(default=0)
     arf: float = field(default=0)
-    error: Union[Exception, str, None] = field(default=None)
+    error: InitVar[Optional[List[str]]] = field(default=None)
+    _error: Optional[Exception] = field(default=None, init=False)
     finished: bool = field(default=False)
     q0hash: Optional[str] = field(default=None)
     cachefile: Optional[str] = field(default=None)
@@ -61,6 +62,9 @@ class ConcCacheStatus:
     pid: int = field(default_factory=lambda: os.getpid())
     created: int = field(default_factory=lambda: int(time.time()))
     last_upd: int = field(default_factory=lambda: int(time.time()))
+
+    def __post_init__(self, error: Optional[List[str]]):
+        self._error = ConcCacheStatus.deserialize_error(error)
 
     def recalc_relconcsize(self, corp: AbstractKCorpus):
         """
@@ -73,24 +77,17 @@ class ConcCacheStatus:
             self.relconcsize = 1000000.0 * self.concsize / corp.search_size
 
     @staticmethod
-    def from_storage(
-            task_id: Optional[str] = None, pid: Optional[int] = None, created: Optional[int] = None,
-            last_upd: Optional[int] = None, concsize: Optional[int] = 0, fullsize: Optional[int] = 0,
-            relconcsize: Optional[int] = 0, arf: Optional[float] = 0,
-            error: Optional[List[str]] = None, finished: Optional[bool] = False,
-            q0hash: str = None, cachefile: str = None, readable: bool = False):
-        return ConcCacheStatus(
-            task_id=task_id, pid=pid, created=created, last_upd=last_upd, concsize=concsize, fullsize=fullsize,
-            relconcsize=relconcsize, arf=arf, error=ConcCacheStatus.deserialize_error(error),
-            finished=finished, q0hash=q0hash, cachefile=cachefile, readable=readable)
+    def from_storage(**kw):
+        return ConcCacheStatus(**kw)
 
     @property
     def normalized_error(self):
-        return ConcCacheStatus.normalize_error(self.error)
+        return ConcCacheStatus.normalize_error(self._error)
 
     def to_dict(self) -> Dict[str, Any]:
         ans = asdict(self)
         ans['error'] = ConcCacheStatus.serialize_error(self.normalized_error)
+        del ans['_error']
         return ans
 
     def check_for_errors(self, time_limit: int):
@@ -104,7 +101,7 @@ class ConcCacheStatus:
                 'ConcCacheStatus.test_error - self.error set but self.finished is False - fixing')
         t1 = time.time()
         if not self.finished and t1 - self.last_upd > time_limit:
-            self.error = ConcCacheStatusException(
+            self._error = ConcCacheStatusException(
                 f'Wait limit for initial data exceeded (waited {t1 - self.last_upd} '
                 f', limit: {time_limit})')
             self.finished = True
@@ -118,7 +115,7 @@ class ConcCacheStatus:
         self.fullsize = kw.get('fullsize', self.fullsize)
         self.relconcsize = kw.get('relconcsize', self.relconcsize)
         self.arf = kw.get('arf', self.arf)
-        self.error = kw.get('error', self.error)
+        self._error = kw.get('error', self._error)
         self.finished = kw.get('finished', self.finished)
         self.q0hash = kw.get('q0hash', self.q0hash)
         self.cachefile = kw.get('cachefile', self.cachefile)
