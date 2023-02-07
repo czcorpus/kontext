@@ -84,6 +84,10 @@ class ConcCacheStatus:
     def normalized_error(self):
         return ConcCacheStatus.normalize_error(self._error)
 
+    @property
+    def error(self):
+        return self._error
+
     def to_dict(self) -> Dict[str, Any]:
         ans = asdict(self)
         ans['error'] = ConcCacheStatus.serialize_error(self.normalized_error)
