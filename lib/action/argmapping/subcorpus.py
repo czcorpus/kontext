@@ -59,7 +59,7 @@ class CreateSubcorpusArgs(_SubcGenerateArgsBase):
 
     usesubcorp: Optional[str] = None
 
-    size: Optional[int] = None
+    size: Optional[int] = 0
     """
     the 'size' argument is used to provide an informative value when storing a draft subcorpus; 
     i.e. it has no effect on actual subcorpus size
