@@ -87,7 +87,6 @@ async def check_tasks_status(req: Request, ws: Websocket):
 
     tasks = {t.ident: t for t in (await _check_tasks_status(amodel, req, None))}
     await ws.send(json.dumps([v.to_dict() for v in tasks.values()]))
-    watched_tasks = [x for x in watched_tasks if x in tasks]  # TODO remove?
     while watched_tasks:
         await asyncio.sleep(WEBSOCKET_TASK_CHECK_INTERVAL)
         changed = []
