@@ -324,9 +324,9 @@ export const QuickSubcLABEL = styled.label`
     }
 `
 
-// ----------------- <QuickSubcForm /> ----------------------------------------
+// ----------------- <QuickSubcFieldset /> ----------------------------------------
 
-export const QuickSubcForm = styled.form`
+export const QuickSubcFieldset = styled.fieldset`
     display: flex;
     flex-direction: column;
 

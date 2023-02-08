@@ -65,13 +65,6 @@ export function init({ dispatcher, he, quickSubcorpModel }: QuickSubcorpWidgetAr
             });
         };
 
-        const changeGotoSubcorp = (e:React.ChangeEvent<HTMLInputElement>) => {
-            dispatcher.dispatch(
-                Actions.QuickSubcorpSetGoToSubcPageWhenDone,
-                {value: e.currentTarget.checked}
-            )
-        }
-
         const submitAction = () => {
             if (props.subcname) {
                 dispatcher.dispatch<typeof Actions.QuickSubcorpSubmit>({
@@ -91,7 +84,7 @@ export function init({ dispatcher, he, quickSubcorpModel }: QuickSubcorpWidgetAr
             <layoutViews.ModalOverlay onCloseKey={props.onClose}>
                 <layoutViews.CloseableFrame onCloseClick={props.onClose}
                         label={he.translate('subc__quick_subcorpus_form_hd')} scrollable={true}>
-                    <S.QuickSubcForm>
+                    <S.QuickSubcFieldset>
                         {props.estimatedSubcSize ?
                             <p>{he.translate('global__size_in_tokens')}: <strong>{he.formatNumber(props.estimatedSubcSize)}</strong></p> :
                             null}
@@ -102,10 +95,6 @@ export function init({ dispatcher, he, quickSubcorpModel }: QuickSubcorpWidgetAr
                                 onKeyPress={keyPressHandler}
                                 ref={inputRef} />
                         </S.QuickSubcLABEL>
-                        <label>
-                            {he.translate('subc__quick_subc_what_to_do_when_saved')}
-                            <input type="checkbox" checked={props.goToSubcPageWhenDone} onChange={changeGotoSubcorp} />
-                        </label>
                         <div className="submit-section">
                             {props.isBusy ?
                                 <layoutViews.AjaxLoaderBarImage /> :
@@ -114,7 +103,7 @@ export function init({ dispatcher, he, quickSubcorpModel }: QuickSubcorpWidgetAr
                                 </button>
                             }
                         </div>
-                    </S.QuickSubcForm>
+                    </S.QuickSubcFieldset>
                 </layoutViews.CloseableFrame>
             </layoutViews.ModalOverlay>
         );

@@ -52,7 +52,6 @@ async def properties(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     struct_and_attrs = await amodel.get_structs_and_attrs()
     with plugins.runtime.SUBC_STORAGE as sr:
         info = await sr.get_info(corp_ident.id)
-    live_attrs_enabled = False
     with plugins.runtime.LIVE_ATTRIBUTES as la:
         live_attrs_enabled = info.text_types is not None and await la.is_enabled_for(amodel.plugin_ctx, [corp_ident.corpus_name])
     return {

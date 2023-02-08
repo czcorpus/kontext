@@ -138,6 +138,7 @@ interface SubmitBase {
 export interface CreateSubcorpusArgs extends SubmitBase {
     text_types:TextTypes.ExportedSelection;
     aligned_corpora:Array<string>;
+    size?:number;
     usesubcorp?:string; // if used then we expect the referred subc. to be a draft (= mutable subc.)
     form_type:'tt-sel';
 }
