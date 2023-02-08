@@ -154,7 +154,13 @@ class SubcorpusActionModel(CorpusActionModel):
         with plugins.runtime.SUBC_STORAGE as sr:
             if not usesubcorp:
                 subc_id = await create_new_subc_ident(self.subcpath, self.corp.corpname)
-                await sr.create(ident=subc_id.id, author=self.plugin_ctx.user_dict, size=0, public_description=specification.description, data=specification, is_draft=True)
+                await sr.create(
+                    ident=subc_id.id,
+                    author=self.plugin_ctx.user_dict,
+                    size=specification.size,
+                    public_description=specification.description,
+                    data=specification,
+                    is_draft=True)
                 return dict(subc_id=asdict(subc_id))
             else:
                 await sr.update_draft(ident=usesubcorp, author=self.plugin_ctx.user_dict, size=0, public_description=specification.description, data=specification)

@@ -137,7 +137,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                     name: TTActions.LockSelected.name
                 });
 
-                this.suspend({}, (action, syncData) => {
+                this.waitForAction({}, (action, syncData) => {
                     return action.name === PluginInterfaces.LiveAttributes.Actions.RefineReady.name ?
                         null : syncData;
 

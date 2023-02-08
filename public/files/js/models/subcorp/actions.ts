@@ -327,12 +327,6 @@ export class Actions {
         name: 'QUICK_SUBCORP_CHANGE_NAME'
     };
 
-    static QuickSubcorpSetGoToSubcPageWhenDone:Action<{
-        value:boolean;
-    }> = {
-        name: 'QUICK_SUBCORP_SET_GO_TO_SUBC_PAGE_WHEN_DONE'
-    };
-
     static ToggleSelectLine:Action<{
         selectId:string;
     }> = {

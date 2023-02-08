@@ -52,9 +52,18 @@ class CreateSubcorpusArgs(_SubcGenerateArgsBase):
         text_types_cql: a CQL representation of the selection in 'text_types'
 
     """
+
     text_types: TextTypesType
+
     text_types_cql: Optional[str] = None
+
     usesubcorp: Optional[str] = None
+
+    size: Optional[int] = None
+    """
+    the 'size' argument is used to provide an informative value when storing a draft subcorpus; 
+    i.e. it has no effect on actual subcorpus size
+    """
 
 
 @dataclass
