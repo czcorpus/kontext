@@ -57,11 +57,13 @@ export interface SubcorpListItem {
 
 
 export interface UnfinishedSubcorp {
-    ident:string;
+    subcorpusId?:string;
     name:string;
+    taskId:string;
     corpusName:string;
     created:Date;
-    failed:boolean;
+    finished:boolean;
+    error?:Error;
 }
 
 
@@ -87,7 +89,6 @@ export interface SubcorpListModelState {
     filter:SubcListFilter;
     isBusy:boolean;
     editWindowSubcorpus:currSubcorpusProps|null;
-    finishedTasks:{[taskId:string]:boolean};
     totalPages:number;
     selectedItems:Array<string>;
 }
@@ -138,7 +139,6 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                     },
                 editWindowSubcorpus: null,
                 isBusy: false,
-                finishedTasks: {},
                 totalPages: layoutModel.getConf<number>('SubcTotalPages'),
                 userId: layoutModel.getConf<number>('userId'),
                 selectedItems: [],
@@ -182,34 +182,39 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             }
         });
 
-        this.layoutModel.addOnAsyncTaskUpdate(itemList => {
-            const subcTasks = itemList.filter(item => item.category === 'subcorpus');
-            if (subcTasks.length > 0) {
-                List.forEach(
-                    task => {
-                        if (task.status === 'FAILURE') {
-                            if (!this.state.finishedTasks[task.ident]) {
-                                this.layoutModel.showMessage('error',
-                                    this.layoutModel.translate('task__type_subcorpus_failed_{subc}',
-                                    {subc: task.label}));
-                                this.changeState(state => {
-                                    state.finishedTasks[task.ident] = true;
-                                });
-                            }
+        this.DEBUG_logActions({})
 
-                        } else {
-                            if (!this.state.finishedTasks[task.ident]) {
-                                this.layoutModel.showMessage('info',
-                                this.layoutModel.translate('task__type_subcorpus_done_{subc}',
-                                    {subc: task.label}));
-                                this.changeState(state => {
-                                    state.finishedTasks[task.ident] = true;
-                                });
-                            }
-                        }
-                    },
-                    subcTasks
+        this.layoutModel.addOnAsyncTaskUpdate(itemList => {
+            console.log('subc list informed about async task change: ', itemList)
+            console.log('this.state.unfinished: ', this.state.unfinished);
+            const subcTasks = itemList.filter(item => item.category === 'subcorpus');
+            console.log('subctasks len: ', List.size(subcTasks))
+            if (subcTasks.length > 0) {
+                this.changeState(
+                    state => {
+                        List.forEach(
+                            task => {
+                                const lastStatus = this.updateProcessedSubcorp(state, task);
+                                console.log('last status: ', lastStatus)
+                                if (!lastStatus) {
+                                    throw new Error('unknown task for subc'); // TODO !!!
+
+                                } else if (lastStatus.error) {
+                                    this.layoutModel.showMessage('error',
+                                        this.layoutModel.translate('task__type_subcorpus_failed_{subc}',
+                                        {subc: task.label}));
+
+                                } else if (lastStatus.finished) {
+                                        this.layoutModel.showMessage('info',
+                                        this.layoutModel.translate('task__type_subcorpus_done_{subc}',
+                                            {subc: task.label}));
+                                }
+                            },
+                            subcTasks
+                        );
+                    }
                 );
+                /* TODO this causes the "pending error"
                 this.reloadItems().subscribe({
                     next: data => {
                         this.emitChange();
@@ -219,8 +224,30 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                         this.layoutModel.showMessage('error', error);
                     }
                 });
+                */
             }
         });
+
+        this.addActionHandler(
+            Actions.AttachTaskToSubcorpus,
+            action => {
+                const srchIdx = List.findIndex(
+                    x => x.subcorpusId === action.payload.subcorpusId,
+                    this.state.unfinished
+                );
+                this.changeState(
+                    state => {
+                        if (srchIdx > -1) {
+                            state.unfinished[srchIdx].taskId = action.payload.taskId;
+
+                        } else {
+                            // TODO add new subc. task here
+                        }
+                    }
+                );
+                console.log('task attached to subcorpus: ', action.payload);
+            }
+        )
 
         this.addActionHandler(
             Actions.SortLines,
@@ -476,18 +503,39 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         );
     }
 
+    private getUnfinishedSubcByTask(taskId:string):UnfinishedSubcorp|undefined {
+        return List.find(
+            x => x.taskId === taskId,
+            this.state.unfinished
+        );
+    }
+
+    private updateProcessedSubcorp(
+        state:SubcorpListModelState,
+        task:Kontext.AsyncTaskInfo
+    ):UnfinishedSubcorp|undefined {
+        const srchIdx = List.findIndex(x => x.taskId === task.ident, this.state.unfinished);
+        if (srchIdx > -1) {
+            state.unfinished[srchIdx] = List.head(this.importProcessed([task]));
+            return state.unfinished[srchIdx];
+        }
+        return undefined;
+    }
+
     private importProcessed(data:Array<Kontext.AsyncTaskInfo>):Array<UnfinishedSubcorp> {
         return pipe(
             data,
             List.filter(v => v.status !== 'SUCCESS'),
             List.map(item => ({
-                ident: item.ident,
+                taskId: item.ident,
+                subcorpusId: item.args['usesubcorp'],
                 name: item.label,
                 corpusName: item.args['corpname'],
                 created: new Date(item.created * 1000),
-                failed: item.status === 'FAILURE'
+                error: item.status === 'FAILURE' ? new Error(item.error) : undefined,
+                finished: item.status === 'FAILURE' || item.status === 'SUCCESS'
             }))
-        )
+        );
     }
 
     private sortItems(name:string, reverse:boolean, page:string, pattern:string):Observable<SubcorpList> {

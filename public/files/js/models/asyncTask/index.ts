@@ -332,7 +332,7 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                 List.filter(v => !Dict.hasValue(v.category, DownloadType)),
                 List.map(item => item.ident),
             );
-            const [_, statusSocket] = this.pageModel.openWebSocket<undefined, Array<Kontext.AsyncTaskInfo>>(
+            const [,statusSocket] = this.pageModel.openWebSocket<undefined, Array<Kontext.AsyncTaskInfo>>(
                 this.pageModel.createActionUrl<{taskId: Array<string>}>(
                     'ws/task_status',
                     {taskId: tasks},

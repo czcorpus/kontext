@@ -68,7 +68,6 @@ class CreateSubcorpusTask(object):
                 'Sync. called conc. file not created (path: {})'.format(path))
             time.sleep(5)
         os.chmod(path, 0o664)
-
         with plugins.runtime.SUBC_STORAGE as sr:
             await sr.create(
                 ident=subcorpus_id.id,

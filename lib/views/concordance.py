@@ -210,6 +210,8 @@ async def query_submit(amodel: ConcActionModel, req: KRequest, resp: KResponse):
             raise ex
     ans['conc_args'] = amodel.get_mapped_attrs(ConcArgsMapping)
     ans['conc_args']['cutoff'] = amodel.args.cutoff
+    url = req.create_url('view', ans['conc_args'])
+    resp.set_header('Location', url)
     return ans
 
 

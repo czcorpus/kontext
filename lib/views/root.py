@@ -50,10 +50,11 @@ async def _check_tasks_status(amodel: UserActionModel, req: KRequest, resp: KRes
             if r:
                 at.status = r.status
                 if at.status == 'FAILURE':
+                    r.get(timeout=2)
                     if hasattr(r.result, 'message'):
                         at.error = r.result.message
                     else:
-                        at.error = str(r.result)
+                        at.error = r.result.__class__.__name__
             else:
                 at.status = 'FAILURE'
                 at.error = 'job not found'

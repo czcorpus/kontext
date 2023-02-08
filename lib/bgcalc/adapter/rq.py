@@ -84,6 +84,8 @@ class ResultWrapper(AbstractResultWrapper[T]):
                     self.result = Exception(f'Task result timeout: {self._job}')
                     break
                 total_time += 0.5
+            import logging
+            logging.getLogger(__name__).warning('>>>>>>>> SELF>RESULT: {}'.format(self.result))
         except Exception as e:
             self.result = e
         return self.result
