@@ -69,6 +69,26 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
         super(dispatcher, initialState);
         this.layoutModel = layoutModel;
 
+        this.layoutModel.addOnAsyncTaskUpdate(itemList => {
+            console.log(itemList);
+
+            const subcTasks = itemList.filter(item =>
+                item.category === 'subcorpus' &&
+                item.status === 'SUCCESS' &&
+                item.args['corpname'] === initialState.data.corpname &&
+                item.args['subcname'] === initialState.data.name
+            );
+            if (subcTasks.length > 0) {
+                this.layoutModel.dispatcher.dispatch(
+                    Actions.LoadSubcorpus,
+                    {
+                        corpname: initialState.data.corpname,
+                        subcname: initialState.data.usesubcorp,
+                    }
+                );
+            }
+        });
+
         this.addActionHandler(
             Actions.LoadSubcorpus,
             (state, action) => {
