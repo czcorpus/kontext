@@ -83,7 +83,7 @@ interface currSubcorpusProps {
 export interface SubcorpListModelState {
     userId:number;
     lines:Array<SubcorpListItem>;
-    unfinished:Array<UnfinishedSubcorp>;
+    processedItems:Array<UnfinishedSubcorp>;
     relatedCorpora:Array<string>;
     sortKey:SortKey;
     filter:SubcListFilter;
@@ -125,7 +125,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             dispatcher,
             {
                 lines: [],
-                unfinished: [],
+                processedItems: [],
                 relatedCorpora,
                 sortKey,
                 filter: initialFilter ?
@@ -148,7 +148,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         this.layoutModel.getHistory().replaceState('subcorpus/list', {});
         this.changeState(state => {
             state.lines = this.importAndProcessServerSubcList(data);
-            state.unfinished = this.importProcessed(unfinished);
+            state.processedItems = this.importProcessed(unfinished);
         })
 
         this.filterSubject$ = new Subject();
@@ -182,20 +182,14 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             }
         });
 
-        this.DEBUG_logActions({})
-
         this.layoutModel.addOnAsyncTaskUpdate(itemList => {
-            console.log('subc list informed about async task change: ', itemList)
-            console.log('this.state.unfinished: ', this.state.unfinished);
             const subcTasks = itemList.filter(item => item.category === 'subcorpus');
-            console.log('subctasks len: ', List.size(subcTasks))
             if (subcTasks.length > 0) {
                 this.changeState(
                     state => {
                         List.forEach(
                             task => {
                                 const lastStatus = this.updateProcessedSubcorp(state, task);
-                                console.log('last status: ', lastStatus)
                                 if (!lastStatus) {
                                     throw new Error('unknown task for subc'); // TODO !!!
 
@@ -214,7 +208,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                         );
                     }
                 );
-                /* TODO this causes the "pending error"
+                /* TODO this causes the "pending error" */
                 this.reloadItems().subscribe({
                     next: data => {
                         this.emitChange();
@@ -224,7 +218,6 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                         this.layoutModel.showMessage('error', error);
                     }
                 });
-                */
             }
         });
 
@@ -233,19 +226,18 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             action => {
                 const srchIdx = List.findIndex(
                     x => x.subcorpusId === action.payload.subcorpusId,
-                    this.state.unfinished
+                    this.state.processedItems
                 );
                 this.changeState(
                     state => {
                         if (srchIdx > -1) {
-                            state.unfinished[srchIdx].taskId = action.payload.taskId;
+                            state.processedItems[srchIdx].taskId = action.payload.taskId;
 
                         } else {
                             // TODO add new subc. task here
                         }
                     }
                 );
-                console.log('task attached to subcorpus: ', action.payload);
             }
         )
 
@@ -506,18 +498,24 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
     private getUnfinishedSubcByTask(taskId:string):UnfinishedSubcorp|undefined {
         return List.find(
             x => x.taskId === taskId,
-            this.state.unfinished
+            this.state.processedItems
         );
     }
 
+    /**
+     * Based on task attachments in state.processedItems,
+     * use provided 'task' to update respective item and return
+     * the new value. In case there is nothing to update,
+     * return undefined.
+     */
     private updateProcessedSubcorp(
         state:SubcorpListModelState,
         task:Kontext.AsyncTaskInfo
     ):UnfinishedSubcorp|undefined {
-        const srchIdx = List.findIndex(x => x.taskId === task.ident, this.state.unfinished);
+        const srchIdx = List.findIndex(x => x.taskId === task.ident, this.state.processedItems);
         if (srchIdx > -1) {
-            state.unfinished[srchIdx] = List.head(this.importProcessed([task]));
-            return state.unfinished[srchIdx];
+            state.processedItems[srchIdx] = List.head(this.importProcessed([task]));
+            return state.processedItems[srchIdx];
         }
         return undefined;
     }
@@ -556,7 +554,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             tap((data) => {
                 this.changeState(state => {
                     state.lines = this.importAndProcessServerSubcList(data.subcorp_list);
-                    state.unfinished = this.importProcessed(data.processed_subc);
+                    state.processedItems = this.importProcessed(data.processed_subc);
                     state.relatedCorpora = data.related_corpora;
                     state.totalPages = data.total_pages;
                     state.sortKey = {
@@ -606,7 +604,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             tap((data) => {
                 this.changeState(state => {
                     state.lines = this.importAndProcessServerSubcList(data.subcorp_list);
-                    state.unfinished = this.importProcessed(data.processed_subc);
+                    state.processedItems = this.importProcessed(data.processed_subc);
                     state.relatedCorpora = data.related_corpora;
                     state.totalPages = data.total_pages;
                     state.isBusy = false;

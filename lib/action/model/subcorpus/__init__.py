@@ -132,16 +132,17 @@ class SubcorpusActionModel(CorpusActionModel):
                 object.__class__,
                 (author, specification, subc_id, full_path),
                 time_limit=self.TASK_TIME_LIMIT)
-            self.store_async_task(AsyncTaskStatus(
+            await self.store_async_task(AsyncTaskStatus(
                 status=res.status, ident=res.id, category=AsyncTaskStatus.CATEGORY_SUBCORPUS,
                 label=f'{self.args.corpname}/{specification.subcname}',
                 args=dict(
                     subcname=specification.subcname,
                     corpname=self.args.corpname,
+                    usesubcorp=subc_id.id
                 )))
 
-        unfinished_corpora = [at for at in self.get_async_tasks(
-            category=AsyncTaskStatus.CATEGORY_SUBCORPUS) if not at.is_finished()]
+        unfinished_corpora = [at for at in (await self.get_async_tasks(
+            category=AsyncTaskStatus.CATEGORY_SUBCORPUS)) if not at.is_finished()]
         return dict(processed_subc=[uc.to_dict() for uc in unfinished_corpora])
 
     async def create_subcorpus_draft(self):

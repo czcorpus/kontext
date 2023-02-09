@@ -81,24 +81,16 @@ async def _prepare_websocket_amodel(req: Request, ws: Websocket, amodel: Type[T]
 @bp.websocket('/task_status')
 async def check_tasks_status(req: Request, ws: Websocket):
     amodel = await _prepare_websocket_amodel(req, ws, UserActionModel, 1)
-    watched_tasks = req.args.get('taskId')
-    if not watched_tasks:
+    task_id = req.args.get('taskId')
+    if not task_id:
         await ws.close(code=1007, reason='Missing `taskId` parameter.')
 
-    tasks = {t.ident: t for t in (await _check_tasks_status(amodel, req, None))}
-    await ws.send(json.dumps([v.to_dict() for v in tasks.values()]))
-    while watched_tasks:
+    task = await _check_tasks_status(amodel, task_id)
+    await ws.send(json.dumps(task.to_dict()))
+    while not task.is_finished():
         await asyncio.sleep(WEBSOCKET_TASK_CHECK_INTERVAL)
-        changed = []
-        for t in await _check_tasks_status(amodel, req, None):
-            # AsyncTaskStatus has defined __eq__ method to check change
-            if t.ident in watched_tasks and (t.ident not in tasks or t != tasks[t.ident]):
-                tasks[t.ident] = t
-                changed.append(t.to_dict())
-                if t.is_finished():
-                    watched_tasks = [x for x in watched_tasks if x != t.ident]
-        if changed:
-            await ws.send(json.dumps(changed))
+        task = await _check_tasks_status(amodel, task_id)
+        await ws.send(json.dumps(task.to_dict()))
 
 
 @bp.websocket('/conc_cache_status')

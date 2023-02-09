@@ -39,38 +39,17 @@ async def root_action(amodel: BaseActionModel, req: KRequest, resp: KResponse):
     raise ImmediateRedirectException(req.create_url('query', {}))
 
 
-async def _check_tasks_status(amodel: UserActionModel, req: KRequest, resp: KResponse) -> List[AsyncTaskStatus]:
-    backend = settings.get('calc_backend', 'type')
-    if backend in ('celery', 'rq'):
-        worker = bgcalc.calc_backend_client(settings)
-        at_list = amodel.get_async_tasks()
-        upd_list: List[AsyncTaskStatus] = []
-        for at in at_list:
-            r = worker.AsyncResult(at.ident)
-            if r:
-                at.status = r.status
-                if at.status == 'FAILURE':
-                    r.get(timeout=2)
-                    if hasattr(r.result, 'message'):
-                        at.error = r.result.message
-                    else:
-                        at.error = r.result.__class__.__name__
-            else:
-                at.status = 'FAILURE'
-                at.error = 'job not found'
-            upd_list.append(at)
-        amodel.mark_timeouted_tasks(*upd_list)
-        amodel.set_async_tasks(upd_list)
-        return upd_list
-    else:
-        raise FunctionNotSupported(f'Backend {backend} does not support status checking')
+async def _check_tasks_status(amodel: UserActionModel, task_id: str) -> AsyncTaskStatus:
+    task = AsyncTaskStatus(ident=task_id, label='', status='PENDING', category='')
+    await amodel.update_async_task_status(task)
+    return task
 
 
 @bp.route('/check_tasks_status')
 @http_action(return_type='json', action_model=UserActionModel)
 async def check_tasks_status(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
-    tasks = await _check_tasks_status(amodel, req, resp)
-    return dict(data=[t.to_dict() for t in tasks])
+    task = await _check_tasks_status(amodel, req.args.get('task_id'))
+    return dict(data=[task])
 
 
 @bp.route('/get_task_result')
@@ -85,9 +64,8 @@ async def get_task_result(amodel: BaseActionModel, req: KRequest, resp: KRespons
 @http_action(return_type='json', action_model=UserActionModel)
 async def remove_task_info(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
     task_ids = req.form_getlist('tasks')
-    amodel.set_async_tasks([x for x in amodel.get_async_tasks() if x.ident not in task_ids])
-    tasks = await _check_tasks_status(amodel, req, resp)
-    return dict(data=[t.to_dict() for t in tasks])
+    amodel.set_async_tasks([x for x in (await amodel.get_async_tasks()) if x.ident not in task_ids])
+    return dict(data=[t.to_dict() for t in (await amodel.get_async_tasks())])
 
 
 @bp.route('/compatibility')

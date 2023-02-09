@@ -257,7 +257,6 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
         handleOkButtonClick:(evt:React.MouseEvent<{}>)=>void;
 
     }> = (props) => {
-
         return (
             <layoutViews.ModalOverlay onCloseKey={props.closeClickHandler}>
                 <layoutViews.PopupBox onCloseClick={props.closeClickHandler} customClass="async-task-list">

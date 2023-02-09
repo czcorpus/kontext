@@ -385,7 +385,6 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
         ).pipe(
             tap((data) => {
                 data.processed_subc.forEach(item => {
-                    console.log('>>> data: ', data)
                     this.layoutModel.registerTask({
                         ident: item.ident,
                         label: item.label,

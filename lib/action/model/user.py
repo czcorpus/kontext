@@ -25,7 +25,7 @@ import plugins
 import scheduled
 import settings
 from action.argmapping import UserActionArgs
-from action.errors import UserReadableException
+from action.errors import UserReadableException, FunctionNotSupported
 from action.krequest import KRequest
 from action.model import ModelsSharedData
 from action.model.abstract import AbstractUserModel
@@ -33,6 +33,7 @@ from action.model.base import BaseActionModel, BasePluginCtx
 from action.plugin.ctx import AbstractUserPluginCtx
 from action.props import ActionProps
 from action.response import KResponse
+import bgcalc
 from bgcalc.task import AsyncTaskStatus
 from corplib import CorpusFactory
 from main_menu import MainMenu, generate_main_menu
@@ -352,12 +353,39 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
     async def export_optional_plugins_conf(self, result):
         await self._export_optional_plugins_conf(result, [])
 
-    def get_async_tasks(self, category: Optional[str] = None) -> List[AsyncTaskStatus]:
+    async def update_async_task_status(self, curr_at: AsyncTaskStatus):
+        backend = settings.get('calc_backend', 'type')
+        if backend in ('celery', 'rq'):
+            worker = bgcalc.calc_backend_client(settings)
+            r = worker.AsyncResult(curr_at.ident)
+            if r:
+                curr_at.status = r.status
+                if curr_at.status == 'FAILURE':
+                    r.get(timeout=2)
+                    if hasattr(r.result, 'message'):
+                        curr_at.error = r.result.message
+                    else:
+                        curr_at.error = r.result.__class__.__name__
+            else:
+                curr_at.status = 'FAILURE'
+                curr_at.error = 'job not found'
+            self._check_task_timeout(curr_at)
+        else:
+            raise FunctionNotSupported(f'Backend {backend} does not support status checking')
+
+    async def get_async_tasks(
+            self,
+            category: Optional[str] = None,
+            no_refresh: Optional[bool] = False) -> List[AsyncTaskStatus]:
         """
-        Returns a list of tasks user is explicitly informed about.
+        Returns a list of tasks user is explicitly informed about. In case there is
+        an unfinished task present, it is checked against the worker server
+        (unless 'no_refresh' is set to False).
 
         Args:
             category (str): task category filter
+            no_refresh: if true then the tasks are just loaded from user's session and
+                        no check with the worker server is performed
         Returns:
             (list of AsyncTaskStatus)
         """
@@ -366,26 +394,29 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
         else:
             ans = []
         if category is not None:
-            return [item for item in ans if item.category == category]
-        else:
-            return ans
+            ans = [item for item in ans if item.category == category]
+
+        for item in ans:
+            if not item.is_finished() and no_refresh is False:
+                await self.update_async_task_status(item)
+        return ans
 
     def set_async_tasks(self, task_list: Iterable[AsyncTaskStatus]):
         self._req.ctx.session['async_tasks'] = [at.to_dict() for at in task_list]
 
     @staticmethod
-    def mark_timeouted_tasks(*tasks):
+    def _check_task_timeout(task: AsyncTaskStatus):
         now = time.time()
         task_limit = settings.get_int('calc_backend', 'task_time_limit')
-        for at in tasks:
-            if (at.status == 'PENDING' or at.status == 'STARTED') and now - at.created > task_limit:
-                at.status = 'FAILURE'
-                if not at.error:
-                    at.error = 'task time limit exceeded'
+        if (task.status == 'PENDING' or task.status == 'STARTED') and now - task.created > task_limit:
+            task.status = 'FAILURE'
+            if not task.error:
+                task.error = 'task time limit exceeded'
 
-    def store_async_task(self, async_task_status) -> List[AsyncTaskStatus]:
-        at_list = [t for t in self.get_async_tasks() if t.status != 'FAILURE']
-        self.mark_timeouted_tasks(*at_list)
+    async def store_async_task(self, async_task_status) -> List[AsyncTaskStatus]:
+        at_list = [t for t in (await self.get_async_tasks()) if t.status != 'FAILURE']
+        for task in at_list:
+            self._check_task_timeout(task)
         at_list.append(async_task_status)
         self.set_async_tasks(at_list)
         return at_list
@@ -429,7 +460,7 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
         # the output of 'to_json' is actually only json-like (see the function val_to_js)
 
         # asynchronous tasks
-        result['async_tasks'] = [t.to_dict() for t in self.get_async_tasks()]
+        result['async_tasks'] = [t.to_dict() for t in (await self.get_async_tasks())]
         result['help_links'] = settings.get_help_links(self._req.ui_lang)
         result['integration_testing_env'] = settings.get_bool(
             'global', 'integration_testing_env', '0')

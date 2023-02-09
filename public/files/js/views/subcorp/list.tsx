@@ -500,7 +500,7 @@ export function init(
                         lines={this.props.lines}
                         selectedItems={this.props.selectedItems}
                         sortKey={this.props.sortKey}
-                        unfinished={this.props.unfinished} />
+                        unfinished={this.props.processedItems} />
                 </S.SubcorpList>
             );
         }
