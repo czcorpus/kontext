@@ -398,6 +398,11 @@
                             </a:documentation>
                         </element>
                     </optional>
+                    <optional>
+                        <element name="enabled_websockets">
+                            <ref name="boolValues" />
+                        </element>
+                    </optional>
                 </interleave>
             </element>
             <element name="calc_backend">
@@ -412,11 +417,6 @@
                     <optional>
                         <element name="task_time_limit">
                             <data type="nonNegativeInteger" />
-                        </element>
-                    </optional>
-                    <optional>
-                        <element name="enabled_websockets">
-                            <ref name="boolValues" />
                         </element>
                     </optional>
                     <optional>
