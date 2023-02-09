@@ -26,7 +26,6 @@ import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
 import { pipe, List, HTTP } from 'cnc-tskit';
 import { Actions } from './actions';
-import { Actions as ATActions } from '../asyncTask/actions';
 import { Actions as GlobalOptionsActions } from '../options/actions';
 import { archiveSubcorpora, splitSelectId, importServerSubcList, SubcorpList, SubcorpusServerRecord, wipeSubcorpora } from './common';
 import { validateGzNumber } from '../base';
@@ -74,7 +73,7 @@ export interface SortKey {
 }
 
 
-interface currSubcorpusProps {
+interface CurrSubcorpusProps {
     subcorpusId:string;
     subcorpusName:string;
     corpusName:string;
@@ -89,7 +88,7 @@ export interface SubcorpListModelState {
     sortKey:SortKey;
     filter:SubcListFilter;
     isBusy:boolean;
-    editWindowSubcorpus:currSubcorpusProps|null;
+    editWindowSubcorpus:CurrSubcorpusProps|null;
     totalPages:number;
     selectedItems:Array<string>;
 }
@@ -426,9 +425,9 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                     pipe(
                         Array.from(this.state.selectedItems),
                         List.map(v => {
-                            const [corpus_name, id] = splitSelectId(v);
+                            const [corpusName, id] = splitSelectId(v);
                             return {
-                                corpname: corpus_name,
+                                corpname: corpusName,
                                 subcname: id
                             }
                         })
@@ -460,9 +459,9 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                     pipe(
                         Array.from(this.state.selectedItems),
                         List.map(v => {
-                            const [corpus_name, id] = splitSelectId(v);
+                            const [corpusName, id] = splitSelectId(v);
                             return {
-                                corpname: corpus_name,
+                                corpname: corpusName,
                                 subcname: id
                             }
                         })
@@ -541,8 +540,8 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         const args:{[key:string]:string} = {
             format: 'json',
             sort: (reverse ? '-' : '') + name,
-            pattern: pattern,
-            page: page,
+            pattern,
+            page,
         }
         this.mergeFilter(args, this.state.filter);
 

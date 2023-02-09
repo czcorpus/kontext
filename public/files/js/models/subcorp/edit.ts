@@ -455,7 +455,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
             HTTP.Method.GET,
             this.layoutModel.createActionUrl('/subcorpus/properties'),
             {
-                corpname: corpname,
+                corpname,
                 usesubcorp: subcname,
             }
 
@@ -464,8 +464,8 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                 dispatch(
                     Actions.LoadSubcorpusDone,
                     {
-                        corpname: corpname,
-                        subcname: subcname,
+                        corpname,
+                        subcname,
                         // TODO improve data SubcorpusRecord type
                         data: subcServerRecord2SubcorpusRecord(data.data),
                         textTypes: data.textTypes,
@@ -508,7 +508,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
             HTTP.Method.POST,
             this.layoutModel.createActionUrl('/subcorpus/restore'),
             {
-                corpname: corpname,
+                corpname,
                 usesubcorp: subcname,
             }
         ).subscribe({
