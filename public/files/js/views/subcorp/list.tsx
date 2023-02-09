@@ -27,7 +27,7 @@ import {
 } from '../../models/subcorp/list';
 import { createSelectId } from '../../models/subcorp/common';
 import * as PluginInterfaces from '../../types/plugins';
-import { List } from 'cnc-tskit';
+import { Dict, List, pipe, tuple } from 'cnc-tskit';
 import { Actions } from '../../models/subcorp/actions';
 import { init as editViewInit } from './edit';
 
@@ -53,9 +53,9 @@ export function init(
     const layoutViews = he.getLayoutViews();
     const SubcorpEdit = editViewInit(dispatcher, he, subcorpEditModel, textTypesModel, subcorpWithinFormModel, liveAttrsViews);
 
-    // ------------------------ <TrUnfinishedLine /> --------------------------
+    // ------------------------ <TrUnsavedSubc /> --------------------------
 
-    const TrUnfinishedLine:React.FC<{
+    const TrUnsavedSubc:React.FC<{
         item:UnfinishedSubcorp;
 
     }> = (props) => {
@@ -125,6 +125,7 @@ export function init(
         selectId:string;
         selected:boolean;
         actionButtonHandle:(idx:number)=>void;
+        error?:string;
 
     }> = (props) => {
 
@@ -182,7 +183,12 @@ export function init(
                 <td>
                     {he.formatDate(props.item.created, 1)}
                 </td>
-                <td>{notes.join(', ')}</td>
+                <td className={props.error ? 'processing' : null}>
+                    {props.error ?
+                        <span>{he.translate('subclist__failed_item')}</span> :
+                        notes.join(', ')
+                    }
+                </td>
                 <td>
                         <PropertiesButton onClick={()=>props.actionButtonHandle(props.idx)} />
                 </td>
@@ -288,59 +294,76 @@ export function init(
 
     // ------------------------ <DataTable /> --------------------------
 
-    class DataTable extends React.Component<{
+    const DataTable:React.FC<{
         actionButtonHandle:(action:string, idx:number)=>void;
         pattern:string;
         lines:Array<SubcorpListItem>;
         selectedItems:Array<string>;
         sortKey:SortKey;
         unfinished:Array<UnfinishedSubcorp>;
-    }> {
+    }> = (props) => {
 
-        constructor(props) {
-            super(props);
-        }
-
-        _exportSortKey(name) {
-            if (name === this.props.sortKey.name) {
-                return this.props.sortKey;
+        const exportSortKey = (name) => {
+            if (name === props.sortKey.name) {
+                return props.sortKey;
             }
             return null;
         }
 
-        render() {
-            const numSelected = this.props.selectedItems.length;
-            return (
-                <div>
-                    <table className="data">
-                        <tbody>
-                            <tr>
-                                <ThSortable ident="name" sortKey={this._exportSortKey('name')} label={he.translate('subclist__col_name')} />
-                                <ThSortable ident="corpus_name" sortKey={this._exportSortKey('corpus_name')} label={he.translate('global__corpus')} />
-                                <ThSortable ident="size" sortKey={this._exportSortKey('size')} label={he.translate('subclist__col_size')} />
-                                <ThSortable ident="created" sortKey={this._exportSortKey('created')} label={he.translate('subclist__col_created')} />
-                                <th>{he.translate('global__note_heading')}</th>
-                                <th />
-                                <th />
-                            </tr>
-                            {List.map(item => (
-                                <TrUnfinishedLine key={`${item.name}:${item.created}`} item={item} />
-                            ), this.props.unfinished)}
-                            {List.map((item, i) => {
-                                const selectId = createSelectId(item.corpus_name, item.id);
-                                return <TrDataLine key={`${i}:${item.name}`} idx={i} item={item} selectId={selectId}
-                                        selected={this.props.selectedItems.includes(selectId)}
-                                        actionButtonHandle={this.props.actionButtonHandle.bind(null, 'reuse')} />
-                            }, this.props.lines)}
-                        </tbody>
-                    </table>
-                    {numSelected > 0 ?
-                        <LineSelectionOps numSelected={numSelected} /> :
-                        null
-                    }
-                </div>
-            );
-        }
+        const numSelected = props.selectedItems.length;
+        const runningDrafts = pipe(
+            props.unfinished,
+            List.filter(x => !!x.subcorpusId),
+            List.map(
+                item => tuple(item.subcorpusId, item)
+            ),
+            Dict.fromEntries()
+        );
+
+        return (
+            <div>
+                <table className="data">
+                    <tbody>
+                        <tr>
+                            <ThSortable ident="name" sortKey={exportSortKey('name')} label={he.translate('subclist__col_name')} />
+                            <ThSortable ident="corpus_name" sortKey={exportSortKey('corpus_name')} label={he.translate('global__corpus')} />
+                            <ThSortable ident="size" sortKey={exportSortKey('size')} label={he.translate('subclist__col_size')} />
+                            <ThSortable ident="created" sortKey={exportSortKey('created')} label={he.translate('subclist__col_created')} />
+                            <th>{he.translate('global__note_heading')}</th>
+                            <th />
+                            <th />
+                        </tr>
+                        {pipe(
+                            props.unfinished,
+                            List.filter(x => !x.subcorpusId),
+                            List.map(item => (
+                                <TrUnsavedSubc key={`${item.name}:${item.created}`} item={item} />
+                            ))
+                        )}
+                        {pipe(
+                            props.lines,
+                            List.map(
+                                (item, i) => {
+                                    const selectId = createSelectId(item.corpus_name, item.id);
+                                    return <TrDataLine
+                                                key={`${i}:${item.name}`}
+                                                idx={i}
+                                                item={item}
+                                                selectId={selectId}
+                                                error={runningDrafts[item.id]?.error?.message}
+                                                selected={props.selectedItems.includes(selectId)}
+                                                actionButtonHandle={props.actionButtonHandle.bind(null, 'reuse')} />
+                                }
+                            )
+                        )}
+                    </tbody>
+                </table>
+                {numSelected > 0 ?
+                    <LineSelectionOps numSelected={numSelected} /> :
+                    null
+                }
+            </div>
+        );
     }
 
     // ------------------------ <FilterForm /> --------------------------

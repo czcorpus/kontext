@@ -24,6 +24,7 @@ import { IActionQueue, SEDispatcher, StatelessModel } from 'kombo';
 import { PageModel } from '../../app/page';
 import { Actions } from './actions';
 import { Actions as TTActions } from '../textTypes/actions';
+import { Actions as ATActions } from '../asyncTask/actions';
 import { HTTP, tuple } from 'cnc-tskit';
 import {
     archiveSubcorpora,
@@ -384,27 +385,29 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
 
         ).pipe(
             tap((data) => {
-                data.processed_subc.forEach(item => {
-                    this.layoutModel.registerTask({
-                        ident: item.ident,
-                        label: item.label,
-                        category: item.category,
-                        status: item.status,
-                        created: item.created,
-                        error: item.error,
-                        args: item.args,
-                        url: undefined
-                    });
+                data.processed_subc.forEach(task => {
                     if ((args.form_type === 'tt-sel' || args.form_type === 'within') &&
                             args.usesubcorp) {
                         this.layoutModel.dispatcher.dispatch(
                             Actions.AttachTaskToSubcorpus,
                             {
                                 subcorpusId: args.usesubcorp,
-                                taskId: item.ident
+                                task
                             }
                         );
                     }
+                    this.layoutModel.dispatcher.dispatch<typeof ATActions.InboxAddAsyncTask>({
+                        name: ATActions.InboxAddAsyncTask.name,
+                        payload: {
+                            ident: task.ident,
+                            label: task.label,
+                            created: task.created,
+                            category: task.category,
+                            status: task.status,
+                            error: task.error,
+                            args: task.args,
+                        }
+                    });
                 });
             })
         );
