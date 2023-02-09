@@ -285,14 +285,6 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
     }
 
     /**
-     * Register a handler triggered once at least one async. task
-     * is finished/failed.
-     */
-    addOnAsyncTaskUpdate(fn:Kontext.AsyncTaskOnUpdate):void {
-        this.asyncTaskChecker.addOnUpdate(fn);
-    }
-
-    /**
      *
      * Notes:
      * - default contentType is 'application/x-www-form-urlencoded; charset=UTF-8'

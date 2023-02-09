@@ -63,8 +63,6 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
 
     private readonly pageModel:PageModel;
 
-    private readonly onUpdate:Array<Kontext.AsyncTaskOnUpdate>;
-
     static CHECK_INTERVAL = 5000;
 
     private triggerUpdateAction:(resp:AsyncTaskResponse)=>void;
@@ -84,7 +82,6 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
             }
         );
         this.pageModel = pageModel;
-        this.onUpdate = [];
         this.triggerUpdateAction = (resp:AsyncTaskResponse) => {
             // we don't want to notify about finished tasks multiple times so the
             // receivers do not have to handle it by themselves
@@ -302,14 +299,6 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
         return List.filter(taskIsFinished, state.asyncTasks);
     }
 
-    /**
-     * Adds a handler triggered when task information is
-     * received from server.
-     */
-    addOnUpdate(fn:Kontext.AsyncTaskOnUpdate):void {
-        this.onUpdate.push(fn);
-    }
-
     private startWatchingTask(task:Kontext.AsyncTaskInfo) {
         const [,statusSocket] = this.pageModel.openWebSocket<undefined, Kontext.AsyncTaskInfo>(
             this.pageModel.createActionUrl<{taskId: string}>(
@@ -321,12 +310,7 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
         statusSocket.subscribe({
             next: data => {
                 this.changeState(state => {
-                    const finished = this.updateTasksStatusWS(state, data);
-                    if (!List.empty(finished)) {
-                        this.onUpdate.forEach(item => {
-                            item(finished);
-                        });
-                    }
+                    this.updateTasksStatusWS(state, data);
                 });
                 this.dispatchSideEffect(
                     Actions.AsyncTasksChecked,
@@ -379,12 +363,7 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
             ).subscribe({
                 next: data => {
                     this.changeState(state => {
-                        const finished = this.updateTasksStatusAjax(state, data.data);
-                        if (!List.empty(finished)) {
-                            this.onUpdate.forEach(item => {
-                                item(finished);
-                            });
-                        }
+                        this.updateTasksStatusAjax(state, data.data);
                     });
 
                 },
