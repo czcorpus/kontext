@@ -26,6 +26,7 @@ import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
 import { pipe, List, HTTP } from 'cnc-tskit';
 import { Actions } from './actions';
+import { Actions as ATActions } from '../asyncTask/actions';
 import { Actions as GlobalOptionsActions } from '../options/actions';
 import { archiveSubcorpora, splitSelectId, importServerSubcList, SubcorpList, SubcorpusServerRecord, wipeSubcorpora } from './common';
 import { validateGzNumber } from '../base';
@@ -182,44 +183,47 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             }
         });
 
-        this.layoutModel.addOnAsyncTaskUpdate(itemList => {
-            const subcTasks = itemList.filter(item => item.category === 'subcorpus');
-            if (subcTasks.length > 0) {
-                this.changeState(
-                    state => {
-                        List.forEach(
-                            task => {
-                                const lastStatus = this.updateProcessedSubcorp(state, task);
-                                if (!lastStatus) {
-                                    throw new Error('unknown task for subc'); // TODO !!!
+        this.addActionHandler(
+            ATActions.AsyncTasksChecked,
+            action => {
+                const subcTasks = List.filter(item => item.category === 'subcorpus', action.payload.tasks);
+                if (subcTasks.length > 0) {
+                    this.changeState(
+                        state => {
+                            List.forEach(
+                                task => {
+                                    const lastStatus = this.updateProcessedSubcorp(state, task);
+                                    if (!lastStatus) {
+                                        throw new Error('unknown task for subc'); // TODO !!!
 
-                                } else if (lastStatus.error) {
-                                    this.layoutModel.showMessage('error',
-                                        this.layoutModel.translate('task__type_subcorpus_failed_{subc}',
-                                        {subc: task.label}));
-
-                                } else if (lastStatus.finished) {
-                                        this.layoutModel.showMessage('info',
-                                        this.layoutModel.translate('task__type_subcorpus_done_{subc}',
+                                    } else if (lastStatus.error) {
+                                        this.layoutModel.showMessage('error',
+                                            this.layoutModel.translate('task__type_subcorpus_failed_{subc}',
                                             {subc: task.label}));
-                                }
-                            },
-                            subcTasks
-                        );
-                    }
-                );
-                /* TODO this causes the "pending error" */
-                this.reloadItems().subscribe({
-                    next: data => {
-                        this.emitChange();
-                    },
-                    error: error => {
-                        this.emitChange();
-                        this.layoutModel.showMessage('error', error);
-                    }
-                });
+
+                                    } else if (lastStatus.finished) {
+                                            this.layoutModel.showMessage('info',
+                                            this.layoutModel.translate('task__type_subcorpus_done_{subc}',
+                                                {subc: task.label}));
+                                    }
+                                },
+                                subcTasks
+                            );
+                        }
+                    );
+                    /* TODO this causes the "pending error" */
+                    this.reloadItems().subscribe({
+                        next: data => {
+                            this.emitChange();
+                        },
+                        error: error => {
+                            this.emitChange();
+                            this.layoutModel.showMessage('error', error);
+                        }
+                    });
+                }
             }
-        });
+        );
 
         this.addActionHandler(
             Actions.AttachTaskToSubcorpus,
