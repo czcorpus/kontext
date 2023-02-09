@@ -78,8 +78,6 @@ export class HitReloader {
             );
             concCacheStatusSocket.subscribe({
                 next: response => {
-                    console.log(response);
-
                     applyData(response);
                 },
                 error: err => {
