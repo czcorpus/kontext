@@ -40,8 +40,12 @@ function taskIsFinished(t:Kontext.AsyncTaskInfo):boolean {
 }
 
 
-interface AsyncTaskResponse extends Kontext.AjaxResponse {
+interface DeleteTaskResponse extends Kontext.AjaxResponse {
     data:Array<Kontext.AsyncTaskInfo>;
+}
+
+interface CheckTaskStatusResponse extends Kontext.AjaxResponse {
+    data:Kontext.AsyncTaskInfo;
 }
 
 export interface AsyncTaskCheckerState {
@@ -67,8 +71,6 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
 
     static CHECK_INTERVAL = 5000;
 
-    private triggerUpdateAction:(resp:AsyncTaskResponse)=>void;
-
     constructor(
         dispatcher:IFullActionControl,
         pageModel:PageModel,
@@ -85,26 +87,6 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
         );
         this.pageModel = pageModel;
         this.onUpdate = [];
-        this.triggerUpdateAction = (resp:AsyncTaskResponse) => {
-            // we don't want to notify about finished tasks multiple times so the
-            // receivers do not have to handle it by themselves
-            const tasks = pipe(
-                resp.data,
-                List.filter(v => {
-                    const srch = List.find(c => c.ident === v.ident, this.state.asyncTasks);
-                    return !(srch && (srch.status === 'FAILURE' || srch.status === 'SUCCESS')
-                            && v.status === srch.status);
-                })
-            );
-            if (!List.empty(tasks)) {
-                dispatcher.dispatch<typeof Actions.AsyncTasksChecked>({
-                    name: Actions.AsyncTasksChecked.name,
-                    payload: {
-                        tasks
-                    }
-                });
-            }
-        };
 
         this.addActionHandler<typeof Actions.AsyncTasksChecked>(
             Actions.AsyncTasksChecked.name,
@@ -249,12 +231,8 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
         return pipe(state.asyncTasks, List.filter(taskIsFinished), List.size());
     }
 
-    private getNumRunningTasks(tasks:Array<Kontext.AsyncTaskInfo>):number {
-        return List.filter(taskIsActive, tasks).length;
-    }
-
     private deleteFinishedTaskInfo():Observable<Array<Kontext.AsyncTaskInfo>> {
-        return this.pageModel.ajax$<AsyncTaskResponse>(
+        return this.pageModel.ajax$<DeleteTaskResponse>(
             HTTP.Method.DELETE,
             this.pageModel.createActionUrl('remove_task_info'),
             {
@@ -267,32 +245,7 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
         ).pipe(map(resp => resp.data));
     }
 
-    private updateTasksStatusAjax(
-        state:AsyncTaskCheckerState,
-        incoming:Array<Kontext.AsyncTaskInfo>
-    ):Array<Kontext.AsyncTaskInfo> {
-        state.asyncTasks = pipe(
-            state.asyncTasks,
-            List.map(
-                curr => {
-                    const ans = {...curr};
-                    const idx = List.findIndex(incom => incom.ident === curr.ident, incoming);
-                    if (idx === -1 && !Dict.hasValue(ans.category, DownloadType)) {
-                        ans.status = 'FAILURE';
-                    }
-                    return ans;
-                }
-            ),
-            List.concat(incoming),
-            List.groupBy(v => v.ident),
-            List.map(([,v]) => List.maxItem(
-                item => item.status === 'FAILURE' || item.status === 'SUCCESS' ? 2 : 1, v))
-        );
-        return List.filter(taskIsFinished, state.asyncTasks);
-    }
-
-    // updates only status and error, since ws does not have access to other parameters
-    private updateTasksStatusWS(
+    private updateTasksStatus(
         state:AsyncTaskCheckerState,
         incoming:Kontext.AsyncTaskInfo
     ):Array<Kontext.AsyncTaskInfo> {
@@ -321,75 +274,57 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
     }
 
     private startWatchingTask(task:Kontext.AsyncTaskInfo) {
-        const [,statusSocket] = this.pageModel.openWebSocket<undefined, Kontext.AsyncTaskInfo>(
-            this.pageModel.createActionUrl<{taskId: string}>(
-                'ws/task_status',
-                {taskId: task.ident},
-                true,
-            )
-        );
-        statusSocket.subscribe({
-            next: data => {
-                this.changeState(state => {
-                    const finished = this.updateTasksStatusWS(state, data);
-                    if (!List.empty(finished)) {
-                        this.onUpdate.forEach(item => {
-                            item(finished);
-                        });
-                    }
-                });
-                this.dispatchSideEffect(
-                    Actions.AsyncTasksChecked,
-                    {tasks: this.state.asyncTasks},
-                );
-            },
-            error: err => {
-                if (err instanceof CloseEvent) {
-                    if (err.code > 1001) {
-                        this.pageModel.showMessage('error', err.reason);
-                    }
-                } else {
-                    this.pageModel.showMessage('error', err);
-                }
-            }
-        });
-    }
-
-    private checkCurrentTasks():void {
         if (this.pageModel.supportsWebSocket()) {
-            pipe(
-                this.state.asyncTasks,
-                // exclude download tasks
-                List.filter(v => !Dict.hasValue(v.category, DownloadType)),
-                List.forEach(item => {
-                    this.startWatchingTask(item);
-                })
+            const [,statusSocket] = this.pageModel.openWebSocket<undefined, Kontext.AsyncTaskInfo>(
+                this.pageModel.createActionUrl<{taskId: string}>(
+                    'ws/task_status',
+                    {taskId: task.ident},
+                    true,
+                )
             );
+            statusSocket.subscribe({
+                next: data => {
+                    this.changeState(state => {
+                        const finished = this.updateTasksStatus(state, data);
+                        if (!List.empty(finished)) {
+                            this.onUpdate.forEach(item => {
+                                item(finished);
+                            });
+                        }
+                    });
+                    this.dispatchSideEffect(
+                        Actions.AsyncTasksChecked,
+                        {tasks: this.state.asyncTasks},
+                    );
+                },
+                error: err => {
+                    if (err instanceof CloseEvent) {
+                        if (err.code > 1001) {
+                            this.pageModel.showMessage('error', err.reason);
+                        }
+                    } else {
+                        this.pageModel.showMessage('error', err);
+                    }
+                }
+            });
 
-        } else { // the ajax way
-
-            const timer$ = taskCheckTimer();
-            timer$.pipe(
+        } else {
+            taskCheckTimer().pipe(
                 concatMap(
-                    _ => this.pageModel.ajax$<AsyncTaskResponse>(
+                    _ => this.pageModel.ajax$<CheckTaskStatusResponse>(
                         HTTP.Method.GET,
-                        this.pageModel.createActionUrl('check_tasks_status'),
+                        this.pageModel.createActionUrl('check_tasks_status', {task_id: task.ident}),
                         {}
                     )
                 ),
                 takeWhile(
-                    (ans, i) => this.getNumRunningTasks(ans.data) > 0 || i === 0,
+                    (ans, i) => ans.data.status !== 'FAILURE' && ans.data.status !== 'SUCCESS',
                     true // inclusive
-                ),
-                tap(
-                    (data) => {
-                        this.triggerUpdateAction(data)
-                    }
                 )
             ).subscribe({
                 next: data => {
                     this.changeState(state => {
-                        const finished = this.updateTasksStatusAjax(state, data.data);
+                        const finished = this.updateTasksStatus(state, data.data);
                         if (!List.empty(finished)) {
                             this.onUpdate.forEach(item => {
                                 item(finished);
@@ -403,6 +338,17 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                 }
             });
         }
+    }
+
+    private checkCurrentTasks():void {
+        pipe(
+            this.state.asyncTasks,
+            // exclude download tasks
+            List.filter(v => !Dict.hasValue(v.category, DownloadType)),
+            List.forEach(item => {
+                this.startWatchingTask(item);
+            })
+        );
     }
 
     init():void {

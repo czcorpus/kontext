@@ -49,7 +49,7 @@ async def _check_tasks_status(amodel: UserActionModel, task_id: str) -> AsyncTas
 @http_action(return_type='json', action_model=UserActionModel)
 async def check_tasks_status(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
     task = await _check_tasks_status(amodel, req.args.get('task_id'))
-    return dict(data=[task])
+    return dict(data=task.to_dict())
 
 
 @bp.route('/get_task_result')
