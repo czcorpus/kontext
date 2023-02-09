@@ -231,10 +231,34 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                 this.changeState(
                     state => {
                         if (srchIdx > -1) {
-                            state.processedItems[srchIdx].taskId = action.payload.taskId;
+                            state.processedItems[srchIdx].taskId = action.payload.task.ident;
 
                         } else {
-                            // TODO add new subc. task here
+                            const procItem = List.find(
+                                x => x.id === action.payload.subcorpusId,
+                                this.state.lines
+                            );
+                            if (procItem) {
+                                List.push(
+                                    {
+                                        subcorpusId: action.payload.subcorpusId,
+                                        name: procItem.name,
+                                        taskId: action.payload.task.ident,
+                                        corpusName: procItem.corpus_name,
+                                        created: new Date(1000 * action.payload.task.created),
+                                        finished: action.payload.task.status === 'FAILURE' ||
+                                            action.payload.task.status === 'SUCCESS',
+                                        error: action.payload.task.error ?
+                                                new Error(action.payload.task.error) : undefined
+                                    },
+                                    state.processedItems
+                                );
+
+                            } else {
+                                throw new Error(
+                                    `Failed to find subcorpus attached to task ${action.payload.task}`
+                                );
+                            }
                         }
                     }
                 );

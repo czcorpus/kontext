@@ -350,7 +350,7 @@ export class Actions {
 
     static AttachTaskToSubcorpus:Action<{
         subcorpusId:string;
-        taskId:string;
+        task:Kontext.AsyncTaskInfo;
     }> = {
         name: 'SUBCORP_ATTACH_TASK_TO_SUBCORPUS'
     }
