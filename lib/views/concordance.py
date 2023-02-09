@@ -151,6 +151,9 @@ async def preflight(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     ans['concSize'] = conc.size()
     ans['isLargeCorpus'] = amodel.corp.size > PREFLIGHT_MIN_LARGE_CORPUS
     ans['sizeIpm'] = size_ipm
+    logging.getLogger(__name__).debug(
+        'preflight query, target_corpname: {}, size_ipm: {}, size: {}, subcorp_size: {}'.format(
+            target_corpname, size_ipm, conc.size(), amodel.corp.search_size))
     return ans
 
 
