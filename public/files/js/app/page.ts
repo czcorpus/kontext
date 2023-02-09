@@ -293,17 +293,6 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
     }
 
     /**
-     * Register a function interested in a task status.
-     * Multiple functions can be set to listen a single
-     * task.
-     *
-     * @deprecated Use actions instead
-     */
-    registerTask(task:Kontext.AsyncTaskInfo):void {
-        this.asyncTaskChecker.registerTask(task);
-    }
-
-    /**
      *
      * Notes:
      * - default contentType is 'application/x-www-form-urlencoded; charset=UTF-8'

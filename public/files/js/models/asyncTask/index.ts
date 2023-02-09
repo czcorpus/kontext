@@ -231,16 +231,6 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
         state.asyncTasks = [...data];
     }
 
-    /**
-     * @deprecated
-     */
-    registerTask(task:Kontext.AsyncTaskInfo):void {
-        this.changeState(state => {
-            state.asyncTasks.push(task);
-        });
-        this.startWatchingTask(task);
-    }
-
     static numRunning(state:AsyncTaskCheckerState):number {
         return pipe(state.asyncTasks, List.filter(taskIsActive), List.size());
     }
