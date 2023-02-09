@@ -330,7 +330,7 @@ export function init(
     SubcorpusEditModelState &
     {
         corpname:string;
-        subcname:string;
+        usesubcorp:string;
         userId:number;
     }> = (props) => {
 
@@ -354,7 +354,7 @@ export function init(
             () => {
                 dispatcher.dispatch(
                     Actions.LoadSubcorpus,
-                    {corpname: props.corpname, subcname: props.subcname}
+                    {corpname: props.corpname, usesubcorp: props.usesubcorp}
                 );
             },
             []
@@ -392,7 +392,7 @@ export function init(
     }
 
     return BoundWithProps<
-        {corpname:string; subcname:string; userId: number},
+        {corpname:string; usesubcorp:string; userId: number},
         SubcorpusEditModelState
     >(
         _SubcorpusEdit, subcorpEditModel

@@ -25,7 +25,7 @@ import { PageModel } from '../../app/page';
 import { Actions } from './actions';
 import { Actions as TTActions } from '../textTypes/actions';
 import { Actions as ATActions } from '../asyncTask/actions';
-import { HTTP, tuple } from 'cnc-tskit';
+import { HTTP, List, tuple } from 'cnc-tskit';
 import {
     archiveSubcorpora,
     CreateSubcorpus,
@@ -70,25 +70,29 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
         super(dispatcher, initialState);
         this.layoutModel = layoutModel;
 
-        this.layoutModel.addOnAsyncTaskUpdate(itemList => {
-            console.log(itemList);
-
-            const subcTasks = itemList.filter(item =>
-                item.category === 'subcorpus' &&
-                item.status === 'SUCCESS' &&
-                item.args['corpname'] === initialState.data.corpname &&
-                item.args['subcname'] === initialState.data.name
-            );
-            if (subcTasks.length > 0) {
-                this.layoutModel.dispatcher.dispatch(
-                    Actions.LoadSubcorpus,
-                    {
-                        corpname: initialState.data.corpname,
-                        subcname: initialState.data.usesubcorp,
-                    }
+        this.addActionHandler(
+            ATActions.AsyncTasksChecked,
+            (state, action) => {
+                const idx = List.findIndex(task =>
+                    task.category === 'subcorpus' &&
+                    task.status === 'SUCCESS' &&
+                    task.args['corpname'] === state.data.corpname &&
+                    task.args['usesubcorp'] === state.data.usesubcorp,
+                    action.payload.tasks,
                 );
+                if (idx !== -1) {
+                    // TODO `ATActions.AsyncTasksChecked` is already side effect action
+                    // can not use SEDispatcher
+                    this.layoutModel.dispatcher.dispatch(
+                        Actions.LoadSubcorpus,
+                        {
+                            corpname: state.data.corpname,
+                            usesubcorp: initialState.data.usesubcorp,
+                        }
+                    );
+                }
             }
-        });
+        );
 
         this.addActionHandler(
             Actions.LoadSubcorpus,
@@ -96,7 +100,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.loadSubcorpData(action.payload?.corpname, action.payload?.subcname, dispatch);
+                this.loadSubcorpData(action.payload?.corpname, action.payload?.usesubcorp, dispatch);
             }
         );
 
@@ -255,6 +259,8 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                         } else {
                             this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_reuse_confirm_msg'));
                         }
+                        // reload imediately in case the subcorpus is created without receiving task
+                        this.loadSubcorpData(state.data.corpname, state.data.usesubcorp, dispatch);
                     },
                     error: error => {
                         dispatch(Actions.ReuseQueryDone, error);

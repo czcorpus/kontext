@@ -76,7 +76,7 @@ export class Actions {
 
     static LoadSubcorpus:Action<{
         corpname:string;
-        subcname:string;
+        usesubcorp:string;
     }> = {
         name: 'SUBCORP_LOAD_SUBCORPUS'
     }
