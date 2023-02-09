@@ -24,6 +24,7 @@ import { IActionQueue, SEDispatcher, StatelessModel } from 'kombo';
 import { PageModel } from '../../app/page';
 import { Actions } from './actions';
 import { Actions as TTActions } from '../textTypes/actions';
+import { Actions as ATActions } from '../asyncTask/actions';
 import { HTTP, tuple } from 'cnc-tskit';
 import {
     archiveSubcorpora,
@@ -237,7 +238,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                                     )
                                 }
 
-                                return this.createSubcorpus(state, args).pipe(
+                                return this.createSubcorpus(state, args, dispatch).pipe(
                                     map(resp => tuple(args, resp))
                                 )
                             }
@@ -393,6 +394,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
     private createSubcorpus(
         state:SubcorpusEditModelState,
         args:CreateSubcorpusArgs|CreateSubcorpusWithinArgs|CreateSubcorpusRawCQLArgs,
+        dispatch:SEDispatcher,
     ):Observable<CreateSubcorpus> {
         return this.layoutModel.ajax$<CreateSubcorpus>(
             HTTP.Method.POST,
@@ -405,16 +407,19 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
         ).pipe(
             tap((data) => {
                 data.processed_subc.forEach(item => {
-                    this.layoutModel.registerTask({
-                        ident: item.ident,
-                        label: item.label,
-                        category: item.category,
-                        status: item.status,
-                        created: item.created,
-                        error: item.error,
-                        args: item.args,
-                        url: undefined
-                    });
+                    dispatch(
+                        ATActions.InboxAddAsyncTask,
+                        {
+                            ident: item.ident,
+                            label: item.label,
+                            category: item.category,
+                            status: item.status,
+                            created: item.created,
+                            error: item.error,
+                            args: item.args,
+                            url: undefined
+                        }
+                    );
                     if ((args.form_type === 'tt-sel' || args.form_type === 'within') &&
                             args.usesubcorp) {
                         this.layoutModel.dispatcher.dispatch(
