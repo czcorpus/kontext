@@ -414,9 +414,11 @@
                             <data type="nonNegativeInteger" />
                         </element>
                     </optional>
-                    <element name="enabled_websockets">
-                        <ref name="boolValues" />
-                    </element>
+                    <optional>
+                        <element name="enabled_websockets">
+                            <ref name="boolValues" />
+                        </element>
+                    </optional>
                     <optional>
                         <choice>
                             <element name="conf">
