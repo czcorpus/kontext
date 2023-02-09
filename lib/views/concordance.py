@@ -149,7 +149,7 @@ async def preflight(amodel: ConcActionModel, req: KRequest, resp: KResponse):
             size_ipm,
             None)
     ans['concSize'] = conc.size()
-    ans['isLargeCorpus'] = amodel.corp.search_size > PREFLIGHT_MIN_LARGE_CORPUS
+    ans['isLargeCorpus'] = amodel.corp.size > PREFLIGHT_MIN_LARGE_CORPUS
     ans['sizeIpm'] = size_ipm
     return ans
 
@@ -210,6 +210,8 @@ async def query_submit(amodel: ConcActionModel, req: KRequest, resp: KResponse):
             raise ex
     ans['conc_args'] = amodel.get_mapped_attrs(ConcArgsMapping)
     ans['conc_args']['cutoff'] = amodel.args.cutoff
+    url = req.create_url('view', ans['conc_args'])
+    resp.set_header('Location', url)
     return ans
 
 

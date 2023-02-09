@@ -24,7 +24,7 @@ import { IActionQueue, SEDispatcher, StatelessModel } from 'kombo';
 import { PageModel } from '../../app/page';
 import { Actions } from './actions';
 import { Actions as TTActions } from '../textTypes/actions';
-import { HTTP, List, tuple } from 'cnc-tskit';
+import { HTTP, tuple } from 'cnc-tskit';
 import {
     archiveSubcorpora,
     CreateSubcorpus,
@@ -395,7 +395,16 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                         args: item.args,
                         url: undefined
                     });
-
+                    if ((args.form_type === 'tt-sel' || args.form_type === 'within') &&
+                            args.usesubcorp) {
+                        this.layoutModel.dispatcher.dispatch(
+                            Actions.AttachTaskToSubcorpus,
+                            {
+                                subcorpusId: args.usesubcorp,
+                                taskId: item.ident
+                            }
+                        );
+                    }
                 });
             })
         );

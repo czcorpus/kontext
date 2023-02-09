@@ -347,4 +347,11 @@ export class Actions {
     }> = {
         name: 'SUBCORP_LIST_CLEAR_SELECTED_LINES'
     };
+
+    static AttachTaskToSubcorpus:Action<{
+        subcorpusId:string;
+        taskId:string;
+    }> = {
+        name: 'SUBCORP_ATTACH_TASK_TO_SUBCORPUS'
+    }
 }

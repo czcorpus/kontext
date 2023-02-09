@@ -59,7 +59,6 @@ export function init(
         item:UnfinishedSubcorp;
 
     }> = (props) => {
-
         return (
             <tr>
                 <td>
@@ -71,7 +70,7 @@ export function init(
                 <td />
                 <td className="num">{he.formatDate(props.item.created, 1)}</td>
                 <td className="processing">
-                    {props.item.failed ?
+                    {props.item.error ?
                         he.translate('subclist__failed_item') :
                         he.translate('global__processing')
                     }
@@ -501,7 +500,7 @@ export function init(
                         lines={this.props.lines}
                         selectedItems={this.props.selectedItems}
                         sortKey={this.props.sortKey}
-                        unfinished={this.props.unfinished} />
+                        unfinished={this.props.processedItems} />
                 </S.SubcorpList>
             );
         }

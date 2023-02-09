@@ -263,7 +263,8 @@ class ConcActionModel(CorpusActionModel):
                     'id', None)] if self._active_q_data else []
                 history_ts = None
             for fn in self._on_query_store:
-                fn(next_query_keys, history_ts, resp.result)
+                if callable(fn):
+                    await fn(next_query_keys, history_ts, resp.result)
             self._output_last_op_id(
                 next_query_keys[-1] if len(next_query_keys) else None, resp.result)
 

@@ -57,11 +57,13 @@ export interface SubcorpListItem {
 
 
 export interface UnfinishedSubcorp {
-    ident:string;
+    subcorpusId?:string;
     name:string;
+    taskId:string;
     corpusName:string;
     created:Date;
-    failed:boolean;
+    finished:boolean;
+    error?:Error;
 }
 
 
@@ -81,13 +83,12 @@ interface currSubcorpusProps {
 export interface SubcorpListModelState {
     userId:number;
     lines:Array<SubcorpListItem>;
-    unfinished:Array<UnfinishedSubcorp>;
+    processedItems:Array<UnfinishedSubcorp>;
     relatedCorpora:Array<string>;
     sortKey:SortKey;
     filter:SubcListFilter;
     isBusy:boolean;
     editWindowSubcorpus:currSubcorpusProps|null;
-    finishedTasks:{[taskId:string]:boolean};
     totalPages:number;
     selectedItems:Array<string>;
 }
@@ -124,7 +125,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             dispatcher,
             {
                 lines: [],
-                unfinished: [],
+                processedItems: [],
                 relatedCorpora,
                 sortKey,
                 filter: initialFilter ?
@@ -138,7 +139,6 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                     },
                 editWindowSubcorpus: null,
                 isBusy: false,
-                finishedTasks: {},
                 totalPages: layoutModel.getConf<number>('SubcTotalPages'),
                 userId: layoutModel.getConf<number>('userId'),
                 selectedItems: [],
@@ -148,7 +148,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         this.layoutModel.getHistory().replaceState('subcorpus/list', {});
         this.changeState(state => {
             state.lines = this.importAndProcessServerSubcList(data);
-            state.unfinished = this.importProcessed(unfinished);
+            state.processedItems = this.importProcessed(unfinished);
         })
 
         this.filterSubject$ = new Subject();
@@ -185,31 +185,30 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         this.layoutModel.addOnAsyncTaskUpdate(itemList => {
             const subcTasks = itemList.filter(item => item.category === 'subcorpus');
             if (subcTasks.length > 0) {
-                List.forEach(
-                    task => {
-                        if (task.status === 'FAILURE') {
-                            if (!this.state.finishedTasks[task.ident]) {
-                                this.layoutModel.showMessage('error',
-                                    this.layoutModel.translate('task__type_subcorpus_failed_{subc}',
-                                    {subc: task.label}));
-                                this.changeState(state => {
-                                    state.finishedTasks[task.ident] = true;
-                                });
-                            }
+                this.changeState(
+                    state => {
+                        List.forEach(
+                            task => {
+                                const lastStatus = this.updateProcessedSubcorp(state, task);
+                                if (!lastStatus) {
+                                    throw new Error('unknown task for subc'); // TODO !!!
 
-                        } else {
-                            if (!this.state.finishedTasks[task.ident]) {
-                                this.layoutModel.showMessage('info',
-                                this.layoutModel.translate('task__type_subcorpus_done_{subc}',
-                                    {subc: task.label}));
-                                this.changeState(state => {
-                                    state.finishedTasks[task.ident] = true;
-                                });
-                            }
-                        }
-                    },
-                    subcTasks
+                                } else if (lastStatus.error) {
+                                    this.layoutModel.showMessage('error',
+                                        this.layoutModel.translate('task__type_subcorpus_failed_{subc}',
+                                        {subc: task.label}));
+
+                                } else if (lastStatus.finished) {
+                                        this.layoutModel.showMessage('info',
+                                        this.layoutModel.translate('task__type_subcorpus_done_{subc}',
+                                            {subc: task.label}));
+                                }
+                            },
+                            subcTasks
+                        );
+                    }
                 );
+                /* TODO this causes the "pending error" */
                 this.reloadItems().subscribe({
                     next: data => {
                         this.emitChange();
@@ -221,6 +220,26 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                 });
             }
         });
+
+        this.addActionHandler(
+            Actions.AttachTaskToSubcorpus,
+            action => {
+                const srchIdx = List.findIndex(
+                    x => x.subcorpusId === action.payload.subcorpusId,
+                    this.state.processedItems
+                );
+                this.changeState(
+                    state => {
+                        if (srchIdx > -1) {
+                            state.processedItems[srchIdx].taskId = action.payload.taskId;
+
+                        } else {
+                            // TODO add new subc. task here
+                        }
+                    }
+                );
+            }
+        )
 
         this.addActionHandler(
             Actions.SortLines,
@@ -476,18 +495,45 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         );
     }
 
+    private getUnfinishedSubcByTask(taskId:string):UnfinishedSubcorp|undefined {
+        return List.find(
+            x => x.taskId === taskId,
+            this.state.processedItems
+        );
+    }
+
+    /**
+     * Based on task attachments in state.processedItems,
+     * use provided 'task' to update respective item and return
+     * the new value. In case there is nothing to update,
+     * return undefined.
+     */
+    private updateProcessedSubcorp(
+        state:SubcorpListModelState,
+        task:Kontext.AsyncTaskInfo
+    ):UnfinishedSubcorp|undefined {
+        const srchIdx = List.findIndex(x => x.taskId === task.ident, this.state.processedItems);
+        if (srchIdx > -1) {
+            state.processedItems[srchIdx] = List.head(this.importProcessed([task]));
+            return state.processedItems[srchIdx];
+        }
+        return undefined;
+    }
+
     private importProcessed(data:Array<Kontext.AsyncTaskInfo>):Array<UnfinishedSubcorp> {
         return pipe(
             data,
             List.filter(v => v.status !== 'SUCCESS'),
             List.map(item => ({
-                ident: item.ident,
+                taskId: item.ident,
+                subcorpusId: item.args['usesubcorp'],
                 name: item.label,
                 corpusName: item.args['corpname'],
                 created: new Date(item.created * 1000),
-                failed: item.status === 'FAILURE'
+                error: item.status === 'FAILURE' ? new Error(item.error) : undefined,
+                finished: item.status === 'FAILURE' || item.status === 'SUCCESS'
             }))
-        )
+        );
     }
 
     private sortItems(name:string, reverse:boolean, page:string, pattern:string):Observable<SubcorpList> {
@@ -508,7 +554,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             tap((data) => {
                 this.changeState(state => {
                     state.lines = this.importAndProcessServerSubcList(data.subcorp_list);
-                    state.unfinished = this.importProcessed(data.processed_subc);
+                    state.processedItems = this.importProcessed(data.processed_subc);
                     state.relatedCorpora = data.related_corpora;
                     state.totalPages = data.total_pages;
                     state.sortKey = {
@@ -558,7 +604,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             tap((data) => {
                 this.changeState(state => {
                     state.lines = this.importAndProcessServerSubcList(data.subcorp_list);
-                    state.unfinished = this.importProcessed(data.processed_subc);
+                    state.processedItems = this.importProcessed(data.processed_subc);
                     state.relatedCorpora = data.related_corpora;
                     state.totalPages = data.total_pages;
                     state.isBusy = false;

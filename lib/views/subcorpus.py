@@ -196,7 +196,7 @@ async def _filter_subcorpora(amodel: UserActionModel, req: KRequest, ignore_no_s
         filter=asdict(client_filter_args),
         processed_subc=[
             v.to_dict()
-            for v in amodel.get_async_tasks(category=AsyncTaskStatus.CATEGORY_SUBCORPUS)
+            for v in (await amodel.get_async_tasks(category=AsyncTaskStatus.CATEGORY_SUBCORPUS))
         ],
         related_corpora=related_corpora,
         total_pages=total_pages,
