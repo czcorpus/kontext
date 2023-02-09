@@ -149,7 +149,7 @@ async def preflight(amodel: ConcActionModel, req: KRequest, resp: KResponse):
             size_ipm,
             None)
     ans['concSize'] = conc.size()
-    ans['isLargeCorpus'] = amodel.corp.search_size > PREFLIGHT_MIN_LARGE_CORPUS
+    ans['isLargeCorpus'] = amodel.corp.size > PREFLIGHT_MIN_LARGE_CORPUS
     ans['sizeIpm'] = size_ipm
     return ans
 
