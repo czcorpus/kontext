@@ -67,8 +67,6 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
 
     private readonly pageModel:PageModel;
 
-    private readonly onUpdate:Array<Kontext.AsyncTaskOnUpdate>;
-
     static CHECK_INTERVAL = 5000;
 
     constructor(
@@ -86,7 +84,6 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
             }
         );
         this.pageModel = pageModel;
-        this.onUpdate = [];
 
         this.addActionHandler<typeof Actions.AsyncTasksChecked>(
             Actions.AsyncTasksChecked.name,
@@ -213,16 +210,6 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
         state.asyncTasks = [...data];
     }
 
-    /**
-     * @deprecated
-     */
-    registerTask(task:Kontext.AsyncTaskInfo):void {
-        this.changeState(state => {
-            state.asyncTasks.push(task);
-        });
-        this.startWatchingTask(task);
-    }
-
     static numRunning(state:AsyncTaskCheckerState):number {
         return pipe(state.asyncTasks, List.filter(taskIsActive), List.size());
     }
@@ -245,6 +232,13 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
         ).pipe(map(resp => resp.data));
     }
 
+    /**
+     * Update task information based on the 'incoming' value.
+     * In case it is not already present, the item is added
+     * to the end of the list of active tasks.
+     *
+     * @return list of finished tasks
+     */
     private updateTasksStatus(
         state:AsyncTaskCheckerState,
         incoming:Kontext.AsyncTaskInfo
@@ -265,14 +259,6 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
         return List.filter(taskIsFinished, state.asyncTasks);
     }
 
-    /**
-     * Adds a handler triggered when task information is
-     * received from server.
-     */
-    addOnUpdate(fn:Kontext.AsyncTaskOnUpdate):void {
-        this.onUpdate.push(fn);
-    }
-
     private startWatchingTask(task:Kontext.AsyncTaskInfo) {
         if (this.pageModel.supportsWebSocket()) {
             const [,statusSocket] = this.pageModel.openWebSocket<undefined, Kontext.AsyncTaskInfo>(
@@ -285,12 +271,7 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
             statusSocket.subscribe({
                 next: data => {
                     this.changeState(state => {
-                        const finished = this.updateTasksStatus(state, data);
-                        if (!List.empty(finished)) {
-                            this.onUpdate.forEach(item => {
-                                item(finished);
-                            });
-                        }
+                        this.updateTasksStatus(state, data);
                     });
                     this.dispatchSideEffect(
                         Actions.AsyncTasksChecked,
@@ -324,14 +305,12 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
             ).subscribe({
                 next: data => {
                     this.changeState(state => {
-                        const finished = this.updateTasksStatus(state, data.data);
-                        if (!List.empty(finished)) {
-                            this.onUpdate.forEach(item => {
-                                item(finished);
-                            });
-                        }
+                        this.updateTasksStatus(state, data.data);
                     });
-
+                    this.dispatchSideEffect(
+                        Actions.AsyncTasksChecked,
+                        {tasks: this.state.asyncTasks},
+                    );
                 },
                 error: error => {
                     this.pageModel.showMessage('error', error);
@@ -340,23 +319,16 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
         }
     }
 
-    private checkCurrentTasks():void {
-        pipe(
-            this.state.asyncTasks,
-            // exclude download tasks
-            List.filter(v => !Dict.hasValue(v.category, DownloadType)),
-            List.forEach(item => {
-                this.startWatchingTask(item);
-            })
-        );
-    }
-
     init():void {
         if (!List.empty(this.state.asyncTasks)) {
-            // refresh watched tasks received by ws
-            this.checkCurrentTasks();
-
-        } else {
+            pipe(
+                this.state.asyncTasks,
+                // exclude download tasks
+                List.filter(v => !Dict.hasValue(v.category, DownloadType)),
+                List.forEach(item => {
+                    this.startWatchingTask(item);
+                })
+            );
         }
     }
 }
