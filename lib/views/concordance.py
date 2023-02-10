@@ -46,7 +46,8 @@ from action.krequest import KRequest
 from action.model.base import BaseActionModel
 from action.model.concordance import ConcActionModel
 from action.model.concordance.linesel import LinesGroups
-from action.model.corpus import CorpusActionModel, PREFLIGHT_THRESHOLD_IPM, PREFLIGHT_MIN_LARGE_CORPUS
+from action.model.corpus import (
+    PREFLIGHT_MIN_LARGE_CORPUS, PREFLIGHT_THRESHOLD_IPM, CorpusActionModel)
 from action.model.user import UserActionModel
 from action.response import KResponse
 from action.result.concordance import QueryAction
@@ -94,8 +95,10 @@ async def query(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 
     if not corp_info.preflight_subcorpus and amodel.corp.size >= PREFLIGHT_MIN_LARGE_CORPUS:
         psubc_id = await amodel.create_preflight_subcorpus()
-        logging.getLogger(__name__).warning(f'created missing preflight corpus {amodel.corp.corpname}/{psubc_id}')
+        logging.getLogger(__name__).warning(
+            f'created missing preflight corpus {amodel.corp.corpname}/{psubc_id}')
         corp_info = await amodel.get_corpus_info(amodel.args.corpname)
+    out['alt_corp'] = corp_info.alt_corp
 
     out['text_types_notes'] = corp_info.metadata.desc
     out['default_virt_keyboard'] = corp_info.metadata.default_virt_keyboard
@@ -773,7 +776,8 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
         SimpleQueryDefaultAttrs=corpus_info.simple_query_default_attrs,
         QSEnabled=amodel.args.qs_enabled,
         SubcorpTTStructure=subcorp_tt_structure,
-        concPreflight=preflight_conf
+        concPreflight=preflight_conf,
+        AltCorp=corpus_info.alt_corp,
     )
     await amodel.attach_plugin_exports(ans, direct=True)
     amodel.configure_auth_urls(ans)
