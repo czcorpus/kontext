@@ -90,6 +90,16 @@ class AbstractSubcArchive(abc.ABC):
         """
 
     @abc.abstractmethod
+    async def create_preflight(self, subc_root_dir, corpname) -> str:
+        """
+        Create a preflight subcorpus with defined size (ignoring corpus structures etc.).
+
+        Args:
+            subc_root_dir -- a global root directory for all subcorpora
+            corpname -- a source corpus ID
+        """
+
+    @abc.abstractmethod
     async def update_draft(self, ident: str, author: UserInfo, size: int, public_description: str, data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs]):
         """
         Updates subcorpus draft in the database.

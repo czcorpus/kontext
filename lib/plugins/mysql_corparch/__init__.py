@@ -297,6 +297,9 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
                     cursor, corpus_id)
         return self._corpus_info_cache.get(corpus_id, None)
 
+    async def on_soft_reset(self):
+        self._corpus_info_cache = {}
+
     async def get_corpus_info(self, plugin_ctx: AbstractCorpusPluginCtx, corp_name: str) -> CorpusInfo:
         """
         Obtain full corpus info

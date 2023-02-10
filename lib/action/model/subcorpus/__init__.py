@@ -94,9 +94,10 @@ class SubcorpusActionModel(CorpusActionModel):
 
     async def create_subcorpus(self) -> Dict[str, Any]:
         """
-        req. arguments:
-        subcname -- name of new subcorpus
-        cql -- custom within condition
+        Create a new subcorpus based on submitted data.
+
+        Returns:
+            list of async task related to unfinished corpora
         """
         form_type = self._req.json['form_type']
         author = self.plugin_ctx.user_dict

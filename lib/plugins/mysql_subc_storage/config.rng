@@ -1,10 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <grammar xmlns="http://relaxng.org/ns/structure/1.0"
-         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"
+         xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0">
     <start>
         <element name="subc_storage">
             <element name="module">
                 <value>mysql_subc_storage</value>
+            </element>
+            <element name="shared_subc_user_id">
+                <data type="nonNegativeInteger" />
+                <a:documentation>When creating shared subcorpora (e.g. preflight ones), KonText has to use
+                some user to attach subcorpora to. For that reason, a special user should exist.</a:documentation>
+            </element>
+            <element name="preflight_subcorpus_size">
+                <data type="nonNegativeInteger" />
             </element>
         </element>
     </start>

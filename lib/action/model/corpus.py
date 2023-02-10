@@ -50,8 +50,8 @@ from texttypes.model import TextTypes
 
 T = TypeVar('T')
 
-PREFLIGHT_THRESHOLD_IPM = 200_000
-PREFLIGHT_MIN_LARGE_CORPUS = 100_000_000
+PREFLIGHT_THRESHOLD_IPM = 20_000
+PREFLIGHT_MIN_LARGE_CORPUS = 500_000_000
 
 
 async def empty_query_store(s, uh, res):
@@ -675,6 +675,10 @@ class CorpusActionModel(UserActionModel):
                         break
                 tpl_out['Wposlist_' + al] = [{'n': x.pos, 'v': x.pattern} for x in poslist]
                 tpl_out['input_languages'][al] = corp_info.collator_locale
+
+    async def create_preflight_subcorpus(self) -> str:
+        with plugins.runtime.SUBC_STORAGE as sc:
+            return await sc.create_preflight(self.subcpath, self.corp.corpname)
 
 
 class CorpusPluginCtx(UserPluginCtx, AbstractCorpusPluginCtx):
