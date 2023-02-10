@@ -25,7 +25,7 @@ import { PageModel } from '../../app/page';
 import { Actions } from './actions';
 import { Actions as TTActions } from '../textTypes/actions';
 import { Actions as ATActions } from '../asyncTask/actions';
-import { HTTP, tuple } from 'cnc-tskit';
+import { HTTP, List, tuple } from 'cnc-tskit';
 import {
     archiveSubcorpora,
     CreateSubcorpus,
@@ -71,12 +71,36 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
         this.layoutModel = layoutModel;
 
         this.addActionHandler(
+            ATActions.AsyncTasksChecked,
+            (state, action) => {
+                const idx = List.findIndex(task =>
+                    task.category === 'subcorpus' &&
+                    task.status === 'SUCCESS' &&
+                    task.args['corpname'] === state.data.corpname &&
+                    task.args['usesubcorp'] === state.data.usesubcorp,
+                    action.payload.tasks,
+                );
+                if (idx !== -1) {
+                    // TODO `ATActions.AsyncTasksChecked` is already side effect action
+                    // can not use SEDispatcher
+                    this.layoutModel.dispatcher.dispatch(
+                        Actions.LoadSubcorpus,
+                        {
+                            corpname: state.data.corpname,
+                            usesubcorp: initialState.data.usesubcorp,
+                        }
+                    );
+                }
+            }
+        );
+
+        this.addActionHandler(
             Actions.LoadSubcorpus,
             (state, action) => {
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.loadSubcorpData(action.payload?.corpname, action.payload?.subcname, dispatch);
+                this.loadSubcorpData(action.payload?.corpname, action.payload?.usesubcorp, dispatch);
             }
         );
 
@@ -218,7 +242,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                                     )
                                 }
 
-                                return this.createSubcorpus(state, args).pipe(
+                                return this.createSubcorpus(args, dispatch).pipe(
                                     map(resp => tuple(args, resp))
                                 )
                             }
@@ -231,10 +255,19 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                     next: ([args, resp]) => {
                         dispatch(Actions.ReuseQueryDone);
                         if (action.payload.asDraft) {
-                            this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_save_draft_confirm_msg'));
+                            this.layoutModel.showMessage(
+                                'info',
+                                this.layoutModel.translate('subclist__subc_save_draft_confirm_msg')
+                            );
+
                         } else {
-                            this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_reuse_confirm_msg'));
+                            this.layoutModel.showMessage(
+                                'info',
+                                this.layoutModel.translate('subclist__subc_reuse_confirm_msg')
+                            );
                         }
+                        // reload imediately in case the subcorpus is created without receiving task
+                        this.loadSubcorpData(state.data.corpname, state.data.usesubcorp, dispatch);
                     },
                     error: error => {
                         dispatch(Actions.ReuseQueryDone, error);
@@ -372,8 +405,8 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
     }
 
     private createSubcorpus(
-        state:SubcorpusEditModelState,
         args:CreateSubcorpusArgs|CreateSubcorpusWithinArgs|CreateSubcorpusRawCQLArgs,
+        dispatch:SEDispatcher,
     ):Observable<CreateSubcorpus> {
         return this.layoutModel.ajax$<CreateSubcorpus>(
             HTTP.Method.POST,
@@ -385,30 +418,33 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
 
         ).pipe(
             tap((data) => {
-                data.processed_subc.forEach(task => {
-                    if ((args.form_type === 'tt-sel' || args.form_type === 'within') &&
-                            args.usesubcorp) {
-                        this.layoutModel.dispatcher.dispatch(
-                            Actions.AttachTaskToSubcorpus,
+                data.processed_subc.forEach(
+                    task => {
+                        dispatch(
+                            ATActions.InboxAddAsyncTask,
                             {
-                                subcorpusId: args.usesubcorp,
-                                task
+                                ident: task.ident,
+                                label: task.label,
+                                category: task.category,
+                                status: task.status,
+                                created: task.created,
+                                error: task.error,
+                                args: task.args,
+                                url: undefined
                             }
                         );
-                    }
-                    this.layoutModel.dispatcher.dispatch<typeof ATActions.InboxAddAsyncTask>({
-                        name: ATActions.InboxAddAsyncTask.name,
-                        payload: {
-                            ident: task.ident,
-                            label: task.label,
-                            created: task.created,
-                            category: task.category,
-                            status: task.status,
-                            error: task.error,
-                            args: task.args,
+                        if ((args.form_type === 'tt-sel' || args.form_type === 'within') &&
+                                args.usesubcorp) {
+                            this.layoutModel.dispatcher.dispatch(
+                                Actions.AttachTaskToSubcorpus,
+                                {
+                                    subcorpusId: args.usesubcorp,
+                                    task
+                                }
+                            );
                         }
-                    });
-                });
+                    }
+                );
             })
         );
     }
@@ -438,7 +474,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
             HTTP.Method.GET,
             this.layoutModel.createActionUrl('/subcorpus/properties'),
             {
-                corpname: corpname,
+                corpname,
                 usesubcorp: subcname,
             }
 
@@ -447,8 +483,8 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                 dispatch(
                     Actions.LoadSubcorpusDone,
                     {
-                        corpname: corpname,
-                        subcname: subcname,
+                        corpname,
+                        subcname,
                         // TODO improve data SubcorpusRecord type
                         data: subcServerRecord2SubcorpusRecord(data.data),
                         textTypes: data.textTypes,
@@ -491,7 +527,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
             HTTP.Method.POST,
             this.layoutModel.createActionUrl('/subcorpus/restore'),
             {
-                corpname: corpname,
+                corpname,
                 usesubcorp: subcname,
             }
         ).subscribe({
