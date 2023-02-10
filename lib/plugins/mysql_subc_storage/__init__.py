@@ -18,12 +18,17 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
+import struct
+import aiofiles
+import os
+import ujson as json
+from sanic import Sanic
 
 import plugins
-import ujson as json
 from action.argmapping.subcorpus import (
     CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs)
 from corplib.subcorpus import SubcorpusRecord
+from corplib.abstract import create_new_subc_ident
 from plugin_types.auth import UserInfo
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.subc_storage import AbstractSubcArchive, SubcArchiveException
@@ -94,6 +99,14 @@ class MySQLSubcArchive(AbstractSubcArchive):
         self._corparch = corparch
         self._db = db
 
+    @property
+    def shared_subc_user_id(self) -> int:
+        return int(self._conf['shared_subc_user_id'])
+
+    @property
+    def preflight_subcorpus_size(self) -> int:
+        return int(self._conf['preflight_subcorpus_size'])
+
     async def create(
             self,
             ident: str,
@@ -131,6 +144,37 @@ class MySQLSubcArchive(AbstractSubcArchive):
                         (data.subcname, value, public_description, size, ident, author['id']))
                 else:
                     raise ex
+
+    async def create_preflight(self, subc_root_dir, corpname):
+        """
+        create a preflight subcorpus with fixed size, attached to a special
+        user.
+
+        Returns:
+            new ID of the subcorpsu
+        """
+        subc_id = await create_new_subc_ident(subc_root_dir, corpname)
+        async with aiofiles.open(os.path.join(subc_root_dir, subc_id.data_path), 'wb') as fw:
+            await fw.write(struct.pack('<q', 0))
+            await fw.write(struct.pack('<q', self.preflight_subcorpus_size))
+        subcname = f'{corpname}-preflight'
+        # TODO transaction here
+        async with self._db.cursor() as cursor:
+            await cursor.execute(
+                f'INSERT INTO {self._bconf.subccorp_table} '
+                f'(id, user_id, author_id, corpus_name, name, created, size, is_draft) '
+                'VALUES (%s, %s, %s, %s, %s, %s, %s, %s)',
+                (subc_id.id, self.shared_subc_user_id, self.shared_subc_user_id, corpname, subcname, datetime.now(),
+                 self.preflight_subcorpus_size, 0))
+            await cursor.execute(
+                'INSERT INTO kontext_preflight_subc (id, corpus_name) '
+                'VALUES (%s, %s)',
+                (subc_id.id, corpname)
+            )
+        await Sanic.get_app('kontext').dispatch('kontext.internal.reset')
+        return subc_id.id
+
+
 
     async def update_draft(
             self,

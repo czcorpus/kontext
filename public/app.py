@@ -219,6 +219,15 @@ async def store_jwt(request: Request, response: HTTPResponse):
         or request.headers.get('x-forwarded-proto') == 'https')
 
 
+@application.signal('kontext.internal.reset')
+async def handle_internal_soft_reset_signal():
+    for p in plugins.runtime:
+        fn = getattr(p.instance, 'on_soft_reset', None)
+        if callable(fn):
+            await fn()
+    logging.getLogger(__name__).warning('performed internal soft reset (Sanic signal)')
+
+
 application.config['BABEL_TRANSLATION_DIRECTORIES'] = LOCALE_PATH
 babel = Babel(application, configure_jinja=False)
 

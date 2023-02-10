@@ -91,6 +91,12 @@ async def query(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     out['text_types_data'] = tt_data
 
     corp_info = await amodel.get_corpus_info(amodel.args.corpname)
+
+    if not corp_info.preflight_subcorpus and amodel.corp.size >= PREFLIGHT_MIN_LARGE_CORPUS:
+        psubc_id = await amodel.create_preflight_subcorpus()
+        logging.getLogger(__name__).warning(f'created missing preflight corpus {amodel.corp.corpname}/{psubc_id}')
+        corp_info = await amodel.get_corpus_info(amodel.args.corpname)
+
     out['text_types_notes'] = corp_info.metadata.desc
     out['default_virt_keyboard'] = corp_info.metadata.default_virt_keyboard
 
