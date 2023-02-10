@@ -485,6 +485,14 @@ export function init({
                             <button type="button" className="default-button" onClick={onSubmit}>
                                 {he.translate('query__search_btn')}
                             </button>
+
+                            <button type='button' className='default-button'>
+                                {he.translate('query__search_anyway_btn')}
+                            </button>
+
+                            <button type='button' className='default-button'>
+                                {he.translate('query__search_in_{corpus}_btn', {corpus: 'TODO'})}
+                            </button>
                         </p>
                     </S.CutOffBox>
                 </layoutViews.CloseableFrame>

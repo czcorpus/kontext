@@ -295,6 +295,8 @@
         "query__specify_context": "Specify context",
         "query__specify_tt": "Restrict search",
         "query__search_btn": "Search",
+        "query__search_anyway_btn": "Search anyway",
+        "query__search_in_{corpus}_btn": "Search in corpus {corpus}",
         "query__kb_layout": "Layout",
         "query__align_posneg_label": "Query application",
         "query__align_contains": "Translations contain matching results",

@@ -334,6 +334,8 @@
         "query__specify_context": "Določi kontekst",
         "query__specify_tt": "Omejitev iskanja",
         "query__search_btn": "Išči",
+        "query__search_anyway_btn": "Search anyway UNTRANSLATED",
+        "query__search_in_{corpus}_btn": "Search in corpus {corpus} UNTRANSLATED",
         "query__kb_layout": "Postavitev",
         "query__align_posneg_label": "Aplikacija za poizvedbe",
         "query__align_contains": "Prevodi vsebujejo ujemajoče se rezultate",

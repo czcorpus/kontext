@@ -295,6 +295,8 @@
         "query__specify_context": "Specifikovat kontext",
         "query__specify_tt": "Omezit hledání",
         "query__search_btn": "Hledat",
+        "query__search_anyway_btn": "Přesto hledat",
+        "query__search_in_{corpus}_btn": "Hledat v korpusu {corpus}",
         "query__kb_layout": "Rozložení",
         "query__align_posneg_label": "Aplikace dotazu",
         "query__align_contains": "Překlad obsahuje odpovídající výsledky",

@@ -295,6 +295,8 @@
         "query__specify_context": "Ôkryśl kōntekst",
         "query__specify_tt": "Ôgranicz szukanie",
         "query__search_btn": "Szukej",
+        "query__search_anyway_btn": "Search anyway UNTRANSLATED",
+        "query__search_in_{corpus}_btn": "Search in corpus {corpus} UNTRANSLATED",
         "query__kb_layout": "Ukłŏd",
         "query__align_posneg_label": "Query application",
         "query__align_contains": "Translations contain matching results",
