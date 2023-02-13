@@ -471,7 +471,7 @@
         "query__help": "Pomoč - obrazec za poizvedbo",
         "query__current_posattrs_not_covered_by_all_aligned_corpora": "The current positional attribute display preferences are not compatible with the currently selected aligned corpora. UNTRANSLATED",
         "query__altcorp_heading": "Alternative corpus UNTRANSLATED",
-        "query__altcorp_suggested": "The current query will be likely very time consuming to process and it may happen the operation will not finish. We recommend to use an alternative corpus. UNTRANSLATED",
+        "query__altcorp_suggested_{alt_corpus}": "The current query will be likely very time consuming to process and it may happen the operation will not finish. We recommend to use an alternative corpus \u0022{alt_corpus}\u0022. UNTRANSLATED",
         "pquery__help": "Pomoč - paradigmatična poizvedba UNTRANSLATED",
         "qhistory__attached_text_types": "Vrste besedil",
         "qhistory__query_supertype_sel": "išči vrsto",
