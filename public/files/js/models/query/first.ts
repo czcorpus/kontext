@@ -94,6 +94,14 @@ export interface SubmitQueryResult {
     messages:Array<Kontext.ResponseMessage>;
 }
 
+interface CreateSubmitArgsArgs {
+    contextFormArgs:QueryContextArgs;
+    async:boolean;
+    ttSelection:TextTypes.ExportedSelection;
+    noQueryHistory?:boolean;
+    useAltCorp?:boolean;
+}
+
 /**
  *
  * @param data
@@ -999,13 +1007,13 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         }
     }
 
-    createSubmitArgs(
-        contextFormArgs:QueryContextArgs,
-        async:boolean,
-        ttSelection:TextTypes.ExportedSelection,
-        noQueryHistory:boolean,
-        useAltCorp:boolean,
-    ):ConcQueryArgs {
+    createSubmitArgs({
+        contextFormArgs,
+        async,
+        ttSelection,
+        noQueryHistory,
+        useAltCorp
+    }:CreateSubmitArgsArgs):ConcQueryArgs {
         const currArgs = this.pageModel.getConcArgs();
         const args:ConcQueryArgs = {
             type: 'concQueryArgs',
@@ -1024,7 +1032,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             text_types: this.disableRestrictSearch(this.state) ? {} : ttSelection,
             context: contextFormArgs,
             async,
-            no_query_history: noQueryHistory,
+            no_query_history: !!noQueryHistory,
         };
 
         if (this.state.corpora.length > 1) {
@@ -1147,13 +1155,13 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 'query_submit',
                 {format: 'json'}
             ),
-            this.createSubmitArgs(
+            this.createSubmitArgs({
                 contextFormArgs,
                 async,
                 ttSelection,
                 noQueryHistory,
                 useAltCorp,
-            ),
+            }),
             {
                 contentType: 'application/json'
             }
