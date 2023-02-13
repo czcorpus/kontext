@@ -736,7 +736,7 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
         preflight_conf = dict(
             subc=corpus_info.preflight_subcorpus.id,
             corpname=corpus_info.preflight_subcorpus.corpus_name,
-            threshold_ipm=PREFLIGHT_THRESHOLD_FREQ / amodel.corp.size * 1_000_000)
+            threshold_ipm=round(PREFLIGHT_THRESHOLD_FREQ / amodel.corp.size * 1_000_000))
     else:
         preflight_conf = None
     ans = dict(

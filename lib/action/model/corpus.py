@@ -128,7 +128,7 @@ class CorpusActionModel(UserActionModel):
     def active_q_data(self):
         return self._active_q_data
 
-    async def on_query_store(self, fn: Callable[[List[str], Optional[int], Any], None]):
+    def on_query_store(self, fn: Callable[[List[str], Optional[int], Any], Awaitable[None]]):
         """
         Register a function called after a query (conc, pquery, wordlist) has been stored.
         The function arguments are:
@@ -482,7 +482,7 @@ class CorpusActionModel(UserActionModel):
             result['conc_preflight'] = dict(
                 corpname=corp_info.preflight_subcorpus.corpus_name,
                 subc=corp_info.preflight_subcorpus.id,
-                threshold_ipm=PREFLIGHT_THRESHOLD_FREQ / self.corp.size * 1_000_000)
+                threshold_ipm=round(PREFLIGHT_THRESHOLD_FREQ / self.corp.size * 1_000_000))
         else:
             result['conc_preflight'] = None
 

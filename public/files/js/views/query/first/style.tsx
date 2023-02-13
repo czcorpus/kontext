@@ -161,4 +161,8 @@ export const CutOffBox = styled.div`
             padding-left: 1em;
         }
     }
+
+    p.submit button:not(:first-child) {
+        margin-left: 1em;
+    }
 `;
