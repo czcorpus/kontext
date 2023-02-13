@@ -170,7 +170,7 @@ async def preflight(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     mutates_result=True, action_log_mapper=log_mapping.query_submit, return_type='json', action_model=ConcActionModel)
 async def query_submit(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 
-    def store_last_op(conc_ids: List[str], history_ts: Optional[int], _):
+    async def store_last_op(conc_ids: List[str], history_ts: Optional[int], _):
         if history_ts:
             amodel.store_last_search('conc', conc_ids[0])
 
@@ -809,7 +809,7 @@ async def filter(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     """
     Positive/Negative filter
     """
-    def store_last_op(conc_ids: List[str], history_ts: Optional[int], _):
+    async def store_last_op(conc_ids: List[str], history_ts: Optional[int], _):
         if history_ts:
             amodel.store_last_search('conc:filter', conc_ids[0])
 
