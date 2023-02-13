@@ -46,7 +46,6 @@ import { AttrHelper } from '../cqleditor/attrs';
 import { highlightSyntaxStatic } from '../cqleditor/parser';
 import { ConcFormArgs, QueryFormArgs, QueryFormArgsResponse, SubmitEncodedSimpleTokens } from './formArgs';
 import { PluginName } from '../../app/plugin';
-import { validateGzNumber } from '../base';
 
 
 export interface QueryFormUserEntries {
@@ -304,9 +303,9 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
 
      concPreflight:Kontext.PreflightConf|null;
 
-     cutOffWarningVisible:boolean;
+     suggestAltCorpVisible:boolean;
 
-     cutOffSize:Kontext.FormValue<string>;
+     altCorp:string|null;
 }
 
 
@@ -451,8 +450,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 alignCommonPosAttrs: props.alignCommonPosAttrs,
                 compositionModeOn: false,
                 concPreflight: props.concPreflight,
-                cutOffWarningVisible: false,
-                cutOffSize: Kontext.newFormValue<string>('', true)
+                suggestAltCorpVisible: false,
+                altCorp: pageModel.getConf<string|null>('AltCorp'),
         });
 
         this.addActionSubtypeHandler(
@@ -484,49 +483,27 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         );
 
         this.addActionHandler(
-            Actions.ShowCutOffRequired,
+            Actions.ShowSuggestAltCorp,
             action => {
                 this.changeState(
                     state => {
                         state.isBusy = false;
-                        state.cutOffWarningVisible = true;
-                        state.cutOffSize.value = '10000000';
+                        state.suggestAltCorpVisible = true;
                     }
                 );
             }
         );
 
         this.addActionHandler(
-            Actions.CloseCutOffRequired,
+            Actions.CloseSuggestAltCorp,
             action => {
                 this.changeState(
                     state => {
-                        state.cutOffWarningVisible = false;
+                        state.suggestAltCorpVisible = false;
                     }
                 );
             }
         )
-
-        this.addActionHandler(
-            Actions.CutOffInputSet,
-            action => {
-                this.changeState(
-                    state => {
-                        state.cutOffSize.value = action.payload.value;
-                        if (validateGzNumber(state.cutOffSize.value)) {
-                            state.cutOffSize.isInvalid = false;
-                            state.cutOffSize.errorDesc = undefined;
-
-                        } else {
-                            state.cutOffSize.isInvalid = true;
-                            state.cutOffSize.errorDesc = this.pageModel.translate(
-                                'concview__save_form_line_from_err_msg_{value}',
-                                {value: 10000000});
-                        }
-                    }
-                )
-            }
-        );
 
         this.addActionHandler(
             Actions.QuerySubmit,
@@ -578,7 +555,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                             if (err !== null) {
                                 throw err;
                             }
-                            return this.state.concPreflight && this.state.cutOffSize.value === '' ?
+                            return this.state.concPreflight && this.state.altCorp && action.payload.useAltCorp === undefined ?
                                 this.submitPreflight(
                                     contextData,
                                     ttSelections,
@@ -587,31 +564,31 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                                 rxOf({
                                     contextData,
                                     ttSelections,
-                                    cutOffRequired: false,
+                                    preflightAlert: false,
                                 });
                         }
                     ),
                     concatMap(
-                        ({ttSelections, contextData, cutOffRequired}) => {
+                        ({ttSelections, contextData, preflightAlert}) => {
                             let err:Error;
                             err = this.testQueryTypeMismatch();
                             if (err !== null) {
                                 throw err;
                             }
                             return Rx.zippedWith(
-                                cutOffRequired,
-                                cutOffRequired ?
+                                preflightAlert,
+                                preflightAlert ?
                                     rxOf({ response: null, messages: [] }) :
-                                    this.submitQuery(contextData, true, ttSelections)
+                                    this.submitQuery(contextData, true, ttSelections, undefined, action.payload.useAltCorp)
                             );
                         }
                     )
 
                 ).subscribe({
-                    next: ([{response, messages}, cutOffRequired]) => {
-                        if (cutOffRequired) {
+                    next: ([{response, messages}, preflightAlert]) => {
+                        if (preflightAlert) {
                             this.dispatchSideEffect(
-                                Actions.ShowCutOffRequired
+                                Actions.ShowSuggestAltCorp
                             )
 
                         } else if (response === null) {
@@ -1026,7 +1003,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         contextFormArgs:QueryContextArgs,
         async:boolean,
         ttSelection:TextTypes.ExportedSelection,
-        noQueryHistory:boolean
+        noQueryHistory:boolean,
+        useAltCorp:boolean,
     ):ConcQueryArgs {
         const currArgs = this.pageModel.getConcArgs();
         const args:ConcQueryArgs = {
@@ -1047,9 +1025,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             context: contextFormArgs,
             async,
             no_query_history: noQueryHistory,
-            cutoff: this.state.cutOffSize.value ?
-                parseInt(this.state.cutOffSize.value) :
-                undefined
         };
 
         if (this.state.corpora.length > 1) {
@@ -1060,6 +1035,19 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             corpus => this.exportQuery(this.state.queries[corpus]),
             this.state.corpora
         );
+
+        if (useAltCorp) {
+            const corp = this.pageModel.getCorpusIdent();
+            args.queries = List.map(
+                query => {
+                    if (query.corpname == corp.name) {
+                        query.corpname = this.state.altCorp;
+                    }
+                    return query;
+                },
+                args.queries,
+            );
+        }
 
         return args;
     }
@@ -1118,7 +1106,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
     ):Observable<{
         contextData:QueryContextArgs;
         ttSelections:TextTypes.ExportedSelection;
-        cutOffRequired:boolean;
+        preflightAlert:boolean;
     }> {
 
         return this.pageModel.ajax$<PreflightResponse>(
@@ -1139,7 +1127,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 ans => ({
                     contextData,
                     ttSelections,
-                    cutOffRequired: ans.sizeIpm >= preflightSubc.threshold_ipm
+                    preflightAlert: ans.sizeIpm >= preflightSubc.threshold_ipm
                 })
             )
         );
@@ -1149,7 +1137,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         contextFormArgs:QueryContextArgs,
         async:boolean,
         ttSelection:TextTypes.ExportedSelection,
-        noQueryHistory?:boolean
+        noQueryHistory?:boolean,
+        useAltCorp?:boolean,
     ):Observable<SubmitQueryResult> {
 
         return this.pageModel.ajax$<ConcQueryResponse>(
@@ -1162,7 +1151,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 contextFormArgs,
                 async,
                 ttSelection,
-                noQueryHistory
+                noQueryHistory,
+                useAltCorp,
             ),
             {
                 contentType: 'application/json'
