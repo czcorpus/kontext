@@ -80,7 +80,7 @@ class WordlistActionModel(CorpusActionModel):
                     user_id=self.session_get('user', 'id'),
                     query_id=query_id, q_supertype='wlist')
                 for fn in self._on_query_store:
-                    fn([query_id], ts, resp.result)
+                    await fn([query_id], ts, resp.result)
 
     def export_form_args(self, result: Dict[str, Any]):
         if self._curr_wlform_args:

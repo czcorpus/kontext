@@ -450,7 +450,7 @@ export function init({
                                 {he.translate('query__altcorp_suggested')}
                             </p>
                         </div>
-                        <p>
+                        <p className="submit">
                             <button type='button' className='default-button' onClick={() => onSubmit(false)}>
                                 {he.translate('query__search_anyway_btn')}
                             </button>
