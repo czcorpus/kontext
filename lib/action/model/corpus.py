@@ -50,8 +50,15 @@ from texttypes.model import TextTypes
 
 T = TypeVar('T')
 
-PREFLIGHT_THRESHOLD_IPM = 20_000
+PREFLIGHT_THRESHOLD_FREQ = 10_000_000
+"""
+Specifies a minimum preflight frequency (after it is recalculated 
+to the original corpus size) we consider too comp. demanding 
+and offer users an alternative corpus
+"""
+
 PREFLIGHT_MIN_LARGE_CORPUS = 500_000_000
+"""Specifies a minimum size of a corpus to be used along with preflight queries"""
 
 
 async def empty_query_store(s, uh, res):
@@ -475,7 +482,7 @@ class CorpusActionModel(UserActionModel):
             result['conc_preflight'] = dict(
                 corpname=corp_info.preflight_subcorpus.corpus_name,
                 subc=corp_info.preflight_subcorpus.id,
-                threshold_ipm=PREFLIGHT_THRESHOLD_IPM)
+                threshold_ipm=PREFLIGHT_THRESHOLD_FREQ / self.corp.size * 1_000_000)
         else:
             result['conc_preflight'] = None
 

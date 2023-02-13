@@ -46,7 +46,7 @@ from action.krequest import KRequest
 from action.model.base import BaseActionModel
 from action.model.concordance import ConcActionModel
 from action.model.concordance.linesel import LinesGroups
-from action.model.corpus import CorpusActionModel, PREFLIGHT_THRESHOLD_IPM, PREFLIGHT_MIN_LARGE_CORPUS
+from action.model.corpus import CorpusActionModel, PREFLIGHT_THRESHOLD_FREQ, PREFLIGHT_MIN_LARGE_CORPUS
 from action.model.user import UserActionModel
 from action.response import KResponse
 from action.result.concordance import QueryAction
@@ -91,7 +91,6 @@ async def query(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     out['text_types_data'] = tt_data
 
     corp_info = await amodel.get_corpus_info(amodel.args.corpname)
-
     if not corp_info.preflight_subcorpus and amodel.corp.size >= PREFLIGHT_MIN_LARGE_CORPUS:
         psubc_id = await amodel.create_preflight_subcorpus()
         logging.getLogger(__name__).warning(f'created missing preflight corpus {amodel.corp.corpname}/{psubc_id}')
@@ -734,7 +733,7 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
         preflight_conf = dict(
             subc=corpus_info.preflight_subcorpus.id,
             corpname=corpus_info.preflight_subcorpus.corpus_name,
-            threshold_ipm=PREFLIGHT_THRESHOLD_IPM)
+            threshold_ipm=PREFLIGHT_THRESHOLD_FREQ / amodel.corp.size * 1_000_000)
     else:
         preflight_conf = None
     ans = dict(
