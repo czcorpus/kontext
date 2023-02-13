@@ -401,6 +401,7 @@ export class Actions {
 
     static QuerySubmit: Action<{
         noQueryHistory?:boolean;
+        useAltCorp?:boolean;
     }> = {
         name: 'QUERY_INPUT_SUBMIT'
     };
@@ -439,20 +440,14 @@ export class Actions {
         name: 'QUERY_INPUT_HIDE_QUERY_STRUCTURE_WIDGET'
     };
 
-    static ShowCutOffRequired: Action<{
+    static ShowSuggestAltCorp: Action<{
     }> = {
-        name: 'QUERY_INPUT_SHOW_CUTOFF_REQUIRED'
+        name: 'QUERY_INPUT_SHOW_SUGGEST_ALTCORP'
     };
 
-    static CloseCutOffRequired: Action<{
+    static CloseSuggestAltCorp: Action<{
     }> = {
-        name: 'QUERY_INPUT_CLOSE_CUTOFF_REQUIRED'
-    };
-
-    static CutOffInputSet: Action<{
-        value:string;
-    }> = {
-        name: 'QUERY_INPUT_CUTOFF_INPUT_SET'
+        name: 'QUERY_INPUT_CLOSE_SUGGEST_ALTCORP'
     };
 
     static SampleFormSetRlines: Action<{
