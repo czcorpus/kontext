@@ -215,12 +215,14 @@ class Backend(DatabaseBackend):
             'c.default_virt_keyboard as default_virt_keyboard, '
             'c.default_view_opts, c.default_tagset, '
             'c.part_of_ml_corpus, c.ml_position_filter, '
-            'kps.id AS preflight_subc, ks.corpus_name AS preflight_corpus '
+            'kps.id AS preflight_subc, ks.corpus_name AS preflight_corpus, '
+            'ac.alt_corpus_name AS alt_corp '
             f'FROM {self._corp_table} AS c '
             'LEFT JOIN kontext_keyword_corpus AS kc ON kc.corpus_name = c.name '
             'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
             'LEFT JOIN kontext_preflight_subc AS kps ON kps.corpus_name = c.name '
             'LEFT JOIN kontext_subcorpus AS ks ON ks.id = kps.id '
+            'LEFT JOIN kontext_alt_corpus AS ac ON ac.corpus_name = c.name '
             'WHERE c.active = 1 AND c.name = %s '
             'GROUP BY c.name ', (corp_id,))
         return await cursor.fetchone()

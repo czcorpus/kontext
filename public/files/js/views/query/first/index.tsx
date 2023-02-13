@@ -223,8 +223,8 @@ export function init({
             const primaryCorpname = List.head(this.props.corpora);
             return (
                 <S.QueryForm>
-                    {this.props.cutOffWarningVisible ?
-                        <CutOffWarning cutOffSize={this.props.cutOffSize} /> :
+                    {this.props.suggestAltCorpVisible ?
+                        <AltCorpSuggestion altCorp={this.props.altCorp} /> :
                         null
                     }
                     <div onKeyDown={this._keyEventHandler}>
@@ -421,69 +421,42 @@ export function init({
 
     const BoundSelectedTextTypesLite = Bound(SelectedTextTypesLite, textTypesModel);
 
-    // -------- <CutOffWarning /> ------------------------------------
+    // -------- <AltCorpSuggestion /> ------------------------------------
 
-    const CutOffWarning:React.FC<{
-        cutOffSize:Kontext.FormValue<string>;
+    const AltCorpSuggestion:React.FC<{
+        altCorp:string;
     }> = (props) => {
 
         const onClose = () => {
             dispatcher.dispatch(
-                Actions.CloseCutOffRequired
+                Actions.CloseSuggestAltCorp
             );
         };
 
-        const onInputChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
-            dispatcher.dispatch(
-                Actions.CutOffInputSet,
-                {
-                    value: evt.target.value
-                }
-            );
-        };
-
-        const onSubmit = () => {
-            dispatcher.dispatch(
-                Actions.QuerySubmit
-            );
-        };
-
-        const keyEventHandler = (evt) => {
-            if (evt.key === Keyboard.Value.ENTER && !evt.shiftKey) {
-                if (!evt.ctrlKey && !evt.shiftKey) {
-                    dispatcher.dispatch(
-                        Actions.QuerySubmit
-                    );
-                }
-                evt.stopPropagation();
-                evt.preventDefault();
-            }
+        const onSubmit = (useAltCorp: boolean) => {
+            dispatcher.dispatch<typeof Actions.QuerySubmit>({
+                name: Actions.QuerySubmit.name,
+                payload: {useAltCorp}
+            });
         };
 
         return (
             <layoutViews.ModalOverlay onCloseKey={onClose}>
-                <layoutViews.CloseableFrame onCloseClick={onClose} label={he.translate('query__cutoff_heading')}>
-                    <S.CutOffBox onKeyDown={keyEventHandler}>
+                <layoutViews.CloseableFrame onCloseClick={onClose} label={he.translate('query__altcorp_heading')}>
+                    <S.CutOffBox>
                         <div className="message">
                             <layoutViews.StatusIcon status="warning" />
                             <p>
-                                {he.translate('query__cutoff_required')}
+                                {he.translate('query__altcorp_suggested')}
                             </p>
                         </div>
-                        <label>
-                            {he.translate('query__cutoff_input_label')}
-                            <layoutViews.ValidatedItem invalid={props.cutOffSize.isInvalid}
-                                        errorDesc={props.cutOffSize.errorDesc}>:{'\u00a0'}
-                                <input
-                                    type="text"
-                                    value={props.cutOffSize.value}
-                                    onChange={onInputChange}
-                                    style={{width: '6em'}} />
-                            </layoutViews.ValidatedItem>
-                        </label>
                         <p>
-                            <button type="button" className="default-button" onClick={onSubmit}>
-                                {he.translate('query__search_btn')}
+                            <button type='button' className='default-button' onClick={() => onSubmit(false)}>
+                                {he.translate('query__search_anyway_btn')}
+                            </button>
+
+                            <button type='button' className='default-button' onClick={() => onSubmit(true)}>
+                                {he.translate('query__search_in_{corpus}_btn', {corpus: props.altCorp})}
                             </button>
                         </p>
                     </S.CutOffBox>

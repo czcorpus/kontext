@@ -21,7 +21,6 @@ import logging
 import re
 from collections import OrderedDict, defaultdict
 from typing import Any, Dict, Iterable, List, Optional, Tuple
-from sanic.blueprints import Blueprint
 
 import plugins
 import ujson as json
@@ -31,6 +30,7 @@ from action.model.user import UserActionModel
 from action.plugin.ctx import AbstractCorpusPluginCtx, PluginCtx
 from action.response import KResponse
 from aiomysql.cursors import Cursor
+from corplib.abstract import SubcorpusIdent
 from plugin_types.corparch import (
     AbstractSearchableCorporaArchive, CorpusListItem)
 from plugin_types.corparch.backend import DatabaseBackend
@@ -44,8 +44,7 @@ from plugins.mysql_corparch.backend import Backend
 from plugins.mysql_corparch.corplist import (
     DefaultCorplistProvider, parse_query)
 from plugins.mysql_integration_db import MySqlIntegrationDb
-from corplib.abstract import SubcorpusIdent
-
+from sanic.blueprints import Blueprint
 
 try:
     from markdown import markdown
@@ -166,7 +165,10 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
             ans.part_of_ml_corpus = row['part_of_ml_corpus']
             ans.ml_position_filter = MLPositionFilter(row['ml_position_filter'])
             if row['preflight_subc']:
-                ans.preflight_subcorpus = SubcorpusIdent(id=row['preflight_subc'], corpus_name=row['preflight_corpus'])
+                ans.preflight_subcorpus = SubcorpusIdent(
+                    id=row['preflight_subc'], corpus_name=row['preflight_corpus'])
+            if row['alt_corp']:
+                ans.alt_corp = row['alt_corp']
             return ans
         return None
 
