@@ -432,7 +432,7 @@
         "query__help": "Nápověda - dotazovací formulář",
         "query__current_posattrs_not_covered_by_all_aligned_corpora": "Aktuální nastavení zobrazení pozičních atributů není kompatibilní se zvolenými zarovnanými korpusy.",
         "query__altcorp_heading": "Alternativní korpus",
-        "query__altcorp_suggested": "Aktuální dotaz bude pravděpodobně časově náročný a může se stát, že vyhledání nedoběhne do konce. Doporučujeme použít alternativní korpus.",
+        "query__altcorp_suggested_{alt_corpus}": "Aktuální dotaz bude pravděpodobně časově náročný a může se stát, že vyhledání nedoběhne do konce. Doporučujeme použít alternativní korpus \u0022{alt_corpus}\u0022",
         "pquery__help": "Nápověda - paradigmatický dotaz",
         "qhistory__attached_text_types": "Typy textů",
         "qhistory__curr_corp_only_label_{corpus}": "pouze korpus {corpus}",

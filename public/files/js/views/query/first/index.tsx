@@ -447,7 +447,7 @@ export function init({
                         <div className="message">
                             <layoutViews.StatusIcon status="warning" />
                             <p>
-                                {he.translate('query__altcorp_suggested')}
+                                {he.translate('query__altcorp_suggested_{alt_corpus}', {alt_corpus: props.altCorp})}
                             </p>
                         </div>
                         <p className="submit">
