@@ -32,6 +32,9 @@ class ConcFormArgs(Generic[T]):
         self._op_key = '__new__'
         self.data: T = None
 
+    def __repr__(self):
+        return f'<{self.__class__.__name__}{{ _op_key: {self._op_key}, _persistent: {self._persistent} }}>'
+
     def updated(self, attrs: Dict[str, Any], op_key: str) -> 'ConcFormArgs[T]':
         """
         Return an updated self object (the same instance). There must
