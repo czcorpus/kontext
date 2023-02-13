@@ -323,7 +323,11 @@ class ConcActionModel(CorpusActionModel):
                 pipeline = await qp.load_pipeline_ops(self.plugin_ctx, op_key, build_conc_form_args)
                 for i, item in enumerate(pipeline):
                     conc_forms_args[item.op_key] = item.to_dict()
-                    query_overview[i].conc_persistence_op_id = item.op_key
+                    if i < len(query_overview):
+                        query_overview[i].conc_persistence_op_id = item.op_key
+                    elif item.form_type != 'lgroup':
+                        raise RuntimeError('Found a mismatch between Manatee query encoding and stored metadata')
+
         # Attach new form args added by the current action.
         if len(self._auto_generated_conc_ops) > 0:
             conc_forms_args['__latest__'] = self._auto_generated_conc_ops[-1][1].to_dict()
