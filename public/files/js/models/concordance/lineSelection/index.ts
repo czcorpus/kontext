@@ -34,6 +34,7 @@ import { Actions } from '../actions';
 import { Actions as UserActions } from '../../user/actions';
 import { Actions as GlobalActions } from '../../common/actions';
 import { IPageLeaveVoter } from '../../common/pageLeave';
+import * as copy from 'copy-to-clipboard';
 
 
 interface ReenableEditResponse extends AjaxConcResponse {
@@ -647,6 +648,15 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
                 });
             }
         );
+
+        this.addActionHandler(
+            Actions.CopyLineSelectionLinkToClipboard,
+            action => {
+                copy(this.state.lastCheckpointUrl);
+                this.layoutModel.showMessage(
+                    'info', this.layoutModel.translate('global__link_copied_to_clipboard'));
+            }
+        )
     }
 
     getRegistrationId():string {
