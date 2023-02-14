@@ -147,20 +147,29 @@ export function init(dispatcher:IActionDispatcher, he:ComponentHelpers):CommonFr
 
     }> = (props) => {
 
+        const [{recipient}, changeState] = React.useState({recipient: ''});
+
         const copyToClipboard = () => {
-            dispatcher.dispatch<typeof Actions.ResultLinkCopyToClipboard>({
-                name: Actions.ResultLinkCopyToClipboard.name,
-                payload: {sourceId: props.sourceId}
-            });
-        }
-
-        const [{targetMail}, changeState] = React.useState({targetMail: ''});
-
-        const onMailInputChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
-            changeState({targetMail: evt.target.value});
+            dispatcher.dispatch(
+                Actions.ResultLinkCopyToClipboard,
+                {sourceId: props.sourceId}
+            );
         };
 
-        const currHref = `mailto:${targetMail}?body=${encodeURIComponent(props.url)}`;
+        const shareViaEmail = () => {
+            dispatcher.dispatch(
+                Actions.ResultLinkShareViaEmail,
+                {
+                    sourceId: props.sourceId,
+                    recipient,
+                    url: props.url
+                }
+            );
+        };
+
+        const onMailInputChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            changeState({recipient: evt.target.value});
+        };
 
         return (
             <S.ShareFreqTable>
@@ -179,13 +188,17 @@ export function init(dispatcher:IActionDispatcher, he:ComponentHelpers):CommonFr
                         </a>
                     </span>
                 </div>
-                <h4>{he.translate('global__create_email')}</h4>
+                <h4>{he.translate('global__send_link_via_email')}</h4>
                 <div className="mail">
                     <label>{he.translate('global__mail_recipient')}:{'\u00a0'}
-                        <input type="text" value={targetMail} onChange={onMailInputChange} />
+                        <input
+                            type="email"
+                            value={recipient}
+                            onChange={onMailInputChange}
+                            style={{width: '20em'}} />
                     </label>
-                    <a className="util-button" target="_blank" href={currHref}>
-                        {he.translate('global__create')}
+                    <a className="util-button" onClick={shareViaEmail}>
+                        {he.translate('global__send')}
                     </a>
                 </div>
             </S.ShareFreqTable>

@@ -457,11 +457,20 @@ msgstr "Concordance regeneration"
 msgid "Word list regeneration"
 msgstr "Word list regeneration UNRANSLATED"
 
-msgid "Word list regeneration"
-msgstr "Word list regeneration UNRANSLATED"
-
 msgid "Paradigmatic query calculation"
 msgstr "Paradigmatic query calculation UNTRANSLATED"
 
 msgid "Go to the constituent concordance #{}"
 msgstr "Go to the constituent concordance #{} UNTRANSLATED"
+
+msgid "KonText concordance link"
+msgstr "KonText concordance link UNTRANSLATED"
+
+msgid "KonText user {} has sent to you a concordance link to you"
+msgstr "Uživatel KonTextu {} vám zaslal odkaz na konkordanci UNTRANSLATED"
+
+msgid "KonText frequency table link"
+msgstr "KonText frequency table link UNTRANSLATED"
+
+msgid "KonText user {} has sent a link to a frequency distribution table"
+msgstr "Uživatel KonTextu {} vám zaslal odkaz na tabulku frekvenční distribuce UNTRANSLATED"

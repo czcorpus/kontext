@@ -25,7 +25,7 @@ import { Observable } from 'rxjs';
 import {
     EmptyResultBlock, FreqDataLoader, FreqDataRowsModelState, FreqServerArgs, isEmptyResultBlock,
     isFreqChartsModelState, MulticritFreqServerArgs, recalculateConfIntervals, ResultBlock } from './common';
-import { Dict, List, Maths, pipe, tuple } from 'cnc-tskit';
+import { Dict, HTTP, List, Maths, pipe, tuple } from 'cnc-tskit';
 import { ConcQuickFilterServerArgs } from '../../concordance/common';
 import { Actions } from './actions';
 import { Actions as MainMenuActions } from '../../mainMenu/actions';
@@ -241,6 +241,58 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 if (state.isActive) {
                     copy(this.getShareLink(state, action.payload.sourceId));
                     this.pageModel.showMessage('info', this.pageModel.translate('global__link_copied_to_clipboard'));
+                }
+            }
+        );
+
+        this.addActionHandler(
+            Actions.ResultLinkShareViaEmail,
+            (state, action) => {
+                if (state.isActive) {
+                    state.isBusy[action.payload.sourceId] = true;
+                }
+            },
+            (state, action, dispatch) => {
+                if (state.isActive) {
+                    this.pageModel.ajax$<{ok: boolean}>(
+                        HTTP.Method.POST,
+                        this.pageModel.createActionUrl('/share_freq_table_via_mail'),
+                        {
+                            url: action.payload.url,
+                            email: action.payload.recipient
+                        },
+                        {
+                            contentType: 'application/json'
+                        }
+
+                    ).subscribe({
+                        next: data => {
+                            dispatch(
+                                Actions.ResultLinkShareViaEmailDone,
+                                {
+                                    sourceId: action.payload.sourceId
+                                }
+                            );
+                            this.pageModel.showMessage(
+                                'info', this.pageModel.translate('global__ok'));
+                        },
+                        error: error => {
+                            this.pageModel.showMessage('error', error);
+                            dispatch(
+                                Actions.ResultLinkShareViaEmailDone,
+                                error
+                            );
+                        }
+                    });
+                }
+            }
+        );
+
+        this.addActionHandler(
+            Actions.ResultLinkShareViaEmailDone,
+            (state, action) => {
+                if (state.isActive) {
+                    state.isBusy[action.payload.sourceId] = false;
                 }
             }
         );
