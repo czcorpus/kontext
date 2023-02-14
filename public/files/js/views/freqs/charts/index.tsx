@@ -34,10 +34,11 @@ import { Actions as GlobalActions } from '../../../models/common/actions';
 import * as theme from '../../theme/default';
 import { init as initSaveViews } from './save';
 import { init as initWordCloud } from './wordCloud/index';
+import { init as initFreqCommonViews } from '../common';
 import * as S from './style';
 import {
     FreqChartsModelState,
-    isEmptyResultBlock, ResultBlock, ResultItem
+    isEmptyResultBlock, ResultBlock, ResultItem, ShareLink
 } from '../../../models/freqs/regular/common';
 import { WordCloudItemCalc } from './wordCloud/calc';
 import { FreqChartsAvailableData, FreqChartsAvailableOrder, FreqChartsAvailableTypes
@@ -67,7 +68,14 @@ function transformDataForErrorBars(block:ResultBlock):Array<ResultItem & {z:numb
     );
 }
 
-
+/**
+ *
+ * @param dispatcher
+ * @param he
+ * @param freqChartsModel
+ * @param chartSaveFormModel
+ * @returns
+ */
 export function init(
     dispatcher:IActionDispatcher,
     he:Kontext.ComponentHelpers,
@@ -82,6 +90,7 @@ export function init(
     const globalComponents = he.getLayoutViews();
     const SaveForm = initSaveViews(dispatcher, he, chartSaveFormModel);
     const WordCloud = initWordCloud<ResultItem>(he);
+    const {ShareLinkWidget} = initFreqCommonViews(dispatcher, he);
 
     const dataTransform = (unit:FreqChartsAvailableData) => (item:ResultItem):WordCloudItemCalc => {
         return {
@@ -277,45 +286,37 @@ export function init(
         dtFormat:string;
         downloadFormat:Kontext.ChartExportFormat;
         handleDownload:()=>void;
+        shareLink:string;
+        onShowShare:(sourceId:string)=>void;
 
-    }> = (props) => {
-
-        const copyToClipboard = () => {
-            dispatcher.dispatch<typeof Actions.ResultLinkCopyToClipboard>({
-                name: Actions.ResultLinkCopyToClipboard.name,
-                payload: {sourceId: props.sourceId}
-            });
-        }
-
-        return (
-            <S.FreqChartsParamsFieldset>
-                <globalComponents.ExpandableArea initialExpanded={false} label={he.translate('freq__chart_options')}>
-                    <div className="opts-line">
-                        <ChartTypeSelector sourceId={props.sourceId} type={props.type} dtFormat={props.dtFormat} />
-                        <FreqUnitsSelector sourceId={props.sourceId} dataKey={props.dataKey} data={props.data} />
-                        <PageSizeInput sourceId={props.sourceId} data={props.data} fmaxitems={props.fmaxitems} type={props.type} />
-                        {props.type === 'bar' || props.type === 'cloud' ?
-                            <FreqSortBySelector sourceId={props.sourceId} sortColumn={props.sortColumn} data={props.data} /> :
-                            null
-                        }
-                    </div>
-                    <div className="opts-line">
-                        <label>{he.translate('freq__download_chart')}:</label>
-                        <DownloadFormatSelector sourceId={props.sourceId} format={props.downloadFormat} />
-                        <S.DownloadButton src={he.createStaticUrl('img/download-button.svg')} alt={he.translate('freq__download_chart')} onClick={props.handleDownload} />
-                        {props.isBusy ?
-                            <img src={he.createStaticUrl('img/ajax-loader-bar.gif')} alt={he.translate('global__loading')} /> :
-                            null}
-                        <label>{he.translate('freq__share_chart')}:</label>
-                        <a onClick={copyToClipboard}>
-                            <img className="over-img" style={{width: '1em', verticalAlign: 'middle'}} src={he.createStaticUrl('img/share.svg')}
-                                    alt={he.translate('freq__share_chart')} title={he.translate('freq__share_chart')} />
-                        </a>
-                    </div>
-                </globalComponents.ExpandableArea>
-            </S.FreqChartsParamsFieldset>
-        );
-    }
+    }> = (props) => (
+        <S.FreqChartsParamsFieldset>
+            <globalComponents.ExpandableArea initialExpanded={false} label={he.translate('freq__chart_options')}>
+                <div className="opts-line">
+                    <ChartTypeSelector sourceId={props.sourceId} type={props.type} dtFormat={props.dtFormat} />
+                    <FreqUnitsSelector sourceId={props.sourceId} dataKey={props.dataKey} data={props.data} />
+                    <PageSizeInput sourceId={props.sourceId} data={props.data} fmaxitems={props.fmaxitems} type={props.type} />
+                    {props.type === 'bar' || props.type === 'cloud' ?
+                        <FreqSortBySelector sourceId={props.sourceId} sortColumn={props.sortColumn} data={props.data} /> :
+                        null
+                    }
+                </div>
+                <div className="opts-line">
+                    <label>{he.translate('freq__download_chart')}:</label>
+                    <DownloadFormatSelector sourceId={props.sourceId} format={props.downloadFormat} />
+                    <S.DownloadButton src={he.createStaticUrl('img/download-button.svg')} alt={he.translate('freq__download_chart')} onClick={props.handleDownload} />
+                    {props.isBusy ?
+                        <img src={he.createStaticUrl('img/ajax-loader-bar.gif')} alt={he.translate('global__loading')} /> :
+                        null}
+                    <label>{he.translate('freq__share_chart')}:</label>
+                    <a onClick={()=>props.onShowShare(props.sourceId)}>
+                        <img className="over-img" style={{width: '1em', verticalAlign: 'middle'}} src={he.createStaticUrl('img/share.svg')}
+                                alt={he.translate('freq__share_chart')} title={he.translate('freq__share_chart')} />
+                    </a>
+                </div>
+            </globalComponents.ExpandableArea>
+        </S.FreqChartsParamsFieldset>
+    );
 
 
     // ----------------------- <FreqChart /> -------------------------
@@ -330,6 +331,10 @@ export function init(
         fmaxitems:Kontext.FormValue<string>;
         sortColumn:FreqChartsAvailableOrder;
         downloadFormat:Kontext.ChartExportFormat;
+        shareLink:ShareLink|null;
+        onShowShare:(sourceId:string)=>void;
+        onHideShare:()=>void;
+
     }> = (props) => {
 
         const ref = React.useRef(null);
@@ -490,10 +495,21 @@ export function init(
                 <FreqChartsParams sourceId={props.sourceId} data={props.data} type={props.type}
                         dataKey={props.dataKey} isBusy={props.isBusy} dtFormat={props.dtFormat}
                         fmaxitems={props.fmaxitems} sortColumn={props.sortColumn} handleDownload={handleDownload}
-                        downloadFormat={props.downloadFormat} />
+                        downloadFormat={props.downloadFormat}
+                        shareLink={props.shareLink?.url}
+                        onShowShare={props.onShowShare} />
                 <div className="chart-wrapper">
                     {renderChart()}
                 </div>
+                { props.shareLink ?
+                    <globalComponents.ModalOverlay onCloseKey={props.onHideShare}>
+                        <globalComponents.CloseableFrame
+                                onCloseClick={props.onHideShare}
+                                label={he.translate('freq__share_table')}>
+                            <ShareLinkWidget sourceId={props.sourceId} url={props.shareLink.url} />
+                        </globalComponents.CloseableFrame>
+                    </globalComponents.ModalOverlay> : null
+                }
             </S.FreqChartSection>
         );
     };
@@ -562,6 +578,17 @@ export function init(
             );
         }
 
+        const hideShare = () => {
+            dispatcher.dispatch(Actions.ResultHideShareLink);
+        };
+
+        const showShare = (sourceId:string) => {
+            dispatcher.dispatch(
+                Actions.ResultShowShareLink,
+                {sourceId}
+            );
+        };
+
         return (
             <S.FreqChartsView>
                 {pipe(
@@ -578,7 +605,10 @@ export function init(
                                         isBusy={props.isBusy[sourceId]}
                                         dtFormat={props.dtFormat[sourceId]} fmaxitems={props.fmaxitems[sourceId]}
                                         sortColumn={props.sortColumn[sourceId]}
-                                        downloadFormat={props.downloadFormat[sourceId]} />
+                                        downloadFormat={props.downloadFormat[sourceId]}
+                                        shareLink={props.shareLink}
+                                        onShowShare={showShare}
+                                        onHideShare={hideShare} />
                         )
                     )
                 )}

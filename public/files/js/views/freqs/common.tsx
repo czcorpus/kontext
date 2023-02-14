@@ -21,8 +21,10 @@
 import { IActionDispatcher } from 'kombo';
 import * as React from 'react';
 import { Actions as HelpActions } from '../../models/help/actions';
+import { Actions } from '../../models/freqs/regular/actions';
 import { ComponentHelpers } from '../../types/kontext';
-import * as S from './charts/style';
+import * as SChart from './charts/style';
+import * as S from './style';
 
 
 export interface CommonFreqComponents {
@@ -32,6 +34,10 @@ export interface CommonFreqComponents {
     }>;
     FreqsHelp:React.FC<{
         confIntervalLeftMinWarn:number;
+    }>;
+    ShareLinkWidget:React.FC<{
+        url:string;
+        sourceId:string;
     }>;
 }
 
@@ -47,7 +53,7 @@ export function init(dispatcher:IActionDispatcher, he:ComponentHelpers):CommonFr
         confIntervalLeftMinWarn: number;
 
     }> = ({confIntervalLeftMinWarn}) => (
-        <S.ConfidenceIntervalHint>
+        <SChart.ConfidenceIntervalHint>
             <p>
                 {he.translate('freq__ct_confidence_level_hint_part1')}
             </p>
@@ -79,7 +85,7 @@ export function init(dispatcher:IActionDispatcher, he:ComponentHelpers):CommonFr
                     null
                 }
             </ul>
-        </S.ConfidenceIntervalHint>
+        </SChart.ConfidenceIntervalHint>
     );
 
     // ----------------------- <ConfidenceIntervalHintBox /> --------------------
@@ -112,7 +118,7 @@ export function init(dispatcher:IActionDispatcher, he:ComponentHelpers):CommonFr
         };
 
         return (
-            <S.FreqsHelp className="topbar-help-icon">
+            <SChart.FreqsHelp className="topbar-help-icon">
                 <a className="icon" onClick={toggleHelp}>
                     <layoutViews.ImgWithMouseover
                         htmlClass="over-img"
@@ -128,13 +134,68 @@ export function init(dispatcher:IActionDispatcher, he:ComponentHelpers):CommonFr
                     </layoutViews.ModalOverlay> :
                     null
                 }
-            </S.FreqsHelp>
+            </SChart.FreqsHelp>
         );
     };
 
 
+    // ----------------------- <ShareLinkWidget /> -------------------
+
+    const ShareLinkWidget:React.FC<{
+        url:string;
+        sourceId:string;
+
+    }> = (props) => {
+
+        const copyToClipboard = () => {
+            dispatcher.dispatch<typeof Actions.ResultLinkCopyToClipboard>({
+                name: Actions.ResultLinkCopyToClipboard.name,
+                payload: {sourceId: props.sourceId}
+            });
+        }
+
+        const [{targetMail}, changeState] = React.useState({targetMail: ''});
+
+        const onMailInputChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            changeState({targetMail: evt.target.value});
+        };
+
+        const currHref = `mailto:${targetMail}?body=${encodeURIComponent(props.url)}`;
+
+        return (
+            <S.ShareFreqTable>
+                <h4>{he.translate('global__permanent_link')}</h4>
+                <div className="link">
+                    <input className="share-link" type="text" readOnly={true}
+                        onClick={(e)=> (e.target as HTMLInputElement).select()}
+                        value={props.url} />
+                    <span>
+                        <a onClick={copyToClipboard}>
+                            <layoutViews.ImgWithMouseover
+                                src={he.createStaticUrl('img/copy-icon.svg')}
+                                src2={he.createStaticUrl('img/copy-icon_s.svg')}
+                                alt={he.translate('global__copy_to_clipboard')}
+                                style={{width: '1.5em'}} />
+                        </a>
+                    </span>
+                </div>
+                <h4>{he.translate('global__create_email')}</h4>
+                <div className="mail">
+                    <label>{he.translate('global__mail_recipient')}:{'\u00a0'}
+                        <input type="text" value={targetMail} onChange={onMailInputChange} />
+                    </label>
+                    <a className="util-button" target="_blank" href={currHref}>
+                        {he.translate('global__create')}
+                    </a>
+                </div>
+            </S.ShareFreqTable>
+        );
+    }
+
+
     return {
         ConfidenceIntervalHintBox,
-        FreqsHelp
+        FreqsHelp,
+        ShareLinkWidget
     };
 }

@@ -20,10 +20,11 @@
 
 import * as React from 'react';
 import * as Kontext from '../../../types/kontext';
-import { Dict, Keyboard, List, Maths, pipe } from 'cnc-tskit';
+import { Dict, List, Maths, pipe } from 'cnc-tskit';
 import { init as dataRowsInit } from '../dataRows';
 import { init as initSaveViews } from './save';
 import { init as initChartViews } from '../charts';
+import { init as initFreqCommonViews } from '../common';
 import { FreqDataRowsModel } from '../../../models/freqs/regular/table';
 import { IActionDispatcher, BoundWithProps, Bound } from 'kombo';
 import { Actions } from '../../../models/freqs/regular/actions';
@@ -55,6 +56,8 @@ export function init(
         dispatcher, he, freqChartsModel, freqChartsSaveModel);
     const saveViews = initSaveViews(dispatcher, he, freqTableSaveModel);
     const alphaToCoeff = alphaToCoeffFormatter(he);
+    const {ShareLinkWidget} = initFreqCommonViews(dispatcher, he);
+
 
     // ----------------------- <Paginator /> -------------------------
 
@@ -64,6 +67,9 @@ export function init(
         totalPages:number;
         totalItems:number;
         sourceId:string;
+        shareLink:string|null;
+        onShowShare:(sourceId:string)=>void;
+        onHideShare:()=>void;
     }
 
     const Paginator:React.FC<PaginatorProps> = (props) => {
@@ -78,12 +84,10 @@ export function init(
             });
         };
 
-        const copyToClipboard = () => {
-            dispatcher.dispatch<typeof Actions.ResultLinkCopyToClipboard>({
-                name: Actions.ResultLinkCopyToClipboard.name,
-                payload: {sourceId: props.sourceId}
-            });
-        }
+        const shareIcon = <img
+            src={he.createStaticUrl('img/share.svg')}
+            alt="share"
+            style={{width: '1em'}} />;
 
         return (
             <S.FreqPaginator className="ktx-pagination">
@@ -98,11 +102,22 @@ export function init(
                 </div>
                 <div className="share">
                     <label>{he.translate('freq__share_table')}: </label>
-                    <a onClick={copyToClipboard}>
+                    <a onClick={()=>props.onShowShare(props.sourceId)}>
                         <img className="over-img" style={{width: '1em', verticalAlign: 'middle'}} src={he.createStaticUrl('img/share.svg')}
                                 alt={he.translate('freq__share_table')} title={he.translate('freq__share_table')} />
                     </a>
                 </div>
+                { props.shareLink ?
+                    <globalComponents.ModalOverlay onCloseKey={props.onHideShare}>
+                        <globalComponents.CloseableFrame
+                                onCloseClick={props.onHideShare}
+                                label={he.translate('freq__share_table')}
+                                icon={shareIcon}>
+                            <ShareLinkWidget sourceId={props.sourceId} url={props.shareLink} />
+                        </globalComponents.CloseableFrame>
+                    </globalComponents.ModalOverlay> : null
+                }
+
             </S.FreqPaginator>
         );
     };
@@ -226,7 +241,7 @@ export function init(
             dispatcher.dispatch(
                 Actions.ResultCloseSaveForm,
             );
-        }
+        };
 
         const handleConfidenceToggle = (checked:boolean) => {
             dispatcher.dispatch<typeof Actions.ToggleDisplayConfidence>({
@@ -235,7 +250,18 @@ export function init(
                     value: checked
                 }
             });
-        }
+        };
+
+        const hideShare = () => {
+            dispatcher.dispatch(Actions.ResultHideShareLink);
+        };
+
+        const showShare = (sourceId:string) => {
+            dispatcher.dispatch(
+                Actions.ResultShowShareLink,
+                {sourceId}
+            );
+        };
 
         return (
             <div className="FreqResultView">
@@ -269,7 +295,14 @@ export function init(
                                             sourceId={sourceId}
                                             totalPages={block.TotalPages}
                                             isLoading={props.isBusy[sourceId]}
-                                            totalItems={block.Total} />
+                                            totalItems={block.Total}
+                                            shareLink={
+                                                props.shareLink && sourceId === props.shareLink.sourceId ?
+                                                    props.shareLink.url :
+                                                    null
+                                                    }
+                                            onShowShare={showShare}
+                                            onHideShare={hideShare} />
                                     <div>
                                         <drViews.DataTable head={block.Head}
                                                 sortColumn={props.sortColumn[sourceId]}
@@ -308,6 +341,7 @@ export function init(
                 }
             });
         }
+
         return (
             <S.FreqResultView>
                 <FilterForm minFreqVal={props.flimit} alphaLevel={props.alphaLevel} />

@@ -88,6 +88,11 @@ export function clearResultBlock(res:ResultBlock|EmptyResultBlock):EmptyResultBl
         };
 }
 
+export interface ShareLink {
+    sourceId:string;
+    url:string;
+}
+
 export interface BaseFreqModelState {
     freqType:BasicFreqModuleType;
     data:{[sourceId:string]:ResultBlock|EmptyResultBlock};
@@ -101,6 +106,7 @@ export interface BaseFreqModelState {
     isError:{[sourceId:string]:Error};
     alphaLevel:Maths.AlphaLevel;
     saveFormActive:boolean;
+    shareLink:ShareLink|null;
     /**
      * flimit is a derived value from TabWrapperModel
      */

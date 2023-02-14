@@ -69,11 +69,17 @@ export const CloseableFrame = styled.section<{fixedTop?: string}>`
     }
 
     > .heading {
+        display: flex;
+        align-items: center;
         padding: 0.6em 0.8em;
         background-color: ${theme.colorLightFrame};
         border-radius: 6px 6px 0 0;
         font-weight: normal;
         text-align: left;
+
+        .icon {
+            margin-right: 0.7em;
+        }
 
         h2 {
             margin: 0 1.6em 0 0;
