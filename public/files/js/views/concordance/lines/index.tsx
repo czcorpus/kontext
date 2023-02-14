@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { List, pipe } from 'cnc-tskit';
+import { List, pipe, tuple } from 'cnc-tskit';
 
 import * as Kontext from '../../../types/kontext';
 import * as ViewOptions from '../../../types/viewOptions';
@@ -74,19 +74,57 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             List.filter(v => v.level == -1 || v.level == corpusIdx),
             List.map(v => v.value),
         );
-        const positionReducer = (chunks:Array<TextChunk>):Array<Array<number>> => List.map((chunk) =>
-            List.reduce((acc, val, i) => {
-                if (items.includes(val)) {
-                    acc.push(i);
+        const positionReducer = (chunks:Array<TextChunk>):Array<Array<[number, number]>> => List.map((chunk) => {
+            const chunkText = chunk.text.join(' ');
+            const allPositions = [];
+            items.forEach(item => {
+                const index = chunkText.indexOf(item);
+                if (index > -1) {
+                    const itemLength = item.split(' ').length;
+                    if (index === 0) {
+                        allPositions.push([0, itemLength - 1]);
+                    } else {
+                        const position = chunkText.slice(0, index).split(' ').length;
+                        allPositions.push([
+                            position,
+                            position + itemLength - 1,
+                        ]);
+                    }
                 }
-                return acc;
-            }, [], chunk.text),
-        chunks);
+            });
+
+            const aIntersectsB = (a:[number, number], b:[number, number]):boolean => {
+                return (a[0] <= b[0] && a[1] >= b[0]) || (a[0] >= b[0] && a[0] <= b[1]);
+            };
+
+            const mergeIntervals = (a:[number, number], b:[number, number]):[number, number] => {
+                return [a[0] <= b[0] ? a[0] : b[0], a[1] >= b[1] ? a[1] : b[1]];
+            }
+
+            const biggestPositions = [];
+            const checked = [];
+            allPositions.forEach((p1, i1) => {
+                if (checked.includes(i1)) return;
+                checked.push(i1)
+                let tmp = p1;
+                allPositions.forEach((p2, i2) => {
+                    if (checked.includes(i2)) return;
+                    if (aIntersectsB(tmp, p2)) {
+                        tmp = mergeIntervals(tmp, p2);
+                        checked.push(i2);
+                    }
+                });
+                biggestPositions.push(tmp);
+            });
+
+            return biggestPositions;
+        }, chunks);
+
         return ({
             left: positionReducer(shadowOutput.left),
             kwic: positionReducer(shadowOutput.kwic),
             right: positionReducer(shadowOutput.right),
-        })
+        });
     }
 
     function getViewModeTitle(
