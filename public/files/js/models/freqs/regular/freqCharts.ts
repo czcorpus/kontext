@@ -189,6 +189,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     Dict.fromEntries()
                 ),
                 saveFormActive: false,
+                shareLink: null,
                 flimit: parseInt(formProps.flimit) || 0
             }
         );
@@ -218,6 +219,23 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                 if (state.isActive) {
                     this.pushStateToHistory(state);
                 }
+            }
+        );
+
+        this.addActionHandler(
+            Actions.ResultShowShareLink,
+            (state, action) => {
+                state.shareLink = {
+                    sourceId: action.payload.sourceId,
+                    url: this.getShareLink(state, action.payload.sourceId)
+                };
+            }
+        );
+
+        this.addActionHandler(
+            Actions.ResultHideShareLink,
+            (state, action) => {
+                state.shareLink = null;
             }
         );
 
@@ -270,6 +288,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     state.isError = storedState.isError;
                     state.alphaLevel = storedState.alphaLevel;
                     state.saveFormActive = storedState.saveFormActive;
+                    state.shareLink = storedState.shareLink;
                     state.type = storedState.type;
                     state.dataKey = storedState.dataKey;
                     state.fmaxitems = storedState.fmaxitems;

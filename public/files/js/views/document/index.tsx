@@ -357,6 +357,11 @@ export function init(
             return (
                 <S.CloseableFrame className={htmlClass} ref={this.resizeFn} fixedTop="5%">
                     <div className="heading">
+                        {this.props.icon ?
+                            <span className="icon">{this.props.icon}</span> : null}
+                        <h2>
+                            {this.props.label}
+                        </h2>
                         <div className="control">
                             <ImgWithMouseover htmlClass="close-icon"
                                     src={he.createStaticUrl('img/close-icon.svg')}
@@ -364,9 +369,6 @@ export function init(
                                     clickHandler={this.closeClickHandler}
                                     alt={he.translate('global__close_the_window')} />
                         </div>
-                        <h2>
-                            {this.props.label}
-                        </h2>
                     </div>
                     <div className="contents" style={this.props.scrollable ? {overflow: 'auto'} : {}}>
                         <div className="padded-contents">

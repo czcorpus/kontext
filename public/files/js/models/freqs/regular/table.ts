@@ -199,6 +199,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 saveFormActive: false,
                 alphaLevel: alphaLevel,
                 displayConfidence: false,
+                shareLink: null,
                 flimit: parseInt(formProps.flimit) || 0
             }
         );
@@ -214,6 +215,23 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 if (state.isActive) {
                     this.pushStateToHistory(state);
                 }
+            }
+        );
+
+        this.addActionHandler(
+            Actions.ResultShowShareLink,
+            (state, action) => {
+                state.shareLink = {
+                    sourceId: action.payload.sourceId,
+                    url: this.getShareLink(state, action.payload.sourceId)
+                };
+            }
+        );
+
+        this.addActionHandler(
+            Actions.ResultHideShareLink,
+            (state, action) => {
+                state.shareLink = null;
             }
         );
 
@@ -383,6 +401,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                     state.isError = storedState.isError;
                     state.alphaLevel = storedState.alphaLevel;
                     state.saveFormActive = storedState.saveFormActive;
+                    state.shareLink = storedState.shareLink;
                     state.displayConfidence = storedState.displayConfidence;
                 }
             },
