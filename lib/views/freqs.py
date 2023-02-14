@@ -21,6 +21,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import List, Tuple
 from sanic import Blueprint
+import time
 
 import plugins
 from action.argmapping.action import IntOpt, ListStrOpt, StrOpt
@@ -41,6 +42,7 @@ from conclib.search import get_conc
 from main_menu import MainMenu
 from strings import escape_attr_val
 import settings
+import mailing
 
 bp = Blueprint('freqs')
 
@@ -517,3 +519,29 @@ async def savefreq(amodel: ConcActionModel, req: KRequest[SavefreqArgs], resp: K
         output = writer.raw_content()
 
     return output
+
+
+@bp.route('/share_freq_table_via_mail', ['POST'])
+@http_action(return_type='json', action_model=UserActionModel)
+async def share_freq_table_via_mail(amodel: UserActionModel, req: KRequest, resp: KResponse):
+    with plugins.runtime.AUTH as auth:
+        user_info = await auth.get_user_info(amodel.plugin_ctx)
+        user_email = user_info['email']
+        username = user_info['username']
+        smtp_server = mailing.smtp_factory()
+        url = req.json.get('url')
+        recip_email = req.json.get('email')
+
+        text = req.translate('KonText user {} has sent to you a link to a frequency distribution table').format(username,) + ':'
+        text += '\n\n'
+        text += url + '\n\n'
+        text += '\n---------------------\n'
+        text += time.strftime('%d.%m. %Y %H:%M')
+        text += '\n'
+
+        msg = mailing.message_factory(
+            recipients=[recip_email],
+            subject=req.translate('KonText frequency table link'),
+            text=text,
+            reply_to=user_email)
+        return dict(ok=mailing.send_mail(smtp_server, msg, [recip_email]))

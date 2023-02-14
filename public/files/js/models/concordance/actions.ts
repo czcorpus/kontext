@@ -455,6 +455,10 @@ export class Actions {
         name: 'LINE_SELECTION_TOGGLE_LINE_GROUP_RENAME'
     };
 
+    static CopyLineSelectionLinkToClipboard:Action<{}> = {
+        name: 'LINE_SELECTION_COPY_LINE_SELECTION_TO_CLIPBOARD'
+    };
+
     static MakeConcPermanent:Action<{
         revoke:boolean;
     }> = {

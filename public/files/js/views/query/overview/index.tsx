@@ -117,8 +117,14 @@ type AnyEditorProps = QueryFormLiteProps | FilterFormProps | SubHitsFormProps | 
         SortFormProps | SampleFormProps | ShuffleFormProps | SwitchMainCorpFormProps | FirstHitsFormProps;
 
 
-export function init({dispatcher, he, viewDeps, queryReplayModel,
-                      mainMenuModel, querySaveAsModel}:OverviewModuleArgs):OverviewViews {
+export function init({
+    dispatcher,
+    he,
+    viewDeps,
+    queryReplayModel,
+    mainMenuModel,
+    querySaveAsModel
+}:OverviewModuleArgs):OverviewViews {
 
     const layoutViews = he.getLayoutViews();
     const basicOverviewViews = basicOverviewInit(dispatcher, he, mainMenuModel);
@@ -696,6 +702,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
             super(props);
             this.handleCloseEvent = this.handleCloseEvent.bind(this);
             this.handleSubmit = this.handleSubmit.bind(this);
+            this.handleRevokeSubmit = this.handleRevokeSubmit.bind(this);
+            this.handleCopyToClipboard = this.handleCopyToClipboard.bind(this);
         }
 
         private handleCloseEvent() {
@@ -726,17 +734,28 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
             return he.createActionLink('view', {q: '~' + this.props.queryId});
         }
 
+        private handleCopyToClipboard() {
+            dispatcher.dispatch(
+                Actions.CopyPermalinkToClipboard,
+                {url: this.createPermanentUrl()}
+            );
+        }
+
         componentDidMount() {
-            dispatcher.dispatch<typeof ConcActions.GetConcArchiveStatus>({
-                name: ConcActions.GetConcArchiveStatus.name
-            });
+            dispatcher.dispatch(
+                ConcActions.GetConcArchiveStatus
+            );
         }
 
         render() {
             return (
                 <layoutViews.ModalOverlay onCloseKey={this.handleCloseEvent}>
                     <layoutViews.CloseableFrame onCloseClick={this.handleCloseEvent}
-                                label={he.translate('concview__make_conc_link_permanent_hd')}>
+                                label={he.translate('concview__make_conc_link_permanent_hd')}
+                                icon={<img
+                                        src={he.createStaticUrl('img/share.svg')}
+                                        alt="share"
+                                        style={{width: '1em'}} />}>
                         {this.props.isBusy ?
                             <layoutViews.AjaxLoaderImage /> :
                             <Style_PersistentConcordanceForm>
@@ -747,13 +766,20 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                                         he.translate('concview__permanent_link_hint_{ttl}', {ttl: this.props.concTTLDays})
                                     }
                                 </Style_SaveHintParagraph>
-                                <div>
+                                <div className="link">
                                     <input type="text" readOnly={true}
                                             disabled={!this.props.concIsArchived}
                                             value={this.createPermanentUrl()}
                                             className={this.props.concIsArchived || this.props.willBeArchived ? 'archived' : ''}
                                             onClick={e => this.props.concIsArchived || this.props.willBeArchived ?
                                                             (e.target as HTMLInputElement).select() : null} />
+                                    <a onClick={this.handleCopyToClipboard}>
+                                        <layoutViews.ImgWithMouseover
+                                                src={he.createStaticUrl('img/copy-icon.svg')}
+                                                src2={he.createStaticUrl('img/copy-icon_s.svg')}
+                                                alt={he.translate('global__copy_to_clipboard')}
+                                                style={{width: '1.8em', marginLeft: '0.3em'}} />
+                                    </a>
                                 </div>
                                 <p>
                                     {this.props.concIsArchived || this.props.willBeArchived ?

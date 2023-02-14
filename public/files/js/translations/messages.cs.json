@@ -221,7 +221,7 @@
         "global__first_page_btn": "první stránka",
         "global__copy_to_clipboard": "Kopírovat do schránky",
         "global__link_copied_to_clipboard": "Odkaz byl zkopírovaný do schránky",
-        "global__create_email": "Vytvořit e-mail",
+        "global__send_link_via_email": "Poslat odkaz e-mailem",
         "global__mail_recipient": "Adresát",
         "global__permanent_link": "Trvalý odkaz",
         "linesel__remove_selected_lines": "Odstranit vybrané řádky",

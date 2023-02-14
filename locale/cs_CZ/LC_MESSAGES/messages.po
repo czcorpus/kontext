@@ -548,3 +548,15 @@ msgstr "Výpočet paradigmatického dotazu"
 
 msgid "Go to the constituent concordance #{}"
 msgstr "Přejít na dílčí konkordanci #{}"
+
+msgid "KonText concordance link"
+msgstr "Odkaz na konkordanci v KonTextu"
+
+msgid "KonText user {} has sent to you a concordance link to you"
+msgstr "Uživatel KonTextu {} vám zaslal odkaz na konkordanci"
+
+msgid "KonText frequency table link"
+msgstr "Odkaz na frekvenční tabulku v KonTextu"
+
+msgid "KonText user {} has sent to you a link to a frequency distribution table"
+msgstr "Uživatel KonTextu {} vám zaslal odkaz na tabulku frekvenční distribuce"

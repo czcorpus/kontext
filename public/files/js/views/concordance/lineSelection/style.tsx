@@ -165,14 +165,15 @@ export const SelectionLinkAndToolsFieldset = styled.fieldset`
         margin-bottom: 0.7em;
     }
 
-    .conc-link {
-        display: block;
-        background-color: ${theme.colorLightGrey};
-        border: 1px solid ${theme.colorLightText};
-        padding: 0.2em 0.5em;
-        margin-bottom: 1em;
-        margin-left: 0.7em;
-        min-width: 30em;
+    .link {
+        display: flex;
+        align-items: center;
+
+        input {
+            border: 1px solid ${theme.colorLightText};
+            margin-left: 0.7em;
+            min-width: 30em;
+        }
     }
 
 `;

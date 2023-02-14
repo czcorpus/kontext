@@ -618,6 +618,12 @@ export class Actions {
         name: 'QUERY_MAKE_CONCORDANCE_PERMANENT_DONE'
     };
 
+    static CopyPermalinkToClipboard:Action<{
+        url:string;
+    }> = {
+        name: 'QUERY_COPY_CONCORDANCE_PERMALINK_TO_CLIPBOARD'
+    }
+
     /**
      * This is an action a tag-helper plug-in should be able to respond to
      */

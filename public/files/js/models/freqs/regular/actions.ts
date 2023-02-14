@@ -53,6 +53,20 @@ export class Actions {
         name: 'FREQ_RESULT_LINK_COPY_TO_CLIPBOARD'
     };
 
+    static ResultLinkShareViaEmail:Action<{
+        sourceId:string;
+        url:string;
+        recipient:string;
+    }> = {
+        name: 'FREQ_RESULT_LINK_SHARE_VIA_EMAIL'
+    };
+
+    static ResultLinkShareViaEmailDone:Action<{
+        sourceId:string;
+    }> = {
+        name: 'FREQ_RESULT_LINK_SHARE_VIA_EMAIL_DONE'
+    };
+
     static ResultSetMinFreqVal:Action<{
         value:string;
         isDebounced?:boolean;

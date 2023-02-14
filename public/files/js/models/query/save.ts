@@ -26,6 +26,7 @@ import { Actions } from './actions';
 import { Actions as ConcActions } from '../concordance/actions';
 import { HTTP } from 'cnc-tskit';
 import { SaveItemResponse } from '../searchHistory/common';
+import * as copy from 'copy-to-clipboard';
 
 
 interface IsArchivedResponse extends Kontext.AjaxResponse {
@@ -75,15 +76,15 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
         );
         this.layoutModel = layoutModel;
 
-        this.addActionHandler<typeof Actions.SaveAsFormSetName>(
-            Actions.SaveAsFormSetName.name,
+        this.addActionHandler(
+            Actions.SaveAsFormSetName,
             (state, action) => {
                 state.name = action.payload.value;
             }
         );
 
-        this.addActionHandler<typeof Actions.SaveAsFormSubmit>(
-            Actions.SaveAsFormSubmit.name,
+        this.addActionHandler(
+            Actions.SaveAsFormSubmit,
             (state, action) => {
                 if (state.name) {
                     state.isValidated = true;
@@ -117,8 +118,8 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
             }
         );
 
-        this.addActionHandler<typeof Actions.SaveAsFormSubmitDone>(
-            Actions.SaveAsFormSubmitDone.name,
+        this.addActionHandler(
+            Actions.SaveAsFormSubmitDone,
             (state, action) => {
                 state.isBusy = false;
                 // TODO these are side-effects actually
@@ -141,8 +142,8 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
             }
         );
 
-        this.addActionHandler<typeof Actions.GetConcArchivedStatus>(
-            Actions.GetConcArchivedStatus.name,
+        this.addActionHandler(
+            Actions.GetConcArchivedStatus,
             (state, action) => {
                 state.isBusy = true;
             },
@@ -168,8 +169,8 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
             }
         );
 
-        this.addActionHandler<typeof Actions.GetConcArchivedStatusDone>(
-            Actions.GetConcArchivedStatusDone.name,
+        this.addActionHandler(
+            Actions.GetConcArchivedStatusDone,
             (state, action) => {
                 state.isBusy = false;
                 state.concIsArchived = action.payload.isArchived;
@@ -177,8 +178,8 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
             }
         );
 
-        this.addActionHandler<typeof Actions.MakeConcordancePermanent>(
-            Actions.MakeConcordancePermanent.name,
+        this.addActionHandler(
+            Actions.MakeConcordancePermanent,
             (state, action) => {
                 state.isBusy = true;
             },
@@ -218,8 +219,8 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
             }
         );
 
-        this.addActionHandler<typeof Actions.MakeConcordancePermanentDone>(
-            Actions.MakeConcordancePermanentDone.name,
+        this.addActionHandler(
+            Actions.MakeConcordancePermanentDone,
             (state, action) => {
                 state.isBusy = false;
                 if (action.error) {
@@ -241,6 +242,16 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                         );
                     }
                 }
+            }
+        );
+
+        this.addActionHandler(
+            Actions.CopyPermalinkToClipboard,
+            null,
+            (state, action, dispatch) => {
+                copy(action.payload.url);
+                this.layoutModel.showMessage(
+                    'info', this.layoutModel.translate('global__link_copied_to_clipboard'));
             }
         );
     }
