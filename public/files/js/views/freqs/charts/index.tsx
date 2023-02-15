@@ -342,6 +342,7 @@ export function init(
         sortColumn:FreqChartsAvailableOrder;
         downloadFormat:Kontext.ChartExportFormat;
         shareLink:ShareLink|null;
+        shareWidgetIsBusy:boolean;
         onShowShare:(sourceId:string)=>void;
         onHideShare:()=>void;
 
@@ -516,7 +517,8 @@ export function init(
                         <globalComponents.CloseableFrame
                                 onCloseClick={props.onHideShare}
                                 label={he.translate('freq__share_table')}>
-                            <ShareLinkWidget sourceId={props.sourceId} url={props.shareLink.url} />
+                            <ShareLinkWidget sourceId={props.sourceId} url={props.shareLink.url}
+                                isBusy={props.shareWidgetIsBusy} />
                         </globalComponents.CloseableFrame>
                     </globalComponents.ModalOverlay> : null
                 }
@@ -617,6 +619,7 @@ export function init(
                                         sortColumn={props.sortColumn[sourceId]}
                                         downloadFormat={props.downloadFormat[sourceId]}
                                         shareLink={props.shareLink}
+                                        shareWidgetIsBusy={props.shareWidgetIsBusy}
                                         onShowShare={showShare}
                                         onHideShare={hideShare} />
                         )
