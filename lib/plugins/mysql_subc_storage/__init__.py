@@ -15,20 +15,19 @@
 
 
 import logging
+import os
+import struct
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
-import struct
-import aiofiles
-import os
-import ujson as json
-from sanic import Sanic
 
+import aiofiles
 import plugins
+import ujson as json
 from action.argmapping.subcorpus import (
     CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs)
-from corplib.subcorpus import SubcorpusRecord
 from corplib.abstract import create_new_subc_ident
+from corplib.subcorpus import SubcorpusRecord
 from plugin_types.auth import UserInfo
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.subc_storage import AbstractSubcArchive, SubcArchiveException
@@ -36,6 +35,7 @@ from plugins import inject
 from plugins.errors import PluginCompatibilityException
 from plugins.mysql_integration_db import MySqlIntegrationDb
 from pymysql.err import IntegrityError
+from sanic import Sanic
 
 try:
     from markdown import markdown
@@ -174,8 +174,6 @@ class MySQLSubcArchive(AbstractSubcArchive):
         await Sanic.get_app('kontext').dispatch('kontext.internal.reset')
         return subc_id.id
 
-
-
     async def update_draft(
             self,
             ident: str,
@@ -245,16 +243,20 @@ class MySQLSubcArchive(AbstractSubcArchive):
            (filter_args.archived_only and filter_args.published_only):
             raise SubcArchiveException('Invalid filter specified')
 
-        where, args = ['(t1.user_id IS NOT NULL AND t1.user_id = %s)'], [user_id]
+        where, args = ['t1.user_id IS NOT NULL'], []
+        if user_id is not None:
+            where.append('t1.user_id = %s')
+            args.append(user_id)
         if corpname is not None:
             where.append('t1.corpus_name = %s')
             args.append(corpname)
         if filter_args.archived_only:
             where.append('t1.archived IS NOT NULL')
-        elif filter_args.active_only:
-            where.append('t1.archived IS NULL')
-        elif filter_args.published_only:
-            where.append('t1.published IS NOT NULL')
+        else:
+            if filter_args.active_only:
+                where.append('t1.archived IS NULL')
+            if filter_args.published_only:
+                where.append('LENGTH(t1.public_description) > 0')
 
         if filter_args.pattern:
             v = f'%{filter_args.pattern}%'
