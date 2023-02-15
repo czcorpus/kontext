@@ -53,7 +53,13 @@ export class ConclineSectionOps {
                     (r, v) => r.concat((v.className ? 0 : v.text.length) + (r.length > 0 ? r[r.length - 1] : 0)), [1]),
                 List.slice(0, -1)
             ),
-            highlightMLPositions: refMlPositions ? List.slice(refMlPositions.left.length, refMlPositions.left.length + refMlPositions.kwic.length, mlPositions.kwic) : []
+            highlightMLPositions: refMlPositions ?
+                pipe(
+                    mlPositions.kwic,
+                    List.slice(refMlPositions.left.length, refMlPositions.left.length + refMlPositions.kwic.length),
+                    List.map(pos => [pos, pos])
+                ) :
+                []
         };
         return ans;
     }

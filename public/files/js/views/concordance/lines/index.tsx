@@ -68,6 +68,13 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         }
     }
 
+    function highlightIndex(index:number, ranges:Array<[number, number]>):number {
+        for (let i=0;i<ranges.length;i++) {
+            if (index >= ranges[i][0] && index <= ranges[i][1]) return i;
+        }
+        return -1;
+    }
+
     function findHighlightPositions(shadowOutput:KWICSection, highlightItems:Array<HighlightItem>, corpusIdx:number) {
         const items = pipe(
             highlightItems,
@@ -84,7 +91,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                     if (index === 0) {
                         allPositions.push([0, itemLength - 1]);
                     } else {
-                        const position = chunkText.slice(0, index).split(' ').length;
+                        const position = chunkText.slice(0, index).split(' ').length - 1;
                         allPositions.push([
                             position,
                             position + itemLength - 1,
@@ -287,7 +294,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         supportsTokenConnect:boolean;
         data:TextChunk;
         attrViewMode:ViewOptions.AttrViewMode;
-        highlightPositions:Array<number>;
+        highlightPositions:Array<[number, number]>;
 
     }> = (props) => {
 
@@ -320,18 +327,40 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             }
 
         } else {
-            return (
-            <>
-                {props.data.text.map((s) => ({text: [s], className: props.data.className, tailPosAttrs: []} as TextChunk)).map((item, i) => (
+            const elements = props.data.text.map((s) => ({text: [s], className: props.data.className, tailPosAttrs: []} as TextChunk)).map((item, i) => {
+                return (
                     <React.Fragment key={`${props.position}:${props.idx}:${i}`}>
                         {i > 0 ? ' ' : ''}
-                        <span className={getViewModeClass(props.attrViewMode) + (props.highlightPositions.includes(i) ? " highlight" : "")}>
+                        <span className={getViewModeClass(props.attrViewMode)}>
                             <Token tokenId={mkTokenId(i)} data={item} viewMode={props.attrViewMode} isKwic={false}
                                     supportsTokenConnect={props.supportsTokenConnect} />
                         </span>
                     </React.Fragment>
-                ))}
-            </>
+                )
+            });
+
+            let lastHighlightId = -1;
+            const highlightGroups = List.reduce((acc, element, i) => {
+                const highlightId = highlightIndex(i, props.highlightPositions);
+                if (highlightId === -1) {
+                    acc.push(element);
+                } else if (highlightId === lastHighlightId) {
+                    acc[acc.length-1].push(element);
+                } else {
+                    acc.push([element]);
+                    lastHighlightId = highlightId
+                }
+                return acc
+            }, [], elements);
+
+            return (
+                <>
+                    {highlightGroups.map(item =>
+                        Array.isArray(item) ?
+                            <span className='highlight'>{item}</span> :
+                            item
+                    )}
+                </>
             );
         }
     };
@@ -443,7 +472,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         supportsTokenConnect:boolean;
         attrViewMode:ViewOptions.AttrViewMode;
         audioPlayerStatus:PlayerStatus;
-        highlightPositions:Array<number>;
+        highlightPositions:Array<[number, number]>;
 
     }> = (props) => {
         return <>
@@ -480,7 +509,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         attrViewMode:ViewOptions.AttrViewMode;
         supportsTokenConnect:boolean;
         audioPlayerStatus:PlayerStatus;
-        highlightPositions:Array<number>;
+        highlightPositions:Array<[number, number]>;
 
     }> = (props) => {
         const prevClosed = props.i > 0 ? props.itemList[props.i - 1] : props.prevBlockClosed;
@@ -513,19 +542,33 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                 return <span>&lt;--not translated--&gt;</span>
 
             } else {
+                const elements = List.map((v, i) => <>
+                    {i > 0 ? ' ' : null}
+                    {v}
+                </>
+                , props.item.text);
+
+                let lastHighlightId = -1;
+                const highlightGroups = List.reduce((acc, element, i) => {
+                    const highlightId = highlightIndex(i, props.highlightPositions);
+                    if (highlightId === -1) {
+                        acc.push(element);
+                    } else if (highlightId === lastHighlightId) {
+
+                        acc[acc.length-1].push(element);
+                    } else {
+                        acc.push([element]);
+                        lastHighlightId = highlightId
+                    }
+                    return acc;
+                }, [], elements);
+
                 return <span className={props.item.className === 'strc' ? 'strc' : null}>
-                    {List.flatMap((v, i) => {
-                        let element;
-                        if (props.highlightPositions.includes(i)) {
-                            element = [<span key={i} className="highlight">{v}</span>];
-                        } else {
-                            element = [v];
-                        }
-                        if (i < props.item.text.length - 1) {
-                            element.push(' ');
-                        }
-                        return element
-                    }, props.item.text)}
+                    {highlightGroups.map(item =>
+                        Array.isArray(item) ?
+                            <span className='highlight'>{item}</span> :
+                            item
+                    )}
                 </span>;
             }
         }
@@ -549,7 +592,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         supportsTokenConnect:boolean;
         attrViewMode:ViewOptions.AttrViewMode;
         audioPlayerStatus:PlayerStatus;
-        highlightPositions:Array<number>;
+        highlightPositions:Array<[number, number]>;
 
     }> = (props) => {
 
