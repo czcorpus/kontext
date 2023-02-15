@@ -97,23 +97,11 @@ def is_compiled(corp: AbstractKCorpus, attr, method):
     attr -- a name of an attribute
     method -- one of arf, docf, frq
     """
-    if attr.endswith('.ngr'):
-        if corp.get_conf('SUBCPATH'):
-            attr = manatee.NGram(corp.get_conf('PATH') + attr,
-                                 corp.get_conf('SUBCPATH') + attr)
-        else:
-            attr = manatee.NGram(corp.get_conf('PATH') + attr)
-        last = attr.size() - 1
-    else:
-        attr = corp.get_attr(attr)
-        last = attr.id_range() - 1
+    attr = corp.get_attr(attr)
     try:
-        if getattr(attr, method)(last) != -1:
-            sys.stdout.write('%s already compiled, skipping.\n' % method)
-            return True
+        return attr.get_stat(method)
     except manatee.FileAccessError:
-        pass
-    return False
+        return False
 
 
 async def _load_corp(corp_ident: Union[str, SubcorpusRecord]):
@@ -140,7 +128,7 @@ async def _compile_frq(corp: KCorpus, attr, logfile):
     logfile -- a file where calculation status will be written
                (bonito-open approach)
     """
-    if is_compiled(corp, attr, 'freq'):
+    if is_compiled(corp, attr, 'frq'):
         async with aiofiles.open(logfile, 'a') as f:
             await f.write('\n100 %\n')  # to get proper calculation of total progress
         return {'message': 'freq already compiled'}
@@ -274,7 +262,7 @@ async def compile_arf(corpus_ident, attr, logfile):
     num_wait = 20
     base_paths = freqs.corp_freqs_cache_paths(corp, attr)
 
-    if not is_compiled(corp, attr, 'freq'):
+    if not is_compiled(corp, attr, 'frq'):
         frq_data_file = corp.freq_precalc_file(attr, 'frq')
         while num_wait > 0 and await freqs.calc_is_running([base_paths['frq']]):
             if await aiofiles.os.path.isfile(frq_data_file):
