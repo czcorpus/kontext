@@ -81,7 +81,7 @@ async def _collx(amodel: ConcActionModel, user_id: int, collpage: int, citemsper
     if amodel.args.csortfn == '':
         amodel.args.csortfn = 't'
 
-    calc_args = CollCalcArgs(
+    return await calculate_colls(CollCalcArgs(
         corpus_encoding=amodel.corp.get_conf('ENCODING'),
         corpname=amodel.args.corpname,
         subcorpus_id=amodel.corp.subcorpus_id,
@@ -97,8 +97,7 @@ async def _collx(amodel: ConcActionModel, user_id: int, collpage: int, citemsper
         cminbgr=amodel.args.cminbgr,
         cminfreq=amodel.args.cminfreq,
         citemsperpage=citemsperpage,
-        collpage=collpage)
-    return await calculate_colls(calc_args)
+        collpage=collpage))
 
 
 @dataclass
