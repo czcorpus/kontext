@@ -141,7 +141,10 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         return -1;
     }
 
-    function createHighlightGroups(highlightPositions:Array<[number, number]>, elements) {
+    function createHighlightGroups(
+        highlightPositions:Array<[number, number]>,
+        elements:Array<JSX.Element|string>,
+    ):Array<Array<JSX.Element|string>|JSX.Element|string> {
         let lastHighlightId = -1;
         return List.reduce((acc, element, i) => {
             const highlightId = getHighlightIndex(i, highlightPositions);
