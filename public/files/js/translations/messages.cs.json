@@ -224,6 +224,8 @@
         "global__send_link_via_email": "Poslat odkaz e-mailem",
         "global__mail_recipient": "Adresát",
         "global__permanent_link": "Trvalý odkaz",
+        "global__missing_email": "Nebyl vyplněn e-mail",
+        "global__failed_to_send_mail": "Nepodařilo se odeslat e-mail",
         "linesel__remove_selected_lines": "Odstranit vybrané řádky",
         "linesel__remove_all_but_selected_lines": "Ponechat pouze vybrané řádky",
         "linesel__clear_the_selection": "Zrušit označení řádků",

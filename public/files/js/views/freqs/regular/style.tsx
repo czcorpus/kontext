@@ -104,6 +104,13 @@ export const FreqPaginator = styled.div`
         margin-left: 1.5em;
         display: flex;
         align-items: center;
+
+        a {
+            display: flex;
+            align-items: center;
+            text-decoration:none;
+            cursor: pointer;
+        }
     }
 
     .share-link {

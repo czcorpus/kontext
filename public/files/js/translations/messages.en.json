@@ -224,6 +224,8 @@
         "global__send_link_via_email": "Send the link via e-mail",
         "global__mail_recipient": "Recipient",
         "global__permanent_link": "Permanent link",
+        "global__missing_email": "Missing e-mail",
+        "global__failed_to_send_mail": "Failed to send the e-mail",
         "linesel__remove_selected_lines": "Remove selected lines",
         "linesel__remove_all_but_selected_lines": "Keep only selected lines",
         "linesel__clear_the_selection": "Clear the selection",

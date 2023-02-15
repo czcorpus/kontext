@@ -99,6 +99,28 @@ export const FreqChartsParamsFieldset = styled.fieldset`
                 margin-left: 1.2em;
             }
 
+            .share {
+                display: flex;
+                align-items: center;
+                margin-left: 1em;
+
+                label {
+                    margin-right: 0.4em;
+                }
+
+                a {
+                    color: ${theme.colorDefaultText};
+                    text-decoration: none;
+
+                    img {
+                        margin-right: 0.4em;
+                    }
+                }
+
+                a:hover {
+                    color: ${theme.colorLogoBlue};
+                }
+            }
         }
     }
 `;
@@ -135,17 +157,6 @@ export const FreqChartSection = styled.section`
         min-width: 30em;
         font-size: 1.2em;
     }
-
-`;
-
-// --------------- <DownloadButton /> ------------------------------------
-
-export const DownloadButton = styled.img`
-    width: 1.2em;
-    height: 1.2em;
-    vertical-align: 'middle';
-    margin: 0 0 0 0.5em;
-    cursor: pointer;
 
 `;
 

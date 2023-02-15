@@ -11,7 +11,7 @@
    viewBox="0 0 433.5 433.5"
    style="enable-background:new 0 0 433.5 433.5;"
    xml:space="preserve"
-   sodipodi:docname="download-button.svg"
+   sodipodi:docname="download-button_s.svg"
    inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -37,15 +37,15 @@
    inkscape:current-layer="Capa_1" />
 <g
    id="g5"
-   style="stroke:none;stroke-opacity:1;fill:#009ee0;fill-opacity:1">
+   style="stroke:none;stroke-opacity:1;fill:#00caf6;fill-opacity:1">
 	<g
    id="file-download"
-   style="stroke:none;stroke-opacity:1;fill:#009ee0;fill-opacity:1">
+   style="stroke:none;stroke-opacity:1;fill:#00caf6;fill-opacity:1">
 		<path
    d="M395.25,153h-102V0h-153v153h-102l178.5,178.5L395.25,153z M38.25,382.5v51h357v-51H38.25z"
    fill="#337ab7"
    id="path2"
-   style="stroke:none;stroke-opacity:1;fill:#009ee0;fill-opacity:1" />
+   style="stroke:none;stroke-opacity:1;fill:#00caf6;fill-opacity:1" />
 	</g>
 </g>
 <g

@@ -23,6 +23,7 @@ import * as React from 'react';
 import { Actions as HelpActions } from '../../models/help/actions';
 import { Actions } from '../../models/freqs/regular/actions';
 import { ComponentHelpers } from '../../types/kontext';
+import { FormValue, newFormValue, updateFormValue } from '../../types/kontext';
 import * as SChart from './charts/style';
 import * as S from './style';
 
@@ -38,6 +39,7 @@ export interface CommonFreqComponents {
     ShareLinkWidget:React.FC<{
         url:string;
         sourceId:string;
+        isBusy:boolean;
     }>;
 }
 
@@ -144,10 +146,13 @@ export function init(dispatcher:IActionDispatcher, he:ComponentHelpers):CommonFr
     const ShareLinkWidget:React.FC<{
         url:string;
         sourceId:string;
+        isBusy:boolean;
 
     }> = (props) => {
 
-        const [{recipient}, changeState] = React.useState({recipient: ''});
+        const [{recipient}, changeState] = React.useState({
+            recipient: newFormValue<string>('', true)
+        });
 
         const copyToClipboard = () => {
             dispatcher.dispatch(
@@ -157,18 +162,33 @@ export function init(dispatcher:IActionDispatcher, he:ComponentHelpers):CommonFr
         };
 
         const shareViaEmail = () => {
-            dispatcher.dispatch(
-                Actions.ResultLinkShareViaEmail,
-                {
-                    sourceId: props.sourceId,
-                    recipient,
-                    url: props.url
-                }
-            );
+            if (recipient.value) {
+                dispatcher.dispatch(
+                    Actions.ResultLinkShareViaEmail,
+                    {
+                        sourceId: props.sourceId,
+                        recipient: recipient.value,
+                        url: props.url
+                    }
+                );
+
+            } else {
+                changeState({
+                    recipient: updateFormValue(
+                        recipient,
+                        {
+                            isInvalid: true,
+                            errorDesc: he.translate('global__missing_email')
+                        }
+                    )
+                });
+            }
         };
 
         const onMailInputChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
-            changeState({recipient: evt.target.value});
+            changeState({
+                recipient: updateFormValue(recipient, {value: evt.target.value})
+            });
         };
 
         return (
@@ -190,16 +210,27 @@ export function init(dispatcher:IActionDispatcher, he:ComponentHelpers):CommonFr
                 </div>
                 <h4>{he.translate('global__send_link_via_email')}</h4>
                 <div className="mail">
-                    <label>{he.translate('global__mail_recipient')}:{'\u00a0'}
+                    <label htmlFor="share-table-target-email">
+                        {he.translate('global__mail_recipient')}:{'\u00a0'}
+                    </label>
+                    <layoutViews.ValidatedItem
+                            invalid={recipient.isInvalid}
+                            errorDesc={recipient.errorDesc}>
                         <input
+                            id="share-table-target-email"
                             type="email"
-                            value={recipient}
+                            value={recipient.value}
                             onChange={onMailInputChange}
                             style={{width: '20em'}} />
-                    </label>
-                    <a className="util-button" onClick={shareViaEmail}>
-                        {he.translate('global__send')}
-                    </a>
+                    </layoutViews.ValidatedItem>
+                    {props.isBusy ?
+                        <span>
+                            <layoutViews.AjaxLoaderBarImage />
+                        </span> :
+                        <a className="util-button" onClick={shareViaEmail}>
+                            {he.translate('global__send')}
+                        </a>
+                    }
                 </div>
             </S.ShareFreqTable>
         );

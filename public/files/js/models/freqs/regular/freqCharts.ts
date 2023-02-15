@@ -190,7 +190,8 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                 ),
                 saveFormActive: false,
                 shareLink: null,
-                flimit: parseInt(formProps.flimit) || 0
+                flimit: parseInt(formProps.flimit) || 0,
+                shareWidgetIsBusy: false
             }
         );
 
@@ -254,7 +255,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             Actions.ResultLinkShareViaEmail,
             (state, action) => {
                 if (state.isActive) {
-                    state.isBusy[action.payload.sourceId] = true;
+                    state.shareWidgetIsBusy = true;
                 }
             },
             (state, action, dispatch) => {
@@ -278,8 +279,16 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                                     sourceId: action.payload.sourceId
                                 }
                             );
-                            this.pageModel.showMessage(
-                                'info', this.pageModel.translate('global__ok'));
+                            if (data.ok) {
+                                this.pageModel.showMessage(
+                                    'info', this.pageModel.translate('global__ok')
+                                );
+
+                            } else {
+                                this.pageModel.showMessage(
+                                    'error', this.pageModel.translate('global__failed_to_send_mail')
+                                );
+                            }
                         },
                         error: error => {
                             this.pageModel.showMessage('error', error);
@@ -297,7 +306,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             Actions.ResultLinkShareViaEmailDone,
             (state, action) => {
                 if (state.isActive) {
-                    state.isBusy[action.payload.sourceId] = false;
+                    state.shareWidgetIsBusy = false;
                 }
             }
         );
