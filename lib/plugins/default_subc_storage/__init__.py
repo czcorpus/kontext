@@ -64,7 +64,7 @@ def _subc_from_row(row: Dict) -> SubcorpusRecord:
         cql=row['cql'],
         within_cond=json.loads(row['within_cond']) if row['within_cond'] else None,
         text_types=json.loads(row['text_types']) if row['text_types'] else None,
-        published=None if row['published'] is None else datetime.fromtimestamp(row['published']))
+    )
 
 
 class SQLiteSubcArchive(AbstractSubcArchive):
@@ -101,7 +101,6 @@ class SQLiteSubcArchive(AbstractSubcArchive):
                     text_types TEXT,
                     created REAL NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     archived REAL NULL,
-                    published REAL NULL,
                     public_description TEXT
                 )
             ''')

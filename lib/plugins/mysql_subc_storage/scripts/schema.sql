@@ -13,7 +13,6 @@ DROP TABLE IF EXISTS kontext_subcorpus;
       text_types TEXT,
       created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       archived TIMESTAMP NULL,
-      published TIMESTAMP NULL,
       public_description TEXT,
       CONSTRAINT kontext_subcorpus_corpus_name_fk FOREIGN KEY (corpus_name) REFERENCES kontext_corpus(name),
       CONSTRAINT kontext_subcorpus_user_id_fk FOREIGN KEY (user_id) REFERENCES kontext_user(id),

@@ -108,7 +108,6 @@ class SubcorpListPage {
                     {
                         isBusy: false,
                         data: undefined,
-                        derivedSubc: undefined,
                         liveAttrsEnabled: false,
                         previewEnabled: false,
                         prevRawDescription: undefined

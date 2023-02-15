@@ -71,7 +71,7 @@ def _subc_from_row(row: Dict) -> SubcorpusRecord:
         cql=row['cql'],
         within_cond=json.loads(row['within_cond']) if row['within_cond'] else None,
         text_types=json.loads(row['text_types']) if row['text_types'] else None,
-        published=row['published'])
+    )
 
 
 @dataclass

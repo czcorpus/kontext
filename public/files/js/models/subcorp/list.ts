@@ -49,7 +49,6 @@ export interface SubcorpListItem {
     archived:Date;
     author_fullname: string;
     created:Date;
-    published:Date;
     size:number;
     is_draft:boolean;
     public_description:string;

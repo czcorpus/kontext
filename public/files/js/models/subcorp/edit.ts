@@ -40,18 +40,9 @@ import {
     wipeSubcorpora } from './common';
 
 
-
-export interface DerivedSubcorp {
-    cql:string|undefined;
-    published:boolean;
-    description:string|undefined;
-}
-
-
 export interface SubcorpusEditModelState {
     isBusy:boolean;
     data:SubcorpusRecord|undefined;
-    derivedSubc:DerivedSubcorp|undefined;
     liveAttrsEnabled:boolean;
     previewEnabled:boolean;
     prevRawDescription:string|undefined;
