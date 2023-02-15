@@ -343,8 +343,14 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             const highlightGroups = List.reduce((acc, element, i) => {
                 const highlightId = highlightIndex(i, props.highlightPositions);
                 if (highlightId === -1) {
+                    if (lastHighlightId !== -1) {
+                        acc.push(' ')
+                        lastHighlightId = -1;
+                    }
                     acc.push(element);
+                    acc.push(' ');
                 } else if (highlightId === lastHighlightId) {
+                    acc[acc.length-1].push(' ');
                     acc[acc.length-1].push(element);
                 } else {
                     acc.push([element]);
@@ -542,26 +548,25 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                 return <span>&lt;--not translated--&gt;</span>
 
             } else {
-                const elements = List.map((v, i) => <>
-                    {i > 0 ? ' ' : null}
-                    {v}
-                </>
-                , props.item.text);
-
                 let lastHighlightId = -1;
                 const highlightGroups = List.reduce((acc, element, i) => {
                     const highlightId = highlightIndex(i, props.highlightPositions);
                     if (highlightId === -1) {
+                        if (lastHighlightId !== -1) {
+                            acc.push(' ')
+                            lastHighlightId = -1;
+                        }
                         acc.push(element);
+                        acc.push(' ');
                     } else if (highlightId === lastHighlightId) {
-
+                        acc[acc.length-1].push(' ');
                         acc[acc.length-1].push(element);
                     } else {
                         acc.push([element]);
                         lastHighlightId = highlightId
                     }
-                    return acc;
-                }, [], elements);
+                    return acc
+                }, [], props.item.text);
 
                 return <span className={props.item.className === 'strc' ? 'strc' : null}>
                     {highlightGroups.map(item =>
