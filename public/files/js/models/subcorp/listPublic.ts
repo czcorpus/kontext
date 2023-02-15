@@ -158,17 +158,13 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
         // TODO
         return this.pageModel.ajax$<LoadDataResponse>(
             HTTP.Method.GET,
-            this.pageModel.createActionUrl(
-                'subcorpus/list_published',
-                {
-                    format: 'json',
-                    ia_query: state.searchQuery,
-                    published_only: true,
-                    offset: 0, // TODO
-                    limit: 20 // TODO
-                }
-            ),
-            {}
+            this.pageModel.createActionUrl('subcorpus/list_published'),
+            {
+                format: 'json',
+                ia_query: state.searchQuery,
+                offset: 0, // TODO
+                limit: 20, // TODO
+            }
         );
     }
 

@@ -28,7 +28,7 @@ from manatee import Concordance, Corpus, SubCorpus
 from manatee import create_subcorpus as m_create_subcorpus
 
 from ..abstract import SubcorpusIdent
-from ..corpus import KCorpus, AbstractKCorpus
+from ..corpus import AbstractKCorpus, KCorpus
 from ..errors import (
     CorpusInstantiationError, InvalidSubCorpFreqFileType,
     SubcorpusAlreadyExistsError)
@@ -99,9 +99,6 @@ class SubcorpusRecord(SubcorpusIdent):
     public_description: str
     public_description_raw: str
     archived: Optional[datetime] = field(default=None, metadata=config(
-        encoder=serialize_datetime,
-        decoder=deserialize_datetime))
-    published: Optional[datetime] = field(default=None, metadata=config(
         encoder=serialize_datetime,
         decoder=deserialize_datetime))
     cql: Optional[str] = None

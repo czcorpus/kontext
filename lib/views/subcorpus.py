@@ -255,16 +255,17 @@ async def update_name_and_public_desc(amodel: CorpusActionModel, req: KRequest, 
 
 
 @dataclass
-class _PublicListArgs(SubcListFilterArgs):
+class PublicListArgs(SubcListFilterArgs):
     offset: IntOpt = 0
     limit: IntOpt = 20
+    published_only: IntOpt = 1
 
 
 @bp.route('/list_published')
 @http_action(
     template='subcorpus/list_published.html', page_model='pubSubcorpList', action_model=UserActionModel,
-    mapped_args=_PublicListArgs)
-async def list_published(amodel: UserActionModel, req: KRequest[_PublicListArgs], resp: KResponse) -> Dict[str, Any]:
+    mapped_args=PublicListArgs)
+async def list_published(amodel: UserActionModel, req: KRequest[PublicListArgs], resp: KResponse) -> Dict[str, Any]:
     amodel.disabled_menu_items = (
         MainMenu.VIEW, MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
     min_query_size = 3
@@ -272,6 +273,5 @@ async def list_published(amodel: UserActionModel, req: KRequest[_PublicListArgs]
         if not req.mapped_args.ia_query or len(req.mapped_args.ia_query) < 3:
             items = []
         else:
-            items = await sr.list(
-                amodel.session_get('user', 'id'), req.mapped_args, req.mapped_args.offset, req.mapped_args.limit)
+            items = await sr.list(None, req.mapped_args, None, req.mapped_args.offset, req.mapped_args.limit)
     return dict(data=[v.to_dict() for v in items], min_query_size=min_query_size)

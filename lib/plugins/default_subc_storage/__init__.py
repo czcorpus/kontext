@@ -64,7 +64,7 @@ def _subc_from_row(row: Dict) -> SubcorpusRecord:
         cql=row['cql'],
         within_cond=json.loads(row['within_cond']) if row['within_cond'] else None,
         text_types=json.loads(row['text_types']) if row['text_types'] else None,
-        published=None if row['published'] is None else datetime.fromtimestamp(row['published']))
+    )
 
 
 class SQLiteSubcArchive(AbstractSubcArchive):
@@ -101,7 +101,6 @@ class SQLiteSubcArchive(AbstractSubcArchive):
                     text_types TEXT,
                     created REAL NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     archived REAL NULL,
-                    published REAL NULL,
                     public_description TEXT
                 )
             ''')
@@ -231,16 +230,20 @@ class SQLiteSubcArchive(AbstractSubcArchive):
            (filter_args.archived_only and filter_args.published_only):
             raise SubcArchiveException('Invalid filter specified')
 
-        where, args = ['(t1.user_id IS NOT NULL AND t1.user_id = ?)'], [user_id]
+        where, args = ['t1.user_id IS NOT NULL'], []
+        if user_id is not None:
+            where.append('t1.user_id = ?')
+            args.append(user_id)
         if corpname is not None:
             where.append('t1.corpus_name = ?')
             args.append(corpname)
         if filter_args.archived_only:
             where.append('t1.archived IS NOT NULL')
-        elif filter_args.active_only:
-            where.append('t1.archived IS NULL')
-        elif filter_args.published_only:
-            where.append('t1.published IS NOT NULL')
+        else:
+            if filter_args.active_only:
+                where.append('t1.archived IS NULL')
+            if filter_args.published_only:
+                where.append('LENGTH(t1.public_description) > 0')
 
         if filter_args.pattern:
             v = f'%{filter_args.pattern}%'
