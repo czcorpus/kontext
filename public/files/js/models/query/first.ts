@@ -852,17 +852,12 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
     private transferFormValues(
         state:FirstQueryFormModelState,
         data:FirstQueryFormModelSwitchPreserve,
-        oldCorp:string,
         newCorp:string,
         isAligned?:boolean
     ) {
         const oldQuery = data.queries[newCorp];
         let newQuery = state.queries[newCorp];
-        if (oldCorp === newCorp && oldQuery.qtype === newQuery.qtype) {
-            // for corpora that are not changed only copy query
-            newQuery = oldQuery;
-
-        } else if (newQuery.qtype === 'advanced' && oldQuery.qtype === 'simple') {
+        if (newQuery.qtype === 'advanced' && oldQuery.qtype === 'simple') {
             newQuery = advancedToSimpleQuery(newQuery, List.head(state.simpleQueryDefaultAttrs[newCorp]));
 
         } else if (newQuery.qtype === 'simple' && oldQuery.qtype === 'advanced') {
@@ -890,7 +885,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             pipe(
                 corpora,
                 List.filter(([oldCorp, newCorp]) => !!oldCorp && !!newCorp), // add/remove aligned corp
-                List.forEach(([oldCorp, newCorp], i) => this.transferFormValues(state, data, oldCorp, newCorp, i > 0)),
+                List.forEach(([, newCorp], i) => this.transferFormValues(
+                    state, data, newCorp, i > 0)),
             );
             state.alignedCorporaVisible = data.alignedCorporaVisible;
             state.supportedWidgets = determineSupportedWidgets(
@@ -1179,13 +1175,9 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
     }
 
     disableRestrictSearch(state:FirstQueryFormModelState):boolean {
-        if (!!state.currentSubcorp) {
-            if (!!this.pageModel.getConf('SubcorpTTStructure') && this.pageModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES)) {
-                return false;
-            }
-            return true;
-        }
-        return false;
+        return !!state.currentSubcorp &&
+                (!this.pageModel.getConf('SubcorpTTStructure') ||
+                !this.pageModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES));
     }
 
 }
