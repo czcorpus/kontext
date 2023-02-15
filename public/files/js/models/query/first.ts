@@ -1175,13 +1175,9 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
     }
 
     disableRestrictSearch(state:FirstQueryFormModelState):boolean {
-        if (!!state.currentSubcorp) {
-            if (!!this.pageModel.getConf('SubcorpTTStructure') && this.pageModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES)) {
-                return false;
-            }
-            return true;
-        }
-        return false;
+        return !!state.currentSubcorp &&
+                (!this.pageModel.getConf('SubcorpTTStructure') ||
+                !this.pageModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES));
     }
 
 }
