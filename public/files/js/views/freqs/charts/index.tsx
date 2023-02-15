@@ -286,7 +286,6 @@ export function init(
         dtFormat:string;
         downloadFormat:Kontext.ChartExportFormat;
         handleDownload:()=>void;
-        shareLink:string;
         onShowShare:(sourceId:string)=>void;
 
     }> = (props) => (
@@ -341,10 +340,8 @@ export function init(
         fmaxitems:Kontext.FormValue<string>;
         sortColumn:FreqChartsAvailableOrder;
         downloadFormat:Kontext.ChartExportFormat;
-        shareLink:ShareLink|null;
         shareWidgetIsBusy:boolean;
         onShowShare:(sourceId:string)=>void;
-        onHideShare:()=>void;
 
     }> = (props) => {
 
@@ -507,21 +504,10 @@ export function init(
                         dataKey={props.dataKey} isBusy={props.isBusy} dtFormat={props.dtFormat}
                         fmaxitems={props.fmaxitems} sortColumn={props.sortColumn} handleDownload={handleDownload}
                         downloadFormat={props.downloadFormat}
-                        shareLink={props.shareLink?.url}
                         onShowShare={props.onShowShare} />
                 <div className="chart-wrapper">
                     {renderChart()}
                 </div>
-                { props.shareLink ?
-                    <globalComponents.ModalOverlay onCloseKey={props.onHideShare}>
-                        <globalComponents.CloseableFrame
-                                onCloseClick={props.onHideShare}
-                                label={he.translate('freq__share_table')}>
-                            <ShareLinkWidget sourceId={props.sourceId} url={props.shareLink.url}
-                                isBusy={props.shareWidgetIsBusy} />
-                        </globalComponents.CloseableFrame>
-                    </globalComponents.ModalOverlay> : null
-                }
             </S.FreqChartSection>
         );
     };
@@ -618,16 +604,24 @@ export function init(
                                         dtFormat={props.dtFormat[sourceId]} fmaxitems={props.fmaxitems[sourceId]}
                                         sortColumn={props.sortColumn[sourceId]}
                                         downloadFormat={props.downloadFormat[sourceId]}
-                                        shareLink={props.shareLink}
-                                        shareWidgetIsBusy={props.shareWidgetIsBusy}
                                         onShowShare={showShare}
-                                        onHideShare={hideShare} />
+                                        shareWidgetIsBusy={props.shareWidgetIsBusy} />
                         )
                     )
                 )}
                 {props.saveFormActive ?
                     <SaveForm onClose={handleSaveFormClose} /> :
                     null
+                }
+                {props.shareLink ?
+                    <globalComponents.ModalOverlay onCloseKey={hideShare}>
+                        <globalComponents.CloseableFrame
+                                onCloseClick={hideShare}
+                                label={he.translate('freq__share_table')}>
+                            <ShareLinkWidget sourceId={props.shareLink.sourceId} url={props.shareLink.url}
+                                isBusy={props.shareWidgetIsBusy} />
+                        </globalComponents.CloseableFrame>
+                    </globalComponents.ModalOverlay> : null
                 }
             </S.FreqChartsView>
         );
