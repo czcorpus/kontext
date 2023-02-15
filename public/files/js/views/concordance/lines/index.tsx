@@ -68,19 +68,27 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         }
     }
 
-    function highlightIndex(index:number, ranges:Array<[number, number]>):number {
-        for (let i=0;i<ranges.length;i++) {
-            if (index >= ranges[i][0] && index <= ranges[i][1]) return i;
-        }
-        return -1;
-    }
-
     function findHighlightPositions(shadowOutput:KWICSection, highlightItems:Array<HighlightItem>, corpusIdx:number) {
         const items = pipe(
             highlightItems,
             List.filter(v => v.level == -1 || v.level == corpusIdx),
             List.map(v => v.value),
         );
+
+        const aIntersectsB = (a:[number, number], b:[number, number]):boolean => {
+            return (
+                (a[0] <= b[0] && a[1] >= b[0]) ||
+                (a[0] >= b[0] && a[0] <= b[1])
+            );
+        };
+
+        const mergeIntervals = (a:[number, number], b:[number, number]):[number, number] => {
+            return [
+                a[0] <= b[0] ? a[0] : b[0],
+                a[1] >= b[1] ? a[1] : b[1],
+            ];
+        }
+
         const positionReducer = (chunks:Array<TextChunk>):Array<Array<[number, number]>> => List.map((chunk) => {
             const chunkText = chunk.text.join(' ');
             const allPositions = [];
@@ -99,14 +107,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                     }
                 }
             });
-
-            const aIntersectsB = (a:[number, number], b:[number, number]):boolean => {
-                return (a[0] <= b[0] && a[1] >= b[0]) || (a[0] >= b[0] && a[0] <= b[1]);
-            };
-
-            const mergeIntervals = (a:[number, number], b:[number, number]):[number, number] => {
-                return [a[0] <= b[0] ? a[0] : b[0], a[1] >= b[1] ? a[1] : b[1]];
-            }
 
             const biggestPositions = [];
             const checked = [];
@@ -132,6 +132,35 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             kwic: positionReducer(shadowOutput.kwic),
             right: positionReducer(shadowOutput.right),
         });
+    }
+
+    function getHighlightIndex(index:number, highlightPositions:Array<[number, number]>):number {
+        for (let i=0;i<highlightPositions.length;i++) {
+            if (index >= highlightPositions[i][0] && index <= highlightPositions[i][1]) return i;
+        }
+        return -1;
+    }
+
+    function createHighlightGroups(highlightPositions:Array<[number, number]>, elements) {
+        let lastHighlightId = -1;
+        return List.reduce((acc, element, i) => {
+            const highlightId = getHighlightIndex(i, highlightPositions);
+            if (highlightId === -1) {
+                if (lastHighlightId !== -1) {
+                    acc.push(' ')
+                    lastHighlightId = -1;
+                }
+                acc.push(element);
+                acc.push(' ');
+            } else if (highlightId === lastHighlightId) {
+                acc[acc.length-1].push(' ');
+                acc[acc.length-1].push(element);
+            } else {
+                acc.push([element]);
+                lastHighlightId = highlightId
+            }
+            return acc
+        }, [], elements);
     }
 
     function getViewModeTitle(
@@ -330,7 +359,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             const elements = props.data.text.map((s) => ({text: [s], className: props.data.className, tailPosAttrs: []} as TextChunk)).map((item, i) => {
                 return (
                     <React.Fragment key={`${props.position}:${props.idx}:${i}`}>
-                        {i > 0 ? ' ' : ''}
                         <span className={getViewModeClass(props.attrViewMode)}>
                             <Token tokenId={mkTokenId(i)} data={item} viewMode={props.attrViewMode} isKwic={false}
                                     supportsTokenConnect={props.supportsTokenConnect} />
@@ -338,33 +366,13 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                     </React.Fragment>
                 )
             });
-
-            let lastHighlightId = -1;
-            const highlightGroups = List.reduce((acc, element, i) => {
-                const highlightId = highlightIndex(i, props.highlightPositions);
-                if (highlightId === -1) {
-                    if (lastHighlightId !== -1) {
-                        acc.push(' ')
-                        lastHighlightId = -1;
-                    }
-                    acc.push(element);
-                    acc.push(' ');
-                } else if (highlightId === lastHighlightId) {
-                    acc[acc.length-1].push(' ');
-                    acc[acc.length-1].push(element);
-                } else {
-                    acc.push([element]);
-                    lastHighlightId = highlightId
-                }
-                return acc
-            }, [], elements);
-
+            const highlightGroups = createHighlightGroups(props.highlightPositions, elements);
             return (
                 <>
-                    {highlightGroups.map(item =>
-                        Array.isArray(item) ?
-                            <span className='highlight'>{item}</span> :
-                            item
+                    {highlightGroups.map(group =>
+                        Array.isArray(group) ?
+                            <span className='highlight'>{group}</span> :
+                            group
                     )}
                 </>
             );
@@ -548,31 +556,12 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                 return <span>&lt;--not translated--&gt;</span>
 
             } else {
-                let lastHighlightId = -1;
-                const highlightGroups = List.reduce((acc, element, i) => {
-                    const highlightId = highlightIndex(i, props.highlightPositions);
-                    if (highlightId === -1) {
-                        if (lastHighlightId !== -1) {
-                            acc.push(' ')
-                            lastHighlightId = -1;
-                        }
-                        acc.push(element);
-                        acc.push(' ');
-                    } else if (highlightId === lastHighlightId) {
-                        acc[acc.length-1].push(' ');
-                        acc[acc.length-1].push(element);
-                    } else {
-                        acc.push([element]);
-                        lastHighlightId = highlightId
-                    }
-                    return acc
-                }, [], props.item.text);
-
+                const highlightGroups = createHighlightGroups(props.highlightPositions, props.item.text);
                 return <span className={props.item.className === 'strc' ? 'strc' : null}>
-                    {highlightGroups.map(item =>
-                        Array.isArray(item) ?
-                            <span className='highlight'>{item}</span> :
-                            item
+                    {highlightGroups.map(group =>
+                        Array.isArray(group) ?
+                            <span className='highlight'>{group}</span> :
+                            group
                     )}
                 </span>;
             }
