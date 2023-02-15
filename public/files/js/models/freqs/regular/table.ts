@@ -200,7 +200,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 alphaLevel: alphaLevel,
                 displayConfidence: false,
                 shareLink: null,
-                flimit: parseInt(formProps.flimit) || 0
+                flimit: parseInt(formProps.flimit) || 0,
+                shareWidgetIsBusy: false
             }
         );
         this.pageModel = pageModel;
@@ -240,7 +241,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             (state, action) => {
                 if (state.isActive) {
                     copy(this.getShareLink(state, action.payload.sourceId));
-                    this.pageModel.showMessage('info', this.pageModel.translate('global__link_copied_to_clipboard'));
+                    this.pageModel.showMessage(
+                        'info', this.pageModel.translate('global__link_copied_to_clipboard'));
                 }
             }
         );
@@ -249,7 +251,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             Actions.ResultLinkShareViaEmail,
             (state, action) => {
                 if (state.isActive) {
-                    state.isBusy[action.payload.sourceId] = true;
+                    state.shareWidgetIsBusy = true;
                 }
             },
             (state, action, dispatch) => {
@@ -273,8 +275,16 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                                     sourceId: action.payload.sourceId
                                 }
                             );
-                            this.pageModel.showMessage(
-                                'info', this.pageModel.translate('global__ok'));
+                            if (data.ok) {
+                                this.pageModel.showMessage(
+                                    'info', this.pageModel.translate('global__ok')
+                                );
+
+                            } else {
+                                this.pageModel.showMessage(
+                                    'error', this.pageModel.translate('global__failed_to_send_mail')
+                                );
+                            }
                         },
                         error: error => {
                             this.pageModel.showMessage('error', error);
@@ -292,7 +302,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             Actions.ResultLinkShareViaEmailDone,
             (state, action) => {
                 if (state.isActive) {
-                    state.isBusy[action.payload.sourceId] = false;
+                    state.shareWidgetIsBusy = false;
                 }
             }
         );

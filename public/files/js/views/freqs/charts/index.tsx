@@ -304,15 +304,25 @@ export function init(
                 <div className="opts-line">
                     <label>{he.translate('freq__download_chart')}:</label>
                     <DownloadFormatSelector sourceId={props.sourceId} format={props.downloadFormat} />
-                    <S.DownloadButton src={he.createStaticUrl('img/download-button.svg')} alt={he.translate('freq__download_chart')} onClick={props.handleDownload} />
+                    <a onClick={props.handleDownload}>
+                        <globalComponents.ImgWithMouseover
+                                alt={he.translate('freq__download_chart')}
+                                src={he.createStaticUrl('img/download-button.svg')}
+                                style={{width: '1.1em', marginLeft: '0.2em'}} />
+                    </a>
                     {props.isBusy ?
                         <img src={he.createStaticUrl('img/ajax-loader-bar.gif')} alt={he.translate('global__loading')} /> :
                         null}
-                    <label>{he.translate('freq__share_chart')}:</label>
-                    <a onClick={()=>props.onShowShare(props.sourceId)}>
-                        <img className="over-img" style={{width: '1em', verticalAlign: 'middle'}} src={he.createStaticUrl('img/share.svg')}
-                                alt={he.translate('freq__share_chart')} title={he.translate('freq__share_chart')} />
-                    </a>
+                    <div className="share">
+                        <label>{he.translate('freq__share_chart')}:</label>
+                        <a onClick={()=>props.onShowShare(props.sourceId)}>
+                            <globalComponents.ImgWithMouseover
+                                    style={{width: '1em', verticalAlign: 'middle'}}
+                                    src={he.createStaticUrl('img/share.svg')}
+                                    alt={he.translate('freq__share_chart')}
+                                    title={he.translate('freq__share_chart')} />
+                        </a>
+                    </div>
                 </div>
             </globalComponents.ExpandableArea>
         </S.FreqChartsParamsFieldset>

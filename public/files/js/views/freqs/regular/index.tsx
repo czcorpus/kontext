@@ -68,6 +68,7 @@ export function init(
         totalItems:number;
         sourceId:string;
         shareLink:string|null;
+        shareWidgetIsBusy:boolean;
         onShowShare:(sourceId:string)=>void;
         onHideShare:()=>void;
     }
@@ -101,10 +102,13 @@ export function init(
                     {he.translate('freq__avail_items_{num_items}', {num_items: props.totalItems})})
                 </div>
                 <div className="share">
-                    <label>{he.translate('freq__share_table')}: </label>
+                    <label>{he.translate('freq__share_table')}:</label>
                     <a onClick={()=>props.onShowShare(props.sourceId)}>
-                        <img className="over-img" style={{width: '1em', verticalAlign: 'middle'}} src={he.createStaticUrl('img/share.svg')}
-                                alt={he.translate('freq__share_table')} title={he.translate('freq__share_table')} />
+                        <globalComponents.ImgWithMouseover
+                                style={{width: '1em', verticalAlign: 'middle'}}
+                                src={he.createStaticUrl('img/share.svg')}
+                                alt={he.translate('freq__share_table')}
+                                title={he.translate('freq__share_table')} />
                     </a>
                 </div>
                 { props.shareLink ?
@@ -113,7 +117,10 @@ export function init(
                                 onCloseClick={props.onHideShare}
                                 label={he.translate('freq__share_table')}
                                 icon={shareIcon}>
-                            <ShareLinkWidget sourceId={props.sourceId} url={props.shareLink} />
+                            <ShareLinkWidget
+                                    sourceId={props.sourceId}
+                                    url={props.shareLink}
+                                    isBusy={props.shareWidgetIsBusy} />
                         </globalComponents.CloseableFrame>
                     </globalComponents.ModalOverlay> : null
                 }
@@ -301,6 +308,7 @@ export function init(
                                                     props.shareLink.url :
                                                     null
                                                     }
+                                            shareWidgetIsBusy={props.shareWidgetIsBusy}
                                             onShowShare={showShare}
                                             onHideShare={hideShare} />
                                     <div>

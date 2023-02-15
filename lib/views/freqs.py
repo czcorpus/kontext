@@ -531,6 +531,8 @@ async def share_freq_table_via_mail(amodel: UserActionModel, req: KRequest, resp
         smtp_server = mailing.smtp_factory()
         url = req.json.get('url')
         recip_email = req.json.get('email')
+        if not recip_email:
+            raise UserReadableException('Missing recipient e-mail')
 
         text = req.translate('KonText user {} has sent to you a link to a frequency distribution table').format(username,) + ':'
         text += '\n\n'

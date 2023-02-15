@@ -31,7 +31,13 @@ export const ShareFreqTable = styled.div`
         align-items: center;
     }
 
-    .mail .util-button {
-        margin-left: 0.7em;
+    .mail {
+
+        display: flex;
+        align-items: center;
+
+        .util-button {
+            margin-left: 0.7em;
+        }
     }
 `;

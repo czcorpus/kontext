@@ -103,6 +103,7 @@ export interface BaseFreqModelState {
     ftt_include_empty:boolean;
     isActive:boolean;
     isBusy:{[sourceId:string]:boolean};
+    shareWidgetIsBusy:boolean;
     isError:{[sourceId:string]:Error};
     alphaLevel:Maths.AlphaLevel;
     saveFormActive:boolean;

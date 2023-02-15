@@ -224,6 +224,8 @@
         "global__send_link_via_email": "Send the link via e-mail UNTRANSLATED",
         "global__mail_recipient": "Recipient UNTRANSLATED",
         "global__permanent_link": "Permanent link UNTRANSLATED",
+        "global__missing_email": "Missing e-mail UNTRANSLATED",
+        "global__failed_to_send_mail": "Failed to send the e-mail UNTRANSLATED",
         "linesel__remove_selected_lines": "Skasuj ôznaczōne linije",
         "linesel__remove_all_but_selected_lines": "Ôstŏw ino ôznaczōne linije",
         "linesel__clear_the_selection": "Wysnŏż wybōr",
