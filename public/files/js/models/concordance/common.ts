@@ -53,7 +53,7 @@ export interface KWICSection {
     /**
      * Higlighted positions for multi layered corpora
      */
-    highlightMLPositions:Array<number>;
+    highlightMLPositions:Array<[number, number]>;
 }
 
 
