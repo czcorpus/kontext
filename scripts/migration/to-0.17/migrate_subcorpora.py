@@ -36,9 +36,17 @@ import aiofiles
 import plugins
 import settings
 from action.plugin import initializer
-from corplib.abstract import SubcorpusIdent, create_new_subc_ident
+from corplib.abstract import SubcorpusIdent
 from pymysql.err import IntegrityError
+from util import int2chash
+import hashlib
 
+UNIQ_K = '6dec36fa-ae04-11ed-bc95-07f4e403ca31'
+"""
+we will add this value to import paths so we decrease a chance of collision 
+between imported values (based on this const and orig. path) and the 
+new ones (based on uuid)
+"""
 
 async def ensure_subc_dir(subc_root: str, subc_ident: SubcorpusIdent):
     full_dir_path = os.path.join(subc_root, subc_ident.data_dir)
@@ -53,6 +61,14 @@ async def user_exists(user_id: int, users_table: str) -> bool:
             row = await cursor.fetchone()
             return row['cnt'] == 1
 
+async def create_permanent_subc_id(subc_root: str, subc_path: str, corpus_name: str) -> SubcorpusIdent:
+    ans = SubcorpusIdent(
+        id=int2chash(int(hashlib.sha1(f'{UNIQ_K}#{subc_path}'.encode()).hexdigest(), 16), 8),
+        corpus_name=corpus_name)
+    full_dir_path = os.path.join(subc_root, ans.data_dir)
+    if not await aiofiles.os.path.isdir(full_dir_path):
+        await aiofiles.os.makedirs(full_dir_path)
+    return ans
 
 async def migrate_subcorpora(
         users_subcpath: str, subcorpora_dir: str, default_user_id: int, is_ucnk: bool) -> Tuple[int, int]:
@@ -66,6 +82,9 @@ async def migrate_subcorpora(
                     continue
 
                 user_path = os.path.join(users_subcpath, user_id)
+                if not os.path.isdir(user_path):
+                    print(f'Skipping non-directory entry: {user_path}')
+                    continue
                 for corpname in os.listdir(user_path):
                     corp_path = os.path.join(user_path, corpname)
                     subcorpora = [file.split('.')[0]
@@ -109,7 +128,7 @@ async def migrate_subcorpora(
 
                             subc_id = SubcorpusIdent(p_hash, corpname)
                         else:
-                            subc_id = await create_new_subc_ident(subcorpora_dir, corpname)
+                            subc_id = await create_permanent_subc_id(subcorpora_dir, subc_path, corpname)
 
                         try:
                             await cursor.execute(
@@ -119,8 +138,8 @@ async def migrate_subcorpora(
                                 (subc_id.id, subcname, int(user_id), int(author_id), corpname,
                                  0, None, None, None, created, None, published, public_description)
                             )
-                        except IntegrityError:
-                            print(f'failed to insert subcorpus {subcname} for user {user_id}')
+                        except IntegrityError as ex:
+                            print(f'failed to insert subcorpus [{subcname}] for user {user_id}: {ex}')
                             if not await user_exists(int(user_id), user_table):
                                 print(
                                     f'no such user ... going to insert using a backup user ID {default_user_id}')
@@ -177,9 +196,9 @@ async def migrate_subcorpora(
                                 (subc_id.id, subcname, int(user_id), int(author_id), corpname,
                                  0, None, None, None, created, None, published, public_description)
                             )
-                        except IntegrityError:
+                        except IntegrityError as ex:
                             print(
-                                f'failed to insert published-only subcorpus {subcname} for user {user_id}')
+                                f'failed to insert published-only subcorpus [{subcname}] for user {user_id}, author: {author_id}: {ex}')
 
                         await ensure_subc_dir(subcorpora_dir, subc_id)
                         shutil.copy(subc_path, os.path.join(subcorpora_dir, subc_id.data_path))

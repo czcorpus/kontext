@@ -38,8 +38,8 @@ CREATE TABLE kontext_preflight_stats (
     estimated_size INT,
     actual_size INT,
     PRIMARY KEY(id, corpus_name, subc_id),
-    CONSTRAINT kontext_preflight_stats_corpus_name_fk FOREIGN KEY (corpus_name) REFERENCES kontext_corpus(name),
-    CONSTRAINT kontext_preflight_stats_id_fk FOREIGN KEY (subc_id) REFERENCES kontext_subcorpus(id)
+    CONSTRAINT kontext_preflight_stats_corpus_name_fk FOREIGN KEY (corpus_name) REFERENCES kontext_corpus(name) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT kontext_preflight_stats_id_fk FOREIGN KEY (subc_id) REFERENCES kontext_subcorpus(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 DROP VIEW IF EXISTS kontext_preflight_subc_evaluation;
