@@ -90,6 +90,7 @@ import * as formArgs from '../models/query/formArgs';
 import { DispersionResultModel } from '../models/dispersion/result';
 import { AnyTTSelection } from '../types/textTypes';
 import { ShuffleModel } from '../models/query/shuffle';
+import { ActionUrlCodes } from '../app/navigation/interpage';
 
 
 export class QueryModels {
@@ -123,6 +124,7 @@ type HashedActionsTypes = typeof MainMenuActions.ShowFilter |
             typeof MainMenuActions.ShowSort |
             typeof MainMenuActions.ShowSample |
             typeof MainMenuActions.ApplyShuffle |
+            typeof MainMenuActions.MakeConcLinkPersistent |
             typeof QueryActions.EditQueryOperation;
 
 
@@ -188,55 +190,59 @@ export class ViewPage {
         const [actionName, rawArgs] = (v || '').substring(1).split('/');
         const args = Dict.fromEntries(parseUrlArgs(rawArgs || ''));
 
-            function fetchRequired(k:string):string {
-                if (k in args) {
-                    return args[k];
-                }
-                throw new Error(`Missing hashed action argument ${k}`);
+        function fetchRequired(k:string):string {
+            if (k in args) {
+                return args[k];
             }
+            throw new Error(`Missing hashed action argument ${k}`);
+        }
 
-            switch (actionName) {
-                case 'filter': {
-                    return {
-                        ...MainMenuActions.ShowFilter,
-                        payload: {
-                            within: args['within'],
-                            maincorp: args['maincorp'],
-                            pnfilter: fetchRequired('pnfilter')
-                        }
-                    };
-                }
-                case 'sort':
-                case 'sortx': {
-                    return {
-                        ...MainMenuActions.ShowSort
-                    };
-                }
-                case 'sample': {
-                    return {
-                        ...MainMenuActions.ShowSample
-                    };
-                }
-                case 'shuffle': {
-                    return {
-                        ...MainMenuActions.ApplyShuffle
-                    };
-                }
-                case 'edit_op': {
-                    const operationIdx = parseInt(fetchRequired('operationIdx'));
-                    if (isNaN(operationIdx)) {
-                        throw new Error(`Invalid operationIdx for edit_op: ${fetchRequired('operationIdx')}`);
+        switch (actionName as ActionUrlCodes) {
+            case 'filter': {
+                return {
+                    ...MainMenuActions.ShowFilter,
+                    payload: {
+                        within: args['within'],
+                        maincorp: args['maincorp'],
+                        pnfilter: fetchRequired('pnfilter')
                     }
-                    return {
-                        ...QueryActions.EditQueryOperation,
-                        payload: {
-                            operationIdx
-                        }
-                    };
-                }
-                default:
-                    throw new Error(`Unknown hashed action ${actionName}`);
+                };
             }
+            case 'sort': {
+                return {
+                    ...MainMenuActions.ShowSort
+                };
+            }
+            case 'sample': {
+                return {
+                    ...MainMenuActions.ShowSample
+                };
+            }
+            case 'shuffle': {
+                return {
+                    ...MainMenuActions.ApplyShuffle
+                };
+            }
+            case 'edit_op': {
+                const operationIdx = parseInt(fetchRequired('operationIdx'));
+                if (isNaN(operationIdx)) {
+                    throw new Error(`Invalid operationIdx for edit_op: ${fetchRequired('operationIdx')}`);
+                }
+                return {
+                    ...QueryActions.EditQueryOperation,
+                    payload: {
+                        operationIdx
+                    }
+                };
+            }
+            case 'show_permalink': {
+                return {
+                    ...MainMenuActions.MakeConcLinkPersistent
+                };
+            }
+            default:
+                throw new Error(`Unknown hashed action ${actionName}`);
+        }
     }
 
     /**

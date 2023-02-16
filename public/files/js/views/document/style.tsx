@@ -82,9 +82,9 @@ export const CloseableFrame = styled.section<{fixedTop?: string}>`
         }
 
         h2 {
+            flex-grow: 1;
             margin: 0 1.6em 0 0;
             padding: 0;
-            display: block;
             text-align: left;
             width: 90%;
             font-size: 140%;

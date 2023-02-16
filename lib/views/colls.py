@@ -71,6 +71,7 @@ async def collx(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         ans['save_line_limit'] = amodel.COLLS_QUICK_SAVE_MAX_LINES
         ans['text_types_data'] = await amodel.tt.export_with_norms(ret_nums=True)
         ans['quick_save_row_limit'] = amodel.COLLS_QUICK_SAVE_MAX_LINES
+        await amodel.export_query_forms(ans)
         return ans
     except ConcNotFoundException:
         amodel.go_to_restore_conc('collx')
