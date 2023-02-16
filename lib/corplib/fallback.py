@@ -10,7 +10,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Any, Awaitable, List, Union, Optional
+from typing import Any, Awaitable, List
 
 from corplib import SubcorpusIdent
 from corplib.abstract import AbstractKCorpus
@@ -150,13 +150,14 @@ class ErrorCorpus(EmptyCorpus):
     (e.g. user visits URL containing non-existing sub-corpus)
     """
 
-    def __init__(self, err):
+    def __init__(self, err: Exception, corpname: str = '', usesubcorp: str = None):
         """
         arguments:
         err -- an error which caused that the original corpus failed to initialize
         """
-        super().__init__()
+        super().__init__(corpname)
         self._error = err
+        self._usesubcorp = usesubcorp
 
     def get_error(self):
         """
@@ -166,12 +167,12 @@ class ErrorCorpus(EmptyCorpus):
 
     @property
     def subcorpus_id(self):
-        return None
+        return self._usesubcorp
 
     @property
     def subcorpus_name(self):
-        return None
+        return self._usesubcorp
 
     @property
     def portable_ident(self):
-        return ''
+        return SubcorpusIdent(id=self.subcorpus_id, corpus_name=self._corpname) if self._usesubcorp else self._corpname

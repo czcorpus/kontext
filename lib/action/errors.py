@@ -90,6 +90,10 @@ class ForbiddenException(UserReadableException):
     def __init__(self, message, internal_message=None):
         super().__init__(message, 403, internal_message=internal_message)
 
+class CorpusNotFoundException(UserReadableException):
+
+    def __init__(self, message, internal_message=None):
+        super().__init__(message, 404, internal_message=internal_message)
 
 class CorpusForbiddenException(ForbiddenException):
     def __init__(self, corpname, variant):

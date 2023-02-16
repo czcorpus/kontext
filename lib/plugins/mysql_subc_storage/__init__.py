@@ -301,6 +301,22 @@ class MySQLSubcArchive(AbstractSubcArchive):
             row = await cursor.fetchone()
             return None if row is None else _subc_from_row(row)
 
+    async def get_info_by_name(self, corpname, subc_name, user_id):
+        async with self._db.cursor() as cursor:
+            await cursor.execute(
+                f"""SELECT
+                t1.*,
+                CONCAT(t2.{self._bconf.user_table_firstname_col}, ' ', {self._bconf.user_table_lastname_col}) AS fullname
+                FROM {self._bconf.subccorp_table} AS t1
+                JOIN {self._bconf.user_table} AS t2 ON t1.author_id = t2.id
+                WHERE t1.corpus_name = %s AND t1.name = %s AND t1.author_id = %s
+                ORDER BY t1.created
+                LIMIT 1""",
+                (corpname, subc_name, user_id)
+            )
+            row = await cursor.fetchone()
+            return None if row is None else _subc_from_row(row)
+
     async def get_names(self, subc_ids):
         ans = {}
         if len(subc_ids) == 0:

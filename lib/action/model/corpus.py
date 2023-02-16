@@ -23,6 +23,7 @@ from dataclasses import asdict
 from functools import partial
 from typing import (
     Any, Awaitable, Callable, Dict, Iterable, List, Optional, Tuple, TypeVar, Union)
+import logging
 
 import corplib
 import l10n
@@ -32,7 +33,7 @@ from action.argmapping import Args
 from action.argmapping.conc.query import ConcFormArgs
 from action.errors import (
     AlignedCorpusForbiddenException, ImmediateRedirectException,
-    NotFoundException, UserReadableException)
+    NotFoundException, UserReadableException, CorpusNotFoundException)
 from action.krequest import KRequest
 from action.model import ModelsSharedData
 from action.model.user import UserActionModel, UserPluginCtx
@@ -210,7 +211,9 @@ class CorpusActionModel(UserActionModel):
                     if len(corpora) > 1:
                         req_args.add_forced_arg('align', *corpora[1:])
                         req_args.add_forced_arg('viewmode', 'align')
-                    if self._active_q_data.get('usesubcorp', None):
+                    if '_usesubcorp' in req_args:
+                        req_args.add_forced_arg('usesubcorp', req_args.getvalue('_usesubcorp'))
+                    elif self._active_q_data.get('usesubcorp', None):
                         req_args.add_forced_arg('usesubcorp', self._active_q_data['usesubcorp'])
                     return True
                 else:
@@ -267,7 +270,7 @@ class CorpusActionModel(UserActionModel):
         """
         req_args = await super().pre_dispatch(req_args)
         try:
-            await self._restore_prev_query_params(req_args)
+            q_loaded = await self._restore_prev_query_params(req_args)
             # corpus access check and modify path in case user cannot access currently requested corp.
             corpname, self._corpus_variant = await self._check_corpus_access(req_args, self._action_props)
             # now we can apply also corpus-dependent settings
@@ -303,15 +306,22 @@ class CorpusActionModel(UserActionModel):
         if self._req.method == 'GET':
             self.return_url = self._req.updated_current_url(args)
         else:
-            self.return_url = '{}query?{}'.format(self._req.get_root_url(),
-                                                  '&'.join([f'{k}={v}' for k, v in list(args.items())]))
+            self.return_url = '{}query?{}'.format(
+                self._req.get_root_url(), '&'.join([f'{k}={v}' for k, v in list(args.items())]))
         self._curr_corpus = await self._load_corpus()
         # plugins setup
         for p in plugins.runtime:
             if callable(getattr(p.instance, 'setup', None)):
                 p.instance.setup(self)
         if isinstance(self.corp, ErrorCorpus):
-            raise self.corp.get_error()
+            err = self.corp.get_error()
+            # in case user tries to open a non-existing subcorpus, we must test
+            # whether it is due to the older identifier and redirect if applicable
+            if isinstance(err, CorpusNotFoundException) and self.corp.subcorpus_id:
+                await self._redirect_old_subcorpus(err, q_loaded)
+            else:
+                raise err
+
         info = await self.get_corpus_info(self.args.corpname)
         if isinstance(info, BrokenCorpusInfo):
             raise NotFoundException(
@@ -319,6 +329,24 @@ class CorpusActionModel(UserActionModel):
                 internal_message=f'Failed to fetch configuration for {info.name}')
 
         return req_args
+
+    async def _redirect_old_subcorpus(self, orig_err: Exception, q_loaded: bool):
+        with plugins.runtime.SUBC_STORAGE as sr:
+            subc = await sr.get_info_by_name(self.args.corpname, self.args.usesubcorp, self.session_get('user', 'id'))
+            if subc:
+                logging.getLogger(__name__).warning(
+                    'Upgraded action with deprecated subcorpus identifier {}{}'.format(
+                        self.args.usesubcorp, ' (loaded from conc_persistence)' if q_loaded else ''))
+                args = {}
+                if q_loaded:
+                    # in case args are loaded from conc. persistence storage,
+                    # we must tell the target action pre_dispatch to overwrite
+                    # stored subc. identifier on the next try
+                    args['_usesubcorp'] = subc.id
+                else:
+                    args['usesubcorp'] = subc.id
+                raise ImmediateRedirectException(self._req.updated_current_url(args))
+            raise orig_err
 
     async def resolve_error_state(self, req, resp, result, err):
         await super().resolve_error_state(req, resp, result, err)
@@ -382,7 +410,8 @@ class CorpusActionModel(UserActionModel):
         else:
             corpus_ident = self.args.corpname
         if corpus_ident is None:
-            return ErrorCorpus(Exception('Corpus not found'))
+            return ErrorCorpus(
+                CorpusNotFoundException('Corpus not found'), corpname=self.args.corpname, usesubcorp=self.args.usesubcorp)
         if self.args.corpname:
             try:
                 corp = await self.cf.get_corpus(
