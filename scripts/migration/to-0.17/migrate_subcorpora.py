@@ -87,7 +87,7 @@ async def migrate_subcorpora(
                     continue
                 for corpname in os.listdir(user_path):
                     corp_path = os.path.join(user_path, corpname)
-                    subcorpora = [file.split('.')[0]
+                    subcorpora = [file.rsplit('.', 1)[0]
                                   for file in os.listdir(corp_path) if file.endswith('.subc')]
                     for subcname in subcorpora:
                         subc_path = os.path.join(corp_path, f'{subcname}.subc')
