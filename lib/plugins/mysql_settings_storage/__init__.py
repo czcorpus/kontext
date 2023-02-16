@@ -90,7 +90,7 @@ class SettingsStorage(AbstractSettingsStorage):
                 ''', (user_id, corpus_id))
                 row = await cursor.fetchone()
 
-            if row is not None:
+            if row is not None and row['data']:
                 return json.loads(row['data'])
 
         else:
