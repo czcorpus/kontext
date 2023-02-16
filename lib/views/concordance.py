@@ -1173,7 +1173,10 @@ async def get_adhoc_subcorp_size(amodel: ConcActionModel, req: KRequest, resp: K
 async def load_query_pipeline(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.QUERY_PERSISTENCE as qp:
         pipeline = await qp.load_pipeline_ops(amodel.plugin_ctx, amodel.q_code, build_conc_form_args)
-    return dict(ops=[dict(id=x.op_key, form_args=x.to_dict()) for x in pipeline])
+        concdesc = await amodel.concdesc_json()
+    return dict(
+        ops=[dict(id=x.op_key, form_args=x.to_dict()) for x in pipeline],
+        query_overview=[x.to_dict() for x in concdesc])
 
 
 @bp.route('/matching_structattr')
