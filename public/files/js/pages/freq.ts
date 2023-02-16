@@ -56,6 +56,7 @@ import { FreqResultsSaveModel } from '../models/freqs/regular/save';
 import { FreqChartsSaveFormModel } from '../models/freqs/regular/saveChart';
 import { importInitialTTData, TTInitialData } from '../models/textTypes/common';
 import { TabWrapperModel } from '../models/freqs/regular/tabs';
+import { transferActionToViewPage } from '../app/navigation/interpage';
 
 /**
  *
@@ -568,40 +569,7 @@ class FreqPage {
             // the fragment part of the URL) which form should be opened
             // once the 'view' page is loaded
             this.layoutModel.dispatcher.registerActionListener(
-                (action) => {
-                    switch (action.name) {
-                        case MainMenuActions.ShowFilter.name:
-                            window.location.replace(
-                                this.layoutModel.createActionUrl(
-                                    'view',
-                                    this.layoutModel.getConcArgs()
-                                ) + '#filter/' + pipe(
-                                    action.payload,
-                                    CURL.valueToPairs(),
-                                    List.map(([k, v]) => `${k}=${v}`)
-                                ).join('&')
-                            );
-                        break;
-                        case MainMenuActions.ShowSort.name:
-                            window.location.replace(this.layoutModel.createActionUrl(
-                                'view',
-                                this.layoutModel.getConcArgs()
-                            ) + '#sort');
-                        break;
-                        case MainMenuActions.ShowSample.name:
-                            window.location.replace(this.layoutModel.createActionUrl(
-                                'view',
-                                this.layoutModel.getConcArgs()
-                            ) + '#sample');
-                        break;
-                        case MainMenuActions.ApplyShuffle.name:
-                            window.location.replace(this.layoutModel.createActionUrl(
-                                'view',
-                                this.layoutModel.getConcArgs()
-                            ) + '#shuffle');
-                        break;
-                    }
-                }
+                transferActionToViewPage(this.layoutModel)
             );
             const ttData = this.layoutModel.getConf<TTInitialData>('textTypesData');
             const [,ttSelection] = this.initTTModel(ttData);

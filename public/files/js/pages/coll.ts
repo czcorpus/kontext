@@ -44,6 +44,7 @@ import { DispersionResultModel } from '../models/dispersion/result';
 import { importInitialTTData, TTInitialData } from '../models/textTypes/common';
 import { ConcFormArgs } from '../models/query/formArgs';
 import { fetchQueryFormArgs } from '../models/query/first';
+import { transferActionToViewPage } from '../app/navigation/interpage';
 
 
 /**
@@ -356,47 +357,14 @@ export class CollPage {
 
     init():void {
         this.layoutModel.init(true, [], () => {
-            const mainMenuModel = this.layoutModel.getModels().mainMenuModel;
             // we must capture concordance-related actions which lead
             // to specific "pop-up" forms and redirect user back to
             // the 'view' action with additional information (encoded in
             // the fragment part of the URL) specifying which form should be opened
             // once the 'view' page is loaded
             this.layoutModel.dispatcher.registerActionListener(
-                (action) => {
-                    switch (action.name) {
-                        case MainMenuActions.ShowFilter.name:
-                            window.location.replace(
-                                this.layoutModel.createActionUrl(
-                                    'view',
-                                    this.layoutModel.getConcArgs()
-                                ) + '#filter/' + pipe(
-                                    action.payload,
-                                    URL.valueToPairs(),
-                                    List.map(([k, v]) => `${k}=${v}`)
-                                ).join('&')
-                            );
-                        break;
-                        case MainMenuActions.ShowSort.name:
-                            window.location.replace(this.layoutModel.createActionUrl(
-                                'view',
-                                this.layoutModel.getConcArgs()
-                            ) + '#sort');
-                        break;
-                        case MainMenuActions.ShowSample.name:
-                            window.location.replace(this.layoutModel.createActionUrl(
-                                'view',
-                                this.layoutModel.getConcArgs()
-                            ) + '#sample');
-                        break;
-                        case MainMenuActions.ApplyShuffle.name:
-                            window.location.replace(this.layoutModel.createActionUrl(
-                                'view',
-                                this.layoutModel.getConcArgs()
-                            ) + '#shuffle');
-                        break;
-                }
-            });
+                transferActionToViewPage(this.layoutModel)
+            );
             this.initAnalysisViews();
             this.initQueryOpNavigation();
             this.setupBackButtonListening();
