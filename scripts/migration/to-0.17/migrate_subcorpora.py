@@ -139,7 +139,7 @@ async def migrate_subcorpora(
                                  0, None, None, None, created, None, published, public_description)
                             )
                         except IntegrityError as ex:
-                            print(f'failed to insert subcorpus [{subcname}] for user {user_id}: {ex}')
+                            print(f'failed to insert subcorpus [{subcname}] for user {user_id}, author: {author_id}: {ex}')
                             if not await user_exists(int(user_id), user_table):
                                 print(
                                     f'no such user ... going to insert using a backup user ID {default_user_id}')
