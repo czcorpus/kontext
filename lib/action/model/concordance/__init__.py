@@ -81,6 +81,7 @@ class ConcActionModel(CorpusActionModel):
         if loaded:
             self._lines_groups = LinesGroups.deserialize(
                 self._active_q_data.get('lines_groups', []))
+        return loaded
 
     async def fetch_prev_query(self, query_type: str) -> Optional[QueryFormArgs]:
         """

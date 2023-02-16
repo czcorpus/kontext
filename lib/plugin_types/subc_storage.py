@@ -145,6 +145,12 @@ class AbstractSubcArchive(abc.ABC):
         Returns an information about the most recent record matching provided ID
         """
 
+    async def get_info_by_name(self, corpname: str, subc_name: str, user_id: int) -> Optional[SubcorpusRecord]:
+        """
+        Returns an information about a subcorpus based on KonText <= 0.16 credentials.
+        This is for backwards compatibility
+        """
+
     @abc.abstractmethod
     async def get_names(self, subc_ids: List[str]) -> Dict[str, str]:
         """
