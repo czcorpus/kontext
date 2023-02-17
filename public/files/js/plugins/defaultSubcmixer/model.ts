@@ -418,7 +418,7 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
             Dict.fromEntries()
         );
         for (let k in sums) {
-            if (Maths.roundToPos(sums[k], 2) !== 100) {
+            if (Maths.roundToPos(sums[k], 1) !== 100) {
                 return throwError(() => new Error(this.pluginApi.translate(
                     'subcmixer__ratios_cannot_over_100_{struct_name}{over_val}',
                     {struct_name: k, over_val: this.pluginApi.formatNumber(sums[k] - 100)})));
