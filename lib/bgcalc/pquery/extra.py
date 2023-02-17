@@ -125,7 +125,7 @@ async def calc_merged_freqs_threaded(
                 pquery=pquery, conc_id=conc_id, raw_queries=raw_queries, subcpath=subcpath, user_id=user_id,
                 collator_locale=collator_locale)
             conc = await require_existing_conc(corp, freq_args.q, freq_args.cutoff)
-            specif_futures.append(executor.submit(calculate_freqs_bg_sync, freq_args, conc))
+            specif_futures.append(executor.submit(calculate_freqs_bg_sync, freq_args, corp, conc))
 
         # calculate auxiliary data for the "(almost) never" condition
         cond1_futures = []
@@ -135,7 +135,7 @@ async def calc_merged_freqs_threaded(
                     pquery=pquery, conc_id=conc_id, raw_queries=raw_queries, subcpath=subcpath, user_id=user_id,
                     collator_locale=collator_locale, flimit_override=1)
                 conc = await require_existing_conc(corp, freq_args.q, freq_args.cutoff)
-                cond1_futures.append(executor.submit(calculate_freqs_bg_sync, freq_args, conc))
+                cond1_futures.append(executor.submit(calculate_freqs_bg_sync, freq_args, corp, conc))
         # calculate auxiliary data (the superset here) for the "(almost) always" condition
         cond2_future = None
         if pquery.conc_superset:
@@ -143,7 +143,7 @@ async def calc_merged_freqs_threaded(
                 pquery=pquery, conc_id=pquery.conc_superset.conc_id, raw_queries=raw_queries, subcpath=subcpath,
                 user_id=user_id, collator_locale=collator_locale)
             conc = await require_existing_conc(corp, freq_args.q, freq_args.cutoff)
-            cond2_future = executor.submit(calculate_freqs_bg_sync, freq_args, conc)
+            cond2_future = executor.submit(calculate_freqs_bg_sync, freq_args, corp, conc)
 
         # merge frequencies of individual realizations
         realizations = as_completed(specif_futures, timeout=SUBTASK_TIMEOUT_SECS)

@@ -71,7 +71,7 @@ from action.argmapping.subcorpus import (
 from action.argmapping.wordlist import WordlistFormArgs
 from bgcalc import coll_calc, freqs, pquery, subc_calc, wordlist
 from corplib import CorpusFactory
-from corplib.abstract import AbstractKCorpus, SubcorpusIdent
+from corplib.abstract import SubcorpusIdent
 from corplib.corpus import KCorpus
 from corplib.subcorpus import SubcorpusRecord
 
@@ -84,24 +84,6 @@ def load_script_module(name, path):
 
 class WorkerTaskException(Exception):
     pass
-
-
-def is_compiled(corp: AbstractKCorpus, attr, method):
-    """
-    Test whether pre-calculated data for particular
-    combination corpus+attribute+method (arf, docf, frq)
-    already exist.
-
-    arguments:
-    corp --
-    attr -- a name of an attribute
-    method -- one of arf, docf, frq
-    """
-    attr = corp.get_attr(attr)
-    try:
-        return attr.get_stat(method)
-    except manatee.FileAccessError:
-        return False
 
 
 async def _load_corp(corp_ident: Union[str, SubcorpusRecord]):
@@ -128,7 +110,7 @@ async def _compile_frq(corp: KCorpus, attr, logfile):
     logfile -- a file where calculation status will be written
                (bonito-open approach)
     """
-    if is_compiled(corp, attr, 'frq'):
+    if freqs.is_compiled(corp, attr, 'frq'):
         async with aiofiles.open(logfile, 'a') as f:
             await f.write('\n100 %\n')  # to get proper calculation of total progress
         return {'message': 'freq already compiled'}
@@ -262,7 +244,7 @@ async def compile_arf(corpus_ident, attr, logfile):
     num_wait = 20
     base_paths = freqs.corp_freqs_cache_paths(corp, attr)
 
-    if not is_compiled(corp, attr, 'frq'):
+    if not freqs.is_compiled(corp, attr, 'frq'):
         frq_data_file = corp.freq_precalc_file(attr, 'frq')
         while num_wait > 0 and await freqs.calc_is_running([base_paths['frq']]):
             if await aiofiles.os.path.isfile(frq_data_file):
@@ -272,7 +254,7 @@ async def compile_arf(corpus_ident, attr, logfile):
         if not await aiofiles.os.path.isfile(frq_data_file):
             await _compile_frq(corp, attr, logfile)
         corp = await _load_corp(corpus_ident)  # must reopen freq files
-    if is_compiled(corp, attr, 'arf'):
+    if freqs.is_compiled(corp, attr, 'arf'):
         async with aiofiles.open(logfile, 'a') as f:
             await f.write('\n100 %\n')  # to get proper calculation of total progress
         return {'message': 'arf already compiled'}
@@ -290,7 +272,7 @@ async def compile_docf(corpus_ident, attr, logfile):
     (see freqs.build_arf_db)
     """
     corp = await _load_corp(corpus_ident)
-    if is_compiled(corp, attr, 'docf'):
+    if freqs.is_compiled(corp, attr, 'docf'):
         async with aiofiles.open(logfile, 'a') as f:
             await f.write('\n100 %\n')  # to get proper calculation of total progress
         return {'message': 'docf already compiled'}
