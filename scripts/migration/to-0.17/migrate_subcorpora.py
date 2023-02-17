@@ -152,7 +152,7 @@ async def migrate_subcorpora(
                                 )
 
                         await ensure_subc_dir(subcorpora_dir, subc_id)
-                        shutil.copy(subc_path, os.path.join(subcorpora_dir, subc_id.data_path))
+                        shutil.copy2(subc_path, os.path.join(subcorpora_dir, subc_id.data_path))
                         total_count += 1
 
             published_dir = os.path.join(users_subcpath, 'published')
@@ -201,7 +201,7 @@ async def migrate_subcorpora(
                                 f'failed to insert published-only subcorpus [{subcname}] for user {user_id}, author: {author_id}: {ex}')
 
                         await ensure_subc_dir(subcorpora_dir, subc_id)
-                        shutil.copy(subc_path, os.path.join(subcorpora_dir, subc_id.data_path))
+                        shutil.copy2(subc_path, os.path.join(subcorpora_dir, subc_id.data_path))
                         total_count += 1
                         published_count += 1
 
