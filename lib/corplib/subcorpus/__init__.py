@@ -212,7 +212,7 @@ class KSubcorpus(KCorpus):
         return self._data_record.public_description
 
     def freq_precalc_file(self, attrname: str, ftype: str) -> str:
-        if ftype not in ('frq', 'docf', 'arf'):
+        if ftype not in ('frq', 'docf', 'arf', 'token:l'):
             raise InvalidSubCorpFreqFileType(
                 f'invalid subcorpus freq type file specification: {ftype}')
         return os.path.join(self._subcorp_root_dir, self._data_record.data_dir, f'data.{attrname}.{ftype}')

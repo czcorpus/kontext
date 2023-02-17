@@ -20,6 +20,7 @@ import time
 from dataclasses import asdict
 from datetime import datetime
 from typing import Dict, Iterable, List, Optional, Union, Tuple
+from subprocess import Popen, PIPE
 
 import aiofiles
 import aiofiles.os
@@ -36,12 +37,32 @@ from conclib.calc import require_existing_conc
 from conclib.pyconc import PyConc
 from corplib.abstract import SubcorpusIdent
 from corplib.corpus import AbstractKCorpus, KCorpus
+from corplib.subcorpus import KSubcorpus
 
 from ..errors import CalcArgsAssertionError
 
 MAX_LOG_FILE_AGE = 1800  # in seconds
 
 TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
+
+
+
+def is_compiled(corp: AbstractKCorpus, attr, method):
+    """
+    Test whether pre-calculated data for particular
+    combination corpus+attribute+method (arf, docf, frq, token:l)
+    already exist.
+
+    arguments:
+    corp --
+    attr -- a name of an attribute
+    method -- one of arf, docf, frq, token:l
+    """
+    attr = corp.get_attr(attr)
+    try:
+        return attr.get_stat(method)
+    except manatee.FileAccessError:
+        return False
 
 
 def corp_freqs_cache_paths(corp: AbstractKCorpus, attrname) -> Dict[str, str]:
@@ -59,7 +80,8 @@ def corp_freqs_cache_paths(corp: AbstractKCorpus, attrname) -> Dict[str, str]:
     return {
         'arf': corp.freq_precalc_file(attrname, 'arf'),
         'frq': corp.freq_precalc_file(attrname, 'frq'),
-        'docf': corp.freq_precalc_file(attrname, 'docf')
+        'docf': corp.freq_precalc_file(attrname, 'docf'),
+        'token:l': corp.freq_precalc_file(attrname, 'token'),
     }
 
 
@@ -151,7 +173,7 @@ async def build_arf_db_status(corp, attrname):
     return await _get_total_calc_status(corp_freqs_cache_paths(corp, attrname).values())
 
 
-def calculate_freqs_bg_sync(args: FreqCalcArgs, conc: PyConc) -> FreqCalcResult:
+def calculate_freqs_bg_sync(args: FreqCalcArgs, corp: AbstractKCorpus, conc: PyConc) -> FreqCalcResult:
     """
     This is a blocking variant of calculate_freqs_bg which requires a concordance
     instance to be already available. This is mostly intended for passing sub-calculations
@@ -160,6 +182,17 @@ def calculate_freqs_bg_sync(args: FreqCalcArgs, conc: PyConc) -> FreqCalcResult:
     if not conc.finished():
         raise UnfinishedConcordanceError(
             'Cannot calculate yet - source concordance not finished. Please try again later.')
+
+    for crit in args.fcrit:
+        attr = crit.split()[0].split('/')[0]
+        if not '.' in attr:
+            continue
+        if not is_compiled(corp, attr, 'token:l') and isinstance(corp, KSubcorpus):
+            logging.getLogger(__name__).warning(f'Missing token:l data for subcorpus {corp.subcorpus_id}')
+            compute_norms(
+                corp,
+                attr.split('.')[0],
+                os.path.join(os.path.dirname(corp.freq_precalc_file(attr, 'token:l')), 'data.subc'))
     freqs = [conc.xfreq_dist(
         cr, args.flimit, args.freq_sort, args.ftt_include_empty, args.rel_mode, args.collator_locale)
         for cr in args.fcrit]
@@ -181,7 +214,7 @@ async def calculate_freqs_bg(args: FreqCalcArgs) -> FreqCalcResult:
     corp = await cm.get_corpus(
         SubcorpusIdent(id=args.subcname, corpus_name=args.corpname) if args.subcname else args.corpname)
     conc = await require_existing_conc(corp=corp, q=args.q, cutoff=args.cutoff)
-    return calculate_freqs_bg_sync(args, conc)
+    return calculate_freqs_bg_sync(args, corp, conc)
 
 
 async def calculate_freqs(args: FreqCalcArgs):
@@ -225,6 +258,15 @@ async def calculate_freqs(args: FreqCalcArgs):
             fcrit=args.fcrit[i]))
     return dict(lastpage=lastpage, data=ans, fstart=fstart, fmaxitems=args.fmaxitems, conc_size=calc_result.conc_size)
 
+
+def compute_norms(corp: AbstractKCorpus, struct: str, subcpath: str):
+    subc_part = ['-s',  subcpath] if subcpath else []
+    cmd = ['mktokencov', corp.get_confpath(),  struct] + subc_part
+    p = Popen(cmd, stdout=PIPE, stderr=PIPE)
+    stdout, errors = p.communicate(timeout=120)
+    if p.returncode > 0:
+        logging.getLogger(__name__).error('Failed to run mktokencov: {}'.format(errors[:550]))
+        raise RuntimeError(f'Failed to run mktokencov with error code {p.returncode}')
 
 def clean_freqs_cache():
     root_dir = settings.get('corpora', 'freqs_cache_dir')
