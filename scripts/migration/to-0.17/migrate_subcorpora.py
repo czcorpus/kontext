@@ -125,9 +125,9 @@ async def migrate_subcorpora(
                                 author_id = default_user_id
                             published_count += 1
                             published_hashes.append(p_hash)
-
                             subc_id = SubcorpusIdent(p_hash, corpname)
                         else:
+                            published = datetime.datetime.fromtimestamp(os.path.getctime(subc_path))
                             subc_id = await create_permanent_subc_id(subcorpora_dir, subc_path, corpname)
 
                         try:

@@ -43,6 +43,7 @@ from action.req_args import JSONRequestArgsProxy, RequestArgsProxy
 from action.response import KResponse
 from corplib.abstract import AbstractKCorpus
 from corplib.corpus import KCorpus
+from corplib.subcorpus import SubcorpusRecord
 from corplib.fallback import EmptyCorpus, ErrorCorpus
 from main_menu.model import EventTriggeringItem, MainMenu
 from plugin_types.corparch.corpus import (
@@ -290,8 +291,9 @@ class CorpusActionModel(UserActionModel):
             # now we apply args from URL (highest priority)
             self.args.map_args_to_attrs(req_args)
             # validate self.args.maincorp which is dependent on 'corpname', 'align'
-            if self.args.maincorp and (self.args.maincorp != self.args.corpname and
-                                       self.args.maincorp not in self.args.align):
+            if (self.args.maincorp and
+                    self.args.maincorp != self.args.corpname and
+                    self.args.maincorp not in self.args.align):
                 raise UserReadableException(
                     f'Invalid argument value {self.args.maincorp} for "maincorp"',
                     code=422)
@@ -309,10 +311,6 @@ class CorpusActionModel(UserActionModel):
             self.return_url = '{}query?{}'.format(
                 self._req.get_root_url(), '&'.join([f'{k}={v}' for k, v in list(args.items())]))
         self._curr_corpus = await self._load_corpus()
-        # plugins setup
-        for p in plugins.runtime:
-            if callable(getattr(p.instance, 'setup', None)):
-                p.instance.setup(self)
         if isinstance(self.corp, ErrorCorpus):
             err = self.corp.get_error()
             # in case user tries to open a non-existing subcorpus, we must test
@@ -321,7 +319,13 @@ class CorpusActionModel(UserActionModel):
                 await self._redirect_old_subcorpus(err, q_loaded)
             else:
                 raise err
-
+        # Restrict usage of special URL argument '_usesubcorp' we use to upgrade URLs with deprecated subc. access.
+        # Please note that here we know, the 'usesubcorp' has already been set at the beginning of pre_dispatch
+        # to the value of '_usesubcorp' arg.
+        elif '_usesubcorp' in req_args:
+            srec = self.corp.portable_ident
+            if not isinstance(srec, SubcorpusRecord) or srec.version > 1:
+                raise UserReadableException('Invalid argument: _usesubcorp', code=422)
         info = await self.get_corpus_info(self.args.corpname)
         if isinstance(info, BrokenCorpusInfo):
             raise NotFoundException(
@@ -333,7 +337,7 @@ class CorpusActionModel(UserActionModel):
     async def _redirect_old_subcorpus(self, orig_err: Exception, q_loaded: bool):
         with plugins.runtime.SUBC_STORAGE as sr:
             subc = await sr.get_info_by_name(self.args.corpname, self.args.usesubcorp, self.session_get('user', 'id'))
-            if subc:
+            if subc and subc.version == 1:
                 logging.getLogger(__name__).warning(
                     'Upgraded action with deprecated subcorpus identifier {}{}'.format(
                         self.args.usesubcorp, ' (loaded from conc_persistence)' if q_loaded else ''))
@@ -345,7 +349,7 @@ class CorpusActionModel(UserActionModel):
                     args['_usesubcorp'] = subc.id
                 else:
                     args['usesubcorp'] = subc.id
-                raise ImmediateRedirectException(self._req.updated_current_url(args))
+                raise ImmediateRedirectException(self._req.updated_current_url(args), code=301)
             raise orig_err
 
     async def resolve_error_state(self, req, resp, result, err):

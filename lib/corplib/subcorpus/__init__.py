@@ -76,6 +76,7 @@ class SubcorpusRecord(SubcorpusIdent):
         created: datetime of corpus creation
         public_description: a public description in a decoded format (HTML)
         public_description_raw: a public description in Markdown format - just like stored in db
+        version: allows handling distinction between older subcorpora accessed via name and the new ones with ID
         archived: datetime specifying when the subcorpus was archived (= not listed anywhere by default but URLs
             with the subcorpus are still available
         cql: (mutually exclusive with 'within_cond' and 'text_types') defines a raw CQL specification of the subcorpus;
@@ -98,6 +99,7 @@ class SubcorpusRecord(SubcorpusIdent):
         decoder=datetime.fromtimestamp))
     public_description: str
     public_description_raw: str
+    version: int
     archived: Optional[datetime] = field(default=None, metadata=config(
         encoder=serialize_datetime,
         decoder=deserialize_datetime))
