@@ -63,7 +63,8 @@ class Backend:
                 'JOIN kontext_corpus_user_fav_item AS t ON fav.id = t.user_fav_corpus_id '
                 f'JOIN {self._corp_table} AS c ON t.corpus_name = c.name '
                 'WHERE user_id = %s '
-                'GROUP BY id ', (user_id,))
+                'GROUP BY id '
+                'ORDER BY fav.name ', (user_id,))
 
             ans = []
             async for item in cursor:
