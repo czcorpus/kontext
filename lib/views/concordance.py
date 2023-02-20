@@ -1080,7 +1080,7 @@ async def ajax_get_first_line_select_page(amodel: ConcActionModel, req: KRequest
     conc = await get_conc(
         corp=amodel.corp, user_id=amodel.session_get('user', 'id'),
         q=amodel.args.q, fromp=amodel.args.fromp, pagesize=amodel.args.pagesize,
-        asnc=False, cutoff=self.args.cutoff)
+        asnc=False, cutoff=amodel.args.cutoff)
     amodel.apply_linegroups(conc)
     kwic = Kwic(amodel.corp, amodel.args.corpname, conc)
     return {'first_page': int((kwic.get_groups_first_line() - 1) / amodel.args.pagesize) + 1}
