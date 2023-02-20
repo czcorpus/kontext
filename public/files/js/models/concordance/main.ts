@@ -24,7 +24,6 @@ import { tap, map, concatMap } from 'rxjs/operators';
 import { List, pipe, HTTP, tuple } from 'cnc-tskit';
 
 import * as ViewOptions from '../../types/viewOptions';
-import * as PluginInterfaces from '../../types/plugins';
 import { PageModel } from '../../app/page';
 import { ConclineSectionOps } from './line';
 import { AudioPlayer, PlayerStatus} from './media';
@@ -32,7 +31,7 @@ import { ConcSaveModel } from './save';
 import { Actions as ViewOptionsActions } from '../options/actions';
 import { CorpColumn, ViewConfiguration, AudioPlayerActions, AjaxConcResponse,
     ServerPagination, ServerLineData, ServerTextChunk, LineGroupId, attachColorsToIds,
-    mapIdToIdWithColors, Line, TextChunk, KWICSection, PaginationActions} from './common';
+    mapIdToIdWithColors, Line, TextChunk, KWICSection, PaginationActions, ConcViewMode} from './common';
 import { Actions, ConcGroupChangePayload,
     PublishLineSelectionPayload } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
@@ -127,7 +126,7 @@ export interface ConcordanceModelState {
 
     highlightItems:Array<HighlightItem>;
 
-    viewMode:'kwic'|'sen'|'align';
+    viewMode:ConcViewMode;
 
     attrViewMode:ViewOptions.AttrViewMode;
 
@@ -417,7 +416,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         this.addActionHandler<typeof Actions.ChangePage, typeof Actions.ReloadConc>(
             [
                 Actions.ChangePage.name,
-                Actions.ReloadConc.name
+                Actions.ReloadConc.name,
             ],
             action => {
                 forkJoin([
@@ -555,6 +554,12 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             action => {
                 this.changeViewMode().subscribe({
                     next: () => {
+                        if (!action.payload.isPopState) {
+                            this.pushHistoryState({
+                                name: Actions.SwitchKwicSentMode.name,
+                                payload: {},
+                            });
+                        }
                         this.emitChange();
                     },
                     error: (err) => {
@@ -892,7 +897,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         return this.state.numItemsInLockedGroups;
     }
 
-    private pushHistoryState(action:typeof Actions.ChangePage|typeof Actions.ReloadConc):void {
+    private pushHistoryState(action:typeof Actions.ChangePage|typeof Actions.ReloadConc|typeof Actions.SwitchKwicSentMode):void {
         const args = this.layoutModel.getConcArgs();
         if (Actions.isChangePage(action)) {
             args.fromp = action.payload.pageNum;
@@ -1030,7 +1035,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             {'align': 'kwic', 'kwic': 'align'}[this.state.viewMode] :
             {'sen': 'kwic', 'kwic': 'sen'}[this.state.viewMode];
         this.changeState(state => {state.viewMode = mode});
-        this.layoutModel.updateConcArgs({viewmode: this.state.viewMode});
+        this.layoutModel.updateConcArgs({viewmode: mode});
         const args = this.layoutModel.getConcArgs();
         args.q = ['~' + this.state.concId];
         args.format = 'json';

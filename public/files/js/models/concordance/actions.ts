@@ -20,7 +20,7 @@
 
 import { Action } from 'kombo';
 import { AudioPlayerActions, DetailExpandPositions, LineSelectionModes, LineSelValue,
-    AjaxConcResponse, LineGroupId, RefsColumn, PaginationActions, LineGroupChartData } from './common';
+    AjaxConcResponse, LineGroupId, RefsColumn, PaginationActions, LineGroupChartData, ConcViewMode } from './common';
 import * as TextTypes from '../../types/textTypes';
 import { DataSaveFormat } from '../../app/navigation/save';
 import { HighlightItem } from './main';
@@ -159,7 +159,9 @@ export class Actions {
         name: 'CONCORDANCE_CHANGE_LANG_VISIBILITY'
     };
 
-    static SwitchKwicSentMode:Action<{}> = {
+    static SwitchKwicSentMode:Action<{
+        isPopState?:boolean;
+    }> = {
         name: 'CONCORDANCE_SWITCH_KWIC_SENT_MODE'
     };
 
