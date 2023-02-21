@@ -68,7 +68,7 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
     textTypesNotes:string;
     subcorpList:Array<Kontext.SubcorpListItem>;
     currentSubcorp:string;
-    origSubcorpName:string;
+    subcorpusId:string;
     isForeignSubcorpus:boolean;
     shuffleConcByDefault:boolean;
     inputLanguages:{[corpname:string]:string};
@@ -262,7 +262,7 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
      * the user-defined name. Otherwise (foreign published subc.) a public
      * identifier/code is used.
      */
-    origSubcorpName:string;
+    subcorpusId:string;
 
     isForeignSubcorpus:boolean;
 
@@ -380,7 +380,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 availableAlignedCorpora: props.availableAlignedCorpora,
                 subcorpList: props.subcorpList,
                 currentSubcorp: props.currentSubcorp || '',
-                origSubcorpName: props.origSubcorpName || '',
+                subcorpusId: props.subcorpusId || '',
                 isForeignSubcorpus: !!props.isForeignSubcorpus,
                 shuffleForbidden: false,
                 shuffleConcByDefault: props.shuffleConcByDefault,

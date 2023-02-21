@@ -395,7 +395,7 @@ export class ViewPage {
             currUseRegexpValues: queryFormArgs.curr_use_regexp_values,
             subcorpList: this.layoutModel.getConf<Array<Kontext.SubcorpListItem>>('SubcorpList'),
             currentSubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
-            origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
+            subcorpusId: this.layoutModel.getCorpusIdent().usesubcorp,
             isForeignSubcorpus: this.layoutModel.getCorpusIdent().foreignSubcorp,
             shuffleConcByDefault: this.layoutModel.getConf<boolean>('ShuffleConcByDefault'),
             forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),

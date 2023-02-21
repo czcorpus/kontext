@@ -214,7 +214,7 @@ export class QueryPage {
                     'SubcorpList'
                 ),
                 currentSubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
-                origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
+                subcorpusId: this.layoutModel.getCorpusIdent().usesubcorp,
                 isForeignSubcorpus: this.layoutModel.getCorpusIdent().foreignSubcorp,
                 tagsets: queryFormArgs.tagsets,
                 shuffleConcByDefault: this.layoutModel.getConf<boolean>('ShuffleConcByDefault'),
