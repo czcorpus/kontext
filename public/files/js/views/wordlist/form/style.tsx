@@ -43,6 +43,10 @@ export const WordListForm = styled.form`
         }
     }
 
+    .buttons {
+        margin-top: 1.5em;
+    }
+
 `;
 
 // ---------------- <ExistingFileOps /> --------------------------------------

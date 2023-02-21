@@ -1235,7 +1235,7 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
 
         conc = await get_conc(
             corp=amodel.corp, user_id=req.session_get('user', 'id'), q=amodel.args.q, fromp=amodel.args.fromp,
-            pagesize=amodel.args.pagesize, asnc=False, cutoff=self.args.cutoff)
+            pagesize=amodel.args.pagesize, asnc=False, cutoff=amodel.args.cutoff)
         amodel.apply_linegroups(conc)
         kwic = Kwic(amodel.corp, amodel.args.corpname, conc)
         conc.switch_aligned(os.path.basename(amodel.args.corpname))

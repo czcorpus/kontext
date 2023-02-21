@@ -139,6 +139,7 @@ export function init({
                     </a>
                 </td>
                 <td className="num">
+                    {List.size(props.data.corpora) > 1 ? '\u2264\u00a0' : null}
                     {props.data.size_info}
                 </td>
                 <td className="tools">
