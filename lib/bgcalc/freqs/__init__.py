@@ -81,7 +81,7 @@ def corp_freqs_cache_paths(corp: AbstractKCorpus, attrname) -> Dict[str, str]:
         'arf': corp.freq_precalc_file(attrname, 'arf'),
         'frq': corp.freq_precalc_file(attrname, 'frq'),
         'docf': corp.freq_precalc_file(attrname, 'docf'),
-        'token:l': corp.freq_precalc_file(attrname, 'token'),
+        'token:l': corp.freq_precalc_file(attrname, 'token:l'),
     }
 
 
