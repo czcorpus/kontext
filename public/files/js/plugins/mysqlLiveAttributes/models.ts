@@ -207,14 +207,16 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             (state, action) => {
                 state.isBusy = false;
                 if (!action.error) {
-                    state.alignedCorpora = pipe(
-                        state.alignedCorpora,
-                        List.map((value) => ({
-                            ...value,
-                            locked: value.selected
-                        })),
-                        List.filter(item=>item.locked)
-                    );
+                    if (List.some(item => item.selected, state.alignedCorpora)) {
+                        state.alignedCorpora = pipe(
+                            state.alignedCorpora,
+                            List.map((value) => ({
+                                ...value,
+                                locked: value.selected
+                            })),
+                            List.filter(item=>item.locked)
+                        );
+                    }
                     if (!action.payload.isSubcorpDefinitionFilter) {
                         this.updateSelectionSteps(state, action.payload.selectedTypes, action.payload.poscount);
                     }
