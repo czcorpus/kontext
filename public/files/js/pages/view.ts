@@ -65,7 +65,7 @@ import { init as sampleFormInit, SampleFormViews } from '../views/query/miscActi
 import { init as analysisFrameInit, FormsViews as AnalysisFrameViews } from '../views/analysis';
 import { init as collFormInit, FormsViews as CollFormsViews } from '../views/coll/forms';
 import { init as freqFormInit, FormsViews as FreqFormViews } from '../views/freqs/forms';
-import { ViewConfiguration, ConcSummary, ServerPagination, ServerLineData, WideCtxArgs, ConcServerArgs }
+import { ViewConfiguration, ConcSummary, ServerPagination, ServerLineData, WideCtxArgs, ConcServerArgs, ConcViewMode }
     from '../models/concordance/common';
 import { RefsDetailModel } from '../models/concordance/refsDetail';
 import { openStorage, ConcLinesStorage } from '../models/concordance/selectionStorage';
@@ -319,6 +319,7 @@ export class ViewPage {
                             name: Actions.ReloadConc.name,
                             payload: {
                                 concId: this.layoutModel.getConf<string>('concPersistenceOpId'),
+                                viewMode: this.layoutModel.getConcArgs().viewmode,
                                 isPopState: true
                             }
                         }
@@ -942,7 +943,7 @@ export class ViewPage {
             baseViewAttr: this.layoutModel.getConcArgs().base_viewattr,
             activePosAttrs: this.layoutModel.getConcArgs().attrs,
             anonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
-            ViewMode: this.layoutModel.getConf<'kwic'|'sen'|'align'>('ViewMode'),
+            ViewMode: this.layoutModel.getConf<ConcViewMode>('ViewMode'),
             AttrViewMode: this.layoutModel.getConf<ViewOptions.AttrViewMode>('AttrViewMode'),
             ShowLineNumbers: this.layoutModel.getConf<boolean>('ShowLineNumbers'),
             KWICCorps: this.layoutModel.getConf<Array<string>>('KWICCorps'),

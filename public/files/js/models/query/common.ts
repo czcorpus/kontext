@@ -29,7 +29,7 @@ import { PageModel } from '../../app/page';
 import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
 import { parse as parseQuery, ITracer } from 'cqlParser/parser';
-import { ConcServerArgs } from '../concordance/common';
+import { ConcServerArgs, ConcViewMode } from '../concordance/common';
 import { QueryFormType, Actions } from './actions';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
@@ -71,7 +71,7 @@ export interface QueryContextArgs {
 export interface ConcQueryArgs {
     queries:Array<AnyQuerySubmit>;
     usesubcorp:string|undefined;
-    viewmode:'kwic'|'sen'|'align';
+    viewmode:ConcViewMode;
     pagesize:number;
     shuffle:0|1;
     attrs:Array<string>;
