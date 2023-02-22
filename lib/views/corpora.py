@@ -141,8 +141,8 @@ async def ajax_get_corp_details(amodel: CorpusActionModel, req: KRequest, resp: 
 
 
 @bp.route('/ajax_get_structattrs_details')
-@http_action(action_model=UserActionModel, return_type='json')
-async def ajax_get_structattrs_details(amodel: UserActionModel, req: KRequest, resp: KResponse):
+@http_action(action_model=CorpusActionModel, return_type='json')
+async def ajax_get_structattrs_details(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     """
     Provides a map (struct_name=>[list of attributes]). This is used
     by 'insert within' widget.
