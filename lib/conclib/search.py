@@ -88,7 +88,7 @@ async def _get_bg_conc(
         worker = bgcalc.calc_backend_client(settings)
         await worker.send_task(
             'conc_sync_calculate', object.__class__,
-            (user_id, corp.corpname, getattr(corp, 'subcname', None), corp_cache_key, q, cutoff),
+            (user_id, corp.corpname, corp.subcorpus_id, corp_cache_key, q, cutoff),
             time_limit=TASK_TIME_LIMIT)
     # for smaller concordances/corpora there is a chance the data
     # is ready in a few seconds - let's try this:
