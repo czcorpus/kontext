@@ -768,7 +768,8 @@ export class ViewPage {
                 sampleFormProps: {
                     formType: Kontext.ConcFormTypes.SAMPLE,
                     sampleId: undefined
-                }
+                },
+                cutoff: this.layoutModel.getConcArgs().cutoff
             }
         );
     }
