@@ -32,7 +32,7 @@ import { ConcSaveModel } from './save';
 import { Actions as ViewOptionsActions } from '../options/actions';
 import { CorpColumn, ViewConfiguration, AudioPlayerActions, AjaxConcResponse,
     ServerPagination, ServerLineData, ServerTextChunk, LineGroupId, attachColorsToIds,
-    mapIdToIdWithColors, Line, TextChunk, KWICSection, PaginationActions} from './common';
+    mapIdToIdWithColors, Line, TextChunk, KWICSection, PaginationActions, ConcViewMode} from './common';
 import { Actions, ConcGroupChangePayload,
     PublishLineSelectionPayload } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
@@ -127,7 +127,7 @@ export interface ConcordanceModelState {
 
     highlightItems:Array<HighlightItem>;
 
-    viewMode:'kwic'|'sen'|'align';
+    viewMode:ConcViewMode;
 
     attrViewMode:ViewOptions.AttrViewMode;
 
@@ -414,12 +414,15 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.ChangePage, typeof Actions.ReloadConc>(
+        this.addActionHandler(
             [
-                Actions.ChangePage.name,
-                Actions.ReloadConc.name
+                Actions.ChangePage,
+                Actions.ReloadConc
             ],
             action => {
+                if (Actions.isReloadConc(action) && action.payload.viewMode) {
+                    this.changeState(state => {state.viewMode = action.payload.viewMode});
+                }
                 forkJoin([
                     this.waitForAction({}, (action, syncData) => {
                         return action.name === Actions.PublishStoredLineSelections.name ?
@@ -949,6 +952,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         const args = {
             ...this.layoutModel.getConcArgs(),
             fromp: pageNum,
+            viewmode: this.state.viewMode,
             format: 'json'
         };
         if (concId) {
@@ -1025,11 +1029,15 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         state.lineGroupIds = data.lineGroupIds;
     }
 
-    private changeViewMode():Observable<any> {
-        const mode = this.state.corporaColumns.length > 1 ?
+    private getFlippedViewModeValue():ConcViewMode {
+         return this.state.corporaColumns.length > 1 ?
             {'align': 'kwic', 'kwic': 'align'}[this.state.viewMode] :
             {'sen': 'kwic', 'kwic': 'sen'}[this.state.viewMode];
-        this.changeState(state => {state.viewMode = mode});
+    }
+
+    private changeViewMode():Observable<ConcViewMode> {
+        const viewMode = this.getFlippedViewModeValue()
+        this.changeState(state => {state.viewMode = viewMode});
         this.layoutModel.updateConcArgs({viewmode: this.state.viewMode});
         const args = this.layoutModel.getConcArgs();
         args.q = ['~' + this.state.concId];
@@ -1046,7 +1054,17 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                     this.changeState(state => {
                         this.importData(state, data);
                     });
+                    this.pushHistoryState({
+                        name: Actions.ReloadConc.name,
+                        payload: {
+                            concId: data.conc_persistence_op_id,
+                            viewMode
+                        }
+                    });
                 }
+            ),
+            map(
+                _ => viewMode
             )
         );
     }

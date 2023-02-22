@@ -20,7 +20,7 @@
 
 import { Action } from 'kombo';
 import { AudioPlayerActions, DetailExpandPositions, LineSelectionModes, LineSelValue,
-    AjaxConcResponse, LineGroupId, RefsColumn, PaginationActions, LineGroupChartData } from './common';
+    AjaxConcResponse, LineGroupId, RefsColumn, PaginationActions, LineGroupChartData, ConcViewMode } from './common';
 import * as TextTypes from '../../types/textTypes';
 import { DataSaveFormat } from '../../app/navigation/save';
 import { HighlightItem } from './main';
@@ -101,6 +101,7 @@ export class Actions {
     static ReloadConc:Action<{
         concId:string;
         isPopState?:boolean;
+        viewMode?:ConcViewMode;
     }> = {
         name: 'CONCORDANCE_RELOAD_CONC'
     };

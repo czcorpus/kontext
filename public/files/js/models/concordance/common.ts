@@ -208,6 +208,8 @@ export interface ServerPagination {
 
 export type PaginationActions = 'prevPage'|'nextPage'|'customPage'|'firstPage'|'lastPage';
 
+export type ConcViewMode = 'kwic'|'sen'|'align';
+
 /**
  * ConcServerArgs defines a set of arguments needed
  * to address a specific concordance (including required
@@ -217,7 +219,7 @@ export type PaginationActions = 'prevPage'|'nextPage'|'customPage'|'firstPage'|'
  */
 export interface ConcServerArgs {
     maincorp:string;
-    viewmode:'kwic'|'sen'|'align';
+    viewmode:ConcViewMode;
     format:Kontext.ResponseFormat;
     pagesize:number;
     attrs:Array<string>;
@@ -393,7 +395,7 @@ export interface ViewConfiguration {
     /**
      * Determine concordance view mode
      */
-    ViewMode:'kwic'|'sen'|'align';
+    ViewMode:ConcViewMode;
 
     /**
      * How we should display positional attributes
