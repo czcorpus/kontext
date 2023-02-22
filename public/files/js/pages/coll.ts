@@ -291,7 +291,8 @@ export class CollPage {
                 sortFormProps: {
                     formType: Kontext.ConcFormTypes.SORT,
                     sortId: null
-                }
+                },
+                cutoff: this.layoutModel.getConcArgs().cutoff
             }
         );
     }

@@ -297,7 +297,8 @@ class FreqPage {
                 sortFormProps: {
                     formType: Kontext.ConcFormTypes.SORT,
                     sortId: null,
-                }
+                },
+                cutoff: this.layoutModel.getConcArgs().cutoff
             }
         );
     }

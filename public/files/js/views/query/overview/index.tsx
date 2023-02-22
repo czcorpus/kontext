@@ -89,6 +89,7 @@ export interface QueryToolbarProps {
     filterSubHitsFormProps:SubHitsFormProps;
     filterFirstDocHitsFormProps:FirstHitsFormProps;
     sortFormProps:SortFormProps;
+    cutoff:number;
 }
 
 
@@ -105,6 +106,7 @@ export interface NonViewPageQueryToolbarProps {
     filterSubHitsFormProps?:SubHitsFormProps;
     filterFirstDocHitsFormProps?:FirstHitsFormProps;
     sortFormProps?:SortFormProps;
+    cutoff:number;
 }
 
 export interface OverviewViews {
@@ -347,6 +349,7 @@ export function init({
         corpname:string;
         numOps:number;
         item:PersistentQueryOperation;
+        cutoff:number;
         editorProps:AnyEditorProps;
         hasOpenEditor:boolean;
         groupsSelected:boolean;
@@ -374,7 +377,7 @@ export function init({
         };
 
         const showSize = () => {
-            if (props.item.fullSize > props.item.size) {
+            if (props.cutoff) {
                 return `(${he.translate('query__overview_using_implicit_sample_{size}', {size: props.item.size})})`;
 
             } else if (props.item.size) {
@@ -423,6 +426,7 @@ export function init({
         usesubcorp:string;
         origSubcorpName:string;
         foreignSubcorp:boolean;
+        cutoff:number;
         queryFormProps:QueryFormLiteProps;
         filterFormProps:FilterFormProps;
         filterFirstDocHitsFormProps:FirstHitsFormProps;
@@ -523,6 +527,7 @@ export function init({
                                 corpname={props.corpname}
                                 key={`op_${i}`}
                                 idx={i}
+                                cutoff={props.cutoff}
                                 item={item}
                                 numOps={List.size(props.operations)}
                                 clickHandler={handleEditClick(i)}
@@ -566,6 +571,7 @@ export function init({
         origSubcorpName:string;
         foreignSubcorp:boolean;
         ops:Array<PersistentQueryOperation>;
+        cutoff:number;
 
     }> = (props) => {
 
@@ -604,7 +610,8 @@ export function init({
                             isLoading={false}
                             modeRunFullQuery={false}
                             shuffleMinResultWarning={null}
-                            groupsSelected={true} />,
+                            groupsSelected={true}
+                            cutoff={props.cutoff} />,
                         props.ops
                     )}
             </Style_QueryOverviewBarUL>
