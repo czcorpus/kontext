@@ -314,7 +314,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             <td>{he.translate('global__key_shortcut_sample')}</td>
                         </tr>
                         <tr className="separ">
-                        <td colSpan={2}><hr /></td>
+                            <td colSpan={2}><hr /></td>
                         </tr>
                         <tr>
                             <th>

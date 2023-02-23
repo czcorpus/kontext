@@ -66,9 +66,15 @@ export function init(he:Kontext.ComponentHelpers) {
         return (
             <S.SubcorpusInfo>
                 {props.standalone ?
-                    <h2 className="subcorpus-name">
-                        {props.data.corpname}{'\u00a0/\u00a0'}<strong>{props.data.name}</strong>
-                    </h2> :
+                    <>
+                        <h2 className="subcorpus-name">
+                            {props.data.corpname}{'\u00a0/\u00a0'}<strong>{props.data.name}</strong>
+                        </h2>
+                        (<a href={he.createActionLink('query', {corpname: props.data.corpname, usesubcorp: props.data.usesubcorp})}
+                            className='kontext-link'>
+                            {he.translate('global__use_in_query')}
+                        </a>)
+                    </> :
                     null
                 }
                 <dl>
