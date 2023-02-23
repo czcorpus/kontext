@@ -18,12 +18,13 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
+import logging
 import urllib.parse
 from dataclasses import asdict
 from functools import partial
 from typing import (
-    Any, Awaitable, Callable, Dict, Iterable, List, Optional, Tuple, TypeVar, Union)
-import logging
+    Any, Awaitable, Callable, Dict, Iterable, List, Optional, Tuple, TypeVar,
+    Union)
 
 import corplib
 import l10n
@@ -32,8 +33,8 @@ import settings
 from action.argmapping import Args
 from action.argmapping.conc.query import ConcFormArgs
 from action.errors import (
-    AlignedCorpusForbiddenException, ImmediateRedirectException,
-    NotFoundException, UserReadableException, CorpusNotFoundException)
+    AlignedCorpusForbiddenException, CorpusNotFoundException,
+    ImmediateRedirectException, NotFoundException, UserReadableException)
 from action.krequest import KRequest
 from action.model import ModelsSharedData
 from action.model.user import UserActionModel, UserPluginCtx
@@ -43,8 +44,8 @@ from action.req_args import JSONRequestArgsProxy, RequestArgsProxy
 from action.response import KResponse
 from corplib.abstract import AbstractKCorpus
 from corplib.corpus import KCorpus
-from corplib.subcorpus import SubcorpusRecord
 from corplib.fallback import EmptyCorpus, ErrorCorpus
+from corplib.subcorpus import SubcorpusRecord
 from main_menu.model import EventTriggeringItem, MainMenu
 from plugin_types.corparch.corpus import (
     BrokenCorpusInfo, CorpusInfo, StructAttrInfo)
@@ -54,8 +55,8 @@ T = TypeVar('T')
 
 PREFLIGHT_THRESHOLD_FREQ = 10_000_000
 """
-Specifies a minimum preflight frequency (after it is recalculated 
-to the original corpus size) we consider too comp. demanding 
+Specifies a minimum preflight frequency (after it is recalculated
+to the original corpus size) we consider too comp. demanding
 and offer users an alternative corpus
 """
 
@@ -102,7 +103,8 @@ class CorpusActionModel(UserActionModel):
 
         self._auto_generated_conc_ops: List[Tuple[int, ConcFormArgs]] = []
 
-        self._on_query_store: List[Callable[[List[str], Optional[int], Dict[str, Any]], Awaitable[None]]] = [empty_query_store]
+        self._on_query_store: List[Callable[[List[str], Optional[int],
+                                             Dict[str, Any]], Awaitable[None]]] = [empty_query_store]
 
         self._tt_cache = shared_data.tt_cache
 
@@ -472,7 +474,7 @@ class CorpusActionModel(UserActionModel):
             variant=self._corpus_variant,
             name=self.corp.human_readable_corpname,
             usesubcorp=self.corp.subcorpus_id,
-            origSubcorpName=self.corp.subcorpus_name,
+            subcName=self.corp.subcorpus_name,
             foreignSubcorp=self.session_get('user', 'id') != self.corp.author_id,
             size=self.corp.size,
             searchSize=self.corp.search_size)

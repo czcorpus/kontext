@@ -175,7 +175,7 @@ async def ajax_get_corp_details(amodel: CorpusActionModel, req: KRequest, resp: 
         variant=amodel._corpus_variant,
         name=amodel.corp.human_readable_corpname,
         usesubcorp=amodel.corp.subcorpus_id,
-        origSubcorpName=amodel.corp.subcorpus_name,
+        subcName=amodel.corp.subcorpus_name,
         foreignSubcorp=user_id != amodel.corp.author_id,
         size=amodel.corp.size,
         searchSize=amodel.corp.search_size,

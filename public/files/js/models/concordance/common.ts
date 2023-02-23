@@ -422,14 +422,14 @@ export interface ViewConfiguration {
      * special code is used here instead and the original
      * name is moved to the 'origSubCorpName' attribute.
      */
-    subCorpName:string;
+    subcId:string;
 
     /**
      * The original name user entered for a subcorpus.
      * The value is non-empty only if a respective corpus
      * is published.
      */
-    origSubCorpName:string;
+    subcName:string;
 
     pagination:ServerPagination;
 

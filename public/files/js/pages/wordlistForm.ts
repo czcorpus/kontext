@@ -107,7 +107,7 @@ class WordlistFormPage {
 
     init():void {
         this.layoutModel.init(true, [], () => {
-            this.corpusIdent = this.layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent');
+            this.corpusIdent = this.layoutModel.getCorpusIdent();
             const wlForm = this.layoutModel.getConf<WordlistFormModelArgs["initialArgs"]>('FormData');
             this.wordlistFormModel = new WordlistFormModel({
                 dispatcher: this.layoutModel.dispatcher,

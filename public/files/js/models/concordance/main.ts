@@ -141,9 +141,9 @@ export interface ConcordanceModelState {
 
     maincorp:string; // primary corpus in alignent mode (can be different from baseCorpname)
 
-    subCorpName:string;
+    subcId:string;
 
-    origSubcorpName:string;
+    subcName:string;
 
     playerAttachedChunk:string;
 
@@ -237,8 +237,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 corporaColumns: lineViewProps.CorporaColumns,
                 baseCorpname: lineViewProps.baseCorpname,
                 maincorp: lineViewProps.mainCorp,
-                subCorpName: lineViewProps.subCorpName,
-                origSubcorpName: lineViewProps.origSubCorpName,
+                subcId: lineViewProps.subcId,
+                subcName: lineViewProps.subcName,
                 unfinishedCalculation: lineViewProps.Unfinished,
                 concSize: lineViewProps.concSummary.concSize,
                 concId: layoutModel.getConf<string>('concPersistenceOpId'),

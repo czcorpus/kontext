@@ -202,7 +202,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 dataFavImp,
                 {
                     subcorpus_id: currCorp.usesubcorp,
-                    subcorpus_orig_id: currCorp.origSubcorpName,
+                    subcorpus_orig_id: currCorp.subcName,
                     corpora: [...(pluginApi.getConf<Array<string>>('alignedCorpora') || []),
                             currCorp.id]
                 }
@@ -739,7 +739,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
     getFullCorpusSelection(state:CorplistWidgetModelState):common.GeneratedFavListItem {
         return {
             subcorpus_id: state.corpusIdent.usesubcorp,
-            subcorpus_orig_id: state.corpusIdent.origSubcorpName,
+            subcorpus_orig_id: state.corpusIdent.subcName,
             corpora: [state.corpusIdent.id, ...state.alignedCorpora]
         };
     };

@@ -22,7 +22,7 @@
 export interface Props {
     corpname:string;
     usesubcorp:string;
-    origSubcorpName:string;
+    subcName:string;
     foreignSubcorp:boolean;
     humanCorpname:string;
 }

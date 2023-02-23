@@ -581,7 +581,7 @@ export function init({
     const SubcorpSelection:React.FC<{
         corpusName:string;
         currSubcorpus:string;
-        origSubcorpName:string;
+        subcName:string;
         availSubcorpora:Array<Kontext.SubcorpListItem>;
 
     }> = (props) => {
@@ -731,7 +731,7 @@ export function init({
                                 <SubcorpSelection
                                     corpusName={this.props.corpusIdent.id}
                                     currSubcorpus={this.props.currSubcorpus}
-                                    origSubcorpName={this.props.currSubcorpusOrigName}
+                                    subcName={this.props.currSubcorpusOrigName}
                                     availSubcorpora={this.props.availableSubcorpora} />
                             </span>) :
                             null
