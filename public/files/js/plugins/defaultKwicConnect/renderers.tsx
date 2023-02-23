@@ -20,7 +20,7 @@
 import * as React from 'react';
 import * as Kontext from '../../types/kontext';
 import { IActionDispatcher } from 'kombo';
-import { List, pipe } from 'cnc-tskit';
+import { Dict, List, pipe, tuple } from 'cnc-tskit';
 import { Actions as QueryActions } from '../../models/query/actions';
 import { Actions as ConcActions } from '../../models/concordance/actions';
 import { HighlightItem } from '../../models/concordance/main';
@@ -133,8 +133,17 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
     // ---------------------------------- <TreqRenderer /> ------------------------------------------
 
     const TreqRenderer:Views['TreqRenderer'] = (props) => {
-
-        const [toggleAllOn, setToggleAll] = React.useState(false);
+        const [state, setState] = React.useState<{
+            toggleAll:boolean;
+            highlights:{[k:string]:boolean}
+        }>({
+            toggleAll: false,
+            highlights: pipe(
+                props.data.contents['translations'] as Array<{righ:string}>,
+                List.map(item => tuple(item.righ, false)),
+                Dict.fromEntries()
+            )
+        });
 
         const handleClick = (word:string) => () => {
             dispatcher.dispatch<typeof QueryActions.QueryInputSetQuery>({
@@ -155,52 +164,53 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
 
         // handling highlights only for first aligned corpus (level = 1)
         const handleHighlight = (evt:React.ChangeEvent<HTMLInputElement>) => {
-            if (evt.target.checked) {
-                dispatcher.dispatch(
-                    ConcActions.SetHighlightItems,
-                    {
-                        matchPosAttr: props.freqType as string,
-                        items: List.push({value: evt.target.value, level: 1}, [...props.highlightItems])
-                    }
-                );
-
-            } else {
-                const items = List.filter(v => !(v.level === 1 && v.value === evt.target.value), [...props.highlightItems]);
-                if (List.empty(items)) {
-                    setToggleAll(false);
-                }
-                dispatcher.dispatch(
-                    ConcActions.SetHighlightItems,
-                    {
-                        matchPosAttr: props.freqType as string,
-                        items
-                    }
-                );
-            }
-        }
-
-        const handleHighlightAll = (evt:React.ChangeEvent<HTMLInputElement>) => {
-            setToggleAll(!toggleAllOn);
-
-            const translations:Array<{freq:number; perc:number; left:string; righ:string}> = props.data.contents['translations'];
+            const highlights = {...state.highlights, [evt.target.value]: evt.target.checked};
+            setState({...state, highlights});
             dispatcher.dispatch(
                 ConcActions.SetHighlightItems,
                 {
                     matchPosAttr: props.freqType as string,
-                    items: evt.target.checked ?
-                        pipe(
-                            translations,
-                            List.map(
-                                v => ({value: v.righ, level: 1})
-                            )
-                        ) :
-                        []
+                    items: pipe(
+                        highlights,
+                        Dict.toEntries(),
+                        List.map(
+                            ([value, checked]) => ({
+                                level: 1,
+                                checked,
+                                value
+                            })
+                        )
+                    )
                 }
             );
         }
 
-        const _isHighlighted = (value:string):boolean => {
-            return List.some(v => v.level === 1 && v.value === value, props.highlightItems);
+        const handleHighlightAll = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            const highlights = Dict.map(
+                (v, k) => !state.toggleAll,
+                state.highlights
+            );
+            setState({
+                toggleAll: !state.toggleAll,
+                highlights
+            });
+            dispatcher.dispatch(
+                ConcActions.SetHighlightItems,
+                {
+                    matchPosAttr: props.freqType as string,
+                    items: pipe(
+                        highlights,
+                        Dict.toEntries(),
+                        List.map(
+                            ([value, checked]) => ({
+                                level: 1,
+                                checked,
+                                value
+                            })
+                        )
+                    )
+                }
+            );
         }
 
         const renderWords = () => {
@@ -211,7 +221,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                         {translations.length > 0 ? '' : '\u2014'}
                         {List.map((translation, i) => (
                             <React.Fragment key={`${translation['righ']}:${i}`}>
-                                <input type='checkbox' value={translation['righ']} checked={_isHighlighted(translation['righ'])} onChange={handleHighlight}/>
+                                <input type='checkbox' value={translation['righ']}
+                                        checked={state.highlights[translation['righ']]} onChange={handleHighlight}/>
                                 <a className="word"
                                         onClick={handleClick(translation['righ'])}
                                         title={he.translate('default_kwic_connect__use_as_filter_in_2nd_corp')}>
@@ -245,7 +256,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                 <p>
                     <label>
                         {he.translate('default_kwic_connect__highlight_all_translations')}
-                        <input type="checkbox" onChange={handleHighlightAll} checked={toggleAllOn} />
+                        <input type="checkbox" onChange={handleHighlightAll} checked={state.toggleAll} />
                     </label>
                 </p>
                 <TreqBacklinkForm action={backLink[0]} args={backLink[1]} />
