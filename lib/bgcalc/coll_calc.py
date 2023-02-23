@@ -18,6 +18,7 @@ import pickle
 import time
 from dataclasses import dataclass, field
 from typing import Any, List, Optional
+import logging
 
 import aiofiles
 import aiofiles.os
@@ -84,7 +85,12 @@ class CollCalcCache(object):
                                            cminbgr=cminbgr, cminfreq=cminfreq)
         if await aiofiles.os.path.isfile(cache_path):
             async with aiofiles.open(cache_path, 'rb') as f:
-                collocs = pickle.loads(await f.read())
+                try:
+                    collocs = pickle.loads(await f.read())
+                except Exception as ex:
+                    logging.getLogger(__name__).error(f'Failed to read coll cache file: {ex}. Removing.')
+                    await aiofiles.os.remove(cache_path)
+                    raise ex
         else:
             collocs = None
         return collocs, cache_path
