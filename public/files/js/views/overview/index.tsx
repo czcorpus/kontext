@@ -39,7 +39,6 @@ interface OverviewAreaState {
 
 export interface OverviewAreaProps {
     isLocalUiLang:boolean;
-    userId:number;
 }
 
 
@@ -428,7 +427,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     case CorpusInfoType.CITATION:
                         return <CorpusReference data={this.state.data} />;
                     case CorpusInfoType.SUBCORPUS:
-                        return <SubcOverview data={this.state.data} userId={this.props.userId} standalone={true} />;
+                        return <SubcOverview data={this.state.data} standalone={true} />;
                     case CorpusInfoType.KEY_SHORTCUTS:
                         return <KeyboardShortcuts />;
                 }

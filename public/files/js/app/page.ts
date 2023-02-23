@@ -646,7 +646,6 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                 PageMount.GENERAL_OVERVIEW,
                 {
                     isLocalUiLang: this.getConf<boolean>('isLocalUiLang'),
-                    userId: this.getConf<number>('userId'),
                 }
             );
         }
