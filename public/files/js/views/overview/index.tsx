@@ -39,6 +39,7 @@ interface OverviewAreaState {
 
 export interface OverviewAreaProps {
     isLocalUiLang:boolean;
+    userId:number;
 }
 
 
@@ -383,7 +384,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ----------------------------- <OverviewArea /> --------------------------
 
-    class OverviewArea extends React.Component<{userId:number; isLocalUiLang:boolean}, OverviewAreaState> {
+    class OverviewArea extends React.Component<OverviewAreaProps, OverviewAreaState> {
 
         private modelSubscription:Subscription;
 

@@ -68,7 +68,7 @@ export function init(he:Kontext.ComponentHelpers) {
             <S.SubcorpusInfo>
                 {props.standalone ?
                     <h2 className="subcorpus-name">
-                        {props.data.corpname}{'\u00a0/\u00a0'}<strong>{props.data.authorId != props.userId ? props.data.usesubcorp : props.data.name}</strong>
+                        {props.data.corpname}{'\u00a0/\u00a0'}<strong>{props.data.authorId !== props.userId ? props.data.usesubcorp : props.data.name}</strong>
                     </h2> :
                     null
                 }
