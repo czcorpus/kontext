@@ -314,7 +314,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             <td>{he.translate('global__key_shortcut_sample')}</td>
                         </tr>
                         <tr className="separ">
-                        <td colSpan={2}><hr /></td>
+                            <td colSpan={2}><hr /></td>
                         </tr>
                         <tr>
                             <th>
@@ -383,7 +383,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ----------------------------- <OverviewArea /> --------------------------
 
-    class OverviewArea extends React.Component<{userId:number; isLocalUiLang:boolean}, OverviewAreaState> {
+    class OverviewArea extends React.Component<OverviewAreaProps, OverviewAreaState> {
 
         private modelSubscription:Subscription;
 
@@ -427,7 +427,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     case CorpusInfoType.CITATION:
                         return <CorpusReference data={this.state.data} />;
                     case CorpusInfoType.SUBCORPUS:
-                        return <SubcOverview data={this.state.data} userId={this.props.userId} standalone={true} />;
+                        return <SubcOverview data={this.state.data} standalone={true} />;
                     case CorpusInfoType.KEY_SHORTCUTS:
                         return <KeyboardShortcuts />;
                 }

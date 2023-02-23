@@ -608,6 +608,16 @@ export const GlobalStyle = createGlobalStyle`
         background-color: ${theme.colorButtonHover};
     }
 
+    a.kontext-link {
+        color: ${theme.colorLogoBlue};
+        text-decoration: none;
+    }
+
+    a.kontext-link:hover {
+        color: ${theme.colorLogoBlue};
+        text-decoration: underline;
+    }
+
     #error-reporting {
         font-size: 7.5pt;
     }

@@ -147,7 +147,7 @@ export function init(
                                     <tr className={index > 0 ? 'separ' : null}>
                                         <th className="attr1" rowSpan={List.size(attrs2)}>{
                                             props.itemClickHandler ?
-                                            <a onClick={e => props.itemClickHandler({
+                                            <a className="kontext-link" onClick={e => props.itemClickHandler({
                                                 attr1: props.attrs[0], attr1Val: attr1,
                                                 attr2: props.attrs[1], attr2Val: undefined,
                                                 renderer: KnownRenderers.POS_ATTR_PAIR_REL})}>{attr1}</a> :
@@ -155,7 +155,7 @@ export function init(
                                         }</th>
                                         <td>{
                                             props.itemClickHandler ?
-                                            <a onClick={e => props.itemClickHandler({
+                                            <a className="kontext-link" onClick={e => props.itemClickHandler({
                                                 attr1: props.attrs[0], attr1Val: attr1,
                                                 attr2: props.attrs[1], attr2Val: List.head(attrs2),
                                                 renderer: KnownRenderers.POS_ATTR_PAIR_REL})}>{List.head(attrs2)}</a> :

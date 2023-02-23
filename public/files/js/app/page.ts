@@ -438,7 +438,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             name: Actions.MessageAdd.name,
             payload: {
                 messageType: msgType,
-                message: message
+                message,
             }
         });
     }
@@ -645,7 +645,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                 overviewViews.OverviewArea,
                 PageMount.GENERAL_OVERVIEW,
                 {
-                    isLocalUiLang: this.getConf<boolean>('isLocalUiLang')
+                    isLocalUiLang: this.getConf<boolean>('isLocalUiLang'),
                 }
             );
         }

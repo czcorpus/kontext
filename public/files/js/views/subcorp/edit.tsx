@@ -162,7 +162,6 @@ export function init(
 
     const FormActionFile:React.FC<{
         data:SubcorpusRecord;
-        userId:number;
         inputMode:FormType;
     }> = (props) => {
 
@@ -203,7 +202,7 @@ export function init(
 
         return (
             <TabContentWrapper>
-                <SubcOverview data={props.data} userId={props.userId} standalone={false} />
+                <SubcOverview data={props.data} standalone={false} />
                 <hr />
                 <S.RestoreTabContentWrapper>
                     {props.data.isDraft ?
@@ -367,8 +366,7 @@ export function init(
                     <>
                         <layoutViews.TabView className="ActionMenu" items={items} >
                             <FormActionFile key="restore" data={props.data}
-                                inputMode={getFormTypeFromSelection(props.data.selections)}
-                                userId={props.userId} />
+                                inputMode={getFormTypeFromSelection(props.data.selections)} />
                             <FormActionReuse
                                 key="action-reuse"
                                 data={props.data}
@@ -392,7 +390,7 @@ export function init(
     }
 
     return BoundWithProps<
-        {corpname:string; usesubcorp:string; userId: number},
+        {corpname:string; usesubcorp:string;},
         SubcorpusEditModelState
     >(
         _SubcorpusEdit, subcorpEditModel

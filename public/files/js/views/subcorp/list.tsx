@@ -506,8 +506,7 @@ export function init(
                                         scrollable={true}>
                                     <SubcorpEdit
                                         corpname={this.props.editWindowSubcorpus.corpusName}
-                                        usesubcorp={this.props.editWindowSubcorpus.subcorpusId}
-                                        userId={this.props.userId} />
+                                        usesubcorp={this.props.editWindowSubcorpus.subcorpusId} />
                                 </layoutViews.CloseableFrame>
                             </layoutViews.ModalOverlay>
                         ) : null}

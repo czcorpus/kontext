@@ -163,7 +163,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             return <S.DataRow>
                 <button type="button" className="util-button use-in-query"
                         onClick={this._handleUseInQueryButton}>
-                    {he.translate('pubsubclist__use_in_query')}
+                    {he.translate('global__use_in_query')}
                 </button>
                 <h3>
                     {`${this.props.item.corpus_name} / ${this.props.item.name}`}
@@ -186,7 +186,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                         corpname: this.props.item.corpus_name,
                                         usesubcorp: this.props.item.id
                                     })
-                                } title={he.translate('pubsubclist__use_in_query')}>
+                                } title={he.translate('global__use_in_query')}>
                                     {this.props.item.id}
                                 </a>
                             </td>
