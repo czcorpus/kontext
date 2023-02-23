@@ -64,7 +64,7 @@ class Backend:
                 f'JOIN {self._corp_table} AS c ON t.corpus_name = c.name '
                 'WHERE user_id = %s '
                 'GROUP BY id '
-                'ORDER BY fav.name ', (user_id,))
+                'ORDER BY fav.name, t.corpus_order ', (user_id,))
 
             ans = []
             async for item in cursor:
@@ -91,8 +91,8 @@ class Backend:
 
             favitem_id: int = cursor.lastrowid
             await cursor.executemany(
-                'INSERT INTO kontext_corpus_user_fav_item (user_fav_corpus_id, corpus_name) '
-                'VALUES (%s, %s) ', [(favitem_id, corp['id']) for corp in item.corpora])
+                'INSERT INTO kontext_corpus_user_fav_item (user_fav_corpus_id, corpus_name, corpus_order) '
+                'VALUES (%s, %s, %s) ', [(favitem_id, corp['id'], i) for i, corp in enumerate(item.corpora)])
             await cursor.connection.commit()
         item.ident = str(favitem_id)  # need to update new id
 
