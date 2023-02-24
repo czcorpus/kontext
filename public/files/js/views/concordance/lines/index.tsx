@@ -62,6 +62,7 @@ function renderTokens(data:Array<Token>):JSX.Element {
     {pipe(
         data,
         List.map(({s, h}, i) => h ? <em key={i} className="highlight">{s}</em> : s),
+        List.join<string|JSX.Element>(_ => ' ')
     )}
     </>;
 }
