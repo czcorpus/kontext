@@ -1146,7 +1146,7 @@ async def audio_waveform(amodel: CorpusActionModel, req: KRequest, resp: KRespon
         return await audiop.get_waveform(amodel.plugin_ctx, req)
 
 
-@bp.route('/get_adhoc_subcorp_size')
+@bp.route('/get_adhoc_subcorp_size', methods=['POST'])
 @http_action(return_type='json', action_model=ConcActionModel)
 async def get_adhoc_subcorp_size(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     if (await plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(
