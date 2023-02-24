@@ -34,7 +34,8 @@ import { Actions as MainMenuActions } from '../../../models/mainMenu/actions';
 import {
     KWICSection, LineSelectionModes, TextChunk,
     Line as ConcLine,
-    ConcToken } from '../../../models/concordance/common';
+    ConcToken,
+    Token} from '../../../models/concordance/common';
 import * as S from './style';
 import { PlayerStatus } from '../../../models/concordance/media';
 import { SentenceToken } from '../../../types/plugins/syntaxViewer';
@@ -56,10 +57,10 @@ export interface LinesViews {
 const ATTR_SEPARATOR = '/';
 
 
-function renderToken(data:ConcToken):JSX.Element {
+function renderTokens(data:Array<Token>):JSX.Element {
     return <>
     {pipe(
-        data.text,
+        data,
         List.map(({s, h}, i) => h ? <em key={i} className="highlight">{s}</em> : s),
     )}
     </>;
@@ -204,7 +205,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
 
         if (props.data.className === 'strc') {
             return (
-                <span className="strc">{renderToken(props.data)}</span>
+                <span className="strc">{renderTokens(props.data.text)}</span>
             );
 
         } else if (props.viewMode === ViewOptions.AttrViewMode.MOUSEOVER ||
@@ -212,7 +213,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             const title = props.data.tailPosAttrs.length > 0 ? props.data.tailPosAttrs.join(ATTR_SEPARATOR) : null;
             return (
                 <mark data-tokenid={props.tokenId} className={mkClass()} title={title}>
-                    {renderToken(props.data)}
+                    {renderTokens(props.data.text)}
                 </mark>
             );
 
@@ -220,7 +221,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             return (
                 <>
                     <mark data-tokenid={props.tokenId} className={mkClass()}>
-                        {renderToken(props.data)}
+                        {renderTokens(props.data.text)}
                     </mark>
                     {props.data.tailPosAttrs.length > 0 ?
                         <span className="tail attr" style={props.viewMode === ViewOptions.AttrViewMode.VISIBLE_MULTILINE && props.data.tailPosAttrs.length === 0 ? {display: 'none'} : null}>
@@ -478,7 +479,9 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                 return <span>&lt;--not translated--&gt;</span>
 
             } else {
-                return <span className={props.item.className === 'strc' ? 'strc' : null}>{props.item.text.join(' ')} </span>;
+                return <span className={props.item.className === 'strc' ? 'strc' : null}>
+                    {renderTokens(props.item.text)}
+                </span>;
             }
         }
 
@@ -677,12 +680,13 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             }
         }
 
-        _renderTextSimple(corpusOutput, corpusIdx) {
-            const mp  = v => v.text.join(' ');
-            return corpusOutput.left.map(mp)
-                    .concat(corpusOutput.kwic.map(mp))
-                    .concat(corpusOutput.right.map(mp))
-                    .join(' ');
+        _renderTextSimple(corpusOutput:KWICSection):string {
+            return pipe(
+                [...corpusOutput.left, ...corpusOutput.kwic, ...corpusOutput.right],
+                List.flatMap(v => v.text),
+                List.map(v => v.s),
+                x => x.join(' ')
+            );
         }
 
         _handleKwicClick(corpusId, tokenNumber, lineIdx) {
@@ -753,7 +757,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                     </td>
                     {List.head(this.props.cols).visible ?
                             this._renderText(primaryLang, 0) :
-                            <td title={this._renderTextSimple(primaryLang, 0)}>{'\u2026'}</td>
+                            <td title={this._renderTextSimple(primaryLang)}>{'\u2026'}</td>
                     }
                     {alignedCorpora.map((alCorp, i) => {
                         if (this.props.cols[i + 1].visible) {
@@ -774,7 +778,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                         } else {
                             return <React.Fragment key={`al-${i}`}>
                                 <td className="ref" />
-                                <td key="par" title={this._renderTextSimple(alCorp, i + 1)}>{'\u2026'}</td>
+                                <td key="par" title={this._renderTextSimple(alCorp)}>{'\u2026'}</td>
                             </React.Fragment>;
                         }
                     })}
