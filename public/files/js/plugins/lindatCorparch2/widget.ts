@@ -195,7 +195,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 dataFavImp,
                 {
                     subcorpus_id: pluginApi.getCorpusIdent().usesubcorp,
-                    subcorpus_orig_id: pluginApi.getCorpusIdent().origSubcorpName,
+                    subcorpus_orig_id: pluginApi.getCorpusIdent().subcName,
                     corpora: List.concat(
                         pluginApi.getConf<Array<string>>('alignedCorpora'),
                         [pluginApi.getCorpusIdent().id]
@@ -208,7 +208,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             availSearchKeywords: List.map(item => (
                 {id: item[0], label: item[1], color: item[2], selected:false}), corporaLabels),
             currSubcorpus: pluginApi.getCorpusIdent().usesubcorp,
-            currSubcorpusOrigName: pluginApi.getCorpusIdent().origSubcorpName,
+            currSubcorpusOrigName: pluginApi.getCorpusIdent().subcName,
             focusedRowIdx: -1,
             availableSubcorpora: pluginApi.getConf<Array<Kontext.SubcorpListItem>>('SubcorpList')
         });
@@ -661,8 +661,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
     getFullCorpusSelection(state:CorplistWidgetModelState):common.GeneratedFavListItem {
         return {
             subcorpus_id: state.corpusIdent.usesubcorp,
-            subcorpus_orig_id: state.corpusIdent.origSubcorpName ?
-                    `#${state.corpusIdent.origSubcorpName}` :
+            subcorpus_orig_id: state.corpusIdent.subcName ?
+                    `#${state.corpusIdent.subcName}` :
                     state.corpusIdent.usesubcorp,
             corpora: [state.corpusIdent.id].concat(state.alignedCorpora)
         };
