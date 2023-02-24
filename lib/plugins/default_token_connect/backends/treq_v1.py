@@ -21,6 +21,7 @@ import logging
 import urllib.parse
 
 import ujson as json
+from plugins.common.http import HTTPApiLogin, HTTPUnauthorized
 from plugins.default_token_connect.backends import HTTPBackend
 from plugins.default_token_connect.backends.cache import cached
 
@@ -49,12 +50,20 @@ class TreqBackend(HTTPBackend):
 
     AVAIL_LANG_MAPPINGS = None
 
+    ANONYMOUS_SESSION_ID = None
+
     def __init__(self, conf, ident, db, ttl):
         super(TreqBackend, self).__init__(conf, ident, db, ttl)
         self._conf = conf
         self.BACKLINK_SERVER = conf.get('backlinkServer', conf['server'])
         self.AVAIL_GROUPS = conf.get('availGroups', {})
         self.AVAIL_LANG_MAPPINGS = conf.get('availTranslations', {})
+
+        self._token_api_client = HTTPApiLogin(
+            conf.get('apiLoginUrl'),
+            conf.get('apiToken'),
+            self.sid_cookie,
+        )
 
     @property
     def sid_cookie(self):
@@ -118,8 +127,13 @@ class TreqBackend(HTTPBackend):
             return f'https://{self.BACKLINK_SERVER}'
         return f'http://{self.BACKLINK_SERVER}'
 
+    async def make_request(self, path: str, session_id: str):
+        headers = {'Cookie': f'{self.sid_cookie}={session_id}'}
+        data, valid = await self._client.request('GET', path, {}, headers=headers)
+        return json.loads(data)
+
     @cached
-    async def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None, cookies=None):
+    async def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, is_anonymous, context=None, cookies=None):
         """
         """
         primary_lang = self._lang_from_corpname(corpora[0])
@@ -138,11 +152,16 @@ class TreqBackend(HTTPBackend):
 
             try:
                 logging.getLogger(__name__).debug('Treq request args: {0}'.format(ta_args))
-                headers = {
-                    'Cookie': f'{self.sid_cookie}={cookies[self.sid_cookie]}'
-                }
-                data, status = await self._client.request('GET', self.mk_api_path(ta_args), {}, headers=headers)
-                data = json.loads(data)
+                path = self.mk_api_path(ta_args)
+                if is_anonymous:
+                    try:
+                        data = await self.make_request(path, self.ANONYMOUS_SESSION_ID)
+                    except HTTPUnauthorized:
+                        self.ANONYMOUS_SESSION_ID = await self._token_api_client.login()
+                        data = await self.make_request(path, self.ANONYMOUS_SESSION_ID)
+                else:
+                    data = await self.make_request(path, cookies[self.sid_cookie])
+
                 max_items = self._conf.get('maxResultItems', self.DEFAULT_MAX_RESULT_LINES)
                 orig = data['lines'][:max_items]
                 data['lines'] = []

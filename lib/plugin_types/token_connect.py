@@ -44,8 +44,8 @@ it will be probably enough to extend this plug-in by an empty class and
 add your frontend or backend (depending on what needs to be customized).
 """
 import abc
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Sequence, Tuple
 import logging
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Sequence, Tuple
 
 from corplib.corpus import KCorpus
 from plugin_types.general_storage import KeyValueStorage
@@ -129,8 +129,10 @@ class AbstractBackend(abc.ABC):
             num_tokens: int,
             query_args: Dict[str, str],
             lang: str,
+            is_anonymous: bool,
             context: Tuple[int, int] = None,
-            cookies: Dict[str, str] = None) -> Tuple[Any, bool]:
+            cookies: Dict[str, str] = None,
+    ) -> Tuple[Any, bool]:
         pass
 
     def enabled_for_corpora(self, corpora: Iterable[str]) -> bool:
