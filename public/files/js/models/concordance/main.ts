@@ -21,99 +21,27 @@
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { throwError, Observable, interval, Subscription, forkJoin } from 'rxjs';
 import { tap, map, concatMap } from 'rxjs/operators';
-import { List, pipe, HTTP, tuple } from 'cnc-tskit';
+import { List, pipe, HTTP, tuple, Dict } from 'cnc-tskit';
 
 import * as ViewOptions from '../../types/viewOptions';
-import * as PluginInterfaces from '../../types/plugins';
 import { PageModel } from '../../app/page';
 import { ConclineSectionOps } from './line';
 import { AudioPlayer, PlayerStatus} from './media';
 import { ConcSaveModel } from './save';
 import { Actions as ViewOptionsActions } from '../options/actions';
 import { CorpColumn, ViewConfiguration, AudioPlayerActions, AjaxConcResponse,
-    ServerPagination, ServerLineData, ServerTextChunk, LineGroupId, attachColorsToIds,
-    mapIdToIdWithColors, Line, TextChunk, KWICSection, PaginationActions, ConcViewMode} from './common';
+    ServerPagination, ServerLineData, LineGroupId, attachColorsToIds,
+    mapIdToIdWithColors, Line, TextChunk, PaginationActions, ConcViewMode, HighlightWords} from './common';
 import { Actions, ConcGroupChangePayload,
     PublishLineSelectionPayload } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
-
-/**
- *
- */
-function importLines(data:Array<ServerLineData>, mainAttrIdx:number):Array<Line> {
-    let ans:Array<Line> = [];
-
-    function importTextChunk(item:ServerTextChunk, id:string):TextChunk {
-        if (mainAttrIdx === -1) {
-            return {
-                id,
-                className: item.class,
-                text: item.str.trim().split(' '),
-                openLink: item.open_link ? {speechPath: item.open_link.speech_path} : undefined,
-                closeLink: item.close_link ? {speechPath: item.close_link.speech_path} : undefined,
-                continued: item.continued,
-                showAudioPlayer: false,
-                tailPosAttrs: item.tail_posattrs || []
-            };
-
-        } else {
-            const tailPosattrs = item.tail_posattrs || [];
-            const text = item.class === 'strc' ?  item.str : tailPosattrs[mainAttrIdx];
-            tailPosattrs.splice(mainAttrIdx, 1, item.str.trim());
-            return {
-                id,
-                className: item.class,
-                text: [text],
-                openLink: item.open_link ? {speechPath: item.open_link.speech_path} : undefined,
-                closeLink: item.close_link ? {speechPath: item.close_link.speech_path} : undefined,
-                continued: item.continued,
-                showAudioPlayer: false,
-                tailPosAttrs: tailPosattrs
-            };
-        }
-    }
-
-    data.forEach((item:ServerLineData, i:number) => {
-        let line:Array<KWICSection> = [];
-        const main_line = ConclineSectionOps.newKWICSection(
-            item.toknum,
-            item.linenum,
-            item.ref,
-            List.map((v, j) => importTextChunk(v, `C${i}:L${j}`), item.Left),
-            List.map((v, j) => importTextChunk(v, `C${i}:K${j}`), item.Kwic),
-            List.map((v, j) => importTextChunk(v, `C${i}:R${j}`), item.Right),
-            item.ml_positions,
-            undefined,
-        );
-        line.push(main_line);
-
-        line = line.concat((item.Align || []).map((align_item, k) => {
-            return ConclineSectionOps.newKWICSection(
-                align_item.toknum,
-                align_item.linenum,
-                align_item.ref,
-                List.map((v, j) => importTextChunk(v, `C${i}:A${k}:L${j}`), align_item.Left),
-                List.map((v, j) => importTextChunk(v, `C${i}:A${k}:K${j}`), align_item.Kwic),
-                List.map((v, j) => importTextChunk(v, `C${i}:A${k}:R${j}`), align_item.Right),
-                align_item.ml_positions,
-                item.ml_positions,
-            );
-        }));
-        ans.push({
-            lineNumber: item.linenum,
-            lineGroup: item.linegroup >= 0 ? item.linegroup : undefined,
-            kwicLength: item.kwiclen,
-            languages: line,
-            hasFocus: false
-        });
-    });
-
-    return ans;
-}
+import { Block } from '../freqs/common';
+import { highlightLineTokens, importLines } from './transform';
 
 export interface HighlightItem {
     level:number; // 0 first corpus, 1 second corpus, ... -1: all corpora
-    value:string
+    checked:boolean;
+    value:string;
 }
 
 
@@ -121,11 +49,16 @@ export interface ConcordanceModelState {
 
     lines:Array<Line>;
 
-    shadowLines:Array<Line>;
+    alignedHighligtWords:HighlightWords;
 
-    shadowPosattrs:Array<string>;
+    highlightMatchPosattrs:Array<string>;
 
     highlightItems:Array<HighlightItem>;
+
+    /**
+     * a concordance ID the highlight was loaded for (=> if conc is changed, we have to reload highlights too)
+     */
+    highlightConcId:string|undefined;
 
     viewMode:ConcViewMode;
 
@@ -244,9 +177,10 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 concId: layoutModel.getConf<string>('concPersistenceOpId'),
                 baseViewAttr: lineViewProps.baseViewAttr,
                 lines: importLines(initialData, viewAttrs.indexOf(lineViewProps.baseViewAttr) - 1),
-                shadowLines: null, // used as highlighting reference
-                shadowPosattrs: [],
+                alignedHighligtWords: {},
+                highlightMatchPosattrs: [],
                 highlightItems: [],
+                highlightConcId: null,
                 viewAttrs,
                 numItemsInLockedGroups: lineViewProps.NumItemsInLockedGroups,
                 pagination: lineViewProps.pagination, // TODO possible mutable mess
@@ -348,9 +282,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                             concId: action.payload.data.conc_persistence_op_id
                         }
                     });
-                    if (!List.empty(this.state.highlightItems)) {
-                        this.reloadShadowLines(this.state.currentPage, this.state.shadowPosattrs);
-                    }
+                    this.reloadAlignedHighlights(true);
                 }
             }
         );
@@ -435,10 +367,13 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         this.changePage(action.payload.action, action.payload.pageNum)
 
                 ]).pipe(
-                    tap(([wakePayload,[,pageNum]]) => {
+                    tap(([wakePayload,]) => {
                         this.applyLineSelections(wakePayload);
-                        if (!List.empty(this.state.highlightItems)) {
-                            this.reloadShadowLines(pageNum, this.state.shadowPosattrs);
+                        if (Actions.isReloadConc(action)) {
+                            this.reloadAlignedHighlights(this.state.highlightConcId !== action.payload.concId);
+
+                        } else {
+                            this.reloadAlignedHighlights(false);
                         }
                     })
 
@@ -525,8 +460,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                     } else {
                         this.busyTimer = this.stopBusyTimer(this.busyTimer);
                     }
-                    if (!List.empty(this.state.highlightItems)) {
-                        this.reloadShadowLines(this.state.currentPage, this.state.shadowPosattrs);
+                    if (action.payload.finished) {
+                        this.reloadAlignedHighlights(true);
                     }
                 }
                 this.emitChange();
@@ -566,9 +501,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         this.emitChange();
                     }
                 });
-                if (!List.empty(this.state.highlightItems)) {
-                    this.reloadShadowLines(this.state.currentPage, this.state.shadowPosattrs);
-                }
+                this.reloadAlignedHighlights(true);
             }
         );
 
@@ -627,9 +560,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                             this.layoutModel.showMessage('error', err);
                         }
                     });
-                    if (!List.empty(this.state.highlightItems)) {
-                        this.reloadShadowLines(this.state.currentPage, this.state.shadowPosattrs);
-                    }
+                    this.reloadAlignedHighlights(true);
+
                 }
             }
         );
@@ -837,11 +769,9 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 this.changeState(state => {
                     state.forceScroll = window.pageYOffset;
                     state.highlightItems = action.payload.items;
-                    state.shadowPosattrs = List.addUnique(action.payload.matchPosAttr, state.shadowPosattrs);
+                    state.highlightMatchPosattrs = List.addUnique(action.payload.matchPosAttr, state.highlightMatchPosattrs);
                 });
-                if (this.state.shadowLines === null) {
-                    this.reloadShadowLines(this.state.currentPage, this.state.shadowPosattrs);
-                }
+                this.reloadAlignedHighlights(false);
             }
         );
     }
@@ -981,25 +911,118 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         );
     }
 
-    private reloadShadowLines(fromp:number, attrs: Array<string>) {
+    private reloadAlignedHighlights(forceReload:boolean) {
+        if (List.size(this.state.corporaColumns) === 1 || List.size(this.state.highlightItems) === 0) {
+            return;
+        }
+        if (!forceReload && Dict.size(this.state.alignedHighligtWords) > 0) {
+            this.changeState(
+                state => {
+                    state.lines = List.map(
+                        line => ({
+                            ...line,
+                            languages: highlightLineTokens(
+                                line.languages,
+                                Dict.filter(
+                                    (v, _) => List.findIndex(x => x.value === v && x.checked, state.highlightItems) > -1,
+                                    state.alignedHighligtWords
+                                )
+                            )
+                        }),
+                        state.lines
+                    );
+                }
+            );
+            return;
+        }
+        const corpname = this.state.corporaColumns[1].n;
         const args = {
-            ...this.layoutModel.getConcArgs(),
-            attrs,
-            format: 'json',
-            fromp,
-            q: ['~' + this.state.concId],
+            corpname,
+            usesubcorp: null,
+            wlattr: List.head(this.state.highlightMatchPosattrs), // TODO we support only a single attr.
+            wlpat: pipe(
+                this.state.highlightItems,
+                List.map(x => x.value),
+                x => x.join('|')
+            ),
+            wlminfreq: 5,
+            wlnums: 'frq',
+            pfilter_words: [],
+            nfilter_words: [],
+            include_nonwords: false,
+            wlposattrs: [List.head(this.state.highlightMatchPosattrs), 'word'],
+            wltype: 'multilevel'
         };
-        this.layoutModel.ajax$<AjaxConcResponse>(
-            HTTP.Method.GET,
-            this.layoutModel.createActionUrl('view'),
-            args
+        this.layoutModel.ajax$<{location:string}>(
+            HTTP.Method.POST,
+            this.layoutModel.createActionUrl('/wordlist/struct_result', {format: 'json'}),
+            args,
+            {
+                contentType: 'application/json'
+            }
+
+        ).pipe(
+            concatMap(
+                resp => this.layoutModel.ajax$<{
+                        conc_persistence_op_id:string;
+                        next_action_args:{[k:string]:string|number};
+                        next_action:string;
+                }>(
+                    HTTP.Method.GET,
+                    resp.location,
+                    {}
+                )
+            ),
+            concatMap(
+                ({
+                    next_action,
+                    next_action_args,
+                    conc_persistence_op_id}
+                ) => this.layoutModel.ajax$<{Blocks:Array<Block>}>(
+                    HTTP.Method.GET,
+                    this.layoutModel.createActionUrl(
+                        next_action,
+                        {...next_action_args, corpname, q: '~' + conc_persistence_op_id}
+                    ),
+                    {}
+                )
+            ),
+            map(
+                data => pipe(
+                    data.Blocks,
+                    List.head(),
+                    x => x.Items,
+                    List.map(
+                        x => tuple(x.Word[1].n, x.Word[0].n) // [attr] + word
+                    ),
+                    Dict.fromEntries()
+                )
+            )
         ).subscribe({
-            next: data => this.changeState(state => {
-                state.shadowLines = importLines(
-                    data.Lines,
-                    this.getViewAttrs().indexOf(state.baseViewAttr) - 1
+            next: data => {
+                this.changeState(
+                    state => {
+                        state.alignedHighligtWords = data;
+                        state.highlightConcId = state.concId;
+                        state.lines = List.map(
+                            line => ({
+                                ...line,
+                                languages: highlightLineTokens(
+                                    line.languages,
+                                    Dict.filter(
+                                        (v, _) => List.findIndex(x => x.value === v && x.checked, state.highlightItems) > -1,
+                                        state.alignedHighligtWords
+                                    )
+                                )
+                            }),
+                            state.lines
+                        );
+                    }
                 );
-            })
+            },
+            error: error => {
+                this.layoutModel.showMessage('error', error);
+            }
         });
     }
 
@@ -1014,7 +1037,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         state.unfinishedCalculation = !!data.running_calc;
         state.lineGroupIds = [];
         state.concId = data.conc_persistence_op_id;
-        state.shadowLines = null;
     }
 
     private changeGroupNaming(state:ConcordanceModelState, data:ConcGroupChangePayload):void {

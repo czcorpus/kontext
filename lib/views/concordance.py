@@ -529,6 +529,8 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
             elif req.args.get('next') == 'dispersion':
                 out['next_action'] = 'dispersion'
                 out['next_action_args'] = {}
+            if amodel.args.format == 'json':
+                out['next_action_args']['format'] = 'json'
     except TypeError as ex:
         resp.add_system_message('error', str(ex))
         logging.getLogger(__name__).error(ex)
