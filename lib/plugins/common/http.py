@@ -123,7 +123,7 @@ class HTTPApiLogin:
         self._server = server
         self._api_token = api_token
         self._sid_cookie = sid_cookie
-        self._ssl_context = ssl.create_default_context() if server.startswith('https://') else None
+        self._ssl_context = ssl.create_default_context() if server and server.startswith('https://') else None
         self._client_timeout = None
 
     @property
