@@ -31,7 +31,7 @@ import { ConcSaveModel } from './save';
 import { Actions as ViewOptionsActions } from '../options/actions';
 import { CorpColumn, ViewConfiguration, AudioPlayerActions, AjaxConcResponse,
     ServerPagination, ServerLineData, LineGroupId, attachColorsToIds,
-    mapIdToIdWithColors, Line, TextChunk, PaginationActions, ConcViewMode, HighlightWords} from './common';
+    mapIdToIdWithColors, Line, TextChunk, PaginationActions, ConcViewMode, HighlightWords, ConcQueryResponse} from './common';
 import { Actions, ConcGroupChangePayload,
     PublishLineSelectionPayload } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
@@ -936,53 +936,50 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             return;
         }
         const corpname = this.state.corporaColumns[1].n;
-        const args = {
-            corpname,
-            usesubcorp: null,
-            wlattr: List.head(this.state.highlightMatchPosattrs), // TODO we support only a single attr.
-            wlpat: pipe(
-                this.state.highlightItems,
-                List.map(x => x.value),
-                x => x.join('|')
-            ),
-            wlminfreq: 5,
-            wlnums: 'frq',
-            pfilter_words: [],
-            nfilter_words: [],
-            include_nonwords: false,
-            wlposattrs: [List.head(this.state.highlightMatchPosattrs), 'word'],
-            wltype: 'multilevel'
-        };
-        this.layoutModel.ajax$<{location:string}>(
+        const attr = List.head(this.state.highlightMatchPosattrs);
+        const values = pipe(
+            this.state.highlightItems,
+            List.map(x => x.value),
+            x => x.join('|')
+        );
+        this.layoutModel.ajax$<ConcQueryResponse>(
             HTTP.Method.POST,
-            this.layoutModel.createActionUrl('/wordlist/struct_result', {format: 'json'}),
-            args,
+            this.layoutModel.createActionUrl('/query_submit', {format: 'json'}),
+            {
+                type: 'concQueryArgs',
+                queries: [
+                    {
+                        qtype: 'advanced',
+                        corpname,
+                        query: `[${attr}="${values}"]`
+                    }
+                ]
+            },
             {
                 contentType: 'application/json'
             }
 
         ).pipe(
             concatMap(
-                resp => this.layoutModel.ajax$<{
-                        conc_persistence_op_id:string;
-                        next_action_args:{[k:string]:string|number};
-                        next_action:string;
-                }>(
-                    HTTP.Method.GET,
-                    resp.location,
-                    {}
-                )
-            ),
-            concatMap(
-                ({
-                    next_action,
-                    next_action_args,
-                    conc_persistence_op_id}
-                ) => this.layoutModel.ajax$<{Blocks:Array<Block>}>(
+                (resp) => this.layoutModel.ajax$<{Blocks:Array<Block>}>(
                     HTTP.Method.GET,
                     this.layoutModel.createActionUrl(
-                        next_action,
-                        {...next_action_args, corpname, q: '~' + conc_persistence_op_id}
+                        '/freqml',
+                        {
+                            freq_type: 'tokens',
+                            fpage: 1,
+                            flimit: 1,
+                            q: '~' + resp.conc_persistence_op_id,
+                            cutoff: resp.conc_args.cutoff,
+                            ml1attr: attr,
+                            ml1icase: '0',
+                            ml1ctx: '0<0',
+                            ml2attr: 'word',
+                            ml2icase: '0',
+                            ml2ctx: '0<0',
+                            freqlevel: 2,
+                            format: 'json'
+                        }
                     ),
                     {}
                 )
