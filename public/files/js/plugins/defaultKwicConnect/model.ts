@@ -266,7 +266,19 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
             action => {
                 this.changeState(state => {
                     state.highlightItems = action.payload.items;
+                    state.isBusy = true;
                 });
+            }
+        );
+
+        this.addActionHandler(
+            ConcActions.SetHighlightItemsDone,
+            action => {
+                this.changeState(
+                    state => {
+                        state.isBusy = false;
+                    }
+                );
             }
         );
 

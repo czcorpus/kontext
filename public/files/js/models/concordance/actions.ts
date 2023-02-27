@@ -504,6 +504,13 @@ export class Actions {
         name: 'CONCORDANCE_SET_HIGHLIGHT_ITEMS'
     };
 
+    static SetHighlightItemsDone:Action<{
+        items:Array<HighlightItem>;
+        matchPosAttr:string;
+    }> = {
+        name: 'CONCORDANCE_SET_HIGHLIGHT_ITEMS_DONE'
+    };
+
     static HighlightedTokenMouseover:Action<{
         attr:string;
         value:string;
