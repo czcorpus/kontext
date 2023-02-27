@@ -13,6 +13,9 @@
 # GNU General Public License for more details.
 
 
+class WorkerTaskException(Exception):
+    pass
+
 class BgCalcError(Exception):
     pass
 
