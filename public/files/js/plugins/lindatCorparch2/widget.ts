@@ -197,8 +197,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                     subcorpus_id: pluginApi.getCorpusIdent().usesubcorp,
                     subcorpus_orig_id: pluginApi.getCorpusIdent().subcName,
                     corpora: List.concat(
+                        [pluginApi.getCorpusIdent().id],
                         pluginApi.getConf<Array<string>>('alignedCorpora'),
-                        [pluginApi.getCorpusIdent().id]
                     )
                 }
             ),
