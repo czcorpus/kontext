@@ -228,8 +228,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                         {translations.length > 0 ? '' : '\u2014'}
                         {List.map((translation, i) => (
                             <span className="item" key={`${translation['righ']}:${i}`}>
-                                <input type='checkbox' value={translation['righ']}
-                                        checked={state.highlights[translation['righ']]} onChange={handleConcHighlight}/>
+                                <input type='checkbox'
+                                        title={he.translate('default_kwic_connect__highlight_this_translation')}
+                                        value={translation['righ']}
+                                        checked={state.highlights[translation['righ']]}
+                                        onChange={handleConcHighlight}/>
                                 <a className={`word${props.highlightedItems[translation["righ"]] ?
                                                 ' highlighted' : ' no-highlight'}`}
                                         onClick={handleClick(translation['righ'])}

@@ -959,6 +959,9 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
      */
     private reloadAlignedHighlights(kcAttr:string, forceReload:boolean) {
         if (List.size(this.state.corporaColumns) === 1 || List.size(this.state.highlightItems) === 0) {
+            this.dispatchSideEffect(
+                Actions.SetHighlightItemsDone
+            );
             return;
         }
         if (!forceReload && Dict.size(this.state.alignedHighligtWords[kcAttr]) > 0) {
@@ -982,6 +985,9 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         state.lines
                     );
                 }
+            );
+            this.dispatchSideEffect(
+                Actions.SetHighlightItemsDone
             );
             return;
         }
@@ -1067,9 +1073,16 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         );
                     }
                 );
+                this.dispatchSideEffect(
+                    Actions.SetHighlightItemsDone
+                );
             },
             error: error => {
                 this.layoutModel.showMessage('error', error);
+                this.dispatchSideEffect(
+                    Actions.SetHighlightItemsDone,
+                    error
+                );
             }
         });
     }
