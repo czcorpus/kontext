@@ -161,7 +161,7 @@ export function importLines(data:Array<ServerLineData>, mainAttrIdx:number):Arra
 }
 
 
-function highlightWordInTokens(tokens:Array<Token>, mword:string) {
+function highlightWordInTokens(tokens:Array<Token>, mword:string, attr:string) {
     const word = mword.split(' ');
     let currSrch:Array<Token> = [];
     for (let i = 0; i < tokens.length; i++) {
@@ -172,6 +172,7 @@ function highlightWordInTokens(tokens:Array<Token>, mword:string) {
             List.forEach(
                 item => {
                     item.h = true;
+                    item.kcConnection = {attr, s: mword};
                 },
                 currSrch
             );
@@ -182,6 +183,7 @@ function highlightWordInTokens(tokens:Array<Token>, mword:string) {
         List.forEach(
             item => {
                 item.h = true;
+                item.kcConnection = {attr, s: mword};
             },
             currSrch
         );
@@ -193,7 +195,12 @@ function highlightWordInTokens(tokens:Array<Token>, mword:string) {
  * @param alignedSections
  * @param words
  */
-export function highlightLineTokens(alignedSections:Array<KWICSection>, words:HighlightWords):Array<KWICSection> {
+export function highlightLineTokens(
+    alignedSections:Array<KWICSection>,
+    words:HighlightWords,
+    kcAttr:string
+
+):Array<KWICSection> {
     List.forEach(
         alignedSection => {
             const tokens = pipe(
@@ -206,7 +213,7 @@ export function highlightLineTokens(alignedSections:Array<KWICSection>, words:Hi
             );
             Dict.forEach(
                 (attr, word) => {
-                    highlightWordInTokens(tokens, word);
+                    highlightWordInTokens(tokens, word, kcAttr);
                 },
                 words
             )

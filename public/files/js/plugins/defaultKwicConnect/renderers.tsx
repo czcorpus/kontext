@@ -25,41 +25,47 @@ import { Actions as QueryActions } from '../../models/query/actions';
 import { Actions as ConcActions } from '../../models/concordance/actions';
 import { HighlightItem } from '../../models/concordance/main';
 import { FreqDistType } from './model';
+import * as TreqStyle from './treqStyle';
 
 
 export interface Views {
     DisplayLinkRenderer:React.FC<{
-        data: {link: string};
+        data: {link:string};
     }>;
     RawHtmlRenderer:React.FC<{
-        corpora: Array<string>;
-        data: {contents: Array<[string, string]>};
-        highlightItems: Array<HighlightItem>;
-        freqType: FreqDistType;
+        corpora:Array<string>;
+        data:{contents:Array<[string, string]>};
+        concHighlightItems:Array<HighlightItem>;
+        highlightedItems:{[item:string]:boolean}; // items hightlighted in kwic connect list
+        freqType:FreqDistType;
     }>;
     DataMuseSimilarWords:React.FC<{
-        corpora: Array<string>;
+        corpora:Array<string>;
         data:any;
-        highlightItems: Array<HighlightItem>;
-        freqType: FreqDistType;
+        concHighlightItems:Array<HighlightItem>;
+        highlightedItems:{[item:string]:boolean}; // items hightlighted in kwic connect list
+        freqType:FreqDistType;
     }>;
     TreqRenderer:React.FC<{
-        corpora: Array<string>;
+        corpora:Array<string>;
         data:any;
-        highlightItems: Array<HighlightItem>;
-        freqType: FreqDistType;
+        concHighlightItems:Array<HighlightItem>;
+        highlightedItems:{[item:string]:boolean}; // items hightlighted in kwic connect list
+        freqType:FreqDistType;
     }>;
     UnsupportedRenderer:React.FC<{
-        corpora: Array<string>;
+        corpora:Array<string>;
         data:any;
-        highlightItems: Array<HighlightItem>;
-        freqType: FreqDistType;
+        concHighlightItems:Array<HighlightItem>;
+        highlightedItems:{[item:string]:boolean}; // items hightlighted in kwic connect list
+        freqType:FreqDistType;
     }>;
     CustomMessageRenderer:React.FC<{
-        corpora: Array<string>;
+        corpora:Array<string>;
         data:any;
-        highlightItems: Array<HighlightItem>;
-        freqType: FreqDistType;
+        concHighlightItems:Array<HighlightItem>;
+        highlightedItems:{[item:string]:boolean}; // items hightlighted in kwic connect list
+        freqType:FreqDistType;
     }>;
 }
 
@@ -162,8 +168,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
             });
         }
 
-        // handling highlights only for first aligned corpus (level = 1)
-        const handleHighlight = (evt:React.ChangeEvent<HTMLInputElement>) => {
+        // handling concordance highlights only for first aligned corpus (level = 1)
+        const handleConcHighlight = (evt:React.ChangeEvent<HTMLInputElement>) => {
             const highlights = {...state.highlights, [evt.target.value]: evt.target.checked};
             setState({...state, highlights});
             dispatcher.dispatch(
@@ -177,7 +183,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                             ([value, checked]) => ({
                                 level: 1,
                                 checked,
-                                value
+                                value,
+                                attr: props.freqType as string
                             })
                         )
                     )
@@ -185,7 +192,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
             );
         }
 
-        const handleHighlightAll = (evt:React.ChangeEvent<HTMLInputElement>) => {
+        const handleConcHighlightAll = (evt:React.ChangeEvent<HTMLInputElement>) => {
             const highlights = Dict.map(
                 (v, k) => !state.toggleAll,
                 state.highlights
@@ -217,25 +224,28 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
             const translations = props.data.contents['translations'];
             if (translations.length > 0) {
                 return (
-                    <span className="words">
+                    <div className="words">
                         {translations.length > 0 ? '' : '\u2014'}
                         {List.map((translation, i) => (
-                            <React.Fragment key={`${translation['righ']}:${i}`}>
+                            <span className="item" key={`${translation['righ']}:${i}`}>
                                 <input type='checkbox' value={translation['righ']}
-                                        checked={state.highlights[translation['righ']]} onChange={handleHighlight}/>
-                                <a className="word"
+                                        checked={state.highlights[translation['righ']]} onChange={handleConcHighlight}/>
+                                <a className={`word${props.highlightedItems[translation["righ"]] ?
+                                                ' highlighted' : ' no-highlight'}`}
                                         onClick={handleClick(translation['righ'])}
                                         title={he.translate('default_kwic_connect__use_as_filter_in_2nd_corp')}>
                                     {translation['righ']}
                                 </a>
-                                {'\u00a0'}
                                 <span className="note" title={he.translate('default_kwic_connect__abs_freq') + ': ' + translation['freq']}>
                                 ({he.formatNumber(translation['perc'], 1)}%)
                                 </span>
-                                {i < props.data.contents.translations.length - 1 ? ', ' : null}
-                            </React.Fragment>
+                                {i < props.data.contents.translations.length - 1 ?
+                                    <span className="separ">, </span> :
+                                    null
+                                }
+                            </span>
                         ), translations)}
-                    </span>
+                    </div>
                 );
 
             } else {
@@ -250,17 +260,17 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
         const backLink:[string, Array<[string, string]>] = props.data['contents']['treq_link'];
 
         return (
-            <div className="provider-block">
+            <TreqStyle.TreqContainer className="provider-block">
                 <strong className="base-word">{props.data.kwic}:</strong>
                 {renderWords()}
                 <p>
                     <label>
                         {he.translate('default_kwic_connect__highlight_all_translations')}
-                        <input type="checkbox" onChange={handleHighlightAll} checked={state.toggleAll} />
+                        <input type="checkbox" onChange={handleConcHighlightAll} checked={state.toggleAll} />
                     </label>
                 </p>
                 <TreqBacklinkForm action={backLink[0]} args={backLink[1]} />
-            </div>
+            </TreqStyle.TreqContainer>
         );
     };
 

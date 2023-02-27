@@ -81,6 +81,7 @@ export interface ProviderWordMatch {
     note:string;
     renderer:PluginInterfaces.TokenConnect.Renderer;
     data:Array<ProviderOutput>;
+    highlights:{[value:string]:boolean};
 }
 
 export interface KwicConnectState {
@@ -268,6 +269,39 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
                 });
             }
         );
+
+        this.addActionHandler(
+            ConcActions.HighlightedTokenMouseover,
+            action => {
+                this.changeState(
+                    state => {
+                        List.forEach(
+                            pwMatch => {
+                                pwMatch.highlights[action.payload.value] = true;
+                            },
+                            state.data
+                        );
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            ConcActions.HighlightedTokenMouseout,
+            action => {
+                console.log('mouseout...')
+                this.changeState(
+                    state => {
+                        List.forEach(
+                            pwMatch => {
+                                pwMatch.highlights[action.payload.value] = false;
+                            },
+                            state.data
+                        );
+                    }
+                );
+            }
+        );
     }
 
     private loadData(flimit:number):void {
@@ -344,7 +378,8 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
                                         heading: p.label,
                                         note: null,
                                         renderer: null,
-                                        data: []
+                                        data: [],
+                                        highlights: {}
                                     }), data.providers)
                                 )
                             )
@@ -370,7 +405,8 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
                                             }],
                                             heading: p.label,
                                             note: null,
-                                            renderer: this.rendererMap(KnownRenderers.MESSAGE)
+                                            renderer: this.rendererMap(KnownRenderers.MESSAGE),
+                                            highlights: {}
                                         }), data.providers)
                                     )
                                 )
@@ -408,7 +444,8 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
                 heading: providerData.heading,
                 note: providerData.note,
                 renderer: providerData.renderer,
-                data: List.concat(newData[i].data, providerData.data)
+                data: List.concat(newData[i].data, providerData.data),
+                highlights: {}
             }), state.data);
 
         } else {
@@ -454,16 +491,25 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
             ).pipe(
                 concatMap(
                     (responseData) => {
-                        return rxOf(List.map(provider => ({
-                            data: List.map(item => ({
-                                contents: item.contents,
-                                found: item.status,
-                                kwic: item.kwic
-                            }), provider.data),
-                            heading: provider.heading,
-                            note: provider.note,
-                            renderer: this.rendererMap(provider.renderer)
-                        }), responseData.data));
+                        return rxOf(
+                            List.map(
+                                provider => ({
+                                    data: List.map(
+                                        item => ({
+                                            contents: item.contents,
+                                            found: item.status,
+                                            kwic: item.kwic
+                                        }),
+                                        provider.data
+                                    ),
+                                    heading: provider.heading,
+                                    note: provider.note,
+                                    renderer: this.rendererMap(provider.renderer),
+                                    highlights: {}
+                                }),
+                                responseData.data
+                            )
+                        );
                     }
                 )
             );

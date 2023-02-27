@@ -144,13 +144,7 @@ export const ConcLines = styled.table`
     }
 
     .highlight {
-        font-weight: bold;
-        background-color: ${theme.colorGreenBgHighlighted};
-        color: ${theme.colorLightText};
-        border: 1px solid ${theme.colorLightText};
-        border-radius: ${theme.borderRadiusDefault};
-        display: inline-block;
-        padding: 0 0.3em 0 0.3em;
+        ${theme.textHighlight}
     }
 
     .concordance-col-heading {

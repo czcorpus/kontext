@@ -92,6 +92,15 @@ export interface Token {
      * Specifies whether the token is highlighed
      */
     h:boolean;
+
+    /**
+     * Specifies a possible connetion with a kwic_connect result
+     * based on some attribute (attr) and its value (s)
+     */
+    kcConnection?:{
+        attr:string;
+        s:string;
+    }
 }
 
 
