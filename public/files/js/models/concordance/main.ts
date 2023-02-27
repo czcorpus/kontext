@@ -1002,7 +1002,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         corpname,
                         query: `[${kcAttr}="${values}"]`
                     }
-                ]
+                ],
+                no_query_history: true
             },
             {
                 contentType: 'application/json'
