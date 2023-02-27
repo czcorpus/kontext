@@ -57,17 +57,6 @@ export interface LinesViews {
 const ATTR_SEPARATOR = '/';
 
 
-function renderTokens(data:Array<Token>):JSX.Element {
-    return <>
-    {pipe(
-        data,
-        List.map(({s, h}, i) => h ? <em key={i} className="highlight">{s}</em> : s),
-        List.join<string|JSX.Element>(_ => ' ')
-    )}
-    </>;
-}
-
-
 export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModuleArgs):LinesViews {
 
     const extras = lineExtrasViewsInit(dispatcher, he, lineModel);
@@ -100,6 +89,45 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                 tokenConnectInfo1;
         }
         return tokenConnectInfo1;
+    }
+
+
+    function renderTokens(data:Array<Token>):JSX.Element {
+
+        const handleMouseover = ({attr, s}:{attr:string; s:string}) => () => {
+            dispatcher.dispatch(
+                Actions.HighlightedTokenMouseover,
+                {
+                    attr,
+                    value: s
+                }
+            );
+        }
+
+        const handleMouseout = ({attr, s}:{attr:string; s:string}) => () => {
+            dispatcher.dispatch(
+                Actions.HighlightedTokenMouseout,
+                {
+                    attr,
+                    value: s
+                }
+            );
+        }
+
+        return <>
+        {pipe(
+            data,
+            List.map(({s, h, kcConnection}, i) => h ?
+                <em key={i} className="highlight"
+                        onMouseOver={handleMouseover(kcConnection)}
+                        onMouseOut={handleMouseout(kcConnection)}>
+                    {s}
+                </em> :
+                s
+            ),
+            List.join<string|JSX.Element>(_ => ' ')
+        )}
+        </>;
     }
 
     // ------------------------- <ConcColHideSwitch /> ---------------------------

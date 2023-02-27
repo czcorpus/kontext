@@ -503,4 +503,18 @@ export class Actions {
     }> = {
         name: 'CONCORDANCE_SET_HIGHLIGHT_ITEMS'
     };
+
+    static HighlightedTokenMouseover:Action<{
+        attr:string;
+        value:string;
+    }> = {
+        name: 'CONCORDANCE_HIGHLIGHTED_TOKEN_MOUSEOVER'
+    }
+
+    static HighlightedTokenMouseout:Action<{
+        attr:string;
+        value:string;
+    }> = {
+        name: 'CONCORDANCE_HIGHLIGHTED_TOKEN_MOUSEOUT'
+    }
 }

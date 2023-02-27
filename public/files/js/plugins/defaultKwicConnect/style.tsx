@@ -80,13 +80,28 @@ export const KwicConnectContainer = styled.div`
 
             padding-right: 0.7em;
 
-            a.word {
-                text-decoration: none;
-            }
+            .item {
 
-            a.word:hover {
-                text-decoration: underline;
-                color: ${theme.colorLogoPink};
+                display: inline-flex;
+                align-items: center;
+
+                input[type=checkbox] {
+                    margin: 0;
+                }
+
+                a.word {
+                    text-decoration: none;
+                }
+
+                a.word:hover {
+                    text-decoration: underline;
+                    color: ${theme.colorLogoPink};
+                }
+
+                .separ {
+                    display: inline-block;
+                    margin-right: 0.7em;
+                }
             }
         }
 

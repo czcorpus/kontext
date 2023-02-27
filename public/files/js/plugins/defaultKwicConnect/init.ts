@@ -25,6 +25,7 @@ import { init as renderersInit, Views as RenderersView } from './renderers';
 import { KwicConnectModel, KnownRenderers } from './model';
 import { List } from 'cnc-tskit';
 import { IPluginApi } from '../../types/plugins/common';
+import { RendererData } from '../../types/plugins/tokenConnect';
 
 declare var require:any;
 require('./style.css'); // webpack
