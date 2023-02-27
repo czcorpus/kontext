@@ -203,8 +203,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 {
                     subcorpus_id: currCorp.usesubcorp,
                     subcorpus_orig_id: currCorp.subcName,
-                    corpora: [...(pluginApi.getConf<Array<string>>('alignedCorpora') || []),
-                            currCorp.id]
+                    corpora: [currCorp.id, ...(pluginApi.getConf<Array<string>>('alignedCorpora') || [])]
                 }
             ),
             isWaitingForSearchResults: false,
