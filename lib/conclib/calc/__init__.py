@@ -31,7 +31,7 @@ from bgcalc.errors import CalcTaskNotFoundError
 from conclib.calc.base import GeneralWorker
 from conclib.empty import InitialConc
 from conclib.errors import (
-    BrokenConcordanceException, ConcCalculationStatusException, ConcNotFoundException, extract_manatee_error)
+    UnreadableConcordanceException, ConcCalculationStatusException, ConcNotFoundException, extract_manatee_error)
 from conclib.pyconc import PyConc
 from corplib import CorpusFactory
 from corplib.corpus import AbstractKCorpus
@@ -156,7 +156,10 @@ async def require_existing_conc(
         cutoff: int) -> PyConc:
     """
     Load a cached concordance based on a provided corpus and query.
-    If nothing is found, ConcNotFoundException is thrown.
+    If nothing is found, ConcNotFoundException is thrown which should
+    be understood as a trigger for 'restore_conc' action.
+    In case the concordance is not ready yet or finished with an
+    error, UnreadableConcordanceException is thrown.
     """
     corpus_factory = CorpusFactory()
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
@@ -173,8 +176,9 @@ async def require_existing_conc(
             return PyConc(mcorp, 'l', status.cachefile, orig_corp=corp)
         except manatee.FileAccessError as ex:
             raise ConcNotFoundException(ex)
-    raise BrokenConcordanceException(
-        'Concordance broken. File: {}, error: {}'.format(status.cachefile, status.error))
+    logging.getLogger(__name__).error('Unreadable concordance, status: {}'.format(status.to_dict()))
+    raise UnreadableConcordanceException(
+        'Unreadable concordance. File: {}, error: {}'.format(status.cachefile, status.error))
 
 
 async def find_cached_conc_base(
