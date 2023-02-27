@@ -46,7 +46,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'lib'))  # appl
 
 CONF_PATH = os.getenv(
     'KONTEXT_CONF', os.path.realpath(f'{os.path.dirname(os.path.realpath(__file__))}/../conf/config.xml'))
-LOCALE_PATH = os.path.realpath(f'{os.path.dirname(__file__)}/../locale')
+LOCALE_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), '../locale'))
 JWT_COOKIE_NAME = 'kontext_jwt'
 JWT_ALGORITHM = 'HS256'
 DFLT_HTTP_CLIENT_TIMEOUT = 20
