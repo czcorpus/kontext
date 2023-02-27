@@ -70,6 +70,7 @@ from action.argmapping.subcorpus import (
     CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs)
 from action.argmapping.wordlist import WordlistFormArgs
 from bgcalc import coll_calc, freqs, pquery, subc_calc, wordlist
+from bgcalc.errors import WorkerTaskException
 from corplib import CorpusFactory
 from corplib.abstract import SubcorpusIdent
 from corplib.corpus import KCorpus
@@ -80,10 +81,6 @@ stderr_redirector = get_stderr_redirector(settings)
 
 def load_script_module(name, path):
     return importlib.util.spec_from_file_location(name, path)
-
-
-class WorkerTaskException(Exception):
-    pass
 
 
 async def _load_corp(corp_ident: Union[str, SubcorpusRecord]):
@@ -287,8 +284,9 @@ async def compile_docf(corpus_ident, attr, logfile):
     except manatee.AttrNotFound:
         corp_id = corpus_ident.corpname if isinstance(
             corpus_ident, SubcorpusIdent) else corpus_ident
-        raise WorkerTaskException('Failed to compile docf: attribute {}.{} not found in {}'.format(
-                                  doc_struct, attr, corp_id))
+        raise WorkerTaskException(
+            'Failed to compile docf: attribute {}.{} not found in {}'.format(
+                doc_struct, attr, corp_id))
 
 
 # ----------------------------- SUBCORPORA ------------------------------------
