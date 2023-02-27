@@ -165,7 +165,7 @@ async def bibliography(amodel: CorpusActionModel, req: KRequest, resp: KResponse
 
 @bp.route('/ajax_get_corparch_item')
 @http_action(action_model=CorpusActionModel, return_type='json')
-async def ajax_get_corp_details(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
+async def ajax_get_corparch_item(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     corpname = getattr(amodel.args, 'corpname')
     user_id = amodel.session_get('user', 'id')
 
