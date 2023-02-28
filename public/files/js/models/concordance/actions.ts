@@ -504,6 +504,10 @@ export class Actions {
         name: 'CONCORDANCE_SET_HIGHLIGHT_ITEMS'
     };
 
+    static isSetHighlightItems(a:Action):a is typeof Actions.SetHighlightItems {
+        return a.name === Actions.SetHighlightItems.name;
+    }
+
     static SetHighlightItemsDone:Action<{
         items:Array<HighlightItem>;
         matchPosAttr:string;
