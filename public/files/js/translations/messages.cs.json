@@ -296,6 +296,8 @@
         "query__tt_selected": "Vybráno",
         "query__tt_no_date_range_selected": "Není vybrán žádný rozsah.",
         "query__tt_you_can_unselect_date_range": "Pro zrušení výběru klikněte na aktuálně zvolený den, nebo přejděte na jiný měsíc",
+        "query__tt_search_by_value": "Hledat podle hodnoty...",
+        "query__tt_exact_value": "Přesná hodnota...",
         "query__span_from": "od",
         "query__span_to": "do",
         "query__include_kwic": "včetně KWIC",
