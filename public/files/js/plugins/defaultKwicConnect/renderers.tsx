@@ -19,7 +19,7 @@
  */
 import * as React from 'react';
 import * as Kontext from '../../types/kontext';
-import { IActionDispatcher } from 'kombo';
+import { IActionDispatcher, IFullActionControl } from 'kombo';
 import { Dict, List, pipe, tuple } from 'cnc-tskit';
 import { Actions as QueryActions } from '../../models/query/actions';
 import { Actions as ConcActions } from '../../models/concordance/actions';
@@ -70,7 +70,7 @@ export interface Views {
 }
 
 
-export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):Views {
+export function init(dispatcher:IFullActionControl, he:Kontext.ComponentHelpers):Views {
 
     const DisplayLinkRenderer:Views['DisplayLinkRenderer'] = (props) => (
         <div>
@@ -139,6 +139,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
     // ---------------------------------- <TreqRenderer /> ------------------------------------------
 
     const TreqRenderer:Views['TreqRenderer'] = (props) => {
+
         const [state, setState] = React.useState<{
             toggleAll:boolean;
             highlights:{[k:string]:boolean}
@@ -146,10 +147,44 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
             toggleAll: false,
             highlights: pipe(
                 props.data.contents['translations'] as Array<{righ:string}>,
-                List.map(item => tuple(item.righ, false)),
+                List.map(
+                    item => {
+                        const srch = List.find(x => x.value === item.righ, props.concHighlightItems);
+                        return tuple(
+                            item.righ,
+                            srch ? srch.checked : false
+                        )
+                    }
+                ),
                 Dict.fromEntries()
             )
         });
+
+        React.useEffect(
+            () => {
+                dispatcher.registerActionListener(
+                    action => {
+                        if (ConcActions.isSetHighlightItems(action)) {
+                            const newState = {...state};
+                            List.forEach(
+                                a => {
+                                    const srch = state.highlights[a.value];
+                                    if (srch !== undefined && srch !== a.checked) {
+                                        newState.highlights[a.value] = a.checked;
+                                    }
+                                },
+                                action.payload.items
+                            );
+                            if (Dict.every(x => x, newState.highlights)) {
+                                newState.toggleAll = true;
+                            }
+                            setState(newState);
+                        }
+                    }
+                )
+            },
+            []
+        );
 
         const handleClick = (word:string) => () => {
             dispatcher.dispatch<typeof QueryActions.QueryInputSetQuery>({
