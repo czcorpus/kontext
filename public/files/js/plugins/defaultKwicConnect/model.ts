@@ -30,7 +30,7 @@ import { FreqServerArgs } from '../../models/freqs/regular/common';
 import { HTTP, List } from 'cnc-tskit';
 import { Actions } from './actions';
 import { IPluginApi } from '../../types/plugins/common';
-import { HighlightItem } from '../../models/concordance/main';
+import { HighlightItem, mergeHighlightItems } from '../../models/concordance/main';
 
 
 export enum KnownRenderers {
@@ -256,7 +256,6 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
                             this.pluginApi.showMessage('error', error);
                         }
                     });
-
                 }
             }
         );
@@ -265,7 +264,11 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
             ConcActions.SetHighlightItems,
             action => {
                 this.changeState(state => {
-                    state.highlightItems = action.payload.items;
+                    state.highlightItems = mergeHighlightItems(
+                        state.highlightItems,
+                        action.payload.items,
+                        false
+                    );
                     state.isBusy = true;
                 });
             }
@@ -274,11 +277,17 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
         this.addActionHandler(
             ConcActions.SetHighlightItemsDone,
             action => {
-                this.changeState(
-                    state => {
-                        state.isBusy = false;
-                    }
-                );
+                if (action.error) {
+                    this.pluginApi.showMessage('error', action.error);
+
+                } else {
+                    this.changeState(
+                        state => {
+                            state.highlightItems = action.payload.items;
+                            state.isBusy = false;
+                        }
+                    );
+                }
             }
         );
 
@@ -301,7 +310,6 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
         this.addActionHandler(
             ConcActions.HighlightedTokenMouseout,
             action => {
-                console.log('mouseout...')
                 this.changeState(
                     state => {
                         List.forEach(
