@@ -335,6 +335,8 @@
         "query__tt_selected": "Izbrano",
         "query__tt_no_date_range_selected": "Časovni razpon ni bil izbran.",
         "query__tt_you_can_unselect_date_range": "Da odstranite izbor, kliknite na trenutno izbrani dan ali se premaknite do drugega meseca.",
+        "query__tt_search_by_value": "Search by value... UNTRANSLATED",
+        "query__tt_exact_value": "Exact value... UNTRANSLATED",
         "query__span_from": "Od",
         "query__span_to": "Do",
         "query__include_kwic": "Vključi KWIC",

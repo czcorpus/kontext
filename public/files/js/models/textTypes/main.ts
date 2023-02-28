@@ -162,7 +162,9 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                     Dict.fromEntries()
                 ),
                 metaInfo: {},
-                textInputPlaceholder: null,
+                textInputPlaceholder: pluginApi.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES) ?
+                    pluginApi.translate('query__tt_search_by_value') :
+                    pluginApi.translate('query__tt_exact_value'),
                 busyAttributes: {},
                 minimizedBoxes: pipe(
                     attributes,
