@@ -301,7 +301,6 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
         this.addActionHandler(
             ConcActions.HighlightedTokenMouseout,
             action => {
-                console.log('mouseout...')
                 this.changeState(
                     state => {
                         List.forEach(
