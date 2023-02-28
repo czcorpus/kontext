@@ -36,12 +36,23 @@ import { Actions, ConcGroupChangePayload,
     PublishLineSelectionPayload } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { Block } from '../freqs/common';
-import { highlightLineTokens, importLines } from './transform';
+import { highlightConcLineTokens, importLines } from './transform';
 
 export interface HighlightItem {
-    level:number; // 0 first corpus, 1 second corpus, ... -1: all corpora
+
+    /**
+     * level specifies target lang./corp. column for highlighting:
+     *  -  0: first corpus,
+     *  -  1: second corpus,
+     *  -  N: (N-1)th corpus
+     *  - -1: all corpora
+     */
+    level:number;
+
     checked:boolean;
+
     loaded:boolean;
+
     value:string;
 
     /**
@@ -81,23 +92,14 @@ export function mergeHighlightItems(
 }
 
 
-function highlightTokensInAlignedLanguages(
-    languages:Array<KWICSection>,
-    words:HighlightWords,
-    kcAttr:string
-):Array<KWICSection> {
-    return [
-        List.head(languages),
-        ...highlightLineTokens(List.tail(languages), words, kcAttr)
-    ];
-}
-
-
+/**
+ *
+ */
 export interface ConcordanceModelState {
 
     lines:Array<Line>;
 
-    alignedHighligtWords:{[posAttr:string]:HighlightWords};
+    highlightWordsStore:{[posAttr:string]:HighlightWords};
 
     highlightItems:Array<HighlightItem>;
 
@@ -223,7 +225,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 concId: layoutModel.getConf<string>('concPersistenceOpId'),
                 baseViewAttr: lineViewProps.baseViewAttr,
                 lines: importLines(initialData, viewAttrs.indexOf(lineViewProps.baseViewAttr) - 1),
-                alignedHighligtWords: {},
+                highlightWordsStore: {},
                 highlightItems: [],
                 highlightConcId: null,
                 viewAttrs,
@@ -331,7 +333,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         (_, kcAttr) => {
                             this.reloadAlignedHighlights(kcAttr, true);
                         },
-                        this.state.alignedHighligtWords
+                        this.state.highlightWordsStore
                     );
                 }
             }
@@ -427,7 +429,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                                         this.state.highlightConcId !== action.payload.concId
                                     );
                                 },
-                                this.state.alignedHighligtWords
+                                this.state.highlightWordsStore
                             );
 
                         } else {
@@ -435,7 +437,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                                 (_, kcAttr) => {
                                     this.reloadAlignedHighlights(kcAttr, false);
                                 },
-                                this.state.alignedHighligtWords
+                                this.state.highlightWordsStore
                             );
                         }
                     })
@@ -528,7 +530,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                             (_, kcAttr) => {
                                 this.reloadAlignedHighlights(kcAttr, true);
                             },
-                            this.state.alignedHighligtWords
+                            this.state.highlightWordsStore
                         );
                     }
                 }
@@ -573,7 +575,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                     (_, kcAttr) => {
                         this.reloadAlignedHighlights(kcAttr, true);
                     },
-                    this.state.alignedHighligtWords
+                    this.state.highlightWordsStore
                 );
             }
         );
@@ -637,7 +639,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         (_, kcAttr) => {
                             this.reloadAlignedHighlights(kcAttr, true);
                         },
-                        this.state.alignedHighligtWords
+                        this.state.highlightWordsStore
                     );
 
                 }
@@ -854,8 +856,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         action.payload.items,
                         false
                     );
-                    if (!Dict.hasKey(action.payload.matchPosAttr, state.alignedHighligtWords)) {
-                        state.alignedHighligtWords[action.payload.matchPosAttr] = {};
+                    if (!Dict.hasKey(action.payload.matchPosAttr, state.highlightWordsStore)) {
+                        state.highlightWordsStore[action.payload.matchPosAttr] = {};
                     }
                 });
                 this.reloadAlignedHighlights(action.payload.matchPosAttr, false);
@@ -902,6 +904,30 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         } else {
             throw new Error(`column for ${corpusId} not found`);
         }
+    }
+
+    private applyTokenHighlighting(
+            languages:Array<KWICSection>,
+            highlightItems:Array<HighlightItem>,
+            words:HighlightWords,
+            kcAttr:string
+    ):Array<KWICSection> {
+        return pipe(
+            languages,
+            List.map(
+                (lang, i) => {
+                    const colHlItems = List.filter(x => x.level === i, highlightItems);
+                    const colWordDb = Dict.filter(
+                        (v, _) => List.findIndex(
+                            x => x.value === v && x.checked, colHlItems) > -1,
+                        words
+                    );
+                    return List.size(colHlItems) > 0 ?
+                        highlightConcLineTokens(lang, colWordDb, kcAttr) :
+                        lang;
+                }
+            )
+        );
     }
 
     getViewAttrs():Array<string> {
@@ -1027,15 +1053,10 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                     state.lines = List.map(
                         line => ({
                             ...line,
-                            languages: highlightTokensInAlignedLanguages(
+                            languages: this.applyTokenHighlighting(
                                 line.languages,
-                                Dict.filter(
-                                    (v, _) => List.findIndex(
-                                        x => x.value === v && x.checked,
-                                        state.highlightItems
-                                    ) > -1,
-                                    state.alignedHighligtWords[kcAttr]
-                                ),
+                                List.filter(x => x.attr === kcAttr, state.highlightItems),
+                                state.highlightWordsStore[kcAttr],
                                 kcAttr
                             )
                         }),
@@ -1116,17 +1137,19 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             next: data => {
                 this.changeState(
                     state => {
-                        state.alignedHighligtWords[kcAttr] = data;
+                        state.highlightWordsStore[kcAttr] = Dict.mergeDict(
+                            (_, v2) => v2,
+                            data,
+                            state.highlightWordsStore[kcAttr]
+                        );
                         state.highlightConcId = state.concId;
                         state.lines = List.map(
                             line => ({
                                 ...line,
-                                languages: highlightTokensInAlignedLanguages(
+                                languages: this.applyTokenHighlighting(
                                     line.languages,
-                                    Dict.filter(
-                                        (v, _) => List.findIndex(x => x.value === v && x.checked, state.highlightItems) > -1,
-                                        state.alignedHighligtWords[kcAttr]
-                                    ),
+                                    List.filter(x => x.attr === kcAttr, state.highlightItems),
+                                    state.highlightWordsStore[kcAttr],
                                     kcAttr
                                 )
                             }),

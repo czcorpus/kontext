@@ -191,36 +191,28 @@ function highlightWordInTokens(tokens:Array<Token>, mword:string, attr:string) {
 }
 
 /**
+ * Highlight a single line of a concordance.
  *
- * @param alignedSections
- * @param words
  */
-export function highlightLineTokens(
-    alignedSections:Array<KWICSection>,
+export function highlightConcLineTokens(
+    concLine:KWICSection,
     words:HighlightWords,
     kcAttr:string
 
-):Array<KWICSection> {
-    pipe(
-        alignedSections,
-        List.forEach(
-            alignedSection => {
-                const tokens = pipe(
-                    [...alignedSection.left, ...alignedSection.kwic, ...alignedSection.right],
-                    List.flatMap(x => x.text),
-                    List.map(token => {
-                        token.h = false;
-                        return token;
-                    })
-                );
-                Dict.forEach(
-                    (attr, word) => {
-                        highlightWordInTokens(tokens, word, kcAttr);
-                    },
-                    words
-                )
-            },
-        )
+):KWICSection {
+    const tokens = pipe(
+        [...concLine.left, ...concLine.kwic, ...concLine.right],
+        List.flatMap(x => x.text),
+        List.map(token => {
+            token.h = false;
+            return token;
+        })
     );
-    return alignedSections;
+    Dict.forEach(
+        (_, word) => {
+            highlightWordInTokens(tokens, word, kcAttr);
+        },
+        words
+    )
+    return concLine;
 }
