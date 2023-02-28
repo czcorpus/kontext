@@ -201,25 +201,26 @@ export function highlightLineTokens(
     kcAttr:string
 
 ):Array<KWICSection> {
-    List.forEach(
-        alignedSection => {
-            const tokens = pipe(
-                [...alignedSection.left, ...alignedSection.kwic, ...alignedSection.right],
-                List.flatMap(x => x.text),
-                List.map(token => {
-                    token.h = false;
-                    return token;
-                })
-            );
-            Dict.forEach(
-                (attr, word) => {
-                    highlightWordInTokens(tokens, word, kcAttr);
-                },
-                words
-            )
-        },
-        alignedSections
+    pipe(
+        alignedSections,
+        List.forEach(
+            alignedSection => {
+                const tokens = pipe(
+                    [...alignedSection.left, ...alignedSection.kwic, ...alignedSection.right],
+                    List.flatMap(x => x.text),
+                    List.map(token => {
+                        token.h = false;
+                        return token;
+                    })
+                );
+                Dict.forEach(
+                    (attr, word) => {
+                        highlightWordInTokens(tokens, word, kcAttr);
+                    },
+                    words
+                )
+            },
+        )
     );
-
     return alignedSections;
 }

@@ -183,6 +183,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                             ([value, checked]) => ({
                                 level: 1,
                                 checked,
+                                loaded: false,
                                 value,
                                 attr: props.freqType as string
                             })
@@ -212,7 +213,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                             ([value, checked]) => ({
                                 level: 1,
                                 checked,
-                                value
+                                loaded: false,
+                                value,
+                                attr: props.freqType as string
                             })
                         )
                     )

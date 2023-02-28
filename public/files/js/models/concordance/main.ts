@@ -31,7 +31,7 @@ import { ConcSaveModel } from './save';
 import { Actions as ViewOptionsActions } from '../options/actions';
 import { CorpColumn, ViewConfiguration, AudioPlayerActions, AjaxConcResponse,
     ServerPagination, ServerLineData, LineGroupId, attachColorsToIds,
-    mapIdToIdWithColors, Line, TextChunk, PaginationActions, ConcViewMode, HighlightWords, ConcQueryResponse} from './common';
+    mapIdToIdWithColors, Line, TextChunk, PaginationActions, ConcViewMode, HighlightWords, ConcQueryResponse, KWICSection} from './common';
 import { Actions, ConcGroupChangePayload,
     PublishLineSelectionPayload } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
@@ -41,12 +41,55 @@ import { highlightLineTokens, importLines } from './transform';
 export interface HighlightItem {
     level:number; // 0 first corpus, 1 second corpus, ... -1: all corpora
     checked:boolean;
+    loaded:boolean;
     value:string;
 
     /**
      * attr specifies a kwic_connect pos. attribute data is based on
      */
     attr:string;
+}
+
+/**
+ *
+ * @param current
+ * @param incoming
+ * @param incomingLoaded if false then the 'loaded' status is taken
+ *  from 'current' else from 'incoming'
+ * @returns
+ */
+export function mergeHighlightItems(
+    current:Array<HighlightItem>,
+    incoming:Array<HighlightItem>,
+    incomingLoaded:boolean
+):Array<HighlightItem> {
+
+    return pipe(
+        [...current, ...incoming],
+        List.groupBy(
+            x => `${x.attr}#${x.value}`
+        ),
+        List.map(
+            ([, hi]) => ({
+                ...List.last(hi),
+                loaded: incomingLoaded ?
+                    List.last(hi).loaded :
+                    List.head(hi).loaded
+            })
+        )
+    );
+}
+
+
+function highlightTokensInAlignedLanguages(
+    languages:Array<KWICSection>,
+    words:HighlightWords,
+    kcAttr:string
+):Array<KWICSection> {
+    return [
+        List.head(languages),
+        ...highlightLineTokens(List.tail(languages), words, kcAttr)
+    ];
 }
 
 
@@ -806,7 +849,11 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             action => {
                 this.changeState(state => {
                     state.forceScroll = window.pageYOffset;
-                    state.highlightItems = action.payload.items;
+                    state.highlightItems = mergeHighlightItems(
+                        state.highlightItems,
+                        action.payload.items,
+                        false
+                    );
                     if (!Dict.hasKey(action.payload.matchPosAttr, state.alignedHighligtWords)) {
                         state.alignedHighligtWords[action.payload.matchPosAttr] = {};
                     }
@@ -960,17 +1007,27 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
     private reloadAlignedHighlights(kcAttr:string, forceReload:boolean) {
         if (List.size(this.state.corporaColumns) === 1 || List.size(this.state.highlightItems) === 0) {
             this.dispatchSideEffect(
-                Actions.SetHighlightItemsDone
+                Actions.SetHighlightItemsDone,
+                {
+                    matchPosAttr: kcAttr,
+                    items: []
+                }
             );
             return;
         }
-        if (!forceReload && Dict.size(this.state.alignedHighligtWords[kcAttr]) > 0) {
+        const toLoad = pipe(
+            this.state.highlightItems,
+            List.filter(x => !x.loaded),
+            List.map(x => ({...x, loaded: true}))  // we already prepere here for later merge
+        );
+
+        if (!forceReload && List.size(toLoad) === 0) {
             this.changeState(
                 state => {
                     state.lines = List.map(
                         line => ({
                             ...line,
-                            languages: highlightLineTokens(
+                            languages: highlightTokensInAlignedLanguages(
                                 line.languages,
                                 Dict.filter(
                                     (v, _) => List.findIndex(
@@ -987,13 +1044,17 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 }
             );
             this.dispatchSideEffect(
-                Actions.SetHighlightItemsDone
+                Actions.SetHighlightItemsDone,
+                {
+                    matchPosAttr: kcAttr,
+                    items: this.state.highlightItems
+                }
             );
             return;
         }
         const corpname = this.state.corporaColumns[1].n;
         const values = pipe(
-            this.state.highlightItems,
+            toLoad,
             List.map(x => x.value),
             x => x.join('|')
         );
@@ -1060,7 +1121,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         state.lines = List.map(
                             line => ({
                                 ...line,
-                                languages: highlightLineTokens(
+                                languages: highlightTokensInAlignedLanguages(
                                     line.languages,
                                     Dict.filter(
                                         (v, _) => List.findIndex(x => x.value === v && x.checked, state.highlightItems) > -1,
@@ -1071,10 +1132,19 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                             }),
                             state.lines
                         );
+                        state.highlightItems = mergeHighlightItems(
+                            state.highlightItems,
+                            toLoad,
+                            true
+                        );
                     }
                 );
                 this.dispatchSideEffect(
-                    Actions.SetHighlightItemsDone
+                    Actions.SetHighlightItemsDone,
+                    {
+                        matchPosAttr: kcAttr,
+                        items: this.state.highlightItems
+                    }
                 );
             },
             error: error => {
