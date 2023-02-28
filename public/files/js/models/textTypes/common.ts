@@ -182,7 +182,8 @@ export function importInitialTTData(data:TTInitialData,
                     textFieldValue: '',
                     textFieldDecoded: '',
                     isLocked: false,
-                    type: 'regexp'
+                    type: 'regexp',
+                    metaInfo: null,
                 };
 
             } else if (attrItem.textboxlength) {
@@ -199,7 +200,8 @@ export function importInitialTTData(data:TTInitialData,
                     autoCompleteHints: [],
                     values: [],
                     textFieldValue: '',
-                    type: 'text'
+                    type: 'text',
+                    metaInfo: null
                 };
 
             } else {
@@ -216,7 +218,8 @@ export function importInitialTTData(data:TTInitialData,
                         availItems:valItem.xcnt,
                         // TODO here we expect that initial data
                         // do not have any name duplicities
-                        numGrouped: 1
+                        numGrouped: 1,
+                        metaInfo: null,
                     }),
                     attrItem.Values
                 );
@@ -231,7 +234,8 @@ export function importInitialTTData(data:TTInitialData,
                         docLabel: attrItem.attr_doc_label
                     },
                     values,
-                    type: 'full'
+                    type: 'full',
+                    metaInfo: null,
                 };
             }
         });

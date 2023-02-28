@@ -95,6 +95,7 @@ export interface FullAttributeSelection {
     name:string;
     values:Array<AttributeValue>;
     type:'full';
+    metaInfo:AttrSummary;
 }
 
 export interface TextInputAttributeSelection {
@@ -108,6 +109,7 @@ export interface TextInputAttributeSelection {
     values:Array<AttributeValue>; // it supports appending values via a single text input
     textFieldValue:string;
     type:'text';
+    metaInfo:AttrSummary;
 }
 
 export interface RegexpAttributeSelection {
@@ -119,6 +121,7 @@ export interface RegexpAttributeSelection {
     textFieldDecoded:string;
     isLocked:boolean;
     type:'regexp';
+    metaInfo:AttrSummary;
 }
 
 export type AnyTTSelection = TextInputAttributeSelection|FullAttributeSelection|
