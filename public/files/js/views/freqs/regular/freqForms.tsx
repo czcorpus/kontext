@@ -126,7 +126,7 @@ export function init(
         };
 
         return (
-            <layoutViews.ValidatedItem invalid={props.flimit.isInvalid}>
+            <layoutViews.ValidatedItem invalid={props.flimit.isInvalid} errorDesc={props.flimit.errorDesc}>
                 <input id="freq-limit-input" type="text" name="flimit"
                         value={props.flimit.value}
                         style={{width: '3em'}} onChange={handleInputChange} />
@@ -139,9 +139,9 @@ export function init(
     interface TTFreqFormProps {
     }
 
-    class TTFreqForm extends React.Component<TTFreqFormProps & TTFreqFormModelState> {
+    const TTFreqForm:React.FC<TTFreqFormProps & TTFreqFormModelState> = (props) => {
 
-        getStructAttrListSplitTypes(state:TTFreqFormModelState):Array<Array<Kontext.AttrItem>> {
+        const getStructAttrListSplitTypes = (state:TTFreqFormModelState):Array<Array<Kontext.AttrItem>> => {
             const structOf = (a:Kontext.AttrItem) => a.n.split('.')[0];
             return List.reduce((reduc, curr) => {
                 const lastElement = reduc.length === 0 ? null : List.last(reduc);
@@ -161,41 +161,44 @@ export function init(
                     return reduc;
                 }
             }, [], state.structAttrList);
-        }
+        };
 
-        render():React.ReactElement<{}> {
-            return (
-                <div>
-                    <table className="form">
-                        <tbody>
-                            <tr>
-                                <th>
-                                    <label htmlFor="freq-limit-input">
-                                        {he.translate('freq__freq_limit_label')}:
-                                    </label>
-                                </th>
-                                <td>
-                                    <FreqLimitInput flimit={this.props.flimit} actionName={Actions.TTSetFLimit.name} />
-                                    <span className="note">
-                                        {'\u00a0'}(0 = {he.translate('freq__tt_freq_zero_means_show_all')})
-                                    </span>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <table className="form">
-                        <tbody>
-                            <tr>
-                                <td colSpan={2}>
-                                    <StructAttrSelect structAttrListSplitTypes={this.getStructAttrListSplitTypes(this.props)}
-                                            fttattr={this.props.fttattr} />
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            );
-        }
+        return (
+            <S.TTFreqForm>
+                <table className="form">
+                    <tbody>
+                        <tr>
+                            <th>
+                                <label htmlFor="freq-limit-input">
+                                    {he.translate('freq__freq_limit_label')}:
+                                </label>
+                            </th>
+                            <td className="flimit">
+                                <div>
+                                    <FreqLimitInput flimit={props.flimit} actionName={Actions.TTSetFLimit.name} />
+                                    <layoutViews.InlineHelp htmlClass="help-icon" noSuperscript={true}>
+                                        <span className="note">
+                                            0 = {he.translate('freq__tt_freq_zero_means_show_all')}
+                                        </span>
+                                    </layoutViews.InlineHelp>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table className="form">
+                    <tbody>
+                        <tr>
+                            <td colSpan={2}>
+                                <StructAttrSelect
+                                        structAttrListSplitTypes={getStructAttrListSplitTypes(props)}
+                                        fttattr={props.fttattr} />
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </S.TTFreqForm>
+        );
     }
 
     // -------------------- <MLAttrSelection /> --------------------------------------------

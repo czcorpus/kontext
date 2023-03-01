@@ -282,3 +282,35 @@ export const TableViewToolbar = styled.div`
         margin: 0 0.5em;
     }
 `;
+
+
+// ----------------- <TTFreqForm /> ---------------------------------------
+
+export const TTFreqForm = styled.div`
+
+    .form {
+
+        td.flimit {
+
+            div {
+                display: flex;
+                align-items: center;
+
+                .note {
+                    display: block;
+                }
+
+                .help-icon {
+                    padding-left: 0.7em;
+
+                    img {
+                        width: 0.8em;
+                        display: block;
+                    }
+                }
+
+            }
+        }
+    }
+
+`;
