@@ -606,7 +606,6 @@ class CorpusActionModel(UserActionModel):
         await self._add_corpus_related_globals(result, thecorp)
         result['uses_corp_instance'] = True
 
-        result['undo_q'] = urllib.parse.urlencode([('q', q) for q in getattr(self.args, 'q')[:-1]])
         result['shuffle_min_result_warning'] = settings.get_int(
             'global', 'shuffle_min_result_warning', 100000)
 

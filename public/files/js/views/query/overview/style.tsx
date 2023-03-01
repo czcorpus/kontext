@@ -30,6 +30,29 @@ export const QueryFormOverlay = styled.div`
 
 `;
 
+// -------------------------- <QueryOverviewLinkSpan /> ------------------
+
+export const QueryOverviewLinkSpan = styled.span`
+
+    .separ {
+        display: inline-block;
+        margin-left: 0.3em;
+        margin-right: 0.3em;
+        font-size: 1.3em;
+        font-weight: normal;
+    }
+
+    a {
+        color: ${theme.colorLogoBlue};
+        text-decoration: none;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+`;
+
+
 // -------------------------- <ExecutionOptionsFieldset /> -------------------
 
 export const ExecutionOptionsFieldset = styled.div`

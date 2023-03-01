@@ -33,6 +33,7 @@
         "global__failed_to_load_query_overview": "Failed to load query overview",
         "global__query_overview": "Query overview",
         "global__num_of_hits": "Num. of hits",
+        "global__details": "Details",
         "global__search_engine_parameters": "Search engine parameters",
         "global__operation": "Operation",
         "global__user_entry": "User entry",
