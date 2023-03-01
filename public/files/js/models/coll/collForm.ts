@@ -238,7 +238,7 @@ export class CollFormModel extends StatelessModel<CollFormModelState> {
 
         } else {
             state.cminfreq.isInvalid = true;
-            state.cminfreq.errorDesc = this.pageModel.translate('coll__invalid_gz_number_value');
+            state.cminfreq.errorDesc = this.pageModel.translate('global__invalid_gz_number_value');
         }
 
         if (this.validateGzNumber(state.cminbgr.value)) {
@@ -246,7 +246,7 @@ export class CollFormModel extends StatelessModel<CollFormModelState> {
 
         } else {
             state.cminbgr.isInvalid = true;
-            state.cminbgr.errorDesc = this.pageModel.translate('coll__invalid_gz_number_value');
+            state.cminbgr.errorDesc = this.pageModel.translate('global__invalid_gz_number_value');
         }
     }
 

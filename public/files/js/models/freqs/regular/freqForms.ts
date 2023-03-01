@@ -109,13 +109,13 @@ export class MLFreqFormModel extends StatelessModel<MLFreqFormModelState> {
         );
         this.pageModel = pageModel;
 
-        this.addActionHandler<typeof Actions.MLSetFLimit>(
-            Actions.MLSetFLimit.name,
+        this.addActionHandler(
+            Actions.MLSetFLimit,
             (state, action) => {state.flimit.value = action.payload.value}
         );
 
-        this.addActionHandler<typeof Actions.MLAddLevel>(
-            Actions.MLAddLevel.name,
+        this.addActionHandler(
+            Actions.MLAddLevel,
             (state, action) => {
                 if (state.mlxattr.length < state.maxNumLevels) {
                     this.addLevel(state);
@@ -126,38 +126,38 @@ export class MLFreqFormModel extends StatelessModel<MLFreqFormModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.MLRemoveLevel>(
-            Actions.MLRemoveLevel.name,
+        this.addActionHandler(
+            Actions.MLRemoveLevel,
             (state, action) => this.removeLevel(state, action.payload.levelIdx)
         );
 
-        this.addActionHandler<typeof Actions.MLChangeLevel>(
-            Actions.MLChangeLevel.name,
+        this.addActionHandler(
+            Actions.MLChangeLevel,
             (state, action) => this.changeLevel(state, action.payload.levelIdx, action.payload.direction)
         );
 
-        this.addActionHandler<typeof Actions.MLSetMlxAttr>(
-            Actions.MLSetMlxAttr.name,
+        this.addActionHandler(
+            Actions.MLSetMlxAttr,
             (state, action) => {state.mlxattr[action.payload.levelIdx] = action.payload.value}
         );
 
-        this.addActionHandler<typeof Actions.MLSetMlxiCase>(
-            Actions.MLSetMlxiCase.name,
+        this.addActionHandler(
+            Actions.MLSetMlxiCase,
             (state, action) => {state.mlxicase[action.payload.levelIdx] = !state.mlxicase[action.payload.levelIdx]}
         );
 
-        this.addActionHandler<typeof Actions.MLSetMlxctxIndex>(
-            Actions.MLSetMlxctxIndex.name,
+        this.addActionHandler(
+            Actions.MLSetMlxctxIndex,
             (state, action) => {state.mlxctxIndices[action.payload.levelIdx] = Number(action.payload.value)}
         );
 
-        this.addActionHandler<typeof Actions.MLSetAlignType>(
-            Actions.MLSetAlignType.name,
+        this.addActionHandler(
+            Actions.MLSetAlignType,
             (state, action) => {state.alignType[action.payload.levelIdx] = action.payload.value}
         );
 
-        this.addActionHandler<typeof Actions.MLSubmit>(
-            Actions.MLSubmit.name,
+        this.addActionHandler(
+            Actions.MLSubmit,
             (state, action) => {
                 const err = this.validateForm(state);
                 if (!err) {
@@ -177,7 +177,7 @@ export class MLFreqFormModel extends StatelessModel<MLFreqFormModelState> {
 
         } else {
             state.flimit.isInvalid = true;
-            return new Error(this.pageModel.translate('coll__invalid_gz_number_value'));
+            return new Error(this.pageModel.translate('global__invalid_gz_number_value'));
         }
     }
 
@@ -197,10 +197,22 @@ export class MLFreqFormModel extends StatelessModel<MLFreqFormModelState> {
 
     private changeLevel(state:MLFreqFormModelState, levelIdx:number, direction:string):void {
         const shift = direction === 'down' ? 1 : -1;
-        [state.mlxattr[levelIdx], state.mlxattr[levelIdx + shift]] = [state.mlxattr[levelIdx + shift], state.mlxattr[levelIdx]];
-        [state.mlxicase[levelIdx], state.mlxicase[levelIdx + shift]] = [state.mlxicase[levelIdx + shift], state.mlxicase[levelIdx]];
-        [state.mlxctxIndices[levelIdx], state.mlxctxIndices[levelIdx + shift]] = [state.mlxctxIndices[levelIdx + shift], state.mlxctxIndices[levelIdx]];
-        [state.alignType[levelIdx], state.alignType[levelIdx + shift]] = [state.alignType[levelIdx + shift], state.alignType[levelIdx]]
+        [state.mlxattr[levelIdx], state.mlxattr[levelIdx + shift]] = [
+            state.mlxattr[levelIdx + shift],
+            state.mlxattr[levelIdx]
+        ];
+        [state.mlxicase[levelIdx], state.mlxicase[levelIdx + shift]] = [
+            state.mlxicase[levelIdx + shift],
+            state.mlxicase[levelIdx]
+        ];
+        [state.mlxctxIndices[levelIdx], state.mlxctxIndices[levelIdx + shift]] = [
+            state.mlxctxIndices[levelIdx + shift],
+            state.mlxctxIndices[levelIdx]
+        ];
+        [state.alignType[levelIdx], state.alignType[levelIdx + shift]] = [
+            state.alignType[levelIdx + shift],
+            state.alignType[levelIdx]
+        ]
     }
 
     private submit(state:MLFreqFormModelState):void {
@@ -266,8 +278,8 @@ export class TTFreqFormModel extends StatelessModel<TTFreqFormModelState> {
         );
         this.pageModel = pageModel;
 
-        this.addActionHandler<typeof Actions.TTSetFttAttr>(
-            Actions.TTSetFttAttr.name,
+        this.addActionHandler(
+            Actions.TTSetFttAttr,
             (state, action) => {
                 if (state.fttattr.includes(action.payload.value)) {
                     state.fttattr = List.removeValue(action.payload.value, state.fttattr);
@@ -278,15 +290,27 @@ export class TTFreqFormModel extends StatelessModel<TTFreqFormModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.TTSetFLimit>(
-            Actions.TTSetFLimit.name,
+        this.addActionHandler(
+            Actions.TTSetFLimit,
             (state, action) => {
                 state.flimit.value = action.payload.value;
+                const err = this.validateFlimit(state);
+                if (err instanceof Error) {
+                    state.flimit.isInvalid = true;
+                    state.flimit.errorDesc = err.message;
+
+                } else {
+                    state.flimit.isInvalid = false;
+                    state.flimit.errorDesc = undefined;
+                }
+            },
+            (state, action, dispatch) => {
+
             }
         );
 
-        this.addActionHandler<typeof Actions.TTSubmit>(
-            Actions.TTSubmit.name,
+        this.addActionHandler(
+            Actions.TTSubmit,
             (state, action) => {
                 const err = this.validateForm(state);
                 if (!err) {
@@ -300,15 +324,23 @@ export class TTFreqFormModel extends StatelessModel<TTFreqFormModelState> {
         );
     }
 
+    private validateFlimit(state:TTFreqFormModelState):Error|null {
+        if (!validateNumber(state.flimit.value) || parseInt(state.flimit.value) < 0) {
+            return new Error(this.pageModel.translate('global__invalid_nneg_number_value'));
+        }
+        return null;
+    }
+
     private validateForm(state:TTFreqFormModelState):Error|null {
-        if (validateNumber(state.flimit.value) && parseInt(state.flimit.value) >= 0) {
+        const validateError = this.validateFlimit(state);
+        if (!validateError) {
             state.flimit.isInvalid = false;
-            return null;
 
         } else {
             state.flimit.isInvalid = true;
-            return new Error(this.pageModel.translate('coll__invalid_gz_number_value'));
+            return validateError;
         }
+        return null;
     }
 
     private submit(state:TTFreqFormModelState):void {
