@@ -48,12 +48,16 @@ def order_favitems(mysql_db: mysql.connector.MySQLConnection, dry_run: bool):
         print(orders)
 
     else:
-        cursor.executemany(
-            "UPDATE kontext_corpus_user_fav_item "
-            "SET corpus_order = %s"
-            "WHERE user_fav_corpus_id = %s AND corpus_name = %s",
-            orders,
-        )
+        for order_item in orders:
+            try:
+                cursor.execute(
+                    "UPDATE kontext_corpus_user_fav_item "
+                    "SET corpus_order = %s "
+                    "WHERE user_fav_corpus_id = %s AND corpus_name = %s",
+                    order_item,
+                )
+            except Exception as ex:
+                print('Failed to update items {}: {}'.format(order_item, ex))
         mysql_db.commit()
 
     cursor.close()
