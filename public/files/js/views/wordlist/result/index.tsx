@@ -135,8 +135,6 @@ export function init({dispatcher, utils, wordlistSaveViews,
                 <td className="center">
                     <ResultRowPosFilter usesStructAttr={props.usesStructAttr}
                             word={props.str} />
-                    {'\u00a0/\u00a0'}
-                    <span className="hint" title={utils.translate('wordlist__filter_not_avail')}>n</span>
                 </td>
                 <td>
                     {props.str}
