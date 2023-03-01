@@ -73,6 +73,20 @@ export const ConcordanceView = styled.div`
             text-align: center;
         }
     }
+
+    .tooltip-box.conc-detail {
+        max-width: 40em;
+        min-width: 30em;
+        max-height: 80%;
+    }
+
+    .tooltip-box.refs-detail {
+        min-width: 40em;
+        max-height: 80%;
+        display: flex;
+        justify-content: center;
+        overflow: auto;
+    }
 `;
 
 // ----------- <ConcVerticalBar /> -----------------------
