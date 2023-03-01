@@ -125,6 +125,10 @@ export interface FreqChartsModelState extends BaseFreqModelState {
     downloadFormat:{[sourceId:string]:Kontext.ChartExportFormat};
 }
 
+export interface FreqViewProps {
+    userEmail:string;
+}
+
 export function isFreqChartsModelState(s:BaseFreqModelState):s is FreqChartsModelState {
     return s['type'] != undefined && s['dataKey'] != undefined &&
         s['fmaxitems'] != undefined && s['dtFormat'] != undefined &&

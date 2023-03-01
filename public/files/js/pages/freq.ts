@@ -428,7 +428,7 @@ class FreqPage {
                 this.layoutModel.renderReactComponent(
                     freqResultView.FreqResultView,
                     window.document.getElementById('result-mount'),
-                    {} as FreqDataRowsModelState
+                    {userEmail: this.layoutModel.getConf<string>('userEmail')}
                 );
             break;
             case '2-attribute':
