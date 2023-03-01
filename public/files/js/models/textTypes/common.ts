@@ -201,7 +201,7 @@ export function importInitialTTData(data:TTInitialData,
                     values: [],
                     textFieldValue: '',
                     type: 'text',
-                    metaInfo: null
+                    metaInfo: null,
                 };
 
             } else {
