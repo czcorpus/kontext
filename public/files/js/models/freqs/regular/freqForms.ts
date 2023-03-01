@@ -27,11 +27,11 @@ import { FreqServerArgs } from './common';
 import { AlignTypes } from '../twoDimension/common';
 import { Actions } from './actions';
 import { FreqChartsAvailableOrder } from '../common';
+import { validateNumber } from '../../base';
 
 
 export interface FreqFormInputs {
     fttattr:Array<string>;
-    ftt_include_empty:boolean;
     flimit:string;
     freq_sort:FreqChartsAvailableOrder;
 
@@ -207,7 +207,6 @@ export class MLFreqFormModel extends StatelessModel<MLFreqFormModelState> {
         const args:FreqServerArgs = {
             ...this.pageModel.getConcArgs(),
             freq_type: 'tokens',
-            ftt_include_empty: undefined,
             fpage: 1,
             flimit: parseInt(state.flimit.value),
             ...pipe(
@@ -247,7 +246,6 @@ export class MLFreqFormModel extends StatelessModel<MLFreqFormModelState> {
 export interface TTFreqFormModelState {
     structAttrList:Array<Kontext.AttrItem>;
     fttattr:Array<string>;
-    fttIncludeEmpty:boolean;
     flimit:Kontext.FormValue<string>;
     freqSort:string;
 }
@@ -262,7 +260,6 @@ export class TTFreqFormModel extends StatelessModel<TTFreqFormModelState> {
             {
                 structAttrList: props.structAttrList,
                 fttattr: props.fttattr,
-                fttIncludeEmpty: props.ftt_include_empty,
                 flimit: {value: props.flimit, isInvalid: false, isRequired: true},
                 freqSort: props.freq_sort,
             }
@@ -281,14 +278,11 @@ export class TTFreqFormModel extends StatelessModel<TTFreqFormModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.TTSetIncludeEmpty>(
-            Actions.TTSetIncludeEmpty.name,
-            (state, action) => {state.fttIncludeEmpty = !state.fttIncludeEmpty}
-        );
-
         this.addActionHandler<typeof Actions.TTSetFLimit>(
             Actions.TTSetFLimit.name,
-            (state, action) => {state.flimit.value = action.payload.value}
+            (state, action) => {
+                state.flimit.value = action.payload.value;
+            }
         );
 
         this.addActionHandler<typeof Actions.TTSubmit>(
@@ -307,7 +301,7 @@ export class TTFreqFormModel extends StatelessModel<TTFreqFormModelState> {
     }
 
     private validateForm(state:TTFreqFormModelState):Error|null {
-        if (validateGzNumber(state.flimit.value)) {
+        if (validateNumber(state.flimit.value) && parseInt(state.flimit.value) >= 0) {
             state.flimit.isInvalid = false;
             return null;
 
@@ -323,7 +317,6 @@ export class TTFreqFormModel extends StatelessModel<TTFreqFormModelState> {
             freq_type: 'text-types',
             fttattr: List.head(state.fttattr),
             fttattr_async: List.tail(state.fttattr),
-            ftt_include_empty: state.fttIncludeEmpty,
             flimit: parseInt(state.flimit.value),
             fpage: 1,
             freq_sort: state.freqSort,

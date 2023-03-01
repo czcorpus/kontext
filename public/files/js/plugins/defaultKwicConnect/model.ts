@@ -549,7 +549,6 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
             freq_sort: 'freq',
             fmaxitems: KwicConnectModel.UNIQ_KWIC_FREQ_PAGESIZE,
             freqlevel: undefined,
-            ftt_include_empty: undefined,
             format: 'json'
         };
         return this.pluginApi.ajax$<ttResponse.FreqData>(

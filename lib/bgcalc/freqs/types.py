@@ -32,7 +32,6 @@ class FreqCalcArgs:
     flimit: int
     fcrit: Union[List[str], Tuple[str, ...]]
     freq_sort: str
-    ftt_include_empty: int  # 0, 1  # TODO should be bool
     rel_mode: int  # 0, 1 # TODO should be bool
     fmaxitems: int
     subcname: Optional[str] = None

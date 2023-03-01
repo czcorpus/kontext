@@ -191,7 +191,6 @@ class Args(UserActionArgs):
     usearf: int = field(default=0, metadata=mk_metdata())
     collpage: int = field(default=1, metadata=mk_metdata())
     fpage: int = field(default=1, metadata=mk_metdata())
-    ftt_include_empty: int = field(default=0, metadata=mk_metdata())
     ref_usesubcorp: str = field(default='', metadata=mk_metdata())
     wlsort: str = field(default='', metadata=mk_metdata())
     keywords: str = field(default='', metadata=mk_metdata())

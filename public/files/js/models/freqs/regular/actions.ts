@@ -264,11 +264,6 @@ export class Actions {
         name: 'FREQ_TT_SET_FTTATTR'
     };
 
-    static TTSetIncludeEmpty:Action<{
-    }> = {
-        name: 'FREQ_TT_SET_FTT_INCLUDE_EMPTY'
-    };
-
     static TTSetFLimit:Action<{
         value:string;
     }> = {
