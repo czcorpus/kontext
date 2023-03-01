@@ -41,7 +41,6 @@ def _cache_file_path(args: FreqCalcArgs):
         str(args.fcrit),
         str(args.flimit),
         str(args.freq_sort),
-        str(args.ftt_include_empty),
         str(args.rel_mode),
         str(args.collator_locale),
     ])

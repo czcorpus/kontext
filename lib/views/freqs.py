@@ -205,7 +205,6 @@ async def _freqs(
         flimit=flimit,
         fcrit=fcrit,
         freq_sort=freq_sort,
-        ftt_include_empty=amodel.args.ftt_include_empty,
         rel_mode=rel_mode,
         collator_locale=corp_info.collator_locale,
         fmaxitems=amodel.args.fmaxitems,

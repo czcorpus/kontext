@@ -249,7 +249,7 @@ class PyConc(manatee.Concordance):
         return ans
 
     def xfreq_dist(
-            self, crit: str, limit: int = 1, sortkey: str = 'freq', ftt_include_empty: int = 0, rel_mode: int = 0,
+            self, crit: str, limit: int = 1, sortkey: str = 'freq', rel_mode: int = 0,
             collator_locale: str = 'en_US') -> FreqData:
         """
         Calculates data (including data for visual output) of a frequency distribution
@@ -258,9 +258,8 @@ class PyConc(manatee.Concordance):
         arguments:
         crit -- specified criteria (CQL)
         limit -- str type!, minimal frequency accepted, this value is exclusive! (i.e. accepted
-                 values must be greater than the limit)
+                 values must be greater than the limit); it can be also 0
         sortkey -- a key according to which the distribution will be sorted
-        ftt_include_empty -- str, TODO
         rel_mode -- {0, 1} (0 for structural attrs. , 1 for positional ones ??)
         """
 
@@ -318,7 +317,7 @@ class PyConc(manatee.Concordance):
                 freq=f,
                 norm=nf,
                 rel=round(f / nf * 1e6, 3)))
-        if ftt_include_empty and limit == 0 and '.' in attrs[0]:
+        if limit == 0 and '.' in attrs[0]:
             attr = self.pycorp.get_attr(attrs[0])
             all_vals = [attr.id2str(i) for i in range(attr.id_range())]
             used_vals = [line.Word[0]['n'] for line in lines]
@@ -337,7 +336,7 @@ class PyConc(manatee.Concordance):
         except ValueError:
             int_sortkey = None
 
-        if int_sortkey is not None and int_sortkey >= 0 and int_sortkey < len(lines[0].Word):
+        if int_sortkey is not None and 0 <= int_sortkey < len(lines[0].Word):
             lines = l10n.sort(lines, loc=collator_locale, key=lambda v: v.Word[int_sortkey]['n'])
         else:
             if sortkey not in ('freq', 'rel'):

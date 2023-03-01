@@ -56,8 +56,7 @@ def create_freq_calc_args(
         flimit=flimit_override if flimit_override is not None else pquery.min_freq,
         q=raw_queries[conc_id],
         collator_locale=collator_locale,
-        rel_mode=0 if '.' in attr else 1,
-        ftt_include_empty=False)
+        rel_mode=0 if '.' in attr else 1)
 
 
 @stored_to_fs

@@ -134,25 +134,6 @@ export function init(
         );
     };
 
-    // ---------------------- <IncludeEmptyCheckbox /> --------------------------------------------
-
-    interface IncludeEmptyCheckboxProps {
-        fttIncludeEmpty:boolean;
-    }
-
-    const IncludeEmptyCheckbox:React.FC<IncludeEmptyCheckboxProps> = (props) => {
-
-        const handleCheckboxChange = () => {
-            dispatcher.dispatch<typeof Actions.TTSetIncludeEmpty>({
-                name: Actions.TTSetIncludeEmpty.name,
-                payload: {}
-            });
-        };
-
-        return <input id="include-empty-checkbox" type="checkbox" checked={props.fttIncludeEmpty}
-                    onChange={handleCheckboxChange} />;
-    };
-
     // ---------------------- <TTFreqForm /> --------------------------------------------
 
     interface TTFreqFormProps {
@@ -195,16 +176,9 @@ export function init(
                                 </th>
                                 <td>
                                     <FreqLimitInput flimit={this.props.flimit} actionName={Actions.TTSetFLimit.name} />
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>
-                                    <label htmlFor="include-empty-checkbox">
-                                        {he.translate('freq__incl_no_hits_cats_label')}:
-                                    </label>
-                                </th>
-                                <td>
-                                    <IncludeEmptyCheckbox fttIncludeEmpty={this.props.fttIncludeEmpty} />
+                                    <span className="note">
+                                        {'\u00a0'}(0 = {he.translate('freq__tt_freq_zero_means_show_all')})
+                                    </span>
                                 </td>
                             </tr>
                         </tbody>

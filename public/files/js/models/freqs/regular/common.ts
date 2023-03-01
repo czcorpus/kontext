@@ -100,7 +100,6 @@ export interface BaseFreqModelState {
     sortColumn:{[sourceId:string]:FreqChartsAvailableOrder};
     freqCrit:Array<AttrItem>;
     freqCritAsync:Array<AttrItem>;
-    ftt_include_empty:boolean;
     isActive:boolean;
     isBusy:{[sourceId:string]:boolean};
     shareWidgetIsBusy:boolean;
@@ -149,7 +148,6 @@ export interface FreqServerArgs extends ConcServerArgs {
     freqlevel:number;
     freq_sort:string;
     freq_type:BasicFreqModuleType;
-    ftt_include_empty:boolean;
     fttattr?:string|Array<string>;
     fttattr_async?:string|Array<string>;
     fcrit?:string;
@@ -163,7 +161,6 @@ export interface MulticritFreqServerArgs extends ConcServerArgs {
     freqlevel:number;
     freq_sort:string;
     freq_type:BasicFreqModuleType;
-    ftt_include_empty:boolean;
     fcrit:Array<string>;
 }
 
