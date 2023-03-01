@@ -40,6 +40,7 @@ export interface CommonFreqComponents {
         url:string;
         sourceId:string;
         isBusy:boolean;
+        email:string;
     }>;
 }
 
@@ -147,11 +148,12 @@ export function init(dispatcher:IActionDispatcher, he:ComponentHelpers):CommonFr
         url:string;
         sourceId:string;
         isBusy:boolean;
+        email:string;
 
     }> = (props) => {
 
         const [{recipient}, changeState] = React.useState({
-            recipient: newFormValue<string>('', true)
+            recipient: newFormValue<string>(props.email, true)
         });
 
         const copyToClipboard = () => {
