@@ -682,8 +682,7 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
     tmp_out = dict(
         uses_corp_instance=True,
         corpname=amodel.args.corpname,
-        usesubcorp=amodel.args.usesubcorp,
-        undo_q=[]
+        usesubcorp=amodel.args.usesubcorp
     )
 
     tmp_out['AttrList'] = [{

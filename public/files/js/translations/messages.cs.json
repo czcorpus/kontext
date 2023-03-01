@@ -33,6 +33,7 @@
         "global__failed_to_load_query_overview": "Nepodařilo se nahrát podrobnosti dotazu",
         "global__query_overview": "Popis dotazu",
         "global__num_of_hits": "Počet výskytů",
+        "global__details": "Podrobnosti",
         "global__search_engine_parameters": "Parametry korpusového vyhledávače",
         "global__operation": "Operace",
         "global__user_entry": "Uživatelský vstup",

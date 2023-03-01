@@ -36,7 +36,7 @@ class ConcordanceDefault:
 
     curr_conc: ConcMenuItem = field(
         default_factory=lambda: ConcMenuItem(
-            MainMenu.CONCORDANCE('current-concordance'), 'Current concordance', 'view')
+            MainMenu.CONCORDANCE('current-concordance'), 'Show', 'view')
         .enable_if(lambda d: d.get('current_action', None) != 'view')
     )
 
@@ -52,18 +52,9 @@ class ConcordanceDefault:
         default_factory=lambda: EventTriggeringItem(
             MainMenu.CONCORDANCE('sample'), 'Sample', 'MAIN_MENU_SHOW_SAMPLE', key_code=77).mark_indirect())
 
-    query_overview: EventTriggeringItem = field(
-        default_factory=lambda: EventTriggeringItem(
-            MainMenu.CONCORDANCE('query-overview'), 'Query overview', 'MAIN_MENU_OVERVIEW_SHOW_QUERY_INFO'))
-
     # we need lazy evaluation for archive_conc (all the result args must be ready)
     archive_conc: Callable[[OutData], Optional[EventTriggeringItem]] = field(
         default_factory=lambda: _create_archive_conc_item)
-
-    query_undo: EventTriggeringItem = field(
-        default_factory=lambda: EventTriggeringItem(
-            MainMenu.CONCORDANCE('undo'), 'Undo', 'MAIN_MENU_UNDO_LAST_QUERY_OP'
-        ).enable_if(lambda d: len(d.get('undo_q', [])) > 0))
 
 
 @dataclass

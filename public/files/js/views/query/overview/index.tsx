@@ -417,6 +417,22 @@ export function init({
         );
     };
 
+    // ------------------------ <QueryOverviewButton /> ---------------------------
+
+    const QueryOverviewButton:React.FC<{}> = (props) => {
+
+        const handleQueryOverview = () => {
+            dispatcher.dispatch(MainMenuActions.OverviewShowQueryInfo);
+        };
+
+        return (
+            <S.QueryOverviewLinkSpan>
+                <strong className="separ">~</strong>
+                <a title={he.translate('global__query_overview')} onClick={handleQueryOverview}>{he.translate('global__details')}</a>
+            </S.QueryOverviewLinkSpan>
+        );
+    };
+
 
     // ------------------------ <QueryOverview /> --------------------------------
 
@@ -552,6 +568,7 @@ export function init({
                         </S.GroupIndicator> :
                         null
                     }
+                    <QueryOverviewButton />
                 </Style_QueryOverviewBarUL>
             </div>
         );
