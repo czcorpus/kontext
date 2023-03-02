@@ -248,6 +248,15 @@ class PyConc(manatee.Concordance):
             ans[value] = cnt
         return ans
 
+    def compute_ARF(self):
+        """
+        Calculate ARF. Here we override the method to prevent
+        crazy negative numbers returned by Manatee in case
+        of aligned corpora with empty secondary query and
+        selected "include empty" option.
+        """
+        return max(super().compute_ARF(), 0)
+
     def xfreq_dist(
             self, crit: str, limit: int = 1, sortkey: str = 'freq', rel_mode: int = 0,
             collator_locale: str = 'en_US') -> FreqData:

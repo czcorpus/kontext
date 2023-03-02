@@ -301,7 +301,7 @@
         "concview__ipm_rel_to_the_{subcname}": "za podkorpus \"{subcname}\"",
         "concview__ipm_rel_to_adhoc": "za podmnožico, določeno z izbranimi vrstami besedil",
         "concview__arf_help": "Povprečna zmanjšana frekvenca",
-        "concview__arf_not_avail": "ARF ni dostopen za podkorpuse",
+        "concview__arf_not_avail": "ARF ni dostopen",
         "concview__change_display_settings": "Možnosti prikaza",
         "concview__failed_to_play_audio": "Napaka pri predvajanju zvočne datoteke",
         "wordlist__cannot_save_empty": "Praznega rezultata ni mogoče shraniti.",
