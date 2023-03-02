@@ -923,18 +923,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                                 valueEndIdx: q.position[1]
                             }),
                             queryObj.queryParsed
-                        ) :
-                        List.map(
-                            attr => ({
-                                value: attr.value ?
-                                    attr.value.trim().replace(/^"(.+)"$/, '$1') : '',
-                                attrStartIdx: attr.rangeAttr ? attr.rangeAttr[0] : undefined,
-                                attrEndIdx: attr.rangeAttr ? attr.rangeAttr[1] : undefined,
-                                valueStartIdx: attr.rangeVal[0],
-                                valueEndIdx: attr.rangeVal[1]
-                            }),
-                            queryObj.parsedAttrs
-                        );
+                        ) : [];
 
                 this.changeState(state => {
                     state.suggestionsLoading[sourceId] = {};

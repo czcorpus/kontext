@@ -24,6 +24,8 @@ import { List, tuple, pipe, Dict } from 'cnc-tskit';
 import { TokenSuggestions } from '../query/query';
 
 
+type FormattedNonTerm = 'Position'|'WithinOrContaining'|'GlobPart';
+
 /**
  * CharsRule represents a pointer to the original
  * CQL query specifying a single rule applied to a
@@ -94,9 +96,15 @@ export interface ParsedPQItem {
 
     private wrapLongQuery:boolean;
 
-    private readonly attrHelper:IAttrHelper;
+    /**
+     * During parsing, we store different non-terminals here
+     * so we can later analyze them and if required, break
+     * a long single-line query into several lines (mainly for
+     * displaying the query in query history)
+     */
+    private formattingBlocks:Array<[FormattedNonTerm, CharsRule]>;
 
-    private posCounter:number;
+    private readonly attrHelper:IAttrHelper;
 
     private readonly wrapRange:(startIdx:number, endIdx:number)=>[string, string];
 
@@ -114,8 +122,8 @@ export interface ParsedPQItem {
         this.he = he;
         this.attrHelper = attrHelper;
         this.wrapLongQuery = wrapLongQuery;
+        this.formattingBlocks = [];
         this.wrapRange = wrapRange;
-        this.posCounter = 0;
     }
 
     private mkKey(i:number, j:number):string {
@@ -428,13 +436,7 @@ export interface ParsedPQItem {
                                 }
                             });
                         });
-                        if (this.wrapLongQuery && this.posCounter % 3 == 0) {
-                            const range = this.convertRange(nonTerm.from, nonTerm.to, chunks);
-                            if (Array.isArray(inserts[range[0]]) && List.size(inserts[range[0]]) > 0) {
-                                inserts[range[0]].push('<br />');
-                            }
-                        }
-                        this.posCounter += 1;
+                        this.formattingBlocks.push(tuple('Position', nonTerm));
                     break;
                     case 'Structure':
                         const attrNamesInStruct = this.findRuleInRange('AttName', nonTerm.from, nonTerm.to);
@@ -455,11 +457,11 @@ export interface ParsedPQItem {
                             }
                         });
                     break;
-                    case 'WithinContainingPart':
-                        if (this.wrapLongQuery) {
-                            const range = this.convertRange(nonTerm.from, nonTerm.to, chunks);
-                            inserts[range[0]].push('<br />');
-                        }
+                    case 'WithinOrContaining':
+                        this.formattingBlocks.push(['WithinOrContaining', nonTerm])
+                    break;
+                    case 'GlobPart':
+                        this.formattingBlocks.push(['GlobPart', nonTerm])
                     break;
                     case 'RgLookOperator': {
                         const range = this.convertRange(nonTerm.from, nonTerm.to, chunks);
@@ -470,6 +472,34 @@ export interface ParsedPQItem {
                 }
             })
         );
+
+        if (this.wrapLongQuery) {
+            const totalPos = pipe(
+                this.formattingBlocks,
+                List.filter(([type, ]) => type === 'Position'),
+                List.size()
+            );
+            pipe(
+                this.formattingBlocks,
+                List.reversed(),
+                List.reduce(
+                    ({numPos}, [type, item], i) => {
+                        const range = this.convertRange(item.from, item.to, chunks);
+                        if (numPos > 0 && numPos % 3 == 0 ||
+                                totalPos > 3 && (
+                                    type === 'WithinOrContaining' ||
+                                    type === 'GlobPart')) {
+                            inserts[range[0]].push('<br />')
+                        }
+                        return {
+                            numPos: type === 'Position' ? numPos + 1 : numPos
+                        };
+                    },
+                    {numPos: 0}
+                )
+            );
+        }
+
         const ans:Array<string> = [];
         for (let i = 0; i < chunks.length; i += 1) {
             inserts[i].forEach(v => ans.push(v));
