@@ -552,13 +552,18 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         this.addActionHandler(
             Actions.SetAttrSummary,
             action => {
-                this.changeState(state => {
-                    const index = List.findIndex(
-                        v => v.name === action.payload.attrName,
-                        state.attributes,
-                    );
-                    state.attributes[index].metaInfo = action.payload.value;
-                });
+                const index = List.findIndex(
+                    v => v.name === action.payload.attrName,
+                    this.state.attributes,
+                );
+                if (index === -1) {
+                    console.warn(`LiveAttrs: attribute '${action.payload.attrName}' not found`);
+
+                } else {
+                    this.changeState(state => {
+                        state.attributes[index].metaInfo = action.payload.value;
+                    });
+                }
             }
         );
 
