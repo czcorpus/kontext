@@ -709,25 +709,20 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
     }
 
     private importFilter(data:ServerRefineResponse['attr_values']):SelectionFilterMap {
-        let ans:SelectionFilterMap = {};
-        Dict.forEach(
-            (item, k) => {
-                if (k.indexOf('.') > 0 && Array.isArray(item)) { // is the key an attribute? (there are other values there too)
-                    ans[k] = List.map(
-                        ([,ident, v, numGrouped, availItems]) => ({
-                            ident,
-                            v,
-                            lock: false,
-                            availItems,
-                            numGrouped
-                        }),
-                        item
-                    );
-                }
-            },
-            data
+        return pipe(
+            data,
+            Dict.filter((item, k) => k.indexOf('.') > 0 && Array.isArray(item)),
+            Dict.map((item, k) => List.map(
+                ([,ident, v, numGrouped, availItems]) => ({
+                    ident,
+                    v,
+                    lock: false,
+                    availItems,
+                    numGrouped
+                }),
+                item as TextTypes.AvailItemsList
+            ))
         );
-        return ans;
     }
 
     private loadBibInfo(bibId:string):Observable<ServerBibInfoResponse> {
