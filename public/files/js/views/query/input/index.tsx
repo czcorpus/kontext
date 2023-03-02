@@ -299,21 +299,24 @@ export function init({
 
     const TRIncludeEmptySelector:React.FC<TRIncludeEmptySelectorProps> = (props) => {
 
-        const handleCheckbox = () => {
-            dispatcher.dispatch<typeof Actions.QueryInputSetIncludeEmpty>({
-                name: Actions.QueryInputSetIncludeEmpty.name,
-                payload: {
+        const handleCheckbox = (value) => {
+            console.log('change event')
+            dispatcher.dispatch(
+                Actions.QueryInputSetIncludeEmpty,
+                {
                     corpname: props.corpname,
-                    value: !props.value
+                    value
                 }
-            });
+            );
         };
 
         return (
             <S.TRIncludeEmptySelector>
                 <label>
                     {he.translate('query__include_empty_aligned')}:{'\u00a0'}
-                    <input type="checkbox" checked={props.value}
+                    <layoutViews.ToggleSwitch
+                        id={`include-empty-toggle-${props.corpname}`}
+                        checked={props.value}
                         onChange={handleCheckbox} />
                 </label>
             </S.TRIncludeEmptySelector>
