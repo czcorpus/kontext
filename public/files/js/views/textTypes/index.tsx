@@ -26,7 +26,6 @@ import * as PluginInterfaces from '../../types/plugins';
 import * as Kontext from '../../types/kontext';
 import * as TextTypes from '../../types/textTypes';
 import { TTSelOps } from '../../models/textTypes/selectionOps';
-import * as CoreViews from '../../types/coreViews';
 import { TextTypesModelState } from '../../models/textTypes/main';
 import { Actions } from '../../models/textTypes/actions';
 import { WidgetView } from '../../models/textTypes/common';
@@ -184,7 +183,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         attrObj:TextTypes.AnyTTSelection;
         widget:{widget:WidgetView; active:boolean};
         isMinimized:boolean;
-        metaInfoHelpVisible:boolean;
         hasExtendedInfo:boolean;
         metaInfo:TextTypes.AttrSummary;
         textInputPlaceholder:string;
@@ -404,9 +402,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                                 attrObj={attrObj}
                                 widget={props.attributeWidgets[attrObj.name]}
                                 isMinimized={props.minimizedBoxes[attrObj.name]}
-                                metaInfoHelpVisible={props.metaInfoHelpVisible}
                                 hasExtendedInfo={props.bibLabelAttr === attrObj.name}
-                                metaInfo={props.metaInfo[attrObj.name]}
+                                metaInfo={attrObj.metaInfo}
                                 isBusy={props.busyAttributes[attrObj.name]}
                                 textInputPlaceholder={props.textInputPlaceholder}
                                 firstDayOfWeek={props.firstDayOfWeek}
