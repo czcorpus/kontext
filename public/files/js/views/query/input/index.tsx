@@ -300,7 +300,7 @@ export function init({
     const TRIncludeEmptySelector:React.FC<TRIncludeEmptySelectorProps> = (props) => {
 
         const handleCheckbox = (value) => {
-            console.log('change event')
+
             dispatcher.dispatch(
                 Actions.QueryInputSetIncludeEmpty,
                 {

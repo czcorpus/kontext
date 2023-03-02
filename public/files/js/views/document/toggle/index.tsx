@@ -26,15 +26,26 @@ import * as S from './style';
 import { Keyboard } from 'cnc-tskit';
 
 
+type ToggleMotionTypes = 'switch-on'|'switch-off'|undefined;
+
 
 export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.ToggleSwitch.Props> {
 
     const ToggleSwitch:React.FC<CoreViews.ToggleSwitch.Props> = (props) => {
 
+        const [inMotionTo, setMotionTo] = React.useState<ToggleMotionTypes>(undefined);
+
+        React.useEffect(
+            () => {
+                if (props.onChange !== undefined && inMotionTo) {
+                    props.onChange(inMotionTo === 'switch-on');
+                }
+            },
+            [inMotionTo]
+        )
+
         const clickHandler = () => {
-            if (props.onChange !== undefined) {
-                props.onChange(!props.checked);
-            }
+            setMotionTo(props.checked ? 'switch-off' : 'switch-on');
         };
 
         const keyHandler = (evt:React.KeyboardEvent) => {
@@ -50,7 +61,7 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.ToggleSwitc
             }
         };
 
-        const imgClass = !!props.checked ? 'on switch-on' : 'off switch-off';
+        const imgClass = !!props.checked ? `on ${inMotionTo || ''}`: `off ${inMotionTo || ''}`;
 
         return (
             <S.ToggleSwitch onKeyDown={keyHandler} tabIndex={props.disabled ? -1 : 0}
