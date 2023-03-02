@@ -30,4 +30,4 @@ export interface State {
     imgClass:string;
 }
 
-export type Component = React.ComponentClass<Props, State>;
+export type Component = React.FC<Props>;
