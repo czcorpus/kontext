@@ -482,7 +482,7 @@
         "concview__ipm_rel_to_the_{subcname}": "related to the subcorpus \"{subcname}\"",
         "concview__ipm_rel_to_adhoc": "related to the subset defined by the selected text types",
         "concview__arf_help": "Average Reduced Frequency",
-        "concview__arf_not_avail": "ARF is not available for subcorpora",
+        "concview__arf_not_avail": "ARF is not available",
         "concview__change_display_settings": "Display options",
         "concview__failed_to_play_audio": "Failed to play audio file",
         "concview__click_to_play_audio": "Click to play audio",

@@ -482,7 +482,7 @@
         "concview__ipm_rel_to_the_{subcname}": "vztaženo k subkorpusu \"{subcname}\"",
         "concview__ipm_rel_to_adhoc": "vztaženo k podmnožině určené vybranými typy textů",
         "concview__arf_help": "Průměrná redukovaná frekvence",
-        "concview__arf_not_avail": "ARF není pro subkorpusy k dispozici",
+        "concview__arf_not_avail": "ARF není k dispozici",
         "concview__change_display_settings": "Parametry zobrazení",
         "concview__failed_to_play_audio": "Selhalo přehrávání zvukového souboru",
         "concview__click_to_play_audio": "Klikněte pro přehrání zvuku",

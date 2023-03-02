@@ -481,7 +481,7 @@
         "concview__ipm_rel_to_the_{subcname}": "na podkorpus \"{subcname}\"",
         "concview__ipm_rel_to_adhoc": "na podzbiōr zdefiniowany ôbranymi typami tekstōw",
         "concview__arf_help": "Postrzedniŏ zredukowanŏ frekwyncyjŏ",
-        "concview__arf_not_avail": "ARF niyma dosympne we podkorpusach",
+        "concview__arf_not_avail": "ARF niyma dosympne",
         "concview__change_display_settings": "Ôpcyje pokazowaniŏ",
         "concview__failed_to_play_audio": "Niy szło grać zbioru audio",
         "concview__click_to_play_audio": "Kliknij, żeby grać audio",
