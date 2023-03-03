@@ -518,17 +518,30 @@ class FreqPage {
                 }
 
                 const [args, state, activeView] = (() => {
+                    const currAction = this.layoutModel.getConf<'freqs'|'freqml'>('currentAction');
+
                     if (this.layoutModel.getConf<FreqResultViews>('FreqDefaultView') === 'tables') {
-                        const state = this.freqResultModel.getState(); // no antipattern here
-                        const firstCrit = List.head(state.freqCrit);
-                        const args = {
-                            ...this.freqResultModel.getSubmitArgs(
-                                state, firstCrit.n, state.flimit, parseInt(state.currentPage[firstCrit.n])),
-                            fcrit_async: List.map(v => v.n, state.freqCritAsync),
-                            freq_type: state.freqType,
-                            format: undefined
-                        };
-                        return tuple(args, state, 'tables');
+                        if (currAction === 'freqs') {
+                            const state = this.freqResultModel.getState(); // no antipattern here
+                            const firstCrit = List.head(state.freqCrit);
+                            const args = {
+                                ...this.freqResultModel.getSubmitArgs(
+                                    state, firstCrit.n, state.flimit, parseInt(state.currentPage[firstCrit.n])),
+                                fcrit_async: List.map(v => v.n, state.freqCritAsync),
+                                freq_type: state.freqType,
+                                format: undefined
+                            };
+                            return tuple(args, state, 'tables');
+
+                        } else {
+                            const state = this.mlFreqModel.getState(); // no antipattern here
+                            const args = {
+                                ...this.mlFreqModel.getSubmitArgs(state),
+                                freq_type: 'freqml',
+                                format: undefined
+                            };
+                            return tuple(args, state, 'tables');
+                        }
 
                     } else {
                         const state = this.freqChartsModel.getState(); // no antipattern here
@@ -543,7 +556,7 @@ class FreqPage {
                     }
                 })();
                 this.layoutModel.getHistory().replaceState(
-                    'freqs',
+                    this.layoutModel.getConf<string>('currentAction'),
                     args,
                     {
                         onPopStateAction: {
