@@ -386,8 +386,10 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                         }
                     },
                     error: err => {
-                        console.error(err);
-                        this.pluginApi.showMessage('error', err);
+                        dispatch<typeof TTActions.AttributeTextInputAutocompleteRequestDone>({
+                            name: TTActions.AttributeTextInputAutocompleteRequestDone.name,
+                            error: err
+                        });
                     }
                 });
             }
@@ -411,7 +413,6 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                             })
                         },
                         error: error => {
-                            this.pluginApi.showMessage('error', error);
                             dispatch<typeof TTActions.ExtendedInformationRequestDone>({
                                 name: TTActions.ExtendedInformationRequestDone.name,
                                 error
@@ -420,7 +421,10 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                     });
 
                 } else {
-                    return this.pluginApi.showMessage('error', this.pluginApi.translate('ucnkLA__item_not_found'));
+                    dispatch<typeof TTActions.ExtendedInformationRequestDone>({
+                        name: TTActions.ExtendedInformationRequestDone.name,
+                        error: new Error(this.pluginApi.translate('ucnkLA__item_not_found')),
+                    });
                 }
             }
         );
@@ -428,7 +432,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
         this.addActionHandler(
             TTActions.AttributeTextInputAutocompleteRequestDone,
             (state, action) => {
-                if (Array.isArray(action.payload.filterData[state.bibliographyAttribute])) {
+                if (!action.error && Array.isArray(action.payload.filterData[state.bibliographyAttribute])) {
                     this.attachBibData(state, action.payload.filterData);
                 }
             }
