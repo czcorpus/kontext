@@ -23,7 +23,7 @@ import { Dict, List, pipe, tuple } from 'cnc-tskit';
 
 import * as Kontext from '../../../types/kontext';
 import { PageModel } from '../../../app/page';
-import { FreqServerArgs } from './common';
+import { FreqServerArgs, MLFreqServerArgs } from './common';
 import { AlignTypes } from '../twoDimension/common';
 import { Actions } from './actions';
 import { FreqChartsAvailableOrder } from '../common';
@@ -107,6 +107,7 @@ export class MLFreqFormModel extends StatelessModel<MLFreqFormModelState> {
                 maxNumLevels: maxNumLevels,
             }
         );
+
         this.pageModel = pageModel;
 
         this.addActionHandler(
@@ -215,8 +216,8 @@ export class MLFreqFormModel extends StatelessModel<MLFreqFormModelState> {
         ]
     }
 
-    private submit(state:MLFreqFormModelState):void {
-        const args:FreqServerArgs = {
+    getSubmitArgs(state:MLFreqFormModelState):MLFreqServerArgs {
+        return {
             ...this.pageModel.getConcArgs(),
             freq_type: 'tokens',
             fpage: 1,
@@ -243,7 +244,11 @@ export class MLFreqFormModel extends StatelessModel<MLFreqFormModelState> {
             freqlevel: state.mlxattr.length,
             freq_sort: state.freqSort
         };
-        window.location.href = this.pageModel.createActionUrl('freqml', args);
+    }
+
+    private submit(state:MLFreqFormModelState):void {
+        window.location.href = this.pageModel.createActionUrl(
+            'freqml', this.getSubmitArgs(state));
     }
 
     getPositionRangeLabels():Array<string> {
