@@ -84,6 +84,8 @@ class TextTypeCollector:
                     query = f'({" | ".join(expr_items)})'
                 else:
                     query = None
+            elif type(v) is dict and 'regexp' in v:
+                query = f'{a}="{v["regexp"]}"'
             else:
                 query = f'{a}="{v}"'
 
