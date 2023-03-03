@@ -234,14 +234,13 @@ async def delete(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dic
     with plugins.runtime.SUBC_STORAGE as sr, plugins.runtime.USER_ITEMS as ui:
         user_items = {x.subcorpus_id: x.ident for x in (await ui.get_user_items(amodel.plugin_ctx))}
         for item in req.json['items']:
-            ui.get_user_items(amodel.plugin_ctx)
             await sr.delete_query(amodel.session_get('user', 'id'), item['corpname'], item['subcname'])
             try:
                 subc = await amodel.cf.get_corpus(await sr.get_info(item['subcname']))
                 os.unlink(os.path.join(settings.get('corpora', 'subcorpora_dir'),
                                        subc.portable_ident.data_path))
                 if item['subcname'] in user_items:
-                    ui.delete_user_item(amodel.plugin_ctx, user_items[item['subcname']])
+                    await ui.delete_user_item(amodel.plugin_ctx, user_items[item['subcname']])
             except (CorpusInstantiationError, IOError) as e:
                 logging.getLogger(__name__).warning(e)
 
