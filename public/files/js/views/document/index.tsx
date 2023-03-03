@@ -563,35 +563,21 @@ export function init(
             });
         };
 
-        const getSubcName = () => {
-            if (props.origSubcorpName && props.origSubcorpName !== props.usesubcorp) {
-                return <>
-                    <a className={`subcorpus${props.foreignSubcorp ? ' foreign' : ''}`} title={he.translate('global__subcorpus')}
-                                        onClick={handleSubcnameClick}>
-                        <strong>{props.origSubcorpName}</strong>
-                    </a>
-                    <span title={he.translate('global__public_subc_id_{id}', {id: props.usesubcorp})}>
-                        {'\u00a0'}
-                        {props.foreignSubcorp ?
-                        <span>({he.translate('global__published_foreign_subcorp')})</span> : null
-                        }
-                    </span>
-                </>;
-
-            } else {
-                return <a className="subcorpus" title={he.translate('global__subcorpus')}
-                                        onClick={handleSubcnameClick}>
-                        <strong>{props.usesubcorp}</strong>
-                    </a>;
-            }
-        };
-
         const renderSubcorp = () => {
             if (props.usesubcorp) {
                 return (
                     <>
                         {'\u00a0'}<strong>/</strong>{'\u00a0'}
-                        {getSubcName()}
+                        <a className={`subcorpus${props.foreignSubcorp ? ' foreign' : ''}`} title={he.translate('global__subcorpus')}
+                                    onClick={handleSubcnameClick}>
+                            <strong>{props.subcName}</strong>
+                        </a>
+                        <span title={he.translate('global__public_subc_id_{id}', {id: props.usesubcorp})}>
+                            {'\u00a0'}
+                            {props.foreignSubcorp ?
+                            <span>({he.translate('global__published_foreign_subcorp')})</span> : null
+                            }
+                        </span>
                     </>
                 );
 

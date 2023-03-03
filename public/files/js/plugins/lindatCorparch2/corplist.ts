@@ -439,7 +439,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                 this.pluginApi.createActionUrl('user/set_favorite_item'),
                 {
                     subcorpus_id: null,
-                    subcorpus_orig_id: null,
+                    subcorpus_name: null,
                     corpora:[corpusId]
                 }
             ).pipe(map(v => tuple(v.id, 'add'))) :

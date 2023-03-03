@@ -21,7 +21,7 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as Kontext from '../../../types/kontext';
-import { Bound, IActionDispatcher } from "kombo";
+import { Bound, BoundWithProps, IActionDispatcher } from "kombo";
 import { FreqChartsModel } from '../../../models/freqs/regular/freqCharts';
 import {
     BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -38,7 +38,8 @@ import { init as initFreqCommonViews } from '../common';
 import * as S from './style';
 import {
     FreqChartsModelState,
-    isEmptyResultBlock, ResultBlock, ResultItem, ShareLink
+    FreqViewProps,
+    isEmptyResultBlock, ResultBlock, ResultItem
 } from '../../../models/freqs/regular/common';
 import { WordCloudItemCalc } from './wordCloud/calc';
 import { FreqChartsAvailableData, FreqChartsAvailableOrder, FreqChartsAvailableTypes
@@ -568,7 +569,7 @@ export function init(
     // --------------------- <FreqChartsView /> -----------------------------------------
 
 
-    const FreqChartsView:React.FC<FreqChartsModelState> = (props) => {
+    const FreqChartsView:React.FC<FreqChartsModelState & FreqViewProps> = (props) => {
 
         const handleSaveFormClose = () => {
             dispatcher.dispatch(
@@ -619,7 +620,7 @@ export function init(
                                 onCloseClick={hideShare}
                                 label={he.translate('freq__share_table')}>
                             <ShareLinkWidget sourceId={props.shareLink.sourceId} url={props.shareLink.url}
-                                isBusy={props.shareWidgetIsBusy} />
+                                isBusy={props.shareWidgetIsBusy} email={props.userEmail} />
                         </globalComponents.CloseableFrame>
                     </globalComponents.ModalOverlay> : null
                 }
@@ -628,6 +629,6 @@ export function init(
     };
 
     return {
-        FreqChartsView: Bound(FreqChartsView, freqChartsModel)
+        FreqChartsView: BoundWithProps<FreqViewProps, FreqChartsModelState>(FreqChartsView, freqChartsModel)
     };
 }

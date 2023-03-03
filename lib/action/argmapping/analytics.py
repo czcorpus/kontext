@@ -48,13 +48,11 @@ class FreqFormArgs:
         self.fttattr: List[str] = []
         self.flimit: str = '1'
         self.freq_sort: str = 'freq'
-        self.ftt_include_empty: bool = False
 
     def update(self, args: Args) -> 'FreqFormArgs':
         self.fttattr = args.fttattr + args.fttattr_async
         self.flimit = args.flimit
         self.freq_sort = args.freq_sort
-        self.ftt_include_empty = args.ftt_include_empty
         return self
 
     def to_dict(self) -> Dict[str, Any]:

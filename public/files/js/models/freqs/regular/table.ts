@@ -180,7 +180,6 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                     ),
                     Dict.fromEntries()
                 ),
-                ftt_include_empty: formProps.ftt_include_empty,
                 isBusy: pipe(
                     allCrit,
                     List.map(
@@ -457,7 +456,6 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                     state.sortColumn = storedState.sortColumn;
                     state.freqCrit = storedState.freqCrit;
                     state.freqCritAsync = storedState.freqCritAsync;
-                    state.ftt_include_empty = storedState.ftt_include_empty;
                     state.isActive = storedState.isActive;
                     state.isBusy = storedState.isBusy;
                     state.isError = storedState.isError;
@@ -674,7 +672,6 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
 
                 fcrit: state.data[sourceId].fcrit,
                 freq_type: state.freqType,
-                ftt_include_empty: state.ftt_include_empty,
                 freqlevel: 1,
                 flimit: state.flimit,
                 alpha_level: state.alphaLevel,
@@ -693,7 +690,6 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             freq_sort: state.sortColumn[fcrit],
             freq_type: state.freqType,
             fpage,
-            ftt_include_empty: state.ftt_include_empty,
             freqlevel: 1,
             format: 'json',
         };
@@ -707,7 +703,6 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             freq_sort: 'freq',
             freq_type: state.freqType,
             fpage: 1,
-            ftt_include_empty: state.ftt_include_empty,
             freqlevel: 1,
             format: 'json',
         };

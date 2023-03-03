@@ -363,9 +363,6 @@ msgid "Cannot change status of a concordance belonging to another user"
 msgstr ""
 "Stanja konkordanc, ki pripadajo drugemu uporabniku, ni mogoče spremeniti"
 
-msgid "Undo"
-msgstr "Razveljavi"
-
 msgid "Remove nested matches"
 msgstr "Odstrani gnezdena ujemanja"
 
@@ -406,8 +403,8 @@ msgstr "Atribut \"%s\" ni bil najden."
 msgid "MI"
 msgstr "MI"
 
-msgid "Current concordance"
-msgstr "Trenutne konkordance"
+msgid "Show"
+msgstr "Show UNTRANSLATED"
 
 msgid "Word List Form"
 msgstr "Obrazec za seznam besed"
@@ -454,8 +451,8 @@ msgstr "ID-ji dokumentov"
 msgid "pre-installed on Apple macOS"
 msgstr "vnaprej nameščeno v sistemu Apple macOS"
 
-msgid "Node forms"
-msgstr "Oblike zadetkov"
+msgid "Node forms [A=a]"
+msgstr "Oblike zadetkov [A=a]"
 
 msgid "new subcorpora in your library: %s"
 msgstr "novi podkorpusi v vaši knjižnici: %s"

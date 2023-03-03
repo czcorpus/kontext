@@ -503,4 +503,29 @@ export class Actions {
     }> = {
         name: 'CONCORDANCE_SET_HIGHLIGHT_ITEMS'
     };
+
+    static isSetHighlightItems(a:Action):a is typeof Actions.SetHighlightItems {
+        return a.name === Actions.SetHighlightItems.name;
+    }
+
+    static SetHighlightItemsDone:Action<{
+        items:Array<HighlightItem>;
+        matchPosAttr:string;
+    }> = {
+        name: 'CONCORDANCE_SET_HIGHLIGHT_ITEMS_DONE'
+    };
+
+    static HighlightedTokenMouseover:Action<{
+        attr:string;
+        value:string;
+    }> = {
+        name: 'CONCORDANCE_HIGHLIGHTED_TOKEN_MOUSEOVER'
+    }
+
+    static HighlightedTokenMouseout:Action<{
+        attr:string;
+        value:string;
+    }> = {
+        name: 'CONCORDANCE_HIGHLIGHTED_TOKEN_MOUSEOUT'
+    }
 }

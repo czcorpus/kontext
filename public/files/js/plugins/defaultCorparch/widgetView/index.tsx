@@ -639,7 +639,7 @@ export function init({
         widgetId:string;
         corpusName:string;
         currSubcorpus:string;
-        origSubcorpName:string;
+        subcName:string;
         availSubcorpora:Array<Kontext.SubcorpListItem>;
 
     }> = (props) => {
@@ -799,7 +799,7 @@ export function init({
                                     widgetId={this.props.widgetId}
                                     corpusName={this.props.corpusIdent.id}
                                     currSubcorpus={this.props.corpusIdent.usesubcorp}
-                                    origSubcorpName={this.props.corpusIdent.origSubcorpName}
+                                    subcName={this.props.corpusIdent.subcName}
                                     availSubcorpora={this.props.availableSubcorpora} />
                             </span>) :
                             null

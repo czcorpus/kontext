@@ -122,6 +122,8 @@ export const PoSFilter = styled.div`
 
 export const SyntaxHighlight = styled.pre`
 
+    line-height: 1.5em;
+
     .sh-regexp {
         color: ${theme.shRegexp};
     }

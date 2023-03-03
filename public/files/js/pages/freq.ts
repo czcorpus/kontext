@@ -116,7 +116,6 @@ class FreqPage {
         const initFreqLevel = this.layoutModel.getConf<number>('InitialFreqLevel');
         const freqFormProps:FreqFormProps = {
             fttattr: freqFormInputs.fttattr || [],
-            ftt_include_empty: freqFormInputs.ftt_include_empty || false,
             flimit: freqFormInputs.flimit || '1',
             freq_sort: 'freq',
             mlxattr: freqFormInputs.mlxattr || List.repeat(() => attrs[0].n, initFreqLevel),
@@ -279,7 +278,7 @@ class FreqPage {
                 corpname: this.layoutModel.getCorpusIdent().id,
                 humanCorpname: this.layoutModel.getCorpusIdent().name,
                 usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
-                origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
+                subcName: this.layoutModel.getCorpusIdent().subcName,
                 foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp,
                 queryFormProps: {
                     formType: Kontext.ConcFormTypes.QUERY,
@@ -429,7 +428,7 @@ class FreqPage {
                 this.layoutModel.renderReactComponent(
                     freqResultView.FreqResultView,
                     window.document.getElementById('result-mount'),
-                    {} as FreqDataRowsModelState
+                    {userEmail: this.layoutModel.getConf<string>('userEmail')}
                 );
             break;
             case '2-attribute':
@@ -519,17 +518,30 @@ class FreqPage {
                 }
 
                 const [args, state, activeView] = (() => {
+                    const currAction = this.layoutModel.getConf<'freqs'|'freqml'>('currentAction');
+
                     if (this.layoutModel.getConf<FreqResultViews>('FreqDefaultView') === 'tables') {
-                        const state = this.freqResultModel.getState(); // no antipattern here
-                        const firstCrit = List.head(state.freqCrit);
-                        const args = {
-                            ...this.freqResultModel.getSubmitArgs(
-                                state, firstCrit.n, state.flimit, parseInt(state.currentPage[firstCrit.n])),
-                            fcrit_async: List.map(v => v.n, state.freqCritAsync),
-                            freq_type: state.freqType,
-                            format: undefined
-                        };
-                        return tuple(args, state, 'tables');
+                        if (currAction === 'freqs') {
+                            const state = this.freqResultModel.getState(); // no antipattern here
+                            const firstCrit = List.head(state.freqCrit);
+                            const args = {
+                                ...this.freqResultModel.getSubmitArgs(
+                                    state, firstCrit.n, state.flimit, parseInt(state.currentPage[firstCrit.n])),
+                                fcrit_async: List.map(v => v.n, state.freqCritAsync),
+                                freq_type: state.freqType,
+                                format: undefined
+                            };
+                            return tuple(args, state, 'tables');
+
+                        } else {
+                            const state = this.mlFreqModel.getState(); // no antipattern here
+                            const args = {
+                                ...this.mlFreqModel.getSubmitArgs(state),
+                                freq_type: 'freqml',
+                                format: undefined
+                            };
+                            return tuple(args, state, 'tables');
+                        }
 
                     } else {
                         const state = this.freqChartsModel.getState(); // no antipattern here
@@ -544,7 +556,7 @@ class FreqPage {
                     }
                 })();
                 this.layoutModel.getHistory().replaceState(
-                    'freqs',
+                    this.layoutModel.getConf<string>('currentAction'),
                     args,
                     {
                         onPopStateAction: {

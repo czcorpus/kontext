@@ -39,14 +39,14 @@ import manatee
 import plugins
 import ujson as json
 from action.control import http_action
+from action.krequest import KRequest
 from action.model.concordance import ConcActionModel
+from action.response import KResponse
 from corplib.corpus import KCorpus
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.general_storage import KeyValueStorage
 from plugin_types.token_connect import (
-    AbstractBackend,
-    AbstractFrontend,
-    AbstractTokenConnect,
+    AbstractBackend, AbstractFrontend, AbstractTokenConnect,
     find_implementation)
 from plugins.default_token_connect.frontends import ErrorFrontend
 from sanic.blueprints import Blueprint
@@ -56,7 +56,7 @@ bp = Blueprint('default_token_connect')
 
 @bp.route('/fetch_token_detail')
 @http_action(return_type='json', action_model=ConcActionModel)
-async def fetch_token_detail(amodel, req, resp):
+async def fetch_token_detail(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     """
     This is a controller action used by client to obtain
     data for a token. Token is identified by its position id
@@ -176,10 +176,11 @@ class DefaultTokenConnect(AbstractTokenConnect):
                 cookies = {}
                 for cname in backend.get_required_cookies():
                     if cname not in plugin_ctx.cookies:
-                        raise Exception(f'Backend configuration problem: cookie {cname} not available')
+                        raise Exception(
+                            f'Backend configuration problem: cookie {cname} not available')
                     cookies[cname] = plugin_ctx.cookies[cname]
                 data, status = await backend.fetch(
-                    corpora, corpus, token_id, num_tokens, args, lang, context, cookies)
+                    corpora, corpus, token_id, num_tokens, args, lang, plugin_ctx.user_is_anonymous, context, cookies)
                 ans.append(frontend.export_data(data, status, lang, is_kwic_view).to_dict())
             except TypeError as ex:
                 logging.getLogger(__name__).error('TokenConnect backend error: {0}'.format(ex))

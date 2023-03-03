@@ -189,7 +189,8 @@ function importUserQueries(
                     querySuperType: 'conc',
                     he: {
                         translate: (s:string, values?:any) => s
-                    }
+                    },
+                    wrapLongQuery: false
                 });
                 return tuple<string, AdvancedQuery>(
                     corpus,

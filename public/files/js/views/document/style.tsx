@@ -436,7 +436,10 @@ export const ErrorBoundary = styled.span`
 
 export const ValidatedItem = styled.span`
 
+    position: relative;
+
     .error-desc {
+        position: absolute;
         font-size: 80%;
         background-color: #444444;
         color: #ffb4b4;

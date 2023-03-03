@@ -72,7 +72,7 @@ export class Plugin implements PluginInterfaces.Corparch.IPlugin {
         this.model = new CorplistWidgetModel({
             dispatcher: this.pluginApi.dispatcher(),
             pluginApi: this.pluginApi,
-            corpusIdent: initialData ? initialData.corpusIdent : this.pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
+            corpusIdent: initialData ? initialData.corpusIdent : this.pluginApi.getCorpusIdent(),
             widgetId,
             anonymousUser: this.pluginApi.getConf<boolean>('anonymousUser'),
             searchEngine: searchEngine,

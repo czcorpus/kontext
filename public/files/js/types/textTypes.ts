@@ -86,35 +86,31 @@ export function isEncodedSelectionType(sel:TTSelectionTypes):boolean {
     return sel === 'regexp';
 }
 
-export interface FullAttributeSelection {
-    attrInfo:AttrInfo;
-    isInterval:boolean;
-    widget:WidgetView;
-    isNumeric:boolean;
+interface BaseAttributeSelection {
     label:string;
     name:string;
+    attrInfo:AttrInfo;
+    widget:WidgetView;
+    metaInfo:AttrSummary;
+}
+
+export interface FullAttributeSelection extends BaseAttributeSelection {
+    isInterval:boolean;
+    isNumeric:boolean;
     values:Array<AttributeValue>;
     type:'full';
 }
 
-export interface TextInputAttributeSelection {
-    attrInfo:AttrInfo;
+export interface TextInputAttributeSelection extends BaseAttributeSelection {
     isInterval:boolean;
-    widget:WidgetView;
     isNumeric:boolean;
-    label:string;
-    name:string;
     autoCompleteHints:Array<AutoCompleteItem>;
     values:Array<AttributeValue>; // it supports appending values via a single text input
     textFieldValue:string;
     type:'text';
 }
 
-export interface RegexpAttributeSelection {
-    attrInfo:AttrInfo;
-    widget:WidgetView;
-    label:string;
-    name:string;
+export interface RegexpAttributeSelection extends BaseAttributeSelection {
     textFieldValue:string;
     textFieldDecoded:string;
     isLocked:boolean;

@@ -29,20 +29,30 @@ class HTTPClientException(Exception):
     pass
 
 
+class HTTPUnauthorized(HTTPClientException):
+    pass
+
+
+class HTTPStatus(int):
+    @property
+    def is_valid_response(self) -> bool:
+        return 200 <= self < 300 or 400 <= self < 500
+
+    @property
+    def is_found(self) -> bool:
+        return 200 <= self < 300
+
+    @property
+    def is_unauthorized(self) -> bool:
+        return self in (401, 403)
+
+
 class HTTPClient:
 
     def __init__(self, server: str, enable_ssl: bool = False):
         self._server = server
         self._ssl_context = ssl.create_default_context() if enable_ssl else None
         self._client_timeout = None
-
-    @staticmethod
-    def _is_valid_response(response: aiohttp.ClientResponse) -> bool:
-        return response and (200 <= response.status < 300 or 400 <= response.status < 500)
-
-    @staticmethod
-    def _is_found(response: aiohttp.ClientResponse) -> bool:
-        return 200 <= response.status < 300
 
     @property
     def _app_client_session(self) -> aiohttp.ClientSession:
@@ -51,15 +61,19 @@ class HTTPClient:
     @property
     def client_timeout(self) -> int:
         if not self._client_timeout:
-            self._client_timeout = Sanic.get_app('kontext').ctx.kontext_conf.get('http_client_timeout_secs')
+            self._client_timeout = Sanic.get_app(
+                'kontext').ctx.kontext_conf.get('http_client_timeout_secs')
         return self._client_timeout
 
     async def process_response(self, response: aiohttp.ClientResponse):
-        if self._is_valid_response(response):
-            logging.getLogger(__name__).debug(f'HTTP client response status: {response.status}')
-            return (await response.read()).decode('utf-8'), self._is_found(response)
+        status = HTTPStatus(response.status)
+        if status.is_valid_response:
+            logging.getLogger(__name__).debug(f'HTTP client response status: {status}')
+            if status.is_unauthorized:
+                raise HTTPUnauthorized()
+            return (await response.read()).decode('utf-8'), status.is_found
         else:
-            raise HTTPClientException(f'HTTP client response error {response.status}')
+            raise HTTPClientException(f'HTTP client response error {status}')
 
     @staticmethod
     def enc_val(s):
@@ -101,3 +115,34 @@ class HTTPClient:
                 timeout=self.client_timeout,
                 ssl=self._ssl_context) as response:
             return await self.process_response(response)
+
+
+class HTTPApiLogin:
+
+    def __init__(self, server: str, api_token: str, sid_cookie: str):
+        self._server = server
+        self._api_token = api_token
+        self._sid_cookie = sid_cookie
+        self._ssl_context = ssl.create_default_context() if server and server.startswith('https://') else None
+        self._client_timeout = None
+
+    @property
+    def _app_client_session(self) -> aiohttp.ClientSession:
+        return Sanic.get_app('kontext').ctx.client_session
+
+    @property
+    def client_timeout(self) -> int:
+        if not self._client_timeout:
+            self._client_timeout = Sanic.get_app(
+                'kontext').ctx.kontext_conf.get('http_client_timeout_secs')
+        return self._client_timeout
+
+    async def login(self):
+        async with self._app_client_session.request(
+                'POST',
+                self._server,
+                data=f'personal_access_token={self._api_token}',
+                headers={'Content-Type': 'application/x-www-form-urlencoded'},
+                timeout=self.client_timeout,
+                ssl=self._ssl_context) as response:
+            return response.cookies.get(self._sid_cookie)

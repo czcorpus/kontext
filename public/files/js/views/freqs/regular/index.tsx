@@ -30,7 +30,7 @@ import { IActionDispatcher, BoundWithProps, Bound } from 'kombo';
 import { Actions } from '../../../models/freqs/regular/actions';
 import * as S from './style';
 import { FreqChartsModel } from '../../../models/freqs/regular/freqCharts';
-import { FreqDataRowsModelState, isEmptyResultBlock } from '../../../models/freqs/regular/common';
+import { FreqDataRowsModelState, FreqViewProps, isEmptyResultBlock } from '../../../models/freqs/regular/common';
 import { alphaToCoeffFormatter, FreqResultViews } from '../../../models/freqs/common';
 import { FreqChartsSaveFormModel } from '../../../models/freqs/regular/saveChart';
 import { FreqResultsSaveModel } from '../../../models/freqs/regular/save';
@@ -68,6 +68,7 @@ export function init(
         totalItems:number;
         sourceId:string;
         shareLink:string|null;
+        email:string;
         shareWidgetIsBusy:boolean;
         onShowShare:(sourceId:string)=>void;
         onHideShare:()=>void;
@@ -120,7 +121,8 @@ export function init(
                             <ShareLinkWidget
                                     sourceId={props.sourceId}
                                     url={props.shareLink}
-                                    isBusy={props.shareWidgetIsBusy} />
+                                    isBusy={props.shareWidgetIsBusy}
+                                    email={props.email} />
                         </globalComponents.CloseableFrame>
                     </globalComponents.ModalOverlay> : null
                 }
@@ -242,7 +244,7 @@ export function init(
 
     // ----------------------- <FreqTablesView /> ------------------------
 
-    const _FreqTablesView:React.FC<FreqDataRowsModelState> = (props) => {
+    const _FreqTablesView:React.FC<FreqDataRowsModelState & FreqViewProps> = (props) => {
 
         const handleSaveFormClose = () => {
             dispatcher.dispatch(
@@ -308,6 +310,7 @@ export function init(
                                                     props.shareLink.url :
                                                     null
                                                     }
+                                            email={props.userEmail}
                                             shareWidgetIsBusy={props.shareWidgetIsBusy}
                                             onShowShare={showShare}
                                             onHideShare={hideShare} />
@@ -335,11 +338,11 @@ export function init(
         );
     }
 
-    const FreqTablesView = BoundWithProps(_FreqTablesView, freqDataRowsModel)
+    const FreqTablesView = BoundWithProps<FreqViewProps, FreqDataRowsModelState>(_FreqTablesView, freqDataRowsModel)
 
     // ----------------------- <FreqResultView /> -------------------------
 
-    const FreqResultView:React.FC<TabWrapperModelState> = (props) => {
+    const FreqResultView:React.FC<TabWrapperModelState & FreqViewProps> = (props) => {
 
         const handleTabSelection = (value:string) => {
             dispatcher.dispatch<typeof Actions.ResultSetActiveTab>({
@@ -365,9 +368,9 @@ export function init(
                         defaultId={props.activeTab}
                         noButtonSeparator={true} >
                     <div>
-                        <chartViews.FreqChartsView />
+                        <chartViews.FreqChartsView userEmail={props.userEmail} />
                     </div>
-                    <FreqTablesView />
+                    <FreqTablesView userEmail={props.userEmail} />
                 </globalComponents.TabView>
             </S.FreqResultView>
         );
@@ -375,6 +378,6 @@ export function init(
 
 
     return {
-        FreqResultView: Bound(FreqResultView, tabSwitchModel)
+        FreqResultView: BoundWithProps<FreqViewProps, TabWrapperModelState>(FreqResultView, tabSwitchModel)
     };
 }

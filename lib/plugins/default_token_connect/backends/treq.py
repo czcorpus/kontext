@@ -110,7 +110,7 @@ class TreqBackend(HTTPBackend):
         return f'http://{self._conf["server"]}'
 
     @cached
-    async def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None, cookies=None):
+    async def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, is_anonymous, context=None, cookies=None):
         """
         """
         primary_lang = self._lang_from_corpname(corpora[0])

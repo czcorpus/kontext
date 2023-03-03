@@ -268,7 +268,7 @@ export function init(conf:Kontext.Conf):void {
     const layoutModel:PageModel = new KontextPage(conf);
     const pageModel = new SubcorpForm(
         layoutModel,
-        layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent')
+        layoutModel.getCorpusIdent()
     );
     pageModel.init();
 }

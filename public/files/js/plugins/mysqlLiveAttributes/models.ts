@@ -146,7 +146,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                         (action) => {
                             if (PluginInterfaces.LiveAttributes.Actions.isRefineReady(action)) {
                                 if (!List.empty(action.payload.newSelections)) {
-                                    return this.loadFilteredData(state, action.payload.selections);
+                                    return this.loadFilteredData(state, action.payload.selections, dispatch);
 
                                 } else {
                                     return rxOf<[TextTypes.ExportedSelection, ServerRefineResponse]>(tuple({}, null));
@@ -161,7 +161,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                 ).subscribe({
                     next: ([selections, data]) => {
                         if (data) {
-                            const filterData = this.importFilter(data.attr_values, dispatch);
+                            const filterData = this.importFilter(data.attr_values);
                             dispatch(
                                 TTActions.FilterWholeSelection,
                                 {
@@ -340,7 +340,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             TTActions.AttributeTextInputAutocompleteRequest,
             null,
             (state, action, dispatch) => {
-                this.suspend({}, (action, syncData) => {
+                this.waitForAction({}, (action, syncData) => {
                     if (action.name === TTActions.AttributeTextInputAutocompleteReady.name) {
                         return null;
                     }
@@ -363,7 +363,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                     )
                 ).subscribe({
                     next: resp => {
-                        const filterData = this.importFilter(resp.attr_values, dispatch);
+                        const filterData = this.importFilter(resp.attr_values);
                         const values = resp.attr_values[action.payload.attrName];
                         if (Array.isArray(values)) {
                             dispatch<typeof TTActions.AttributeTextInputAutocompleteRequestDone>({
@@ -519,12 +519,13 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                         total: data.poscount
                     }
                 );
+                this.updateSummary(data.attr_values, dispatch);
                 if (state.subcorpDefinition) {
                     dispatch(
                         TTActions.FilterWholeSelection,
                         {
                             poscount: data.poscount,
-                            filterData: this.importFilter(data.attr_values, dispatch),
+                            filterData: this.importFilter(data.attr_values),
                             selectedTypes: state.subcorpDefinition,
                             bibAttrValsAreListed: Array.isArray(data.attr_values[state.bibliographyAttribute]),
                             isSubcorpDefinitionFilter: true,
@@ -681,35 +682,47 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
         });
     }
 
-    private importFilter(data:ServerRefineResponse['attr_values'], dispatch:SEDispatcher):SelectionFilterMap {
-        let ans:SelectionFilterMap = {};
+    private updateSummary(data:ServerRefineResponse['attr_values'], dispatch:SEDispatcher) {
         Dict.forEach(
             (item, k) => {
                 if (k.indexOf('.') > 0) { // is the key an attribute? (there are other values there too)
-                    if (Array.isArray(item)) {
-                        ans[k] = List.map(
-                            ([,ident, v, numGrouped, availItems]) => ({
-                                ident,
-                                v,
-                                lock: false,
-                                availItems,
-                                numGrouped
-                            }),
-                            item
-                        );
+                    if (Array.isArray(item) || !item.length) {
                         this.setAttrSummary(k, null, dispatch);
 
-                    } else if (item.length) {
+                    } else {
                         this.setAttrSummary(
                             k,
                             {
-                                text: this.pluginApi.translate('query__tt_{num}_items',
-                                    {num: item.length}),
+                                text: this.pluginApi.translate(
+                                    'query__tt_{num}_items',
+                                    {num: item.length}
+                                ),
                                 help: this.pluginApi.translate('ucnkLA__bib_list_warning')
                             },
                             dispatch
                         );
                     }
+                }
+            },
+            data
+        );
+    }
+
+    private importFilter(data:ServerRefineResponse['attr_values']):SelectionFilterMap {
+        let ans:SelectionFilterMap = {};
+        Dict.forEach(
+            (item, k) => {
+                if (k.indexOf('.') > 0 && Array.isArray(item)) { // is the key an attribute? (there are other values there too)
+                    ans[k] = List.map(
+                        ([,ident, v, numGrouped, availItems]) => ({
+                            ident,
+                            v,
+                            lock: false,
+                            availItems,
+                            numGrouped
+                        }),
+                        item
+                    );
                 }
             },
             data
@@ -730,7 +743,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
 
     private loadFilteredData(
         state:LiveAttrsModelState,
-        selections:TextTypes.ExportedSelection
+        selections:TextTypes.ExportedSelection,
+        dispatch:SEDispatcher,
     ):Observable<[TextTypes.ExportedSelection, ServerRefineResponse]> {
         const aligned = pipe(
             state.alignedCorpora,
@@ -754,6 +768,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                             fixedAttrVals[k] = resp.attr_values[k];
                         }
                     });
+                    this.updateSummary(resp.attr_values, dispatch);
                     return tuple(
                         selections,
                         {

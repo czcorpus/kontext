@@ -194,7 +194,7 @@ def calculate_freqs_bg_sync(args: FreqCalcArgs, corp: AbstractKCorpus, conc: PyC
                 attr.split('.')[0],
                 os.path.join(os.path.dirname(corp.freq_precalc_file(attr, 'token:l')), 'data.subc'))
     freqs = [conc.xfreq_dist(
-        cr, args.flimit, args.freq_sort, args.ftt_include_empty, args.rel_mode, args.collator_locale)
+        cr, args.flimit, args.freq_sort, args.rel_mode, args.collator_locale)
         for cr in args.fcrit]
     return FreqCalcResult(freqs=freqs, conc_size=conc.size())
 

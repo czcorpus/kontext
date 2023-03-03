@@ -231,8 +231,8 @@ msgstr "Předchozí dotazy"
 msgid "Word List"
 msgstr "Seznam slov"
 
-msgid "Current concordance"
-msgstr "Aktuální konkordance"
+msgid "Show"
+msgstr "Zobrazit"
 
 msgid "Sorting"
 msgstr "Třídění"
@@ -255,8 +255,8 @@ msgstr "Negativní"
 msgid "Frequency"
 msgstr "Frekvence"
 
-msgid "Node forms"
-msgstr "Slovní tvary"
+msgid "Node forms [A=a]"
+msgstr "Slovní tvary [A=a]"
 
 msgid "Doc IDs"
 msgstr "Dokumenty"
@@ -440,9 +440,6 @@ msgstr "Nelze měnit status konkordance, která patří jinému uživateli"
 
 msgid "Access forbidden - please log-in."
 msgstr "Přístup zamítnut - přihlašte se prosím."
-
-msgid "Undo"
-msgstr "Zpět"
 
 msgid "Public subcorpora"
 msgstr "Veřejné subkorpusy"

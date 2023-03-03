@@ -89,7 +89,7 @@ export class WordlistPage {
             const formModel = new WordlistFormModel({
                 dispatcher: this.layoutModel.dispatcher,
                 layoutModel: this.layoutModel,
-                corpusIdent: this.layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
+                corpusIdent: this.layoutModel.getCorpusIdent(),
                 subcorpList: this.layoutModel.getConf<Array<string>>('SubcorpList'),
                 attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
                 structAttrList: Kontext.structsAndAttrsToStructAttrList(this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs')),

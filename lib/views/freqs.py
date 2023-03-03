@@ -205,7 +205,6 @@ async def _freqs(
         flimit=flimit,
         fcrit=fcrit,
         freq_sort=freq_sort,
-        ftt_include_empty=amodel.args.ftt_include_empty,
         rel_mode=rel_mode,
         collator_locale=corp_info.collator_locale,
         fmaxitems=amodel.args.fmaxitems,
@@ -362,8 +361,10 @@ async def _freqml(amodel: ConcActionModel, req: KRequest[MLFreqRequestArgs], res
         tmp['mlxctx'].append(getattr(args, 'ml{0}ctx'.format(i), '0'))
         tmp['mlxpos'].append(getattr(args, 'ml{0}pos'.format(i), 1))
         tmp['mlxicase'].append(getattr(args, 'ml{0}icase'.format(i), ''))
-        tmp['flimit'].append(args.flimit)
-        tmp['freq_sort'].append(args.freq_sort)
+    tmp = dict(tmp)
+    tmp['flimit'] = args.flimit
+    tmp['freq_sort'] = args.freq_sort
+
     result['freq_form_args'] = tmp
     result['freq_type'] = 'tokens'
     result['alpha_level'] = '0.05'

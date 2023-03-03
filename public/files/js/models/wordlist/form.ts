@@ -88,7 +88,6 @@ export interface WordlistFormState {
     includeNonwords:boolean;
     isForeignSubcorp:boolean;
     currentSubcorpus:string;
-    origSubcorpName:string;
     outputOptionsVisible:boolean;
     filtersVisible:boolean;
     precalcTasks:Array<Kontext.AsyncTaskInfo<{}>>;
@@ -179,7 +178,6 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                 },
                 isForeignSubcorp: corpusIdent.foreignSubcorp,
                 currentSubcorpus: corpusIdent.usesubcorp,
-                origSubcorpName: '',
                 outputOptionsVisible: false,
                 filtersVisible: false,
                 precalcTasks: [],

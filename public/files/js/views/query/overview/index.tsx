@@ -79,7 +79,7 @@ export interface QueryToolbarProps {
     corpname:string;
     humanCorpname:string;
     usesubcorp:string;
-    origSubcorpName:string;
+    subcName:string;
     foreignSubcorp:boolean;
     queryFormProps:QueryFormLiteProps;
     filterFormProps:FilterFormProps;
@@ -97,7 +97,7 @@ export interface NonViewPageQueryToolbarProps {
     corpname:string;
     humanCorpname:string;
     usesubcorp:string;
-    origSubcorpName:string;
+    subcName:string;
     foreignSubcorp:boolean;
     queryFormProps?:QueryFormProps;
     filterFormProps?:FilterFormProps;
@@ -417,6 +417,22 @@ export function init({
         );
     };
 
+    // ------------------------ <QueryOverviewButton /> ---------------------------
+
+    const QueryOverviewButton:React.FC<{}> = (props) => {
+
+        const handleQueryOverview = () => {
+            dispatcher.dispatch(MainMenuActions.OverviewShowQueryInfo);
+        };
+
+        return (
+            <S.QueryOverviewLinkSpan>
+                <strong className="separ">~</strong>
+                <a title={he.translate('global__query_overview')} onClick={handleQueryOverview}>{he.translate('global__details')}</a>
+            </S.QueryOverviewLinkSpan>
+        );
+    };
+
 
     // ------------------------ <QueryOverview /> --------------------------------
 
@@ -424,7 +440,7 @@ export function init({
         corpname:string;
         humanCorpname:string;
         usesubcorp:string;
-        origSubcorpName:string;
+        subcName:string;
         foreignSubcorp:boolean;
         cutoff:number;
         queryFormProps:QueryFormLiteProps;
@@ -518,7 +534,7 @@ export function init({
                                     corpname={props.corpname}
                                     humanCorpname={props.humanCorpname}
                                     usesubcorp={props.usesubcorp}
-                                    origSubcorpName={props.origSubcorpName}
+                                    subcName={props.subcName}
                                     foreignSubcorp={props.foreignSubcorp} />
                             : null}
                     {List.map(
@@ -552,6 +568,7 @@ export function init({
                         </S.GroupIndicator> :
                         null
                     }
+                    <QueryOverviewButton />
                 </Style_QueryOverviewBarUL>
             </div>
         );
@@ -568,7 +585,7 @@ export function init({
         corpname:string;
         humanCorpname:string;
         usesubcorp:string;
-        origSubcorpName:string;
+        subcName:string;
         foreignSubcorp:boolean;
         ops:Array<PersistentQueryOperation>;
         cutoff:number;
@@ -593,7 +610,7 @@ export function init({
                                     corpname={props.corpname}
                                     humanCorpname={props.humanCorpname}
                                     usesubcorp={props.usesubcorp}
-                                    origSubcorpName={props.origSubcorpName}
+                                    subcName={props.subcName}
                                     foreignSubcorp={props.foreignSubcorp} />
                             : null}
                     {List.map(

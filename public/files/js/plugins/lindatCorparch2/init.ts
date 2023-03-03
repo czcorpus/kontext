@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../../types/kontext';
 import * as PluginInterfaces from '../../types/plugins';
 import { CorplistWidgetModel } from './widget';
 import { CorplistPage, CorplistServerData } from './corplist';
@@ -76,7 +75,7 @@ export class Plugin implements PluginInterfaces.Corparch.IPlugin {
         this.model = new CorplistWidgetModel({
             dispatcher: this.pluginApi.dispatcher(),
             pluginApi: this.pluginApi,
-            corpusIdent: this.pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
+            corpusIdent: this.pluginApi.getCorpusIdent(),
             anonymousUser: this.pluginApi.getConf<boolean>('anonymousUser'),
             searchEngine: searchEngine,
             dataFav: favData,

@@ -62,7 +62,7 @@ export function init(
                         corpname={props.corpname}
                         humanCorpname={props.humanCorpname}
                         usesubcorp={props.usesubcorp}
-                        origSubcorpName={props.origSubcorpName}
+                        subcName={props.subcName}
                         foreignSubcorp={props.foreignSubcorp} />
                 {props.children}
             </S.QueryOverviewBarUL>

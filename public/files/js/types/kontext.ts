@@ -183,7 +183,7 @@ export interface FullCorpusIdent {
     variant:string;
     name:string;
     usesubcorp?:string;
-    origSubcorpName?:string;
+    subcName?:string;
     foreignSubcorp?:boolean;
 
     /**

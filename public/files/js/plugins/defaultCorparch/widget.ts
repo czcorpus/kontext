@@ -79,7 +79,7 @@ const importServerFavitem = (item:common.ServerFavlistItem):FavListItem => {
         id: item.id,
         name: item.name,
         subcorpus_id: item.subcorpus_id,
-        subcorpus_orig_id: item.subcorpus_orig_id,
+        subcorpus_name: item.subcorpus_name,
         size: item.size,
         size_info: item.size_info,
         corpora: item.corpora,
@@ -202,9 +202,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 dataFavImp,
                 {
                     subcorpus_id: currCorp.usesubcorp,
-                    subcorpus_orig_id: currCorp.origSubcorpName,
-                    corpora: [...(pluginApi.getConf<Array<string>>('alignedCorpora') || []),
-                            currCorp.id]
+                    subcorpus_name: currCorp.subcName,
+                    corpora: [currCorp.id, ...(pluginApi.getConf<Array<string>>('alignedCorpora') || [])]
                 }
             ),
             isWaitingForSearchResults: false,
@@ -354,7 +353,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                                     name: response.name,
                                     subcorpus_id: response.subcorpus_id,
                                     // TODO !!! missing orig subc name
-                                    subcorpus_orig_id: response.subcorpus_id,
+                                    subcorpus_name: response.subcorpus_id,
                                     size: response.size,
                                     size_info: response.size_info,
                                     // TODO missing name
@@ -739,7 +738,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
     getFullCorpusSelection(state:CorplistWidgetModelState):common.GeneratedFavListItem {
         return {
             subcorpus_id: state.corpusIdent.usesubcorp,
-            subcorpus_orig_id: state.corpusIdent.origSubcorpName,
+            subcorpus_name: state.corpusIdent.subcName,
             corpora: [state.corpusIdent.id, ...state.alignedCorpora]
         };
     };
@@ -779,7 +778,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 {
                     corpora: List.map(v => v.id, trashedItem.corpora),
                     subcorpus_id: trashedItem.subcorpus_id,
-                    subcorpus_orig_id: trashedItem.subcorpus_orig_id,
+                    subcorpus_name: trashedItem.subcorpus_name,
                 }
             );
 

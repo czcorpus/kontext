@@ -21,7 +21,6 @@
  */
 
 import * as React from 'react';
-import * as Kontext from '../../types/kontext';
 import * as PluginInterfaces from '../../types/plugins';
 import { IPluginApi } from '../../types/plugins/common';
 import { TreeWidgetModel } from './model';
@@ -41,7 +40,7 @@ export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage  {
         this.pluginApi = pluginApi;
         this.treeModel = new TreeWidgetModel(
             pluginApi,
-            this.pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
+            this.pluginApi.getCorpusIdent(),
             (corpusIdent:string) => {
                 window.location.href = pluginApi.createActionUrl(
                     'query', {corpname: corpusIdent});
@@ -94,7 +93,7 @@ export class Plugin implements PluginInterfaces.Corparch.IPlugin {
 
         this.treeModel = new TreeWidgetModel(
             this.pluginApi,
-            this.pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
+            this.pluginApi.getCorpusIdent(),
             (corpusIdent: string) => {
                 window.location.href = this.pluginApi.createActionUrl(
                     targetAction, {corpname: corpusIdent});

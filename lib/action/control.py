@@ -85,7 +85,7 @@ async def _output_result(
             result['messages'] = resp.system_messages
         apply_theme(result, app, translate)
         action_model.init_menu(result)
-        return tpl_engine.render(action_props.template, result)
+        return tpl_engine.render(action_props.template, result, translate)
 
     if (isinstance(result, dict) and
             'messages' in result and

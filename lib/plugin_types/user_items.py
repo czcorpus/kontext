@@ -25,8 +25,8 @@ Expected factory method signature: create_instance(config, db)
 """
 
 import abc
-from dataclasses import dataclass, field, InitVar
-from typing import Dict, Any, Optional, List, TypedDict
+from dataclasses import InitVar, dataclass, field
+from typing import Any, Dict, List, Optional, TypedDict
 
 import l10n
 from action.errors import UserReadableException
@@ -57,7 +57,7 @@ class FavoriteItem:
     sizes: InitVar[List[Any]] = None
     size_info: Optional[str] = None
     subcorpus_id: Optional[str] = None
-    subcorpus_orig_id: Optional[str] = None
+    subcorpus_name: Optional[str] = None
 
     def __post_init__(self, id, sizes):
         if self.ident is None:
@@ -86,7 +86,7 @@ class FavoriteItem:
             size_info=self.size_info,
             corpora=self.corpora,
             subcorpus_id=self.subcorpus_id,
-            subcorpus_orig_id=self.subcorpus_orig_id
+            subcorpus_name=self.subcorpus_name
         )
 
 
