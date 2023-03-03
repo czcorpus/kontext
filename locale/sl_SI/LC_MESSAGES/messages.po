@@ -451,8 +451,8 @@ msgstr "ID-ji dokumentov"
 msgid "pre-installed on Apple macOS"
 msgstr "vnaprej nameščeno v sistemu Apple macOS"
 
-msgid "Node forms"
-msgstr "Oblike zadetkov"
+msgid "Node forms [A=a]"
+msgstr "Oblike zadetkov [A=a]"
 
 msgid "new subcorpora in your library: %s"
 msgstr "novi podkorpusi v vaši knjižnici: %s"

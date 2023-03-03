@@ -245,8 +245,8 @@ msgstr "Negatywne"
 msgid "Frequency"
 msgstr "Frekwyncyjŏ"
 
-msgid "Node forms"
-msgstr "Formy wynzłōw"
+msgid "Node forms [A=a]"
+msgstr "Formy wynzłōw [A=a]"
 
 msgid "Doc IDs"
 msgstr "ID ôd dokumyntōw"
