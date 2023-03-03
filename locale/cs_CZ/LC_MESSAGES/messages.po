@@ -255,8 +255,8 @@ msgstr "Negativní"
 msgid "Frequency"
 msgstr "Frekvence"
 
-msgid "Node forms"
-msgstr "Slovní tvary"
+msgid "Node forms [A=a]"
+msgstr "Slovní tvary [A=a]"
 
 msgid "Doc IDs"
 msgstr "Dokumenty"

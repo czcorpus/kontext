@@ -184,7 +184,7 @@ class Frequency:
 
     freq_node_forms_i: ConcMenuItem = field(
         default_factory=lambda: ConcMenuItem(
-            MainMenu.FREQUENCY('node-forms'), 'Node forms' + ' [A=a]', 'freqs', hint='case insensitive'
+            MainMenu.FREQUENCY('node-forms'), 'Node forms [A=a]', 'freqs', hint='case insensitive'
         ).add_args(
             ('fcrit', 'word/ie 0~0>0'),
             ('freq_type', 'tokens'))
