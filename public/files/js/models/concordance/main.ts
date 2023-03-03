@@ -21,111 +21,92 @@
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { throwError, Observable, interval, Subscription, forkJoin } from 'rxjs';
 import { tap, map, concatMap } from 'rxjs/operators';
-import { List, pipe, HTTP, tuple } from 'cnc-tskit';
+import { List, pipe, HTTP, tuple, Dict } from 'cnc-tskit';
 
 import * as ViewOptions from '../../types/viewOptions';
-import * as PluginInterfaces from '../../types/plugins';
 import { PageModel } from '../../app/page';
 import { ConclineSectionOps } from './line';
 import { AudioPlayer, PlayerStatus} from './media';
 import { ConcSaveModel } from './save';
 import { Actions as ViewOptionsActions } from '../options/actions';
 import { CorpColumn, ViewConfiguration, AudioPlayerActions, AjaxConcResponse,
-    ServerPagination, ServerLineData, ServerTextChunk, LineGroupId, attachColorsToIds,
-    mapIdToIdWithColors, Line, TextChunk, KWICSection, PaginationActions, ConcViewMode} from './common';
+    ServerPagination, ServerLineData, LineGroupId, attachColorsToIds,
+    mapIdToIdWithColors, Line, TextChunk, PaginationActions, ConcViewMode, HighlightWords, ConcQueryResponse, KWICSection} from './common';
 import { Actions, ConcGroupChangePayload,
     PublishLineSelectionPayload } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
+import { Block } from '../freqs/common';
+import { highlightConcLineTokens, importLines } from './transform';
+
+export interface HighlightItem {
+
+    /**
+     * level specifies target lang./corp. column for highlighting:
+     *  -  0: first corpus,
+     *  -  1: second corpus,
+     *  -  N: (N-1)th corpus
+     *  - -1: all corpora
+     */
+    level:number;
+
+    checked:boolean;
+
+    loaded:boolean;
+
+    value:string;
+
+    /**
+     * attr specifies a kwic_connect pos. attribute data is based on
+     */
+    attr:string;
+}
+
+/**
+ *
+ * @param current
+ * @param incoming
+ * @param incomingLoaded if false then the 'loaded' status is taken
+ *  from 'current' else from 'incoming'
+ * @returns
+ */
+export function mergeHighlightItems(
+    current:Array<HighlightItem>,
+    incoming:Array<HighlightItem>,
+    incomingLoaded:boolean
+):Array<HighlightItem> {
+
+    return pipe(
+        [...current, ...incoming],
+        List.groupBy(
+            x => `${x.attr}#${x.value}`
+        ),
+        List.map(
+            ([, hi]) => ({
+                ...List.last(hi),
+                loaded: incomingLoaded ?
+                    List.last(hi).loaded :
+                    List.head(hi).loaded
+            })
+        )
+    );
+}
+
 
 /**
  *
  */
-function importLines(data:Array<ServerLineData>, mainAttrIdx:number):Array<Line> {
-    let ans:Array<Line> = [];
-
-    function importTextChunk(item:ServerTextChunk, id:string):TextChunk {
-        if (mainAttrIdx === -1) {
-            return {
-                id,
-                className: item.class,
-                text: item.str.trim().split(' '),
-                openLink: item.open_link ? {speechPath: item.open_link.speech_path} : undefined,
-                closeLink: item.close_link ? {speechPath: item.close_link.speech_path} : undefined,
-                continued: item.continued,
-                showAudioPlayer: false,
-                tailPosAttrs: item.tail_posattrs || []
-            };
-
-        } else {
-            const tailPosattrs = item.tail_posattrs || [];
-            const text = item.class === 'strc' ?  item.str : tailPosattrs[mainAttrIdx];
-            tailPosattrs.splice(mainAttrIdx, 1, item.str.trim());
-            return {
-                id,
-                className: item.class,
-                text: [text],
-                openLink: item.open_link ? {speechPath: item.open_link.speech_path} : undefined,
-                closeLink: item.close_link ? {speechPath: item.close_link.speech_path} : undefined,
-                continued: item.continued,
-                showAudioPlayer: false,
-                tailPosAttrs: tailPosattrs
-            };
-        }
-    }
-
-    data.forEach((item:ServerLineData, i:number) => {
-        let line:Array<KWICSection> = [];
-        const main_line = ConclineSectionOps.newKWICSection(
-            item.toknum,
-            item.linenum,
-            item.ref,
-            List.map((v, j) => importTextChunk(v, `C${i}:L${j}`), item.Left),
-            List.map((v, j) => importTextChunk(v, `C${i}:K${j}`), item.Kwic),
-            List.map((v, j) => importTextChunk(v, `C${i}:R${j}`), item.Right),
-            item.ml_positions,
-            undefined,
-        );
-        line.push(main_line);
-
-        line = line.concat((item.Align || []).map((align_item, k) => {
-            return ConclineSectionOps.newKWICSection(
-                align_item.toknum,
-                align_item.linenum,
-                align_item.ref,
-                List.map((v, j) => importTextChunk(v, `C${i}:A${k}:L${j}`), align_item.Left),
-                List.map((v, j) => importTextChunk(v, `C${i}:A${k}:K${j}`), align_item.Kwic),
-                List.map((v, j) => importTextChunk(v, `C${i}:A${k}:R${j}`), align_item.Right),
-                align_item.ml_positions,
-                item.ml_positions,
-            );
-        }));
-        ans.push({
-            lineNumber: item.linenum,
-            lineGroup: item.linegroup >= 0 ? item.linegroup : undefined,
-            kwicLength: item.kwiclen,
-            languages: line,
-            hasFocus: false
-        });
-    });
-
-    return ans;
-}
-
-export interface HighlightItem {
-    level:number; // 0 first corpus, 1 second corpus, ... -1: all corpora
-    value:string
-}
-
-
 export interface ConcordanceModelState {
 
     lines:Array<Line>;
 
-    shadowLines:Array<Line>;
-
-    shadowPosattrs:Array<string>;
+    highlightWordsStore:{[posAttr:string]:HighlightWords};
 
     highlightItems:Array<HighlightItem>;
+
+    /**
+     * a concordance ID the highlight was loaded for (=> if conc is changed, we have to reload highlights too)
+     */
+    highlightConcId:string|undefined;
 
     viewMode:ConcViewMode;
 
@@ -141,9 +122,9 @@ export interface ConcordanceModelState {
 
     maincorp:string; // primary corpus in alignent mode (can be different from baseCorpname)
 
-    subCorpName:string;
+    subcId:string;
 
-    origSubcorpName:string;
+    subcName:string;
 
     playerAttachedChunk:string;
 
@@ -237,16 +218,16 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 corporaColumns: lineViewProps.CorporaColumns,
                 baseCorpname: lineViewProps.baseCorpname,
                 maincorp: lineViewProps.mainCorp,
-                subCorpName: lineViewProps.subCorpName,
-                origSubcorpName: lineViewProps.origSubCorpName,
+                subcId: lineViewProps.subcId,
+                subcName: lineViewProps.subcName,
                 unfinishedCalculation: lineViewProps.Unfinished,
                 concSize: lineViewProps.concSummary.concSize,
                 concId: layoutModel.getConf<string>('concPersistenceOpId'),
                 baseViewAttr: lineViewProps.baseViewAttr,
                 lines: importLines(initialData, viewAttrs.indexOf(lineViewProps.baseViewAttr) - 1),
-                shadowLines: null, // used as highlighting reference
-                shadowPosattrs: [],
+                highlightWordsStore: {},
                 highlightItems: [],
+                highlightConcId: null,
                 viewAttrs,
                 numItemsInLockedGroups: lineViewProps.NumItemsInLockedGroups,
                 pagination: lineViewProps.pagination, // TODO possible mutable mess
@@ -323,8 +304,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         };
         this.busyTimer = lineViewProps.Unfinished ? this.runBusyTimer(this.busyTimer) : null;
 
-        this.addActionHandler<typeof Actions.AddedNewOperation>(
-            Actions.AddedNewOperation.name,
+        this.addActionHandler(
+            Actions.AddedNewOperation,
             action => {
                 if (action.error) {
                     this.changeState(state => {
@@ -348,23 +329,26 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                             concId: action.payload.data.conc_persistence_op_id
                         }
                     });
-                    if (!List.empty(this.state.highlightItems)) {
-                        this.reloadShadowLines(this.state.currentPage, this.state.shadowPosattrs);
-                    }
+                    Dict.forEach(
+                        (_, kcAttr) => {
+                            this.reloadAlignedHighlights(kcAttr, true);
+                        },
+                        this.state.highlightWordsStore
+                    );
                 }
             }
         );
 
-        this.addActionHandler<typeof Actions.ChangeMainCorpus>(
-            Actions.ChangeMainCorpus.name,
+        this.addActionHandler(
+            Actions.ChangeMainCorpus,
             action => {
                 this.changeMainCorpus(action.payload.maincorp);
                     // we leave the page here
             }
         );
 
-        this.addActionHandler<typeof Actions.PlayAudioSegment>(
-            Actions.PlayAudioSegment.name,
+        this.addActionHandler(
+            Actions.PlayAudioSegment,
             action => {
                 this.changeState(state => {
                     state.forceScroll = window.scrollY;
@@ -376,8 +360,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.AudioPlayerClickControl>(
-            Actions.AudioPlayerClickControl.name,
+        this.addActionSubtypeHandler(
+            Actions.AudioPlayerClickControl,
             action => action.payload.playerId === ConcordanceModel.AUDIO_PLAYER_ID,
             action => {
                 this.changeState(state => {
@@ -390,8 +374,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.AudioPlayerSetPosition>(
-            Actions.AudioPlayerSetPosition.name,
+        this.addActionSubtypeHandler(
+            Actions.AudioPlayerSetPosition,
             action => action.payload.playerId === ConcordanceModel.AUDIO_PLAYER_ID,
             action => {
                 this.changeState(state => {
@@ -404,8 +388,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.AudioPlayersStop>(
-            Actions.AudioPlayersStop.name,
+        this.addActionHandler(
+            Actions.AudioPlayersStop,
             action => {
                 this.handlePlayerControls('stop');
                 this.changeState(state => {
@@ -435,10 +419,26 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         this.changePage(action.payload.action, action.payload.pageNum)
 
                 ]).pipe(
-                    tap(([wakePayload,[,pageNum]]) => {
+                    tap(([wakePayload,]) => {
                         this.applyLineSelections(wakePayload);
-                        if (!List.empty(this.state.highlightItems)) {
-                            this.reloadShadowLines(pageNum, this.state.shadowPosattrs);
+                        if (Actions.isReloadConc(action)) {
+                            Dict.forEach(
+                                (_, kcAttr) => {
+                                    this.reloadAlignedHighlights(
+                                        kcAttr,
+                                        this.state.highlightConcId !== action.payload.concId
+                                    );
+                                },
+                                this.state.highlightWordsStore
+                            );
+
+                        } else {
+                            Dict.forEach(
+                                (_, kcAttr) => {
+                                    this.reloadAlignedHighlights(kcAttr, false);
+                                },
+                                this.state.highlightWordsStore
+                            );
                         }
                     })
 
@@ -463,10 +463,10 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.LineSelectionResetOnServer>(
-            Actions.LineSelectionResetOnServer.name,
+        this.addActionHandler(
+            Actions.LineSelectionResetOnServer,
             action => {
-                this.suspend({}, (action, syncData) => {
+                this.waitForAction({}, (action, syncData) => {
                     return action.name === Actions.LineSelectionResetOnServerDone.name ?
                         null : syncData;
 
@@ -499,8 +499,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.AsyncCalculationUpdated>(
-            Actions.AsyncCalculationUpdated.name,
+        this.addActionHandler(
+            Actions.AsyncCalculationUpdated,
             action => {
                 const prevConcSize = this.state.concSize;
                 this.changeState(state => {
@@ -525,16 +525,21 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                     } else {
                         this.busyTimer = this.stopBusyTimer(this.busyTimer);
                     }
-                    if (!List.empty(this.state.highlightItems)) {
-                        this.reloadShadowLines(this.state.currentPage, this.state.shadowPosattrs);
+                    if (action.payload.finished) {
+                        Dict.forEach(
+                            (_, kcAttr) => {
+                                this.reloadAlignedHighlights(kcAttr, true);
+                            },
+                            this.state.highlightWordsStore
+                        );
                     }
                 }
                 this.emitChange();
             }
         );
 
-        this.addActionHandler<typeof Actions.AsyncCalculationFailed>(
-            Actions.AsyncCalculationFailed.name,
+        this.addActionHandler(
+            Actions.AsyncCalculationFailed,
             action => {
                 this.busyTimer = this.stopBusyTimer(this.busyTimer);
                 this.changeState(state => {
@@ -545,16 +550,16 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.ChangeLangVisibility>(
-            Actions.ChangeLangVisibility.name,
+        this.addActionHandler(
+            Actions.ChangeLangVisibility,
             action => {
                 this.changeColVisibility(action.payload.corpusId, action.payload.value);
                 this.emitChange();
             }
         );
 
-        this.addActionHandler<typeof Actions.SwitchKwicSentMode>(
-            Actions.SwitchKwicSentMode.name,
+        this.addActionHandler(
+            Actions.SwitchKwicSentMode,
             action => {
                 this.changeViewMode().subscribe({
                     next: () => {
@@ -566,21 +571,24 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         this.emitChange();
                     }
                 });
-                if (!List.empty(this.state.highlightItems)) {
-                    this.reloadShadowLines(this.state.currentPage, this.state.shadowPosattrs);
-                }
+                Dict.forEach(
+                    (_, kcAttr) => {
+                        this.reloadAlignedHighlights(kcAttr, true);
+                    },
+                    this.state.highlightWordsStore
+                );
             }
         );
 
-        this.addActionHandler<typeof Actions.DataWaitTimeInc>(
-            Actions.DataWaitTimeInc.name,
+        this.addActionHandler(
+            Actions.DataWaitTimeInc,
             action => {
                 this.changeState(state => {state.busyWaitSecs = action.payload.idx});
             }
         );
 
-        this.addActionHandler<typeof ViewOptionsActions.SaveSettingsDone>(
-            ViewOptionsActions.SaveSettingsDone.name,
+        this.addActionHandler(
+            ViewOptionsActions.SaveSettingsDone,
             action => {
                 if (!action.error) {
                     this.changeState(state => {
@@ -605,8 +613,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<typeof ViewOptionsActions.GeneralSubmitDone>(
-            ViewOptionsActions.GeneralSubmitDone.name,
+        this.addActionHandler(
+            ViewOptionsActions.GeneralSubmitDone,
             action => {
                 if (!action.error) {
                     this.changeState(state => {
@@ -627,15 +635,19 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                             this.layoutModel.showMessage('error', err);
                         }
                     });
-                    if (!List.empty(this.state.highlightItems)) {
-                        this.reloadShadowLines(this.state.currentPage, this.state.shadowPosattrs);
-                    }
+                    Dict.forEach(
+                        (_, kcAttr) => {
+                            this.reloadAlignedHighlights(kcAttr, true);
+                        },
+                        this.state.highlightWordsStore
+                    );
+
                 }
             }
         );
 
-        this.addActionHandler<typeof Actions.SetLineSelectionMode>(
-            Actions.SetLineSelectionMode.name,
+        this.addActionHandler(
+            Actions.SetLineSelectionMode,
             action => {
                 this.changeState(state => {
                     state.forceScroll = null;
@@ -643,8 +655,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.LineSelectionReset>(
-            Actions.LineSelectionReset.name,
+        this.addActionHandler(
+            Actions.LineSelectionReset,
             action => {
                 this.changeState(state => {
                     state.forceScroll = window.pageYOffset;
@@ -657,8 +669,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.UnlockLineSelectionDone>(
-            Actions.UnlockLineSelectionDone.name,
+        this.addActionHandler(
+            Actions.UnlockLineSelectionDone,
             action => {
                 if (!action.error) {
                     this.changeState(state => {
@@ -671,8 +683,11 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<typeof MainMenuActions.ShowSaveForm, typeof Actions.ResultCloseSaveForm>(
-            [MainMenuActions.ShowSaveForm.name, Actions.ResultCloseSaveForm.name],
+        this.addActionHandler(
+            [
+                MainMenuActions.ShowSaveForm,
+                Actions.ResultCloseSaveForm
+            ],
             action => {
                 this.changeState(state => {
                     state.forceScroll = window.pageYOffset;
@@ -681,8 +696,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.ShowKwicDetail>(
-            Actions.ShowKwicDetail.name,
+        this.addActionHandler(
+            Actions.ShowKwicDetail,
             action => {
                 this.changeState(state => {
                     state.kwicDetailVisible = true;
@@ -693,8 +708,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.ShowTokenDetail>(
-            Actions.ShowTokenDetail.name,
+        this.addActionHandler(
+            Actions.ShowTokenDetail,
             action => {
                 this.changeState(state => {
                     state.kwicDetailVisible = true;
@@ -705,8 +720,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.ResetDetail>(
-            Actions.ResetDetail.name,
+        this.addActionHandler(
+            Actions.ResetDetail,
             action => {
                 this.changeState(state => {
                     state.kwicDetailVisible = false;
@@ -716,8 +731,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.ShowRefDetail>(
-            Actions.ShowRefDetail.name,
+        this.addActionHandler(
+            Actions.ShowRefDetail,
             action => {
                 this.changeState(state => {
                     state.refDetailVisible = true;
@@ -728,8 +743,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.RefResetDetail>(
-            Actions.RefResetDetail.name,
+        this.addActionHandler(
+            Actions.RefResetDetail,
             action => {
                 this.changeState(state => {
                     state.refDetailVisible = false;
@@ -739,8 +754,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.SelectLine>(
-            Actions.SelectLine.name,
+        this.addActionHandler(
+            Actions.SelectLine,
             action => {
                 this.changeState(state => {
                     state.forceScroll = window.pageYOffset;
@@ -756,15 +771,15 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.ApplyStoredLineSelectionsDone>(
-            Actions.ApplyStoredLineSelectionsDone.name,
+        this.addActionHandler(
+            Actions.ApplyStoredLineSelectionsDone,
             action => {
                 this.applyLineSelections(action.payload);
             }
         );
 
-        this.addActionHandler<typeof Actions.ToggleLineSelOptions>(
-            Actions.ToggleLineSelOptions.name,
+        this.addActionHandler(
+            Actions.ToggleLineSelOptions,
             action => {
                 this.changeState(state => {
                     state.forceScroll = window.pageYOffset;
@@ -773,8 +788,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.MarkLinesDone>(
-            Actions.MarkLinesDone.name,
+        this.addActionHandler(
+            Actions.MarkLinesDone,
             action => {
                 if (!action.error) {
                     this.loadConcPage(action.payload.data.conc_persistence_op_id).subscribe(
@@ -792,8 +807,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.RenameSelectionGroupDone>(
-            Actions.RenameSelectionGroupDone.name,
+        this.addActionHandler(
+            Actions.RenameSelectionGroupDone,
             action => {
                 if (!action.error) {
                     this.changeState(state => {
@@ -804,8 +819,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.ShowSyntaxView>(
-            Actions.ShowSyntaxView.name,
+        this.addActionHandler(
+            Actions.ShowSyntaxView,
             action => {
                 this.changeState(state => {
                     state.syntaxViewVisible = true;
@@ -813,8 +828,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.CloseSyntaxView>(
-            Actions.CloseSyntaxView.name,
+        this.addActionHandler(
+            Actions.CloseSyntaxView,
             action => {
                 this.changeState(state => {
                     state.syntaxViewVisible = false;
@@ -822,8 +837,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.HideAnonymousUserWarning>(
-            Actions.HideAnonymousUserWarning.name,
+        this.addActionHandler(
+            Actions.HideAnonymousUserWarning,
             action => {
                 this.changeState(state => {
                     state.showAnonymousUserWarn = false;
@@ -836,12 +851,16 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             action => {
                 this.changeState(state => {
                     state.forceScroll = window.pageYOffset;
-                    state.highlightItems = action.payload.items;
-                    state.shadowPosattrs = List.addUnique(action.payload.matchPosAttr, state.shadowPosattrs);
+                    state.highlightItems = mergeHighlightItems(
+                        state.highlightItems,
+                        action.payload.items,
+                        false
+                    );
+                    if (!Dict.hasKey(action.payload.matchPosAttr, state.highlightWordsStore)) {
+                        state.highlightWordsStore[action.payload.matchPosAttr] = {};
+                    }
                 });
-                if (this.state.shadowLines === null) {
-                    this.reloadShadowLines(this.state.currentPage, this.state.shadowPosattrs);
-                }
+                this.reloadAlignedHighlights(action.payload.matchPosAttr, false);
             }
         );
     }
@@ -885,6 +904,30 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         } else {
             throw new Error(`column for ${corpusId} not found`);
         }
+    }
+
+    private applyTokenHighlighting(
+            languages:Array<KWICSection>,
+            highlightItems:Array<HighlightItem>,
+            words:HighlightWords,
+            kcAttr:string
+    ):Array<KWICSection> {
+        return pipe(
+            languages,
+            List.map(
+                (lang, i) => {
+                    const colHlItems = List.filter(x => x.level === i, highlightItems);
+                    const colWordDb = Dict.filter(
+                        (v, _) => List.findIndex(
+                            x => x.value === v && x.checked, colHlItems) > -1,
+                        words
+                    );
+                    return List.size(colHlItems) > 0 ?
+                        highlightConcLineTokens(lang, colWordDb, kcAttr) :
+                        lang;
+                }
+            )
+        );
     }
 
     getViewAttrs():Array<string> {
@@ -981,25 +1024,159 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         );
     }
 
-    private reloadShadowLines(fromp:number, attrs: Array<string>) {
-        const args = {
-            ...this.layoutModel.getConcArgs(),
-            attrs,
-            format: 'json',
-            fromp,
-            q: ['~' + this.state.concId],
-        };
-        this.layoutModel.ajax$<AjaxConcResponse>(
-            HTTP.Method.GET,
-            this.layoutModel.createActionUrl('view'),
-            args
+    /**
+     *
+     * @param kcAttr an attribute (typically: word or lemma) we want the hightlight base on
+     * @param forceReload
+     * @returns
+     */
+    private reloadAlignedHighlights(kcAttr:string, forceReload:boolean) {
+        if (List.size(this.state.corporaColumns) === 1 || List.size(this.state.highlightItems) === 0) {
+            this.dispatchSideEffect(
+                Actions.SetHighlightItemsDone,
+                {
+                    matchPosAttr: kcAttr,
+                    items: []
+                }
+            );
+            return;
+        }
+        const toLoad = pipe(
+            this.state.highlightItems,
+            List.filter(x => !x.loaded),
+            List.map(x => ({...x, loaded: true}))  // we already prepere here for later merge
+        );
+
+        if (!forceReload && List.size(toLoad) === 0) {
+            this.changeState(
+                state => {
+                    state.lines = List.map(
+                        line => ({
+                            ...line,
+                            languages: this.applyTokenHighlighting(
+                                line.languages,
+                                List.filter(x => x.attr === kcAttr, state.highlightItems),
+                                state.highlightWordsStore[kcAttr],
+                                kcAttr
+                            )
+                        }),
+                        state.lines
+                    );
+                }
+            );
+            this.dispatchSideEffect(
+                Actions.SetHighlightItemsDone,
+                {
+                    matchPosAttr: kcAttr,
+                    items: this.state.highlightItems
+                }
+            );
+            return;
+        }
+        const corpname = this.state.corporaColumns[1].n;
+        const values = pipe(
+            toLoad,
+            List.map(x => x.value),
+            x => x.join('|')
+        );
+        this.layoutModel.ajax$<ConcQueryResponse>(
+            HTTP.Method.POST,
+            this.layoutModel.createActionUrl('/query_submit', {format: 'json'}),
+            {
+                type: 'concQueryArgs',
+                queries: [
+                    {
+                        qtype: 'advanced',
+                        corpname,
+                        query: `[${kcAttr}="${values}"]`
+                    }
+                ],
+                no_query_history: true
+            },
+            {
+                contentType: 'application/json'
+            }
+
+        ).pipe(
+            concatMap(
+                (resp) => this.layoutModel.ajax$<{Blocks:Array<Block>}>(
+                    HTTP.Method.GET,
+                    this.layoutModel.createActionUrl(
+                        '/freqml',
+                        {
+                            freq_type: 'tokens',
+                            fpage: 1,
+                            flimit: 1,
+                            q: '~' + resp.conc_persistence_op_id,
+                            cutoff: resp.conc_args.cutoff,
+                            ml1attr: kcAttr,
+                            ml1icase: '0',
+                            ml1ctx: '0<0',
+                            ml2attr: 'word',
+                            ml2icase: '0',
+                            ml2ctx: '0<0',
+                            freqlevel: 2,
+                            format: 'json'
+                        }
+                    ),
+                    {}
+                )
+            ),
+            map(
+                data => pipe(
+                    data.Blocks,
+                    List.head(),
+                    x => x.Items,
+                    List.map(
+                        x => tuple(x.Word[1].n, x.Word[0].n) // [attr] + word
+                    ),
+                    Dict.fromEntries()
+                )
+            )
         ).subscribe({
-            next: data => this.changeState(state => {
-                state.shadowLines = importLines(
-                    data.Lines,
-                    this.getViewAttrs().indexOf(state.baseViewAttr) - 1
+            next: data => {
+                this.changeState(
+                    state => {
+                        state.highlightWordsStore[kcAttr] = Dict.mergeDict(
+                            (_, v2) => v2,
+                            data,
+                            state.highlightWordsStore[kcAttr]
+                        );
+                        state.highlightConcId = state.concId;
+                        state.lines = List.map(
+                            line => ({
+                                ...line,
+                                languages: this.applyTokenHighlighting(
+                                    line.languages,
+                                    List.filter(x => x.attr === kcAttr, state.highlightItems),
+                                    state.highlightWordsStore[kcAttr],
+                                    kcAttr
+                                )
+                            }),
+                            state.lines
+                        );
+                        state.highlightItems = mergeHighlightItems(
+                            state.highlightItems,
+                            toLoad,
+                            true
+                        );
+                    }
                 );
-            })
+                this.dispatchSideEffect(
+                    Actions.SetHighlightItemsDone,
+                    {
+                        matchPosAttr: kcAttr,
+                        items: this.state.highlightItems
+                    }
+                );
+            },
+            error: error => {
+                this.layoutModel.showMessage('error', error);
+                this.dispatchSideEffect(
+                    Actions.SetHighlightItemsDone,
+                    error
+                );
+            }
         });
     }
 
@@ -1014,7 +1191,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         state.unfinishedCalculation = !!data.running_calc;
         state.lineGroupIds = [];
         state.concId = data.conc_persistence_op_id;
-        state.shadowLines = null;
     }
 
     private changeGroupNaming(state:ConcordanceModelState, data:ConcGroupChangePayload):void {

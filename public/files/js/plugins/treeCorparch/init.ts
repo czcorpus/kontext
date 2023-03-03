@@ -16,12 +16,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { throwError } from 'rxjs';
 import * as Kontext from '../../types/kontext';
 import * as PluginInterfaces from '../../types/plugins';
 import { init as viewInit, Views as TreeCorparchViews } from './view';
 import { StatelessModel, SEDispatcher } from 'kombo';
-import { map } from 'rxjs/operators';
 import { Actions, Corplist, itemIsCorplist } from './common';
 import { List, HTTP, pipe, tuple, Dict } from 'cnc-tskit';
 import { IUnregistrable } from '../../models/common/common';
@@ -167,7 +165,7 @@ export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage {
         this.pluginApi = pluginApi;
         this.treeModel = new TreeWidgetModel(
             pluginApi,
-            pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
+            pluginApi.getCorpusIdent(),
             (corpora:Array<string>, subcorpId:string) => {
                 window.location.href = pluginApi.createActionUrl(
                     'query',
@@ -226,7 +224,7 @@ class Plugin {
     ):React.ComponentClass<{widgetId:string}> {
         this.treeModel = new TreeWidgetModel(
             this.pluginApi,
-            this.pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
+            this.pluginApi.getCorpusIdent(),
             onCorpusSelection
         );
         return viewInit(

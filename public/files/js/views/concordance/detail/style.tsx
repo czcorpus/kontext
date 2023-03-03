@@ -27,12 +27,6 @@ import * as theme from '../../theme/default';
 
 export const ConcordanceDetail = styled.div`
 
-    &.tooltip-box {
-        max-width: 40em;
-        min-width: 30em;
-        max-height: 80%;
-    }
-
     .footer {
         padding-top: 1em;
         text-align: center;
@@ -224,18 +218,6 @@ export const ConcordanceDetail = styled.div`
 // ----------- <RefsDetail /> -----------------------------------
 
 export const RefsDetail = styled.div`
-
-    &.tooltip-box.refs-detail {
-        min-width: 40em;
-        max-height: 80%;
-        display: flex;
-        justify-content: center;
-
-        .wrapper {
-            overflow-x: auto;
-            overflow-y: auto;
-        }
-    }
 
     table.full-ref {
         border-spacing: 0;

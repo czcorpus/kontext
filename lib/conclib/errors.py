@@ -60,7 +60,7 @@ class ConcNotFoundException(ConcordanceException):
     pass
 
 
-class BrokenConcordanceException(ConcordanceException):
+class UnreadableConcordanceException(ConcordanceException):
     pass
 
 

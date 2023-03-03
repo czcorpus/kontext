@@ -201,7 +201,7 @@ async def result(amodel: WordlistActionModel, req: KRequest, _: KResponse):
 
 @bp.route('/struct_result', ['POST'])
 @http_action(return_type='json', mutates_result=True, action_model=WordlistActionModel)
-async def struct_result(amodel: WordlistActionModel, req: KRequest, _: KResponse):
+async def struct_result(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
     form_args = WordlistFormArgs()
     form_args.update_by_user_query(req.json)
     amodel.set_curr_wlform_args(form_args)
@@ -239,7 +239,12 @@ async def struct_result(amodel: WordlistActionModel, req: KRequest, _: KResponse
             ('ml2attr', form_args.get_wlposattr(1)),
             ('ml3attr', form_args.get_wlposattr(2)),
             ('next', 'freqml')] + [('q', q) for q in amodel.args.q]
-    return dict(location=req.create_url('restore_conc', args))
+    if req.args.get('format') == 'json':  # => explicit JSON format specification from URL
+        args.append(('format', 'json'))
+    target_url = req.create_url('restore_conc', args)
+    resp.set_http_status(201)
+    resp.set_header('Location', target_url)
+    return dict(location=target_url)
 
 
 @bp.route('/savewl')

@@ -47,8 +47,8 @@ export interface ConcSummaryModelState {
     concSize:number;
     fullSize:number; // TODO explain
     baseCorpname:string;
-    subCorpName:string;
-    origSubcorpName:string;
+    subcId:string;
+    subcName:string;
     isShuffled:boolean;
     isUnfinishedConc:boolean;
     arf:number;
@@ -191,7 +191,7 @@ export class ConcSummaryModel extends StatelessModel<ConcSummaryModelState> {
             ),
             {
                 corpname: state.baseCorpname,
-                usesubcorp: state.subCorpName,
+                usesubcorp: state.subcId,
                 ...this.layoutModel.getConcArgs(),
                 type:'adHocIpmArgs',
                 text_types: ttSelection

@@ -107,10 +107,10 @@ async def _normalize_permissions(path: str):
 
 
 async def _get_sync_conc(
-        worker, corp: AbstractKCorpus, q: Tuple[str, ...], corp_cache_key: Optional[str], cutoff: int) -> PyConc:
+        worker, corp: AbstractKCorpus, q: Tuple[str, ...], cutoff: int) -> PyConc:
     """
-    Calculate a concordance via a provided worker. On the Manatee side,
-    wait until the concordance is complete.
+    Calculate a concordance using worker functionality but on the webserver.
+    Return completed concordance (i.e. block until finished).
     """
     status = worker.create_new_calc_status()
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
@@ -124,15 +124,16 @@ async def _get_sync_conc(
             fullsize=conc.fullsize())
         status.recalc_relconcsize(corp)
         status.arf = round(conc.compute_ARF(), 2) if not corp.subcorpus_id else None
-        status = await cache_map.add_to_map(corp_cache_key, q[:1], cutoff, status)
+        status = await cache_map.add_to_map(corp.cache_key, q[:1], cutoff, status)
         await _normalize_permissions(status.cachefile)  # in case the file already exists
         conc.save(status.cachefile)
         await _normalize_permissions(status.cachefile)
-        await cache_map.add_to_map(corp_cache_key, q[:1], cutoff, status, overwrite=True)
+        await cache_map.add_to_map(corp.cache_key, q[:1], cutoff, status, overwrite=True)
         # update size in map file
         return conc
     except Exception as e:
-        # Please note that there is no need to clean any mess (unfinished cached concordance etc.)
+        # Please note that there is no need to clean any mess
+        # (unfinished cached concordance etc.)
         # here as this is performed by _get_cached_conc()
         # function in case it detects a problem.
         manatee_err = extract_manatee_error(e)
@@ -140,7 +141,7 @@ async def _get_sync_conc(
             finished=True,
             concsize=0,
             error=manatee_err if manatee_err else e)
-        status = await cache_map.add_to_map(corp_cache_key, q[:1], cutoff, status, overwrite=True)
+        status = await cache_map.add_to_map(corp.cache_key, q[:1], cutoff, status, overwrite=True)
         raise status.normalized_error
 
 
@@ -217,12 +218,10 @@ async def get_conc(
                 conc = await _get_async_conc(
                     corp=corp, user_id=user_id, q=q, corp_cache_key=corp.cache_key,
                     cutoff=cutoff, minsize=minsize)
-
             # do the calc here and return (OK for small to mid-sized corpora without alignments)
             else:
                 conc = await _get_sync_conc(
-                    worker=worker, corp=corp, q=q, corp_cache_key=corp.cache_key, cutoff=cutoff)
-
+                    worker=worker, corp=corp, q=q, cutoff=cutoff)
         # save additional concordance actions to cache (e.g. sample)
         for act in range(calc_from, len(q)):
             command, args = q[act][0], q[act][1:]

@@ -109,7 +109,6 @@ export class DispersionPage {
         const initFreqLevel = this.layoutModel.getConf<number>('InitialFreqLevel');
         const freqFormProps:FreqFormProps = {
             fttattr: freqFormInputs.fttattr || [],
-            ftt_include_empty: freqFormInputs.ftt_include_empty || false,
             flimit: freqFormInputs.flimit || '1',
             freq_sort: 'freq',
             mlxattr: freqFormInputs.mlxattr || List.repeat(() => attrs[0].n, initFreqLevel),
@@ -275,7 +274,7 @@ export class DispersionPage {
                 corpname: this.layoutModel.getCorpusIdent().id,
                 humanCorpname: this.layoutModel.getCorpusIdent().name,
                 usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
-                origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
+                subcName: this.layoutModel.getCorpusIdent().subcName,
                 foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp,
                 queryFormProps: {
                     formType: Kontext.ConcFormTypes.QUERY,

@@ -138,7 +138,7 @@ export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelS
                         action => {
                             if (TTActions.isTextTypesQuerySubmitReady(action)) {
                                 const args:CreateSubcorpusArgs = {
-                                    corpname: pageModel.getNestedConf('corpusIdent', 'id'),
+                                    corpname: pageModel.getCorpusIdent().id,
                                     subcname: this.state.subcname,
                                     size: this.state.estimatedSubcSize,
                                     description: '',

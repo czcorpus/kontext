@@ -11,7 +11,10 @@
  */
 
 Query =
-    Sequence (_ BINAND _ GlobPart)? (_ NOT? (KW_WITHIN / KW_CONTAINING) _ WithinContainingPart)*
+    Sequence (_ BINAND _ GlobPart)? (_ WithinOrContaining)*
+
+WithinOrContaining =
+    NOT? (KW_WITHIN / KW_CONTAINING) _ WithinContainingPart
 
 GlobPart =
     GlobCond (_ BINAND _ GlobCond)*
@@ -28,9 +31,11 @@ WithinContainingPart =
 Structure =
     AttName _ AttValList?
 
+NumberedPosition =
+    NUMBER COLON OnePosition
+
 Position =
-    OnePosition
-    / NUMBER COLON OnePosition
+    OnePosition / NumberedPosition
 
 OnePosition =
     LBRACKET _ AttValList? _ RBRACKET

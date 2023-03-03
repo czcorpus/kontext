@@ -70,12 +70,6 @@ export interface TextTypesModelState {
      */
     selectAll:{[key:string]:boolean};
 
-    /**
-     * Represents meta information related to the whole attribute
-     * (i.e. not just to a single value).
-     */
-    metaInfo:{[key:string]:TextTypes.AttrSummary};
-
     minimizedBoxes:{[key:string]:boolean};
 
     textInputPlaceholder:string;
@@ -92,8 +86,6 @@ export interface TextTypesModelState {
     }};
 
     intervalChars:Array<string>;
-
-    metaInfoHelpVisible:boolean;
 
     firstDayOfWeek:'mo'|'su'|'sa';
 
@@ -161,8 +153,9 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                     ),
                     Dict.fromEntries()
                 ),
-                metaInfo: {},
-                textInputPlaceholder: null,
+                textInputPlaceholder: pluginApi.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES) ?
+                    pluginApi.translate('query__tt_search_by_value') :
+                    pluginApi.translate('query__tt_exact_value'),
                 busyAttributes: {},
                 minimizedBoxes: pipe(
                     attributes,
@@ -180,7 +173,6 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                     Dict.fromEntries(),
                 ),
                 intervalChars: pluginApi.getConf<Array<string>>('ttIntervalChars'),
-                metaInfoHelpVisible: false,
                 firstDayOfWeek: pluginApi.getConf<'mo'|'su'|'sa'>('firstDayOfWeek'),
                 isLiveAttrsActive: pluginApi.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES),
             }
@@ -560,9 +552,18 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         this.addActionHandler(
             Actions.SetAttrSummary,
             action => {
-                this.changeState(state => {
-                    state.metaInfo[action.payload.attrName] = action.payload.value;
-                });
+                const index = List.findIndex(
+                    v => v.name === action.payload.attrName,
+                    this.state.attributes,
+                );
+                if (index === -1) {
+                    console.warn(`LiveAttrs: attribute '${action.payload.attrName}' not found`);
+
+                } else {
+                    this.changeState(state => {
+                        state.attributes[index].metaInfo = action.payload.value;
+                    });
+                }
             }
         );
 
@@ -957,7 +958,6 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         state.attributes = List.head(state.selectionHistory);
         state.selectionHistory = [List.head(state.selectionHistory)];
         state.selectAll = Dict.map(_ => false, state.selectAll);
-        state.metaInfo = {};
         state.hasSelectedItems = false;
     }
 
@@ -1077,7 +1077,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                     label: srchAttr.label,
                     name: srchAttr.name,
                     values: [...srchAttr.values],
-                    type: 'full'
+                    type: 'full',
+                    metaInfo: null,
                 } :
                 state.attributes[attrIdx];
 

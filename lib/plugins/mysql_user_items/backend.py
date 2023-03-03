@@ -56,7 +56,7 @@ class Backend:
     async def get_favitems(self, user_id: int):
         async with self._db.cursor() as cursor:
             await cursor.execute(
-                'SELECT fav.id as id, fav.name, fav.subcorpus_id, fav.subcorpus_orig_id, '
+                'SELECT fav.id as id, fav.name, fav.subcorpus_id, fav.subcorpus_orig_id as subcorpus_name, '
                 " GROUP_CONCAT(t.corpus_name SEPARATOR ',') as corpora, "
                 " GROUP_CONCAT(c.size SEPARATOR ',') as sizes "
                 'FROM kontext_user_fav_item as fav '
@@ -87,7 +87,7 @@ class Backend:
         async with self._db.cursor() as cursor:
             await cursor.execute(
                 'INSERT INTO kontext_user_fav_item (name, subcorpus_id, subcorpus_orig_id, user_id) '
-                'VALUES (%s, %s, %s, %s) ', (item.name, item.subcorpus_id, item.subcorpus_orig_id, user_id))
+                'VALUES (%s, %s, %s, %s) ', (item.name, item.subcorpus_id, item.subcorpus_name, user_id))
 
             favitem_id: int = cursor.lastrowid
             await cursor.executemany(

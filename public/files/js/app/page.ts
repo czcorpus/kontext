@@ -830,7 +830,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             this.corpViewOptionsModel = new CorpusViewOptionsModel(
                 this.dispatcher,
                 this,
-                this.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
+                this.getCorpusIdent(),
                 this.getConf<boolean>('anonymousUser'),
                 this.qsuggPlugin.listCurrentProviders()
             );

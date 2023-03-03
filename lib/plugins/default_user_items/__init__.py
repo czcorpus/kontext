@@ -21,13 +21,13 @@ from action.control import http_action
 from action.krequest import KRequest
 from action.model.corpus import CorpusActionModel
 from action.response import KResponse
+from corplib.abstract import SubcorpusIdent
 from plugin_types.auth import AbstractAuth
 from plugin_types.general_storage import KeyValueStorage
 from plugin_types.user_items import (
     AbstractUserItems, FavoriteItem, UserItemException)
 from plugins import inject
 from sanic import Blueprint
-from corplib.abstract import SubcorpusIdent
 
 bp = Blueprint('default_user_items')
 
@@ -45,7 +45,7 @@ def import_legacy_record(data):
                 logging.getLogger(__name__).warning(
                     'Failed to import legacy fav. item record component: {0}'.format(ex))
     ans.subcorpus_id = data.get('subcorpus_id', None)
-    ans.subcorpus_orig_id = data.get('subcorpus_orig_id', ans.subcorpus_id)
+    ans.subcorpus_name = data.get('subcorpus_orig_id', ans.subcorpus_id)
     ans.size = data.get('size', None)
     ans.size_info = data.get('size_info', None)
     return ans
@@ -63,6 +63,8 @@ def import_record(obj):
     if 'type' in obj:
         return import_legacy_record(obj)
     else:
+        obj['subcorpus_name'] = obj['subcorpus_orig_id']
+        del obj['subcorpus_orig_id']
         return FavoriteItem(**obj)
 
 
@@ -84,13 +86,13 @@ async def set_favorite_item(amodel: CorpusActionModel, req: KRequest, resp: KRes
             main_size = corp.search_size
         corpora.append(dict(id=c_id, name=corp.get_conf('NAME')))
     subcorpus_id = req.form.get('subcorpus_id')
-    subcorpus_orig_id = req.form.get('subcorpus_orig_id')
+    subcorpus_name = req.form.get('subcorpus_name')
     item = FavoriteItem(
         name=' || '.join(c['name'] for c in corpora) +
-        (' / ' + subcorpus_orig_id if subcorpus_orig_id else ''),
+        (' / ' + subcorpus_name if subcorpus_name else ''),
         corpora=corpora,
         subcorpus_id=subcorpus_id,
-        subcorpus_orig_id=subcorpus_orig_id,
+        subcorpus_name=subcorpus_name,
         size=main_size
     )
     with plugins.runtime.USER_ITEMS as uit:
@@ -144,12 +146,15 @@ class UserItems(AbstractUserItems):
             ans = l10n.sort(ans, plugin_ctx.user_lang, key=lambda itm: itm.sort_key, reverse=False)
         return ans
 
-    async def add_user_item(self, plugin_ctx, item):
+    async def add_user_item(self, plugin_ctx, item: FavoriteItem):
         if len(await self.get_user_items(plugin_ctx)) >= self.max_num_favorites:
             raise UserItemException('Max. number of fav. items exceeded',
                                     error_code='defaultCorparch__err001',
                                     error_args={'maxNum': self.max_num_favorites})
-        await self._db.hash_set(self._mk_key(plugin_ctx.user_id), item.ident, item.to_dict())
+        data = item.to_dict()
+        data['subcorpus_orig_id'] = data['subcorpus_name']
+        del data['subcorpus_name']
+        await self._db.hash_set(self._mk_key(plugin_ctx.user_id), item.ident, data)
 
     async def delete_user_item(self, plugin_ctx, item_id):
         await self._db.hash_del(self._mk_key(plugin_ctx.user_id), item_id)

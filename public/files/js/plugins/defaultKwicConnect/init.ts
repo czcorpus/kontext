@@ -18,13 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../../types/kontext';
 import * as PluginInterfaces from '../../types/plugins';
 import { init as viewInit, View } from './views';
 import { init as renderersInit, Views as RenderersView } from './renderers';
 import { KwicConnectModel, KnownRenderers } from './model';
 import { List } from 'cnc-tskit';
 import { IPluginApi } from '../../types/plugins/common';
+import { RendererData } from '../../types/plugins/tokenConnect';
 
 declare var require:any;
 require('./style.css'); // webpack
@@ -62,11 +62,11 @@ export class DefaultKwicConnectPlugin implements PluginInterfaces.KwicConnect.IP
             pluginApi,
             corpora: List.concat(
                 pluginApi.getConf<Array<string>>('alignedCorpora'),
-                [pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent').id]
+                [pluginApi.getCorpusIdent().id]
             ),
             mainCorp: concArgs.maincorp ?
                         concArgs.maincorp :
-                        pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent').id,
+                        pluginApi.getCorpusIdent().id,
             rendererMap: this.selectRenderer.bind(this),
             loadChunkSize,
             maxKwicWords,

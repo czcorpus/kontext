@@ -26,67 +26,51 @@ import * as S from './style';
 import { Keyboard } from 'cnc-tskit';
 
 
+type ToggleMotionTypes = 'switch-on'|'switch-off'|undefined;
 
-export function init(he:Kontext.ComponentHelpers):React.ComponentClass<CoreViews.ToggleSwitch.Props, CoreViews.ToggleSwitch.State> {
 
-    class ToggleSwitch extends React.Component<CoreViews.ToggleSwitch.Props, CoreViews.ToggleSwitch.State> {
+export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.ToggleSwitch.Props> {
 
-        constructor(props) {
-            super(props)
-            this.state = {
-                checked: this.props.checked === undefined ? false : this.props.checked,
-                imgClass: this.props.checked === undefined ? 'off' : this.props.checked ? 'on' : 'off'
-            }
-            this.clickHandler = this.clickHandler.bind(this);
-            this.keyHandler = this.keyHandler.bind(this);
-        }
+    const ToggleSwitch:React.FC<CoreViews.ToggleSwitch.Props> = (props) => {
 
-        componentDidUpdate(prevProps) {
-            if (this.props.checked !== prevProps.checked && this.state.checked !== this.props.checked) {
-                this.setState({
-                    checked: this.props.checked,
-                    imgClass: this.props.checked ? 'on switch-on' : 'off switch-off'
-                });
-            }
-          }
+        const [inMotionTo, setMotionTo] = React.useState<ToggleMotionTypes>(undefined);
 
-        clickHandler() {
-            this.setState(
-                {
-                    checked: !this.state.checked,
-                    imgClass: !this.state.checked ? 'on switch-on' : 'off switch-off'
-                },
-                () => {
-                    if (this.props.onChange !== undefined) {
-                        this.props.onChange(this.state.checked);
-                    }
+        React.useEffect(
+            () => {
+                if (props.onChange !== undefined && inMotionTo) {
+                    props.onChange(inMotionTo === 'switch-on');
                 }
-            );
-        }
+            },
+            [inMotionTo]
+        )
 
-        keyHandler(evt) {
+        const clickHandler = () => {
+            setMotionTo(props.checked ? 'switch-off' : 'switch-on');
+        };
+
+        const keyHandler = (evt:React.KeyboardEvent) => {
             if (
                 (evt.key === Keyboard.Value.ENTER) ||
-                (!this.state.checked && evt.key === Keyboard.Value.RIGHT_ARROW) ||
-                (this.state.checked && evt.key === Keyboard.Value.LEFT_ARROW)
+                 evt.key === Keyboard.Value.SPACE ||
+                (!props.checked && evt.key === Keyboard.Value.RIGHT_ARROW) ||
+                (props.checked && evt.key === Keyboard.Value.LEFT_ARROW)
             ) {
-                this.clickHandler();
+                clickHandler();
                 evt.stopPropagation();
                 evt.preventDefault();
             }
-        }
+        };
 
-        render() {
-            return (
-                <S.ToggleSwitch onKeyDown={this.keyHandler} tabIndex={this.props.disabled ? -1 : 0} className={this.props.disabled ? "ToggleSwitch disabled" : "ToggleSwitch"}>
-                    <input id={this.props.id} type="checkbox" checked={this.state.checked}
-                            onChange={this.clickHandler} disabled={this.props.disabled}/>
-                    <span className="toggle-img" onClick={this.props.disabled ? null : this.clickHandler}>
-                        <a role="checkbox" aria-checked={this.state.checked} className={this.state.imgClass}/>
-                    </span>
-                </S.ToggleSwitch>
-            );
-        }
+        const imgClass = !!props.checked ? `on ${inMotionTo || ''}`: `off ${inMotionTo || ''}`;
+
+        return (
+            <S.ToggleSwitch onKeyDown={keyHandler} tabIndex={props.disabled ? -1 : 0}
+                    className={props.disabled ? "ToggleSwitch disabled" : "ToggleSwitch"}>
+                <span className="toggle-img" onClick={props.disabled ? null : clickHandler}>
+                    <a role="checkbox" aria-checked={!!props.checked} className={imgClass}/>
+                </span>
+            </S.ToggleSwitch>
+        );
     }
 
     return ToggleSwitch;

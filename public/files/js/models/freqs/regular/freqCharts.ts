@@ -131,7 +131,6 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     ),
                     Dict.fromEntries()
                 ),
-                ftt_include_empty: formProps.ftt_include_empty,
                 type: pipe(
                     allCrits,
                     List.map(
@@ -344,7 +343,6 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     state.sortColumn = storedState.sortColumn;
                     state.freqCrit = storedState.freqCrit;
                     state.freqCritAsync = storedState.freqCritAsync;
-                    state.ftt_include_empty = storedState.ftt_include_empty;
                     state.isActive = storedState.isActive;
                     state.isBusy = storedState.isBusy;
                     state.isError = storedState.isError;
@@ -659,7 +657,6 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
 
                 fcrit: state.data[sourceId].fcrit,
                 freq_type: state.freqType,
-                ftt_include_empty: state.ftt_include_empty,
                 freqlevel: 1,
 
                 flimit: state.flimit,
@@ -685,7 +682,6 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                 '0' :
                 state.sortColumn[fcrit],
             fpage: 1,
-            ftt_include_empty: state.ftt_include_empty,
             freqlevel: 1,
             fmaxitems: parseInt(state.fmaxitems[fcrit].value),
             format: 'json',

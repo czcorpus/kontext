@@ -24,6 +24,13 @@ import * as ViewOptions from '../../types/viewOptions';
 import { DataSaveFormat } from '../../app/navigation/save';
 
 
+export interface ConcToken {
+    className:string;
+    text:Array<Token>; // array => multiple words per 'pseudo-position'
+    tailPosAttrs:Array<string>; // array => multiple pos attrs per whole 'pseudo-position'
+}
+
+
 export interface KWICSection {
 
     tokenNumber:number;
@@ -57,10 +64,50 @@ export interface KWICSection {
 }
 
 
+export function getKwicSectionToken(ks:KWICSection, idx:number):Token {
+    return pipe(
+        [...ks.left, ...ks.kwic, ...ks.right],
+        List.flatMap(item => item.text),
+        List.find(
+            x => x.idx === idx,
+        )
+    );
+}
+
+export interface Token {
+
+    /**
+     * Token raw value
+     */
+    s:string;
+
+    /**
+     * Represents indexing within a single line.
+     * This means that the value goes across
+     * TextChunk and even KWICSection instances
+     */
+    idx:number;
+
+    /**
+     * Specifies whether the token is highlighed
+     */
+    h:boolean;
+
+    /**
+     * Specifies a possible connetion with a kwic_connect result
+     * based on some attribute (attr) and its value (s)
+     */
+    kcConnection?:{
+        attr:string;
+        s:string;
+    }
+}
+
+
 export class TextChunk {
     id:string;
     className:string;
-    text:Array<string>; // array => multiple words per 'pseudo-position'
+    text:Array<Token>; // array => multiple words per 'pseudo-position'
     openLink:{speechPath:string};
     closeLink:{speechPath:string};
     continued:boolean;
@@ -74,6 +121,11 @@ export interface Line {
     kwicLength:number;
     hasFocus:boolean;
     languages:Array<KWICSection>;
+}
+
+
+export interface HighlightWords {
+    [attr:string]:string; // word form (typically: word) => [attr] (e.g. lemma)
 }
 
 
@@ -422,14 +474,14 @@ export interface ViewConfiguration {
      * special code is used here instead and the original
      * name is moved to the 'origSubCorpName' attribute.
      */
-    subCorpName:string;
+    subcId:string;
 
     /**
      * The original name user entered for a subcorpus.
      * The value is non-empty only if a respective corpus
      * is published.
      */
-    origSubCorpName:string;
+    subcName:string;
 
     pagination:ServerPagination;
 

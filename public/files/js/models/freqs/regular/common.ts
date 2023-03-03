@@ -100,7 +100,6 @@ export interface BaseFreqModelState {
     sortColumn:{[sourceId:string]:FreqChartsAvailableOrder};
     freqCrit:Array<AttrItem>;
     freqCritAsync:Array<AttrItem>;
-    ftt_include_empty:boolean;
     isActive:boolean;
     isBusy:{[sourceId:string]:boolean};
     shareWidgetIsBusy:boolean;
@@ -126,6 +125,10 @@ export interface FreqChartsModelState extends BaseFreqModelState {
     downloadFormat:{[sourceId:string]:Kontext.ChartExportFormat};
 }
 
+export interface FreqViewProps {
+    userEmail:string;
+}
+
 export function isFreqChartsModelState(s:BaseFreqModelState):s is FreqChartsModelState {
     return s['type'] != undefined && s['dataKey'] != undefined &&
         s['fmaxitems'] != undefined && s['dtFormat'] != undefined &&
@@ -137,22 +140,52 @@ export interface HistoryState {
     state:FreqDataRowsModelState|FreqChartsModelState;
 }
 
+export interface BaseFreqServerArgs extends ConcServerArgs {
+    flimit:number;
+    fpage:number;
+    freqlevel:number;
+    freq_sort:string;
+}
+
 /**
  * @todo this probably mixes two types where one represents a higher level approach
  * to freq. args (fttattr, fttattr_async) and the other (fcrit) represents an already
  * encoded arguments as required by the Manatee engine.
  */
-export interface FreqServerArgs extends ConcServerArgs {
-    flimit:number;
-    fpage:number;
-    fmaxitems?:number; // TODO this one vs. 'flimit'?
-    freqlevel:number;
-    freq_sort:string;
+export interface FreqServerArgs extends BaseFreqServerArgs {
     freq_type:BasicFreqModuleType;
-    ftt_include_empty:boolean;
+    fmaxitems?:number; // TODO this one vs. 'flimit'?
     fttattr?:string|Array<string>;
     fttattr_async?:string|Array<string>;
     fcrit?:string;
+}
+
+export interface MLFreqServerArgs extends BaseFreqServerArgs {
+    freq_type:'tokens';
+    ml1attr?:string;
+    ml2attr?:string;
+    ml3attr?:string;
+    ml4attr?:string;
+    ml5attr?:string;
+    ml1icase?:0|1;
+    ml2icase?:0|1;
+    ml3icase?:0|1;
+    ml4icase?:0|1;
+    ml1bward?:string;
+    ml2bward?:string;
+    ml3bward?:string;
+    ml4bward?:string;
+    ml5bward?:string;
+    ml1pos?:number;
+    ml2pos?:number;
+    ml3pos?:number;
+    ml4pos?:number;
+    ml5pos?:number;
+    ml1ctx?:string;
+    ml2ctx?:string;
+    ml3ctx?:string;
+    ml4ctx?:string;
+    ml5ctx?:string;
 }
 
 
@@ -163,7 +196,6 @@ export interface MulticritFreqServerArgs extends ConcServerArgs {
     freqlevel:number;
     freq_sort:string;
     freq_type:BasicFreqModuleType;
-    ftt_include_empty:boolean;
     fcrit:Array<string>;
 }
 

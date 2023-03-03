@@ -221,8 +221,8 @@ msgstr "Wykŏz słōw"
 msgid "Concordance"
 msgstr "Kōnkordancyjŏ"
 
-msgid "Current concordance"
-msgstr "Terŏźnŏ kōnkordancyjŏ"
+msgid "Show"
+msgstr "Show UNTRANSLATED"
 
 msgid "Sorting"
 msgstr "Porzōndkowanie"
@@ -245,8 +245,8 @@ msgstr "Negatywne"
 msgid "Frequency"
 msgstr "Frekwyncyjŏ"
 
-msgid "Node forms"
-msgstr "Formy wynzłōw"
+msgid "Node forms [A=a]"
+msgstr "Formy wynzłōw [A=a]"
 
 msgid "Doc IDs"
 msgstr "ID ôd dokumyntōw"
@@ -432,9 +432,6 @@ msgstr "Niy idzie umiynić statusu kōnkordancyje, co należy do inkszego używ�
 
 msgid "Access forbidden - please log-in."
 msgstr "Brak dostympu - zaloguj sie."
-
-msgid "Undo"
-msgstr "Cŏfnij"
 
 msgid "Public subcorpora"
 msgstr "Publiczne podkorpusy"

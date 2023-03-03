@@ -200,7 +200,7 @@ export const QueryAndTypeDiv = styled.div`
     display: flex;
     align-items: center;
     max-width: 80em;
-    margin-top: 0.7em;
+    margin-top: 0;
 
     .symbol {
         font-size: 1.4em;
