@@ -282,16 +282,20 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         this.addActionHandler(
             Actions.ExtendedInformationRequestDone,
             action => {
-                this.changeState(state => {
-                    state.busyAttributes[action.payload.attrName] = false;
-                    this.setExtendedInfo(
-                        state,
-                        action.payload.attrName,
-                        action.payload.ident,
-                        // TODO type?? !!!!
-                        action.payload.data
-                    );
-                });
+                if (!action.error) {
+                    this.changeState(state => {
+                        state.busyAttributes[action.payload.attrName] = false;
+                        this.setExtendedInfo(
+                            state,
+                            action.payload.attrName,
+                            action.payload.ident,
+                            // TODO type?? !!!!
+                            action.payload.data
+                        );
+                    });
+                } else {
+                    this.pluginApi.showMessage('error', action.error);
+                }
             }
         );
 
@@ -435,14 +439,18 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             Actions.AttributeTextInputAutocompleteRequestDone,
             _ => !this.readonlyMode,
             action => {
-                this.changeState(state => {
-                    state.busyAttributes[action.payload.attrName] = false;
-                    this.setAutoComplete(
-                        state,
-                        action.payload.attrName,
-                        action.payload.autoCompleteData
-                    );
-                });
+                if (!action.error) {
+                    this.changeState(state => {
+                        state.busyAttributes[action.payload.attrName] = false;
+                        this.setAutoComplete(
+                            state,
+                            action.payload.attrName,
+                            action.payload.autoCompleteData,
+                        );
+                    });
+                } else {
+                    this.pluginApi.showMessage('error', action.error);
+                }
             }
         );
 
