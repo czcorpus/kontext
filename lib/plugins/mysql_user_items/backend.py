@@ -20,6 +20,8 @@
 A corparch database backend for MySQL/MariaDB.
 
 """
+from typing import List
+
 from plugin_types.user_items import FavoriteItem
 from plugins.common.mysql import MySQLOps
 
@@ -53,7 +55,7 @@ class Backend:
         self._group_acc_corp_attr = group_acc_corp_attr
         self._group_acc_group_attr = group_acc_group_attr
 
-    async def get_favitems(self, user_id: int):
+    async def get_favitems(self, user_id: int) -> List[FavoriteItem]:
         async with self._db.cursor() as cursor:
             await cursor.execute(
                 'SELECT fav.id as id, fav.name, fav.subcorpus_id, fav.subcorpus_orig_id as subcorpus_name, '
