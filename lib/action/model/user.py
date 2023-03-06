@@ -22,7 +22,6 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import corplib
 import plugins
-import scheduled
 import settings
 from action.argmapping import UserActionArgs
 from action.errors import UserReadableException, FunctionNotSupported
@@ -89,8 +88,8 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
 
     async def pre_dispatch(self, req_args):
         """
-        pre_dispatch calls its descendant first and the it
-        initializes scheduled actions, user settings, user paths
+        pre_dispatch calls its descendant first,
+        then it initializes user settings, user paths
         and the CorpusFactory.
         """
         req_args = await super().pre_dispatch(req_args)
@@ -98,7 +97,6 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
             await dhook.pre_dispatch(self.plugin_ctx, self._action_props, self._req)
 
         options = {}
-        await self._scheduled_actions(options)
 
         # only general setting can be applied now because
         # we do not know final corpus name yet
@@ -161,7 +159,7 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
 
     @staticmethod
     def _get_save_excluded_attributes() -> Tuple[str, ...]:
-        return 'corpname', BaseActionModel.SCHEDULED_ACTIONS_KEY
+        return tuple('corpname', )
 
     async def save_options(self, optlist: Optional[Iterable] = None, corpus_id: Optional[str] = None):
         """
@@ -205,34 +203,6 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
                     options.update(sess_options)
                 merge_incoming_opts_to(options)
                 self._req.ctx.session['settings'] = options
-
-    async def _scheduled_actions(self, user_settings):
-        actions = []
-        if BaseActionModel.SCHEDULED_ACTIONS_KEY in user_settings:
-            value = user_settings[BaseActionModel.SCHEDULED_ACTIONS_KEY]
-            if type(value) is dict:
-                actions.append(value)
-            elif type(value):
-                actions += value
-            for action in actions:
-                func_name = action['action']
-                if hasattr(scheduled, func_name):
-                    fn = getattr(scheduled, func_name)
-                    if inspect.isclass(fn):
-                        fn = fn()
-                    if callable(fn):
-                        try:
-                            ans = fn(*(), **action)
-                            if 'message' in ans:
-                                self._resp.add_system_message('message', ans['message'])
-                            continue
-                        except Exception as e:
-                            logging.getLogger('SCHEDULING').error('task_id: {}, error: {} ({})'.format(
-                                action.get('id', '??'), e.__class__.__name__, e))
-                # avoided by 'continue' in case everything is OK
-                logging.getLogger('SCHEDULING').error('task_id: {}, Failed to invoke scheduled action: {}'.format(
-                    action.get('id', '??'), action,))
-            await self.save_options()  # this causes scheduled task to be removed from settings
 
     @property
     def plugin_ctx(self):

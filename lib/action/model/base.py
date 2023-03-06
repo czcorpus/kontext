@@ -43,8 +43,6 @@ class BaseActionModel(AbstractPageModel):
 
     ANON_FORBIDDEN_MENU_ITEMS = []
 
-    # a user settings key entry used to access user's scheduled actions
-    SCHEDULED_ACTIONS_KEY = '_scheduled'
 
     def __init__(
             self,
