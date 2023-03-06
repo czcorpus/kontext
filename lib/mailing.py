@@ -29,7 +29,7 @@ def smtp_factory() -> smtplib.SMTP:
     """
     if settings.get('mailing') is None:
         raise Exception(
-            'Can not create SMTP connection, please fill in `mailing` section to Kontext config.')
+            'Cannot create SMTP connection, please fill in `mailing` section to Kontext config.')
     username = settings.get('mailing', 'auth_username')
     password = settings.get('mailing', 'auth_password')
     port = settings.get_int('mailing', 'smtp_port', 25)
