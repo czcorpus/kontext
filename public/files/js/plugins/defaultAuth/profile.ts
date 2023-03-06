@@ -292,14 +292,14 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
                         password: state.newPasswd.value,
                         password2: state.newPasswd2.value
                     }
-                ).subscribe(
-                    (resp) => {
+                ).subscribe({
+                    next: resp => {
                         dispatch<typeof Actions.SubmitSignUpDone>({
                             name: Actions.SubmitSignUpDone.name,
                             payload: {errors: {}}
                         });
                     },
-                    (err) => {
+                    error: err => {
                         dispatch<typeof Actions.SubmitSignUpDone>({
                             name: Actions.SubmitSignUpDone.name,
                             payload: {
@@ -317,7 +317,7 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
                             )
                         )
                     }
-                );
+                });
             }
         );
 
