@@ -110,6 +110,8 @@ async def resolve_error(
     await amodel.resolve_error_state(req, resp, ans, err)
     if isinstance(err, UserReadableException):
         resp.set_http_status(err.code)
+        if err.error_args:
+            ans['error_args'] = err.error_args
     else:
         resp.set_http_status(500)
     resp.set_result(ans)
