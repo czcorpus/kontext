@@ -265,7 +265,7 @@ class CorpusActionModel(UserActionModel):
         """
         Runs before main action is processed. The action includes
         mapping of URL/form parameters to self.args, loading user
-        options, validating corpus access rights, scheduled actions.
+        options, validating corpus access rights.
 
         It is OK to override this method but the super().pre_dispatch()
         should be always called before performing custom actions.
