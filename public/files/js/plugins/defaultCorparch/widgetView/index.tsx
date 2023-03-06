@@ -253,12 +253,16 @@ export function init({
     const StarComponent:React.FC<{
         widgetId:string;
         currFavitemId:string;
+        isBusy:boolean;
 
-    }> = (props) => {
+    }> = ({widgetId, currFavitemId, isBusy}) => {
 
         const renderIcon = () => {
             const style = {width: '1.6em'};
-            if (props.currFavitemId) {
+            if (isBusy) {
+                return <layoutViews.AjaxLoaderBarImage />;
+
+            } else if (currFavitemId) {
                 return <img src={util.createStaticUrl('img/starred.svg')}
                         title={util.translate('defaultCorparch__in_fav')}
                         alt={util.translate('defaultCorparch__in_fav')}
@@ -276,9 +280,9 @@ export function init({
             dispatcher.dispatch<typeof Actions.WidgetStarIconClick>({
                 name: Actions.WidgetStarIconClick.name,
                 payload: {
-                    widgetId: props.widgetId,
-                    status: props.currFavitemId ? false : true,
-                    itemId: props.currFavitemId
+                    widgetId: widgetId,
+                    status: currFavitemId ? false : true,
+                    itemId: currFavitemId
                 }
             });
         };
@@ -805,7 +809,8 @@ export function init({
                             null
                         }
                         {!this.props.anonymousUser ?
-                            <StarComponent widgetId={this.props.widgetId} currFavitemId={this.props.currFavitemId} /> :
+                            <StarComponent widgetId={this.props.widgetId}
+                                currFavitemId={this.props.currFavitemId} isBusy={this.props.isBusy} /> :
                             null
                         }
                     </div>
