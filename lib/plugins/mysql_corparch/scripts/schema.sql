@@ -341,7 +341,7 @@ CREATE TABLE registry_conf (
 
 -- -------------------- susanne corpus
 
-INSERT INTO kontext_corpus (id, name, size, group_name, version, created, active, collator_locale)
+INSERT INTO kontext_corpus (id, name, size, group_name, version, created, active, locale)
 VALUES (1, 'susanne', 150426, 'susanne', 1, '2018-06-21T10:36:58+0200', 1, 'en_US');
 INSERT INTO corpus_structure (corpus_name, name) VALUES ('susanne', 'p');
 INSERT INTO corpus_structure (corpus_name, name) VALUES ('susanne', 'doc');
