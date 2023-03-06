@@ -30,6 +30,7 @@ import urllib.request
 from collections import defaultdict
 from typing import List
 
+import aiomysql
 import mailing
 import plugins
 from action.plugin.ctx import PluginCtx
@@ -40,8 +41,8 @@ from plugin_types.auth.hash import (
     mk_pwd_hash, mk_pwd_hash_default, split_pwd_hash)
 from plugins import inject
 from plugins.common.mysql import MySQLConf, MySQLOps
-from plugins.mysql_integration_db import MySqlIntegrationDb
 from plugins.mysql_corparch.backend import Backend
+from plugins.mysql_integration_db import MySqlIntegrationDb
 
 from .sign_up import SignUpToken
 
@@ -301,11 +302,12 @@ class MysqlAuthHandler(AbstractInternalAuth):
         return mailing.send_mail(server, msg, [user_email])
 
     async def sign_up_confirm(self, plugin_ctx, key):
+        token = SignUpToken(value=key)
+        await token.load(self.db)
+
         async with self.db.connection() as conn:
             await conn.begin()
             try:
-                token = SignUpToken(value=key)
-                await token.load(conn)
                 if token.is_stored():
                     curr = await self._find_user(token.username)
                     if curr:

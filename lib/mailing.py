@@ -17,15 +17,19 @@
 import logging
 import smtplib
 from email.mime.text import MIMEText
+from typing import List, Optional
 
 import settings
 
 
-def smtp_factory():
+def smtp_factory() -> smtplib.SMTP:
     """
     Create a new SMTP instance with some predefined stuff
     :return:
     """
+    if settings.get('mailing') is None:
+        raise Exception(
+            'Cannot create SMTP connection, please fill in `mailing` section to Kontext config.')
     username = settings.get('mailing', 'auth_username')
     password = settings.get('mailing', 'auth_password')
     port = settings.get_int('mailing', 'smtp_port', 25)
@@ -38,7 +42,7 @@ def smtp_factory():
     return server
 
 
-def message_factory(recipients, subject, text, reply_to=None):
+def message_factory(recipients: List[str], subject: str, text: str, reply_to: Optional[str] = None) -> MIMEText:
     """
     Create message instance with some predefined properties
     """
@@ -51,7 +55,7 @@ def message_factory(recipients, subject, text, reply_to=None):
     return msg
 
 
-def send_mail(server, msg, recipients):
+def send_mail(server: smtplib.SMTP, msg: MIMEText, recipients: List[str]) -> bool:
     sender = settings.get('mailing', 'sender')
     try:
         server.sendmail(sender, recipients, msg.as_string())

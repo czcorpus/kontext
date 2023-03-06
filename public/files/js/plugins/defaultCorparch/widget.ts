@@ -74,19 +74,10 @@ interface SetFavItemResponse extends Kontext.AjaxResponse {
 }
 
 
-const importServerFavitem = (item:common.ServerFavlistItem):FavListItem => {
-    return {
-        id: item.id,
-        name: item.name,
-        subcorpus_id: item.subcorpus_id,
-        subcorpus_name: item.subcorpus_name,
-        size: item.size,
-        size_info: item.size_info,
-        corpora: item.corpora,
-        description: item.description,
-        trashTTL: null
-    };
-};
+const importServerFavitem = (item:common.ServerFavlistItem):FavListItem => ({
+    ...item,
+    trashTTL: null
+});
 
 const importServerFavitems = (items:Array<common.ServerFavlistItem>):Array<FavListItem> => {
     return List.map(importServerFavitem, items);
@@ -102,11 +93,21 @@ const importServerFavitems = (items:Array<common.ServerFavlistItem>):Array<FavLi
  */
 const findCurrFavitemId = (dataFav:Array<FavListItem>, item:common.GeneratedFavListItem):string => {
     const normalize = (v:string) => v ? v : '';
-    const srch = dataFav.filter(x => x.trashTTL === null).find(x => {
-            return normalize(x.subcorpus_id) === normalize(item.subcorpus_id) &&
-                item.corpora.join('') === x.corpora.map(x => x.id).join('');
-    });
-    return srch ? srch.id : undefined;
+    const itemsEqual = (item1:FavListItem, item2:common.GeneratedFavListItem):boolean => {
+        return normalize(item1.subcorpus_id) === normalize(item2.subcorpus_id) &&
+            pipe(
+                item1.corpora,
+                List.map(v => v.id),
+                List.zipAll(item2.corpora),
+                List.every(([v1, v2]) => v1 === v2)
+            );
+    }
+    const srch = pipe(
+        dataFav,
+        List.filter(x => x.trashTTL === null),
+        List.find(x => itemsEqual(x, item))
+    );
+    return srch?.id;
 }
 
 

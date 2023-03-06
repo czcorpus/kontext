@@ -73,7 +73,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                 );
                 if (idx !== -1) {
                     // TODO `ATActions.AsyncTasksChecked` is already side effect action
-                    // can not use SEDispatcher
+                    // cannot use SEDispatcher
                     this.layoutModel.dispatcher.dispatch(
                         Actions.LoadSubcorpus,
                         {

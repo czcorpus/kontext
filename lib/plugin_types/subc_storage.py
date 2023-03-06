@@ -171,7 +171,7 @@ class AbstractSubcArchive(abc.ABC):
     @abc.abstractmethod
     async def delete_query(self, user_id: int, corpname: str, subc_id: str) -> None:
         """
-        Makes sure subcorpus can not be used, restored and found anymore
+        Makes sure subcorpus cannot be used, restored and found anymore
         """
 
     @abc.abstractmethod

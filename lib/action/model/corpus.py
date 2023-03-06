@@ -265,7 +265,7 @@ class CorpusActionModel(UserActionModel):
         """
         Runs before main action is processed. The action includes
         mapping of URL/form parameters to self.args, loading user
-        options, validating corpus access rights, scheduled actions.
+        options, validating corpus access rights.
 
         It is OK to override this method but the super().pre_dispatch()
         should be always called before performing custom actions.
@@ -403,7 +403,10 @@ class CorpusActionModel(UserActionModel):
         async def test_fn(auth_plg, cname):
             return await auth_plg.validate_access(cname, self.session_get('user'))
 
-        if not cn:
+        if cn and cn.startswith('omezeni/'):  # legacy corpus ID; still can be encountered
+            cn = cn[len('omezeni/'):]
+            redirect = True
+        elif not cn:
             with plugins.runtime.AUTH as auth:
                 cn = await settings.get_default_corpus(partial(test_fn, auth))
                 redirect = True
