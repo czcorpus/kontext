@@ -59,8 +59,8 @@ class Backend:
         async with self._db.cursor() as cursor:
             await cursor.execute(
                 'SELECT fav.id as id, fav.name, fav.subcorpus_id, fav.subcorpus_orig_id as subcorpus_name, '
-                " GROUP_CONCAT(t.corpus_name SEPARATOR ',') as corpora, "
-                " GROUP_CONCAT(c.size SEPARATOR ',') as sizes "
+                " GROUP_CONCAT(t.corpus_name ORDER BY t.corpus_order SEPARATOR ',') as corpora, "
+                " GROUP_CONCAT(c.size ORDER BY t.corpus_order SEPARATOR ',') as sizes "
                 'FROM kontext_user_fav_item as fav '
                 'JOIN kontext_corpus_user_fav_item AS t ON fav.id = t.user_fav_corpus_id '
                 f'JOIN {self._corp_table} AS c ON t.corpus_name = c.name '
