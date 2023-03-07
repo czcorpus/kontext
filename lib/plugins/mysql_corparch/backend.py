@@ -38,7 +38,7 @@ class MySQLConfException(Exception):
 
 
 DFLT_USER_TABLE = 'kontext_user'
-DFLT_USER_CORPLIST_ATTR = 'corplist_id'
+DFLT_USER_CORPLIST_ATTR = 'group_access'
 DFLT_CORP_TABLE = 'kontext_corpus'
 DFLT_CORP_ID_ATTR = 'name'
 DFLT_CORP_PC_ID_ATTR = 'parallel_corpus_id'
@@ -100,7 +100,7 @@ class Backend(DatabaseBackend):
         Query to get corpora user has access to. It accepts 2 `user_id` arguments
         """
         return (
-                f'''
+            f'''
                 SELECT
                     acc.{self._user_acc_corp_attr} AS corpus_id,
                     acc.limited AS limited
@@ -117,7 +117,7 @@ class Backend(DatabaseBackend):
                     WHERE {self._user_table}.id = %s
                 )
                 ''',
-                [user_id, user_id]
+            [user_id, user_id]
         )
 
     def _parallel_access_query(self, user_id) -> Tuple[str, List[int]]:
@@ -125,7 +125,7 @@ class Backend(DatabaseBackend):
         Query to get parallel corpora user has access to. It accepts 2 `user_id` arguments.
         """
         return (
-                f'''
+            f'''
                 SELECT
                     corp.{self._corp_id_attr} AS corpus_id,
                     pc_acc.limited AS limited
@@ -145,7 +145,7 @@ class Backend(DatabaseBackend):
                     WHERE user.id = %s
                 )
                 ''',
-                [user_id, user_id]
+            [user_id, user_id]
         )
 
     def _total_access_query(self, user_id) -> Tuple[str, List[int]]:
@@ -153,7 +153,7 @@ class Backend(DatabaseBackend):
         if self._enable_parallel_acc:
             par_acc_sql, par_acc_args = self._parallel_access_query(user_id)
             return f'{corp_acc_sql} UNION {par_acc_sql}', corp_acc_args + par_acc_args
-        return  corp_acc_sql, corp_acc_args
+        return corp_acc_sql, corp_acc_args
 
     def contains_corpus(self, corpus_id: str) -> bool:
         cursor = self._db.cursor()
