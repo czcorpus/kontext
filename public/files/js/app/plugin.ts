@@ -22,7 +22,7 @@ import * as Kontext from '../types/kontext';
 import { CommonViews } from '../views/common';
 import * as CoreViews from '../types/coreViews';
 import { Observable } from 'rxjs';
-import { PageModel } from './page';
+import { DownloadType, PageModel } from './page';
 import { ConcServerArgs } from '../models/concordance/common';
 import { IPluginApi } from '../types/plugins/common';
 import { Root } from 'react-dom/client';
@@ -149,5 +149,25 @@ export class PluginApi implements IPluginApi {
 
     setLocationPost<T>(path:string, args:T, blankWindow:boolean=false):void {
         this.pageModel.setLocationPost(path, args, blankWindow);
+    }
+
+    bgDownload<T=Kontext.AjaxArgs>(
+        {
+            name,
+            format,
+            datasetType,
+            url,
+            contentType,
+            args}:
+        {
+            name?:string,
+            format:string,
+            datasetType:DownloadType,
+            url:string,
+            contentType:string,
+            args?:T
+        }
+    ):Observable<string> {
+        return this.pageModel.bgDownload({name, format, datasetType, url, contentType, args});
     }
 }

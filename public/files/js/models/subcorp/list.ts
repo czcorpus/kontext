@@ -52,6 +52,7 @@ export interface SubcorpListItem {
     size:number;
     is_draft:boolean;
     public_description:string;
+    bib_id_attr:string;
     info?:string;
 }
 
@@ -77,6 +78,7 @@ interface CurrSubcorpusProps {
     subcorpusId:string;
     subcorpusName:string;
     corpusName:string;
+    bibIdAttr:string;
 }
 
 
@@ -304,7 +306,8 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                     state.editWindowSubcorpus = {
                         corpusName: action.payload.corpusName,
                         subcorpusId: action.payload.subcorpusId,
-                        subcorpusName: action.payload.subcorpusName
+                        subcorpusName: action.payload.subcorpusName,
+                        bibIdAttr: action.payload.bibIdAttr
                     }
                 });
             }

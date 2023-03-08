@@ -19,7 +19,7 @@
 import * as Kontext from '../../types/kontext';
 import * as PluginInterfaces from '../../types/plugins';
 import * as common from './common';
-import { CorpusInfo, CorpusInfoType, CorpusInfoResponse } from '../../models/common/layout';
+import { CorpusInfo, CorpusInfoType, CorpusInfoResponse } from '../../models/common/corpusInfo';
 import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';

@@ -25,7 +25,7 @@ import * as Kontext from '../../../types/kontext';
 import { CorplistTableModel, CorplistTableModelState, KeywordInfo } from '../corplist';
 import { CorplistItem, Filters } from '../common';
 import { CorpusInfoBoxProps } from '../../../views/overview';
-import { CorpusInfoType } from '../../../models/common/layout';
+import { CorpusInfoType } from '../../../models/common/corpusInfo';
 import * as S from './style';
 import * as S2 from '../commonStyle';
 

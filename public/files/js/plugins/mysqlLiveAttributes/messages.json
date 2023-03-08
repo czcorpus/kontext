@@ -21,7 +21,11 @@
         "ucnkLA__the_selection_is_empty_msg": "The current selection does not provide any result.",
         "ucnkLA__are_you_sure_to_reset": "The whole text type selection will be lost. Are you sure to reset?",
         "ucnkLA__are_you_sure_to_mod_align_lang": "Adding/removing of an aligned language will cause the whole selection to be lost. Are you sure to reset?",
-        "ucnkLA__item_not_found": "Item not found"
+        "ucnkLA__item_not_found": "Item not found",
+        "ucnkLA__download_btn": "Download",
+        "ucnkLA__dt_structattrs": "Included attributes",
+        "ucnkLA__total_items": "Total items",
+        "ucnkLA__dt_file_format": "Data format"
     },
     "cs-CZ": {
         "ucnkLA__bib_list_warning": "Vzhledem k velkému počtu odpovídajících položek se konkrétní tituly objeví až po dalším filtrování a zúžení výběru.",
@@ -45,7 +49,11 @@
         "ucnkLA__the_selection_is_empty_msg": "Aktuální výběr neposkytuje žádné položky.",
         "ucnkLA__are_you_sure_to_reset": "Celý výběr textů bude ztracen. Chcete provést?",
         "ucnkLA__are_you_sure_to_mod_align_lang": "Přidání/odebrání zarovnaného jazyka způsobí smazání celého výběru textů. Chcete pokračovat?",
-        "ucnkLA__item_not_found": "Položka nenalezena"
+        "ucnkLA__item_not_found": "Položka nenalezena",
+        "ucnkLA__download_btn": "Stáhnout",
+        "ucnkLA__dt_structattrs": "Zahrnuté atributy",
+        "ucnkLA__total_items": "Položek celkem",
+        "ucnkLA__dt_file_format": "Formát dat"
 	},
     "szl": {
         "ucnkLA__bib_list_warning": "Skuli wielości ôdpowiadajōncych elymyntōw lista indywidualnych tytułōw bydzie pokŏzanŏ po zakuratniyniu zaznaczyniŏ.",
@@ -69,7 +77,11 @@
         "ucnkLA__the_selection_is_empty_msg": "Terŏźne zaznaczynie niy przinosi żŏdnego wyniku.",
         "ucnkLA__are_you_sure_to_reset": "Cołke zaznaczynie typu tekstu bydzie stracōne. Na isto chcesz wysnŏżyć?",
         "ucnkLA__are_you_sure_to_mod_align_lang": "Adding/removing of an aligned language will cause the whole selection to be lost. Are you sure to reset?",
-        "ucnkLA__item_not_found": "Item not found"
+        "ucnkLA__item_not_found": "Item not found",
+        "ucnkLA__download_btn": "Download UNTRANSLATED",
+        "ucnkLA__dt_structattrs": "Included attributes UNTRANSLATED",
+        "ucnkLA__total_items": "Total items UNTRANSLATED",
+        "ucnkLA__dt_file_format": "Data format UNTRANSLATED"
     },
     "sl-SI": {
         "ucnkLA__bib_list_warning": "Due to the large number of matching items, the list of individual titles will only be displayed after refining the selection. UNTRANSLATED",
@@ -93,6 +105,10 @@
         "ucnkLA__the_selection_is_empty_msg": "The current selection does not provide any result. UNTRANSLATED",
         "ucnkLA__are_you_sure_to_reset": "The whole text type selection will be lost. Are you sure to reset? UNTRANSLATED",
         "ucnkLA__are_you_sure_to_mod_align_lang": "Adding/removing of an aligned language will cause the whole selection to be lost. Are you sure to reset? UNTRANSLATED",
-        "ucnkLA__item_not_found": "Item not found UNTRANSLATED"
+        "ucnkLA__item_not_found": "Item not found UNTRANSLATED",
+        "ucnkLA__download_btn": "Download UNTRANSLATED",
+        "ucnkLA__dt_structattrs": "Included attributes UNTRANSLATED",
+        "ucnkLA__total_items": "Total items UNTRANSLATED",
+        "ucnkLA__dt_file_format": "Data format UNTRANSLATED"
     }
 }

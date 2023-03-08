@@ -75,7 +75,8 @@ export class TTSelOps {
 
         } else {
             const hasSelected = List.some(
-                (item:TextTypes.AttributeValue) => includeSubcorpDefinition ? item.selected : item.selected && !item.definesSubcorp,
+                (item:TextTypes.AttributeValue) => includeSubcorpDefinition ?
+                        item.selected : item.selected,
                 sel.values,
             );
             if (sel.type === 'text') {
@@ -97,14 +98,10 @@ export class TTSelOps {
         const filter = lockedOnesOnly ?
             List.filter<TextTypes.AttributeValue>(item => item.locked) :
             List.filter<TextTypes.AttributeValue>(_ => true);
-        const filter2 = includeSubcorpDefinition ?
-            List.filter<TextTypes.AttributeValue>(_ => true) :
-            List.filter<TextTypes.AttributeValue>(item => !item.definesSubcorp);
 
         return pipe(
             sel.values,
             filter,
-            filter2,
             List.filter(item => item.selected),
             List.map(item => item.ident),
             sel.type === 'text' && sel.textFieldValue !== '' ?
@@ -130,7 +127,6 @@ export class TTSelOps {
                         value: item,
                         selected: false,
                         locked: false,
-                        definesSubcorp: false,
                         ident: item, // TODO is this correct? (ident vs label problem)
                         numGrouped: 0
                     }),

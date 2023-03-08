@@ -162,7 +162,9 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                     this.changeState(state => {
                         state.asyncTasks.push(newTask);
                     });
-                    this.startWatchingTask(newTask);
+                    if (!Dict.hasValue(newTask.category, DownloadType)) {
+                        this.startWatchingTask(newTask);
+                    }
 
                 } else {
                     this.pageModel.showMessage('error', action.error);

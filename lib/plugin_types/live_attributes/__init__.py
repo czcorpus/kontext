@@ -20,7 +20,7 @@ import abc
 from dataclasses import dataclass
 from functools import wraps
 from hashlib import md5
-from typing import Any, Dict, List, NamedTuple, Optional, Union
+from typing import Any, Dict, List, NamedTuple, Optional, Union, Tuple
 
 from action.plugin.ctx import AbstractCorpusPluginCtx
 from corplib.corpus import AbstractKCorpus
@@ -146,6 +146,33 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         For a structattr and its values find values structattrs specified in fill list
 
         Returns a dict of dicts {search_attr_value: {attr: value}}
+        """
+
+    @abc.abstractmethod
+    async def document_list(
+            self,
+            plugin_ctx: AbstractCorpusPluginCtx,
+            corpus_id: str,
+            view_attrs: List[str],
+            attr_map: Dict[str, Union[str, List[str]]],
+            aligned_corpora: List[str],
+            save_format: str) -> Tuple[str, str]:
+        """
+        In case bib_id (and bib_label) is defined, create a list of documents
+        from corpus matching provided attr_map. Return path to a file containing
+        the data in the required format.
+        """
+
+    @abc.abstractmethod
+    async def num_matching_documents(
+            self,
+            plugin_ctx: AbstractCorpusPluginCtx,
+            corpus_id: str,
+            attr_map: Dict[str, Union[str, List[str]]],
+            aligned_corpora: List[str]) -> int:
+        """
+        In case bib_id (and bib_label) is defined, return number of
+        documents from corpus matching provided attr_map.
         """
 
 

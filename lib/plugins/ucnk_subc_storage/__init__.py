@@ -36,6 +36,7 @@ def create_instance(conf, corparch: AbstractCorporaArchive, integ_db: MySqlInteg
         bconf = BackendConfig(
             user_table='user',
             subccorp_table='kontext_subcorpus',
+            corpora_table='corpora',
             user_table_firstname_col='firstName',
             user_table_lastname_col='surname'
         )

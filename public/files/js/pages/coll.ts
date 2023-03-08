@@ -34,11 +34,10 @@ import { init as freqFormInit } from '../views/freqs/forms';
 import { init as queryOverviewInit } from '../views/query/overview';
 import { TextTypesModel } from '../models/textTypes/main';
 import { IndirectQueryReplayModel } from '../models/query/replay/indirect';
-import { List, pipe, tuple, URL } from 'cnc-tskit';
+import { List, tuple } from 'cnc-tskit';
 import { CollResultsSaveModel } from '../models/coll/save';
 import { CollResultData, CollResultHeading } from '../models/coll/common';
 import { CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/twoDimension/common';
-import { Actions as MainMenuActions } from '../models/mainMenu/actions';
 import { Actions } from '../models/coll/actions';
 import { DispersionResultModel } from '../models/dispersion/result';
 import { importInitialTTData, TTInitialData } from '../models/textTypes/common';
@@ -136,8 +135,8 @@ export class CollPage {
             usesAdHocSubcorpus:  TextTypesModel.findHasSelectedItems(ttSelections),
             selectedTextTypes: TextTypesModel.exportSelections(
                 ttSelections,
-                ttData.id_attr,
-                ttData.bib_attr,
+                ttData.bib_id_attr,
+                ttData.bib_label_attr,
                 false,
                 true,
             )
@@ -304,7 +303,7 @@ export class CollPage {
             contentType: 'multipart/form-data',
             url,
             args,
-        });
+        }).subscribe();
     }
 
     initTextTypesModel(ttData:TTInitialData):[TextTypesModel, Array<TextTypes.AnyTTSelection>] {
@@ -312,14 +311,14 @@ export class CollPage {
             'ConcFormsArgs'
         );
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
-        const attributes = importInitialTTData(ttData, {}, {});
+        const attributes = importInitialTTData(ttData, {});
         const ttModel = new TextTypesModel({
             dispatcher: this.layoutModel.dispatcher,
             pluginApi: this.layoutModel.pluginApi(),
             attributes,
             readonlyMode: true,
-            bibIdAttr: ttData.id_attr,
-            bibLabelAttr: ttData.bib_attr
+            bibIdAttr: ttData.bib_id_attr,
+            bibLabelAttr: ttData.bib_label_attr
         });
         ttModel.applyCheckedItems(queryFormArgs.selected_text_types, {});
         return tuple(ttModel, attributes);

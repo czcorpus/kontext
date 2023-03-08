@@ -1,0 +1,34 @@
+# Copyright (c) 2023 Charles University in Prague, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2023 Tomas Machalek <tomas.machalek@gmail.com>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2
+# dated June, 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+from typing import Dict, List
+from dataclasses import dataclass
+from dataclasses_json import dataclass_json, LetterCase
+import ujson
+import hashlib
+
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass
+class DocListItem:
+
+    id: str
+    label: str
+    idx: int
+    num_of_pos: int
+    attrs: Dict[str, str]
+
+
+
+def mk_cache_key(attrs: Dict[str, List[str]], aligned: List[str], view_attrs: List[str]) -> str:
+    return hashlib.sha1((ujson.dumps(attrs) + '#'.join(aligned) + '*'.join(view_attrs)).encode()).hexdigest()

@@ -148,22 +148,22 @@ class TextTypes:
             logging.getLogger(__name__).warning('Duplicate SUBCORPATTRS item found')
 
         if plugins.runtime.LIVE_ATTRIBUTES.exists:
-            ans['bib_attr'] = corpus_info.metadata.label_attr
-            ans['id_attr'] = corpus_info.metadata.id_attr
+            ans['bib_label_attr'] = corpus_info.metadata.label_attr
+            ans['bib_id_attr'] = corpus_info.metadata.id_attr
             # We have to ensure that the bibliography item (which uses different values
             # for labels and different values for actual identifiers) is represented
-            # as an input box on client-side. Passing list_none with bib_attr element
+            # as an input box on client-side. Passing list_none with bib_label_attr element
             # to get_values()'s shrink_list ensures this.
             # Please see public/files/js/stores/textTypes/attrValues.ts for more information
             # on how is bibliography attr. box handled on client.
-            list_none = (ans['bib_attr'], )
+            list_none = (ans['bib_label_attr'], )
             tmp = [s for s in subcorp_attr_list]  # making copy here
-            if ans['bib_attr'] and ans['bib_attr'] not in tmp:  # if bib type is not in subcorpattrs
-                tmp.append(ans['bib_attr'])                     # we add it there
+            if ans['bib_label_attr'] and ans['bib_label_attr'] not in tmp:  # if bib type is not in subcorpattrs
+                tmp.append(ans['bib_label_attr'])                     # we add it there
                 subcorpattrs = '|'.join(tmp)  # we ignore NoSkE '|' vs. ',' stuff deliberately here
         else:
-            ans['bib_attr'] = None
-            ans['id_attr'] = None
+            ans['bib_label_attr'] = None
+            ans['bib_id_attr'] = None
             list_none = ()
         tt = await self._tt_cache.get_values(
             corp=self._corp, subcorpattrs=subcorpattrs, maxlistsize=maxlistsize, shrink_list=list_none,

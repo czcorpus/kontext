@@ -21,9 +21,9 @@
 import * as React from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import { ITranslator, IFullActionControl, StatelessModel } from 'kombo';
-import { Observable, Subject } from 'rxjs';
+import { catchError, map, Observable, Subject, tap } from 'rxjs';
 import { webSocket } from 'rxjs/webSocket';
-import { List, HTTP, tuple, pipe, URL as CURL, Dict } from 'cnc-tskit';
+import { List, HTTP, tuple, pipe, URL as CURL } from 'cnc-tskit';
 
 import * as PluginInterfaces from '../types/plugins';
 import * as Kontext from '../types/kontext';
@@ -61,6 +61,7 @@ import { SearchHistoryModel } from '../models/searchHistory';
 import { IPluginApi } from '../types/plugins/common';
 import { FreqResultViews } from '../models/freqs/common';
 import { PageMount } from './mounts';
+import { CorpusInfoModel } from '../models/common/corpusInfo';
 
 
 export enum DownloadType {
@@ -71,14 +72,15 @@ export enum DownloadType {
     WORDLIST = 'wordlist_download',
     LINE_SELECTION = 'line_selection_download',
     PQUERY = 'pquery_download',
-    CHART = 'chart_download'
+    CHART = 'chart_download',
+    DOCUMENT_LIST = 'document_list_download'
 }
 
 export function isDownloadType(s:string):s is DownloadType {
     return s === DownloadType.CONCORDANCE || s === DownloadType.COLL  ||
         s === DownloadType.FREQ || s === DownloadType.FREQ2D || s === DownloadType.WORDLIST ||
         s === DownloadType.LINE_SELECTION || s === DownloadType.PQUERY ||
-        s === DownloadType.CHART;
+        s === DownloadType.CHART || s === DownloadType.DOCUMENT_LIST;
 }
 
 export interface SaveLinkHandler<T = any> {
@@ -141,7 +143,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
 
     commonViews:CommonViews;
 
-    private corpusInfoModel:docModels.CorpusInfoModel;
+    private corpusInfoModel:CorpusInfoModel;
 
     private messageModel:docModels.MessageModel;
 
@@ -316,7 +318,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             url:string,
             contentType:string,
             args?:T
-        }):void {
+        }):Observable<string> {
 
 
         function generateFileIdentifier() {
@@ -329,7 +331,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             if (
                 datasetType === DownloadType.FREQ2D ||
                 datasetType === DownloadType.LINE_SELECTION ||
-                datasetType === DownloadType.CHART) {
+                datasetType === DownloadType.CHART ||
+                datasetType === DownloadType.DOCUMENT_LIST) {
                 return HTTP.Method.POST;
             }
             return HTTP.Method.GET;
@@ -344,33 +347,41 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                 category: datasetType as string
             }
         );
-        this.appNavig.bgDownload<T>({
+        return this.appNavig.bgDownload<T>({
             filename: fullname,
             url,
             method: method(),
             contentType,
             args
-        }).subscribe({
-            next: () => {
-                this.dispatcher.dispatch(
-                    ATActions.InboxUpdateAsyncTask,
-                    {
-                        ident: taskId,
-                        status: 'SUCCESS'
+        }).pipe(
+            catchError(
+                error => error
+            ),
+            tap(
+                (resp) => {
+                    if (resp instanceof Error) {
+                        this.dispatcher.dispatch(
+                            ATActions.InboxUpdateAsyncTask,
+                            {
+                                ident: taskId,
+                                status: 'FAILURE'
+                            },
+                            resp
+                        );
+
+                    } else {
+                        this.dispatcher.dispatch(
+                            ATActions.InboxUpdateAsyncTask,
+                            {
+                                ident: taskId,
+                                status: 'SUCCESS'
+                            }
+                        );
                     }
-                );
-            },
-            error: error => {
-                this.dispatcher.dispatch(
-                    ATActions.InboxUpdateAsyncTask,
-                    {
-                        ident: taskId,
-                        status: 'FAILURE'
-                    },
-                    error
-                );
-            }
-        });
+                }
+            ),
+            map(_ => taskId)
+        );
     }
 
     /**
@@ -809,7 +820,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                 this,
                 this.getConf<any>('asyncTasks') || []
             );
-            this.corpusInfoModel = new docModels.CorpusInfoModel(this.dispatcher, this.pluginApi());
+            this.corpusInfoModel = new CorpusInfoModel(this.dispatcher, this.pluginApi());
             this.messageModel = new docModels.MessageModel(
                 this.dispatcher,
                 this.pluginApi(),
