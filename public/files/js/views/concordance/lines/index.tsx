@@ -607,23 +607,23 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                 });
 
             } else { // = default and custom modes
-                if (kwicLength > 0) {
+                if (kwicLength === -1 && this.props.supportsTokenConnect) { // non kwic search (e.g. aligned language)
+                    dispatcher.dispatch<typeof Actions.ShowTokenDetail>({
+                        name: Actions.ShowTokenDetail.name,
+                        payload: {
+                            corpusId: corpusId,
+                            tokenNumber: tokenNumber,
+                            lineIdx: lineIdx
+                        }
+                    });
+
+                } else {
                     dispatcher.dispatch<typeof Actions.ShowKwicDetail>({
                         name: Actions.ShowKwicDetail.name,
                         payload: {
                             corpusId: corpusId,
                             tokenNumber: tokenNumber,
                             kwicLength: kwicLength,
-                            lineIdx: lineIdx
-                        }
-                    });
-
-                } else if (kwicLength === -1) { // non kwic search (e.g. aligned language)
-                    dispatcher.dispatch<typeof Actions.ShowTokenDetail>({
-                        name: Actions.ShowTokenDetail.name,
-                        payload: {
-                            corpusId: corpusId,
-                            tokenNumber: tokenNumber,
                             lineIdx: lineIdx
                         }
                     });
