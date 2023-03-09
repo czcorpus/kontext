@@ -135,14 +135,8 @@ export const pageFormMargin = '1.5em';
 export const GeneralLabel = styled.label`
   display: inline-block;
   text-decoration: none;
-  font-size: 1em;
-  background-color: ${colorBgLightBlue};
-  border-style: solid;
-  border-color: #b0e1f3;
-  border-width: 1px;
-  border-radius: ${borderRadiusDefault};
-  margin-right: 0.4em;
-  margin-bottom: 0.5em;
+  font-size: 1.1em;
+  padding: 0.3em;
   white-space: nowrap;
 `;
 
