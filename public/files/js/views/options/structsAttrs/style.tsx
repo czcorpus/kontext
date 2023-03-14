@@ -111,27 +111,16 @@ export const AttributesTweaks = styled.div`
     margin-left: 1.5em;
     margin-bottom: 1.2em;
 
-    h3 {
-        margin-bottom: 0.4em;
-    }
+    label {
+        display: block;
 
-    ul.switch {
-        list-style-type: none;
-        margin: 0;
-        padding: 0;
+        input {
+            margin: 0 1em;
+        }
 
-        li {
-
-            margin: 0;
-            padding: 0.2em 0;
-
-            label {
-                input,
-                span {
-                    vertical-align: middle;
-                    display: inline-block;
-                }
-            }
+        input, span {
+            vertical-align: middle;
+            display: inline-block;
         }
     }
 `;
