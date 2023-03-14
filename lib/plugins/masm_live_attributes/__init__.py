@@ -17,11 +17,15 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import Any, Dict, List
+from typing import Any, List
+import urllib.parse
+import os
 
 import aiohttp
+import aiofiles
 import plugins
 import ujson
+from sanic.blueprints import Blueprint
 from action.control import http_action
 from action.krequest import KRequest
 from action.model.corpus import CorpusActionModel
@@ -29,7 +33,8 @@ from action.response import KResponse
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.live_attributes import (
     AbstractLiveAttributes, AttrValuesResponse, BibTitle, LiveAttrsException)
-from sanic.blueprints import Blueprint
+from .doclist import mk_cache_key, DocListItem
+from .doclist.writer import export_csv
 
 bp = Blueprint('masm_live_attributes')
 
@@ -72,8 +77,33 @@ async def fill_attrs(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.LIVE_ATTRIBUTES as lattr:
         return await lattr.fill_attrs(corpus_id=amodel.corp.corpname, search=search, values=values, fill=fill)
 
+@bp.route('/num_matching_documents', methods=['POST'])
+@http_action(return_type='json', action_model=CorpusActionModel)
+async def num_matching_documents(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
+    with plugins.runtime.LIVE_ATTRIBUTES as lattr:
+        nm = await lattr.num_matching_documents(
+            amodel.plugin_ctx, amodel.args.corpname, req.json['lattrs'], req.json['laligned'])
+        return dict(num_documents=nm)
 
-async def proc_masm_response(resp) -> Dict[str, Any]:
+@bp.route('/save_document_list', methods=['POST'])
+@http_action(return_type='plain', action_model=CorpusActionModel)
+async def save_document_list(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
+    attrs = ujson.loads(req.form.get('attrs', '{}'))
+    aligned = ujson.loads(req.form.get('aligned', '[]'))
+    save_format = req.args.get('save_format')
+    with plugins.runtime.LIVE_ATTRIBUTES as lattr:
+        nm, ttype = await lattr.document_list(
+            amodel.plugin_ctx, amodel.args.corpname, req.args.getlist('lattr'), attrs, aligned, save_format)
+        resp.set_header('Content-Type', ttype)
+        file_size = await aiofiles.os.path.getsize(nm)
+        resp.set_header('Content-Length', str(file_size))
+        resp.set_header(
+            'Content-Disposition', f'attachment; filename="document-list-{amodel.args.corpname}.{save_format}"')
+        with open(nm, 'r') as fr:
+            return fr.read()
+
+
+async def proc_masm_response(resp) -> Any:
     data = await resp.json()
     if 400 <= resp.status <= 500:
         raise LiveAttrsException(data.get('error', 'unspecified error'))
@@ -88,9 +118,16 @@ class MasmLiveAttributes(AbstractLiveAttributes):
     def export_actions():
         return bp
 
-    def __init__(self, corparch: AbstractCorporaArchive, service_url: str, max_attr_list_size: int):
+    def __init__(
+            self,
+            corparch: AbstractCorporaArchive,
+            service_url: str,
+            doclist_cache_dir: str,
+            max_attr_list_size: int
+    ):
         self.corparch = corparch
         self._service_url = service_url
+        self._doclist_cache_dir = doclist_cache_dir
         self._session = None
         self._max_attr_list_size = max_attr_list_size
 
@@ -152,6 +189,25 @@ class MasmLiveAttributes(AbstractLiveAttributes):
         async with session.post(f'/liveAttributes/{corpus_id}/fillAttrs', json=json_body) as resp:
             return await proc_masm_response(resp)
 
+    async def document_list(self, plugin_ctx, corpus_id, view_attrs, attr_map, aligned_corpora, save_format):
+        session = await self._get_session()
+        args = dict(attrs=attr_map, aligned=aligned_corpora)
+        attrs = urllib.parse.urlencode([('attr',  x) for x in view_attrs])
+        async with session.post(f'/liveAttributes/{corpus_id}/documentList?{attrs}', json=args) as resp:
+            data = await proc_masm_response(resp)
+            for i, item in enumerate(data):
+                data[i] = DocListItem.from_dict(item)
+            if save_format == 'csv':
+                file = os.path.join(self._doclist_cache_dir, mk_cache_key(attr_map, aligned_corpora, view_attrs))
+                await export_csv(data, file)
+                return file, 'text/csv'
+
+
+    async def num_matching_documents(self, plugin_ctx, corpus_id, attr_map, aligned_corpora):
+        session = await self._get_session()
+        args = dict(attrs=attr_map, aligned=aligned_corpora)
+        async with session.post(f'/liveAttributes/{corpus_id}/numMatchingDocuments', json=args) as resp:
+            return await proc_masm_response(resp)
 
 @plugins.inject(plugins.runtime.CORPARCH)
 def create_instance(settings, corparch: AbstractCorporaArchive) -> MasmLiveAttributes:
@@ -159,5 +215,6 @@ def create_instance(settings, corparch: AbstractCorporaArchive) -> MasmLiveAttri
     return MasmLiveAttributes(
         corparch,
         plg_conf['service_url'],
+        plg_conf['doclist_cache_dir'],
         max_attr_list_size=settings.get_int('global', 'max_attr_list_size')
     )

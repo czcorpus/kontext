@@ -128,7 +128,7 @@ class ParadigmaticQueryPage {
                         url,
                         contentType: 'multipart/form-data',
                         args,
-                    });
+                    }).subscribe();
                 },
                 quickSaveRowLimit: 10000 // TODO
             });

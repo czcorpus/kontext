@@ -19,22 +19,17 @@
  */
 
 import * as React from 'react';
-import {IActionDispatcher} from 'kombo';
+import {BoundWithProps, IActionDispatcher} from 'kombo';
 import * as Kontext from '../../types/kontext';
-import { CorpusInfoType, AnyOverviewInfo, CorpusInfo, CitationInfo }
-    from '../../models/common/layout';
+import { CorpusInfoType, CorpusInfo, CitationInfo, CorpusInfoModelState }
+    from '../../models/common/corpusInfo';
 import { init as subcOverviewInit } from '../subcorp/overview';
-import { Subscription } from 'rxjs';
 import { Actions } from '../../models/common/actions';
 import * as S from './style';
 import * as S2 from '../style';
 import { List } from 'cnc-tskit';
+import { CorpusInfoModel } from '../../models/common/corpusInfo';
 
-
-interface OverviewAreaState {
-    isLoading:boolean;
-    data:AnyOverviewInfo;
-}
 
 
 export interface OverviewAreaProps {
@@ -56,7 +51,7 @@ export interface OverviewViews {
 
 
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
-            corpusInfoModel:Kontext.ICorpusInfoModel):OverviewViews {
+            corpusInfoModel:CorpusInfoModel):OverviewViews {
 
     const layoutViews = he.getLayoutViews();
     const SubcOverview = subcOverviewInit(he);
@@ -139,13 +134,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         );
     };
 
-    // ---------------------- <CorpusInfoBox /> ------------------------------------
+    // ----------------------  <CorpusInfoOverview /> ---------------
 
-    const CorpusInfoBox:React.FC<CorpusInfoBoxProps> = (props) => {
+    const CorpusInfoOverview:React.FC<CorpusInfoBoxProps> = (props) => {
 
         const renderWebLink = () => {
             if (props.data.webUrl) {
-                return <a href={props.data.webUrl} target="_blank">{props.data.webUrl}</a>;
+                return <a href={props.data.webUrl} target="_blank" className="external">{props.data.webUrl}</a>;
 
             } else {
                 return '-';
@@ -162,6 +157,92 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             }
         };
 
+        return (
+            <dl>
+            <dt>{he.translate('global__description')}:</dt>
+            <dd>{props.data.description}</dd>
+            <dt>{he.translate('global__size')}:</dt>
+            <dd>{he.formatNumber(props.data.size, 0)} {he.translate('global__positions')}
+            </dd>
+            <dt>{he.translate('global__website')}:</dt>
+            <dd>{renderWebLink()}</dd>
+            <dt>{he.translate('global__keywords')}:</dt>
+            <dd>{renderKeywords()}</dd>
+            </dl>
+        )
+    }
+
+    // --------------------- <CorpusStructureAndMetadata /> ----------------
+
+    const CorpusStructureAndMetadata:React.FC<CorpusInfoBoxProps> = (props) => (
+        <div>
+            <table className="structs-and-attrs">
+                <tbody>
+                    <tr>
+                        <td>
+                            <AttributeList rows={props.data.attrlist} />
+                        </td>
+                        <td style={{paddingLeft: '4em'}}>
+                            <StructureList rows={props.data.structlist} />
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <p className="note">
+            <strong>{he.translate('global__corp_info_attrs_remark_label')}: </strong>
+            {he.translate('global__corp_info_attrs_remark_text')}
+            </p>
+
+            <table className="tagset-list">
+                <thead>
+                    <tr>
+                        <th colSpan={3} className="attrib-heading">
+                            {he.translate('global__tagsets')}
+                        </th>
+                    </tr>
+                    <tr className="col-headings">
+                        <th>{he.translate('global__name')}</th>
+                        <th>{he.translate('global__attribute')}</th>
+                        <th>{he.translate('global__get_more_info')}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {List.map(v => {
+                        const url = props.isLocalUiLang ? v.docUrlLocal : v.docUrlEn;
+                        return (
+                            <tr key={`tagset:${v.ident}`}>
+                                <td className="name">{v.ident}</td>
+                                <td>"{v.featAttr}"</td>
+                                <td>
+                                    {url ? <a target="_blank" className="external" href={url}>{url}</a> : null}
+                                </td>
+                            </tr>
+                        )
+                    }, props.data.tagsets)}
+                </tbody>
+            </table>
+        </div>
+    );
+
+    // ---------------------- <CitationInfo /> ---------------------------------------
+
+    const CitationInfo:React.FC<CitationInfo> = (props) => (
+        <div>
+            <CorpusReference data={props} />
+        </div>
+    );
+
+    // ---------------------- <CorpusInfoBox /> ------------------------------------
+
+    const CorpusInfoBox:React.FC<CorpusInfoBoxProps> = (props) => {
+
+        const items:Array<{id:'overview'|'structure'|'references'; label:string}> = [
+            {id: 'overview', label: he.translate('global__corpus_info_overview')},
+            {id: 'structure', label: he.translate('global__corpus_info_struct_and_metadata')},
+            {id: 'references', label: he.translate('global__citation_info')}
+        ];
+
+
         if (props.isWaiting) {
             return (
                 <S.CorpusInfoBox>
@@ -174,55 +255,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             return (
                 <S.CorpusInfoBox>
                     <h2 className="corpus-name">{props.data.corpname}</h2>
-                    <dl>
-                        <dt>{he.translate('global__description')}:</dt>
-                        <dd>{props.data.description}</dd>
-                        <dt>{he.translate('global__size')}:</dt>
-                        <dd>{he.formatNumber(props.data.size, 0)} {he.translate('global__positions')}
-                        </dd>
-                        <dt>{he.translate('global__website')}:</dt>
-                        <dd>{renderWebLink()}</dd>
-                        <dt>{he.translate('global__keywords')}:</dt>
-                        <dd>{renderKeywords()}</dd>
-                        <dt>{he.translate('global__corpus_info_metadata_heading')}:</dt>
-                        <dd>
-                            <table className="structs-and-attrs">
-                                <tbody>
-                                    <tr>
-                                        <td>
-                                            <AttributeList rows={props.data.attrlist} />
-                                        </td>
-                                        <td style={{paddingLeft: '4em'}}>
-                                            <StructureList rows={props.data.structlist} />
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            <p className="note">
-                            <strong>{he.translate('global__corp_info_attrs_remark_label')}: </strong>
-                            {he.translate('global__corp_info_attrs_remark_text')}
-                            </p>
-                        </dd>
-                        <dt>{he.translate('global__tagsets')}:</dt>
-                        <dd>
-                            <ul>
-                                {List.map(v => {
-                                    const url = props.isLocalUiLang ? v.docUrlLocal : v.docUrlEn;
-                                    return <li key={`tagset:${v.ident}`}>
-                                        <span>{v.ident}</span>{'\u00a0'}
-                                        <span>({v.type})</span>{'\u00a0'}
-                                        {he.translate('global__on_attr').toLocaleLowerCase()}{'\u00a0'}
-                                        <span>"{v.featAttr}"</span>{'\u00a0'}
-                                        {url ? <span> - <a target="_blank" href={url}>{url}</a></span> : null}
-                                    </li>
-                                }, props.data.tagsets)}
-                            </ul>
-                        </dd>
-                        <dt>{he.translate('global__citation_info')}:</dt>
-                        <dd className="references">
-                            <CorpusReference data={props.data.citationInfo} />
-                        </dd>
-                    </dl>
+                    <layoutViews.TabView
+                            defaultId="overview"
+                            callback={()=>undefined}
+                            items={items}>
+                        <CorpusInfoOverview {...props} />
+                        <CorpusStructureAndMetadata {...props} />
+                        <CitationInfo {...props.data.citationInfo} />
+                    </layoutViews.TabView>
                 </S.CorpusInfoBox>
             );
         }
@@ -383,87 +423,54 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ----------------------------- <OverviewArea /> --------------------------
 
-    class OverviewArea extends React.Component<OverviewAreaProps, OverviewAreaState> {
+    const OverviewArea:React.FC<CorpusInfoModelState & OverviewAreaProps> = (props) => {
 
-        private modelSubscription:Subscription;
 
-        constructor(props) {
-            super(props);
-            this._handleModelChange = this._handleModelChange.bind(this);
-            this._handleCloseClick = this._handleCloseClick.bind(this);
-            this.state = this._fetchModelState();
-        }
-
-        _fetchModelState() {
-            return {
-                data: corpusInfoModel.getCurrentInfoData(),
-                isLoading: corpusInfoModel.isLoading()
-            };
-        }
-
-        _handleModelChange() {
-            this.setState(this._fetchModelState());
-        }
-
-        _handleCloseClick() {
+        const handleCloseClick = () => {
             dispatcher.dispatch<typeof Actions.OverviewClose>({
                 name: Actions.OverviewClose.name
             });
         }
 
-        componentDidMount() {
-            this.modelSubscription = corpusInfoModel.addListener(this._handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
-        _renderInfo() {
-            if (this.state.data) {
-                switch (this.state.data.type) {
-                    case CorpusInfoType.CORPUS:
-                        return <CorpusInfoBox data={this.state.data} isWaiting={this.state.isLoading} isLocalUiLang={this.props.isLocalUiLang}/>;
-                    case CorpusInfoType.CITATION:
-                        return <CorpusReference data={this.state.data} />;
-                    case CorpusInfoType.SUBCORPUS:
-                        return <SubcOverview data={this.state.data} standalone={true} />;
-                    case CorpusInfoType.KEY_SHORTCUTS:
-                        return <KeyboardShortcuts />;
-                }
-            }
-            return null;
-        }
-
-        render() {
-            const ans = this._renderInfo();
-            if (this.state.isLoading) {
-                return (
-                    <layoutViews.PopupBox customClass="centered"
-                            onCloseClick={this._handleCloseClick}
-                            takeFocus={true}>
-                        <img className="ajax-loader" src={he.createStaticUrl('img/ajax-loader.gif')}
-                                alt={he.translate('global__loading')} title={he.translate('global__loading')} />
-                    </layoutViews.PopupBox>
-                );
-
-            } else if (ans) {
-                return (
-                    <layoutViews.PopupBox customClass="centered"
-                            onCloseClick={this._handleCloseClick} takeFocus={true}>
-                        {ans}
-                    </layoutViews.PopupBox>
-                );
-
-            } else {
-                return null;
+        const renderInfo = () => {
+            switch (props.currentInfoType) {
+                case CorpusInfoType.CORPUS:
+                    return <CorpusInfoBox
+                            data={{...props.corpusData, type: CorpusInfoType.CORPUS}}
+                            isWaiting={props.isWaiting} isLocalUiLang={props.isLocalUiLang} />;
+                case CorpusInfoType.CITATION:
+                    return <CorpusReference data={props.corpusData.citationInfo} />;
+                case CorpusInfoType.SUBCORPUS:
+                    return <SubcOverview data={props.subcorpusData} standalone={true} />;
+                case CorpusInfoType.KEY_SHORTCUTS:
+                    return <KeyboardShortcuts />;
+                default:
+                    return null;
             }
         }
-    }
+
+        const renderInfoArea = () => {
+            return props.currentInfoType ?
+                <layoutViews.PopupBox customClass="centered"
+                        onCloseClick={handleCloseClick} takeFocus={true}>
+                    {renderInfo()}
+                </layoutViews.PopupBox> :
+                null;
+        }
+
+        return props.isWaiting ?
+                <layoutViews.PopupBox customClass="centered"
+                        onCloseClick={handleCloseClick}
+                        takeFocus={true}>
+                    <img className="ajax-loader" src={he.createStaticUrl('img/ajax-loader.gif')}
+                            alt={he.translate('global__loading')} title={he.translate('global__loading')} />
+                </layoutViews.PopupBox> :
+                renderInfoArea();
+    };
 
 
     return {
-        OverviewArea,
+        OverviewArea: BoundWithProps<OverviewAreaProps, CorpusInfoModelState>(OverviewArea, corpusInfoModel),
         CorpusInfoBox
     };
 }

@@ -19,8 +19,8 @@
  */
 
 import { Action } from 'kombo';
+import { CorpusInfo } from '../../models/common/corpusInfo';
 import { CorplistDataResponse, Filters, ServerFavlistItem } from './common';
-import { CorpusInfo } from '../../models/common/layout';
 import { SearchResultRow } from './search';
 
 

@@ -32,6 +32,7 @@ import { TextTypesModelState } from '../../models/textTypes/main';
 
 import * as S from './style';
 import * as TTS from '../../views/textTypes/style';
+import { DataSaveFormat } from '../../app/navigation/save';
 
 
 export interface ViewModuleArgs {
@@ -46,9 +47,16 @@ export interface LiveAttrsCustomTTProps {
 }
 
 
-export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAttrsModel}:ViewModuleArgs):PluginInterfaces.LiveAttributes.Views {
+export function init({
+    dispatcher,
+    he,
+    SubcmixerComponent,
+    textTypesModel,
+    liveAttrsModel
+}:ViewModuleArgs):PluginInterfaces.LiveAttributes.Views {
 
     const ttViews = ttViewInit(dispatcher, he, textTypesModel);
+    const layoutViews = he.getLayoutViews();
 
     // ----------------------------- <StepLoader /> --------------------------
 
@@ -97,7 +105,7 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
                 ans = values;
             }
             return ans
-                .map(item => item.substr(0, 1) !== '@' ? item : item.substr(1))
+                .map(item => item.substring(0, 1) !== '@' ? item : item.substring(1))
                 .join(joinChar);
         };
 
@@ -229,6 +237,132 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
         }
     };
 
+    // ----------------------------- <DocumentListFieldset /> -----------------------
+
+    const DocumentListFieldset:React.FC<{
+        structAttrList:Array<{n:string; selected:boolean}>;
+        totalItems:number;
+        dataFormat:DataSaveFormat;
+    }> = (props) => {
+
+        const handleStructAttr = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch(
+                PluginInterfaces.LiveAttributes.Actions.SelectDownloadStructAttr,
+                {
+                    name: evt.target.value,
+                    checked: evt.target.checked
+                }
+            );
+        };
+
+        const handleDataFormat = (evt:React.ChangeEvent<HTMLSelectElement>) => {
+            dispatcher.dispatch(
+                PluginInterfaces.LiveAttributes.Actions.SetDocumentListDataFormat,
+                {
+                    value: evt.target.value as DataSaveFormat
+                }
+            );
+        };
+
+        const handleSaveButton = () => {
+            dispatcher.dispatch(
+                PluginInterfaces.LiveAttributes.Actions.DownloadDocumentList
+            );
+        };
+
+        return (
+            <S.DocumentListFieldset>
+                <ul>
+                    <li>
+                        <S.Label htmlFor="dl-attrs">
+                            {he.translate('ucnkLA__dt_structattrs')}:
+                        </S.Label>
+                        <ul className="attrs" id="dl-attrs">
+                            {List.map(
+                                x => (
+                                    <li key={`sattr:${x.n}`} className={x.selected ? 'selected' : null}>
+                                        <label>
+                                            <input type="checkbox" value={x.n} checked={x.selected} onChange={handleStructAttr} />
+                                            {x.n}
+                                        </label>
+                                    </li>
+                                ),
+                                props.structAttrList
+                            )}
+                        </ul>
+                    </li>
+                    <li>
+                        <S.Label htmlFor="dl-format">
+                            {he.translate('ucnkLA__dt_file_format')}:
+                        </S.Label>
+                        <select id="dl-format"
+                                onChange={handleDataFormat}
+                                value={props.dataFormat}>
+                            <option value="csv">CSV</option>
+                            <option value="xlsx">XLSX (Excel)</option>
+                            <option value="xml">XML</option>
+                            <option value="txt">TXT</option>
+                        </select>
+                    </li>
+                    <li>
+                        <S.Label htmlFor="dl-total-items">
+                            {he.translate('ucnkLA__total_items')}:
+                        </S.Label>
+                        <span>
+                            {props.totalItems ?
+                                he.formatNumber(props.totalItems) :
+                                null
+                            }
+                        </span>
+                    </li>
+                </ul>
+                <p>
+                    <button type="button" className="default-button" onClick={handleSaveButton}>
+                        {he.translate('global__save')}
+                    </button>
+                </p>
+            </S.DocumentListFieldset>
+        );
+    };
+
+    // ----------------------------- <DocumentListWidget /> ---------------------
+
+    const DocumentListWidget:React.FC<{
+        structAttrList:Array<{n:string; selected:boolean}>;
+        totalItems:number;
+        dataFormat:DataSaveFormat;
+        isBusy:boolean;
+        onClose:()=>void
+    }> = (props) => {
+
+        React.useEffect(
+            () => {
+                dispatcher.dispatch(
+                    PluginInterfaces.LiveAttributes.Actions.DownloadNumMatchingDocuments
+                )
+            },
+            []
+        );
+
+        return (
+            <layoutViews.ModalOverlay onCloseKey={props.onClose}>
+                <layoutViews.CloseableFrame
+                        onCloseClick={props.onClose}
+                        label="save document list">
+                    <S.DocumentListWidget>
+                        {props.isBusy ?
+                            <layoutViews.AjaxLoaderImage /> :
+                            <DocumentListFieldset
+                                structAttrList={props.structAttrList}
+                                totalItems={props.totalItems}
+                                dataFormat={props.dataFormat} />
+                        }
+                    </S.DocumentListWidget>
+                </layoutViews.CloseableFrame>
+            </layoutViews.ModalOverlay>
+        )
+    }
+
     // ----------------------------- <LiveAttrsView /> --------------------------
 
     const LiveAttrsView:React.FC<LiveAttrsModelState> = (props) => {
@@ -236,24 +370,31 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
         const handleRefine = () => {
             dispatcher.dispatch(
                 PluginInterfaces.LiveAttributes.Actions.RefineClicked,
+                {onlyUnlockedSelections: true}
             );
         };
 
         const handleReset = () => {
-            dispatcher.dispatch<typeof PluginInterfaces.LiveAttributes.Actions.ResetClicked>({
-                name: PluginInterfaces.LiveAttributes.Actions.ResetClicked.name,
-            });
+            dispatcher.dispatch(
+                PluginInterfaces.LiveAttributes.Actions.ResetClicked,
+            );
         };
 
         const handleUndo = () => {
-            dispatcher.dispatch<typeof PluginInterfaces.LiveAttributes.Actions.UndoClicked>({
-                name: PluginInterfaces.LiveAttributes.Actions.UndoClicked.name,
-            });
+            dispatcher.dispatch(
+                PluginInterfaces.LiveAttributes.Actions.UndoClicked,
+            );
         };
 
         const widgetIsActive = () => {
             return !List.empty(props.alignedCorpora) && props.selectionSteps.length > 1
                 || List.empty(props.alignedCorpora) && !List.empty(props.selectionSteps);
+        };
+
+        const handleDocumentListWidget = () => {
+            dispatcher.dispatch(
+                PluginInterfaces.LiveAttributes.Actions.ToggleDocumentListWidget
+            );
         };
 
         return (
@@ -275,6 +416,15 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
                     : null}
                 </S.LiveAttributesControlsUL>
                 <SelectionSteps items={props.selectionSteps} isLoading={props.isBusy} />
+                {props.documentListWidgetVisible ?
+                    <DocumentListWidget
+                        onClose={handleDocumentListWidget}
+                        structAttrList={props.structAttrs}
+                        totalItems={props.documentListTotalSize}
+                        dataFormat={props.documentListSaveFormat}
+                        isBusy={props.docSaveIsBusy} /> :
+                    null
+                }
             </div>
         );
     }

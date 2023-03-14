@@ -72,6 +72,8 @@ def _subc_from_row(row: Dict) -> SubcorpusRecord:
         cql=row['cql'],
         within_cond=json.loads(row['within_cond']) if row['within_cond'] else None,
         text_types=json.loads(row['text_types']) if row['text_types'] else None,
+        bib_id_attr=row['bib_id_attr'],
+        bib_label_attr=row['bib_label_attr']
     )
 
 
@@ -79,6 +81,7 @@ def _subc_from_row(row: Dict) -> SubcorpusRecord:
 class BackendConfig:
     user_table: str = 'kontext_user'
     subccorp_table: str = 'kontext_subcorpus'
+    corpora_table: str = 'kontext_corpus'
     user_table_firstname_col: str = 'firstname'
     user_table_lastname_col: str = 'lastname'
 
@@ -277,10 +280,12 @@ class MySQLSubcArchive(AbstractSubcArchive):
             where.append('t1.is_draft = 0')
 
         sql = f"""SELECT
-            t1.*,
+            t1.*, CONCAT(t3.bib_id_struct, '.', t3.bib_id_attr) AS bib_id_attr, 
+            CONCAT(t3.bib_label_struct, '.', t3.bib_label_attr) AS bib_label_attr,
             CONCAT(t2.{self._bconf.user_table_firstname_col}, ' ', {self._bconf.user_table_lastname_col}) AS fullname
             FROM {self._bconf.subccorp_table} AS t1
-            JOIN {self._bconf.user_table} as t2 ON t1.author_id = t2.id
+            JOIN {self._bconf.user_table} AS t2 ON t1.author_id = t2.id
+            JOIN {self._bconf.corpora_table} AS t3 ON t3.name = t1.corpus_name
             WHERE {" AND ".join(where)} ORDER BY t1.id LIMIT %s OFFSET %s"""
         async with self._db.cursor() as cursor:
             await cursor.execute(sql, args)
@@ -290,10 +295,12 @@ class MySQLSubcArchive(AbstractSubcArchive):
         async with self._db.cursor() as cursor:
             await cursor.execute(
                 f"""SELECT
-                t1.*,
+                t1.*, CONCAT(t3.bib_id_struct, '.', t3.bib_id_attr) AS bib_id_attr,
+                CONCAT(t3.bib_label_struct, '.', t3.bib_label_attr) AS bib_label_attr,
                 CONCAT(t2.{self._bconf.user_table_firstname_col}, ' ', {self._bconf.user_table_lastname_col}) AS fullname
                 FROM {self._bconf.subccorp_table} AS t1
                 JOIN {self._bconf.user_table} AS t2 ON t1.author_id = t2.id
+                JOIN {self._bconf.corpora_table} AS t3 ON t3.name = t1.corpus_name
                 WHERE t1.id = %s
                 ORDER BY t1.created
                 LIMIT 1""",

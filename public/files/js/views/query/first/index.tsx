@@ -157,25 +157,15 @@ export function init({
 
     // ------------------- <QueryForm /> -----------------------------
 
-    class QueryForm extends React.PureComponent<QueryFormProps & FirstQueryFormModelState> {
+    const QueryForm:React.FC<QueryFormProps & FirstQueryFormModelState> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._handleSubmit = this._handleSubmit.bind(this);
-            this._handleContextFormVisibility = this._handleContextFormVisibility.bind(this);
-            this._handleTextTypesFormVisibility = this._handleTextTypesFormVisibility.bind(this);
-            this._keyEventHandler = this._keyEventHandler.bind(this);
-            this._handleShowQuickSubcorpWidget = this._handleShowQuickSubcorpWidget.bind(this);
-            this._handleHideQuickSubcorpWidget = this._handleHideQuickSubcorpWidget.bind(this);
-        }
-
-        _handleSubmit() {
+        const handleSubmit = () => {
             dispatcher.dispatch<typeof Actions.QuerySubmit>({
                 name: Actions.QuerySubmit.name
             });
-        }
+        };
 
-        _keyEventHandler(evt) {
+        const keyEventHandler = (evt) => {
             if (evt.key === Keyboard.Value.ENTER && !evt.shiftKey) {
                 if (!evt.ctrlKey && !evt.shiftKey) {
                     dispatcher.dispatch<typeof Actions.QuerySubmit>({
@@ -185,147 +175,156 @@ export function init({
                 evt.stopPropagation();
                 evt.preventDefault();
             }
-        }
+        };
 
-        _handleTextTypesFormVisibility() {
+        const handleTextTypesFormVisibility = () => {
             dispatcher.dispatch(
                 Actions.QueryTextTypesToggleForm,
-                {visible: !this.props.textTypesFormVisible}
+                {visible: !props.textTypesFormVisible}
             );
-        }
+        };
 
-        _handleContextFormVisibility() {
+        const handleContextFormVisibility = () => {
             dispatcher.dispatch<typeof Actions.QueryContextToggleForm>({
                 name: Actions.QueryContextToggleForm.name
             });
-        }
+        };
 
-        _handleShowQuickSubcorpWidget() {
-            if (this.props.quickSubcorpActive) {
-                if (this.props.LiveAttrsView) {
+        const handleShowQuickSubcorpWidget = () => {
+            if (props.quickSubcorpActive) {
+                if (props.LiveAttrsView) {
                     dispatcher.dispatch(
-                        PluginInterfaces.LiveAttributes.Actions.RefineClicked
+                        PluginInterfaces.LiveAttributes.Actions.RefineClicked,
+                        {onlyUnlockedSelections: true}
                     );
                 }
                 dispatcher.dispatch(
                     Actions.QueryShowQuickSubcorpWidget
                 );
             }
-        }
+        };
 
-        _handleHideQuickSubcorpWidget() {
+        const handleShowDownloadDocumentsWidget = () => {
+            dispatcher.dispatch(
+                PluginInterfaces.LiveAttributes.Actions.ToggleDocumentListWidget
+            );
+        };
+
+        const handleHideQuickSubcorpWidget = () => {
             dispatcher.dispatch<typeof Actions.QueryHideQuickSubcorpWidget>({
                 name: Actions.QueryHideQuickSubcorpWidget.name
             });
-        }
+        };
 
-        render() {
-            const primaryCorpname = List.head(this.props.corpora);
-            return (
-                <S.QueryForm>
-                    {this.props.suggestAltCorpVisible ?
-                        <AltCorpSuggestion altCorp={this.props.altCorp} /> :
-                        null
-                    }
-                    <div onKeyDown={this._keyEventHandler}>
-                        <div className="form primary-language">
-                            {this.props.allowCorpusSelection ?
-                                <TRCorpusField corparchWidget={CorparchWidget} />
-                                : null}
-                            <div className="query">
-                                <inputViews.TRQueryInputField
-                                    widgets={this.props.supportedWidgets[primaryCorpname]}
-                                    sourceId={primaryCorpname}
-                                    corpname={primaryCorpname}
-                                    wPoSList={this.props.wPoSList}
-                                    lposValue={this.props.lposValues[primaryCorpname]}
-                                    forcedAttr={this.props.forcedAttr}
-                                    attrList={this.props.attrList}
-                                    tagHelperView={this.props.tagHelperViews[primaryCorpname]}
-                                    tagsets={this.props.tagsets[primaryCorpname]}
-                                    inputLanguage={this.props.inputLanguages[primaryCorpname]}
-                                    onEnterKey={this._handleSubmit}
-                                    useRichQueryEditor={this.props.useRichQueryEditor}
-                                    takeFocus={true}
-                                    qsuggPlugin={querySuggest} />
-                            </div>
-                        </div>
-                        {this.props.corpora.length > 1 || this.props.availableAlignedCorpora.length > 0 ?
-                            <alignedViews.AlignedCorpora
-                                    availableCorpora={this.props.availableAlignedCorpora}
-                                    primaryCorpus={primaryCorpname}
-                                    subcorpus={this.props.subcorpusId}
-                                    alignedCorpora={List.tail(this.props.corpora)}
-                                    sectionVisible={this.props.alignedCorporaVisible}
-                                    supportedWidgets={this.props.supportedWidgets}
-                                    wPoSList={this.props.wPoSList}
-                                    queries={this.props.queries}
-                                    lposValues={this.props.lposValues}
-                                    forcedAttr={this.props.forcedAttr}
-                                    attrList={this.props.attrList}
-                                    inputLanguages={this.props.inputLanguages}
-                                    hasLemmaAttr={this.props.hasLemma}
-                                    useRichQueryEditor={this.props.useRichQueryEditor}
-                                    tagHelperViews={this.props.tagHelperViews}
-                                    tagsets={this.props.tagsets}
-                                    onEnterKey={this._handleSubmit} />
-                            : null
-                        }
-                        <inputViews.AdvancedFormFieldset
-                                uniqId="section-specify-context"
-                                formVisible={this.props.contextFormVisible}
-                                handleClick={this._handleContextFormVisibility}
-                                htmlClass="specify-context"
-                                title={he.translate('query__specify_context')}>
-                            <contextViews.SpecifyContextForm
-                                    hasLemmaAttr={this.props.hasLemma[primaryCorpname]}
-                                    wPoSList={this.props.wPoSList} />
-                        </inputViews.AdvancedFormFieldset>
-                        <inputViews.AdvancedFormFieldset
-                                    uniqId="section-specify-text-types"
-                                    formVisible={this.props.textTypesFormVisible}
-                                    formDisabled={queryModel.disableRestrictSearch(this.props)}
-                                    handleClick={this._handleTextTypesFormVisibility}
-                                    title={he.translate('query__specify_tt')}
-                                    htmlClass="specify-text-types"
-                                    closedStateHint={<BoundTextTypesFieldsetHint />}
-                            closedStateDesc={this.props.textTypesNotes}>
-                                <ttViews.TextTypesPanel
-                                        LiveAttrsView={this.props.LiveAttrsView}
-                                        LiveAttrsCustomTT={this.props.LiveAttrsCustomTT}
-                                        controls={[
-                                            <a onClick={this._handleShowQuickSubcorpWidget}
-                                                className={"util-button" + (this.props.quickSubcorpActive ? "" : " disabled")}>
-                                                    {he.translate('subc__quick_subcorpus')}
-                                            </a>
-                                            ]}
-                                        />
-                        </inputViews.AdvancedFormFieldset>
-                        <div className="submit-block">
-                            <div className="buttons">
-                                {this.props.isBusy ?
-                                    <layoutViews.AjaxLoaderBarImage /> :
-                                    <button type="button" className="default-button" onClick={this._handleSubmit}>
-                                        {he.translate('query__search_btn')}
-                                    </button>
-                                }
-                            </div>
-                            {posAttrsCompatibleWithAllAlignedCorpora(this.props.concViewPosAttrs, this.props.alignCommonPosAttrs) ?
-                                null :
-                                <div className="warning note">
-                                    <layoutViews.StatusIcon status="warning" inline={true} />
-                                    {he.translate('query__current_posattrs_not_covered_by_all_aligned_corpora')}
-                                </div>
-                            }
+        const primaryCorpname = List.head(props.corpora);
+        return (
+            <S.QueryForm>
+                {props.suggestAltCorpVisible ?
+                    <AltCorpSuggestion altCorp={props.altCorp} /> :
+                    null
+                }
+                <div onKeyDown={keyEventHandler}>
+                    <div className="form primary-language">
+                        {props.allowCorpusSelection ?
+                            <TRCorpusField corparchWidget={CorparchWidget} />
+                            : null}
+                        <div className="query">
+                            <inputViews.TRQueryInputField
+                                widgets={props.supportedWidgets[primaryCorpname]}
+                                sourceId={primaryCorpname}
+                                corpname={primaryCorpname}
+                                wPoSList={props.wPoSList}
+                                lposValue={props.lposValues[primaryCorpname]}
+                                forcedAttr={props.forcedAttr}
+                                attrList={props.attrList}
+                                tagHelperView={props.tagHelperViews[primaryCorpname]}
+                                tagsets={props.tagsets[primaryCorpname]}
+                                inputLanguage={props.inputLanguages[primaryCorpname]}
+                                onEnterKey={handleSubmit}
+                                useRichQueryEditor={props.useRichQueryEditor}
+                                takeFocus={true}
+                                qsuggPlugin={querySuggest} />
                         </div>
                     </div>
-                    {quickSubcorpViews && this.props.quickSubcorpVisible ?
-                        <quickSubcorpViews.Widget onClose={this._handleHideQuickSubcorpWidget} /> :
-                        null}
-                </S.QueryForm>
-            );
-        }
-    }
+                    {props.corpora.length > 1 || props.availableAlignedCorpora.length > 0 ?
+                        <alignedViews.AlignedCorpora
+                                availableCorpora={props.availableAlignedCorpora}
+                                primaryCorpus={primaryCorpname}
+                                subcorpus={props.subcorpusId}
+                                alignedCorpora={List.tail(props.corpora)}
+                                sectionVisible={props.alignedCorporaVisible}
+                                supportedWidgets={props.supportedWidgets}
+                                wPoSList={props.wPoSList}
+                                queries={props.queries}
+                                lposValues={props.lposValues}
+                                forcedAttr={props.forcedAttr}
+                                attrList={props.attrList}
+                                inputLanguages={props.inputLanguages}
+                                hasLemmaAttr={props.hasLemma}
+                                useRichQueryEditor={props.useRichQueryEditor}
+                                tagHelperViews={props.tagHelperViews}
+                                tagsets={props.tagsets}
+                                onEnterKey={handleSubmit} />
+                        : null
+                    }
+                    <inputViews.AdvancedFormFieldset
+                            uniqId="section-specify-context"
+                            formVisible={props.contextFormVisible}
+                            handleClick={handleContextFormVisibility}
+                            htmlClass="specify-context"
+                            title={he.translate('query__specify_context')}>
+                        <contextViews.SpecifyContextForm
+                                hasLemmaAttr={props.hasLemma[primaryCorpname]}
+                                wPoSList={props.wPoSList} />
+                    </inputViews.AdvancedFormFieldset>
+                    <inputViews.AdvancedFormFieldset
+                                uniqId="section-specify-text-types"
+                                formVisible={props.textTypesFormVisible}
+                                formDisabled={queryModel.disableRestrictSearch(props)}
+                                handleClick={handleTextTypesFormVisibility}
+                                title={he.translate('query__specify_tt')}
+                                htmlClass="specify-text-types"
+                                closedStateHint={<BoundTextTypesFieldsetHint />}
+                        closedStateDesc={props.textTypesNotes}>
+                            <ttViews.TextTypesPanel
+                                    LiveAttrsView={props.LiveAttrsView}
+                                    LiveAttrsCustomTT={props.LiveAttrsCustomTT}
+                                    controls={[
+                                        <a onClick={handleShowQuickSubcorpWidget}
+                                            className={"util-button" + (props.quickSubcorpActive ? "" : " disabled")}>
+                                                {he.translate('subc__quick_subcorpus')}
+                                        </a>,
+                                        <a onClick={handleShowDownloadDocumentsWidget}
+                                            className={"util-button" + (props.bibIdAttr ? "" : " disabled")}>
+                                            {he.translate('subc__save_list_of_documents')}
+                                        </a>
+                                        ]}
+                                    />
+                    </inputViews.AdvancedFormFieldset>
+                    <div className="submit-block">
+                        <div className="buttons">
+                            {props.isBusy ?
+                                <layoutViews.AjaxLoaderBarImage /> :
+                                <button type="button" className="default-button" onClick={handleSubmit}>
+                                    {he.translate('query__search_btn')}
+                                </button>
+                            }
+                        </div>
+                        {posAttrsCompatibleWithAllAlignedCorpora(props.concViewPosAttrs, props.alignCommonPosAttrs) ?
+                            null :
+                            <div className="warning note">
+                                <layoutViews.StatusIcon status="warning" inline={true} />
+                                {he.translate('query__current_posattrs_not_covered_by_all_aligned_corpora')}
+                            </div>
+                        }
+                    </div>
+                </div>
+                {quickSubcorpViews && props.quickSubcorpVisible ?
+                    <quickSubcorpViews.Widget onClose={handleHideQuickSubcorpWidget} /> :
+                    null}
+            </S.QueryForm>
+        );
+    };
 
     // -------- <SelectedTextTypesLite /> ---------------------------
 

@@ -41,6 +41,8 @@ export interface SubcorpusServerRecord {
     archived:number|undefined;
     public_description:string|undefined;
     public_description_raw:string|undefined;
+    bib_id_attr:string;
+    bib_label_attr:string;
     cql:string|undefined;
     within_cond:Array<ServerWithinSelection>|undefined;
     text_types:TextTypes.ExportedSelection|undefined;
@@ -76,6 +78,8 @@ export interface SubcorpusRecord {
     descriptionRaw:string|undefined;
     authorId:number;
     authorFullname:string;
+    bibIdAttr:string;
+    bibLabelAttr:string;
 }
 
 export function subcServerRecord2SubcorpusRecord(srec:SubcorpusServerRecord):SubcorpusRecord {
@@ -93,7 +97,9 @@ export function subcServerRecord2SubcorpusRecord(srec:SubcorpusServerRecord):Sub
         description: srec.public_description,
         descriptionRaw: srec.public_description_raw,
         authorId: srec.author_id,
-        authorFullname: srec.author_fullname
+        authorFullname: srec.author_fullname,
+        bibIdAttr: srec.bib_id_attr,
+        bibLabelAttr: srec.bib_label_attr
     };
 }
 
@@ -190,6 +196,7 @@ export function importServerSubcList(data:Array<SubcorpusServerRecord>):Array<Su
         archived: item.archived ? new Date(item.archived * 1000) : undefined,
         selected: false,
         public_description: item.public_description,
+        bib_id_attr: item.bib_id_attr
     }), data);
 }
 

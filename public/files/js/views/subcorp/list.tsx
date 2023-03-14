@@ -468,14 +468,15 @@ export function init(
 
         _handleActionButton(action:string, idx:number) {
             const item = this.props.lines[idx];
-            dispatcher.dispatch<typeof Actions.ShowSubcEditWindow>({
-                name: Actions.ShowSubcEditWindow.name,
-                payload: {
+            dispatcher.dispatch(
+                Actions.ShowSubcEditWindow,
+                {
                     corpusName: item.corpus_name,
                     subcorpusId: item.id,
-                    subcorpusName: item.name
+                    subcorpusName: item.name,
+                    bibIdAttr: item.bib_id_attr
                 }
-            });
+            );
         }
 
         _handleActionsClose() {
@@ -506,7 +507,9 @@ export function init(
                                         scrollable={true}>
                                     <SubcorpEdit
                                         corpname={this.props.editWindowSubcorpus.corpusName}
-                                        usesubcorp={this.props.editWindowSubcorpus.subcorpusId} />
+                                        usesubcorp={this.props.editWindowSubcorpus.subcorpusId}
+                                        bibIdAttr={this.props.editWindowSubcorpus.bibIdAttr}
+                                        userId={this.props.userId} />
                                 </layoutViews.CloseableFrame>
                             </layoutViews.ModalOverlay>
                         ) : null}

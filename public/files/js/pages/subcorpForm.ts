@@ -104,14 +104,14 @@ export class SubcorpForm {
 
     private createTextTypesComponents(selectedTextTypes:TextTypes.ExportedSelection):TTInitData {
         const ttData = this.layoutModel.getConf<TTInitialData>('textTypesData');
-        const ttSelections = importInitialTTData(ttData, {}, {});
+        const ttSelections = importInitialTTData(ttData, {});
         this.textTypesModel = new TextTypesModel({
                 dispatcher: this.layoutModel.dispatcher,
                 pluginApi: this.layoutModel.pluginApi(),
                 attributes: ttSelections,
                 readonlyMode: false,
-                bibIdAttr: ttData.id_attr,
-                bibLabelAttr: ttData.bib_attr
+                bibIdAttr: ttData.bib_id_attr,
+                bibLabelAttr: ttData.bib_label_attr
         });
         const concFormArgs = this.layoutModel.getConf<{[ident:string]:ConcFormArgs}>(
             'ConcFormsArgs'
@@ -131,13 +131,15 @@ export class SubcorpForm {
             this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES),
             true, // manual aligned corp. selection mode
             {
-                bibAttr: ttData.bib_attr,
+                bibIdAttr: ttData.bib_id_attr,
+                bibLabelAttr: ttData.bib_label_attr,
                 availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>(
                     'availableAlignedCorpora'
                 ),
                 refineEnabled: true,
                 manualAlignCorporaMode: true,
                 subcorpTTStructure: {},
+                textTypesData: this.layoutModel.getConf<TTInitialData>('textTypesData')
             }
         );
 

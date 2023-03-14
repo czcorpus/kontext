@@ -113,15 +113,20 @@ export class QueryPage {
         );
     }
 
-    createTTViews(queryFormArgs:QueryFormArgs, textTypesData:TTInitialData, subcorpTTStructure:ExportedSelection):[QueryFormProps, Array<AnyTTSelection>] {
-        const attributes = importInitialTTData(textTypesData, {}, subcorpTTStructure || {});
+    createTTViews(
+        queryFormArgs:QueryFormArgs,
+        textTypesData:TTInitialData,
+        subcorpTTStructure:ExportedSelection
+    ):[QueryFormProps, Array<AnyTTSelection>] {
+        const attributes = importInitialTTData(
+            textTypesData, subcorpTTStructure, subcorpTTStructure);
         this.textTypesModel = new TextTypesModel({
                 dispatcher: this.layoutModel.dispatcher,
                 pluginApi: this.layoutModel.pluginApi(),
                 attributes,
                 readonlyMode: false,
-                bibIdAttr: textTypesData.id_attr,
-                bibLabelAttr: textTypesData.bib_attr
+                bibIdAttr: textTypesData.bib_id_attr,
+                bibLabelAttr: textTypesData.bib_label_attr
         });
         this.textTypesModel.applyCheckedItems(
             queryFormArgs.selected_text_types,
@@ -133,7 +138,8 @@ export class QueryPage {
             this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES),
             false,
             {
-                bibAttr: textTypesData.bib_attr,
+                bibIdAttr: textTypesData.bib_id_attr,
+                bibLabelAttr: textTypesData.bib_label_attr,
                 availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>(
                     'availableAlignedCorpora'
                 ),
@@ -142,6 +148,7 @@ export class QueryPage {
                     Dict.keys(queryFormArgs.selected_text_types).length > 0,
                 manualAlignCorporaMode: false,
                 subcorpTTStructure,
+                textTypesData: this.layoutModel.getConf<TTInitialData>('textTypesData')
             }
         );
 
@@ -227,6 +234,7 @@ export class QueryPage {
                     'InputLanguages'
                 ),
                 textTypesNotes: this.layoutModel.getConf<string>('TextTypesNotes'),
+                bibIdAttr,
                 selectedTextTypes: queryFormArgs.selected_text_types,
                 hasLemma: queryFormArgs.has_lemma,
                 useRichQueryEditor:this.layoutModel.getConf<boolean>('UseRichQueryEditor'),
@@ -383,8 +391,8 @@ export class QueryPage {
                 tagHelperPlg,
                 queryFormArgs,
                 ttSelection,
-                textTypesData.id_attr,
-                textTypesData.bib_attr
+                textTypesData.bib_id_attr,
+                textTypesData.bib_label_attr
             );
             const corparchWidgetId = Ident.puid()
             const [corparchWidget, corparchPlg]  = this.initCorplistComponent(corparchWidgetId);

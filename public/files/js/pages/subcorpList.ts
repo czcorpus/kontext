@@ -109,6 +109,7 @@ class SubcorpListPage {
                         isBusy: false,
                         data: undefined,
                         liveAttrsEnabled: false,
+                        liveAttrsInitialized: false,
                         previewEnabled: false,
                         prevRawDescription: undefined
                     },
@@ -130,11 +131,19 @@ class SubcorpListPage {
                         this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES),
                         false,
                         {
-                            bibAttr: null,
+                            bibIdAttr: null,
+                            bibLabelAttr: null,
                             availableAlignedCorpora: [],
                             refineEnabled: false,
                             manualAlignCorporaMode: false,
                             subcorpTTStructure: {},
+                            textTypesData: { // here we insert "nothing" as actual data will
+                                // be loaded based on user's click on subc. list item
+                                Blocks: [{Line: []}],
+                                Normslist: [],
+                                bib_label_attr: null,
+                                bib_id_attr: null
+                            }
                         }
                     );
                 }

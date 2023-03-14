@@ -418,7 +418,7 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
             url: this.pageModel.createActionUrl('export_freqct', args),
             contentType: 'application/json',
             args: this.exportData()
-        });
+        }).subscribe();
     }
 
     private sortByDimension(state:Freq2DTableModelState, dim:Dimensions, sortAttr:string):void {

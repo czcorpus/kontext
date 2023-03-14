@@ -66,6 +66,7 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
     corpora:Array<string>;
     availableAlignedCorpora:Array<Kontext.AttrItem>;
     textTypesNotes:string;
+    bibIdAttr:string|null;
     subcorpList:Array<Kontext.SubcorpListItem>;
     currentSubcorp:string;
     subcorpusId:string;
@@ -303,6 +304,8 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
 
     quickSubcorpActive:boolean;
 
+    bibIdAttr:string;
+
     /**
      * Attributes user wants to display
      */
@@ -455,6 +458,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 isLocalUiLang: props.isLocalUiLang,
                 quickSubcorpVisible: false,
                 quickSubcorpActive,
+                bibIdAttr: props.bibIdAttr,
                 concViewPosAttrs: props.concViewPosAttrs,
                 alignCommonPosAttrs: props.alignCommonPosAttrs,
                 compositionModeOn: false,

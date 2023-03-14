@@ -178,7 +178,7 @@ class ParadigmaticQueryPage {
             contentType: 'multipart/form-data',
             url,
             args,
-        });
+        }).subscribe();
     }
 }
 

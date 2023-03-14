@@ -38,12 +38,14 @@ import {
     SubcorpusRecord,
     subcServerRecord2SubcorpusRecord,
     wipeSubcorpora } from './common';
+import * as PluginInterfaces from '../../types/plugins';
 
 
 export interface SubcorpusEditModelState {
     isBusy:boolean;
     data:SubcorpusRecord|undefined;
     liveAttrsEnabled:boolean;
+    liveAttrsInitialized:boolean;
     previewEnabled:boolean;
     prevRawDescription:string|undefined;
 }
@@ -338,6 +340,20 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                 if (isCQLSelection(state.data.selections)) {
                     state.data.selections = action.payload.value;
                 }
+            }
+        );
+
+        this.addActionHandler(
+            PluginInterfaces.LiveAttributes.Actions.RefineClicked,
+            (state, action) => {
+                state.liveAttrsInitialized = true;
+            }
+        );
+
+        this.addActionHandler(
+            Actions.HideSubcEditWindow,
+            (state, action) => {
+                state.liveAttrsInitialized = false;
             }
         );
     }

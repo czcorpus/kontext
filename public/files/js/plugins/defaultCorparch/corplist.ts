@@ -23,7 +23,7 @@ import { List, HTTP, pipe, tuple, Dict } from 'cnc-tskit';
 
 import * as Kontext from '../../types/kontext';
 import * as PluginInterfaces from '../../types/plugins';
-import { CorpusInfo, CorpusInfoType, CorpusInfoResponse } from '../../models/common/layout';
+import { CorpusInfo, CorpusInfoType, CorpusInfoResponse } from '../../models/common/corpusInfo';
 import { Actions } from './actions';
 import { CorplistItem, Filters, CorplistDataResponse, validateSizeSpec, ConfPluginData } from './common';
 import { IPluginApi } from '../../types/plugins/common';

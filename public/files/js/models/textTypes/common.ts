@@ -23,7 +23,7 @@
  * as returned by respective AJAX calls.
  */
 
-import { List } from 'cnc-tskit';
+import { Dict, List } from 'cnc-tskit';
 
 import * as TextTypes from '../../types/textTypes';
 
@@ -118,8 +118,8 @@ export type SelectionFilterMap = {[k:string]:Array<SelectionFilterValue>};
 export interface TTInitialData {
     Blocks:Array<Block>;
     Normslist:Array<any>;
-    bib_attr:string; // bib item label (possibly non-unique)
-    id_attr:string; // actual bib item identifier (unique)
+    bib_label_attr:string; // bib item label (possibly non-unique)
+    bib_id_attr:string; // actual bib item identifier (unique)
 }
 
 
@@ -160,85 +160,162 @@ const textTypeValueIsSelected = (data:TextTypes.ExportedSelection, attr:string, 
     return false;
 }
 
-export function importInitialTTData(data:TTInitialData,
-        selectedItems:TextTypes.ExportedSelection, subcorpDefinition:TextTypes.ExportedSelection):Array<TextTypes.AnyTTSelection> {
+
+function createTextInputAttributeSelection(
+    sel:TextTypes.AnyExportedTTSelection|undefined,
+    attrItem:BlockLine,
+    definesSubcorpus:boolean
+):TextTypes.TextInputAttributeSelection {
+    if (Array.isArray(sel)) {
+        return {
+            name: attrItem.name,
+            label: attrItem.label,
+            isNumeric: attrItem.numeric,
+            isInterval: !!attrItem.is_interval,
+            widget: attrItem.widget,
+            attrInfo: {
+                doc: attrItem.attr_doc,
+                docLabel: attrItem.attr_doc_label
+            },
+            autoCompleteHints: [],
+            values: List.map(
+                value => ({
+                    value,
+                    selected: true,
+                    locked: true,
+                    ident: value,
+                    numGrouped: 0
+                }),
+                sel
+            ),
+            definesSubcorpus,
+            textFieldValue: '',
+            type: 'text',
+            metaInfo: null,
+        };
+    }
+    return {
+        name: attrItem.name,
+        label: attrItem.label,
+        isNumeric: attrItem.numeric,
+        isInterval: !!attrItem.is_interval,
+        widget: attrItem.widget,
+        attrInfo: {
+            doc: attrItem.attr_doc,
+            docLabel: attrItem.attr_doc_label
+        },
+        autoCompleteHints: [],
+        values: [],
+        definesSubcorpus,
+        textFieldValue: '',
+        type: 'text',
+        metaInfo: null,
+    };
+}
+
+function createFullAttributeSelection(
+    selectedItems:TextTypes.ExportedSelection,
+    attrItem:BlockLine,
+    definesSubcorpus:boolean
+):TextTypes.FullAttributeSelection {
+
+    const values:Array<TextTypes.AttributeValue> = List.map(
+        valItem => ({
+            value: valItem.v,
+            ident: valItem.v, // TODO what about bib items?
+            selected: textTypeValueIsSelected(selectedItems, attrItem.name, valItem.v),
+            locked: definesSubcorpus,
+            availItems:valItem.xcnt,
+            // TODO here we expect that initial data
+            // do not have any name duplicities
+            numGrouped: 1,
+            metaInfo: null,
+        }),
+        attrItem.Values
+    );
+    return {
+        name: attrItem.name,
+        label: attrItem.label,
+        isNumeric: attrItem.numeric,
+        isInterval: !!attrItem.is_interval,
+        widget: attrItem.widget,
+        attrInfo: {
+            doc: attrItem.attr_doc,
+            docLabel: attrItem.attr_doc_label
+        },
+        values,
+        definesSubcorpus,
+        type: 'full',
+        metaInfo: null,
+    };
+}
+
+function createRegexpAttributeSelection(
+    attrItem:BlockLine,
+    definesSubcorpus:boolean
+):TextTypes.RegexpAttributeSelection {
+    return {
+        name: attrItem.name,
+        label: attrItem.label,
+        widget: attrItem.widget,
+        attrInfo: {
+            doc: attrItem.attr_doc,
+            docLabel: attrItem.attr_doc_label
+        },
+        textFieldValue: '',
+        textFieldDecoded: '',
+        isLocked: definesSubcorpus,
+        definesSubcorpus,
+        type: 'regexp',
+        metaInfo: null,
+    };
+}
+
+/**
+ *
+ * @param data
+ * @param selectedItems
+ * @param subcIncludedAttrs if restoring a subcorpus selection, include involved attributes
+ *   so we can lock respective text type boxes
+ * @returns
+ */
+export function importInitialTTData(
+    data:TTInitialData,
+    selectedItems:TextTypes.ExportedSelection|null,
+    subcorpStructure?:TextTypes.ExportedSelection
+):Array<TextTypes.AnyTTSelection> {
+    const nSelectedItems = selectedItems ? selectedItems : {};
     const mergedBlocks:Array<BlockLine> = List.foldl(
         (prev, curr) => prev.concat(curr.Line),
         [] as Array<BlockLine>,
         data.Blocks
     );
     if (mergedBlocks.length > 0) {
-        return mergedBlocks.map((attrItem:BlockLine) => {
-            if (isRegexpGeneratingWidgetView(attrItem.widget)) {
-                return {
-                    name: attrItem.name,
-                    label: attrItem.label,
-                    isNumeric: attrItem.numeric,
-                    widget: attrItem.widget,
-                    attrInfo: {
-                        doc: attrItem.attr_doc,
-                        docLabel: attrItem.attr_doc_label
-                    },
-                    textFieldValue: '',
-                    textFieldDecoded: '',
-                    isLocked: false,
-                    type: 'regexp',
-                    metaInfo: null,
-                };
+        return List.map(
+            (attrItem:BlockLine) => {
+                const attrInSubc = subcorpStructure ?
+                    Dict.hasKey(attrItem.name, subcorpStructure) : false;
 
-            } else if (attrItem.textboxlength) {
-                return {
-                    name: attrItem.name,
-                    label: attrItem.label,
-                    isNumeric: attrItem.numeric,
-                    isInterval: !!attrItem.is_interval,
-                    widget: attrItem.widget,
-                    attrInfo: {
-                        doc: attrItem.attr_doc,
-                        docLabel: attrItem.attr_doc_label
-                    },
-                    autoCompleteHints: [],
-                    values: [],
-                    textFieldValue: '',
-                    type: 'text',
-                    metaInfo: null,
-                };
+                if (isRegexpGeneratingWidgetView(attrItem.widget)) {
+                    return createRegexpAttributeSelection(attrItem, attrInSubc);
 
-            } else {
-                const values:Array<TextTypes.AttributeValue> = List.map(
-                    valItem => ({
-                        value: valItem.v,
-                        ident: valItem.v, // TODO what about bib items?
-                        selected: textTypeValueIsSelected(selectedItems, attrItem.name, valItem.v) || textTypeValueIsSelected(subcorpDefinition, attrItem.name, valItem.v) ?
-                            true : false,
-                        definesSubcorp: textTypeValueIsSelected(subcorpDefinition, attrItem.name, valItem.v) ?
-                            true : false,
-                        locked: textTypeValueIsSelected(subcorpDefinition, attrItem.name, valItem.v) ?
-                            true : false,
-                        availItems:valItem.xcnt,
-                        // TODO here we expect that initial data
-                        // do not have any name duplicities
-                        numGrouped: 1,
-                        metaInfo: null,
-                    }),
-                    attrItem.Values
-                );
-                return {
-                    name: attrItem.name,
-                    label: attrItem.label,
-                    isNumeric: attrItem.numeric,
-                    isInterval: !!attrItem.is_interval,
-                    widget: attrItem.widget,
-                    attrInfo: {
-                        doc: attrItem.attr_doc,
-                        docLabel: attrItem.attr_doc_label
-                    },
-                    values,
-                    type: 'full',
-                    metaInfo: null,
-                };
-            }
-        });
+                } else if (attrItem.textboxlength) {
+                    return createTextInputAttributeSelection(
+                        nSelectedItems[attrItem.name],
+                        attrItem,
+                        attrInSubc
+                    );
+
+                } else {
+                    return createFullAttributeSelection(
+                        nSelectedItems,
+                        attrItem,
+                        attrInSubc
+                    )
+                }
+            },
+            mergedBlocks
+        );
     }
     return null;
 }

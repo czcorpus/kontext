@@ -70,6 +70,7 @@ export class Actions {
         corpusName:string;
         subcorpusId:string;
         subcorpusName:string;
+        bibIdAttr:string;
     }> = {
         name: 'SUBCORP_SHOW_SUBC_EDIT_WINDOW'
     };
