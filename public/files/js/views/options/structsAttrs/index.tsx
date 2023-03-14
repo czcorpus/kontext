@@ -115,40 +115,30 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
 
         return (
             <S.AttributesTweaks>
-                <ul>
-                    <li>
-                        <label>
-                            <input type="radio" value={ViewOptions.AttrViewMode.VISIBLE_KWIC}
-                                    checked={props.attrsVmode === ViewOptions.AttrViewMode.VISIBLE_KWIC}
-                                    onChange={handleSelectChangeFn} />
-                            <span>{helpers.translate('options__vmode_switch_mixed')}</span>
-                        </label>
-                    </li>
-                    <li>
-                        <label>
-                            <input type="radio" value={ViewOptions.AttrViewMode.MOUSEOVER}
-                                    checked={props.attrsVmode === ViewOptions.AttrViewMode.MOUSEOVER}
-                                    onChange={handleSelectChangeFn} />
-                            <span>{helpers.translate('options__vmode_switch_mouseover_all')}</span>
-                        </label>
-                    </li>
-                    <li>
-                        <label>
-                            <input type="radio" value={ViewOptions.AttrViewMode.VISIBLE_ALL}
-                                    checked={props.attrsVmode === ViewOptions.AttrViewMode.VISIBLE_ALL}
-                                    onChange={handleSelectChangeFn} />
-                            <span>{helpers.translate('options__vmode_switch_visible_all')}</span>
-                        </label>
-                    </li>
-                    <li>
-                        <label>
-                            <input type="radio" value={ViewOptions.AttrViewMode.VISIBLE_MULTILINE}
-                                    checked={props.attrsVmode === ViewOptions.AttrViewMode.VISIBLE_MULTILINE}
-                                    onChange={handleSelectChangeFn} />
-                            <span>{helpers.translate('options__vmode_switch_visible_2line')}</span>
-                        </label>
-                    </li>
-                </ul>
+                <label>
+                    <input type="radio" value={ViewOptions.AttrViewMode.VISIBLE_KWIC}
+                            checked={props.attrsVmode === ViewOptions.AttrViewMode.VISIBLE_KWIC}
+                            onChange={handleSelectChangeFn} />
+                    <span>{helpers.translate('options__vmode_switch_mixed')}</span>
+                </label>
+                <label>
+                    <input type="radio" value={ViewOptions.AttrViewMode.MOUSEOVER}
+                            checked={props.attrsVmode === ViewOptions.AttrViewMode.MOUSEOVER}
+                            onChange={handleSelectChangeFn} />
+                    <span>{helpers.translate('options__vmode_switch_mouseover_all')}</span>
+                </label>
+                <label>
+                    <input type="radio" value={ViewOptions.AttrViewMode.VISIBLE_ALL}
+                            checked={props.attrsVmode === ViewOptions.AttrViewMode.VISIBLE_ALL}
+                            onChange={handleSelectChangeFn} />
+                    <span>{helpers.translate('options__vmode_switch_visible_all')}</span>
+                </label>
+                <label>
+                    <input type="radio" value={ViewOptions.AttrViewMode.VISIBLE_MULTILINE}
+                            checked={props.attrsVmode === ViewOptions.AttrViewMode.VISIBLE_MULTILINE}
+                            onChange={handleSelectChangeFn} />
+                    <span>{helpers.translate('options__vmode_switch_visible_2line')}</span>
+                </label>
             </S.AttributesTweaks>
         );
     };
