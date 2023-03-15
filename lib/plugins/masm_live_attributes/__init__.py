@@ -17,15 +17,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import Any, List
-import urllib.parse
 import os
+import urllib.parse
+from typing import Any, List
 
-import aiohttp
 import aiofiles
+import aiohttp
 import plugins
 import ujson
-from sanic.blueprints import Blueprint
 from action.control import http_action
 from action.krequest import KRequest
 from action.model.corpus import CorpusActionModel
@@ -33,8 +32,10 @@ from action.response import KResponse
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.live_attributes import (
     AbstractLiveAttributes, AttrValuesResponse, BibTitle, LiveAttrsException)
-from .doclist import mk_cache_key, DocListItem
-from .doclist.writer import export_csv, export_xml, export_jsonl
+from sanic.blueprints import Blueprint
+
+from .doclist import DocListItem, mk_cache_key
+from .doclist.writer import export_csv, export_jsonl, export_xlsx, export_xml
 
 bp = Blueprint('masm_live_attributes')
 
@@ -77,6 +78,7 @@ async def fill_attrs(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.LIVE_ATTRIBUTES as lattr:
         return await lattr.fill_attrs(corpus_id=amodel.corp.corpname, search=search, values=values, fill=fill)
 
+
 @bp.route('/num_matching_documents', methods=['POST'])
 @http_action(return_type='json', action_model=CorpusActionModel)
 async def num_matching_documents(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
@@ -84,6 +86,7 @@ async def num_matching_documents(amodel: CorpusActionModel, req: KRequest, resp:
         nm = await lattr.num_matching_documents(
             amodel.plugin_ctx, amodel.args.corpname, req.json['lattrs'], req.json['laligned'])
         return dict(num_documents=nm)
+
 
 @bp.route('/save_document_list', methods=['POST'])
 @http_action(return_type='plain', action_model=CorpusActionModel)
@@ -99,7 +102,7 @@ async def save_document_list(amodel: CorpusActionModel, req: KRequest, resp: KRe
         resp.set_header('Content-Length', str(file_size))
         resp.set_header(
             'Content-Disposition', f'attachment; filename="document-list-{amodel.args.corpname}.{save_format}"')
-        with open(nm, 'r') as fr:
+        with open(nm, 'rb') as fr:
             return fr.read()
 
 
@@ -199,7 +202,8 @@ class MasmLiveAttributes(AbstractLiveAttributes):
         attrs = urllib.parse.urlencode([('attr',  x) for x in view_attrs])
         async with session.post(f'/liveAttributes/{corpus_id}/documentList?{attrs}', json=args) as resp:
             data = await proc_masm_response(resp)
-            file = self._mk_doclist_cache_file_path(attr_map, aligned_corpora, view_attrs, save_format)
+            file = self._mk_doclist_cache_file_path(
+                attr_map, aligned_corpora, view_attrs, save_format)
             if save_format == 'csv':
                 for i, item in enumerate(data):
                     data[i] = DocListItem.from_dict(item)
@@ -213,12 +217,18 @@ class MasmLiveAttributes(AbstractLiveAttributes):
             if save_format == 'xml':
                 await export_xml(data, file)
                 return file, 'application/xml'
+            if save_format == 'xlsx':
+                for i, item in enumerate(data):
+                    data[i] = DocListItem.from_dict(item)
+                await export_xlsx(data, file)
+                return file, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
     async def num_matching_documents(self, plugin_ctx, corpus_id, attr_map, aligned_corpora):
         session = await self._get_session()
         args = dict(attrs=attr_map, aligned=aligned_corpora)
         async with session.post(f'/liveAttributes/{corpus_id}/numMatchingDocuments', json=args) as resp:
             return await proc_masm_response(resp)
+
 
 @plugins.inject(plugins.runtime.CORPARCH)
 def create_instance(settings, corparch: AbstractCorporaArchive) -> MasmLiveAttributes:
