@@ -47,14 +47,12 @@ class KeyvalTagVariantLoader(AbstractTagsetInfoLoader):
     async def get_variant(self, filter_values, lang, translate):
         if self.initial_values is None:
             await self._initialize_tags()
-
         # possible values with all filters applied
         possible_values = await self._get_possible_values(filter_values)
         # resolving possible filter values for applied filter features
         for filter_key in filter_values:
             derived_filter = {k: v for k, v in list(filter_values.items()) if k != filter_key}
-            possible_values[filter_key] = await self._get_possible_values(derived_filter)[filter_key]
-
+            possible_values[filter_key] = (await self._get_possible_values(derived_filter))[filter_key]
         return {'keyval_tags': possible_values}
 
     async def get_initial_values(self, lang, translate):
