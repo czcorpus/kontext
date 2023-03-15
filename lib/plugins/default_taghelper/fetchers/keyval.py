@@ -89,5 +89,5 @@ class KeyvalSelectionFetcher(AbstractValueSelectionFetcher):
         # we don't want it to be defaultdict anymore so it can raise KeyError
         return dict(filters)
 
-    def is_empty(self, val):
+    async def is_empty(self, val):
         return len(val) == 0
