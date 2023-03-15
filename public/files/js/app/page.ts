@@ -21,7 +21,8 @@
 import * as React from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import { ITranslator, IFullActionControl, StatelessModel } from 'kombo';
-import { catchError, map, Observable, Subject, tap } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
+import { Observable, Subject, of as rxOf } from 'rxjs';
 import { webSocket } from 'rxjs/webSocket';
 import { List, HTTP, tuple, pipe, URL as CURL } from 'cnc-tskit';
 
@@ -355,7 +356,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             args
         }).pipe(
             catchError(
-                error => error
+                error => rxOf(error)
             ),
             tap(
                 (resp) => {
