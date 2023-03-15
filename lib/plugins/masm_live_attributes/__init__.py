@@ -34,7 +34,7 @@ from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.live_attributes import (
     AbstractLiveAttributes, AttrValuesResponse, BibTitle, LiveAttrsException)
 from .doclist import mk_cache_key, DocListItem
-from .doclist.writer import export_csv
+from .doclist.writer import export_csv, export_xml, export_jsonl
 
 bp = Blueprint('masm_live_attributes')
 
@@ -189,19 +189,30 @@ class MasmLiveAttributes(AbstractLiveAttributes):
         async with session.post(f'/liveAttributes/{corpus_id}/fillAttrs', json=json_body) as resp:
             return await proc_masm_response(resp)
 
+    def _mk_doclist_cache_file_path(self, attr_map, aligned_corpora, view_attrs, save_format: str) -> str:
+        file_path = '{}.{}'.format(mk_cache_key(attr_map, aligned_corpora, view_attrs), save_format)
+        return os.path.join(self._doclist_cache_dir, file_path)
+
     async def document_list(self, plugin_ctx, corpus_id, view_attrs, attr_map, aligned_corpora, save_format):
         session = await self._get_session()
         args = dict(attrs=attr_map, aligned=aligned_corpora)
         attrs = urllib.parse.urlencode([('attr',  x) for x in view_attrs])
         async with session.post(f'/liveAttributes/{corpus_id}/documentList?{attrs}', json=args) as resp:
             data = await proc_masm_response(resp)
-            for i, item in enumerate(data):
-                data[i] = DocListItem.from_dict(item)
+            file = self._mk_doclist_cache_file_path(attr_map, aligned_corpora, view_attrs, save_format)
             if save_format == 'csv':
-                file = os.path.join(self._doclist_cache_dir, mk_cache_key(attr_map, aligned_corpora, view_attrs))
+                for i, item in enumerate(data):
+                    data[i] = DocListItem.from_dict(item)
                 await export_csv(data, file)
                 return file, 'text/csv'
-
+            if save_format == 'jsonl':
+                for i, item in enumerate(data):
+                    data[i] = DocListItem.from_dict(item)
+                await export_jsonl(data, file)
+                return file, 'application/jsonl'
+            if save_format == 'xml':
+                await export_xml(data, file)
+                return file, 'application/xml'
 
     async def num_matching_documents(self, plugin_ctx, corpus_id, attr_map, aligned_corpora):
         session = await self._get_session()

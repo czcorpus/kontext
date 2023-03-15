@@ -18,9 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-export type DataSaveFormat = 'csv'|'txt'|'xml'|'xlsx';
+export type DataSaveFormat = 'csv'|'jsonl'|'txt'|'xml'|'xlsx';
 
 
 export function isDataSaveFormat(s:string):s is DataSaveFormat {
-    return s === 'csv' || s === 'txt' || s === 'xml' || s === 'xlsx';
+    return s === 'csv' || s === 'jsonl' || s === 'txt' || s === 'xml' || s === 'xlsx';
 }

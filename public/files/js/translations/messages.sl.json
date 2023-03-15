@@ -232,6 +232,7 @@
         "global__invalid_gz_number_value": "Invalid positive number format or value UNTRANSLATED",
         "global__invalid_nneg_number_value": "Neveljavna nenegativna številčna vrednost",
         "global__use_in_query": "Uporabi v poizvedbi",
+        "global__jsonl_explanation": "A JSONL file contains a valid JSON object on each line, with each object representing an exported data row. UNTRANSLATED",
         "linesel__remove_selected_lines": "Odstrani izbrane vrstice",
         "linesel__remove_all_but_selected_lines": "Obdrži samo izbrane vrstice",
         "linesel__clear_the_selection": "Počisti izbor",
