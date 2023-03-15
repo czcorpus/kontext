@@ -189,7 +189,11 @@ export class TTSelOps {
             {...sel, values: []};
     }
 
-    static setValues(sel:TextTypes.AnyTTSelection, values:Array<TextTypes.AttributeValue>):TextTypes.AnyTTSelection {
+    static setValues(
+        sel:TextTypes.AnyTTSelection,
+        values:Array<TextTypes.AttributeValue>
+    ):TextTypes.AnyTTSelection {
+
         return sel.type === 'regexp' ?
             sel :
             {...sel, values};
@@ -199,7 +203,11 @@ export class TTSelOps {
         return sel.type === 'regexp' ? [] : sel.values;
     }
 
-    static setAutoComplete(sel:TextTypes.AnyTTSelection, values:Array<TextTypes.AutoCompleteItem>):TextTypes.AnyTTSelection {
+    static setAutoComplete(
+        sel:TextTypes.AnyTTSelection,
+        values:Array<TextTypes.AutoCompleteItem>
+    ):TextTypes.AnyTTSelection {
+
         if (sel.type === 'text') {
             return {
                 ...sel,
@@ -281,7 +289,6 @@ export class TTSelOps {
         value:string,
         valueDecoded?:string
     ):TextTypes.AnyTTSelection {
-
         if (sel.type === 'text') {
             return {
                 ...sel,
