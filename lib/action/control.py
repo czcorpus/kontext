@@ -162,7 +162,9 @@ def http_action(
     return_type -- specifies how the result data should be interpreted for the client {plain, json, template, xml}.
                    In some cases, a single result type (typically a Dict) can be transformed into multiple formats
                    (html page, xml file, json file, plain text file) but in other cases the choice is limited
-                   (e.g. when returning some binary data, only 'plain' return_type makes sense)
+                   (e.g. when returning some binary data, only 'plain' return_type makes sense).
+                   In case a custom Content-Type is needed, return_type must be set to 'plain', otherwise KonText
+                   will force predefined type (e.g. for template it is text/html etc.).
     """
     def decorator(func: Callable[[AbstractPageModel, KRequest, KResponse], Coroutine[Any, Any, Optional[ResultType]]]):
         @wraps(func)

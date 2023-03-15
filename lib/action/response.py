@@ -13,8 +13,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-
-from typing import Dict, Iterable, List, Tuple, Any, TypeVar, Generic
+import logging
+from typing import Dict, Iterable, List, Tuple, TypeVar, Generic
 from urllib.parse import urlparse
 
 from action.cookie import KonTextCookie
@@ -36,15 +36,29 @@ class KResponse(Generic[T]):
     """
 
     def __init__(self, root_url: str, redirect_safe_domains: Iterable[str], cookies_same_site: str, result: T):
+
         self._root_url = root_url
+
         self._redirect_safe_domains: Tuple[str, ...] = (
             urlparse(self._root_url).netloc, *redirect_safe_domains)
+
         self._status: int = 200
-        self._headers: Dict[str, str] = {'Content-Type': 'text/html'}
+
+        self._headers: Dict[str, str] = {}
+        """
+        HTTP headers. Please note that in KonText, headers are case sensitive
+        and we expect the words in keys to start with upper-case letters
+        (e.g. Content-Type, Cache-Control etc.)
+        """
+
         self._new_cookies: KonTextCookie = KonTextCookie()
+
         self._cookies_same_site = cookies_same_site
+
         self._system_messages: List[Tuple[str, str]] = []
+
         self._tpl_data: ResultType = {}
+
         self._result: T = result
 
     def set_result(self, result: T):
@@ -79,6 +93,12 @@ class KResponse(Generic[T]):
         return self._system_messages
 
     def set_header(self, name: str, value: str):
+        """
+        Set HTTP header.
+        Please note that in KonText the headers are case-sensitive and
+        the expected format is with each word starting with an upper
+        case letter (e.g. 'Content-Type' and not 'content-type')
+        """
         self._headers[name] = value
 
     def remove_header(self, name: str):
@@ -160,8 +180,12 @@ class KResponse(Generic[T]):
             self._headers['Content-Type'] = 'application/json'
         elif return_type == 'xml':
             self._headers['Content-Type'] = 'application/xml'
-        elif return_type == 'plain':
+        elif return_type == 'plain' and 'Content-Type' not in self._headers:
             self._headers['Content-Type'] = 'text/plain'
+        elif return_type == 'template':
+            self._headers['Content-Type'] = 'text/html'
+        else:
+            logging.getLogger(__name__).error('unknown action return type "{}"'.format(return_type))
         # Note: 'template' return type should never overwrite content type here as it is action-dependent
         ans = {}
         for k, v in sorted([x for x in list(self._headers.items()) if bool(x[1])], key=lambda item: item[0]):
