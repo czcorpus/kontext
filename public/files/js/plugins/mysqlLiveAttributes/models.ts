@@ -881,11 +881,12 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
     ) {
         Dict.forEach(
             (item, k) => {
-                if (k.indexOf('.') > 0) { // is the key an attribute? (there are other values there too)
+                // is the key an attribute? (there are other values there too)
+                if (k.indexOf('.') > 0 && k !== state.bibIdAttr) {
                     if (Array.isArray(item) || !item.length) {
                         this.setAttrSummary(k, null, dispatch);
 
-                    } else if (k !== state.bibIdAttr) {
+                    } else {
                         this.setAttrSummary(
                             k,
                             {
