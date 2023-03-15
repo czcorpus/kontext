@@ -23,7 +23,7 @@
  * as returned by respective AJAX calls.
  */
 
-import { Dict, List } from 'cnc-tskit';
+import { Dict, List, Strings } from 'cnc-tskit';
 
 import * as TextTypes from '../../types/textTypes';
 
@@ -251,6 +251,7 @@ function createFullAttributeSelection(
 }
 
 function createRegexpAttributeSelection(
+    sel:TextTypes.ExportedRegexpSelection,
     attrItem:BlockLine,
     definesSubcorpus:boolean
 ):TextTypes.RegexpAttributeSelection {
@@ -262,8 +263,8 @@ function createRegexpAttributeSelection(
             doc: attrItem.attr_doc,
             docLabel: attrItem.attr_doc_label
         },
-        textFieldValue: '',
-        textFieldDecoded: '',
+        textFieldValue: sel.regexp,
+        textFieldDecoded: Strings.shortenText(sel.regexp, 50, '\u2026'),
         isLocked: definesSubcorpus,
         definesSubcorpus,
         type: 'regexp',
@@ -297,7 +298,14 @@ export function importInitialTTData(
                     Dict.hasKey(attrItem.name, subcorpStructure) : false;
 
                 if (isRegexpGeneratingWidgetView(attrItem.widget)) {
-                    return createRegexpAttributeSelection(attrItem, attrInSubc);
+                    const sel = nSelectedItems[attrItem.name];
+                    if (TextTypes.isExportedRegexpSelection(sel)) {
+                        return createRegexpAttributeSelection(
+                            sel, attrItem, attrInSubc);
+
+                    } else {
+                        throw new Error(`failed to decode regexp attr. data for ${attrItem.name}`);
+                    }
 
                 } else if (attrItem.textboxlength) {
                     return createTextInputAttributeSelection(

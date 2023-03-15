@@ -135,7 +135,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             } else if (props.attrObj.type === 'regexp') {
                 if (props.widget.widget === 'days') {
                     if (props.attrObj.isLocked) {
-                        return <p>Selected: {props.attrObj.textFieldDecoded}</p>
+                        return (
+                            <p>
+                                {he.translate('query__tt_regexp_value_label')}:
+                                {'\u00a0' + props.attrObj.textFieldDecoded}
+                            </p>
+                        );
                     }
                     return <CalendarDaysSelector attrObj={props.attrObj} firstDayOfWeek={props.firstDayOfWeek} />;
                 }
