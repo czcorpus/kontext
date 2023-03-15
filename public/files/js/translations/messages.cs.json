@@ -232,6 +232,7 @@
         "global__use_in_query": "Použít v dotazu",
         "global__invalid_gz_number_value": "Chybný formát nebo hodnota kladného čísla",
         "global__invalid_nneg_number_value": "Chybný formát nebo hodnota nezáporného čísla",
+        "global__jsonl_explanation": "Data uložená do formátu JSONL obsahují na každém řádku platný JSON objekt odpovídající příslušnému řádku exportovaných dat.",
         "linesel__remove_selected_lines": "Odstranit vybrané řádky",
         "linesel__remove_all_but_selected_lines": "Ponechat pouze vybrané řádky",
         "linesel__clear_the_selection": "Zrušit označení řádků",

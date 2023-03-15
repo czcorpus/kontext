@@ -232,6 +232,7 @@
         "global__use_in_query": "Use in query",
         "global__invalid_gz_number_value": "Invalid positive number format or value",
         "global__invalid_nneg_number_value": "Invalid non-negative number format or value",
+        "global__jsonl_explanation": "A JSONL file contains a valid JSON object on each line, with each object representing an exported data row.",
         "linesel__remove_selected_lines": "Remove selected lines",
         "linesel__remove_all_but_selected_lines": "Keep only selected lines",
         "linesel__clear_the_selection": "Clear the selection",
