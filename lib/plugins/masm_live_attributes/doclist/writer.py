@@ -12,11 +12,14 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import List
-import aiofiles
-import aiocsv
+import asyncio
 import csv
+from typing import List
+
+import aiocsv
+import aiofiles
 import ujson
+from openpyxl import Workbook
 from plugins.masm_live_attributes.doclist import DocListItem
 from templating import Type2XML
 
@@ -32,12 +35,14 @@ async def export_csv(data: List[DocListItem], target_path: str) -> bool:
             await csv_writer.writerow([item.attrs[k] for k in hd])
         return True
 
+
 async def export_xml(data: List[DocListItem], target_path: str) -> bool:
     if len(data) == 0:
         return False
     async with aiofiles.open(target_path, 'w') as fw:
         await fw.write(Type2XML.to_xml(data))
         return True
+
 
 async def export_jsonl(data: List[DocListItem], target_path: str) -> bool:
     if len(data) == 0:
@@ -46,3 +51,17 @@ async def export_jsonl(data: List[DocListItem], target_path: str) -> bool:
         for item in data:
             await fw.write(ujson.dumps(item.to_dict()) + "\n")
         return True
+
+
+async def export_xlsx(data: List[DocListItem], target_path: str) -> bool:
+    if len(data) == 0:
+        return False
+    wb = Workbook()
+    ws = wb.active
+    hd = list(data[0].attrs.keys())
+    ws.append(hd)
+    for item in data:
+        ws.append([item.attrs[k] for k in hd])
+        await asyncio.sleep(0)
+    wb.save(target_path)
+    return True

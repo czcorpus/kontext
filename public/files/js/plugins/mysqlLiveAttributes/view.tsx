@@ -302,7 +302,6 @@ export function init({
                             <option value="xlsx">XLSX (Excel)</option>
                             <option value="xml">XML</option>
                             <option value="jsonl">JSONL</option>
-                            <option value="txt">TXT</option>
                         </select>
                         {props.dataFormat === 'jsonl' ?
                             <layoutViews.InlineHelp
