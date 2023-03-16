@@ -53,15 +53,15 @@ class AbstractConcExportMixin(object):
         converts a list of dicts of the format [{'class': u'col0 coll', 'str': u' \\u0159ekl'},
             {'class': u'attr', 'str': u'/j\xe1/PH-S3--1--------'},...] to a CSV compatible form
         """
-        ans: List[str] = []
+        ans: List[List[str]] = []
         for item in items:
             if 'class' in item and item['class'] != 'attr':
-                ans.append(str(item['str']).strip())
+                ans.append([str(item['str']).strip()])
             else:
-                ans.append(str(item['str']).strip())
+                ans.append([str(item['str']).strip()])
             for tp in item.get('tail_posattrs', []):
-                ans.append(f'/{tp}')
-        return ''.join(ans).strip()
+                ans[-1].append(tp)
+        return ' '.join('/'.join(x) for x in ans).strip()
 
     def _process_lang(self, root: Union[List[Dict[str, Any]], Dict[str, Any]], left_key: str, kwic_key: str, right_key: str, add_linegroup: bool) -> List[Dict[str, str]]:
         if isinstance(root, dict):
