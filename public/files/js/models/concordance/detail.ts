@@ -403,24 +403,25 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                     state.expandingSide = action.payload.position;
                     state.isBusy = true;
                 });
-                this.loadSpeechDetail(action.payload.position).subscribe(
-                    () => {
+                this.loadSpeechDetail(action.payload.position).subscribe({
+                    next: (data) => {
                         this.changeState(state => {
                             state.isBusy = false;
+                            this.applyConcDetailResult(state, data);
                         });
                     },
-                    (err) => {
+                    error: error => {
                         this.changeState(state => {
                             state.isBusy = false;
                         });
-                        this.layoutModel.showMessage('error', err);
+                        this.layoutModel.showMessage('error', error);
                     }
-                );
+                });
             }
         );
 
-        this.addActionHandler<typeof Actions.DetailSwitchMode>(
-            Actions.DetailSwitchMode.name,
+        this.addActionHandler(
+            Actions.DetailSwitchMode,
             action => {
                 (() => {
                     if (action.payload.value === 'default') {
@@ -452,9 +453,10 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                         return rxOf(null);
                     }
                 })().subscribe({
-                    next: () => {
+                    next: data => {
                         this.changeState(state => {
                             state.isBusy = false;
+                            this.applyConcDetailResult(state, data);
                         });
                     },
                     error: err => {

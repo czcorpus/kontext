@@ -29,8 +29,11 @@ import { init as initMediaViews } from '../media';
 import { PlayerStatus } from '../../../models/concordance/media';
 
 
-export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
-            concDetailModel:ConcDetailModel):React.ComponentClass<{}> {
+export function init(
+    dispatcher:IActionDispatcher,
+    he:Kontext.ComponentHelpers,
+    concDetailModel:ConcDetailModel
+):React.ComponentClass<{}> {
 
     const mediaViews = initMediaViews(dispatcher, he);
 
