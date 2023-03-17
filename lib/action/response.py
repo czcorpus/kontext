@@ -180,8 +180,9 @@ class KResponse(Generic[T]):
             self._headers['Content-Type'] = 'application/json'
         elif return_type == 'xml':
             self._headers['Content-Type'] = 'application/xml'
-        elif return_type == 'plain' and 'Content-Type' not in self._headers:
-            self._headers['Content-Type'] = 'text/plain'
+        elif return_type == 'plain':
+            if 'Content-Type' not in self._headers:
+                self._headers['Content-Type'] = 'text/plain'
         elif return_type == 'template':
             self._headers['Content-Type'] = 'text/html'
         else:

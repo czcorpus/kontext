@@ -887,6 +887,9 @@ export const GlobalStyle = createGlobalStyle`
         ul.tabs li:not(:last-child) {
             padding-right: 0em;
         }
+    }
 
+    .format-select-help {
+        margin-left: 0.3em;
     }
 `;

@@ -72,7 +72,14 @@ export function init(
                         <option value="csv">CSV</option>
                         <option value="xlsx">XLSX (Excel)</option>
                         <option value="xml">XML</option>
+                        <option value="jsonl">JSONL</option>
                     </select>
+                    {props.value === 'jsonl' ?
+                            <layoutViews.InlineHelp
+                                    htmlClass="format-select-help"
+                                    url="https://jsonlines.org/">
+                                {utils.translate('global__jsonl_explanation')}
+                            </layoutViews.InlineHelp> : null}
                 </td>
             </tr>
         );

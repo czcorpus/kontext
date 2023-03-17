@@ -64,8 +64,15 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                         <option value="csv">CSV</option>
                         <option value="xlsx">XLSX (Excel)</option>
                         <option value="xml">XML</option>
+                        <option value="jsonl">JSONL</option>
                         <option value="txt">Text</option>
                     </select>
+                    {props.value === 'jsonl' ?
+                            <layoutViews.InlineHelp
+                                    htmlClass="format-select-help"
+                                    url="https://jsonlines.org/">
+                                {he.translate('global__jsonl_explanation')}
+                            </layoutViews.InlineHelp> : null}
                 </td>
             </tr>
         );
@@ -258,8 +265,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                         <form action="saveconc">
                             <table className="form">
                                 <tbody>
+                                    <tr><td colSpan={2} style={{width: '28em'}}></td></tr>
                                     <TRFormatSelect value={this.props.saveformat} />
-                                    <TRIncludeLineNumbersCheckbox value={this.props.includeLineNumbers} />
+                                    {this.props.saveformat !== 'jsonl' ?
+                                        <TRIncludeLineNumbersCheckbox value={this.props.includeLineNumbers} /> :
+                                        null
+                                    }
                                     {this._renderFormatDependentOptions()}
                                     <TRLineRangeInput fromLine={this.props.fromLine}
                                             toLine={this.props.toLine} />
