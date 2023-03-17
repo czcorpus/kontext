@@ -450,7 +450,7 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                             state.concDetail = [];
                             state.isBusy = true;
                         });
-                        return rxOf(null);
+                        return this.reloadConcDetail();
                     }
                 })().subscribe({
                     next: data => {
