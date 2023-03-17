@@ -21,9 +21,9 @@ of CNC's information schema.
 
 import logging
 
+import plugins
 from plugin_types.corparch import AbstractCorporaArchive
 from plugins.errors import PluginCompatibilityException
-import plugins
 from plugins.mysql_integration_db import MySqlIntegrationDb
 from plugins.mysql_subc_storage import BackendConfig, MySQLSubcArchive
 
@@ -42,4 +42,5 @@ def create_instance(conf, corparch: AbstractCorporaArchive, integ_db: MySqlInteg
         )
         return MySQLSubcArchive(plugin_conf, corparch, integ_db, bconf)
     else:
-        raise PluginCompatibilityException('ucnk_subc_storage works only with integration_db enabled')
+        raise PluginCompatibilityException(
+            'ucnk_subc_storage works only with integration_db enabled')

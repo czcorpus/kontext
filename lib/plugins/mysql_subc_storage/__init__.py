@@ -280,7 +280,7 @@ class MySQLSubcArchive(AbstractSubcArchive):
             where.append('t1.is_draft = 0')
 
         sql = f"""SELECT
-            t1.*, CONCAT(t3.bib_id_struct, '.', t3.bib_id_attr) AS bib_id_attr, 
+            t1.*, CONCAT(t3.bib_id_struct, '.', t3.bib_id_attr) AS bib_id_attr,
             CONCAT(t3.bib_label_struct, '.', t3.bib_label_attr) AS bib_label_attr,
             CONCAT(t2.{self._bconf.user_table_firstname_col}, ' ', {self._bconf.user_table_lastname_col}) AS fullname
             FROM {self._bconf.subccorp_table} AS t1
