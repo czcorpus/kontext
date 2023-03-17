@@ -749,7 +749,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
     }
 
     applyCheckedItems(checkedItems:TextTypes.ExportedSelection,
-            bibMapping:TextTypes.BibMapping):void {
+            bibMapping:TextTypes.BibMapping):boolean {
         this.changeState(state => {
             pipe(
                 checkedItems,
@@ -846,6 +846,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             ));
             state.hasSelectedItems = TextTypesModel.findHasSelectedItems(state.attributes);
         });
+        return this.state.hasSelectedItems;
     }
 
     getRegistrationId():string {

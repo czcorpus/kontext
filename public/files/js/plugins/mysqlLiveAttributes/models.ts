@@ -309,7 +309,10 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                         alignedCorpora: List.filter(v => v.selected, state.alignedCorpora)
                     }
                 });
-                this.reloadSizes(state, dispatch);
+                //
+                if (!state.manualAlignCorporaMode) {
+                    this.reloadSizes(state, dispatch);
+                }
             }
         );
 
@@ -326,8 +329,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
         this.addActionHandler(
             TTActions.SelectionChanged,
             (state, action) => {
-                state.controlsEnabled = action.payload.hasSelectedItems ||
-                        List.some(v => v.selected, state.alignedCorpora);
+                state.controlsEnabled = action.payload.hasSelectedItems || this.hasSelectedLanguages(state);
             }
         );
 
@@ -712,7 +714,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                     }
                 );
                 this.updateSummary(state, data.attr_values, dispatch);
-                if (state.subcorpDefinition) {
+                if (state.subcorpDefinition || (state.alignedCorpora && !state.manualAlignCorporaMode)) {
                     dispatch(
                         TTActions.FilterWholeSelection,
                         {
@@ -733,20 +735,6 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                 );
             }
         });
-    }
-
-    private updateAlignedItem(
-        state:LiveAttrsModelState,
-        corpname:string,
-        upd:(orig:TextTypes.AlignedLanguageItem)=>TextTypes.AlignedLanguageItem
-    ):boolean {
-        const srchIdx = state.alignedCorpora.findIndex(v => v.value === corpname);
-        if (srchIdx > -1) {
-            const item = state.alignedCorpora[srchIdx];
-            state.alignedCorpora[srchIdx] = upd(item);
-            return true;
-        }
-        return false;
     }
 
     private attachBibData(state:LiveAttrsModelState, filterData:SelectionFilterMap) {
@@ -857,11 +845,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
     }
 
     hasSelectedLanguages(state:LiveAttrsModelState):boolean {
-        return state.alignedCorpora.find((item)=>item.selected) !== undefined;
-    }
-
-    hasLockedAlignedLanguages(state:LiveAttrsModelState):boolean {
-        return this.hasSelectedLanguages(state) && !List.empty(state.selectionSteps);
+        return List.some(item => item.selected && !item.locked, state.alignedCorpora);
     }
 
     private setAttrSummary(attrName:string, value:TextTypes.AttrSummary, dispatch:SEDispatcher):void {
