@@ -5,12 +5,12 @@ CREATE TABLE kontext_subcorpus (
     user_id INTEGER, -- if NULL then the subcorpus is deleted for the user but it still exists (e.g. to be avail. if published)
     author_id INTEGER NOT NULL,
     corpus_name varchar(63) NOT NULL,
+    aligned TEXT,
     is_draft TINYINT NOT NULL DEFAULT 0,
     size INTEGER NOT NULL,
     cql TEXT,
     within_cond TEXT,
     text_types TEXT,
-    aligned TEXT,
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     archived TIMESTAMP NULL,
     public_description TEXT,

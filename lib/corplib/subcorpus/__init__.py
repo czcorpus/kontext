@@ -109,6 +109,7 @@ class SubcorpusRecord(SubcorpusIdent):
     text_types: Optional[TextTypesType] = None
     bib_id_attr: Optional[str] = None
     bib_label_attr: Optional[str] = None
+    aligned: Optional[List[str]] = None
 
 
 class KSubcorpus(KCorpus):
