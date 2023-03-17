@@ -117,7 +117,7 @@ export class SubcorpForm {
             'ConcFormsArgs'
         );
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
-        this.textTypesModel.applyCheckedItems(selectedTextTypes, queryFormArgs.bib_mapping);
+        const hasSelectedItems = this.textTypesModel.applyCheckedItems(selectedTextTypes, queryFormArgs.bib_mapping);
 
 
         const ttViewComponents = ttViewsInit(
@@ -136,7 +136,7 @@ export class SubcorpForm {
                 availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>(
                     'availableAlignedCorpora'
                 ),
-                refineEnabled: true,
+                refineEnabled: hasSelectedItems,
                 manualAlignCorporaMode: true,
                 subcorpTTStructure: {},
                 textTypesData: this.layoutModel.getConf<TTInitialData>('textTypesData')

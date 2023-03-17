@@ -128,7 +128,7 @@ export class QueryPage {
                 bibIdAttr: textTypesData.bib_id_attr,
                 bibLabelAttr: textTypesData.bib_label_attr
         });
-        this.textTypesModel.applyCheckedItems(
+        const hasSelectedItems = this.textTypesModel.applyCheckedItems(
             queryFormArgs.selected_text_types,
             queryFormArgs.bib_mapping
         );
@@ -143,9 +143,7 @@ export class QueryPage {
                 availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>(
                     'availableAlignedCorpora'
                 ),
-                refineEnabled: this.layoutModel.getConf<Array<string>>(
-                    'alignedCorpora').length > 0 ||
-                    Dict.keys(queryFormArgs.selected_text_types).length > 0,
+                refineEnabled: hasSelectedItems,
                 manualAlignCorporaMode: false,
                 subcorpTTStructure,
                 textTypesData: this.layoutModel.getConf<TTInitialData>('textTypesData')
