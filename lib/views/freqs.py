@@ -515,7 +515,6 @@ async def savefreq(amodel: ConcActionModel, req: KRequest[SavefreqArgs], resp: K
         resp.set_header('Content-Type', writer.content_type())
         resp.set_header(
             'Content-Disposition', f'attachment; filename="{mkfilename(req.mapped_args.saveformat)}"')
-
         await writer.write_freq(amodel, result, req.mapped_args)
         output = writer.raw_content()
 

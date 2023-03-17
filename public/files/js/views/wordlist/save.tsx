@@ -205,10 +205,14 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
                         <table className="form">
                             <tbody>
                                 <TRSaveFormatSelector value={props.saveFormat} />
-                                <TRGeneralHeadingSelector includeHeading={props.includeHeading}
-                                        includeColHeaders={props.includeColHeaders}
-                                        saveFormat={props.saveFormat} />
+                                {props.saveFormat !== 'jsonl' ?
+                                    <TRGeneralHeadingSelector includeHeading={props.includeHeading}
+                                            includeColHeaders={props.includeColHeaders}
+                                            saveFormat={props.saveFormat} /> :
+                                    null
+                                }
                                 <TRToLineInput value={props.toLine} />
+                                <tr><td></td><td style={{minWidth: '25em'}}></td></tr>
                             </tbody>
                         </table>
                         <div className="buttons">

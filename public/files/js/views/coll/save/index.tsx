@@ -72,8 +72,15 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
                         <option value="csv">CSV</option>
                         <option value="xlsx">XLSX (Excel)</option>
                         <option value="xml">XML</option>
+                        <option value="jsonl">JSONL</option>
                         <option value="txt">Text</option>
                     </select>
+                    {props.value === 'jsonl' ?
+                            <layoutViews.InlineHelp
+                                    htmlClass="format-select-help"
+                                    url="https://jsonlines.org/">
+                                {utils.translate('global__jsonl_explanation')}
+                            </layoutViews.InlineHelp> : null}
                 </td>
             </tr>
         );

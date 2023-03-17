@@ -149,10 +149,6 @@ export const DocumentListFieldset = styled.fieldset`
             color: ${theme.colorLogoPink};
         }
     }
-
-    .format-select-help {
-        margin-left: 0.3em;
-    }
 `;
 
 export const Label = styled(theme.GeneralLabel)`

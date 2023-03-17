@@ -63,7 +63,13 @@ class AbstractConcExportMixin(object):
                 ans[-1].append(tp)
         return ' '.join('/'.join(x) for x in ans).strip()
 
-    def _process_lang(self, root: Union[List[Dict[str, Any]], Dict[str, Any]], left_key: str, kwic_key: str, right_key: str, add_linegroup: bool) -> List[Dict[str, str]]:
+    def _process_lang(
+            self,
+            root: Union[List[Dict[str, Any]], Dict[str, Any]],
+            left_key: str, kwic_key: str,
+            right_key: str, add_linegroup: bool
+    ) -> List[Dict[str, str]]:
+
         if isinstance(root, dict):
             root = [root]
 
@@ -152,7 +158,7 @@ def lang_row_to_list(row):
     return ans
 
 
-class Loader(object):
+class Loader:
 
     def __init__(self, module_map):
         self._module_map = module_map
@@ -160,7 +166,7 @@ class Loader(object):
     def load_plugin(self, name: str, locale: Locale) -> AbstractExport:
         """
         Loads an export module specified by passed name.
-        In case you request non existing plug-in (= a plug-in
+        In case you request non-existing plug-in (= a plug-in
         not set in config.xml) ValueError is raised.
 
         arguments:

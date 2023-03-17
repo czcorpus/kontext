@@ -35,18 +35,29 @@ export interface SaveFormatSelectProps {
 
 export function init(he:Kontext.ComponentHelpers):CommonViews {
 
+    const layoutViews = he.getLayoutViews();
+
     /**
      *
      */
     const SaveFormatSelect:React.FC<SaveFormatSelectProps> = (props) => {
 
         return (
-            <select value={props.value} onChange={props.onChange}>
-                <option value="csv">CSV</option>
-                <option value="xlsx">XLSX (Excel)</option>
-                <option value="xml">XML</option>
-                <option value="txt">Text</option>
-            </select>
+            <span>
+                <select value={props.value} onChange={props.onChange}>
+                    <option value="csv">CSV</option>
+                    <option value="xlsx">XLSX (Excel)</option>
+                    <option value="xml">XML</option>
+                    <option value="jsonl">JSONL</option>
+                    <option value="txt">Text</option>
+                </select>
+                {props.value === 'jsonl' ?
+                            <layoutViews.InlineHelp
+                                    htmlClass="format-select-help"
+                                    url="https://jsonlines.org/">
+                                {he.translate('global__jsonl_explanation')}
+                            </layoutViews.InlineHelp> : null}
+            </span>
         );
     };
 

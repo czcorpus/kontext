@@ -56,7 +56,7 @@ class _Head(TypedDict):
 
 @dataclass_json
 @dataclass
-class _BlockMetadata:
+class BlockMetadata:
     head: List[_Head]
     skipped_empty: bool
     no_rel_sorting: bool
@@ -65,7 +65,7 @@ class _BlockMetadata:
 
 @dataclass_json
 @dataclass
-class _CommonMetadata:
+class CommonMetadata:
     num_blocks: int
     conc_size: int
 
@@ -74,12 +74,12 @@ async def find_cached_result(args: FreqCalcArgs) -> Tuple[Optional[FreqCalcResul
     cache_path = _cache_file_path(args)
     if await aiofiles.os.path.exists(cache_path):
         async with aiofiles.open(cache_path, 'r') as fr:
-            common_md = _CommonMetadata.from_dict(ujson.loads(await fr.readline()))
+            common_md = CommonMetadata.from_dict(ujson.loads(await fr.readline()))
             data = FreqCalcResult(freqs=[], conc_size=common_md.conc_size)
             blocks = common_md.num_blocks
 
             for _ in range(blocks):
-                block_md = _BlockMetadata.from_dict(ujson.loads(await fr.readline()))
+                block_md = BlockMetadata.from_dict(ujson.loads(await fr.readline()))
                 freq = FreqData(
                     Head=block_md.head, Items=[], SkippedEmpty=block_md.skipped_empty,
                     NoRelSorting=block_md.no_rel_sorting)
@@ -102,10 +102,10 @@ def stored_to_fs(func):
         if data is None:
             data: FreqCalcResult = await func(args)
             async with aiofiles.open(cache_path, 'w') as fw:
-                common_md = _CommonMetadata(num_blocks=len(data.freqs), conc_size=data.conc_size)
+                common_md = CommonMetadata(num_blocks=len(data.freqs), conc_size=data.conc_size)
                 await fw.write(ujson.dumps(common_md.to_dict()) + '\n')
                 for freq in data.freqs:
-                    block_md = _BlockMetadata(
+                    block_md = BlockMetadata(
                         head=[_Head(**x) for x in freq.Head],
                         skipped_empty=freq.SkippedEmpty,
                         no_rel_sorting=freq.NoRelSorting,
