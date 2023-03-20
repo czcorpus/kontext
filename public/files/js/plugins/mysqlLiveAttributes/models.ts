@@ -101,6 +101,7 @@ export interface LiveAttrsModelState {
     documentListWidgetVisible:boolean;
     documentListSaveFormat:DataSaveFormat;
     documentListTotalSize:number|undefined;
+    controlsAlignedCorpora:boolean;
 }
 
 /**
@@ -129,11 +130,9 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
         dispatcher:IActionDispatcher,
         pluginApi:IPluginApi,
         initialState:LiveAttrsModelState,
-        controlsAlignedCorpora:boolean,
     ) {
         super(dispatcher, initialState);
         this.pluginApi = pluginApi;
-        this.controlsAlignedCorpora = controlsAlignedCorpora;
 
         this.addActionHandler(
             PluginInterfaces.LiveAttributes.Actions.RefineClicked,
@@ -496,6 +495,18 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                             List.map(x => x.name),
                             List.map(n => ({n, selected: n === action.payload.data.bibLabelAttr}))
                         );
+                        state.controlsAlignedCorpora = action.payload.data.isDraft;
+                        state.initialAlignedCorpora = pipe(
+                            action.payload.availableAligned,
+                            List.filter(item => state.controlsAlignedCorpora ? true : action.payload.data.aligned.includes(item.n)),
+                            List.map(item => ({
+                                label: item.label,
+                                value: item.n,
+                                selected: state.controlsAlignedCorpora ? action.payload.data.aligned.includes(item.n) : true,
+                                locked: !state.controlsAlignedCorpora,
+                            })),
+                        );
+                        state.alignedCorpora = state.initialAlignedCorpora;
                     }
                 }
             }
@@ -752,7 +763,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
 
     reset(state:LiveAttrsModelState):void {
         state.selectionSteps = [];
-        if (this.controlsAlignedCorpora) {
+        if (state.controlsAlignedCorpora) {
             state.alignedCorpora = state.initialAlignedCorpora;
         }
         state.bibliographyIds = [];

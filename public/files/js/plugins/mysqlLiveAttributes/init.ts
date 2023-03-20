@@ -142,9 +142,9 @@ const create:PluginInterfaces.LiveAttributes.Factory = (
             subcorpDefinition: args.subcorpTTStructure,
             documentListWidgetVisible: false,
             documentListSaveFormat: 'csv',
-            documentListTotalSize: undefined
+            documentListTotalSize: undefined,
+            controlsAlignedCorpora,
         },
-        controlsAlignedCorpora
     );
 
     let numSelectionSteps = 0;

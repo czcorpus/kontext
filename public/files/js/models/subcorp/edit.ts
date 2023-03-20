@@ -481,7 +481,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
     private loadSubcorpData(corpname: string, subcname: string, dispatch: SEDispatcher) {
         this.layoutModel.ajax$<SubcorpusPropertiesResponse>(
             HTTP.Method.GET,
-            this.layoutModel.createActionUrl('/subcorpus/properties'),
+            this.layoutModel.createActionUrl('subcorpus/properties'),
             {
                 corpname,
                 usesubcorp: subcname,
@@ -499,6 +499,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                         textTypes: data.textTypes,
                         structsAndAttrs: data.structsAndAttrs,
                         liveAttrsEnabled: data.liveAttrsEnabled,
+                        availableAligned: data.availableAligned,
                     }
                 );
             },

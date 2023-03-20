@@ -89,6 +89,7 @@ export class Actions {
         textTypes:TTInitialData;
         structsAndAttrs:Kontext.StructsAndAttrs;
         liveAttrsEnabled:boolean;
+        availableAligned:Array<Kontext.AttrItem>;
     }> = {
         name: 'SUBCORP_LOAD_SUBCORPUS_DONE'
     }

@@ -55,6 +55,7 @@ export interface SubcorpusPropertiesResponse {
     textTypes:TTInitialData;
     structsAndAttrs:Kontext.StructsAndAttrs;
     liveAttrsEnabled:boolean;
+    availableAligned:Array<Kontext.AttrItem>;
 }
 
 
