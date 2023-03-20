@@ -119,7 +119,6 @@ export class SubcorpForm {
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
         const hasSelectedItems = this.textTypesModel.applyCheckedItems(selectedTextTypes, queryFormArgs.bib_mapping);
 
-
         const ttViewComponents = ttViewsInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),

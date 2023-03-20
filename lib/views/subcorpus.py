@@ -120,7 +120,7 @@ async def new(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
         text_types_data=tt_sel,
         method=method,
         id_attr=corpus_info.metadata.id_attr,
-        aligned_corpora=req.form_getlist('aligned_corpora'),
+        aligned_corpora=info.aligned,
     ))
     return out
 
