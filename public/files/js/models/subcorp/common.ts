@@ -82,6 +82,7 @@ export interface SubcorpusRecord {
     authorFullname:string;
     bibIdAttr:string;
     bibLabelAttr:string;
+    aligned:Array<string>|undefined;
 }
 
 export function subcServerRecord2SubcorpusRecord(srec:SubcorpusServerRecord):SubcorpusRecord {
@@ -101,7 +102,8 @@ export function subcServerRecord2SubcorpusRecord(srec:SubcorpusServerRecord):Sub
         authorId: srec.author_id,
         authorFullname: srec.author_fullname,
         bibIdAttr: srec.bib_id_attr,
-        bibLabelAttr: srec.bib_label_attr
+        bibLabelAttr: srec.bib_label_attr,
+        aligned: srec.aligned,
     };
 }
 
