@@ -46,6 +46,8 @@ export interface SubcorpusServerRecord {
     cql:string|undefined;
     within_cond:Array<ServerWithinSelection>|undefined;
     text_types:TextTypes.ExportedSelection|undefined;
+    aligned:Array<string>|null;
+    version:number;
 }
 
 export interface SubcorpusPropertiesResponse {

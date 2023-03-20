@@ -64,6 +64,7 @@ def _subc_from_row(row: Dict) -> SubcorpusRecord:
         cql=row['cql'],
         within_cond=json.loads(row['within_cond']) if row['within_cond'] else None,
         text_types=json.loads(row['text_types']) if row['text_types'] else None,
+        aligned=json.loads(row['aligned']) if row['aligned'] else None,
     )
 
 
@@ -95,6 +96,7 @@ class SQLiteSubcArchive(AbstractSubcArchive):
                     author_id INTEGER NOT NULL,
                     author_fullname varchar(127) NOT NULL,
                     corpus_name varchar(63) NOT NULL,
+                    aligned TEXT,
                     size INTEGER NOT NULL,
                     cql TEXT,
                     within_cond TEXT,
@@ -114,7 +116,8 @@ class SQLiteSubcArchive(AbstractSubcArchive):
             size: int,
             public_description,
             data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs],
-            is_draft: bool = False
+            aligned: List[str],
+            is_draft: bool = False,
     ):
         if isinstance(data, CreateSubcorpusRawCQLArgs):
             column, value = 'cql', data.cql
@@ -127,9 +130,9 @@ class SQLiteSubcArchive(AbstractSubcArchive):
         try:
             cursor.execute(
                 f'INSERT INTO {self.SUBC_TABLE_NAME} '
-                f'(id, user_id, author_id, author_fullname, corpus_name, name, {column}, created, public_description, size, is_draft) '
-                'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                (ident, author['id'], author['id'], author['fullname'], data.corpname, data.subcname, value, datetime.now().timestamp(), public_description, size, 1 if is_draft else 0))
+                f'(id, user_id, author_id, author_fullname, corpus_name, name, {column}, created, public_description, size, is_draft, aligned) '
+                'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                (ident, author['id'], author['id'], author['fullname'], data.corpname, data.subcname, value, datetime.now().timestamp(), public_description, size, 1 if is_draft else 0, json.dumps(aligned) if aligned else ''))
             self._db.commit()
         except sqlite3.IntegrityError as ex:
             cursor.execute(
@@ -139,9 +142,9 @@ class SQLiteSubcArchive(AbstractSubcArchive):
             if row['is_draft'] == 1:
                 await cursor.execute(
                     f'UPDATE {self.SUBC_TABLE_NAME} '
-                    f'SET name = ?, {column} = ?, public_description = ?, size = ?, is_draft = 0 '
+                    f'SET name = ?, {column} = ?, public_description = ?, size = ?, is_draft = 0, aligned = ? '
                     'WHERE id = ? AND author_id = ?',
-                    (data.subcname, value, public_description, size, ident, author['id']))
+                    (data.subcname, value, public_description, size, ident, author['id'], json.dumps(aligned) if aligned else ''))
             else:
                 raise ex
         finally:
@@ -153,7 +156,8 @@ class SQLiteSubcArchive(AbstractSubcArchive):
             author: UserInfo,
             size: int,
             public_description: str,
-            data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs]
+            data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs],
+            aligned: List[str],
     ):
         column1, column2, column3 = 'cql', 'within_cond', 'text_types'
         if isinstance(data, CreateSubcorpusRawCQLArgs):
@@ -167,9 +171,9 @@ class SQLiteSubcArchive(AbstractSubcArchive):
         try:
             cursor.execute(
                 f'UPDATE {self.SUBC_TABLE_NAME} '
-                f'SET name = ?, {column1} = ?, {column2} = ?, {column3} = ?, public_description = ?, size = ? '
+                f'SET name = ?, {column1} = ?, {column2} = ?, {column3} = ?, public_description = ?, size = ?, aligned = ? '
                 'WHERE id = ? AND author_id = ? AND is_draft = 1',
-                (data.subcname, value1, value2, value3, public_description, size, ident, author['id']))
+                (data.subcname, value1, value2, value3, public_description, size, ident, author['id'], json.dumps(aligned) if aligned else ''))
         finally:
             cursor.close()
 
@@ -322,6 +326,7 @@ class SQLiteSubcArchive(AbstractSubcArchive):
             **row,
             'within_cond': json.loads(row['within_cond']) if row['within_cond'] else None,
             'text_types': json.loads(row['text_types']) if row['text_types'] else None,
+            'aligned': json.loads(row['aligned']) if row['aligned'] else None,
         })
 
     async def delete_query(self, user_id: int, corpname: str, subc_id: str) -> None:
