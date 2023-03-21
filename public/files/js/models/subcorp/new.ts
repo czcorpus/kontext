@@ -137,7 +137,7 @@ export class SubcorpFormModel extends BaseTTSubcorpFormModel<SubcorpFormModelSta
             Actions.FormSubmit,
             action => {
                 this.changeState(state => { state.isBusy = true });
-                this.suspendWithTimeout(
+                this.waitForActionWithTimeout(
                     5000,
                     {},
                     (sAction, syncData) => {
@@ -204,6 +204,17 @@ export class SubcorpFormModel extends BaseTTSubcorpFormModel<SubcorpFormModelSta
             action => this.changeState(state => {
                 state.alignedCorpora = action.payload.alignedCorpora
             })
+        );
+
+        this.addActionHandler(
+            Actions.LoadSubcorpusDone,
+            action => {
+                if (!action.error) {
+                    this.changeState(state => {
+                        state.alignedCorpora = action.payload.alignedSelection;
+                    });
+                }
+            }
         );
 
         this.addActionHandler(

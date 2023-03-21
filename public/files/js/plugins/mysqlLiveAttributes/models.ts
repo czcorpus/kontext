@@ -496,20 +496,11 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                             List.map(n => ({n, selected: n === action.payload.data.bibLabelAttr}))
                         );
                         state.controlsAlignedCorpora = action.payload.data.isDraft;
-                        state.initialAlignedCorpora = pipe(
-                            action.payload.availableAligned,
-                            List.filter(item => state.controlsAlignedCorpora ? true : action.payload.data.aligned.includes(item.n)),
-                            List.map(item => ({
-                                label: item.label,
-                                value: item.n,
-                                selected: state.controlsAlignedCorpora ? action.payload.data.aligned.includes(item.n) : true,
-                                locked: !state.controlsAlignedCorpora,
-                            })),
-                        );
-                        state.alignedCorpora = state.initialAlignedCorpora;
+                        state.initialAlignedCorpora = action.payload.alignedSelection;
+                        state.alignedCorpora = action.payload.alignedSelection;
                     }
                 }
-            }
+            },
         );
 
         this.addActionHandler(

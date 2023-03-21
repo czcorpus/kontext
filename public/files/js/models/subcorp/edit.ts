@@ -25,7 +25,7 @@ import { PageModel } from '../../app/page';
 import { Actions } from './actions';
 import { Actions as TTActions } from '../textTypes/actions';
 import { Actions as ATActions } from '../asyncTask/actions';
-import { HTTP, List, tuple } from 'cnc-tskit';
+import { HTTP, List, pipe, tuple } from 'cnc-tskit';
 import {
     archiveSubcorpora,
     CreateSubcorpus,
@@ -489,6 +489,15 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
 
         ).subscribe({
             next: (data) => {
+                const alignedSelection = pipe(
+                    data.availableAligned,
+                    List.map(item => ({
+                        label: item.label,
+                        value: item.n,
+                        selected: data.data.aligned.includes(item.n),
+                        locked: false,
+                    })),
+                );
                 dispatch(
                     Actions.LoadSubcorpusDone,
                     {
@@ -499,7 +508,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                         textTypes: data.textTypes,
                         structsAndAttrs: data.structsAndAttrs,
                         liveAttrsEnabled: data.liveAttrsEnabled,
-                        availableAligned: data.availableAligned,
+                        alignedSelection,
                     }
                 );
             },
