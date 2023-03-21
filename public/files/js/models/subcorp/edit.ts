@@ -66,23 +66,25 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
         this.addActionHandler(
             ATActions.AsyncTasksChecked,
             (state, action) => {
-                const idx = List.findIndex(task =>
-                    task.category === 'subcorpus' &&
-                    task.status === 'SUCCESS' &&
-                    task.args['corpname'] === state.data.corpname &&
-                    task.args['usesubcorp'] === state.data.usesubcorp,
-                    action.payload.tasks,
-                );
-                if (idx !== -1) {
-                    // TODO `ATActions.AsyncTasksChecked` is already side effect action
-                    // cannot use SEDispatcher
-                    this.layoutModel.dispatcher.dispatch(
-                        Actions.LoadSubcorpus,
-                        {
-                            corpname: state.data.corpname,
-                            usesubcorp: initialState.data.usesubcorp,
-                        }
+                if (state.data) { // only if the model is active (i.e. currently editing something)
+                    const idx = List.findIndex(task =>
+                        task.category === 'subcorpus' &&
+                        task.status === 'SUCCESS' &&
+                        task.args['corpname'] === state.data.corpname &&
+                        task.args['usesubcorp'] === state.data.usesubcorp,
+                        action.payload.tasks,
                     );
+                    if (idx !== -1) {
+                        // TODO `ATActions.AsyncTasksChecked` is already side effect action
+                        // cannot use SEDispatcher
+                        this.layoutModel.dispatcher.dispatch(
+                            Actions.LoadSubcorpus,
+                            {
+                                corpname: state.data.corpname,
+                                usesubcorp: initialState.data.usesubcorp,
+                            }
+                        );
+                    }
                 }
             }
         );

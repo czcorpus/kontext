@@ -30,18 +30,6 @@ def get_traceback():
     return traceback.format_exception(err_type, err_value, err_trace)
 
 
-def fetch_exception_msg(ex):
-    msg = getattr(ex, 'message', None)
-    if not msg:
-        try:
-            msg = str(ex)
-        except:
-            msg = '%r' % ex
-    if not msg:
-        msg = ex.__class__.__name__
-    return msg
-
-
 class UserReadableException(Exception):
     """
     This exception covers general errors occurring in Controller's action methods

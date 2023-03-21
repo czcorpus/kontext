@@ -299,10 +299,10 @@ async def create_subcorpus(
         path: str
 ):
     try:
-        worker = subc_calc.CreateSubcorpusTask(author=author)
-        return await worker.run(specification, subcorpus_id, path)
+        job = subc_calc.CreateSubcorpusTask(author=author)
+        return await job.run(specification, subcorpus_id, path)
     except Exception as ex:
-        msg = getattr(ex, 'message', None)
+        msg = str(ex)
         if not msg:
             msg = 'Caused by: {0}'.format(ex.__class__.__name__)
         raise WorkerTaskException(msg)

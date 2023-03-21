@@ -14,7 +14,7 @@
 # GNU General Public License for more details.
 
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict, Optional
 
 import aiofiles
 import aiofiles.os
@@ -22,7 +22,7 @@ import bgcalc
 import settings
 from action.control import http_action
 from action.errors import (
-    FunctionNotSupported, ImmediateRedirectException, NotFoundException)
+    ImmediateRedirectException, NotFoundException)
 from action.krequest import KRequest
 from action.model.base import BaseActionModel
 from action.model.user import UserActionModel
@@ -39,16 +39,20 @@ async def root_action(amodel: BaseActionModel, req: KRequest, resp: KResponse):
     raise ImmediateRedirectException(req.create_url('query', {}))
 
 
-async def _check_tasks_status(amodel: UserActionModel, task_id: str) -> AsyncTaskStatus:
+async def _check_task_status(amodel: UserActionModel, task_id: str) -> Optional[AsyncTaskStatus]:
     task = AsyncTaskStatus(ident=task_id, label='', status='PENDING', category='')
-    await amodel.update_async_task_status(task)
-    return task
+    found = await amodel.update_async_task_status(task)
+    return task if found else None
 
 
 @bp.route('/check_tasks_status')
 @http_action(return_type='json', action_model=UserActionModel)
 async def check_tasks_status(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
-    task = await _check_tasks_status(amodel, req.args.get('task_id'))
+    task = await _check_task_status(amodel, req.args.get('task_id'))
+    if not task:
+        resp.add_system_message('error', 'task not found')
+        resp.set_not_found()
+        return dict(data=None)
     return dict(data=task.to_dict())
 
 

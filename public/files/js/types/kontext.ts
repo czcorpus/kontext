@@ -366,7 +366,7 @@ export interface AsyncTaskInfo<T=GeneralProps> {
     category:string;
     status:AsyncTaskStatus;
     created:number;
-    error:string; // = Celery's "result" property in case status == 'FAILURE'
+    error:string; // = Worker's "result" property in case status == 'FAILURE'
     args:T;
     url:string;
 }
