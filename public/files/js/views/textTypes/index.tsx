@@ -399,7 +399,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             </div>
             <div className="grid">
                 {props.LiveAttrsCustomTT
-                    ? <div><props.LiveAttrsCustomTT /></div>
+                    ? <props.LiveAttrsCustomTT />
                     : null}
                 {List.map((attrObj) => (
                     <div key={attrObj.name + ':list:' + TTSelOps.containsFullList(attrObj)}>

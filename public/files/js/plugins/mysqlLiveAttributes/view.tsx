@@ -483,68 +483,70 @@ export function init({
 
         if (!List.empty(props.alignedCorpora)) {
             return (
-                <TTS.TableTextTypeAttribute className={!List.empty(props.selectionSteps) && isAlignedSelectionStep(List.head(props.selectionSteps)) ? 'locked' : null}>
-                    <TTS.AttribName>
-                        <h3>{he.translate('ucnkLA__aligned_corpora')}</h3>
-                        <ttViews.TextTypeAttributeMinIcon isMinimized={props.isTTListMinimized}
-                                onClick={handleMinIconClick} />
-                    </TTS.AttribName>
-                    {props.isTTListMinimized ?
-                        <div /> :
-                        <>
-                            <S.MinimizedTTBoxNote>
-                                <p>
-                                    {renderHint()}
-                                </p>
-                                {
-                                    !List.empty(props.alignedCorpora) ?
-                                    null :
-                                    <p>{he.translate('ucnkLA__aligned_lang_cannot_be_set_here')}</p>
-                                }
-                            </S.MinimizedTTBoxNote>
-                            <S.CustomizedDataRows className="data-rows">
-                                <div className="scrollable">
-                                    <table>
-                                        <tbody>
-                                            {pipe(
-                                                props.alignedCorpora,
-                                                props.manualAlignCorporaMode ?
-                                                    v => v :
-                                                    List.filter(v => v.selected),
-                                                List.map(
-                                                    (item, i) => (
-                                                        <tr key={item.value}>
-                                                            <td>
-                                                                {props.manualAlignCorporaMode || item.selected ?
-                                                                    <AlignedLangItem item={item} itemIdx={i} /> :
-                                                                    null
-                                                                }
-                                                            </td>
-                                                            <td />
-                                                        </tr>
+                <div>
+                    <TTS.TableTextTypeAttribute className={!List.empty(props.selectionSteps) && isAlignedSelectionStep(List.head(props.selectionSteps)) ? 'locked' : null}>
+                        <TTS.AttribName>
+                            <h3>{he.translate('ucnkLA__aligned_corpora')}</h3>
+                            <ttViews.TextTypeAttributeMinIcon isMinimized={props.isTTListMinimized}
+                                    onClick={handleMinIconClick} />
+                        </TTS.AttribName>
+                        {props.isTTListMinimized ?
+                            <div /> :
+                            <>
+                                <S.MinimizedTTBoxNote>
+                                    <p>
+                                        {renderHint()}
+                                    </p>
+                                    {
+                                        !List.empty(props.alignedCorpora) ?
+                                        null :
+                                        <p>{he.translate('ucnkLA__aligned_lang_cannot_be_set_here')}</p>
+                                    }
+                                </S.MinimizedTTBoxNote>
+                                <S.CustomizedDataRows className="data-rows">
+                                    <div className="scrollable">
+                                        <table>
+                                            <tbody>
+                                                {pipe(
+                                                    props.alignedCorpora,
+                                                    props.manualAlignCorporaMode ?
+                                                        v => v :
+                                                        List.filter(v => v.selected),
+                                                    List.map(
+                                                        (item, i) => (
+                                                            <tr key={item.value}>
+                                                                <td>
+                                                                    {props.manualAlignCorporaMode || item.selected ?
+                                                                        <AlignedLangItem item={item} itemIdx={i} /> :
+                                                                        null
+                                                                    }
+                                                                </td>
+                                                                <td />
+                                                            </tr>
+                                                        )
                                                     )
-                                                )
-                                            )}
-                                            {!props.manualAlignCorporaMode && !List.some(x => x.selected, props.alignedCorpora) ?
-                                                (
-                                                    <tr>
-                                                        <td>
-                                                            <p>{he.translate('ucnkLA__no_aligned_corpora_yet')}</p>
-                                                        </td>
-                                                    </tr>
-                                                 ) : null
-                                            }
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </S.CustomizedDataRows>
-                            <div className="hidden-values" />
-                            <TTS.LastLine>
-                                {'\u00a0'}
-                            </TTS.LastLine>
-                        </>
-                    }
-                </TTS.TableTextTypeAttribute>
+                                                )}
+                                                {!props.manualAlignCorporaMode && !List.some(x => x.selected, props.alignedCorpora) ?
+                                                    (
+                                                        <tr>
+                                                            <td>
+                                                                <p>{he.translate('ucnkLA__no_aligned_corpora_yet')}</p>
+                                                            </td>
+                                                        </tr>
+                                                    ) : null
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </S.CustomizedDataRows>
+                                <div className="hidden-values" />
+                                <TTS.LastLine>
+                                    {'\u00a0'}
+                                </TTS.LastLine>
+                            </>
+                        }
+                    </TTS.TableTextTypeAttribute>
+                </div>
             );
 
         } else {

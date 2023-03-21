@@ -494,7 +494,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                     List.map(item => ({
                         label: item.label,
                         value: item.n,
-                        selected: data.data.aligned.includes(item.n),
+                        selected: data.data.aligned ? data.data.aligned.includes(item.n) : false,
                         locked: false,
                     })),
                 );
