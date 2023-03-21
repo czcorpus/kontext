@@ -67,7 +67,6 @@ export class EmptyLiveAttributesPlugin implements PluginInterfaces.LiveAttribute
 const create:PluginInterfaces.LiveAttributes.Factory = (
     pluginApi,
     isEnabled,
-    controlsAlignedCorpora,
     args
 ) => new EmptyLiveAttributesPlugin(pluginApi);
 

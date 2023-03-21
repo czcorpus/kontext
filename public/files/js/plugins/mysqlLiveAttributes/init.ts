@@ -92,7 +92,6 @@ export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPl
 const create:PluginInterfaces.LiveAttributes.Factory = (
         pluginApi,
         isEnabled,
-        controlsAlignedCorpora,
         args
 ) => {
 
@@ -104,7 +103,7 @@ const create:PluginInterfaces.LiveAttributes.Factory = (
             value: item.n,
             label: item.label,
             selected: currAligned.indexOf(item.n) > -1,
-            locked: !controlsAlignedCorpora
+            locked: !args.manualAlignCorporaMode
         }),
         args.availableAlignedCorpora
     );
@@ -139,7 +138,6 @@ const create:PluginInterfaces.LiveAttributes.Factory = (
             documentListWidgetVisible: false,
             documentListSaveFormat: 'csv',
             documentListTotalSize: undefined,
-            controlsAlignedCorpora,
         },
     );
 

@@ -129,7 +129,6 @@ export class SubcorpForm {
         this.liveAttrsPlugin = liveAttributes(
             this.layoutModel.pluginApi(),
             this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES),
-            true, // manual aligned corp. selection mode
             {
                 bibIdAttr: ttData.bib_id_attr,
                 bibLabelAttr: ttData.bib_label_attr,

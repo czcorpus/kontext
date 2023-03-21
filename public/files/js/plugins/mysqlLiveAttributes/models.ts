@@ -101,7 +101,6 @@ export interface LiveAttrsModelState {
     documentListWidgetVisible:boolean;
     documentListSaveFormat:DataSaveFormat;
     documentListTotalSize:number|undefined;
-    controlsAlignedCorpora:boolean;
 }
 
 /**
@@ -121,8 +120,6 @@ export interface LiveAttrsModelState {
 export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implements IUnregistrable {
 
     private readonly pluginApi:IPluginApi;
-
-    private readonly controlsAlignedCorpora:boolean;
 
     /**
      */
@@ -495,7 +492,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                             List.map(x => x.name),
                             List.map(n => ({n, selected: n === action.payload.data.bibLabelAttr}))
                         );
-                        state.controlsAlignedCorpora = action.payload.data.isDraft;
+                        state.manualAlignCorporaMode = action.payload.data.isDraft;
                         state.initialAlignedCorpora = action.payload.alignedSelection;
                         state.alignedCorpora = action.payload.alignedSelection;
                     }
@@ -754,7 +751,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
 
     reset(state:LiveAttrsModelState):void {
         state.selectionSteps = [];
-        if (state.controlsAlignedCorpora) {
+        if (state.manualAlignCorporaMode) {
             state.alignedCorpora = state.initialAlignedCorpora;
         }
         state.bibliographyIds = [];

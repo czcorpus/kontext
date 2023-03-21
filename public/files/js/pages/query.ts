@@ -137,7 +137,6 @@ export class QueryPage {
         this.liveAttrsPlugin = liveAttributes(
             this.layoutModel.pluginApi(),
             this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES),
-            false,
             {
                 bibIdAttr: textTypesData.bib_id_attr,
                 bibLabelAttr: textTypesData.bib_label_attr,

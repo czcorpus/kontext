@@ -129,7 +129,6 @@ class SubcorpListPage {
                     this.liveAttrsPlugin = liveAttributes(
                         this.layoutModel.pluginApi(),
                         this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES),
-                        false,
                         {
                             bibIdAttr: null,
                             bibLabelAttr: null,

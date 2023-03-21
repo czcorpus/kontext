@@ -194,7 +194,6 @@ export interface Factory {
     (
         pluginApi:IPluginApi,
         isEnabled:boolean,
-        controlsAlignedCorpora:boolean,
         args:InitArgs
     ):IPlugin;
 }
