@@ -323,23 +323,27 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
     async def export_optional_plugins_conf(self, result):
         await self._export_optional_plugins_conf(result, [])
 
-    async def update_async_task_status(self, curr_at: AsyncTaskStatus):
+    async def update_async_task_status(self, curr_at: AsyncTaskStatus) -> bool:
+        """
+        returns:
+            True if job was found (and updated) else False
+        """
         backend = settings.get('calc_backend', 'type')
         if backend in ('celery', 'rq'):
             worker = bgcalc.calc_backend_client(settings)
-            r = worker.AsyncResult(curr_at.ident)
-            if r:
-                curr_at.status = r.status
+            aresult = worker.AsyncResult(curr_at.ident)
+            if aresult:
+                curr_at.status = aresult.status
                 if curr_at.status == 'FAILURE':
-                    r.get(timeout=2)
-                    if hasattr(r.result, 'message'):
-                        curr_at.error = r.result.message
-                    else:
-                        curr_at.error = r.result.__class__.__name__
+                    result = aresult.get(timeout=2)
+                    curr_at.error = str(result)
+                    if not curr_at.error:
+                        curr_at.error = result.__class__.__name__
+                self._check_task_timeout(curr_at)
+                return True
             else:
-                curr_at.status = 'FAILURE'
-                curr_at.error = 'job not found'
-            self._check_task_timeout(curr_at)
+                logging.getLogger(__name__).warning(f'Background job not found: {curr_at.ident}')
+                return False
         else:
             raise FunctionNotSupported(f'Backend {backend} does not support status checking')
 
@@ -360,15 +364,17 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
             (list of AsyncTaskStatus)
         """
         if 'async_tasks' in self._req.ctx.session:
-            ans = [AsyncTaskStatus.from_dict(d) for d in self._req.ctx.session['async_tasks']]
+            src = [AsyncTaskStatus.from_dict(d) for d in self._req.ctx.session['async_tasks']]
         else:
-            ans = []
+            src = []
         if category is not None:
-            ans = [item for item in ans if item.category == category]
-
-        for item in ans:
+            src = [item for item in src if item.category == category]
+        ans = []
+        for item in src:
             if not item.is_finished() and no_refresh is False:
-                await self.update_async_task_status(item)
+                found = await self.update_async_task_status(item)
+                if found:
+                    ans.append(item)
         return ans
 
     def set_async_tasks(self, task_list: Iterable[AsyncTaskStatus]):

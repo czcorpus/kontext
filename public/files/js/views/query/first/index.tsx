@@ -286,20 +286,20 @@ export function init({
                                 htmlClass="specify-text-types"
                                 closedStateHint={<BoundTextTypesFieldsetHint />}
                         closedStateDesc={props.textTypesNotes}>
-                            <ttViews.TextTypesPanel
-                                    LiveAttrsView={props.LiveAttrsView}
-                                    LiveAttrsCustomTT={props.LiveAttrsCustomTT}
-                                    controls={[
-                                        <a onClick={handleShowQuickSubcorpWidget}
-                                            className={"util-button" + (props.quickSubcorpActive ? "" : " disabled")}>
-                                                {he.translate('subc__quick_subcorpus')}
-                                        </a>,
-                                        <a onClick={handleShowDownloadDocumentsWidget}
-                                            className={"util-button" + (props.bibIdAttr ? "" : " disabled")}>
-                                            {he.translate('subc__save_list_of_documents')}
-                                        </a>
-                                        ]}
-                                    />
+                    <ttViews.TextTypesPanel
+                            LiveAttrsView={props.LiveAttrsView}
+                            LiveAttrsCustomTT={props.LiveAttrsCustomTT}
+                            controls={[
+                                <a onClick={handleShowQuickSubcorpWidget}
+                                    className={"util-button" + (props.quickSubcorpActive ? "" : " disabled")}>
+                                        {he.translate('subc__quick_subcorpus')}
+                                </a>,
+                                <a onClick={handleShowDownloadDocumentsWidget}
+                                    className={"util-button" + (props.bibIdAttr ? "" : " disabled")}>
+                                    {he.translate('subc__save_list_of_documents')}
+                                </a>
+                                ]}
+                            />
                     </inputViews.AdvancedFormFieldset>
                     <div className="submit-block">
                         <div className="buttons">
