@@ -41,7 +41,7 @@ import { ConcFormArgs } from '../models/query/formArgs';
 import { fetchQueryFormArgs } from '../models/query/first';
 import { ServerWithinSelection } from '../models/subcorp/common';
 import { Root } from 'react-dom/client';
-import { Ident } from 'cnc-tskit';
+import { Ident, List } from 'cnc-tskit';
 
 
 interface TTProps {
@@ -125,6 +125,7 @@ export class SubcorpForm {
             this.textTypesModel
         );
 
+        const availableAlignedCorpora = this.layoutModel.getConf<Array<Kontext.AttrItem>>('availableAlignedCorpora');
         this.liveAttrsPlugin = liveAttributes(
             this.layoutModel.pluginApi(),
             this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES),
@@ -132,9 +133,7 @@ export class SubcorpForm {
             {
                 bibIdAttr: ttData.bib_id_attr,
                 bibLabelAttr: ttData.bib_label_attr,
-                availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>(
-                    'availableAlignedCorpora'
-                ),
+                availableAlignedCorpora,
                 refineEnabled: hasSelectedItems,
                 manualAlignCorporaMode: true,
                 subcorpTTStructure: {},
@@ -159,7 +158,7 @@ export class SubcorpForm {
 
         let liveAttrsViews:PluginInterfaces.LiveAttributes.Views;
         if (this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES)) {
-            liveAttrsViews = this.liveAttrsPlugin.getViews(subcMixerComponent, this.textTypesModel);
+            liveAttrsViews = this.liveAttrsPlugin.getViews(subcMixerComponent, this.textTypesModel, !List.empty(availableAlignedCorpora));
             this.textTypesModel.enableAutoCompleteSupport();
 
         } else {

@@ -45,7 +45,8 @@ export class EmptyLiveAttributesPlugin implements PluginInterfaces.LiveAttribute
 
     getViews(
         subcMixerView:PluginInterfaces.SubcMixer.View,
-        textTypesModel:TextTypesModel
+        textTypesModel:TextTypesModel,
+        useAlignedCorpBox:boolean,
     ):PluginInterfaces.LiveAttributes.Views {
 
         return {

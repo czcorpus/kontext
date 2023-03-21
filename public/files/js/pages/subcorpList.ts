@@ -58,7 +58,7 @@ class SubcorpListPage {
     private renderView():void {
         let liveAttrsViews:PluginInterfaces.LiveAttributes.Views;
         if (this.liveAttrsPlugin !== undefined) {
-            liveAttrsViews = this.liveAttrsPlugin.getViews(null, this.textTypesModel);
+            liveAttrsViews = this.liveAttrsPlugin.getViews(null, this.textTypesModel, true);
         } else {
             liveAttrsViews = {
                 LiveAttrsCustomTT: null,

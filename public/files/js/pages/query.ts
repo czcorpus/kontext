@@ -133,6 +133,7 @@ export class QueryPage {
             queryFormArgs.bib_mapping
         );
 
+        const availableAlignedCorpora = this.layoutModel.getConf<Array<Kontext.AttrItem>>('availableAlignedCorpora');
         this.liveAttrsPlugin = liveAttributes(
             this.layoutModel.pluginApi(),
             this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES),
@@ -140,9 +141,7 @@ export class QueryPage {
             {
                 bibIdAttr: textTypesData.bib_id_attr,
                 bibLabelAttr: textTypesData.bib_label_attr,
-                availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>(
-                    'availableAlignedCorpora'
-                ),
+                availableAlignedCorpora,
                 refineEnabled: hasSelectedItems,
                 manualAlignCorporaMode: false,
                 subcorpTTStructure,
@@ -152,7 +151,7 @@ export class QueryPage {
 
         let liveAttrsViews:PluginInterfaces.LiveAttributes.Views;
         if (this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES)) {
-            liveAttrsViews = this.liveAttrsPlugin.getViews(null, this.textTypesModel);
+            liveAttrsViews = this.liveAttrsPlugin.getViews(null, this.textTypesModel, !List.empty(availableAlignedCorpora));
             this.textTypesModel.enableAutoCompleteSupport();
 
         } else {
