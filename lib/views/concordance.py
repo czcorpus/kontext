@@ -103,12 +103,15 @@ async def query(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     out['default_virt_keyboard'] = corp_info.metadata.default_virt_keyboard
 
     out['subcorp_tt_structure'] = None
+    out['subcorp_aligned'] = None
     corp_ident = amodel.corp.portable_ident
     if isinstance(corp_ident, SubcorpusIdent):
         with plugins.runtime.SUBC_STORAGE as sr:
             info = await sr.get_info(corp_ident.id)
             if info.text_types:
                 out['subcorp_tt_structure'] = info.text_types
+            if info.aligned:
+                out['subcorp_aligned'] = info.aligned
 
     qf_args = await amodel.fetch_prev_query('conc') if amodel.active_q_data is None else None
     if qf_args is None:
@@ -726,12 +729,15 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
                         for k, item in struct_and_attrs_tmp.items()]
 
     subcorp_tt_structure: Optional[TextTypesType] = None
+    subcorp_aligned: Optional[List[str]] = None
     corp_ident = amodel.corp.portable_ident
     if isinstance(corp_ident, SubcorpusIdent):
         with plugins.runtime.SUBC_STORAGE as sr:
             info = await sr.get_info(corp_ident.id)
             if info.text_types:
                 subcorp_tt_structure = info.text_types
+            if info.aligned:
+                subcorp_aligned = info.aligned
     if corpus_info.preflight_subcorpus:
         preflight_conf = dict(
             subc=corpus_info.preflight_subcorpus.id,
@@ -775,6 +781,7 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
         SimpleQueryDefaultAttrs=corpus_info.simple_query_default_attrs,
         QSEnabled=amodel.args.qs_enabled,
         SubcorpTTStructure=subcorp_tt_structure,
+        SubcorpAligned=subcorp_aligned,
         concPreflight=preflight_conf,
         AltCorp=corpus_info.alt_corp,
     )
