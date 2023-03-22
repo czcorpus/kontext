@@ -23,7 +23,6 @@ from urllib.parse import quote
 from babel import Locale
 from plugin_types.auth import UserInfo
 from sanic.request import Request, RequestParameters
-from sanic_babel import get_locale, gettext
 M_args = TypeVar('M_args')
 
 
@@ -36,7 +35,7 @@ class KRequest(Generic[M_args]):
     def __init__(self, request: Request, app_prefix: str, mapped_args: Optional[M_args]):
         self._request = request
         self._app_prefix = app_prefix if app_prefix else ''
-        self._locale: Locale = get_locale(request)
+        self._locale: Locale = Locale(*request.ctx.locale.split('_'))
         self._mapped_args = mapped_args
         self._start_time = time.time()
 
@@ -240,4 +239,4 @@ class KRequest(Generic[M_args]):
             return f'{root}{action}'
 
     def translate(self, string: str) -> str:
-        return gettext(string, self._request)
+        return self._request.ctx.translations.gettext(string)
