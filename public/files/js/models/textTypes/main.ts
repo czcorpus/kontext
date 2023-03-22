@@ -694,7 +694,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                                 attributes,
                                 List.map(v => tuple(v.name, false)),
                                 Dict.fromEntries()
-                            )
+                            );
                         });
                     }
                 }

@@ -121,19 +121,15 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
 
     private readonly pluginApi:IPluginApi;
 
-    private readonly controlsAlignedCorpora:boolean;
-
     /**
      */
     constructor(
         dispatcher:IActionDispatcher,
         pluginApi:IPluginApi,
         initialState:LiveAttrsModelState,
-        controlsAlignedCorpora:boolean,
     ) {
         super(dispatcher, initialState);
         this.pluginApi = pluginApi;
-        this.controlsAlignedCorpora = controlsAlignedCorpora;
 
         this.addActionHandler(
             PluginInterfaces.LiveAttributes.Actions.RefineClicked,
@@ -496,9 +492,12 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                             List.map(x => x.name),
                             List.map(n => ({n, selected: n === action.payload.data.bibLabelAttr}))
                         );
+                        state.manualAlignCorporaMode = action.payload.data.isDraft;
+                        state.initialAlignedCorpora = action.payload.alignedSelection;
+                        state.alignedCorpora = action.payload.alignedSelection;
                     }
                 }
-            }
+            },
         );
 
         this.addActionHandler(
@@ -752,7 +751,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
 
     reset(state:LiveAttrsModelState):void {
         state.selectionSteps = [];
-        if (this.controlsAlignedCorpora) {
+        if (state.manualAlignCorporaMode) {
             state.alignedCorpora = state.initialAlignedCorpora;
         }
         state.bibliographyIds = [];

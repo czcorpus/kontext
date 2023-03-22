@@ -139,7 +139,7 @@ export interface Views {
 
 export interface IPlugin extends IUnregistrable, BasePlugin {
 
-    getViews(subcMixerView:View, textTypesModel:IModel<{}>):Views;
+    getViews(subcMixerView:View, textTypesModel:IModel<{}>, useAlignedCorpBox:boolean):Views;
 
 }
 
@@ -194,7 +194,6 @@ export interface Factory {
     (
         pluginApi:IPluginApi,
         isEnabled:boolean,
-        controlsAlignedCorpora:boolean,
         args:InitArgs
     ):IPlugin;
 }

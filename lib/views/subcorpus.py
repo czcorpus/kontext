@@ -54,11 +54,18 @@ async def properties(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
         info = await sr.get_info(corp_ident.id)
     with plugins.runtime.LIVE_ATTRIBUTES as la:
         live_attrs_enabled = info.text_types is not None and await la.is_enabled_for(amodel.plugin_ctx, [corp_ident.corpus_name])
+
+    availableAligned = []
+    for al in amodel.get_available_aligned_corpora()[1:]:
+        alcorp = await amodel.cf.get_corpus(al)
+        availableAligned.append(dict(label=alcorp.get_conf('NAME') or al, n=al))
+
     return {
         'data': info.to_dict(),
         'textTypes': await amodel.tt.export_with_norms(),
         'structsAndAttrs': {k: [x.to_dict() for x in item] for k, item in struct_and_attrs.items()},
         'liveAttrsEnabled': live_attrs_enabled,
+        'availableAligned': availableAligned,
     }
 
 
@@ -115,12 +122,12 @@ async def new(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
         ))
         # draft subcorpus should not be projected to main menu links...
         out['usesubcorp'] = None
+        out['aligned_corpora'] = info.aligned
     out.update(dict(
         Normslist=tt_sel['Normslist'],
         text_types_data=tt_sel,
         method=method,
         id_attr=corpus_info.metadata.id_attr,
-        aligned_corpora=req.form_getlist('aligned_corpora'),
     ))
     return out
 

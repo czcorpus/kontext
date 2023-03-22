@@ -41,7 +41,7 @@ import { ConcFormArgs } from '../models/query/formArgs';
 import { fetchQueryFormArgs } from '../models/query/first';
 import { ServerWithinSelection } from '../models/subcorp/common';
 import { Root } from 'react-dom/client';
-import { Ident } from 'cnc-tskit';
+import { Ident, List } from 'cnc-tskit';
 
 
 interface TTProps {
@@ -119,23 +119,20 @@ export class SubcorpForm {
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
         const hasSelectedItems = this.textTypesModel.applyCheckedItems(selectedTextTypes, queryFormArgs.bib_mapping);
 
-
         const ttViewComponents = ttViewsInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
             this.textTypesModel
         );
 
+        const availableAlignedCorpora = this.layoutModel.getConf<Array<Kontext.AttrItem>>('availableAlignedCorpora');
         this.liveAttrsPlugin = liveAttributes(
             this.layoutModel.pluginApi(),
             this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES),
-            true, // manual aligned corp. selection mode
             {
                 bibIdAttr: ttData.bib_id_attr,
                 bibLabelAttr: ttData.bib_label_attr,
-                availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>(
-                    'availableAlignedCorpora'
-                ),
+                availableAlignedCorpora,
                 refineEnabled: hasSelectedItems,
                 manualAlignCorporaMode: true,
                 subcorpTTStructure: {},
@@ -160,7 +157,7 @@ export class SubcorpForm {
 
         let liveAttrsViews:PluginInterfaces.LiveAttributes.Views;
         if (this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES)) {
-            liveAttrsViews = this.liveAttrsPlugin.getViews(subcMixerComponent, this.textTypesModel);
+            liveAttrsViews = this.liveAttrsPlugin.getViews(subcMixerComponent, this.textTypesModel, !List.empty(availableAlignedCorpora));
             this.textTypesModel.enableAutoCompleteSupport();
 
         } else {

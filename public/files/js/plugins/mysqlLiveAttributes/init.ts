@@ -24,7 +24,6 @@ import { init as viewInit } from './view';
 import { List, pipe } from 'cnc-tskit';
 import { IPluginApi } from '../../types/plugins/common';
 import { PluginName } from '../../app/plugin';
-import { TTInitialData } from '../../models/textTypes/common';
 
 
 export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPlugin {
@@ -33,19 +32,15 @@ export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPl
 
     private readonly model:liveAttrsModel.LiveAttrsModel;
 
-    private readonly useAlignedCorpBox:boolean;
-
     private readonly isEnabled:boolean;
 
     constructor(
         pluginApi:IPluginApi,
         store:liveAttrsModel.LiveAttrsModel,
-        useAlignedCorpBox:boolean,
         isEnabled:boolean
     ) {
         this.pluginApi = pluginApi;
         this.model = store;
-        this.useAlignedCorpBox = useAlignedCorpBox;
         this.isEnabled = isEnabled;
     }
 
@@ -55,7 +50,8 @@ export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPl
 
     getViews(
         subcMixerView:PluginInterfaces.SubcMixer.View,
-        textTypesModel:TextTypesModel
+        textTypesModel:TextTypesModel,
+        useAlignedCorpBox:boolean,
     ):PluginInterfaces.LiveAttributes.Views {
 
         const views = viewInit({
@@ -65,7 +61,7 @@ export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPl
             textTypesModel: textTypesModel,
             liveAttrsModel: this.model
         });
-        if (!this.useAlignedCorpBox) {
+        if (!useAlignedCorpBox) {
             views.LiveAttrsCustomTT = null;
         }
         return views;
@@ -96,7 +92,6 @@ export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPl
 const create:PluginInterfaces.LiveAttributes.Factory = (
         pluginApi,
         isEnabled,
-        controlsAlignedCorpora,
         args
 ) => {
 
@@ -108,7 +103,7 @@ const create:PluginInterfaces.LiveAttributes.Factory = (
             value: item.n,
             label: item.label,
             selected: currAligned.indexOf(item.n) > -1,
-            locked: !controlsAlignedCorpora
+            locked: !args.manualAlignCorporaMode
         }),
         args.availableAlignedCorpora
     );
@@ -142,9 +137,8 @@ const create:PluginInterfaces.LiveAttributes.Factory = (
             subcorpDefinition: args.subcorpTTStructure,
             documentListWidgetVisible: false,
             documentListSaveFormat: 'csv',
-            documentListTotalSize: undefined
+            documentListTotalSize: undefined,
         },
-        controlsAlignedCorpora
     );
 
     let numSelectionSteps = 0;
@@ -165,7 +159,7 @@ const create:PluginInterfaces.LiveAttributes.Factory = (
         _ => numSelectionSteps === 0 || window.confirm(pluginApi.translate('ucnkLA__are_you_sure_to_mod_align_lang'))
     );
 
-    return new LiveAttributesPlugin(pluginApi, store, !List.empty(alignedCorpora), isEnabled);
+    return new LiveAttributesPlugin(pluginApi, store, isEnabled);
 }
 
 export default create;
