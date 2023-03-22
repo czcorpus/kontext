@@ -102,7 +102,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                             <layoutViews.CloseableFrame onCloseClick={handleModalClose}
                                     scrollable={true}
                                     label={he.translate('pquery__overview_title')}>
-                                <PqueryViews.PqueryForm corparchWidget={undefined} />
+                                <PqueryViews.PqueryForm corparchWidget={undefined} corparchWidgetId={undefined} />
                             </layoutViews.CloseableFrame>
                         </layoutViews.ModalOverlay> :
                         null
