@@ -23,6 +23,7 @@ import * as React from 'react';
 import { BoundWithProps, IActionDispatcher } from 'kombo';
 
 import * as Kontext from '../../../types/kontext';
+import * as PluginInterfaces from '../../../types/plugins';
 import { PqueryFormModel } from '../../../models/pquery/form';
 import { Actions } from '../../../models/pquery/actions';
 import * as S from './style';
@@ -45,7 +46,8 @@ export interface PqueryFormViewsArgs {
 }
 
 interface PqueryFormProps {
-    corparchWidget:React.ComponentClass;
+    corparchWidget:PluginInterfaces.Corparch.WidgetView;
+    corparchWidgetId:string;
 }
 
 interface PqueryHelpProps {
@@ -555,7 +557,7 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
 
         return (
             <S.PqueryFormSection>
-                {props.corparchWidget ? <props.corparchWidget /> : null}
+                {props.corparchWidget ? <props.corparchWidget widgetId={props.corparchWidgetId} /> : null}
                 <S.PqueryForm>
                     <S.PQueryToolbar>
                         <PQTypeSwitch qtype={props.pqueryType} />
