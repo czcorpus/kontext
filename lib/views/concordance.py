@@ -86,7 +86,7 @@ async def query(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     amodel.disabled_menu_items = (
         MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
         MainMenu.VIEW('kwic-sent-switch'))
-    out = {'aligned_corpora': amodel.args.align}
+    out = {}
     tt_data = await amodel.tt.export_with_norms(ret_nums=True)
     out['Normslist'] = tt_data['Normslist']
     out['text_types_data'] = tt_data
@@ -112,6 +112,9 @@ async def query(amodel: ConcActionModel, req: KRequest, resp: KResponse):
                 out['subcorp_tt_structure'] = info.text_types
             if info.aligned:
                 out['subcorp_aligned'] = info.aligned
+                amodel.args.align = info.aligned + \
+                    [x for x in amodel.args.align if x not in info.aligned]
+    out['aligned_corpora'] = amodel.args.align
 
     qf_args = await amodel.fetch_prev_query('conc') if amodel.active_q_data is None else None
     if qf_args is None:
@@ -703,6 +706,19 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
         ttcrit_attrs = amodel.corp.get_conf('SUBCORPATTRS')
     tmp_out['ttcrit'] = [f'{a} 0' for a in ttcrit_attrs.replace('|', ',').split(',') if a]
 
+    subcorp_tt_structure: Optional[TextTypesType] = None
+    subcorp_aligned: Optional[List[str]] = None
+    corp_ident = amodel.corp.portable_ident
+    if isinstance(corp_ident, SubcorpusIdent):
+        with plugins.runtime.SUBC_STORAGE as sr:
+            info = await sr.get_info(corp_ident.id)
+            if info.text_types:
+                subcorp_tt_structure = info.text_types
+            if info.aligned:
+                subcorp_aligned = info.aligned
+                amodel.args.align = info.aligned + \
+                    [x for x in amodel.args.align if x not in info.aligned]
+
     amodel.set_curr_conc_form_args(
         await QueryFormArgs.create(
             plugin_ctx=amodel.plugin_ctx,
@@ -728,16 +744,6 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
     struct_and_attrs = [(k, [x.to_dict() for x in item])
                         for k, item in struct_and_attrs_tmp.items()]
 
-    subcorp_tt_structure: Optional[TextTypesType] = None
-    subcorp_aligned: Optional[List[str]] = None
-    corp_ident = amodel.corp.portable_ident
-    if isinstance(corp_ident, SubcorpusIdent):
-        with plugins.runtime.SUBC_STORAGE as sr:
-            info = await sr.get_info(corp_ident.id)
-            if info.text_types:
-                subcorp_tt_structure = info.text_types
-            if info.aligned:
-                subcorp_aligned = info.aligned
     if corpus_info.preflight_subcorpus:
         preflight_conf = dict(
             subc=corpus_info.preflight_subcorpus.id,
