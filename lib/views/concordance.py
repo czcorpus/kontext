@@ -41,7 +41,7 @@ from action.argmapping.conc.other import (
     KwicSwitchArgs, LgroupOpArgs, LockedOpFormsArgs, SampleFormArgs)
 from action.argmapping.conc.sort import SortFormArgs
 from action.control import http_action
-from action.errors import NotFoundException, UserReadableException
+from action.errors import NotFoundException, UserReadableException, ImmediateRedirectException
 from action.krequest import KRequest
 from action.model.base import BaseActionModel
 from action.model.concordance import ConcActionModel
@@ -107,6 +107,12 @@ async def query(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     if isinstance(corp_ident, SubcorpusIdent):
         with plugins.runtime.SUBC_STORAGE as sr:
             info = await sr.get_info(corp_ident.id)
+            if set(info.aligned) != set(amodel.args.align):
+                args = dict(req.args)
+                args['align'] = info.aligned
+                raise ImmediateRedirectException(
+                    req.updated_current_url(dict(align=info.aligned))
+                )
             if info.text_types:
                 out['subcorp_tt_structure'] = info.text_types
 
@@ -732,6 +738,11 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
             info = await sr.get_info(corp_ident.id)
             if info.text_types:
                 subcorp_tt_structure = info.text_types
+            subc_aligned = info.aligned
+    else:
+        subc_aligned = []
+    true_aligned = amodel.args.align if set(amodel.args.align) == set(subc_aligned) else subc_aligned
+
     if corpus_info.preflight_subcorpus:
         preflight_conf = dict(
             subc=corpus_info.preflight_subcorpus.id,
@@ -739,6 +750,7 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
             threshold_ipm=round(PREFLIGHT_THRESHOLD_FREQ / amodel.corp.size * 1_000_000))
     else:
         preflight_conf = None
+        
     ans = dict(
         corpname=amodel.args.corpname,
         subcorpname=amodel.corp.subcorpus_id,
@@ -755,7 +767,7 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
             searchSize=amodel.corp.search_size),
         currentArgs=conc_args,
         concPersistenceOpId=None,
-        alignedCorpora=amodel.args.align,
+        alignedCorpora=true_aligned,
         availableAlignedCorpora=avail_al_corp,
         activePlugins=plg_status['active_plugins'],
         queryOverview=[],

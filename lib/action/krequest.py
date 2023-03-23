@@ -196,21 +196,25 @@ class KRequest(Generic[M_args]):
         returns:
         updated URL
         """
-        import urllib.error
         import urllib.parse
+
+        def append_opt_multivalue(target: List, kx: str, vx: Any):
+            tmpv = vx if type(vx) in (list, tuple) else [vx]
+            for vxt in tmpv:
+                target.append((kx, vxt))
 
         parsed_url = list(urllib.parse.urlparse(self.get_current_url()))
         old_params = dict(urllib.parse.parse_qsl(parsed_url[4]))
         new_params = []
         for k, v in old_params.items():
             if k in params:
-                new_params.append((k, params[k]))
+                append_opt_multivalue(new_params, k, params[k])
             else:
                 new_params.append((k, v))
 
         for k, v in list(params.items()):
             if k not in old_params:
-                new_params.append((k, v))
+                append_opt_multivalue(new_params, k, v)
 
         parsed_url[4] = urllib.parse.urlencode(new_params)
         return urllib.parse.urlunparse(parsed_url)
