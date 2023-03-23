@@ -25,7 +25,7 @@ import { Observable } from 'rxjs';
 import {
     EmptyResultBlock, FreqDataLoader, FreqDataRowsModelState, FreqServerArgs, isEmptyResultBlock,
     isFreqChartsModelState, MulticritFreqServerArgs, recalculateConfIntervals, ResultBlock } from './common';
-import { Dict, List, Maths, pipe, tuple } from 'cnc-tskit';
+import { Dict, HTTP, List, Maths, pipe, tuple } from 'cnc-tskit';
 import { ConcQuickFilterServerArgs } from '../../concordance/common';
 import { Actions } from './actions';
 import { Actions as MainMenuActions } from '../../mainMenu/actions';
@@ -34,6 +34,7 @@ import { Block, FreqResultResponse } from '../common';
 import { Actions as GeneralOptsActions } from '../../options/actions';
 import { AttrItem, BasicFreqModuleType } from '../../../types/kontext';
 import { validateGzNumber } from '../../base';
+import * as copy from 'copy-to-clipboard';
 
 
 export interface FreqDataRowsModelArgs {
@@ -179,7 +180,6 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                     ),
                     Dict.fromEntries()
                 ),
-                ftt_include_empty: formProps.ftt_include_empty,
                 isBusy: pipe(
                     allCrit,
                     List.map(
@@ -199,7 +199,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 alphaLevel: alphaLevel,
                 displayConfidence: false,
                 shareLink: null,
-                flimit: parseInt(formProps.flimit) || 0
+                flimit: parseInt(formProps.flimit) || 0,
+                shareWidgetIsBusy: false
             }
         );
         this.pageModel = pageModel;
@@ -222,8 +223,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             (state, action) => {
                 state.shareLink = {
                     sourceId: action.payload.sourceId,
-                    url: this.getShareLink(state, action.payload.sourceId),
-                }
+                    url: this.getShareLink(state, action.payload.sourceId)
+                };
             }
         );
 
@@ -231,6 +232,77 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             Actions.ResultHideShareLink,
             (state, action) => {
                 state.shareLink = null;
+            }
+        );
+
+        this.addActionHandler(
+            Actions.ResultLinkCopyToClipboard,
+            (state, action) => {
+                if (state.isActive) {
+                    copy(this.getShareLink(state, action.payload.sourceId));
+                    this.pageModel.showMessage(
+                        'info', this.pageModel.translate('global__link_copied_to_clipboard'));
+                }
+            }
+        );
+
+        this.addActionHandler(
+            Actions.ResultLinkShareViaEmail,
+            (state, action) => {
+                if (state.isActive) {
+                    state.shareWidgetIsBusy = true;
+                }
+            },
+            (state, action, dispatch) => {
+                if (state.isActive) {
+                    this.pageModel.ajax$<{ok: boolean}>(
+                        HTTP.Method.POST,
+                        this.pageModel.createActionUrl('/share_freq_table_via_mail'),
+                        {
+                            url: action.payload.url,
+                            email: action.payload.recipient
+                        },
+                        {
+                            contentType: 'application/json'
+                        }
+
+                    ).subscribe({
+                        next: data => {
+                            dispatch(
+                                Actions.ResultLinkShareViaEmailDone,
+                                {
+                                    sourceId: action.payload.sourceId
+                                }
+                            );
+                            if (data.ok) {
+                                this.pageModel.showMessage(
+                                    'info', this.pageModel.translate('global__ok')
+                                );
+
+                            } else {
+                                this.pageModel.showMessage(
+                                    'error', this.pageModel.translate('global__failed_to_send_mail')
+                                );
+                            }
+                        },
+                        error: error => {
+                            this.pageModel.showMessage('error', error);
+                            dispatch(
+                                Actions.ResultLinkShareViaEmailDone,
+                                error
+                            );
+                        }
+                    });
+                }
+            }
+        );
+
+        this.addActionHandler(
+            Actions.ResultLinkShareViaEmailDone,
+            (state, action) => {
+                if (state.isActive) {
+                    state.shareWidgetIsBusy = false;
+                }
             }
         );
 
@@ -384,7 +456,6 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                     state.sortColumn = storedState.sortColumn;
                     state.freqCrit = storedState.freqCrit;
                     state.freqCritAsync = storedState.freqCritAsync;
-                    state.ftt_include_empty = storedState.ftt_include_empty;
                     state.isActive = storedState.isActive;
                     state.isBusy = storedState.isBusy;
                     state.isError = storedState.isError;
@@ -601,7 +672,6 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
 
                 fcrit: state.data[sourceId].fcrit,
                 freq_type: state.freqType,
-                ftt_include_empty: state.ftt_include_empty,
                 freqlevel: 1,
                 flimit: state.flimit,
                 alpha_level: state.alphaLevel,
@@ -620,7 +690,6 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             freq_sort: state.sortColumn[fcrit],
             freq_type: state.freqType,
             fpage,
-            ftt_include_empty: state.ftt_include_empty,
             freqlevel: 1,
             format: 'json',
         };
@@ -634,7 +703,6 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             freq_sort: 'freq',
             freq_type: state.freqType,
             fpage: 1,
-            ftt_include_empty: state.ftt_include_empty,
             freqlevel: 1,
             format: 'json',
         };

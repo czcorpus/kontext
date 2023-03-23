@@ -70,13 +70,14 @@ export class Actions {
         corpusName:string;
         subcorpusId:string;
         subcorpusName:string;
+        bibIdAttr:string;
     }> = {
         name: 'SUBCORP_SHOW_SUBC_EDIT_WINDOW'
     };
 
     static LoadSubcorpus:Action<{
         corpname:string;
-        subcname:string;
+        usesubcorp:string;
     }> = {
         name: 'SUBCORP_LOAD_SUBCORPUS'
     }
@@ -88,6 +89,7 @@ export class Actions {
         textTypes:TTInitialData;
         structsAndAttrs:Kontext.StructsAndAttrs;
         liveAttrsEnabled:boolean;
+        alignedSelection:Array<TextTypes.AlignedLanguageItem>;
     }> = {
         name: 'SUBCORP_LOAD_SUBCORPUS_DONE'
     }
@@ -327,12 +329,6 @@ export class Actions {
         name: 'QUICK_SUBCORP_CHANGE_NAME'
     };
 
-    static QuickSubcorpSetGoToSubcPageWhenDone:Action<{
-        value:boolean;
-    }> = {
-        name: 'QUICK_SUBCORP_SET_GO_TO_SUBC_PAGE_WHEN_DONE'
-    };
-
     static ToggleSelectLine:Action<{
         selectId:string;
     }> = {
@@ -353,4 +349,11 @@ export class Actions {
     }> = {
         name: 'SUBCORP_LIST_CLEAR_SELECTED_LINES'
     };
+
+    static AttachTaskToSubcorpus:Action<{
+        subcorpusId:string;
+        task:Kontext.AsyncTaskInfo;
+    }> = {
+        name: 'SUBCORP_ATTACH_TASK_TO_SUBCORPUS'
+    }
 }

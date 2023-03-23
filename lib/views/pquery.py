@@ -138,14 +138,14 @@ async def freq_intersection(amodel: ParadigmaticQueryActionModel, req: KRequest,
     shortened_q = ' && '.join(f'{{{q}}}' for q in sq_items)
     shortened_q = f'{shortened_q} -> {amodel._curr_pquery_args.attr}'
 
-    def on_query_store(query_ids, history_ts, result):
+    async def on_query_store(query_ids, history_ts, result):
         async_task = AsyncTaskStatus(
             status=task_status.status, ident=task_status.id,
             category=AsyncTaskStatus.CATEGORY_PQUERY,
             label=shortened_q,
             args=dict(query_id=query_ids[0], last_update=time.time()),
             url=req.create_url('pquery/result', dict(q=f'~{query_ids[0]}')))
-        amodel.store_async_task(async_task)
+        await amodel.store_async_task(async_task)
         result['task'] = async_task.to_dict()
         if history_ts:
             amodel.store_last_search('pquery', query_ids[0])

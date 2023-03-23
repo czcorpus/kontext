@@ -29,7 +29,7 @@ import { PageModel } from '../../app/page';
 import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
 import { parse as parseQuery, ITracer } from 'cqlParser/parser';
-import { ConcServerArgs } from '../concordance/common';
+import { ConcServerArgs, ConcViewMode } from '../concordance/common';
 import { QueryFormType, Actions } from './actions';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
@@ -71,7 +71,7 @@ export interface QueryContextArgs {
 export interface ConcQueryArgs {
     queries:Array<AnyQuerySubmit>;
     usesubcorp:string|undefined;
-    viewmode:'kwic'|'sen'|'align';
+    viewmode:ConcViewMode;
     pagesize:number;
     shuffle:0|1;
     attrs:Array<string>;
@@ -85,7 +85,7 @@ export interface ConcQueryArgs {
     context:QueryContextArgs;
     async:boolean;
     no_query_history?:boolean;
-    preflight_id?:string;
+    cutoff?:number;
     type:'concQueryArgs';
 }
 
@@ -923,18 +923,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                                 valueEndIdx: q.position[1]
                             }),
                             queryObj.queryParsed
-                        ) :
-                        List.map(
-                            attr => ({
-                                value: attr.value ?
-                                    attr.value.trim().replace(/^"(.+)"$/, '$1') : '',
-                                attrStartIdx: attr.rangeAttr ? attr.rangeAttr[0] : undefined,
-                                attrEndIdx: attr.rangeAttr ? attr.rangeAttr[1] : undefined,
-                                valueStartIdx: attr.rangeVal[0],
-                                valueEndIdx: attr.rangeVal[1]
-                            }),
-                            queryObj.parsedAttrs
-                        );
+                        ) : [];
 
                 this.changeState(state => {
                     state.suggestionsLoading[sourceId] = {};

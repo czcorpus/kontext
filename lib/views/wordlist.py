@@ -68,7 +68,7 @@ async def create_result(amodel: WordlistActionModel, form_args: WordlistFormArgs
         if type(data_calc) is list:
             for subtask in data_calc:
                 # TODO get rid of private method
-                amodel.store_async_task(subtask)
+                await amodel.store_async_task(subtask)
                 ans['subtasks'].append(subtask.to_dict())
             ans['freq_files_avail'] = False
         else:
@@ -79,7 +79,7 @@ async def create_result(amodel: WordlistActionModel, form_args: WordlistFormArgs
     # TODO get rid of private variable
     amodel.set_curr_wlform_args(form_args)
 
-    def on_query_store(query_ids, history_ts, result):
+    async def on_query_store(query_ids, history_ts, result):
         result['wl_query_id'] = query_ids[0]
         if history_ts:
             amodel.store_last_search('wlist', query_ids[0])
@@ -108,7 +108,7 @@ async def restore(amodel: WordlistActionModel, req: KRequest, _: KResponse):
         'get_wordlist', object.__class__,
         args=(amodel.corp.portable_ident, amodel.curr_wlform_args.to_dict(), amodel.corp.size))
 
-    def on_query_store(query_ids, history_ts, result):
+    async def on_query_store(query_ids, history_ts, result):
         async_task = AsyncTaskStatus(
             status=async_res.status, ident=async_res.id,
             category=AsyncTaskStatus.CATEGORY_WORDLIST,
@@ -116,7 +116,7 @@ async def restore(amodel: WordlistActionModel, req: KRequest, _: KResponse):
             args=dict(query_id=query_ids[0], last_update=time.time()),
             url=req.create_url('wordlist/result', dict(q=f'~{query_ids[0]}')),
             auto_redirect=True)
-        amodel.store_async_task(async_task)
+        await amodel.store_async_task(async_task)
         result['task'] = async_task.to_dict()
 
     amodel.on_query_store(on_query_store)
@@ -201,7 +201,7 @@ async def result(amodel: WordlistActionModel, req: KRequest, _: KResponse):
 
 @bp.route('/struct_result', ['POST'])
 @http_action(return_type='json', mutates_result=True, action_model=WordlistActionModel)
-async def struct_result(amodel: WordlistActionModel, req: KRequest, _: KResponse):
+async def struct_result(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
     form_args = WordlistFormArgs()
     form_args.update_by_user_query(req.json)
     amodel.set_curr_wlform_args(form_args)
@@ -239,7 +239,12 @@ async def struct_result(amodel: WordlistActionModel, req: KRequest, _: KResponse
             ('ml2attr', form_args.get_wlposattr(1)),
             ('ml3attr', form_args.get_wlposattr(2)),
             ('next', 'freqml')] + [('q', q) for q in amodel.args.q]
-    return dict(location=req.create_url('restore_conc', args))
+    if req.args.get('format') == 'json':  # => explicit JSON format specification from URL
+        args.append(('format', 'json'))
+    target_url = req.create_url('restore_conc', args)
+    resp.set_http_status(201)
+    resp.set_header('Location', target_url)
+    return dict(location=target_url)
 
 
 @bp.route('/savewl')

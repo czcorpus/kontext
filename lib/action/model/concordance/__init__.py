@@ -22,6 +22,7 @@ import re
 import urllib.parse
 from typing import Any, Dict, List, Optional, Tuple, Union
 import hashlib
+from collections import OrderedDict
 
 import conclib
 import plugins
@@ -80,8 +81,16 @@ class ConcActionModel(CorpusActionModel):
         if loaded:
             self._lines_groups = LinesGroups.deserialize(
                 self._active_q_data.get('lines_groups', []))
+        return loaded
 
     async def fetch_prev_query(self, query_type: str) -> Optional[QueryFormArgs]:
+        """
+        Based on information about prev. query ID (and type) stored in session,
+        load full form data of the previous query.
+
+        In case the prev. operation is based on the same corpus, redirect
+        immediately to the '/query' action with respective arguments.
+        """
         curr = self._req.ctx.session.get('last_search', {})
         last_op = curr.get(query_type, None)
         if last_op:
@@ -95,8 +104,7 @@ class ConcActionModel(CorpusActionModel):
                 curr_subcorp = self.args.usesubcorp
 
                 if prev_corpora and len(curr_corpora) == 1 and prev_corpora[0] == curr_corpora[0]:
-                    args = [('corpname', prev_corpora[0])] + [('align', a)
-                                                              for a in prev_corpora[1:]]
+                    args = [('corpname', prev_corpora[0])] + [('align', a) for a in prev_corpora[1:]]
 
                     subcorpora = await subc_arch.list(
                         self._req.ctx.session.get('user')['id'], SubcListFilterArgs(), corpname=prev_corpora[0])
@@ -126,9 +134,9 @@ class ConcActionModel(CorpusActionModel):
                     return qf_args
         return None
 
-    def add_conc_form_args(self, item: ConcFormArgs) -> None:
+    def set_curr_conc_form_args(self, item: ConcFormArgs) -> None:
         """
-        Add persistent form arguments for a currently processed
+        Set persistent form arguments for the currently processed
         action. The data are used in two ways:
         1) as a source of values when respective JS models are instantiated
         2) when conc persistence automatic save procedure
@@ -173,12 +181,17 @@ class ConcActionModel(CorpusActionModel):
         tpl_data['num_lines_in_groups'] = len(self._lines_groups)
         tpl_data['lines_groups_numbers'] = tuple(set([v[2] for v in self._lines_groups]))
 
-    def _update_output_with_conc_params(self, op_id: Optional[str], tpl_data: Dict[str, Any]) -> None:
+    def _output_last_op_id(self, op_id: Optional[str], tpl_data: Dict[str, Any]) -> None:
         """
-        Updates template data dictionary tpl_data with stored operation values.
+        Update template data dictionary tpl_data with stored concordance operation values.
+        In case the operation is new (i.e. something user just submitted from a respective
+        form), replace temporary '__latest__' ID with actual ID obtained from conc_persistence
+        plug-in.
+
+        Note: the actual op. form data is accessed via '_active_q_data' property
 
         arguments:
-        op_id -- unique operation ID
+        op_id -- unique operation ID as provided by conc_persistence plug-in
         tpl_data -- a dictionary used along with HTML template to render the output
         """
         if plugins.runtime.QUERY_PERSISTENCE.exists:
@@ -205,8 +218,9 @@ class ConcActionModel(CorpusActionModel):
         self.update_output_with_group_info(tpl_data)
 
         if len(self._lines_groups) > 0:
-            self.disabled_menu_items += (MainMenu.FILTER, MainMenu.CONCORDANCE('sorting'),
-                                         MainMenu.CONCORDANCE('shuffle'), MainMenu.CONCORDANCE('sample'))
+            self.disabled_menu_items += (
+                MainMenu.FILTER, MainMenu.CONCORDANCE('sorting'),
+                MainMenu.CONCORDANCE('shuffle'), MainMenu.CONCORDANCE('sample'))
 
     def acknowledge_auto_generated_conc_op(self, q_idx: int, query_form_args: ConcFormArgs) -> None:
         """
@@ -250,8 +264,9 @@ class ConcActionModel(CorpusActionModel):
                     'id', None)] if self._active_q_data else []
                 history_ts = None
             for fn in self._on_query_store:
-                fn(next_query_keys, history_ts, resp.result)
-            self._update_output_with_conc_params(
+                if callable(fn):
+                    await fn(next_query_keys, history_ts, resp.result)
+            self._output_last_op_id(
                 next_query_keys[-1] if len(next_query_keys) else None, resp.result)
 
     async def _store_conc_params(self) -> Tuple[List[str], Optional[int]]:
@@ -285,31 +300,35 @@ class ConcActionModel(CorpusActionModel):
     def select_current_aligned_corpora(self, active_only: bool) -> List[str]:
         return self.get_current_aligned_corpora() if active_only else self.get_available_aligned_corpora()
 
-    async def attach_query_params(
-            self, tpl_out: Dict[str, Any], query: Optional[QueryFormArgs] = None,
-            filter: Optional[FilterFormArgs] = None, sort: Optional[SortFormArgs] = None,
-            sample: Optional[SampleFormArgs] = None, shuffle: Optional[ShuffleFormArgs] = None,
-            firsthits: Optional[FirstHitsFilterFormArgs] = None) -> None:
+    async def export_query_forms(self, tpl_out: Dict[str, Any]) -> List[ConcFormArgs]:
         """
-        Attach data required by client-side forms which are
+        Export  data required by client-side forms which are
         part of the current query pipeline (i.e. initial query, filters,
-        sorting, samples,...). If any of query, filter,..., firsthits is provided than
-        it is used instead of the default variant of the form.
+        sorting, samples,...).
+
+        Also export query_overview which is a list of Manatee arguments for
+        each operation with attached concordance persistence IDs. The 'query_overview'
+        is the only data structure keeping order of operations (directly; otherwise
+        forms and their 'prev_id' can be theoretically used to rebuild the chain).
         """
         corpus_info = await self.get_corpus_info(self.args.corpname)
         tpl_out['metadata_desc'] = corpus_info.metadata.desc
         tpl_out['input_languages'] = {}
         tpl_out['input_languages'][getattr(self.args, 'corpname')] = corpus_info.collator_locale
 
-        conc_forms_args: Dict[str, Dict[str, Any]] = {}
+        conc_forms_args: OrderedDict[str, Dict[str, Any]] = OrderedDict()
+        query_overview = await self.concdesc_json()
         if self._active_q_data is not None and 'lastop_form' in self._active_q_data:
             op_key = self._active_q_data['id']
-            conc_forms_args[op_key] = (await build_conc_form_args(
-                self.plugin_ctx,
-                self._active_q_data.get('corpora', []),
-                self._active_q_data['lastop_form'],
-                op_key
-            )).to_dict()
+            with plugins.runtime.QUERY_PERSISTENCE as qp:
+                pipeline = await qp.load_pipeline_ops(self.plugin_ctx, op_key, build_conc_form_args)
+                for i, item in enumerate(pipeline):
+                    conc_forms_args[item.op_key] = item.to_dict()
+                    if i < len(query_overview):
+                        query_overview[i].conc_persistence_op_id = item.op_key
+                    elif item.form_type != 'lgroup':
+                        raise RuntimeError('Found a mismatch between Manatee query encoding and stored metadata')
+
         # Attach new form args added by the current action.
         if len(self._auto_generated_conc_ops) > 0:
             conc_forms_args['__latest__'] = self._auto_generated_conc_ops[-1][1].to_dict()
@@ -320,16 +339,21 @@ class ConcActionModel(CorpusActionModel):
 
         corpora = self.select_current_aligned_corpora(active_only=True)
         tpl_out['conc_forms_initial_args'] = dict(
-            query=query.to_dict() if query is not None else (await QueryFormArgs.create(
+            query=(await QueryFormArgs.create(
                 plugin_ctx=self.plugin_ctx, corpora=corpora, persist=False)).to_dict(),
-            filter=filter.to_dict() if filter is not None else (await FilterFormArgs.create(
+            filter=(await FilterFormArgs.create(
                 plugin_ctx=self.plugin_ctx, maincorp=getattr(self.args, 'maincorp') if getattr(
                     self.args, 'maincorp') else getattr(self.args, 'corpname'), persist=False)).to_dict(),
-            sort=sort.to_dict() if sort is not None else SortFormArgs(persist=False).to_dict(),
-            sample=sample.to_dict() if sample is not None else SampleFormArgs(persist=False).to_dict(),
-            shuffle=shuffle.to_dict() if shuffle is not None else ShuffleFormArgs(persist=False).to_dict(),
-            firsthits=firsthits.to_dict() if firsthits is not None else FirstHitsFilterFormArgs(
+            sort=SortFormArgs(persist=False).to_dict(),
+            sample=SampleFormArgs(persist=False).to_dict(),
+            shuffle=ShuffleFormArgs(persist=False).to_dict(),
+            firsthits=FirstHitsFilterFormArgs(
                 persist=False, doc_struct=self.corp.get_conf('DOCSTRUCTURE')).to_dict())
+        tpl_out['query_overview'] = [x.to_dict() for x in query_overview]
+        if len(query_overview) > 0:
+            tpl_out['page_title'] = '{0} / {1}'.format(
+                self.corp.human_readable_corpname, tpl_out['query_overview'][0]['nicearg'])
+        return [x for x in conc_forms_args.values()]
 
     async def add_globals(self, app, action_props, result):
         """
@@ -341,6 +365,7 @@ class ConcActionModel(CorpusActionModel):
         result['conc_dashboard_modules'] = settings.get_list('global', 'conc_dashboard_modules')
         conc_args = self.get_mapped_attrs(ConcArgsMapping)
         conc_args['q'] = [q for q in result.get('Q')]
+        conc_args['cutoff'] = self.args.cutoff
         result['Globals'] = conc_args
         return result
 
@@ -554,8 +579,11 @@ class ConcActionModel(CorpusActionModel):
                     fullsize=fullsize, finished=conc.finished())
 
     async def concdesc_json(self):
+        """
+        Return encoded query description (i.e. just Manatee args, no form info)
+        """
         out_list: List[ConcDescJsonItem] = []
-        conc_desc = await conclib.get_conc_desc(corpus=self.corp, q=self.args.q)
+        conc_desc = await conclib.get_conc_desc(corpus=self.corp, q=self.args.q, cutoff=self.args.cutoff)
 
         def nicearg(arg):
             args = arg.split('"')
@@ -588,12 +616,6 @@ class ConcActionModel(CorpusActionModel):
                 size=op_item.size,
                 fullsize=op_item.fullsize))
         return out_list
-
-    async def attach_query_overview(self, out):
-        out['query_overview'] = [x.to_dict() for x in (await self.concdesc_json())]
-        if len(out['query_overview']) > 0:
-            out['page_title'] = '{0} / {1}'.format(
-                self.corp.human_readable_corpname, out['query_overview'][0]['nicearg'])
 
     @staticmethod
     def filter_lines(data, pnfilter):

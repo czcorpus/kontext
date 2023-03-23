@@ -61,15 +61,20 @@ export function init(he:Kontext.ComponentHelpers) {
 
     const SubcorpusInfo:React.FC<{
         data:SubcorpusRecord;
-        userId:number;
         standalone:boolean;
     }> = (props) => {
         return (
             <S.SubcorpusInfo>
                 {props.standalone ?
-                    <h2 className="subcorpus-name">
-                        {props.data.corpname}{'\u00a0/\u00a0'}<strong>{props.data.authorId != props.userId ? props.data.usesubcorp : props.data.name}</strong>
-                    </h2> :
+                    <>
+                        <h2 className="subcorpus-name">
+                            {props.data.corpname}{'\u00a0/\u00a0'}<strong>{props.data.name}</strong>
+                        </h2>
+                        (<a href={he.createActionLink('query', {corpname: props.data.corpname, usesubcorp: props.data.usesubcorp})}
+                            className='kontext-link'>
+                            {he.translate('global__use_in_query')}
+                        </a>)
+                    </> :
                     null
                 }
                 <dl>
@@ -78,7 +83,7 @@ export function init(he:Kontext.ComponentHelpers) {
                         <StatusDisplay isArchived={!!props.data.archived} isDraft={props.data.isDraft} />
                     </dd>
                     <dt>{he.translate('global__size_in_tokens')}:</dt>
-                    <dd>{props.data.isDraft ? '--' : he.formatNumber(props.data.size)}</dd>
+                    <dd>{props.data.size ? he.formatNumber(props.data.size) : '--'}</dd>
                     <dt>{he.translate('pubsubclist__author')}:</dt>
                     <dd>{props.data.authorFullname}</dd>
                     <dt>{he.translate('global__subcorp_created_at')}:</dt>

@@ -258,9 +258,17 @@ export function init({
             });
         };
 
+        const handleLabelClick = (evt:React.MouseEvent) => {
+            handleSelection(props.queryType !== 'advanced');
+            evt.stopPropagation();
+            evt.preventDefault();
+        };
+
         return (
             <S.TRQueryTypeField>
-                <label htmlFor={'query-switch-'+props.sourceId}><a>{he.translate('query__qt_advanced')}</a></label>
+                <label htmlFor={'query-switch-'+props.sourceId}>
+                    <a onClick={handleLabelClick}>{he.translate('query__qt_advanced')}</a>
+                </label>
                 <layoutViews.ToggleSwitch
                     id={'query-switch-'+props.sourceId}
                     onChange={handleSelection}
@@ -299,21 +307,24 @@ export function init({
 
     const TRIncludeEmptySelector:React.FC<TRIncludeEmptySelectorProps> = (props) => {
 
-        const handleCheckbox = () => {
-            dispatcher.dispatch<typeof Actions.QueryInputSetIncludeEmpty>({
-                name: Actions.QueryInputSetIncludeEmpty.name,
-                payload: {
+        const handleCheckbox = (value) => {
+
+            dispatcher.dispatch(
+                Actions.QueryInputSetIncludeEmpty,
+                {
                     corpname: props.corpname,
-                    value: !props.value
+                    value
                 }
-            });
+            );
         };
 
         return (
             <S.TRIncludeEmptySelector>
                 <label>
                     {he.translate('query__include_empty_aligned')}:{'\u00a0'}
-                    <input type="checkbox" checked={props.value}
+                    <layoutViews.ToggleSwitch
+                        id={`include-empty-toggle-${props.corpname}`}
+                        checked={props.value}
                         onChange={handleCheckbox} />
                 </label>
             </S.TRIncludeEmptySelector>

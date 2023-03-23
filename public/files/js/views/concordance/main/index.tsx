@@ -308,7 +308,7 @@ export function init({
                                 {'\u00a0'}
                                 <span key="hits:4b" id="fullsize" title={String(props.fullSize)}>{he.formatNumber(props.fullSize)}</span>
                             </> :
-                            he.translate('concview__size_with_respect_to_cut_conc_{size}', {size: he.formatNumber(props.corpusSampleSize)})
+                            he.translate('concview__size_with_respect_to_cut_conc_{size}', {size: he.formatNumber(props.cutoff)})
                         }
                     </React.Fragment>
                 );
@@ -350,12 +350,12 @@ export function init({
                     return null;
                 }
 
-            } else if (props.subCorpName) {
+            } else if (props.subcId) {
                 return (
                     <span className="ipm-note">(
                         <img src={he.createStaticUrl('img/info-icon.svg')} alt={he.translate('global__info_icon')} />
                         {he.translate('concview__ipm_rel_to_the_{subcname}',
-                        {subcname: props.origSubcorpName ? props.origSubcorpName : props.subCorpName})}
+                        {subcname: props.subcName ? props.subcName : props.subcId})}
                     )</span>
                 );
 

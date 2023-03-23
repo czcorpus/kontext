@@ -14,7 +14,7 @@
 # GNU General Public License for more details.
 
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict, Optional
 
 import aiofiles
 import aiofiles.os
@@ -22,7 +22,7 @@ import bgcalc
 import settings
 from action.control import http_action
 from action.errors import (
-    FunctionNotSupported, ImmediateRedirectException, NotFoundException)
+    ImmediateRedirectException, NotFoundException)
 from action.krequest import KRequest
 from action.model.base import BaseActionModel
 from action.model.user import UserActionModel
@@ -39,37 +39,21 @@ async def root_action(amodel: BaseActionModel, req: KRequest, resp: KResponse):
     raise ImmediateRedirectException(req.create_url('query', {}))
 
 
-async def _check_tasks_status(amodel: UserActionModel, req: KRequest, resp: KResponse) -> List[AsyncTaskStatus]:
-    backend = settings.get('calc_backend', 'type')
-    if backend in ('celery', 'rq'):
-        worker = bgcalc.calc_backend_client(settings)
-        at_list = amodel.get_async_tasks()
-        upd_list: List[AsyncTaskStatus] = []
-        for at in at_list:
-            r = worker.AsyncResult(at.ident)
-            if r:
-                at.status = r.status
-                if at.status == 'FAILURE':
-                    if hasattr(r.result, 'message'):
-                        at.error = r.result.message
-                    else:
-                        at.error = str(r.result)
-            else:
-                at.status = 'FAILURE'
-                at.error = 'job not found'
-            upd_list.append(at)
-        amodel.mark_timeouted_tasks(*upd_list)
-        amodel.set_async_tasks(upd_list)
-        return upd_list
-    else:
-        raise FunctionNotSupported(f'Backend {backend} does not support status checking')
+async def _check_task_status(amodel: UserActionModel, task_id: str) -> Optional[AsyncTaskStatus]:
+    task = AsyncTaskStatus(ident=task_id, label='', status='PENDING', category='')
+    found = await amodel.update_async_task_status(task)
+    return task if found else None
 
 
 @bp.route('/check_tasks_status')
 @http_action(return_type='json', action_model=UserActionModel)
 async def check_tasks_status(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
-    tasks = await _check_tasks_status(amodel, req, resp)
-    return dict(data=[t.to_dict() for t in tasks])
+    task = await _check_task_status(amodel, req.args.get('task_id'))
+    if not task:
+        resp.add_system_message('error', 'task not found')
+        resp.set_not_found()
+        return dict(data=None)
+    return dict(data=task.to_dict())
 
 
 @bp.route('/get_task_result')
@@ -84,9 +68,8 @@ async def get_task_result(amodel: BaseActionModel, req: KRequest, resp: KRespons
 @http_action(return_type='json', action_model=UserActionModel)
 async def remove_task_info(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
     task_ids = req.form_getlist('tasks')
-    amodel.set_async_tasks([x for x in amodel.get_async_tasks() if x.ident not in task_ids])
-    tasks = await _check_tasks_status(amodel, req, resp)
-    return dict(data=[t.to_dict() for t in tasks])
+    amodel.set_async_tasks([x for x in (await amodel.get_async_tasks()) if x.ident not in task_ids])
+    return dict(data=[t.to_dict() for t in (await amodel.get_async_tasks())])
 
 
 @bp.route('/compatibility')

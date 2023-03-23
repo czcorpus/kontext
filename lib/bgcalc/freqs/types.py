@@ -32,13 +32,12 @@ class FreqCalcArgs:
     flimit: int
     fcrit: Union[List[str], Tuple[str, ...]]
     freq_sort: str
-    ftt_include_empty: int  # 0, 1  # TODO should be bool
     rel_mode: int  # 0, 1 # TODO should be bool
     fmaxitems: int
     subcname: Optional[str] = None
     subcpath: Optional[str] = None
     fpage: Optional[int] = 1  # ??
-    samplesize: Optional[int] = 0
+    cutoff: Optional[int] = 0
     q: Optional[List[str]] = field(default_factory=list)
 
 
@@ -53,6 +52,7 @@ class Freq2DCalcArgs:
     q: List[str]
     user_id: int
     corpname: str
+    cutoff: int
     ctminfreq: int
     ctminfreq_type: str
     fcrit: str

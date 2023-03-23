@@ -94,9 +94,10 @@ class SubcorpusActionModel(CorpusActionModel):
 
     async def create_subcorpus(self) -> Dict[str, Any]:
         """
-        req. arguments:
-        subcname -- name of new subcorpus
-        cql -- custom within condition
+        Create a new subcorpus based on submitted data.
+
+        Returns:
+            list of async task related to unfinished corpora
         """
         form_type = self._req.json['form_type']
         author = self.plugin_ctx.user_dict
@@ -124,7 +125,8 @@ class SubcorpusActionModel(CorpusActionModel):
                     author=author,
                     size=subc.search_size,
                     public_description=specification.description,
-                    data=specification)
+                    data=specification,
+                    aligned=specification.aligned_corpora)
         else:
             worker = bgcalc.calc_backend_client(settings)
             res = await worker.send_task(
@@ -132,16 +134,17 @@ class SubcorpusActionModel(CorpusActionModel):
                 object.__class__,
                 (author, specification, subc_id, full_path),
                 time_limit=self.TASK_TIME_LIMIT)
-            self.store_async_task(AsyncTaskStatus(
+            await self.store_async_task(AsyncTaskStatus(
                 status=res.status, ident=res.id, category=AsyncTaskStatus.CATEGORY_SUBCORPUS,
                 label=f'{self.args.corpname}/{specification.subcname}',
                 args=dict(
                     subcname=specification.subcname,
                     corpname=self.args.corpname,
+                    usesubcorp=subc_id.id
                 )))
 
-        unfinished_corpora = [at for at in self.get_async_tasks(
-            category=AsyncTaskStatus.CATEGORY_SUBCORPUS) if not at.is_finished()]
+        unfinished_corpora = [at for at in (await self.get_async_tasks(
+            category=AsyncTaskStatus.CATEGORY_SUBCORPUS)) if not at.is_finished()]
         return dict(processed_subc=[uc.to_dict() for uc in unfinished_corpora])
 
     async def create_subcorpus_draft(self):
@@ -154,8 +157,15 @@ class SubcorpusActionModel(CorpusActionModel):
         with plugins.runtime.SUBC_STORAGE as sr:
             if not usesubcorp:
                 subc_id = await create_new_subc_ident(self.subcpath, self.corp.corpname)
-                await sr.create(ident=subc_id.id, author=self.plugin_ctx.user_dict, size=0, public_description=specification.description, data=specification, is_draft=True)
+                await sr.create(
+                    ident=subc_id.id,
+                    author=self.plugin_ctx.user_dict,
+                    size=specification.size,
+                    public_description=specification.description,
+                    data=specification,
+                    is_draft=True,
+                    aligned=specification.aligned_corpora)
                 return dict(subc_id=asdict(subc_id))
             else:
-                await sr.update_draft(ident=usesubcorp, author=self.plugin_ctx.user_dict, size=0, public_description=specification.description, data=specification)
+                await sr.update_draft(ident=usesubcorp, author=self.plugin_ctx.user_dict, size=0, public_description=specification.description, data=specification, aligned=specification.aligned_corpora)
                 return dict(subc_id={'id': usesubcorp, 'corpus_name': self.corp.corpname})

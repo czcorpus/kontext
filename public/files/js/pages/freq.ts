@@ -40,15 +40,14 @@ import { FreqCTResultsSaveModel } from '../models/freqs/twoDimension/save';
 import { TextTypesModel } from '../models/textTypes/main';
 import { KontextPage } from '../app/main';
 import { IndirectQueryReplayModel } from '../models/query/replay/indirect';
-import { Dict, List, Maths, pipe, tuple, URL as CURL } from 'cnc-tskit';
+import { Dict, List, Maths, pipe, tuple } from 'cnc-tskit';
 import { CTFormInputs, CTFormProperties, CTFreqResultData,
     AlignTypes } from '../models/freqs/twoDimension/common';
-import { Actions as MainMenuActions } from '../models/mainMenu/actions';
 import { Actions } from '../models/freqs/regular/actions';
 import { Block, FreqResultViews } from '../models/freqs/common';
 import { ConcFormArgs } from '../models/query/formArgs';
 import { FreqChartsModel } from '../models/freqs/regular/freqCharts';
-import { FreqDataLoader, FreqDataRowsModelState } from '../models/freqs/regular/common';
+import { FreqDataLoader } from '../models/freqs/regular/common';
 import { init as viewFreqCommonInit } from '../views/freqs/common';
 import { ImageConversionModel } from '../models/common/imgConv';
 import { DispersionResultModel } from '../models/dispersion/result';
@@ -56,6 +55,7 @@ import { FreqResultsSaveModel } from '../models/freqs/regular/save';
 import { FreqChartsSaveFormModel } from '../models/freqs/regular/saveChart';
 import { importInitialTTData, TTInitialData } from '../models/textTypes/common';
 import { TabWrapperModel } from '../models/freqs/regular/tabs';
+import { transferActionToViewPage } from '../app/navigation/interpage';
 
 /**
  *
@@ -115,7 +115,6 @@ class FreqPage {
         const initFreqLevel = this.layoutModel.getConf<number>('InitialFreqLevel');
         const freqFormProps:FreqFormProps = {
             fttattr: freqFormInputs.fttattr || [],
-            ftt_include_empty: freqFormInputs.ftt_include_empty || false,
             flimit: freqFormInputs.flimit || '1',
             freq_sort: 'freq',
             mlxattr: freqFormInputs.mlxattr || List.repeat(() => attrs[0].n, initFreqLevel),
@@ -278,7 +277,7 @@ class FreqPage {
                 corpname: this.layoutModel.getCorpusIdent().id,
                 humanCorpname: this.layoutModel.getCorpusIdent().name,
                 usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
-                origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
+                subcName: this.layoutModel.getCorpusIdent().subcName,
                 foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp,
                 queryFormProps: {
                     formType: Kontext.ConcFormTypes.QUERY,
@@ -296,7 +295,8 @@ class FreqPage {
                 sortFormProps: {
                     formType: Kontext.ConcFormTypes.SORT,
                     sortId: null,
-                }
+                },
+                cutoff: this.layoutModel.getConcArgs().cutoff
             }
         );
     }
@@ -309,7 +309,7 @@ class FreqPage {
             url,
             contentType: 'multipart/form-data',
             args,
-        });
+        }).subscribe();
     }
 
     private initFreqResult():void {
@@ -427,7 +427,7 @@ class FreqPage {
                 this.layoutModel.renderReactComponent(
                     freqResultView.FreqResultView,
                     window.document.getElementById('result-mount'),
-                    {} as FreqDataRowsModelState
+                    {userEmail: this.layoutModel.getConf<string>('userEmail')}
                 );
             break;
             case '2-attribute':
@@ -475,14 +475,14 @@ class FreqPage {
             'ConcFormsArgs'
         );
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
-        const attributes = importInitialTTData(ttData, {}, {});
+        const attributes = importInitialTTData(ttData, {});
         const ttModel = new TextTypesModel({
             dispatcher: this.layoutModel.dispatcher,
             pluginApi: this.layoutModel.pluginApi(),
             attributes,
             readonlyMode: true,
-            bibIdAttr: ttData.id_attr,
-            bibLabelAttr: ttData.bib_attr
+            bibIdAttr: ttData.bib_id_attr,
+            bibLabelAttr: ttData.bib_label_attr
         });
         ttModel.applyCheckedItems(queryFormArgs.selected_text_types, {});
         return tuple(ttModel, attributes);
@@ -517,17 +517,30 @@ class FreqPage {
                 }
 
                 const [args, state, activeView] = (() => {
+                    const currAction = this.layoutModel.getConf<'freqs'|'freqml'>('currentAction');
+
                     if (this.layoutModel.getConf<FreqResultViews>('FreqDefaultView') === 'tables') {
-                        const state = this.freqResultModel.getState(); // no antipattern here
-                        const firstCrit = List.head(state.freqCrit);
-                        const args = {
-                            ...this.freqResultModel.getSubmitArgs(
-                                state, firstCrit.n, state.flimit, parseInt(state.currentPage[firstCrit.n])),
-                            fcrit_async: List.map(v => v.n, state.freqCritAsync),
-                            freq_type: state.freqType,
-                            format: undefined
-                        };
-                        return tuple(args, state, 'tables');
+                        if (currAction === 'freqs') {
+                            const state = this.freqResultModel.getState(); // no antipattern here
+                            const firstCrit = List.head(state.freqCrit);
+                            const args = {
+                                ...this.freqResultModel.getSubmitArgs(
+                                    state, firstCrit.n, state.flimit, parseInt(state.currentPage[firstCrit.n])),
+                                fcrit_async: List.map(v => v.n, state.freqCritAsync),
+                                freq_type: state.freqType,
+                                format: undefined
+                            };
+                            return tuple(args, state, 'tables');
+
+                        } else {
+                            const state = this.mlFreqModel.getState(); // no antipattern here
+                            const args = {
+                                ...this.mlFreqModel.getSubmitArgs(state),
+                                freq_type: 'freqml',
+                                format: undefined
+                            };
+                            return tuple(args, state, 'tables');
+                        }
 
                     } else {
                         const state = this.freqChartsModel.getState(); // no antipattern here
@@ -542,7 +555,7 @@ class FreqPage {
                     }
                 })();
                 this.layoutModel.getHistory().replaceState(
-                    'freqs',
+                    this.layoutModel.getConf<string>('currentAction'),
                     args,
                     {
                         onPopStateAction: {
@@ -568,44 +581,11 @@ class FreqPage {
             // the fragment part of the URL) which form should be opened
             // once the 'view' page is loaded
             this.layoutModel.dispatcher.registerActionListener(
-                (action) => {
-                    switch (action.name) {
-                        case MainMenuActions.ShowFilter.name:
-                            window.location.replace(
-                                this.layoutModel.createActionUrl(
-                                    'view',
-                                    this.layoutModel.getConcArgs()
-                                ) + '#filter/' + pipe(
-                                    action.payload,
-                                    CURL.valueToPairs(),
-                                    List.map(([k, v]) => `${k}=${v}`)
-                                ).join('&')
-                            );
-                        break;
-                        case MainMenuActions.ShowSort.name:
-                            window.location.replace(this.layoutModel.createActionUrl(
-                                'view',
-                                this.layoutModel.getConcArgs()
-                            ) + '#sort');
-                        break;
-                        case MainMenuActions.ShowSample.name:
-                            window.location.replace(this.layoutModel.createActionUrl(
-                                'view',
-                                this.layoutModel.getConcArgs()
-                            ) + '#sample');
-                        break;
-                        case MainMenuActions.ApplyShuffle.name:
-                            window.location.replace(this.layoutModel.createActionUrl(
-                                'view',
-                                this.layoutModel.getConcArgs()
-                            ) + '#shuffle');
-                        break;
-                    }
-                }
+                transferActionToViewPage(this.layoutModel)
             );
             const ttData = this.layoutModel.getConf<TTInitialData>('textTypesData');
             const [,ttSelection] = this.initTTModel(ttData);
-            this.initAnalysisViews(ttSelection, ttData.id_attr, ttData.bib_attr);
+            this.initAnalysisViews(ttSelection, ttData.bib_id_attr, ttData.bib_label_attr);
             this.initQueryOpNavigation();
             this.initHelp();
             this.initFreqResult();

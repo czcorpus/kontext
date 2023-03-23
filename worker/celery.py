@@ -82,20 +82,20 @@ class CustomTasks:
 
 @worker.task(bind=True, name='conc_register')
 @as_sync
-async def conc_register(self, user_id, corpus_ident, corp_cache_key, query, samplesize, time_limit):
-    return general.conc_register(self, user_id, corpus_ident, corp_cache_key, query, samplesize, time_limit, worker)
+async def conc_register(self, user_id, corpus_ident, corp_cache_key, query, cutoff, time_limit):
+    return general.conc_register(self, user_id, corpus_ident, corp_cache_key, query, cutoff, time_limit, worker)
 
 
 @worker.task(bind=True, name='conc_calculate')
 @as_sync
-async def conc_calculate(self, initial_args, user_id, corpus_name, subc_name, corp_cache_key, query, samplesize):
-    return general.conc_calculate(self, initial_args, user_id, corpus_name, subc_name, corp_cache_key, query, samplesize)
+async def conc_calculate(self, initial_args, user_id, corpus_name, subc_name, corp_cache_key, query, cutoff):
+    return general.conc_calculate(self, initial_args, user_id, corpus_name, subc_name, corp_cache_key, query, cutoff)
 
 
 @worker.task(bind=True, name='conc_sync_calculate')
 @as_sync
-async def conc_sync_calculate(self, user_id, corpus_name, subc_name, corp_cache_key, query, samplesize):
-    return general.conc_sync_calculate(self, user_id, corpus_name, subc_name, corp_cache_key, query, samplesize)
+async def conc_sync_calculate(self, user_id, corpus_name, subc_name, corp_cache_key, query, cutoff):
+    return general.conc_sync_calculate(self, user_id, corpus_name, subc_name, corp_cache_key, query, cutoff)
 
 
 # ----------------------------- COLLOCATIONS ----------------------------------

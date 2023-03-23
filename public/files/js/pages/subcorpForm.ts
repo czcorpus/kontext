@@ -41,8 +41,7 @@ import { ConcFormArgs } from '../models/query/formArgs';
 import { fetchQueryFormArgs } from '../models/query/first';
 import { ServerWithinSelection } from '../models/subcorp/common';
 import { Root } from 'react-dom/client';
-import { PageMount } from '../app/mounts';
-import { Ident } from 'cnc-tskit';
+import { Ident, List } from 'cnc-tskit';
 
 
 interface TTProps {
@@ -105,21 +104,20 @@ export class SubcorpForm {
 
     private createTextTypesComponents(selectedTextTypes:TextTypes.ExportedSelection):TTInitData {
         const ttData = this.layoutModel.getConf<TTInitialData>('textTypesData');
-        const ttSelections = importInitialTTData(ttData, {}, {});
+        const ttSelections = importInitialTTData(ttData, {});
         this.textTypesModel = new TextTypesModel({
                 dispatcher: this.layoutModel.dispatcher,
                 pluginApi: this.layoutModel.pluginApi(),
                 attributes: ttSelections,
                 readonlyMode: false,
-                bibIdAttr: ttData.id_attr,
-                bibLabelAttr: ttData.bib_attr
+                bibIdAttr: ttData.bib_id_attr,
+                bibLabelAttr: ttData.bib_label_attr
         });
         const concFormArgs = this.layoutModel.getConf<{[ident:string]:ConcFormArgs}>(
             'ConcFormsArgs'
         );
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
-        this.textTypesModel.applyCheckedItems(selectedTextTypes, queryFormArgs.bib_mapping);
-
+        const hasSelectedItems = this.textTypesModel.applyCheckedItems(selectedTextTypes, queryFormArgs.bib_mapping);
 
         const ttViewComponents = ttViewsInit(
             this.layoutModel.dispatcher,
@@ -127,18 +125,18 @@ export class SubcorpForm {
             this.textTypesModel
         );
 
+        const availableAlignedCorpora = this.layoutModel.getConf<Array<Kontext.AttrItem>>('availableAlignedCorpora');
         this.liveAttrsPlugin = liveAttributes(
             this.layoutModel.pluginApi(),
             this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES),
-            true, // manual aligned corp. selection mode
             {
-                bibAttr: ttData.bib_attr,
-                availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>(
-                    'availableAlignedCorpora'
-                ),
-                refineEnabled: true,
+                bibIdAttr: ttData.bib_id_attr,
+                bibLabelAttr: ttData.bib_label_attr,
+                availableAlignedCorpora,
+                refineEnabled: hasSelectedItems,
                 manualAlignCorporaMode: true,
                 subcorpTTStructure: {},
+                textTypesData: this.layoutModel.getConf<TTInitialData>('textTypesData')
             }
         );
 
@@ -159,7 +157,7 @@ export class SubcorpForm {
 
         let liveAttrsViews:PluginInterfaces.LiveAttributes.Views;
         if (this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES)) {
-            liveAttrsViews = this.liveAttrsPlugin.getViews(subcMixerComponent, this.textTypesModel);
+            liveAttrsViews = this.liveAttrsPlugin.getViews(subcMixerComponent, this.textTypesModel, !List.empty(availableAlignedCorpora));
             this.textTypesModel.enableAutoCompleteSupport();
 
         } else {
@@ -236,8 +234,9 @@ export class SubcorpForm {
 
             this.initCorpusInfo();
 
+            const corparchWidgetId = Ident.puid();
             const corplistWidget = this.corparchPlugin.createWidget(
-                Ident.puid(),
+                corparchWidgetId,
                 'subcorpus/new',
                 (corpora:Array<string>, subcorpId:string) => {
                     this.layoutModel.dispatcher.dispatch<typeof GlobalActions.SwitchCorpus>({
@@ -255,7 +254,8 @@ export class SubcorpForm {
                 he: this.layoutModel.getComponentHelpers(),
                 CorparchComponent: corplistWidget,
                 subcorpFormModel: this.subcorpFormModel,
-                subcorpWithinFormModel: this.subcorpWithinFormModel
+                subcorpWithinFormModel: this.subcorpWithinFormModel,
+                corparchWidgetId
             });
             this.initSubcorpForm(ttComponent.component, ttComponent.props);
         });
@@ -267,7 +267,7 @@ export function init(conf:Kontext.Conf):void {
     const layoutModel:PageModel = new KontextPage(conf);
     const pageModel = new SubcorpForm(
         layoutModel,
-        layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent')
+        layoutModel.getCorpusIdent()
     );
     pageModel.init();
 }

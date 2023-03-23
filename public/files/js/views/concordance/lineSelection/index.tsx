@@ -286,19 +286,36 @@ export function init(
             return null;
         };
 
+        const copyToClipboard = () => {
+            dispatcher.dispatch(
+                Actions.CopyLineSelectionLinkToClipboard
+            );
+        };
+
         return (
             <S.SelectionLinkAndToolsFieldset>
                 <legend>{he.translate('linesel__line_selection_link_heading')}</legend>
-                <input className="conc-link" type="text" readOnly={true}
-                        onClick={(e)=> (e.target as HTMLInputElement).select()}
-                        value={props.lastCheckpointUrl} />
-                {props.emailDialogCredentials ?
-                    <EmailDialog
-                            defaultEmail={props.emailDialogCredentials.email}
-                            handleEmailDialogButton={props.handleEmailDialogButton}
-                            emailChangeHandler={props.emailChangeHandler} /> :
-                    renderEmailButton()
-                }
+                <div className="link">
+                    <input type="text" readOnly={true}
+                            onClick={(e)=> (e.target as HTMLInputElement).select()}
+                            value={props.lastCheckpointUrl} />
+                    <a onClick={copyToClipboard}>
+                        <layoutViews.ImgWithMouseover
+                                src={he.createStaticUrl('img/copy-icon.svg')}
+                                src2={he.createStaticUrl('img/copy-icon_s.svg')}
+                                alt={he.translate('global__copy_to_clipboard')}
+                                style={{width: '1.5em'}} />
+                    </a>
+                </div>
+                <div>
+                    {props.emailDialogCredentials ?
+                        <EmailDialog
+                                defaultEmail={props.emailDialogCredentials.email}
+                                handleEmailDialogButton={props.handleEmailDialogButton}
+                                emailChangeHandler={props.emailChangeHandler} /> :
+                        renderEmailButton()
+                    }
+                </div>
             </S.SelectionLinkAndToolsFieldset>
         );
     };

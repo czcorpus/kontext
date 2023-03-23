@@ -19,7 +19,7 @@
  */
 
 import { Observable } from 'rxjs';
-import { IEventEmitter, IModel, StatelessModel } from 'kombo';
+import { IModel, StatelessModel } from 'kombo';
 
 import * as CoreViews from './coreViews';
 import { MainMenuModel } from '../models/mainMenu';
@@ -30,6 +30,7 @@ import { CorpusSwitchModel } from '../models/common/corpusSwitch';
 import { SearchHistoryModel } from '../models/searchHistory';
 import { ScreenProps } from '../views/document/responsiveWrapper';
 import { Dict, List, pipe } from 'cnc-tskit';
+import { CorpusInfoModel } from '../models/common/corpusInfo';
 
 
 /**
@@ -144,6 +145,8 @@ export const TEXT_INPUT_WRITE_THROTTLE_INTERVAL_MS = 400;
 
 export type UserMessageTypes = 'info'|'warning'|'error'|'mail'|'plain';
 
+export type ResponseMessage = [UserMessageTypes, string];
+
 
 export interface UserCredentials {
     id:number;
@@ -181,7 +184,7 @@ export interface FullCorpusIdent {
     variant:string;
     name:string;
     usesubcorp?:string;
-    origSubcorpName?:string;
+    subcName?:string;
     foreignSubcorp?:boolean;
 
     /**
@@ -194,11 +197,6 @@ export interface FullCorpusIdent {
      * this is the actual size of the subcorpus.
      */
     searchSize:number;
-}
-
-export interface ICorpusInfoModel extends IEventEmitter {
-    getCurrentInfoData():any; // TODO
-    isLoading():boolean;
 }
 
 
@@ -344,7 +342,7 @@ export interface AjaxResponse {
 }
 
 export interface LayoutModel {
-    corpusInfoModel:ICorpusInfoModel,
+    corpusInfoModel:CorpusInfoModel,
     userInfoModel:IModel<{}>,
     corpusViewOptionsModel:CorpusViewOptionsModel,
     generalViewOptionsModel:StatelessModel<GeneralViewOptionsModelState>;
@@ -368,7 +366,7 @@ export interface AsyncTaskInfo<T=GeneralProps> {
     category:string;
     status:AsyncTaskStatus;
     created:number;
-    error:string; // = Celery's "result" property in case status == 'FAILURE'
+    error:string; // = Worker's "result" property in case status == 'FAILURE'
     args:T;
     url:string;
 }
@@ -452,6 +450,11 @@ export interface QueryOperation {
      * size.
      */
      fullsize:number;
+
+     /**
+      * A persistent key of the operation
+      */
+     conc_persistence_op_id:string;
 }
 
 export type VirtualKeys = Array<Array<[string, string]>>;

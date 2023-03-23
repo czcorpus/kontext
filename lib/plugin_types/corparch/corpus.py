@@ -22,10 +22,9 @@ import enum
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, NamedTuple, Optional, Tuple
 
-from corplib.abstract import AbstractKCorpus
+from corplib.abstract import AbstractKCorpus, SubcorpusIdent
 from dataclasses_json import dataclass_json
 from dataclasses_json.api import LetterCase
-from corplib.abstract import SubcorpusIdent
 
 
 @dataclass_json
@@ -159,7 +158,7 @@ class MLPositionFilter(enum.Enum):
 
     alphanum = 'alphanum'
     """
-    The 'alphanum' filter can be used for aligned corpora where by removing any non-alphanumeric characters 
+    The 'alphanum' filter can be used for aligned corpora where by removing any non-alphanumeric characters
     (with the exception for the underscore char.), the positions from different corpora become 1:1.
     """
 
@@ -206,7 +205,6 @@ class CorpusInfo:
     speech_overlap_attr: Optional[str] = None
     speech_overlap_val: Optional[str] = None
     bib_struct: Optional[str] = None
-    sample_size: int = -1
     featured: bool = False
     _collator_locale: str = 'en_US'  # this does not apply for Manatee functions
     use_safe_font: bool = False
@@ -221,6 +219,7 @@ class CorpusInfo:
     part_of_ml_corpus: bool = False
     ml_position_filter: MLPositionFilter = MLPositionFilter.none
     preflight_subcorpus: Optional[SubcorpusIdent] = None
+    alt_corp: Optional[str] = None
 
     def localized_desc(self, lang) -> str:
         if lang.split('_')[0] == 'cs':

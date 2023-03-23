@@ -24,7 +24,9 @@ import { Actions } from '../../models/subcorp/actions';
 import * as Kontext from '../../types/kontext';
 import { SubcorpusEditModel, SubcorpusEditModelState } from '../../models/subcorp/edit';
 import { BoundWithProps, IActionDispatcher } from 'kombo';
-import { isCQLSelection, isTTSelection, isServerWithinSelection, SubcorpusRecord, FormType, getFormTypeFromSelection } from '../../models/subcorp/common';
+import {
+    isCQLSelection, isTTSelection, isServerWithinSelection, SubcorpusRecord,
+    FormType, getFormTypeFromSelection } from '../../models/subcorp/common';
 import { TextTypesModel } from '../../models/textTypes/main';
 import { init as ttInit } from '../../views/textTypes/index';
 import { init as withinViewInit } from './withinForm';
@@ -94,7 +96,23 @@ export function init(
         data:SubcorpusRecord;
         liveAttrsEnabled:boolean;
         selectionType:FormType;
+        bibIdAttr:string;
+        liveAttrsInitialized:boolean;
     }> = (props) => {
+
+        React.useEffect(
+            () => {
+                if (isTTSelection(props.data.selections) && !props.liveAttrsInitialized) {
+                    dispatcher.dispatch(
+                        PluginInterfaces.LiveAttributes.Actions.RefineClicked,
+                        {
+                            onlyUnlockedSelections: false
+                        }
+                    );
+                }
+            },
+            []
+        )
 
         const handleReuse = () => {
             const newName = window.prompt(
@@ -123,6 +141,12 @@ export function init(
             });
         };
 
+        const handleShowDownloadDocumentsWidget = () => {
+            dispatcher.dispatch(
+                PluginInterfaces.LiveAttributes.Actions.ToggleDocumentListWidget
+            );
+        };
+
         return (
             <TabContentWrapper htmlClass="reuse">
                 <S.ReuseTabContentWrapper>
@@ -139,7 +163,16 @@ export function init(
                     {isServerWithinSelection(props.data.selections) ?
                         <WithinForm /> : null}
                     {isTTSelection(props.data.selections) ?
-                        <ttViews.TextTypesPanel LiveAttrsCustomTT={props.liveAttrsEnabled ? liveAttrsViews.LiveAttrsCustomTT : null} LiveAttrsView={props.liveAttrsEnabled ? liveAttrsViews.LiveAttrsView : null} /> :
+                        <ttViews.TextTypesPanel LiveAttrsCustomTT={props.liveAttrsEnabled ?
+                                    liveAttrsViews.LiveAttrsCustomTT : null}
+                                    controls={[
+                                        <a onClick={handleShowDownloadDocumentsWidget}
+                                            className={"util-button" + (props.bibIdAttr ? "" : " disabled")}>
+                                            {he.translate('subc__save_list_of_documents')}
+                                        </a>
+                                    ]}
+                            LiveAttrsView={props.liveAttrsEnabled ?
+                                liveAttrsViews.LiveAttrsView : null} /> :
                         null}
                         <p className='submit-buttons'>
                             {props.data.isDraft ?
@@ -162,7 +195,6 @@ export function init(
 
     const FormActionFile:React.FC<{
         data:SubcorpusRecord;
-        userId:number;
         inputMode:FormType;
     }> = (props) => {
 
@@ -203,7 +235,7 @@ export function init(
 
         return (
             <TabContentWrapper>
-                <SubcOverview data={props.data} userId={props.userId} standalone={false} />
+                <SubcOverview data={props.data} standalone={false} />
                 <hr />
                 <S.RestoreTabContentWrapper>
                     {props.data.isDraft ?
@@ -330,8 +362,9 @@ export function init(
     SubcorpusEditModelState &
     {
         corpname:string;
-        subcname:string;
+        usesubcorp:string;
         userId:number;
+        bibIdAttr:string;
     }> = (props) => {
 
         const items:Array<{id:string, label:string, isDisabled?: boolean}> = [
@@ -354,7 +387,7 @@ export function init(
             () => {
                 dispatcher.dispatch(
                     Actions.LoadSubcorpus,
-                    {corpname: props.corpname, subcname: props.subcname}
+                    {corpname: props.corpname, usesubcorp: props.usesubcorp}
                 );
             },
             []
@@ -367,13 +400,14 @@ export function init(
                     <>
                         <layoutViews.TabView className="ActionMenu" items={items} >
                             <FormActionFile key="restore" data={props.data}
-                                inputMode={getFormTypeFromSelection(props.data.selections)}
-                                userId={props.userId} />
+                                inputMode={getFormTypeFromSelection(props.data.selections)} />
                             <FormActionReuse
                                 key="action-reuse"
                                 data={props.data}
                                 liveAttrsEnabled={props.liveAttrsEnabled}
-                                selectionType={getFormTypeFromSelection(props.data.selections)} />
+                                liveAttrsInitialized={props.liveAttrsInitialized}
+                                selectionType={getFormTypeFromSelection(props.data.selections)}
+                                bibIdAttr={props.bibIdAttr} />
                             <PublishingTab key="publish"
                                 subcname={props.data.name}
                                 descriptionRaw={props.data.descriptionRaw}
@@ -392,7 +426,7 @@ export function init(
     }
 
     return BoundWithProps<
-        {corpname:string; subcname:string; userId: number},
+        {corpname:string; usesubcorp:string; userId:number; bibIdAttr:string},
         SubcorpusEditModelState
     >(
         _SubcorpusEdit, subcorpEditModel

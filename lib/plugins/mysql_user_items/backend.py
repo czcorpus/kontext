@@ -20,6 +20,8 @@
 A corparch database backend for MySQL/MariaDB.
 
 """
+from typing import List
+
 from plugin_types.user_items import FavoriteItem
 from plugins.common.mysql import MySQLOps
 
@@ -53,17 +55,18 @@ class Backend:
         self._group_acc_corp_attr = group_acc_corp_attr
         self._group_acc_group_attr = group_acc_group_attr
 
-    async def get_favitems(self, user_id: int):
+    async def get_favitems(self, user_id: int) -> List[FavoriteItem]:
         async with self._db.cursor() as cursor:
             await cursor.execute(
-                'SELECT fav.id as id, fav.name, fav.subcorpus_id, fav.subcorpus_orig_id, '
-                " GROUP_CONCAT(t.corpus_name SEPARATOR ',') as corpora, "
-                " GROUP_CONCAT(c.size SEPARATOR ',') as sizes "
+                'SELECT fav.id as id, fav.name, fav.subcorpus_id, fav.subcorpus_orig_id as subcorpus_name, '
+                " GROUP_CONCAT(t.corpus_name ORDER BY t.corpus_order SEPARATOR ',') as corpora, "
+                " GROUP_CONCAT(c.size ORDER BY t.corpus_order SEPARATOR ',') as sizes "
                 'FROM kontext_user_fav_item as fav '
                 'JOIN kontext_corpus_user_fav_item AS t ON fav.id = t.user_fav_corpus_id '
                 f'JOIN {self._corp_table} AS c ON t.corpus_name = c.name '
                 'WHERE user_id = %s '
-                'GROUP BY id ', (user_id,))
+                'GROUP BY id '
+                'ORDER BY fav.name, t.corpus_order ', (user_id,))
 
             ans = []
             async for item in cursor:
@@ -86,12 +89,12 @@ class Backend:
         async with self._db.cursor() as cursor:
             await cursor.execute(
                 'INSERT INTO kontext_user_fav_item (name, subcorpus_id, subcorpus_orig_id, user_id) '
-                'VALUES (%s, %s, %s, %s) ', (item.name, item.subcorpus_id, item.subcorpus_orig_id, user_id))
+                'VALUES (%s, %s, %s, %s) ', (item.name, item.subcorpus_id, item.subcorpus_name, user_id))
 
             favitem_id: int = cursor.lastrowid
             await cursor.executemany(
-                'INSERT INTO kontext_corpus_user_fav_item (user_fav_corpus_id, corpus_name) '
-                'VALUES (%s, %s) ', [(favitem_id, corp['id']) for corp in item.corpora])
+                'INSERT INTO kontext_corpus_user_fav_item (user_fav_corpus_id, corpus_name, corpus_order) '
+                'VALUES (%s, %s, %s) ', [(favitem_id, corp['id'], i) for i, corp in enumerate(item.corpora)])
             await cursor.connection.commit()
         item.ident = str(favitem_id)  # need to update new id
 

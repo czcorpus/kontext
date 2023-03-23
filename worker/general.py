@@ -70,9 +70,10 @@ from action.argmapping.keywords import KeywordsFormArgs
 from action.argmapping.subcorpus import (
     CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs)
 from action.argmapping.wordlist import WordlistFormArgs
+from bgcalc.errors import WorkerTaskException
 from bgcalc import coll_calc, freqs, keywords, pquery, subc_calc, wordlist
 from corplib import CorpusFactory
-from corplib.abstract import AbstractKCorpus, SubcorpusIdent
+from corplib.abstract import SubcorpusIdent
 from corplib.corpus import KCorpus
 from corplib.subcorpus import SubcorpusRecord
 
@@ -81,40 +82,6 @@ stderr_redirector = get_stderr_redirector(settings)
 
 def load_script_module(name, path):
     return importlib.util.spec_from_file_location(name, path)
-
-
-class WorkerTaskException(Exception):
-    pass
-
-
-def is_compiled(corp: AbstractKCorpus, attr, method):
-    """
-    Test whether pre-calculated data for particular
-    combination corpus+attribute+method (arf, docf, frq)
-    already exist.
-
-    arguments:
-    corp --
-    attr -- a name of an attribute
-    method -- one of arf, docf, frq
-    """
-    if attr.endswith('.ngr'):
-        if corp.get_conf('SUBCPATH'):
-            attr = manatee.NGram(corp.get_conf('PATH') + attr,
-                                 corp.get_conf('SUBCPATH') + attr)
-        else:
-            attr = manatee.NGram(corp.get_conf('PATH') + attr)
-        last = attr.size() - 1
-    else:
-        attr = corp.get_attr(attr)
-        last = attr.id_range() - 1
-    try:
-        if getattr(attr, method)(last) != -1:
-            sys.stdout.write('%s already compiled, skipping.\n' % method)
-            return True
-    except manatee.FileAccessError:
-        pass
-    return False
 
 
 async def _load_corp(corp_ident: Union[str, SubcorpusRecord]):
@@ -141,7 +108,7 @@ async def _compile_frq(corp: KCorpus, attr, logfile):
     logfile -- a file where calculation status will be written
                (bonito-open approach)
     """
-    if is_compiled(corp, attr, 'freq'):
+    if freqs.is_compiled(corp, attr, 'frq'):
         async with aiofiles.open(logfile, 'a') as f:
             await f.write('\n100 %\n')  # to get proper calculation of total progress
         return {'message': 'freq already compiled'}
@@ -155,7 +122,7 @@ async def _compile_frq(corp: KCorpus, attr, logfile):
 # ----------------------------- CONCORDANCE -----------------------------------
 
 
-async def conc_register(self, user_id, corpus_ident: Union[str, SubcorpusRecord], corp_cache_key, query, samplesize, time_limit, worker):
+async def conc_register(self, user_id, corpus_ident: Union[str, SubcorpusRecord], corp_cache_key, query, cutoff, time_limit, worker):
     """
     Register concordance calculation and initiate the calculation.
 
@@ -163,24 +130,25 @@ async def conc_register(self, user_id, corpus_ident: Union[str, SubcorpusRecord]
     user_id -- an identifier of the user who entered the query (used to specify subc. directory if needed)
     corpus_ident -- a corpus identifier (either a corpus name or data for a subcorpus)
     query -- a query tuple
-    samplesize -- a row number limit (if 0 then unlimited - see Manatee API)
+    cutoff -- a row number limit (if 0 then unlimited - see Manatee API)
     time_limit -- a time limit (in seconds) for the main conc. task
 
     returns:
     a dict(cachefile=..., pidfile=..., stored_pidfile=...)
     """
     task = conclib.calc.base.TaskRegistration(task_id=self.request.id)
-    initial_args = await task.run(corpus_ident, corp_cache_key, query, samplesize)
+    initial_args = await task.run(corpus_ident, corp_cache_key, query, cutoff)
     if not initial_args['already_running']:   # we are first trying to calc this
         worker.send_task_sync(
             'conc_calculate', object.__class__,
-            args=(initial_args, user_id, corpus_ident, corp_cache_key, query, samplesize),
+            args=(initial_args, user_id, corpus_ident, corp_cache_key, query, cutoff),
             soft_time_limit=time_limit)
         # there is no return from the send_task as we obtain the status via conc cache map
     return initial_args
 
 
-async def conc_calculate(self, initial_args, user_id, corpus_ident: Union[str, SubcorpusRecord], corp_cache_key, query, samplesize):
+async def conc_calculate(
+        self, initial_args, user_id, corpus_ident: Union[str, SubcorpusRecord], corp_cache_key, query, cutoff):
     """
     Perform actual concordance calculation.
     This is called automatically by the 'register()' function above.
@@ -192,14 +160,14 @@ async def conc_calculate(self, initial_args, user_id, corpus_ident: Union[str, S
     subc_name -- a sub-corpus identifier (None if not used)
     corp_cache_key -- a MD5 checksum of the sub-corpus data file
     query -- a query tuple
-    samplesize -- a row number limit (if 0 then unlimited - see Manatee API)
+    cutoff -- a row number limit (if 0 then unlimited - see Manatee API)
     """
     task = conclib.calc.ConcCalculation(task_id=self.request.id)
     return await task.run(
-        initial_args, settings.get('corpora', 'subcorpora_dir'), corpus_ident, corp_cache_key, query, samplesize)
+        initial_args, settings.get('corpora', 'subcorpora_dir'), corpus_ident, corp_cache_key, query, cutoff)
 
 
-async def conc_sync_calculate(self, user_id, corpus_name, subc_name, corp_cache_key, query, samplesize):
+async def conc_sync_calculate(self, user_id, corpus_name, subc_name, corp_cache_key, query, cutoff):
     conc_dir = os.path.join(settings.get('corpora', 'conc_dir'), str(user_id))
     task = conclib.calc.ConcSyncCalculation(
         task_id=self.request.id, cache_factory=None,
@@ -207,7 +175,7 @@ async def conc_sync_calculate(self, user_id, corpus_name, subc_name, corp_cache_
         corpus_ident=SubcorpusIdent(
             id=subc_name, corpus_name=corpus_name) if subc_name else corpus_name,
         conc_dir=conc_dir)
-    return await task.run(corp_cache_key, query, samplesize)
+    return await task.run(corp_cache_key, query, cutoff)
 
 
 # ----------------------------- COLLOCATIONS ----------------------------------
@@ -274,7 +242,7 @@ async def compile_arf(corpus_ident, attr, logfile):
     num_wait = 20
     base_paths = freqs.corp_freqs_cache_paths(corp, attr)
 
-    if not is_compiled(corp, attr, 'freq'):
+    if not freqs.is_compiled(corp, attr, 'frq'):
         frq_data_file = corp.freq_precalc_file(attr, 'frq')
         while num_wait > 0 and await freqs.calc_is_running([base_paths['frq']]):
             if await aiofiles.os.path.isfile(frq_data_file):
@@ -284,7 +252,7 @@ async def compile_arf(corpus_ident, attr, logfile):
         if not await aiofiles.os.path.isfile(frq_data_file):
             await _compile_frq(corp, attr, logfile)
         corp = await _load_corp(corpus_ident)  # must reopen freq files
-    if is_compiled(corp, attr, 'arf'):
+    if freqs.is_compiled(corp, attr, 'arf'):
         async with aiofiles.open(logfile, 'a') as f:
             await f.write('\n100 %\n')  # to get proper calculation of total progress
         return {'message': 'arf already compiled'}
@@ -302,7 +270,7 @@ async def compile_docf(corpus_ident, attr, logfile):
     (see freqs.build_arf_db)
     """
     corp = await _load_corp(corpus_ident)
-    if is_compiled(corp, attr, 'docf'):
+    if freqs.is_compiled(corp, attr, 'docf'):
         async with aiofiles.open(logfile, 'a') as f:
             await f.write('\n100 %\n')  # to get proper calculation of total progress
         return {'message': 'docf already compiled'}
@@ -317,8 +285,9 @@ async def compile_docf(corpus_ident, attr, logfile):
     except manatee.AttrNotFound:
         corp_id = corpus_ident.corpname if isinstance(
             corpus_ident, SubcorpusIdent) else corpus_ident
-        raise WorkerTaskException('Failed to compile docf: attribute {}.{} not found in {}'.format(
-                                  doc_struct, attr, corp_id))
+        raise WorkerTaskException(
+            'Failed to compile docf: attribute {}.{} not found in {}'.format(
+                doc_struct, attr, corp_id))
 
 
 # ----------------------------- SUBCORPORA ------------------------------------
@@ -331,10 +300,10 @@ async def create_subcorpus(
         path: str
 ):
     try:
-        worker = subc_calc.CreateSubcorpusTask(author=author)
-        return await worker.run(specification, subcorpus_id, path)
+        job = subc_calc.CreateSubcorpusTask(author=author)
+        return await job.run(specification, subcorpus_id, path)
     except Exception as ex:
-        msg = getattr(ex, 'message', None)
+        msg = str(ex)
         if not msg:
             msg = 'Caused by: {0}'.format(ex.__class__.__name__)
         raise WorkerTaskException(msg)

@@ -21,7 +21,7 @@ import * as Kontext from '../../types/kontext';
 import { CorplistTableModel, CorplistTableModelState, Filters, KeywordInfo } from './corplist';
 import { CorplistItem } from './common';
 import { CorpusInfoBoxProps } from '../../views/overview';
-import { CorpusInfoType } from '../../models/common/layout';
+import { CorpusInfoType } from '../../models/common/corpusInfo';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { pipe, List } from 'cnc-tskit';
 import { Actions } from './actions';

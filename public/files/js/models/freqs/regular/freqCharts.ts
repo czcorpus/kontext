@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Dict, List, Maths, pipe, tuple } from 'cnc-tskit';
+import { Dict, HTTP, List, Maths, pipe, tuple } from 'cnc-tskit';
 import { IFullActionControl, SEDispatcher, StatelessModel } from 'kombo';
 import { debounceTime, Observable, Subject } from 'rxjs';
 import { PageModel } from '../../../app/page';
@@ -37,6 +37,7 @@ import {
     BasicFreqModuleType
 } from '../../../types/kontext';
 import { validateGzNumber } from '../../base';
+import * as copy from 'copy-to-clipboard';
 
 
 
@@ -130,7 +131,6 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     ),
                     Dict.fromEntries()
                 ),
-                ftt_include_empty: formProps.ftt_include_empty,
                 type: pipe(
                     allCrits,
                     List.map(
@@ -189,7 +189,8 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                 ),
                 saveFormActive: false,
                 shareLink: null,
-                flimit: parseInt(formProps.flimit) || 0
+                flimit: parseInt(formProps.flimit) || 0,
+                shareWidgetIsBusy: false
             }
         );
 
@@ -226,8 +227,8 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             (state, action) => {
                 state.shareLink = {
                     sourceId: action.payload.sourceId,
-                    url: this.getShareLink(state, action.payload.sourceId),
-                }
+                    url: this.getShareLink(state, action.payload.sourceId)
+                };
             }
         );
 
@@ -235,6 +236,77 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             Actions.ResultHideShareLink,
             (state, action) => {
                 state.shareLink = null;
+            }
+        );
+
+        this.addActionHandler(
+            Actions.ResultLinkCopyToClipboard,
+            (state, action) => {
+                if (state.isActive) {
+                    copy(this.getShareLink(state, action.payload.sourceId));
+                    this.pageModel.showMessage('info', this.pageModel.translate('global__link_copied_to_clipboard'));
+                }
+            }
+        );
+
+        // TODO this is duplicated between this model and table one
+        this.addActionHandler(
+            Actions.ResultLinkShareViaEmail,
+            (state, action) => {
+                if (state.isActive) {
+                    state.shareWidgetIsBusy = true;
+                }
+            },
+            (state, action, dispatch) => {
+                if (state.isActive) {
+                    this.pageModel.ajax$<{ok: boolean}>(
+                        HTTP.Method.POST,
+                        this.pageModel.createActionUrl('/share_freq_table_via_mail'),
+                        {
+                            url: action.payload.url,
+                            email: action.payload.recipient
+                        },
+                        {
+                            contentType: 'application/json'
+                        }
+
+                    ).subscribe({
+                        next: data => {
+                            dispatch(
+                                Actions.ResultLinkShareViaEmailDone,
+                                {
+                                    sourceId: action.payload.sourceId
+                                }
+                            );
+                            if (data.ok) {
+                                this.pageModel.showMessage(
+                                    'info', this.pageModel.translate('global__ok')
+                                );
+
+                            } else {
+                                this.pageModel.showMessage(
+                                    'error', this.pageModel.translate('global__failed_to_send_mail')
+                                );
+                            }
+                        },
+                        error: error => {
+                            this.pageModel.showMessage('error', error);
+                            dispatch(
+                                Actions.ResultLinkShareViaEmailDone,
+                                error
+                            );
+                        }
+                    });
+                }
+            }
+        );
+
+        this.addActionHandler(
+            Actions.ResultLinkShareViaEmailDone,
+            (state, action) => {
+                if (state.isActive) {
+                    state.shareWidgetIsBusy = false;
+                }
             }
         );
 
@@ -271,7 +343,6 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     state.sortColumn = storedState.sortColumn;
                     state.freqCrit = storedState.freqCrit;
                     state.freqCritAsync = storedState.freqCritAsync;
-                    state.ftt_include_empty = storedState.ftt_include_empty;
                     state.isActive = storedState.isActive;
                     state.isBusy = storedState.isBusy;
                     state.isError = storedState.isError;
@@ -586,7 +657,6 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
 
                 fcrit: state.data[sourceId].fcrit,
                 freq_type: state.freqType,
-                ftt_include_empty: state.ftt_include_empty,
                 freqlevel: 1,
 
                 flimit: state.flimit,
@@ -612,7 +682,6 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                 '0' :
                 state.sortColumn[fcrit],
             fpage: 1,
-            ftt_include_empty: state.ftt_include_empty,
             freqlevel: 1,
             fmaxitems: parseInt(state.fmaxitems[fcrit].value),
             format: 'json',

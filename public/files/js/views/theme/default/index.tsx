@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import {keyframes} from 'styled-components';
 import backgroundSrc from '../../../../img/groovepaper2.jpg';
 
@@ -135,14 +135,8 @@ export const pageFormMargin = '1.5em';
 export const GeneralLabel = styled.label`
   display: inline-block;
   text-decoration: none;
-  font-size: 1em;
-  background-color: ${colorBgLightBlue};
-  border-style: solid;
-  border-color: #b0e1f3;
-  border-width: 1px;
-  border-radius: ${borderRadiusDefault};
-  margin-right: 0.4em;
-  margin-bottom: 0.5em;
+  font-size: 1.1em;
+  padding: 0.3em;
   white-space: nowrap;
 `;
 
@@ -211,4 +205,23 @@ export const FadeOut = keyframes`
 export const ColorChange  = keyframes`
     0% { opacity: 0; }
     100% { opacity: 1; }
+`;
+
+export const textHighlight = css`
+    font-weight: bold;
+    background-color: ${colorGreenBgHighlighted};
+    color: ${colorLightText};
+    border: 1px solid ${colorLightText};
+    border-radius: ${borderRadiusDefault};
+    display: inline-block;
+    padding: 0 0.3em 0 0.3em;
+`;
+
+
+export const textNoHighlight = css`
+    font-weight: bold;
+    border: 1px solid transparent;
+    border-radius: ${borderRadiusDefault};
+    display: inline-block;
+    padding: 0 0.3em 0 0.3em;
 `;

@@ -18,6 +18,7 @@ import pickle
 import time
 from dataclasses import dataclass, field
 from typing import Any, List, Optional
+import logging
 
 import aiofiles
 import aiofiles.os
@@ -55,18 +56,18 @@ class CollCalcArgs:
     subcorpus_id: Optional[str]
     subcorpora_dir: Optional[str]
     cache_path: Optional[str] = field(default=None)
-    samplesize: int = field(default=0)
+    cutoff: int = field(default=0)
 
 
 class CollCalcCache(object):
 
-    def __init__(self, corpname, subcname, subcpath, user_id, q, samplesize=0):
+    def __init__(self, corpname, subcname, subcpath, user_id, q, cutoff=0):
         self._corpname = corpname
         self._subcname = subcname
         self._subcpath = subcpath
         self._user_id = user_id
         self._q = q
-        self._samplesize = samplesize
+        self.cutoff = cutoff
 
     def _cache_file_path(self, cattr, csortfn, cbgrfns, cfromw, ctow, cminbgr, cminfreq):
         v = f'{self._corpname}{self._subcname}{self._user_id}{"".join(self._q)}{cattr}{csortfn}{cbgrfns}{cfromw}{ctow}{cminbgr}{cminbgr}{cminfreq}'
@@ -84,7 +85,12 @@ class CollCalcCache(object):
                                            cminbgr=cminbgr, cminfreq=cminfreq)
         if await aiofiles.os.path.isfile(cache_path):
             async with aiofiles.open(cache_path, 'rb') as f:
-                collocs = pickle.loads(await f.read())
+                try:
+                    collocs = pickle.loads(await f.read())
+                except Exception as ex:
+                    logging.getLogger(__name__).error(f'Failed to read coll cache file: {ex}. Removing.')
+                    await aiofiles.os.remove(cache_path)
+                    raise ex
         else:
             collocs = None
         return collocs, cache_path
@@ -105,7 +111,7 @@ async def calculate_colls_bg(coll_args: CollCalcArgs):
     try:
         # try to fetch precalculated data; if none then MissingSubCorpFreqFile
         await corplib.frq_db(corp, coll_args.cattr)
-        conc = await require_existing_conc(corp=corp, q=coll_args.q)
+        conc = await require_existing_conc(corp=corp, q=coll_args.q, cutoff=coll_args.cutoff)
         if not conc.finished():
             raise UnfinishedConcordanceError(
                 'Cannot calculate yet - source concordance not finished. Please try again later.')
@@ -152,7 +158,7 @@ async def calculate_colls(coll_args: CollCalcArgs) -> CalculateCollsResult:
     collend = collstart + coll_args.citemsperpage
     cache = CollCalcCache(
         corpname=coll_args.corpname, subcname=coll_args.subcorpus_id, subcpath=coll_args.subcorpora_dir,
-        user_id=coll_args.user_id, q=coll_args.q, samplesize=coll_args.samplesize)
+        user_id=coll_args.user_id, q=coll_args.q, cutoff=coll_args.cutoff)
     collocs, cache_path = await cache.get(
         cattr=coll_args.cattr, csortfn=coll_args.csortfn, cbgrfns=coll_args.cbgrfns,
         cfromw=coll_args.cfromw, ctow=coll_args.ctow, cminbgr=coll_args.cminbgr,

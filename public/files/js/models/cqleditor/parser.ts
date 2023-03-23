@@ -236,9 +236,9 @@ export function highlightSyntax(
     }):[string, Array<ParsedAttr>, Array<ParsedPQItem>, string] {
 
     return _highlightSyntax({
-        query: query,
+        query,
         applyRules: getApplyRules(querySuperType),
-        he: he,
+        he,
         ignoreErrors: true,
         attrHelper: attrHelper ? attrHelper : new NullAttrHelper(),
         wrapLongQuery: false,
@@ -249,22 +249,33 @@ export function highlightSyntax(
 
 /**
  *
- * @return a 4-tuple (highlighted query, list of detected attributes, list of detected Paradigm. query blocks, syntax error)
+ * @return a 4-tuple (
+ *      highlighted query,
+ *      list of detected attributes,
+ *      list of detected Paradigm. query blocks,
+ *      syntax error
+ * )
  */
 export function highlightSyntaxStatic(
-    {query, querySuperType, he}:{
+    {
+        query,
+        querySuperType,
+        he,
+        wrapLongQuery
+    }:{
         query:string,
         querySuperType:Kontext.QuerySupertype,
-        he:Kontext.Translator
+        he:Kontext.Translator,
+        wrapLongQuery?:boolean
     }):[string, Array<ParsedAttr>, Array<ParsedPQItem>, string] {
 
     return _highlightSyntax({
-        query: query,
+        query,
         applyRules: getApplyRules(querySuperType),
-        he: he,
+        he,
         ignoreErrors: true,
         attrHelper: new NullAttrHelper(),
-        wrapLongQuery: true,
+        wrapLongQuery: wrapLongQuery === undefined ? true : wrapLongQuery,
         wrapRange: undefined,
         parserRecoverIdx: 0
     });

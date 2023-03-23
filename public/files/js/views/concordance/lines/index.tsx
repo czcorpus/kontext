@@ -20,12 +20,12 @@
 
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { List, pipe } from 'cnc-tskit';
+import { List, pipe, tuple } from 'cnc-tskit';
 
 import * as Kontext from '../../../types/kontext';
 import * as ViewOptions from '../../../types/viewOptions';
 import { init as lineExtrasViewsInit } from '../lineExtras';
-import { ConcordanceModel, ConcordanceModelState, HighlightItem } from '../../../models/concordance/main';
+import { ConcordanceModel, ConcordanceModelState } from '../../../models/concordance/main';
 import { LineSelectionModel, LineSelectionModelState }
     from '../../../models/concordance/lineSelection';
 import { ConcDetailModel } from '../../../models/concordance/detail';
@@ -33,7 +33,9 @@ import { Actions } from '../../../models/concordance/actions';
 import { Actions as MainMenuActions } from '../../../models/mainMenu/actions';
 import {
     KWICSection, LineSelectionModes, TextChunk,
-    Line as ConcLine } from '../../../models/concordance/common';
+    Line as ConcLine,
+    ConcToken,
+    Token} from '../../../models/concordance/common';
 import * as S from './style';
 import { PlayerStatus } from '../../../models/concordance/media';
 import { SentenceToken } from '../../../types/plugins/syntaxViewer';
@@ -68,27 +70,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         }
     }
 
-    function findHighlightPositions(shadowOutput:KWICSection, highlightItems:Array<HighlightItem>, corpusIdx:number) {
-        const items = pipe(
-            highlightItems,
-            List.filter(v => v.level == -1 || v.level == corpusIdx),
-            List.map(v => v.value),
-        );
-        const positionReducer = (chunks:Array<TextChunk>):Array<Array<number>> => List.map((chunk) =>
-            List.reduce((acc, val, i) => {
-                if (items.includes(val)) {
-                    acc.push(i);
-                }
-                return acc;
-            }, [], chunk.text),
-        chunks);
-        return ({
-            left: positionReducer(shadowOutput.left),
-            kwic: positionReducer(shadowOutput.kwic),
-            right: positionReducer(shadowOutput.right),
-        })
-    }
-
     function getViewModeTitle(
         mode:ViewOptions.AttrViewMode,
         isKwic:boolean,
@@ -108,6 +89,45 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                 tokenConnectInfo1;
         }
         return tokenConnectInfo1;
+    }
+
+
+    function renderTokens(data:Array<Token>):JSX.Element {
+
+        const handleMouseover = ({attr, s}:{attr:string; s:string}) => () => {
+            dispatcher.dispatch(
+                Actions.HighlightedTokenMouseover,
+                {
+                    attr,
+                    value: s
+                }
+            );
+        }
+
+        const handleMouseout = ({attr, s}:{attr:string; s:string}) => () => {
+            dispatcher.dispatch(
+                Actions.HighlightedTokenMouseout,
+                {
+                    attr,
+                    value: s
+                }
+            );
+        }
+
+        return <>
+        {pipe(
+            data,
+            List.map(({s, h, kcConnection}, i) => h ?
+                <em key={i} className="highlight"
+                        onMouseOver={handleMouseover(kcConnection)}
+                        onMouseOut={handleMouseout(kcConnection)}>
+                    {s}
+                </em> :
+                s
+            ),
+            List.join<string|JSX.Element>(_ => ' ')
+        )}
+        </>;
     }
 
     // ------------------------- <ConcColHideSwitch /> ---------------------------
@@ -203,7 +223,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
 
     const Token:React.FC<{
         tokenId:number;
-        data:TextChunk;
+        data:ConcToken;
         viewMode:ViewOptions.AttrViewMode;
         isKwic:boolean;
         supportsTokenConnect:boolean;
@@ -213,18 +233,24 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         const mkClass = () => `${props.supportsTokenConnect ? 'active' : ''} ${props.data.className}`;
 
         if (props.data.className === 'strc') {
-            return <span className="strc">{props.data.text.join(' ')}</span>
+            return (
+                <span className="strc">{renderTokens(props.data.text)}</span>
+            );
 
         } else if (props.viewMode === ViewOptions.AttrViewMode.MOUSEOVER ||
                 props.viewMode === ViewOptions.AttrViewMode.VISIBLE_KWIC && !props.isKwic) {
             const title = props.data.tailPosAttrs.length > 0 ? props.data.tailPosAttrs.join(ATTR_SEPARATOR) : null;
-            return <mark data-tokenid={props.tokenId} className={mkClass()} title={title}>{props.data.text.join(' ')}</mark>;
+            return (
+                <mark data-tokenid={props.tokenId} className={mkClass()} title={title}>
+                    {renderTokens(props.data.text)}
+                </mark>
+            );
 
         } else {
             return (
                 <>
                     <mark data-tokenid={props.tokenId} className={mkClass()}>
-                        {props.data.text.join(' ')}
+                        {renderTokens(props.data.text)}
                     </mark>
                     {props.data.tailPosAttrs.length > 0 ?
                         <span className="tail attr" style={props.viewMode === ViewOptions.AttrViewMode.VISIBLE_MULTILINE && props.data.tailPosAttrs.length === 0 ? {display: 'none'} : null}>
@@ -247,9 +273,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         chunkOffset:number;
         idx:number;
         supportsTokenConnect:boolean;
-        data:TextChunk;
+        data:ConcToken;
         attrViewMode:ViewOptions.AttrViewMode;
-        highlightPositions:Array<number>;
 
     }> = (props) => {
 
@@ -268,7 +293,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                 return(
                     <em className={`${props.data.className} ${getViewModeClass(props.attrViewMode)}`} title={title}>
                         <Token tokenId={props.kwicTokenNum + props.chunkOffset} data={props.data}
-                                viewMode={props.attrViewMode} isKwic={false} supportsTokenConnect={props.supportsTokenConnect} />
+                                viewMode={props.attrViewMode} isKwic={false} supportsTokenConnect={props.supportsTokenConnect}
+                            />
                     </em>
                 );
 
@@ -276,25 +302,37 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                 return (
                     <span className={`${props.data.className} ${getViewModeClass(props.attrViewMode)}`} title={title}>
                         <Token tokenId={props.kwicTokenNum + props.chunkOffset} data={props.data}
-                                viewMode={props.attrViewMode} isKwic={false} supportsTokenConnect={props.supportsTokenConnect} />
+                                viewMode={props.attrViewMode} isKwic={false} supportsTokenConnect={props.supportsTokenConnect}
+                            />
                     </span>
                 );
             }
 
         } else {
-            return (
-            <>
-                {props.data.text.map((s) => ({text: [s], className: props.data.className, tailPosAttrs: []} as TextChunk)).map((item, i) => (
-                    <React.Fragment key={`${props.position}:${props.idx}:${i}`}>
-                        {i > 0 ? ' ' : ''}
-                        <span className={getViewModeClass(props.attrViewMode) + (props.highlightPositions.includes(i) ? " highlight" : "")}>
-                            <Token tokenId={mkTokenId(i)} data={item} viewMode={props.attrViewMode} isKwic={false}
-                                    supportsTokenConnect={props.supportsTokenConnect} />
-                        </span>
-                    </React.Fragment>
-                ))}
-            </>
-            );
+            return (<>{
+                pipe(
+                    props.data.text,
+                    List.map(
+                        (token) => ({
+                            text: [token],
+                            className: props.data.className,
+                            tailPosAttrs: []
+                        })
+                    ),
+                    List.map(
+                        (data, i) => (
+                            <React.Fragment key={`${props.position}:${props.idx}:${i}`}>
+                                {i > 0 ? ' ' : ''}
+                                <span className={getViewModeClass(props.attrViewMode)}>
+                                    <Token tokenId={mkTokenId(i)} data={data} viewMode={props.attrViewMode} isKwic={false}
+                                            supportsTokenConnect={props.supportsTokenConnect}
+                                        />
+                                </span>
+                            </React.Fragment>
+                        )
+                    )
+                )
+            }</>);
         }
     };
 
@@ -302,14 +340,11 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
 
     const TextKwicMode:React.FC<{
         corpname:string;
-        corpusIdx:number;
         isAlignedMainCorp:boolean;
         corpsWithKwic:Array<string>;
         supportsTokenConnect:boolean;
         lineIdx:number;
         output:KWICSection;
-        shadowOutput:KWICSection;
-        highlightItems:Array<HighlightItem>;
         kwicLength:number;
         attrViewMode:ViewOptions.AttrViewMode;
         tokenConnectClickHandler:(corpusId:string, tokenNumber:number, kwicLength:number, lineIdx:number)=>void;
@@ -345,7 +380,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             props.tokenConnectClickHandler(corpusId, tokenNumber, props.kwicLength, lineIdx);
         };
 
-        const highlightPositions = props.shadowOutput ? findHighlightPositions(props.shadowOutput, props.highlightItems, props.corpusIdx) : null;
         return <>
             <td className={exportTextElmClass(props.corpname, 'lc')}
                     onClick={handleTokenClick}>
@@ -355,7 +389,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                                     kwicTokenNum={props.output.tokenNumber} lineIdx={props.lineIdx}
                                     supportsTokenConnect={props.supportsTokenConnect}
                                     attrViewMode={props.attrViewMode} audioPlayerStatus={props.audioPlayerStatus}
-                                    highlightPositions={highlightPositions ? highlightPositions.left[i] : []} />,
+                            />,
                         ' '
                     ],
                     props.output.left
@@ -371,7 +405,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                                 hasKwic={hasKwic} lineIdx={props.lineIdx} attrViewMode={props.attrViewMode}
                                 supportsTokenConnect={props.supportsTokenConnect}
                                 kwicTokenNum={props.output.tokenNumber} audioPlayerStatus={props.audioPlayerStatus}
-                                highlightPositions={props.output.highlightMLPositions.concat(highlightPositions ? highlightPositions.kwic[i] : [])} />,
+                            />,
                         ' '
                     ],
                     props.output.kwic
@@ -385,7 +419,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                             kwicTokenNum={props.output.tokenNumber} prevBlockClosed={List.get(-1, props.output.kwic)}
                             lineIdx={props.lineIdx} supportsTokenConnect={props.supportsTokenConnect}
                             attrViewMode={props.attrViewMode} audioPlayerStatus={props.audioPlayerStatus}
-                            highlightPositions={highlightPositions ? highlightPositions.right[i] : []} />
+                        />
                 ],
                 props.output.right)}
                 </>
@@ -405,7 +439,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         supportsTokenConnect:boolean;
         attrViewMode:ViewOptions.AttrViewMode;
         audioPlayerStatus:PlayerStatus;
-        highlightPositions:Array<number>;
 
     }> = (props) => {
         return <>
@@ -421,7 +454,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             }
             <NonKwicText data={props.item} idx={props.i} position="l" chunkOffset={-1 * props.chunkOffsets[props.i]}
                             kwicTokenNum={props.kwicTokenNum} supportsTokenConnect={props.supportsTokenConnect}
-                            attrViewMode={props.attrViewMode} highlightPositions={props.highlightPositions} />
+                            attrViewMode={props.attrViewMode} />
             {props.item.closeLink ?
                 <extras.AudioLink t="R" lineIdx={props.lineIdx} chunks={[props.item]} audioPlayerStatus={props.audioPlayerStatus} /> :
                 null
@@ -442,7 +475,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         attrViewMode:ViewOptions.AttrViewMode;
         supportsTokenConnect:boolean;
         audioPlayerStatus:PlayerStatus;
-        highlightPositions:Array<number>;
 
     }> = (props) => {
         const prevClosed = props.i > 0 ? props.itemList[props.i - 1] : props.prevBlockClosed;
@@ -467,7 +499,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                     <strong className={getViewModeClass(props.attrViewMode)}
                             title={getViewModeTitle(props.attrViewMode, true, props.supportsTokenConnect, props.item.tailPosAttrs)}>
                         <Token tokenId={props.kwicTokenNum} isKwic={true} data={props.item} viewMode={props.attrViewMode}
-                                supportsTokenConnect={props.supportsTokenConnect} />
+                                supportsTokenConnect={props.supportsTokenConnect}
+                            />
                     </strong>
                 );
 
@@ -476,18 +509,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
 
             } else {
                 return <span className={props.item.className === 'strc' ? 'strc' : null}>
-                    {List.flatMap((v, i) => {
-                        let element;
-                        if (props.highlightPositions.includes(i)) {
-                            element = [<span key={i} className="highlight">{v}</span>];
-                        } else {
-                            element = [v];
-                        }
-                        if (i < props.item.text.length - 1) {
-                            element.push(' ');
-                        }
-                        return element
-                    }, props.item.text)}
+                    {renderTokens(props.item.text)}
                 </span>;
             }
         }
@@ -511,7 +533,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         supportsTokenConnect:boolean;
         attrViewMode:ViewOptions.AttrViewMode;
         audioPlayerStatus:PlayerStatus;
-        highlightPositions:Array<number>;
 
     }> = (props) => {
 
@@ -537,7 +558,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             }
             <NonKwicText data={props.item} idx={props.i} position="r" chunkOffset={props.chunkOffsets[props.i]}
                         kwicTokenNum={props.kwicTokenNum} supportsTokenConnect={props.supportsTokenConnect}
-                        attrViewMode={props.attrViewMode} highlightPositions={props.highlightPositions} />
+                        attrViewMode={props.attrViewMode} />
             {props.item.closeLink ?
                 <extras.AudioLink t="R" lineIdx={props.lineIdx} chunks={[props.item]} audioPlayerStatus={props.audioPlayerStatus}/> :
                 null
@@ -562,8 +583,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         numItemsInLockedGroups:number;
         emptyRefValPlaceholder:string;
         data:ConcLine;
-        shadowData:ConcLine;
-        highlightItems:Array<HighlightItem>;
         groupColor:string|undefined;
         groupTextColor:string|undefined;
         audioPlayerStatus:PlayerStatus;
@@ -588,7 +607,17 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                 });
 
             } else { // = default and custom modes
-                if (kwicLength > 0) {
+                if (kwicLength === -1 && this.props.supportsTokenConnect) { // non kwic search (e.g. aligned language)
+                    dispatcher.dispatch<typeof Actions.ShowTokenDetail>({
+                        name: Actions.ShowTokenDetail.name,
+                        payload: {
+                            corpusId: corpusId,
+                            tokenNumber: tokenNumber,
+                            lineIdx: lineIdx
+                        }
+                    });
+
+                } else {
                     dispatcher.dispatch<typeof Actions.ShowKwicDetail>({
                         name: Actions.ShowKwicDetail.name,
                         payload: {
@@ -598,21 +627,11 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                             lineIdx: lineIdx
                         }
                     });
-
-                } else if (kwicLength === -1) {
-                    dispatcher.dispatch<typeof Actions.ShowTokenDetail>({
-                        name: Actions.ShowTokenDetail.name,
-                        payload: {
-                            corpusId: corpusId,
-                            tokenNumber: tokenNumber,
-                            lineIdx: lineIdx
-                        }
-                    });
                 }
             }
         }
 
-        _exportTextElmClass(corpname:string, ...customClasses:string[]) {
+        _exportTextElmClass(corpname, ...customClasses) {
             const ans = customClasses.slice();
             if (corpname === this.props.mainCorp) {
                 ans.push('maincorp');
@@ -620,14 +639,12 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             return ans.join(' ');
         }
 
-        _renderTextParMode(corpusIdx:number, corpusOutput:KWICSection, shadowOutput:KWICSection) {
-            const corpname = this.props.cols[corpusIdx].n;
+        _renderTextParMode(corpname, corpusOutput:KWICSection) {
             const hasKwic = this.props.corpsWithKwic.indexOf(corpname) > -1;
             const handleTokenClick = (evt) => this._handleNonKwicTokenClick(
                 corpname, this.props.lineIdx, Number(evt.target.getAttribute('data-tokenid'))
             );
 
-            const highlightPositions = shadowOutput ? findHighlightPositions(shadowOutput, this.props.highlightItems, corpusIdx) : null;
             return (
                 <td className={this._exportTextElmClass(corpname, 'par')}>
                     <span onClick={handleTokenClick}>
@@ -636,7 +653,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                                         chunkOffsets={corpusOutput.leftOffsets} kwicTokenNum={corpusOutput.tokenNumber}
                                         lineIdx={this.props.lineIdx} supportsTokenConnect={this.props.supportsTokenConnect}
                                         attrViewMode={this.props.attrViewMode} audioPlayerStatus={this.props.audioPlayerStatus}
-                                        highlightPositions={highlightPositions ? highlightPositions.left[i] : []} />,
+                                        />,
                                         ' '
                                 ], corpusOutput.left)}
                     </span>
@@ -649,8 +666,9 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                                         lineIdx={this.props.lineIdx}
                                         attrViewMode={this.props.attrViewMode}
                                         supportsTokenConnect={this.props.supportsTokenConnect}
-                                        kwicTokenNum={corpusOutput.tokenNumber} audioPlayerStatus={this.props.audioPlayerStatus}
-                                        highlightPositions={corpusOutput.highlightMLPositions.concat(highlightPositions ? highlightPositions.kwic[i] : [])} />,
+                                        kwicTokenNum={corpusOutput.tokenNumber}
+                                        audioPlayerStatus={this.props.audioPlayerStatus}
+                                    />,
                                 ' '
                             ],
                             corpusOutput.kwic
@@ -663,42 +681,41 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                                     kwicTokenNum={corpusOutput.tokenNumber} prevBlockClosed={List.get(-1, corpusOutput.kwic)}
                                     lineIdx={this.props.lineIdx} supportsTokenConnect={this.props.supportsTokenConnect}
                                     attrViewMode={this.props.attrViewMode} audioPlayerStatus={this.props.audioPlayerStatus}
-                                    highlightPositions={highlightPositions ? highlightPositions.right[i] : []} />
+                                />
                         ], corpusOutput.right)}
                     </span>
                 </td>
             );
         }
 
-        _renderText(corpusIdx:number, corpusOutput:KWICSection, shadowOutput:KWICSection) {
+        _renderText(corpusOutput, corpusIdx) {
+            const corpname = this.props.cols[corpusIdx].n;
             if (this.props.viewMode === 'kwic') {
-                const corpname = this.props.cols[corpusIdx].n;
                 return <TextKwicMode
                             corpname={corpname}
-                            corpusIdx={corpusIdx}
                             isAlignedMainCorp={this.props.mainCorp === corpname && this.props.cols.length > 1}
                             corpsWithKwic={this.props.corpsWithKwic}
                             supportsTokenConnect={this.props.supportsTokenConnect}
                             lineIdx={this.props.lineIdx}
                             output={corpusOutput}
-                            shadowOutput={shadowOutput}
-                            highlightItems={this.props.highlightItems}
                             kwicLength={this.props.data.kwicLength}
                             tokenConnectClickHandler={this._detailClickHandler}
                             attrViewMode={this.props.attrViewMode}
-                            audioPlayerStatus={this.props.audioPlayerStatus} />;
+                            audioPlayerStatus={this.props.audioPlayerStatus}
+                        />;
 
             } else {
-                return this._renderTextParMode(corpusIdx, corpusOutput, shadowOutput);
+                return this._renderTextParMode(corpname, corpusOutput);
             }
         }
 
-        _renderTextSimple(corpusOutput:KWICSection) {
-            const mp  = v => v.text.join(' ');
-            return corpusOutput.left.map(mp)
-                    .concat(corpusOutput.kwic.map(mp))
-                    .concat(corpusOutput.right.map(mp))
-                    .join(' ');
+        _renderTextSimple(corpusOutput:KWICSection):string {
+            return pipe(
+                [...corpusOutput.left, ...corpusOutput.kwic, ...corpusOutput.right],
+                List.flatMap(v => v.text),
+                List.map(v => v.s),
+                x => x.join(' ')
+            );
         }
 
         _handleKwicClick(corpusId, tokenNumber, lineIdx) {
@@ -706,9 +723,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         }
 
         _handleNonKwicTokenClick(corpusId, lineIdx, tokenNumber) {
-            if (this.props.supportsTokenConnect) {
-                this._detailClickHandler(corpusId, tokenNumber, -1, lineIdx);
-            }
+            this._detailClickHandler(corpusId, tokenNumber, -1, lineIdx);
         }
 
         _refsDetailClickHandler(corpusId, tokenNumber, lineIdx) {
@@ -724,9 +739,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
 
         render() {
             const primaryLang = List.head(this.props.data.languages);
-            const shadowPrimaryLang = this.props.shadowData ? List.head(this.props.shadowData.languages) : null;
             const alignedCorpora = List.tail(this.props.data.languages);
-            const shadowAlignedCorpora = this.props.shadowData ? List.tail(this.props.shadowData.languages) : null;
             const htmlClasses = [];
             if (this.props.data.hasFocus) {
                 htmlClasses.push('active');
@@ -772,7 +785,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
 
                     </td>
                     {List.head(this.props.cols).visible ?
-                            this._renderText(0, primaryLang, shadowPrimaryLang) :
+                            this._renderText(primaryLang, 0) :
                             <td title={this._renderTextSimple(primaryLang)}>{'\u2026'}</td>
                     }
                     {alignedCorpora.map((alCorp, i) => {
@@ -786,7 +799,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                                         emptyRefValPlaceholder={this.props.emptyRefValPlaceholder}
                                         refsDetailClickHandler={this._refsDetailClickHandler} />
                                 </td>
-                                {alCorp.tokenNumber > -1 ? this._renderText(i + 1, alCorp, shadowAlignedCorpora ? shadowAlignedCorpora[i] : null) :
+                                {alCorp.tokenNumber > -1 ? this._renderText(alCorp, i + 1) :
                                     <td className="note">{`// ${he.translate('concview__translat_not_avail')} //`}</td>
                                 }
                             </React.Fragment>;
@@ -829,8 +842,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                         return <Line key={`${i}:${List.head(line.languages).tokenNumber}`}
                             lineIdx={i}
                             data={line}
-                            shadowData={this.props.shadowLines ? this.props.shadowLines[i] : null}
-                            highlightItems={this.props.highlightItems}
                             groupColor={bgColor}
                             groupTextColor={fgColor}
                             cols={this.props.corporaColumns}
@@ -845,7 +856,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                             emptyRefValPlaceholder={this.props.emptyRefValPlaceholder}
                             supportsSyntaxView={this.props.supportsSyntaxView}
                             supportsTokenConnect={this.props.supportsTokenConnect}
-                            audioPlayerStatus={this.props.audioPlayerStatus} />
+                            audioPlayerStatus={this.props.audioPlayerStatus}
+                        />
                     },
                     this.props.lines
                 )}

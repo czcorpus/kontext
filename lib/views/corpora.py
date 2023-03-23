@@ -141,8 +141,8 @@ async def ajax_get_corp_details(amodel: CorpusActionModel, req: KRequest, resp: 
 
 
 @bp.route('/ajax_get_structattrs_details')
-@http_action(action_model=UserActionModel, return_type='json')
-async def ajax_get_structattrs_details(amodel: UserActionModel, req: KRequest, resp: KResponse):
+@http_action(action_model=CorpusActionModel, return_type='json')
+async def ajax_get_structattrs_details(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     """
     Provides a map (struct_name=>[list of attributes]). This is used
     by 'insert within' widget.
@@ -165,7 +165,7 @@ async def bibliography(amodel: CorpusActionModel, req: KRequest, resp: KResponse
 
 @bp.route('/ajax_get_corparch_item')
 @http_action(action_model=CorpusActionModel, return_type='json')
-async def ajax_get_corp_details(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
+async def ajax_get_corparch_item(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     corpname = getattr(amodel.args, 'corpname')
     user_id = amodel.session_get('user', 'id')
 
@@ -175,7 +175,7 @@ async def ajax_get_corp_details(amodel: CorpusActionModel, req: KRequest, resp: 
         variant=amodel._corpus_variant,
         name=amodel.corp.human_readable_corpname,
         usesubcorp=amodel.corp.subcorpus_id,
-        origSubcorpName=amodel.corp.subcorpus_name,
+        subcName=amodel.corp.subcorpus_name,
         foreignSubcorp=user_id != amodel.corp.author_id,
         size=amodel.corp.size,
         searchSize=amodel.corp.search_size,

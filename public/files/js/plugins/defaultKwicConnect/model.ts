@@ -30,7 +30,7 @@ import { FreqServerArgs } from '../../models/freqs/regular/common';
 import { HTTP, List } from 'cnc-tskit';
 import { Actions } from './actions';
 import { IPluginApi } from '../../types/plugins/common';
-import { HighlightItem } from '../../models/concordance/main';
+import { HighlightItem, mergeHighlightItems } from '../../models/concordance/main';
 
 
 export enum KnownRenderers {
@@ -81,6 +81,7 @@ export interface ProviderWordMatch {
     note:string;
     renderer:PluginInterfaces.TokenConnect.Renderer;
     data:Array<ProviderOutput>;
+    highlights:{[value:string]:boolean};
 }
 
 export interface KwicConnectState {
@@ -255,7 +256,6 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
                             this.pluginApi.showMessage('error', error);
                         }
                     });
-
                 }
             }
         );
@@ -264,8 +264,62 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
             ConcActions.SetHighlightItems,
             action => {
                 this.changeState(state => {
-                    state.highlightItems = action.payload.items;
+                    state.highlightItems = mergeHighlightItems(
+                        state.highlightItems,
+                        action.payload.items,
+                        false
+                    );
+                    state.isBusy = true;
                 });
+            }
+        );
+
+        this.addActionHandler(
+            ConcActions.SetHighlightItemsDone,
+            action => {
+                if (action.error) {
+                    this.pluginApi.showMessage('error', action.error);
+
+                } else {
+                    this.changeState(
+                        state => {
+                            state.highlightItems = action.payload.items;
+                            state.isBusy = false;
+                        }
+                    );
+                }
+            }
+        );
+
+        this.addActionHandler(
+            ConcActions.HighlightedTokenMouseover,
+            action => {
+                this.changeState(
+                    state => {
+                        List.forEach(
+                            pwMatch => {
+                                pwMatch.highlights[action.payload.value] = true;
+                            },
+                            state.data
+                        );
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            ConcActions.HighlightedTokenMouseout,
+            action => {
+                this.changeState(
+                    state => {
+                        List.forEach(
+                            pwMatch => {
+                                pwMatch.highlights[action.payload.value] = false;
+                            },
+                            state.data
+                        );
+                    }
+                );
             }
         );
     }
@@ -344,7 +398,8 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
                                         heading: p.label,
                                         note: null,
                                         renderer: null,
-                                        data: []
+                                        data: [],
+                                        highlights: {}
                                     }), data.providers)
                                 )
                             )
@@ -370,7 +425,8 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
                                             }],
                                             heading: p.label,
                                             note: null,
-                                            renderer: this.rendererMap(KnownRenderers.MESSAGE)
+                                            renderer: this.rendererMap(KnownRenderers.MESSAGE),
+                                            highlights: {}
                                         }), data.providers)
                                     )
                                 )
@@ -408,7 +464,8 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
                 heading: providerData.heading,
                 note: providerData.note,
                 renderer: providerData.renderer,
-                data: List.concat(newData[i].data, providerData.data)
+                data: List.concat(newData[i].data, providerData.data),
+                highlights: {}
             }), state.data);
 
         } else {
@@ -454,16 +511,25 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
             ).pipe(
                 concatMap(
                     (responseData) => {
-                        return rxOf(List.map(provider => ({
-                            data: List.map(item => ({
-                                contents: item.contents,
-                                found: item.status,
-                                kwic: item.kwic
-                            }), provider.data),
-                            heading: provider.heading,
-                            note: provider.note,
-                            renderer: this.rendererMap(provider.renderer)
-                        }), responseData.data));
+                        return rxOf(
+                            List.map(
+                                provider => ({
+                                    data: List.map(
+                                        item => ({
+                                            contents: item.contents,
+                                            found: item.status,
+                                            kwic: item.kwic
+                                        }),
+                                        provider.data
+                                    ),
+                                    heading: provider.heading,
+                                    note: provider.note,
+                                    renderer: this.rendererMap(provider.renderer),
+                                    highlights: {}
+                                }),
+                                responseData.data
+                            )
+                        );
                     }
                 )
             );
@@ -483,7 +549,6 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
             freq_sort: 'freq',
             fmaxitems: KwicConnectModel.UNIQ_KWIC_FREQ_PAGESIZE,
             freqlevel: undefined,
-            ftt_include_empty: undefined,
             format: 'json'
         };
         return this.pluginApi.ajax$<ttResponse.FreqData>(

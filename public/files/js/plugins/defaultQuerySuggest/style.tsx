@@ -86,16 +86,6 @@ export const PosAttrPairRelRenderer = styled.div`
                 border-top-color: ${theme.colorLightGrey};
                 border-top-style: solid;
             }
-
-            a {
-                color: ${theme.colorLogoBlue};
-                text-decoration: none;
-            }
-
-            a:hover {
-                color: ${theme.colorLogoBlue};
-                text-decoration: underline;
-            }
         }
     }
 

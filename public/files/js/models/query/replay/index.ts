@@ -582,8 +582,11 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 concatMap(
                     () => {
                         if (opIdx < numOps - 1) {
-                            const args = this.queryModel.createSubmitArgs(
-                                queryContext, false, ttSelection, false);
+                            const args = this.queryModel.createSubmitArgs({
+                                contextFormArgs: queryContext,
+                                async: false,
+                                ttSelection
+                            });
                             const url = this.pageModel.createActionUrl(
                                 'query_submit',
                                 {format: 'json'}
@@ -596,10 +599,10 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
 
                             ).pipe(
                                 map(
-                                    resp => tuple(
-                                        resp,
-                                        resp.messages || []
-                                    )
+                                    response => ({
+                                        response,
+                                        messages: response.messages || []
+                                    })
                                 )
                             )
 
@@ -610,11 +613,11 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                     }
                 ),
                 concatMap(
-                    ([data,]) => this.pageModel.ajax$<AjaxConcResponse>(
+                    ({response}) => this.pageModel.ajax$<AjaxConcResponse>(
                         HTTP.Method.GET,
                         this.queryModel.createViewUrl(
-                            data.conc_persistence_op_id,
-                            data.conc_args,
+                            response.conc_persistence_op_id,
+                            response.conc_args,
                             true,
                             false
                         ),
@@ -792,14 +795,41 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             ...this.pageModel.getConcArgs(),
             q: '~' + state.lastOperationKey
         };
-        return this.pageModel.ajax$<QueryPipelineResponse>(
-            HTTP.Method.GET,
-            this.pageModel.createActionUrl('load_query_pipeline'),
-            args
 
+        return (
+            List.size(state.operations) === Dict.size(state.concArgsCache) ?
+                rxOf<{
+                    ops:Array<QueryPipelineResponseItem>;
+                    query_overview:Array<Kontext.QueryOperation>;
+                }>({
+                    ops: pipe(
+                        state.operations,
+                        List.map(op => ({
+                            form_args: state.concArgsCache[op.concPersistenceId],
+                            id: op.concPersistenceId
+                        }))
+                    ),
+                    query_overview: pipe(
+                        state.operations,
+                        List.map(op => ({
+                            op: op.op,
+                            opid: op.opid,
+                            nicearg: null,
+                            arg: op.encodedArgs,
+                            size: op.size,
+                            fullsize: op.fullSize,
+                            conc_persistence_op_id: op.concPersistenceId
+                        }))
+                    )
+                }) :
+                this.pageModel.ajax$<QueryPipelineResponse>(
+                    HTTP.Method.GET,
+                    this.pageModel.createActionUrl('load_query_pipeline'),
+                    args
+                )
         ).pipe(
             map(
-                (data) => {
+                data => {
                     const newCache = pipe(
                         data.ops,
                         List.map(item =>tuple(item.id, item.form_args)),

@@ -39,12 +39,15 @@ export interface SubcorpusServerRecord {
     is_draft:number;
     created:number;
     archived:number|undefined;
-    published:number|undefined;
     public_description:string|undefined;
     public_description_raw:string|undefined;
+    bib_id_attr:string;
+    bib_label_attr:string;
     cql:string|undefined;
     within_cond:Array<ServerWithinSelection>|undefined;
     text_types:TextTypes.ExportedSelection|undefined;
+    aligned:Array<string>|null;
+    version:number;
 }
 
 export interface SubcorpusPropertiesResponse {
@@ -52,6 +55,7 @@ export interface SubcorpusPropertiesResponse {
     textTypes:TTInitialData;
     structsAndAttrs:Kontext.StructsAndAttrs;
     liveAttrsEnabled:boolean;
+    availableAligned:Array<Kontext.AttrItem>;
 }
 
 
@@ -70,7 +74,6 @@ export interface SubcorpusRecord {
     name:string;
     created:number;
     archived:number|undefined;
-    published:number|undefined;
     selections:SelectionsType;
     size:number;
     isDraft:boolean;
@@ -78,6 +81,9 @@ export interface SubcorpusRecord {
     descriptionRaw:string|undefined;
     authorId:number;
     authorFullname:string;
+    bibIdAttr:string;
+    bibLabelAttr:string;
+    aligned:Array<string>|undefined;
 }
 
 export function subcServerRecord2SubcorpusRecord(srec:SubcorpusServerRecord):SubcorpusRecord {
@@ -87,7 +93,6 @@ export function subcServerRecord2SubcorpusRecord(srec:SubcorpusServerRecord):Sub
         name: srec.name,
         created: srec.created,
         archived: srec.archived,
-        published: srec.published,
         selections: srec.text_types ||
             srec.within_cond ||
             srec.cql,
@@ -96,7 +101,10 @@ export function subcServerRecord2SubcorpusRecord(srec:SubcorpusServerRecord):Sub
         description: srec.public_description,
         descriptionRaw: srec.public_description_raw,
         authorId: srec.author_id,
-        authorFullname: srec.author_fullname
+        authorFullname: srec.author_fullname,
+        bibIdAttr: srec.bib_id_attr,
+        bibLabelAttr: srec.bib_label_attr,
+        aligned: srec.aligned,
     };
 }
 
@@ -138,6 +146,7 @@ interface SubmitBase {
 export interface CreateSubcorpusArgs extends SubmitBase {
     text_types:TextTypes.ExportedSelection;
     aligned_corpora:Array<string>;
+    size?:number;
     usesubcorp?:string; // if used then we expect the referred subc. to be a draft (= mutable subc.)
     form_type:'tt-sel';
 }
@@ -191,8 +200,8 @@ export function importServerSubcList(data:Array<SubcorpusServerRecord>):Array<Su
         created: new Date(item.created * 1000),
         archived: item.archived ? new Date(item.archived * 1000) : undefined,
         selected: false,
-        published: item.published ? new Date(item.published * 1000) : undefined,
         public_description: item.public_description,
+        bib_id_attr: item.bib_id_attr
     }), data);
 }
 

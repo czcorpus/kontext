@@ -43,9 +43,12 @@ LOG_LEVELS = OrderedDict(
 )
 
 DEFAULT_LOG_OUT = sys.stderr
+CONF_PATH = os.getenv('CONF_PATH')
+if not CONF_PATH:
+    CONF_PATH = os.path.join(APP_PATH, 'conf/config.xml')
 
 import settings
-settings.load('%s/conf/config.xml' % APP_PATH)
+settings.load(CONF_PATH)
 
 logger = logging.getLogger()
 

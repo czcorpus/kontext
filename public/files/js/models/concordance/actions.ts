@@ -20,7 +20,7 @@
 
 import { Action } from 'kombo';
 import { AudioPlayerActions, DetailExpandPositions, LineSelectionModes, LineSelValue,
-    AjaxConcResponse, LineGroupId, RefsColumn, PaginationActions, LineGroupChartData } from './common';
+    AjaxConcResponse, LineGroupId, RefsColumn, PaginationActions, LineGroupChartData, ConcViewMode } from './common';
 import * as TextTypes from '../../types/textTypes';
 import { DataSaveFormat } from '../../app/navigation/save';
 import { HighlightItem } from './main';
@@ -101,6 +101,7 @@ export class Actions {
     static ReloadConc:Action<{
         concId:string;
         isPopState?:boolean;
+        viewMode?:ConcViewMode;
     }> = {
         name: 'CONCORDANCE_RELOAD_CONC'
     };
@@ -455,6 +456,10 @@ export class Actions {
         name: 'LINE_SELECTION_TOGGLE_LINE_GROUP_RENAME'
     };
 
+    static CopyLineSelectionLinkToClipboard:Action<{}> = {
+        name: 'LINE_SELECTION_COPY_LINE_SELECTION_TO_CLIPBOARD'
+    };
+
     static MakeConcPermanent:Action<{
         revoke:boolean;
     }> = {
@@ -498,4 +503,29 @@ export class Actions {
     }> = {
         name: 'CONCORDANCE_SET_HIGHLIGHT_ITEMS'
     };
+
+    static isSetHighlightItems(a:Action):a is typeof Actions.SetHighlightItems {
+        return a.name === Actions.SetHighlightItems.name;
+    }
+
+    static SetHighlightItemsDone:Action<{
+        items:Array<HighlightItem>;
+        matchPosAttr:string;
+    }> = {
+        name: 'CONCORDANCE_SET_HIGHLIGHT_ITEMS_DONE'
+    };
+
+    static HighlightedTokenMouseover:Action<{
+        attr:string;
+        value:string;
+    }> = {
+        name: 'CONCORDANCE_HIGHLIGHTED_TOKEN_MOUSEOVER'
+    }
+
+    static HighlightedTokenMouseout:Action<{
+        attr:string;
+        value:string;
+    }> = {
+        name: 'CONCORDANCE_HIGHLIGHTED_TOKEN_MOUSEOUT'
+    }
 }

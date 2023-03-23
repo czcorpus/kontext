@@ -102,7 +102,7 @@ class TreeNode {
             case 'sentence':
                 return <span key={index} className={`${this.className} sentence`}>{renderedChildren}</span>;
             default:
-                console.warn(`Unknown element type, can not render: ${this.element}`);
+                console.warn(`Unknown element type, cannot render: ${this.element}`);
                 return <span key={index} className={this.className}>{renderedChildren}</span>;
         }
     }

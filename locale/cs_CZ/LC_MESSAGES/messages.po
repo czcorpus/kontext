@@ -231,8 +231,8 @@ msgstr "Předchozí dotazy"
 msgid "Word List"
 msgstr "Seznam slov"
 
-msgid "Current concordance"
-msgstr "Aktuální konkordance"
+msgid "Show"
+msgstr "Zobrazit"
 
 msgid "Sorting"
 msgstr "Třídění"
@@ -255,8 +255,8 @@ msgstr "Negativní"
 msgid "Frequency"
 msgstr "Frekvence"
 
-msgid "Node forms"
-msgstr "Slovní tvary"
+msgid "Node forms [A=a]"
+msgstr "Slovní tvary [A=a]"
 
 msgid "Doc IDs"
 msgstr "Dokumenty"
@@ -441,9 +441,6 @@ msgstr "Nelze měnit status konkordance, která patří jinému uživateli"
 msgid "Access forbidden - please log-in."
 msgstr "Přístup zamítnut - přihlašte se prosím."
 
-msgid "Undo"
-msgstr "Zpět"
-
 msgid "Public subcorpora"
 msgstr "Veřejné subkorpusy"
 
@@ -548,3 +545,15 @@ msgstr "Výpočet paradigmatického dotazu"
 
 msgid "Go to the constituent concordance #{}"
 msgstr "Přejít na dílčí konkordanci #{}"
+
+msgid "KonText concordance link"
+msgstr "Odkaz na konkordanci v KonTextu"
+
+msgid "KonText user {} has sent to you a concordance link to you"
+msgstr "Uživatel KonTextu {} vám zaslal odkaz na konkordanci"
+
+msgid "KonText frequency table link"
+msgstr "Odkaz na frekvenční tabulku v KonTextu"
+
+msgid "KonText user {} has sent to you a link to a frequency distribution table"
+msgstr "Uživatel KonTextu {} vám zaslal odkaz na tabulku frekvenční distribuce"

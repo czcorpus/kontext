@@ -20,16 +20,17 @@
 
 import * as React from 'react';
 import * as Kontext from '../../../types/kontext';
-import { Dict, Keyboard, List, Maths, pipe } from 'cnc-tskit';
+import { Dict, List, Maths, pipe } from 'cnc-tskit';
 import { init as dataRowsInit } from '../dataRows';
 import { init as initSaveViews } from './save';
 import { init as initChartViews } from '../charts';
+import { init as initFreqCommonViews } from '../common';
 import { FreqDataRowsModel } from '../../../models/freqs/regular/table';
 import { IActionDispatcher, BoundWithProps, Bound } from 'kombo';
 import { Actions } from '../../../models/freqs/regular/actions';
 import * as S from './style';
 import { FreqChartsModel } from '../../../models/freqs/regular/freqCharts';
-import { FreqDataRowsModelState, isEmptyResultBlock } from '../../../models/freqs/regular/common';
+import { FreqDataRowsModelState, FreqViewProps, isEmptyResultBlock } from '../../../models/freqs/regular/common';
 import { alphaToCoeffFormatter, FreqResultViews } from '../../../models/freqs/common';
 import { FreqChartsSaveFormModel } from '../../../models/freqs/regular/saveChart';
 import { FreqResultsSaveModel } from '../../../models/freqs/regular/save';
@@ -55,6 +56,8 @@ export function init(
         dispatcher, he, freqChartsModel, freqChartsSaveModel);
     const saveViews = initSaveViews(dispatcher, he, freqTableSaveModel);
     const alphaToCoeff = alphaToCoeffFormatter(he);
+    const {ShareLinkWidget} = initFreqCommonViews(dispatcher, he);
+
 
     // ----------------------- <Paginator /> -------------------------
 
@@ -65,6 +68,10 @@ export function init(
         totalItems:number;
         sourceId:string;
         shareLink:string|null;
+        email:string;
+        shareWidgetIsBusy:boolean;
+        onShowShare:(sourceId:string)=>void;
+        onHideShare:()=>void;
     }
 
     const Paginator:React.FC<PaginatorProps> = (props) => {
@@ -79,18 +86,10 @@ export function init(
             });
         };
 
-        const showShare = () => {
-            dispatcher.dispatch<typeof Actions.ResultShowShareLink>({
-                name: Actions.ResultShowShareLink.name,
-                payload: {sourceId: props.sourceId}
-            });
-        }
-
-        const hideShare = () => {
-            dispatcher.dispatch<typeof Actions.ResultHideShareLink>({
-                name: Actions.ResultHideShareLink.name
-            });
-        }
+        const shareIcon = <img
+            src={he.createStaticUrl('img/share.svg')}
+            alt="share"
+            style={{width: '1em'}} />;
 
         return (
             <S.FreqPaginator className="ktx-pagination">
@@ -104,21 +103,30 @@ export function init(
                     {he.translate('freq__avail_items_{num_items}', {num_items: props.totalItems})})
                 </div>
                 <div className="share">
-                    <label>{he.translate('freq__share_table')}: </label>
-                    <a onClick={showShare}>
-                        <img className="over-img" style={{width: '1em', verticalAlign: 'middle'}} src={he.createStaticUrl('img/share.svg')}
-                                alt={he.translate('freq__share_table')} title={he.translate('freq__share_table')} />
+                    <label>{he.translate('freq__share_table')}:</label>
+                    <a onClick={()=>props.onShowShare(props.sourceId)}>
+                        <globalComponents.ImgWithMouseover
+                                style={{width: '1em', verticalAlign: 'middle'}}
+                                src={he.createStaticUrl('img/share.svg')}
+                                alt={he.translate('freq__share_table')}
+                                title={he.translate('freq__share_table')} />
                     </a>
                 </div>
                 { props.shareLink ?
-                    <globalComponents.ModalOverlay onCloseKey={hideShare}>
-                        <globalComponents.CloseableFrame onCloseClick={hideShare} label={he.translate('freq__share_table')}>
-                            <input className="share-link" type="text" readOnly={true}
-                                onClick={(e)=> (e.target as HTMLInputElement).select()}
-                                value={props.shareLink} />
+                    <globalComponents.ModalOverlay onCloseKey={props.onHideShare}>
+                        <globalComponents.CloseableFrame
+                                onCloseClick={props.onHideShare}
+                                label={he.translate('freq__share_table')}
+                                icon={shareIcon}>
+                            <ShareLinkWidget
+                                    sourceId={props.sourceId}
+                                    url={props.shareLink}
+                                    isBusy={props.shareWidgetIsBusy}
+                                    email={props.email} />
                         </globalComponents.CloseableFrame>
                     </globalComponents.ModalOverlay> : null
                 }
+
             </S.FreqPaginator>
         );
     };
@@ -236,13 +244,13 @@ export function init(
 
     // ----------------------- <FreqTablesView /> ------------------------
 
-    const _FreqTablesView:React.FC<FreqDataRowsModelState> = (props) => {
+    const _FreqTablesView:React.FC<FreqDataRowsModelState & FreqViewProps> = (props) => {
 
         const handleSaveFormClose = () => {
             dispatcher.dispatch(
                 Actions.ResultCloseSaveForm,
             );
-        }
+        };
 
         const handleConfidenceToggle = (checked:boolean) => {
             dispatcher.dispatch<typeof Actions.ToggleDisplayConfidence>({
@@ -251,7 +259,18 @@ export function init(
                     value: checked
                 }
             });
-        }
+        };
+
+        const hideShare = () => {
+            dispatcher.dispatch(Actions.ResultHideShareLink);
+        };
+
+        const showShare = (sourceId:string) => {
+            dispatcher.dispatch(
+                Actions.ResultShowShareLink,
+                {sourceId}
+            );
+        };
 
         return (
             <div className="FreqResultView">
@@ -286,7 +305,15 @@ export function init(
                                             totalPages={block.TotalPages}
                                             isLoading={props.isBusy[sourceId]}
                                             totalItems={block.Total}
-                                            shareLink={props.shareLink && sourceId === props.shareLink.sourceId ? props.shareLink.url : null}/>
+                                            shareLink={
+                                                props.shareLink && sourceId === props.shareLink.sourceId ?
+                                                    props.shareLink.url :
+                                                    null
+                                                    }
+                                            email={props.userEmail}
+                                            shareWidgetIsBusy={props.shareWidgetIsBusy}
+                                            onShowShare={showShare}
+                                            onHideShare={hideShare} />
                                     <div>
                                         <drViews.DataTable head={block.Head}
                                                 sortColumn={props.sortColumn[sourceId]}
@@ -311,11 +338,11 @@ export function init(
         );
     }
 
-    const FreqTablesView = BoundWithProps(_FreqTablesView, freqDataRowsModel)
+    const FreqTablesView = BoundWithProps<FreqViewProps, FreqDataRowsModelState>(_FreqTablesView, freqDataRowsModel)
 
     // ----------------------- <FreqResultView /> -------------------------
 
-    const FreqResultView:React.FC<TabWrapperModelState> = (props) => {
+    const FreqResultView:React.FC<TabWrapperModelState & FreqViewProps> = (props) => {
 
         const handleTabSelection = (value:string) => {
             dispatcher.dispatch<typeof Actions.ResultSetActiveTab>({
@@ -325,6 +352,7 @@ export function init(
                 }
             });
         }
+
         return (
             <S.FreqResultView>
                 <FilterForm minFreqVal={props.flimit} alphaLevel={props.alphaLevel} />
@@ -340,9 +368,9 @@ export function init(
                         defaultId={props.activeTab}
                         noButtonSeparator={true} >
                     <div>
-                        <chartViews.FreqChartsView />
+                        <chartViews.FreqChartsView userEmail={props.userEmail} />
                     </div>
-                    <FreqTablesView />
+                    <FreqTablesView userEmail={props.userEmail} />
                 </globalComponents.TabView>
             </S.FreqResultView>
         );
@@ -350,6 +378,6 @@ export function init(
 
 
     return {
-        FreqResultView: Bound(FreqResultView, tabSwitchModel)
+        FreqResultView: BoundWithProps<FreqViewProps, TabWrapperModelState>(FreqResultView, tabSwitchModel)
     };
 }

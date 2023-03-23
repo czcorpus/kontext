@@ -79,7 +79,7 @@ export interface QueryToolbarProps {
     corpname:string;
     humanCorpname:string;
     usesubcorp:string;
-    origSubcorpName:string;
+    subcName:string;
     foreignSubcorp:boolean;
     queryFormProps:QueryFormLiteProps;
     filterFormProps:FilterFormProps;
@@ -89,6 +89,7 @@ export interface QueryToolbarProps {
     filterSubHitsFormProps:SubHitsFormProps;
     filterFirstDocHitsFormProps:FirstHitsFormProps;
     sortFormProps:SortFormProps;
+    cutoff:number;
 }
 
 
@@ -96,7 +97,7 @@ export interface NonViewPageQueryToolbarProps {
     corpname:string;
     humanCorpname:string;
     usesubcorp:string;
-    origSubcorpName:string;
+    subcName:string;
     foreignSubcorp:boolean;
     queryFormProps?:QueryFormProps;
     filterFormProps?:FilterFormProps;
@@ -105,6 +106,7 @@ export interface NonViewPageQueryToolbarProps {
     filterSubHitsFormProps?:SubHitsFormProps;
     filterFirstDocHitsFormProps?:FirstHitsFormProps;
     sortFormProps?:SortFormProps;
+    cutoff:number;
 }
 
 export interface OverviewViews {
@@ -117,8 +119,14 @@ type AnyEditorProps = QueryFormLiteProps | FilterFormProps | SubHitsFormProps | 
         SortFormProps | SampleFormProps | ShuffleFormProps | SwitchMainCorpFormProps | FirstHitsFormProps;
 
 
-export function init({dispatcher, he, viewDeps, queryReplayModel,
-                      mainMenuModel, querySaveAsModel}:OverviewModuleArgs):OverviewViews {
+export function init({
+    dispatcher,
+    he,
+    viewDeps,
+    queryReplayModel,
+    mainMenuModel,
+    querySaveAsModel
+}:OverviewModuleArgs):OverviewViews {
 
     const layoutViews = he.getLayoutViews();
     const basicOverviewViews = basicOverviewInit(dispatcher, he, mainMenuModel);
@@ -341,6 +349,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         corpname:string;
         numOps:number;
         item:PersistentQueryOperation;
+        cutoff:number;
         editorProps:AnyEditorProps;
         hasOpenEditor:boolean;
         groupsSelected:boolean;
@@ -368,7 +377,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         };
 
         const showSize = () => {
-            if (props.item.fullSize > props.item.size) {
+            if (props.cutoff) {
                 return `(${he.translate('query__overview_using_implicit_sample_{size}', {size: props.item.size})})`;
 
             } else if (props.item.size) {
@@ -408,6 +417,22 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         );
     };
 
+    // ------------------------ <QueryOverviewButton /> ---------------------------
+
+    const QueryOverviewButton:React.FC<{}> = (props) => {
+
+        const handleQueryOverview = () => {
+            dispatcher.dispatch(MainMenuActions.OverviewShowQueryInfo);
+        };
+
+        return (
+            <S.QueryOverviewLinkSpan>
+                <strong className="separ">~</strong>
+                <a title={he.translate('global__query_overview')} onClick={handleQueryOverview}>{he.translate('global__details')}</a>
+            </S.QueryOverviewLinkSpan>
+        );
+    };
+
 
     // ------------------------ <QueryOverview /> --------------------------------
 
@@ -415,8 +440,9 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         corpname:string;
         humanCorpname:string;
         usesubcorp:string;
-        origSubcorpName:string;
+        subcName:string;
         foreignSubcorp:boolean;
+        cutoff:number;
         queryFormProps:QueryFormLiteProps;
         filterFormProps:FilterFormProps;
         filterFirstDocHitsFormProps:FirstHitsFormProps;
@@ -508,7 +534,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                                     corpname={props.corpname}
                                     humanCorpname={props.humanCorpname}
                                     usesubcorp={props.usesubcorp}
-                                    origSubcorpName={props.origSubcorpName}
+                                    subcName={props.subcName}
                                     foreignSubcorp={props.foreignSubcorp} />
                             : null}
                     {List.map(
@@ -517,6 +543,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                                 corpname={props.corpname}
                                 key={`op_${i}`}
                                 idx={i}
+                                cutoff={props.cutoff}
                                 item={item}
                                 numOps={List.size(props.operations)}
                                 clickHandler={handleEditClick(i)}
@@ -541,6 +568,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                         </S.GroupIndicator> :
                         null
                     }
+                    <QueryOverviewButton />
                 </Style_QueryOverviewBarUL>
             </div>
         );
@@ -557,9 +585,10 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         corpname:string;
         humanCorpname:string;
         usesubcorp:string;
-        origSubcorpName:string;
+        subcName:string;
         foreignSubcorp:boolean;
         ops:Array<PersistentQueryOperation>;
+        cutoff:number;
 
     }> = (props) => {
 
@@ -581,7 +610,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                                     corpname={props.corpname}
                                     humanCorpname={props.humanCorpname}
                                     usesubcorp={props.usesubcorp}
-                                    origSubcorpName={props.origSubcorpName}
+                                    subcName={props.subcName}
                                     foreignSubcorp={props.foreignSubcorp} />
                             : null}
                     {List.map(
@@ -598,7 +627,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                             isLoading={false}
                             modeRunFullQuery={false}
                             shuffleMinResultWarning={null}
-                            groupsSelected={true} />,
+                            groupsSelected={true}
+                            cutoff={props.cutoff} />,
                         props.ops
                     )}
             </Style_QueryOverviewBarUL>
@@ -696,6 +726,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
             super(props);
             this.handleCloseEvent = this.handleCloseEvent.bind(this);
             this.handleSubmit = this.handleSubmit.bind(this);
+            this.handleRevokeSubmit = this.handleRevokeSubmit.bind(this);
+            this.handleCopyToClipboard = this.handleCopyToClipboard.bind(this);
         }
 
         private handleCloseEvent() {
@@ -726,17 +758,28 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
             return he.createActionLink('view', {q: '~' + this.props.queryId});
         }
 
+        private handleCopyToClipboard() {
+            dispatcher.dispatch(
+                Actions.CopyPermalinkToClipboard,
+                {url: this.createPermanentUrl()}
+            );
+        }
+
         componentDidMount() {
-            dispatcher.dispatch<typeof ConcActions.GetConcArchiveStatus>({
-                name: ConcActions.GetConcArchiveStatus.name
-            });
+            dispatcher.dispatch(
+                ConcActions.GetConcArchiveStatus
+            );
         }
 
         render() {
             return (
                 <layoutViews.ModalOverlay onCloseKey={this.handleCloseEvent}>
                     <layoutViews.CloseableFrame onCloseClick={this.handleCloseEvent}
-                                label={he.translate('concview__make_conc_link_permanent_hd')}>
+                                label={he.translate('concview__make_conc_link_permanent_hd')}
+                                icon={<img
+                                        src={he.createStaticUrl('img/share.svg')}
+                                        alt="share"
+                                        style={{width: '1em'}} />}>
                         {this.props.isBusy ?
                             <layoutViews.AjaxLoaderImage /> :
                             <Style_PersistentConcordanceForm>
@@ -747,13 +790,20 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                                         he.translate('concview__permanent_link_hint_{ttl}', {ttl: this.props.concTTLDays})
                                     }
                                 </Style_SaveHintParagraph>
-                                <div>
+                                <div className="link">
                                     <input type="text" readOnly={true}
                                             disabled={!this.props.concIsArchived}
                                             value={this.createPermanentUrl()}
                                             className={this.props.concIsArchived || this.props.willBeArchived ? 'archived' : ''}
                                             onClick={e => this.props.concIsArchived || this.props.willBeArchived ?
                                                             (e.target as HTMLInputElement).select() : null} />
+                                    <a onClick={this.handleCopyToClipboard}>
+                                        <layoutViews.ImgWithMouseover
+                                                src={he.createStaticUrl('img/copy-icon.svg')}
+                                                src2={he.createStaticUrl('img/copy-icon_s.svg')}
+                                                alt={he.translate('global__copy_to_clipboard')}
+                                                style={{width: '1.8em', marginLeft: '0.3em'}} />
+                                    </a>
                                 </div>
                                 <p>
                                     {this.props.concIsArchived || this.props.willBeArchived ?

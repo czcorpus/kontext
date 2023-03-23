@@ -34,7 +34,6 @@ export interface QuickSubcorpModelState {
     subcname: string;
     estimatedSubcSize:number|undefined;
     liveAttrsEnabled:boolean;
-    goToSubcPageWhenDone:boolean;
     isBusy:boolean;
 }
 
@@ -51,7 +50,6 @@ export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelS
             {
                 subcname: '',
                 estimatedSubcSize: undefined,
-                goToSubcPageWhenDone: false,
                 isBusy: false,
                 liveAttrsEnabled
             },
@@ -140,8 +138,9 @@ export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelS
                         action => {
                             if (TTActions.isTextTypesQuerySubmitReady(action)) {
                                 const args:CreateSubcorpusArgs = {
-                                    corpname: pageModel.getNestedConf('corpusIdent', 'id'),
+                                    corpname: pageModel.getCorpusIdent().id,
                                     subcname: this.state.subcname,
+                                    size: this.state.estimatedSubcSize,
                                     description: '',
                                     aligned_corpora: pageModel.getConf('alignedCorpora'),
                                     text_types: action.payload.selections,
@@ -158,15 +157,9 @@ export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelS
                 ).subscribe({
                     next: (resp) => {
                         this.pageModel.showMessage('info', this.pageModel.translate('subc__quick_subcorpus_created'));
-                        if (this.state.goToSubcPageWhenDone) {
-                            window.location.href = this.pageModel.createActionUrl(
-                                'subcorpus/new', {corpname: resp.subc_id.corpus_name, usesubcorp: resp.subc_id.id})
-
-                        } else {
-                            this.dispatchSideEffect(
-                                Actions.QuickSubcorpSubmitDone
-                            );
-                        }
+                        this.dispatchSideEffect(
+                            Actions.QuickSubcorpSubmitDone
+                        );
                     },
                     error: error => {
                         this.pageModel.showMessage('error', error);
@@ -195,15 +188,6 @@ export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelS
             action => {
                 this.changeState(state => {
                     state.subcname = action.payload.value;
-                });
-            }
-        );
-
-        this.addActionHandler(
-            Actions.QuickSubcorpSetGoToSubcPageWhenDone,
-            action => {
-                this.changeState(state => {
-                    state.goToSubcPageWhenDone = action.payload.value;
                 });
             }
         );

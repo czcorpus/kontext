@@ -104,6 +104,13 @@ export const FreqPaginator = styled.div`
         margin-left: 1.5em;
         display: flex;
         align-items: center;
+
+        a {
+            display: flex;
+            align-items: center;
+            text-decoration:none;
+            cursor: pointer;
+        }
     }
 
     .share-link {
@@ -274,4 +281,36 @@ export const TableViewToolbar = styled.div`
     .ToggleSwitch {
         margin: 0 0.5em;
     }
+`;
+
+
+// ----------------- <TTFreqForm /> ---------------------------------------
+
+export const TTFreqForm = styled.div`
+
+    .form {
+
+        td.flimit {
+
+            div {
+                display: flex;
+                align-items: center;
+
+                .note {
+                    display: block;
+                }
+
+                .help-icon {
+                    padding-left: 0.7em;
+
+                    img {
+                        width: 0.8em;
+                        display: block;
+                    }
+                }
+
+            }
+        }
+    }
+
 `;

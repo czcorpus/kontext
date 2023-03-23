@@ -166,26 +166,33 @@ class Args(UserActionArgs):
     spos: int = field(default=5, metadata=mk_metdata())
     skey: str = field(default='rc', metadata=mk_metdata())
     sortlevel: int = field(default=1, metadata=mk_metdata())
+
+    # multi-level freq. distrib
     ml1attr: str = field(default='', metadata=mk_metdata())
     ml2attr: str = field(default='', metadata=mk_metdata())
     ml3attr: str = field(default='', metadata=mk_metdata())
     ml4attr: str = field(default='', metadata=mk_metdata())
+    ml5attr: str = field(default='', metadata=mk_metdata())
     ml1icase: str = field(default='', metadata=mk_metdata())
     ml2icase: str = field(default='', metadata=mk_metdata())
     ml3icase: str = field(default='', metadata=mk_metdata())
     ml4icase: str = field(default='', metadata=mk_metdata())
+    ml5icase: str = field(default='', metadata=mk_metdata())
     ml1bward: str = field(default='', metadata=mk_metdata())
     ml2bward: str = field(default='', metadata=mk_metdata())
     ml3bward: str = field(default='', metadata=mk_metdata())
     ml4bward: str = field(default='', metadata=mk_metdata())
+    ml5bward: str = field(default='', metadata=mk_metdata())
     ml1pos: int = field(default=1, metadata=mk_metdata())
     ml2pos: int = field(default=1, metadata=mk_metdata())
     ml3pos: int = field(default=1, metadata=mk_metdata())
     ml4pos: int = field(default=1, metadata=mk_metdata())
+    ml5pos: int = field(default=1, metadata=mk_metdata())
     ml1ctx: str = field(default='0~0>0', metadata=mk_metdata())
     ml2ctx: str = field(default='0~0>0', metadata=mk_metdata())
     ml3ctx: str = field(default='0~0>0', metadata=mk_metdata())
     ml4ctx: str = field(default='0~0>0', metadata=mk_metdata())
+    ml5ctx: str = field(default='0~0>0', metadata=mk_metdata())
 
     freq_sort: str = field(default='', metadata=mk_metdata())
     heading: int = field(default=0, metadata=mk_metdata())
@@ -194,7 +201,6 @@ class Args(UserActionArgs):
     usearf: int = field(default=0, metadata=mk_metdata())
     collpage: int = field(default=1, metadata=mk_metdata())
     fpage: int = field(default=1, metadata=mk_metdata())
-    ftt_include_empty: int = field(default=0, metadata=mk_metdata())
     ref_usesubcorp: str = field(default='', metadata=mk_metdata())
     wlsort: str = field(default='', metadata=mk_metdata())
     keywords: str = field(default='', metadata=mk_metdata())
@@ -219,6 +225,7 @@ class Args(UserActionArgs):
     structs: str = field(default='', metadata=mk_metdata(
         Persistence.PERSISTENT, comma_separated_to_js))
     q: List[str] = field(default_factory=list, metadata=mk_metdata())
+    cutoff: int = field(default=0, metadata=mk_metdata())
     wlsendmail: str = field(default='', metadata=mk_metdata())
     cup_hl: str = field(default='q', metadata=mk_metdata(Persistence.PERSISTENT))
     structattrs: List[str] = field(
@@ -323,8 +330,8 @@ class Args(UserActionArgs):
                             else:
                                 setattr(self, key, self._upgrade_legacy_value(
                                     key, values[-1], in_args))
-                    except ValueError as ex:
-                        raise ValueError('Request attribute \'{}\': {}'.format(key, ex))
+                    except Exception as ex:
+                        raise RuntimeError(f'Failed to map request attribute \'{key}\': {ex}')
         if len(in_args.corpora) > 0:
             self.corpname = in_args.corpora[0]
             self.align = in_args.corpora[1:] if len(in_args.corpora) > 1 else []

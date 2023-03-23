@@ -62,7 +62,7 @@ async def collx(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     await amodel.save_options(amodel.LOCAL_COLL_OPTIONS, amodel.args.corpname)
 
     try:
-        await require_existing_conc(amodel.corp, amodel.args.q)
+        await require_existing_conc(amodel.corp, amodel.args.q, amodel.args.cutoff)
         ans = asdict(await _collx(
             amodel, req.session_get('user', 'id'), amodel.args.collpage, amodel.args.citemsperpage))
         ans['coll_form_args'] = CollFormArgs().update(amodel.args).to_dict()
@@ -71,7 +71,7 @@ async def collx(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         ans['save_line_limit'] = amodel.COLLS_QUICK_SAVE_MAX_LINES
         ans['text_types_data'] = await amodel.tt.export_with_norms(ret_nums=True)
         ans['quick_save_row_limit'] = amodel.COLLS_QUICK_SAVE_MAX_LINES
-        await amodel.attach_query_overview(ans)
+        await amodel.export_query_forms(ans)
         return ans
     except ConcNotFoundException:
         amodel.go_to_restore_conc('collx')
@@ -82,14 +82,14 @@ async def _collx(amodel: ConcActionModel, user_id: int, collpage: int, citemsper
     if amodel.args.csortfn == '':
         amodel.args.csortfn = 't'
 
-    calc_args = CollCalcArgs(
+    return await calculate_colls(CollCalcArgs(
         corpus_encoding=amodel.corp.get_conf('ENCODING'),
         corpname=amodel.args.corpname,
         subcorpus_id=amodel.corp.subcorpus_id,
         subcorpora_dir=amodel.subcpath,
         user_id=user_id,
         q=amodel.args.q,
-        samplesize=0,  # TODO (check also freqs)
+        cutoff=0,  # TODO (check also freqs)
         cattr=amodel.args.cattr,
         csortfn=amodel.args.csortfn,
         cbgrfns=''.join(amodel.args.cbgrfns),
@@ -98,8 +98,7 @@ async def _collx(amodel: ConcActionModel, user_id: int, collpage: int, citemsper
         cminbgr=amodel.args.cminbgr,
         cminfreq=amodel.args.cminfreq,
         citemsperpage=citemsperpage,
-        collpage=collpage)
-    return await calculate_colls(calc_args)
+        collpage=collpage))
 
 
 @dataclass
@@ -119,7 +118,7 @@ async def savecoll(amodel: ConcActionModel, req: KRequest[SavecollArgs], resp: K
     save collocations
     """
     try:
-        await require_existing_conc(amodel.corp, tuple(amodel.args.q))
+        await require_existing_conc(amodel.corp, tuple(amodel.args.q), amodel.args.cutoff)
         from_line = req.mapped_args.from_line
         # 'corp.size' below is just a safe max value for to_line
         to_line = amodel.corp.size if req.mapped_args.to_line < 0 else req.mapped_args.to_line

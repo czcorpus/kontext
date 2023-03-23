@@ -20,7 +20,7 @@
 
 import { IActionDispatcher, StatelessModel } from 'kombo';
 import { Observable, throwError } from 'rxjs';
-import { pipe, Dict, List, HTTP, tuple } from 'cnc-tskit';
+import { pipe, Dict, List, HTTP, tuple, Maths } from 'cnc-tskit';
 
 import * as Kontext from '../../types/kontext';
 import * as TextTypes from '../../types/textTypes';
@@ -402,15 +402,23 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
     }
 
     private submitTask(state:SubcMixerModelState):Observable<any> {
-        const sums = {};
-        state.shares.forEach(item => {
-            if (!sums.hasOwnProperty(item.attrName)) {
-                sums[item.attrName] = 0;
-            }
-            sums[item.attrName] += parseFloat(item.ratio.value || '0');
-        });
+        const sums = pipe(
+            state.shares,
+            List.groupBy(v => v.attrName),
+            List.map(
+                ([key, items]) => tuple(
+                    key,
+                    List.foldl(
+                        (acc, x) => acc + parseFloat(x.ratio.value || '0'),
+                        0,
+                        items
+                    )
+                )
+            ),
+            Dict.fromEntries()
+        );
         for (let k in sums) {
-            if (sums[k] !== 100) {
+            if (Maths.roundToPos(sums[k], 1) !== 100) {
                 return throwError(() => new Error(this.pluginApi.translate(
                     'subcmixer__ratios_cannot_over_100_{struct_name}{over_val}',
                     {struct_name: k, over_val: this.pluginApi.formatNumber(sums[k] - 100)})));
@@ -438,6 +446,7 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
     }
 
     private getAvailableValues(state:SubcMixerModelState):Array<TextTypeAttrVal> {
+
         const getInitialAvailableValues = (attrName:string):Array<TextTypes.AttributeValue> => {
             const srchItem = List.find(
                 item => item.name === attrName,
@@ -450,6 +459,7 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
         return pipe(
             state.ttAttributes,
             List.filter(item => TTSelOps.hasUserChanges(item, true)),
+            x => [List.last(x)], // we take only the last attr. in refining sequence as the subcmixer cannot handle more
             List.flatMap(item => {
                 const attr = this.getTtAttribute(state, item.name);
                 const tmp = pipe(
@@ -460,10 +470,10 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
                 return List.map(
                     subItem => ({
                         attrName: item.name,
-                        attrValue: subItem.value,
-                        isSelected: List.some(x => x === subItem.value, tmp)
+                        attrValue: subItem,
+                        isSelected: true
                     }),
-                    getInitialAvailableValues(item.name)
+                    tmp
                 );
             })
         );
@@ -524,8 +534,12 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
      * by modifying the last element.
      */
     safeCalcInitialRatio(numItems:number, currIdx:number):number {
-        const r = Math.round(100 / numItems * 10) / 10;
-        return currIdx < numItems - 1 ? r : 100 - (numItems - 1) * r;
+        const r = Maths.roundToPos(100 / numItems, 1);
+        let sum = pipe(
+            List.repeat(_ => r, numItems - 1),
+            List.foldl((acc, curr) => acc + curr, 0)
+        );
+        return currIdx < numItems - 1 ? r : 100 - sum;
     }
 
     private refreshData(state:SubcMixerModelState):void {

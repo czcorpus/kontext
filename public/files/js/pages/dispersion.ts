@@ -85,14 +85,14 @@ export class DispersionPage {
             'ConcFormsArgs'
         );
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
-        const attributes = importInitialTTData(ttData, {}, {});
+        const attributes = importInitialTTData(ttData, {});
         const ttModel = new TextTypesModel({
             dispatcher: this.layoutModel.dispatcher,
             pluginApi: this.layoutModel.pluginApi(),
             attributes,
             readonlyMode: true,
-            bibIdAttr: ttData.id_attr,
-            bibLabelAttr: ttData.bib_attr
+            bibIdAttr: ttData.bib_id_attr,
+            bibLabelAttr: ttData.bib_label_attr
         });
         ttModel.applyCheckedItems(queryFormArgs.selected_text_types, {});
         return tuple(ttModel, attributes);
@@ -109,7 +109,6 @@ export class DispersionPage {
         const initFreqLevel = this.layoutModel.getConf<number>('InitialFreqLevel');
         const freqFormProps:FreqFormProps = {
             fttattr: freqFormInputs.fttattr || [],
-            ftt_include_empty: freqFormInputs.ftt_include_empty || false,
             flimit: freqFormInputs.flimit || '1',
             freq_sort: 'freq',
             mlxattr: freqFormInputs.mlxattr || List.repeat(() => attrs[0].n, initFreqLevel),
@@ -145,7 +144,8 @@ export class DispersionPage {
             ctminfreq: ctFormInputs.ctminfreq,
             ctminfreq_type: ctFormInputs.ctminfreq_type,
             usesAdHocSubcorpus: TextTypesModel.findHasSelectedItems(ttSelection),
-            selectedTextTypes: TextTypesModel.exportSelections(ttSelection, ttData.id_attr, ttData.bib_attr, false, true)
+            selectedTextTypes: TextTypesModel.exportSelections(
+                ttSelection, ttData.bib_id_attr, ttData.bib_label_attr, false, true)
         };
 
         this.cTFreqFormModel = new Freq2DFormModel(
@@ -275,7 +275,7 @@ export class DispersionPage {
                 corpname: this.layoutModel.getCorpusIdent().id,
                 humanCorpname: this.layoutModel.getCorpusIdent().name,
                 usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
-                origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
+                subcName: this.layoutModel.getCorpusIdent().subcName,
                 foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp,
                 queryFormProps: {
                     formType: Kontext.ConcFormTypes.QUERY,
@@ -293,7 +293,8 @@ export class DispersionPage {
                 sortFormProps: {
                     formType: Kontext.ConcFormTypes.SORT,
                     sortId: null,
-                }
+                },
+                cutoff: this.layoutModel.getConcArgs().cutoff
             }
         );
     }

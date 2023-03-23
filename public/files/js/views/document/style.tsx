@@ -69,16 +69,22 @@ export const CloseableFrame = styled.section<{fixedTop?: string}>`
     }
 
     > .heading {
+        display: flex;
+        align-items: center;
         padding: 0.6em 0.8em;
         background-color: ${theme.colorLightFrame};
         border-radius: 6px 6px 0 0;
         font-weight: normal;
         text-align: left;
 
+        .icon {
+            margin-right: 0.7em;
+        }
+
         h2 {
+            flex-grow: 1;
             margin: 0 1.6em 0 0;
             padding: 0;
-            display: block;
             text-align: left;
             width: 90%;
             font-size: 140%;
@@ -430,9 +436,12 @@ export const ErrorBoundary = styled.span`
 
 export const ValidatedItem = styled.span`
 
+    position: relative;
+
     .error-desc {
+        position: absolute;
         font-size: 80%;
-        background-color: ${theme.colorDefaultText};
+        background-color: #444444;
         color: #ffb4b4;
         padding: 0.2em 2em;
         border-radius: ${theme.inputBorderRadius};

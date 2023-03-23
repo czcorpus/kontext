@@ -401,6 +401,7 @@ export class Actions {
 
     static QuerySubmit: Action<{
         noQueryHistory?:boolean;
+        useAltCorp?:boolean;
     }> = {
         name: 'QUERY_INPUT_SUBMIT'
     };
@@ -437,6 +438,16 @@ export class Actions {
         sourceId:string;
     }> = {
         name: 'QUERY_INPUT_HIDE_QUERY_STRUCTURE_WIDGET'
+    };
+
+    static ShowSuggestAltCorp: Action<{
+    }> = {
+        name: 'QUERY_INPUT_SHOW_SUGGEST_ALTCORP'
+    };
+
+    static CloseSuggestAltCorp: Action<{
+    }> = {
+        name: 'QUERY_INPUT_CLOSE_SUGGEST_ALTCORP'
     };
 
     static SampleFormSetRlines: Action<{
@@ -606,6 +617,12 @@ export class Actions {
     }> = {
         name: 'QUERY_MAKE_CONCORDANCE_PERMANENT_DONE'
     };
+
+    static CopyPermalinkToClipboard:Action<{
+        url:string;
+    }> = {
+        name: 'QUERY_COPY_CONCORDANCE_PERMALINK_TO_CLIPBOARD'
+    }
 
     /**
      * This is an action a tag-helper plug-in should be able to respond to

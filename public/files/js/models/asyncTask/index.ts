@@ -40,8 +40,12 @@ function taskIsFinished(t:Kontext.AsyncTaskInfo):boolean {
 }
 
 
-interface AsyncTaskResponse extends Kontext.AjaxResponse {
+interface DeleteTaskResponse extends Kontext.AjaxResponse {
     data:Array<Kontext.AsyncTaskInfo>;
+}
+
+interface CheckTaskStatusResponse extends Kontext.AjaxResponse {
+    data:Kontext.AsyncTaskInfo;
 }
 
 export interface AsyncTaskCheckerState {
@@ -63,11 +67,7 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
 
     private readonly pageModel:PageModel;
 
-    private readonly onUpdate:Array<Kontext.AsyncTaskOnUpdate>;
-
     static CHECK_INTERVAL = 5000;
-
-    private triggerUpdateAction:(resp:AsyncTaskResponse)=>void;
 
     constructor(
         dispatcher:IFullActionControl,
@@ -84,27 +84,6 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
             }
         );
         this.pageModel = pageModel;
-        this.onUpdate = [];
-        this.triggerUpdateAction = (resp:AsyncTaskResponse) => {
-            // we don't want to notify about finished tasks multiple times so the
-            // receivers do not have to handle it by themselves
-            const tasks = pipe(
-                resp.data,
-                List.filter(v => {
-                    const srch = List.find(c => c.ident === v.ident, this.state.asyncTasks);
-                    return !(srch && (srch.status === 'FAILURE' || srch.status === 'SUCCESS')
-                            && v.status === srch.status);
-                })
-            );
-            if (!List.empty(tasks)) {
-                dispatcher.dispatch<typeof Actions.AsyncTasksChecked>({
-                    name: Actions.AsyncTasksChecked.name,
-                    payload: {
-                        tasks
-                    }
-                });
-            }
-        };
 
         this.addActionHandler<typeof Actions.AsyncTasksChecked>(
             Actions.AsyncTasksChecked.name,
@@ -119,8 +98,7 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                         },
                         action.payload.tasks
                     );
-
-                        state.asyncTasks = updatedList;
+                    state.asyncTasks = updatedList;
                 });
             }
         );
@@ -171,19 +149,22 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
             Actions.InboxAddAsyncTask,
             action => {
                 if (!action.error) {
+                    const newTask = {
+                        status: action.payload.status ? action.payload.status : 'PENDING',
+                        ident: action.payload.ident,
+                        created: action.payload.created ? action.payload.created : new Date().getTime() / 1000,
+                        label: action.payload.label,
+                        category: action.payload.category,
+                        error: action.payload.error,
+                        args: action.payload.args ? action.payload.args : {},
+                        url: action.payload.url ? action.payload.url : undefined
+                    };
                     this.changeState(state => {
-                        state.asyncTasks.push({
-                            status: action.payload.status ? action.payload.status : 'PENDING',
-                            ident: action.payload.ident,
-                            created: action.payload.created ? action.payload.created : new Date().getTime() / 1000,
-                            label: action.payload.label,
-                            category: action.payload.category,
-                            error: action.payload.error,
-                            args: action.payload.args ? action.payload.args : {},
-                            url: action.payload.url ? action.payload.url : undefined
-                        });
+                        state.asyncTasks.push(newTask);
                     });
-                    this.checkCurrentTasks();
+                    if (!Dict.hasValue(newTask.category, DownloadType)) {
+                        this.startWatchingTask(newTask);
+                    }
 
                 } else {
                     this.pageModel.showMessage('error', action.error);
@@ -231,16 +212,6 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
         state.asyncTasks = [...data];
     }
 
-    /**
-     * @deprecated
-     */
-    registerTask(task:Kontext.AsyncTaskInfo):void {
-        this.changeState(state => {
-            state.asyncTasks.push(task);
-        });
-        this.checkCurrentTasks();
-    }
-
     static numRunning(state:AsyncTaskCheckerState):number {
         return pipe(state.asyncTasks, List.filter(taskIsActive), List.size());
     }
@@ -249,12 +220,8 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
         return pipe(state.asyncTasks, List.filter(taskIsFinished), List.size());
     }
 
-    private getNumRunningTasks(tasks:Array<Kontext.AsyncTaskInfo>):number {
-        return List.filter(taskIsActive, tasks).length;
-    }
-
     private deleteFinishedTaskInfo():Observable<Array<Kontext.AsyncTaskInfo>> {
-        return this.pageModel.ajax$<AsyncTaskResponse>(
+        return this.pageModel.ajax$<DeleteTaskResponse>(
             HTTP.Method.DELETE,
             this.pageModel.createActionUrl('remove_task_info'),
             {
@@ -267,135 +234,92 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
         ).pipe(map(resp => resp.data));
     }
 
-    private updateTasksStatusAjax(
-        state:AsyncTaskCheckerState,
-        incoming:Array<Kontext.AsyncTaskInfo>
-    ):Array<Kontext.AsyncTaskInfo> {
-        state.asyncTasks = pipe(
-            state.asyncTasks,
-            List.map(
-                curr => {
-                    const ans = {...curr};
-                    const idx = List.findIndex(incom => incom.ident === curr.ident, incoming);
-                    if (idx === -1 && !Dict.hasValue(ans.category, DownloadType)) {
-                        ans.status = 'FAILURE';
-                    }
-                    return ans;
-                }
-            ),
-            List.concat(incoming),
-            List.groupBy(v => v.ident),
-            List.map(([,v]) => List.maxItem(
-                item => item.status === 'FAILURE' || item.status === 'SUCCESS' ? 2 : 1, v))
-        );
-        return List.filter(taskIsFinished, state.asyncTasks);
-    }
-
-    // updates only status and error, since ws does not have access to other parameters
-    private updateTasksStatusWS(
-        state:AsyncTaskCheckerState,
-        incoming:Array<Kontext.AsyncTaskInfo>
-    ):Array<Kontext.AsyncTaskInfo> {
-        state.asyncTasks = pipe(
-            state.asyncTasks,
-            List.map(
-                curr => {
-                    const ans = {...curr};
-                    const item = List.find(incom => incom.ident === curr.ident, incoming);
-                    if (item === undefined && !Dict.hasValue(ans.category, DownloadType)) {
-                        ans.status = 'FAILURE';
-
-                    } else {
-                        ans.status = item.status;
-                        ans.error = item.error;
-                    }
-                    return ans;
-                }
-            ),
-        );
-        return List.filter(taskIsFinished, state.asyncTasks);
-    }
-
     /**
-     * Adds a handler triggered when task information is
-     * received from server.
+     * Update task information based on the 'incoming' value.
+     * In case it is not already present, the item is added
+     * to the end of the list of active tasks.
+     *
+     * @return list of finished tasks
      */
-    addOnUpdate(fn:Kontext.AsyncTaskOnUpdate):void {
-        this.onUpdate.push(fn);
+    private updateTasksStatus(
+        state:AsyncTaskCheckerState,
+        incoming:Kontext.AsyncTaskInfo
+    ):Array<Kontext.AsyncTaskInfo> {
+        const srch = List.find(x => x.ident === incoming.ident, state.asyncTasks)
+        if (srch) {
+            if (incoming === undefined && !Dict.hasValue(srch.category, DownloadType)) {
+                srch.status = 'FAILURE';
+
+            } else {
+                srch.status = incoming.status;
+                srch.error = incoming.error;
+            }
+
+        } else {
+            List.push(incoming, state.asyncTasks);
+        }
+        return List.filter(taskIsFinished, state.asyncTasks);
     }
 
-    private checkCurrentTasks():void {
+    private startWatchingTask(task:Kontext.AsyncTaskInfo) {
         if (this.pageModel.supportsWebSocket()) {
-            const tasks = pipe(
-                this.state.asyncTasks,
-                // exclude download tasks
-                List.filter(v => !Dict.hasValue(v.category, DownloadType)),
-                List.map(item => item.ident),
-            );
-            const [_, statusSocket] = this.pageModel.openWebSocket<undefined, Array<Kontext.AsyncTaskInfo>>(
-                this.pageModel.createActionUrl<{taskId: Array<string>}>(
+            const [,statusSocket] = this.pageModel.openWebSocket<
+                undefined,
+                Kontext.AsyncTaskInfo
+            >(
+                this.pageModel.createActionUrl<{taskId: string}>(
                     'ws/task_status',
-                    {taskId: tasks},
+                    {taskId: task.ident},
                     true,
                 )
             );
             statusSocket.subscribe({
                 next: data => {
                     this.changeState(state => {
-                        const finished = this.updateTasksStatusWS(state, data);
-                        if (!List.empty(finished)) {
-                            this.onUpdate.forEach(item => {
-                                item(finished);
-                            });
-                        }
-                        this.dispatchSideEffect(
-                            Actions.AsyncTasksChecked,
-                            {tasks: state.asyncTasks},
-                        );
+                        this.updateTasksStatus(state, data);
                     });
+                    this.dispatchSideEffect(
+                        Actions.AsyncTasksChecked,
+                        {tasks: this.state.asyncTasks},
+                    );
                 },
                 error: err => {
                     if (err instanceof CloseEvent) {
                         if (err.code > 1001) {
                             this.pageModel.showMessage('error', err.reason);
+
+                        } else {
+                            this.pageModel.showMessage('warning', err.reason);
                         }
+
                     } else {
                         this.pageModel.showMessage('error', err);
                     }
                 }
             });
 
-        } else { // the ajax way
-
-            const timer$ = taskCheckTimer();
-            timer$.pipe(
+        } else {
+            taskCheckTimer().pipe(
                 concatMap(
-                    _ => this.pageModel.ajax$<AsyncTaskResponse>(
+                    _ => this.pageModel.ajax$<CheckTaskStatusResponse>(
                         HTTP.Method.GET,
-                        this.pageModel.createActionUrl('check_tasks_status'),
+                        this.pageModel.createActionUrl('check_tasks_status', {task_id: task.ident}),
                         {}
                     )
                 ),
                 takeWhile(
-                    (ans, i) => this.getNumRunningTasks(ans.data) > 0 || i === 0,
+                    (ans, i) => ans.data.status !== 'FAILURE' && ans.data.status !== 'SUCCESS',
                     true // inclusive
-                ),
-                tap(
-                    (data) => {
-                        this.triggerUpdateAction(data)
-                    }
                 )
             ).subscribe({
                 next: data => {
                     this.changeState(state => {
-                        const finished = this.updateTasksStatusAjax(state, data.data);
-                        if (!List.empty(finished)) {
-                            this.onUpdate.forEach(item => {
-                                item(finished);
-                            });
-                        }
+                        this.updateTasksStatus(state, data.data);
                     });
-
+                    this.dispatchSideEffect(
+                        Actions.AsyncTasksChecked,
+                        {tasks: this.state.asyncTasks},
+                    );
                 },
                 error: error => {
                     this.pageModel.showMessage('error', error);
@@ -406,10 +330,14 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
 
     init():void {
         if (!List.empty(this.state.asyncTasks)) {
-            // refresh watched tasks received by ws
-            this.checkCurrentTasks();
-
-        } else {
+            pipe(
+                this.state.asyncTasks,
+                // exclude download tasks
+                List.filter(v => !Dict.hasValue(v.category, DownloadType)),
+                List.forEach(item => {
+                    this.startWatchingTask(item);
+                })
+            );
         }
     }
 }

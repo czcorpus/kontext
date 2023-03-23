@@ -42,13 +42,13 @@ export interface ConcSummaryModelState {
     corpusIpm:number; // ipm related to the whole corpus or a named subcorpus
     ipm:number|null;
     baseCorpusSize:number;
-    corpusSampleSize:number;
+    cutoff:number;
     queryChainSize:number;
     concSize:number;
     fullSize:number; // TODO explain
     baseCorpname:string;
-    subCorpName:string;
-    origSubcorpName:string;
+    subcId:string;
+    subcName:string;
     isShuffled:boolean;
     isUnfinishedConc:boolean;
     arf:number;
@@ -191,7 +191,7 @@ export class ConcSummaryModel extends StatelessModel<ConcSummaryModelState> {
             ),
             {
                 corpname: state.baseCorpname,
-                usesubcorp: state.subCorpName,
+                usesubcorp: state.subcId,
                 ...this.layoutModel.getConcArgs(),
                 type:'adHocIpmArgs',
                 text_types: ttSelection

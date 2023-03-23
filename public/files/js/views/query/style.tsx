@@ -68,13 +68,17 @@ export const SaveHintParagraph = styled.p`
 
 export const PersistentConcordanceForm = styled.form`
 
-    input {
-        font-size: 1.5em;
-        width: 30em;
-        display: inline-block;
+    .link {
+        display: flex;
+        align-items: center;
         margin-top: 0.4em;
         margin-bottom: 1em;
-        color: ${theme.colorSuperlightText};
+
+        input {
+            font-size: 1.5em;
+            width: 30em;
+            color: ${theme.colorSuperlightText};
+        }
     }
 
     input.archived {
@@ -117,6 +121,8 @@ export const PoSFilter = styled.div`
 // ---------------- <SyntaxHighlight /> ----------------------------------------
 
 export const SyntaxHighlight = styled.pre`
+
+    line-height: 1.5em;
 
     .sh-regexp {
         color: ${theme.shRegexp};

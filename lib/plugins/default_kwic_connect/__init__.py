@@ -136,10 +136,11 @@ class DefaultKwicConnect(AbstractKwicConnect):
                     cookies = {}
                     for cname in backend.get_required_cookies():
                         if cname not in plugin_ctx.cookies:
-                            raise Exception(f'Backend configuration problem: cookie {cname} not available')
+                            raise Exception(
+                                f'Backend configuration problem: cookie {cname} not available')
                         cookies[cname] = plugin_ctx.cookies[cname]
                     data, status = await backend.fetch(
-                        corpora, None, None, 1, dict(lemma=lemma), lang, (-1, 1), cookies)
+                        corpora, None, None, 1, dict(lemma=lemma), lang, plugin_ctx.user_is_anonymous, (-1, 1), cookies)
                     ans.append(frontend.export_data(
                         data, status, lang, is_kwic_view=False).to_dict())
             except EnvironmentError as ex:

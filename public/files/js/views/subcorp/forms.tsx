@@ -35,6 +35,7 @@ export interface FormsModuleArgs {
     CorparchComponent:PluginInterfaces.Corparch.WidgetView;
     subcorpFormModel:SubcorpFormModel;
     subcorpWithinFormModel:SubcorpWithinFormModel;
+    corparchWidgetId:string;
 }
 
 export interface SubcorpFormProps {
@@ -52,7 +53,8 @@ export function init({
     he,
     CorparchComponent,
     subcorpFormModel,
-    subcorpWithinFormModel
+    subcorpWithinFormModel,
+    corparchWidgetId
 }:FormsModuleArgs):FormViews {
 
     const layoutViews = he.getLayoutViews();
@@ -135,7 +137,7 @@ export function init({
                                 {he.translate('global__corpus')}:
                             </th>
                             <td>
-                                <CorparchComponent />
+                                <CorparchComponent widgetId={corparchWidgetId} />
                                 <div className="starred"></div>
                             </td>
                         </tr>

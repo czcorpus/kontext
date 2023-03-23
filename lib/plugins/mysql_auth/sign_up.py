@@ -18,6 +18,7 @@ import uuid
 
 from aiomysql import Connection
 from plugin_types.auth.sign_up import AbstractSignUpToken
+from plugins.common.mysql import MySQLOps
 
 
 class SignUpToken(AbstractSignUpToken[Connection]):
@@ -41,7 +42,7 @@ class SignUpToken(AbstractSignUpToken[Connection]):
         self.ttl = ttl
         self.bound = False
 
-    async def save(self, db):
+    async def save(self, db: MySQLOps):
         async with db.cursor() as cursor:
             await cursor.execute(
                 'INSERT INTO kontext_sign_up_token '
@@ -51,7 +52,7 @@ class SignUpToken(AbstractSignUpToken[Connection]):
                  self.pwd_hash, self.email, self.affiliation))
             self.bound = True
 
-    async def load(self, db):
+    async def load(self, db: MySQLOps):
         async with db.cursor() as cursor:
             await cursor.execute(
                 'DELETE FROM kontext_sign_up_token '
@@ -74,12 +75,12 @@ class SignUpToken(AbstractSignUpToken[Connection]):
             self.email = row.get('email')
             self.affiliation = row.get('affiliation')
 
-    async def delete(self, db):
+    async def delete(self, db: MySQLOps):
         async with db.cursor() as cursor:
             await cursor.execute('DELETE FROM kontext_sign_up_token WHERE token_value = %s', (self.value,))
         self.bound = False
 
-    async def is_valid(self, db):
+    async def is_valid(self, db: MySQLOps):
         async with db.cursor() as cursor:
             await cursor.execute(
                 'SELECT value '

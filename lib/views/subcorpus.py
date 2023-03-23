@@ -52,14 +52,20 @@ async def properties(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     struct_and_attrs = await amodel.get_structs_and_attrs()
     with plugins.runtime.SUBC_STORAGE as sr:
         info = await sr.get_info(corp_ident.id)
-    live_attrs_enabled = False
     with plugins.runtime.LIVE_ATTRIBUTES as la:
         live_attrs_enabled = info.text_types is not None and await la.is_enabled_for(amodel.plugin_ctx, [corp_ident.corpus_name])
+
+    availableAligned = []
+    for al in amodel.get_available_aligned_corpora()[1:]:
+        alcorp = await amodel.cf.get_corpus(al)
+        availableAligned.append(dict(label=alcorp.get_conf('NAME') or al, n=al))
+
     return {
         'data': info.to_dict(),
         'textTypes': await amodel.tt.export_with_norms(),
         'structsAndAttrs': {k: [x.to_dict() for x in item] for k, item in struct_and_attrs.items()},
         'liveAttrsEnabled': live_attrs_enabled,
+        'availableAligned': availableAligned,
     }
 
 
@@ -116,12 +122,12 @@ async def new(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
         ))
         # draft subcorpus should not be projected to main menu links...
         out['usesubcorp'] = None
+        out['aligned_corpora'] = info.aligned
     out.update(dict(
         Normslist=tt_sel['Normslist'],
         text_types_data=tt_sel,
         method=method,
         id_attr=corpus_info.metadata.id_attr,
-        aligned_corpora=req.form_getlist('aligned_corpora'),
     ))
     return out
 
@@ -197,7 +203,7 @@ async def _filter_subcorpora(amodel: UserActionModel, req: KRequest, ignore_no_s
         filter=asdict(client_filter_args),
         processed_subc=[
             v.to_dict()
-            for v in amodel.get_async_tasks(category=AsyncTaskStatus.CATEGORY_SUBCORPUS)
+            for v in (await amodel.get_async_tasks(category=AsyncTaskStatus.CATEGORY_SUBCORPUS))
         ],
         related_corpora=related_corpora,
         total_pages=total_pages,
@@ -232,16 +238,20 @@ async def ajax_list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KRe
 @http_action(access_level=2, return_type='json', action_model=UserActionModel)
 async def delete(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
     num_wiped = 0
-    for item in req.json['items']:
-        with plugins.runtime.SUBC_STORAGE as sr:
+    with plugins.runtime.SUBC_STORAGE as sr, plugins.runtime.USER_ITEMS as ui:
+        user_items = {x.subcorpus_id: x.ident for x in (await ui.get_user_items(amodel.plugin_ctx))}
+        for item in req.json['items']:
             await sr.delete_query(amodel.session_get('user', 'id'), item['corpname'], item['subcname'])
             try:
                 subc = await amodel.cf.get_corpus(await sr.get_info(item['subcname']))
                 os.unlink(os.path.join(settings.get('corpora', 'subcorpora_dir'),
                                        subc.portable_ident.data_path))
+                if item['subcname'] in user_items:
+                    await ui.delete_user_item(amodel.plugin_ctx, user_items[item['subcname']])
             except (CorpusInstantiationError, IOError) as e:
                 logging.getLogger(__name__).warning(e)
-        num_wiped += 1
+
+            num_wiped += 1
     return {'num_wiped': num_wiped}
 
 
@@ -256,16 +266,17 @@ async def update_name_and_public_desc(amodel: CorpusActionModel, req: KRequest, 
 
 
 @dataclass
-class _PublicListArgs(SubcListFilterArgs):
+class PublicListArgs(SubcListFilterArgs):
     offset: IntOpt = 0
     limit: IntOpt = 20
+    published_only: IntOpt = 1
 
 
 @bp.route('/list_published')
 @http_action(
     template='subcorpus/list_published.html', page_model='pubSubcorpList', action_model=UserActionModel,
-    mapped_args=_PublicListArgs)
-async def list_published(amodel: UserActionModel, req: KRequest[_PublicListArgs], resp: KResponse) -> Dict[str, Any]:
+    mapped_args=PublicListArgs)
+async def list_published(amodel: UserActionModel, req: KRequest[PublicListArgs], resp: KResponse) -> Dict[str, Any]:
     amodel.disabled_menu_items = (
         MainMenu.VIEW, MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
     min_query_size = 3
@@ -273,6 +284,5 @@ async def list_published(amodel: UserActionModel, req: KRequest[_PublicListArgs]
         if not req.mapped_args.ia_query or len(req.mapped_args.ia_query) < 3:
             items = []
         else:
-            items = await sr.list(
-                amodel.session_get('user', 'id'), req.mapped_args, req.mapped_args.offset, req.mapped_args.limit)
+            items = await sr.list(None, req.mapped_args, None, req.mapped_args.offset, req.mapped_args.limit)
     return dict(data=[v.to_dict() for v in items], min_query_size=min_query_size)

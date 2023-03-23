@@ -21,8 +21,8 @@ from action.krequest import KRequest
 from action.model.user import UserActionModel
 from action.response import KResponse
 from plugin_types.auth import AbstractAuth
-from plugin_types.user_items import (AbstractUserItems, FavoriteItem,
-                                     UserItemException)
+from plugin_types.user_items import (
+    AbstractUserItems, FavoriteItem, UserItemException)
 from plugins import inject
 from plugins.common.mysql import MySQLConf, MySQLOps
 from plugins.mysql_integration_db import MySqlIntegrationDb
@@ -46,25 +46,10 @@ def import_legacy_record(data):
                 logging.getLogger(__name__).warning(
                     'Failed to import legacy fav. item record component: {0}'.format(ex))
     ans.subcorpus_id = data.get('subcorpus_id', None)
-    ans.subcorpus_orig_id = data.get('subcorpus_orig_id', ans.subcorpus_id)
+    ans.subcorpus_name = data.get('subcorpus_orig_id', ans.subcorpus_id)
     ans.size = data.get('size', None)
     ans.size_info = data.get('size_info', None)
     return ans
-
-
-def import_record(obj):
-    """
-    Provides a consistent decoding of JSON-encoded GeneralItem objects.
-    If a new GeneralItem implementation occurs then this method must
-    be updated accordingly.
-
-    arguments:
-    obj -- a dictionary as loaded from store
-    """
-    if 'type' in obj:
-        return import_legacy_record(obj)
-    else:
-        return FavoriteItem(**obj)
 
 
 @bp.route('/user/set_favorite_item', methods=['POST'])
@@ -79,11 +64,11 @@ async def set_favorite_item(amodel: UserActionModel, req: KRequest, resp: KRespo
         with plugins.runtime.SUBC_STORAGE as sa:
             ident = await sa.get_info(subc)
             maincorp = await amodel.cf.get_corpus(ident)
-            subcorpus_orig_id = ident.name
+            subcorpus_name = ident.name
             subcorpus_id = ident.id
     else:
         maincorp = await amodel.cf.get_corpus(req_corpora[0])
-        subcorpus_orig_id = None
+        subcorpus_name = None
         subcorpus_id = None
 
     main_size = maincorp.search_size
@@ -96,10 +81,10 @@ async def set_favorite_item(amodel: UserActionModel, req: KRequest, resp: KRespo
     item = FavoriteItem(
         ident=None,  # will be updated after database insert (autoincrement)
         name=' || '.join(c['name'] for c in corpora) +
-        (' / ' + subcorpus_orig_id if subcorpus_orig_id else ''),
+        (' / ' + subcorpus_name if subcorpus_name else ''),
         corpora=corpora,
         subcorpus_id=subcorpus_id,
-        subcorpus_orig_id=subcorpus_orig_id,
+        subcorpus_name=subcorpus_name,
         size=main_size
     )
     with plugins.runtime.USER_ITEMS as uit:

@@ -47,6 +47,26 @@ export class Actions {
         name: 'FREQ_RESULT_HIDE_SHARE_LINK'
     };
 
+    static ResultLinkCopyToClipboard:Action<{
+        sourceId:string;
+    }> = {
+        name: 'FREQ_RESULT_LINK_COPY_TO_CLIPBOARD'
+    };
+
+    static ResultLinkShareViaEmail:Action<{
+        sourceId:string;
+        url:string;
+        recipient:string;
+    }> = {
+        name: 'FREQ_RESULT_LINK_SHARE_VIA_EMAIL'
+    };
+
+    static ResultLinkShareViaEmailDone:Action<{
+        sourceId:string;
+    }> = {
+        name: 'FREQ_RESULT_LINK_SHARE_VIA_EMAIL_DONE'
+    };
+
     static ResultSetMinFreqVal:Action<{
         value:string;
         isDebounced?:boolean;
@@ -242,11 +262,6 @@ export class Actions {
         value:string;
     }> = {
         name: 'FREQ_TT_SET_FTTATTR'
-    };
-
-    static TTSetIncludeEmpty:Action<{
-    }> = {
-        name: 'FREQ_TT_SET_FTT_INCLUDE_EMPTY'
     };
 
     static TTSetFLimit:Action<{

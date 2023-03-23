@@ -25,6 +25,7 @@ import * as Kontext from '../kontext';
 import * as CoreViews from '../coreViews';
 import { ConcServerArgs } from '../../models/concordance/common';
 import { Root } from 'react-dom/client';
+import { DownloadType } from '../../app/page';
 
 
 
@@ -59,4 +60,20 @@ export interface BasePlugin {
     resetMenuActiveItemAndNotify():void;
     getHelpLink(ident:string):string;
     setLocationPost<T>(path:string, args:T, blankWindow?:boolean):void;
+
+    /**
+     * Download data from server. Once finished,
+     * trigger action InboxUpdateAsyncTask.
+     */
+    bgDownload<T=Kontext.AjaxArgs>(
+        {name, format, datasetType, url, contentType, args}:
+        {
+            name?:string,
+            format:string,
+            datasetType:DownloadType,
+            url:string,
+            contentType:string,
+            args?:T
+        }
+    ):Observable<string>;
 }

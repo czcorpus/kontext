@@ -243,7 +243,6 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                         this.state.corpusId,
                         this.state.kwicTokenNum,
                         1,
-                        this.state.lineIdx,
                         action.payload.position
                     ),
                     this.loadConcDetail(
@@ -251,11 +250,13 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                         action.payload.position
                     )
                 ]).subscribe({
-                    next: () => {
+                    next: ([tcData, concData]) => {
                         this.changeState(state => {
                             state.isBusy = false;
                             state.tokenConnectIsBusy = false;
                             state.expandingSide = null;
+                            this.applyTokenConnectResult(state, tcData, state.lineIdx);
+                            this.applyConcDetailResult(state, concData);
                         });
                     },
                     error: err => {
@@ -299,15 +300,16 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                         action.payload.corpusId,
                         action.payload.tokenNumber,
                         action.payload.kwicLength,
-                        action.payload.lineIdx,
                         'reload'
                     )
 
                 ]).subscribe({
-                    next: () => {
+                    next: ([concData, tcData]) => {
                         this.changeState(state => {
                             state.isBusy = false;
                             state.tokenConnectIsBusy = false;
+                            this.applyConcDetailResult(state, concData);
+                            this.applyTokenConnectResult(state, tcData, action.payload.lineIdx);
                         });
                     },
                     error: err => {
@@ -333,13 +335,13 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                     action.payload.corpusId,
                     action.payload.tokenNumber,
                     1,
-                    action.payload.lineIdx,
                     'reload'
 
                 ).subscribe({
-                    next: () => {
+                    next: (tcData) => {
                         this.changeState(state => {
                             state.tokenConnectIsBusy = false;
+                            this.applyTokenConnectResult(state, tcData, action.payload.lineIdx);
                         });
                     },
                     error: err => {
@@ -351,7 +353,6 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                 });
             }
         );
-
 
         this.addActionHandler<typeof Actions.ShowWholeDocument>(
             Actions.ShowWholeDocument.name,
@@ -402,24 +403,25 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                     state.expandingSide = action.payload.position;
                     state.isBusy = true;
                 });
-                this.loadSpeechDetail(action.payload.position).subscribe(
-                    () => {
+                this.loadSpeechDetail(action.payload.position).subscribe({
+                    next: (data) => {
                         this.changeState(state => {
                             state.isBusy = false;
+                            this.applyConcDetailResult(state, data);
                         });
                     },
-                    (err) => {
+                    error: error => {
                         this.changeState(state => {
                             state.isBusy = false;
                         });
-                        this.layoutModel.showMessage('error', err);
+                        this.layoutModel.showMessage('error', error);
                     }
-                );
+                });
             }
         );
 
-        this.addActionHandler<typeof Actions.DetailSwitchMode>(
-            Actions.DetailSwitchMode.name,
+        this.addActionHandler(
+            Actions.DetailSwitchMode,
             action => {
                 (() => {
                     if (action.payload.value === 'default') {
@@ -448,12 +450,13 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                             state.concDetail = [];
                             state.isBusy = true;
                         });
-                        return rxOf(null);
+                        return this.reloadConcDetail();
                     }
                 })().subscribe({
-                    next: () => {
+                    next: data => {
                         this.changeState(state => {
                             state.isBusy = false;
+                            this.applyConcDetailResult(state, data);
                         });
                     },
                     error: err => {
@@ -738,7 +741,7 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
     /**
      *
      */
-    private loadSpeechDetail(expand?:'left'|'right'|'reload'):Observable<boolean> {
+    private loadSpeechDetail(expand?:'left'|'right'|'reload'):Observable<WideCtx> {
         const structs = this.layoutModel.getConcArgs().structs;
         const args = pipe(
                 this.state.speechAttrs,
@@ -759,8 +762,12 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
         return this.loadConcDetail(args, expand);
     }
 
-    private loadTokenConnect(corpusId:string, tokenNum:number, numTokens:number,
-            lineIdx:number, expand:'left'|'right'|'reload'):Observable<boolean> {
+    private loadTokenConnect(
+        corpusId:string,
+        tokenNum:number,
+        numTokens:number,
+        expand:'left'|'right'|'reload'
+    ):Observable<PluginInterfaces.TokenConnect.TCData> {
         const [expand_left_args, expand_right_args] = this.getExpandArgs(expand);
         return this.tokenConnectPlg.fetchTokenConnect(
             corpusId,
@@ -768,21 +775,18 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
             numTokens,
             tuple(expand_left_args, expand_right_args)
 
-        ).pipe(
-            tap(
-                (data) => {
-                    if (data) {
-                        this.changeState(state => {
-                            state.tokenConnectData = data;
-                            state.lineIdx = lineIdx;
-                        });
-                    }
-                }
-            ),
-            map(
-                data => !!data
-            )
         );
+    }
+
+    private applyTokenConnectResult(
+        state:ConcDetailModelState,
+        data:PluginInterfaces.TokenConnect.TCData,
+        lineIdx:number
+    ):void {
+        if (data) {
+            state.tokenConnectData = data;
+            state.lineIdx = lineIdx;
+        }
     }
 
     private getExpandArgs(expand:'left'|'right'|'reload'):[number, number]|[undefined, undefined] {
@@ -807,7 +811,10 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
     /**
      *
      */
-    private loadConcDetail(structs:Array<string>, expand?:'left'|'right'|'reload'):Observable<boolean> {
+    private loadConcDetail(
+        structs:Array<string>,
+        expand?:'left'|'right'|'reload'
+    ):Observable<WideCtx> {
         const [lft, rgt] = this.getExpandArgs(expand);
         const args = {
             ...this.state.wideCtxGlobals,
@@ -832,41 +839,35 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
             this.layoutModel.createActionUrl('widectx'),
             args,
             {}
-
-        ).pipe(
-            tap(
-                (data) => {
-                    this.changeState(state => {
-                        state.concDetail = data.content;
-                        if (state.mode === 'speech') {
-                            state.speechDetail = this.generateSpeechesDetail(state);
-                        }
-                        if (data.expand_left_args) {
-                            state.expandLeftArgs.push([
-                                data.expand_left_args.detail_left_ctx,
-                                data.expand_left_args.detail_right_ctx
-                            ]);
-
-                        } else {
-                            state.expandLeftArgs.push(tuple(undefined, undefined));
-                        }
-                        if (data.expand_right_args) {
-                            state.expandRightArgs.push([
-                                data.expand_right_args.detail_left_ctx,
-                                data.expand_right_args.detail_right_ctx
-                            ]);
-
-                        } else {
-                            state.expandRightArgs.push(tuple(undefined, undefined));
-                        }
-                    });
-                }
-            ),
-            map(d =>  !!d)
-        );
+        )
     }
 
-    private reloadConcDetail():Observable<boolean> {
+    private applyConcDetailResult(state:ConcDetailModelState, data:WideCtx) {
+        state.concDetail = data.content;
+        if (state.mode === 'speech') {
+            state.speechDetail = this.generateSpeechesDetail(state);
+        }
+        if (data.expand_left_args) {
+            state.expandLeftArgs.push([
+                data.expand_left_args.detail_left_ctx,
+                data.expand_left_args.detail_right_ctx
+            ]);
+
+        } else {
+            state.expandLeftArgs.push(tuple(undefined, undefined));
+        }
+        if (data.expand_right_args) {
+            state.expandRightArgs.push([
+                data.expand_right_args.detail_left_ctx,
+                data.expand_right_args.detail_right_ctx
+            ]);
+
+        } else {
+            state.expandRightArgs.push(tuple(undefined, undefined));
+        }
+    }
+
+    private reloadConcDetail():Observable<WideCtx> {
         return this.loadConcDetail([], 'reload');
     }
 

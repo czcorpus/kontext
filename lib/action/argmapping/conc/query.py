@@ -52,6 +52,9 @@ class _QueryFormArgs:
     # for bibliography structattr - maps from hidden ids to visible titles (this is optional)
     bib_mapping: Dict[str, str] = field(default_factory=dict)
 
+    cutoff: int = 0
+    """defines a cut-off for large concordances"""
+
 
 def _corp_mapping(corpora: List[str], v: Any = None) -> Dict[str, Any]:
     return {c: v for c in corpora}
@@ -132,6 +135,7 @@ class QueryFormArgs(ConcFormArgs[_QueryFormArgs]):
         self.data.fc_pos_wsize = ctx.get('fc_pos_wsize', self.data.fc_pos_wsize)
         self.data.fc_pos = ctx.get('fc_pos', self.data.fc_pos)
         self.data.selected_text_types = data.get('text_types', {})
+        self.data.cutoff = data.get('cutoff', 0)
 
     async def _add_corpus_metadata(self, corpus_id: str):
         with plugins.runtime.CORPARCH as ca, plugins.runtime.TAGHELPER as th:

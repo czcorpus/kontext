@@ -36,7 +36,7 @@ export interface ServerFavlistItem {
     id:string;
     name:string;
     subcorpus_id:string;
-    subcorpus_orig_id:string;
+    subcorpus_name:string;
     size:number;
     size_info:string;
     corpora:Array<{id:string; name:string}>;
@@ -45,7 +45,7 @@ export interface ServerFavlistItem {
 
 export interface GeneratedFavListItem {
     subcorpus_id:string;
-    subcorpus_orig_id:string;
+    subcorpus_name:string;
     corpora:Array<string>;
 }
 
@@ -101,7 +101,7 @@ export interface ConfPluginData {
         corpora:Array<{name:string; id:string}>;
         description:string;
         subcorpus_id:string;
-        subcorpus_orig_id:string;
+        subcorpus_name:string;
     }>;
     featured:Array<{
         id:string;

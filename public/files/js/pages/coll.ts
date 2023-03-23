@@ -34,16 +34,16 @@ import { init as freqFormInit } from '../views/freqs/forms';
 import { init as queryOverviewInit } from '../views/query/overview';
 import { TextTypesModel } from '../models/textTypes/main';
 import { IndirectQueryReplayModel } from '../models/query/replay/indirect';
-import { List, pipe, tuple, URL } from 'cnc-tskit';
+import { List, tuple } from 'cnc-tskit';
 import { CollResultsSaveModel } from '../models/coll/save';
 import { CollResultData, CollResultHeading } from '../models/coll/common';
 import { CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/twoDimension/common';
-import { Actions as MainMenuActions } from '../models/mainMenu/actions';
 import { Actions } from '../models/coll/actions';
 import { DispersionResultModel } from '../models/dispersion/result';
 import { importInitialTTData, TTInitialData } from '../models/textTypes/common';
 import { ConcFormArgs } from '../models/query/formArgs';
 import { fetchQueryFormArgs } from '../models/query/first';
+import { transferActionToViewPage } from '../app/navigation/interpage';
 
 
 /**
@@ -85,7 +85,6 @@ export class CollPage {
         const freqFormProps:FreqFormProps = {
             structAttrList: structAttrs,
             fttattr: freqFormInputs.fttattr,
-            ftt_include_empty: freqFormInputs.ftt_include_empty,
             flimit: freqFormInputs.flimit,
             freq_sort: freqFormInputs.freq_sort,
             attrList: attrs,
@@ -136,8 +135,8 @@ export class CollPage {
             usesAdHocSubcorpus:  TextTypesModel.findHasSelectedItems(ttSelections),
             selectedTextTypes: TextTypesModel.exportSelections(
                 ttSelections,
-                ttData.id_attr,
-                ttData.bib_attr,
+                ttData.bib_id_attr,
+                ttData.bib_label_attr,
                 false,
                 true,
             )
@@ -272,7 +271,7 @@ export class CollPage {
                 corpname: this.layoutModel.getCorpusIdent().id,
                 humanCorpname: this.layoutModel.getCorpusIdent().name,
                 usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
-                origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
+                subcName: this.layoutModel.getCorpusIdent().subcName,
                 foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp,
                 queryFormProps: {
                     formType: Kontext.ConcFormTypes.QUERY,
@@ -290,7 +289,8 @@ export class CollPage {
                 sortFormProps: {
                     formType: Kontext.ConcFormTypes.SORT,
                     sortId: null
-                }
+                },
+                cutoff: this.layoutModel.getConcArgs().cutoff
             }
         );
     }
@@ -303,7 +303,7 @@ export class CollPage {
             contentType: 'multipart/form-data',
             url,
             args,
-        });
+        }).subscribe();
     }
 
     initTextTypesModel(ttData:TTInitialData):[TextTypesModel, Array<TextTypes.AnyTTSelection>] {
@@ -311,14 +311,14 @@ export class CollPage {
             'ConcFormsArgs'
         );
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
-        const attributes = importInitialTTData(ttData, {}, {});
+        const attributes = importInitialTTData(ttData, {});
         const ttModel = new TextTypesModel({
             dispatcher: this.layoutModel.dispatcher,
             pluginApi: this.layoutModel.pluginApi(),
             attributes,
             readonlyMode: true,
-            bibIdAttr: ttData.id_attr,
-            bibLabelAttr: ttData.bib_attr
+            bibIdAttr: ttData.bib_id_attr,
+            bibLabelAttr: ttData.bib_label_attr
         });
         ttModel.applyCheckedItems(queryFormArgs.selected_text_types, {});
         return tuple(ttModel, attributes);
@@ -356,47 +356,14 @@ export class CollPage {
 
     init():void {
         this.layoutModel.init(true, [], () => {
-            const mainMenuModel = this.layoutModel.getModels().mainMenuModel;
             // we must capture concordance-related actions which lead
             // to specific "pop-up" forms and redirect user back to
             // the 'view' action with additional information (encoded in
             // the fragment part of the URL) specifying which form should be opened
             // once the 'view' page is loaded
             this.layoutModel.dispatcher.registerActionListener(
-                (action) => {
-                    switch (action.name) {
-                        case MainMenuActions.ShowFilter.name:
-                            window.location.replace(
-                                this.layoutModel.createActionUrl(
-                                    'view',
-                                    this.layoutModel.getConcArgs()
-                                ) + '#filter/' + pipe(
-                                    action.payload,
-                                    URL.valueToPairs(),
-                                    List.map(([k, v]) => `${k}=${v}`)
-                                ).join('&')
-                            );
-                        break;
-                        case MainMenuActions.ShowSort.name:
-                            window.location.replace(this.layoutModel.createActionUrl(
-                                'view',
-                                this.layoutModel.getConcArgs()
-                            ) + '#sort');
-                        break;
-                        case MainMenuActions.ShowSample.name:
-                            window.location.replace(this.layoutModel.createActionUrl(
-                                'view',
-                                this.layoutModel.getConcArgs()
-                            ) + '#sample');
-                        break;
-                        case MainMenuActions.ApplyShuffle.name:
-                            window.location.replace(this.layoutModel.createActionUrl(
-                                'view',
-                                this.layoutModel.getConcArgs()
-                            ) + '#shuffle');
-                        break;
-                }
-            });
+                transferActionToViewPage(this.layoutModel)
+            );
             this.initAnalysisViews();
             this.initQueryOpNavigation();
             this.setupBackButtonListening();

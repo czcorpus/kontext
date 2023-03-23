@@ -167,7 +167,7 @@ export interface MainMenuModelState {
     corpname:string;
     humanCorpname:string;
     usesubcorp?:string;
-    origSubcorpName?:string;
+    subcName?:string;
     foreignSubcorp?:boolean;
 }
 
@@ -213,7 +213,7 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
                 corpname: pageModel.getCorpusIdent().id,
                 humanCorpname: pageModel.getCorpusIdent().name,
                 usesubcorp: pageModel.getCorpusIdent().usesubcorp,
-                origSubcorpName: pageModel.getCorpusIdent().origSubcorpName,
+                subcName: pageModel.getCorpusIdent().subcName,
                 foreignSubcorp: pageModel.getCorpusIdent().foreignSubcorp
             }
         );

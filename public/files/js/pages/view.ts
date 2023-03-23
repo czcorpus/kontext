@@ -65,7 +65,7 @@ import { init as sampleFormInit, SampleFormViews } from '../views/query/miscActi
 import { init as analysisFrameInit, FormsViews as AnalysisFrameViews } from '../views/analysis';
 import { init as collFormInit, FormsViews as CollFormsViews } from '../views/coll/forms';
 import { init as freqFormInit, FormsViews as FreqFormViews } from '../views/freqs/forms';
-import { ViewConfiguration, ConcSummary, ServerPagination, ServerLineData, WideCtxArgs, ConcServerArgs }
+import { ViewConfiguration, ConcSummary, ServerPagination, ServerLineData, WideCtxArgs, ConcServerArgs, ConcViewMode }
     from '../models/concordance/common';
 import { RefsDetailModel } from '../models/concordance/refsDetail';
 import { openStorage, ConcLinesStorage } from '../models/concordance/selectionStorage';
@@ -90,6 +90,7 @@ import * as formArgs from '../models/query/formArgs';
 import { DispersionResultModel } from '../models/dispersion/result';
 import { AnyTTSelection } from '../types/textTypes';
 import { ShuffleModel } from '../models/query/shuffle';
+import { ActionUrlCodes } from '../app/navigation/interpage';
 
 
 export class QueryModels {
@@ -123,6 +124,7 @@ type HashedActionsTypes = typeof MainMenuActions.ShowFilter |
             typeof MainMenuActions.ShowSort |
             typeof MainMenuActions.ShowSample |
             typeof MainMenuActions.ApplyShuffle |
+            typeof MainMenuActions.MakeConcLinkPersistent |
             typeof QueryActions.EditQueryOperation;
 
 
@@ -188,55 +190,59 @@ export class ViewPage {
         const [actionName, rawArgs] = (v || '').substring(1).split('/');
         const args = Dict.fromEntries(parseUrlArgs(rawArgs || ''));
 
-            function fetchRequired(k:string):string {
-                if (k in args) {
-                    return args[k];
-                }
-                throw new Error(`Missing hashed action argument ${k}`);
+        function fetchRequired(k:string):string {
+            if (k in args) {
+                return args[k];
             }
+            throw new Error(`Missing hashed action argument ${k}`);
+        }
 
-            switch (actionName) {
-                case 'filter': {
-                    return {
-                        ...MainMenuActions.ShowFilter,
-                        payload: {
-                            within: args['within'],
-                            maincorp: args['maincorp'],
-                            pnfilter: fetchRequired('pnfilter')
-                        }
-                    };
-                }
-                case 'sort':
-                case 'sortx': {
-                    return {
-                        ...MainMenuActions.ShowSort
-                    };
-                }
-                case 'sample': {
-                    return {
-                        ...MainMenuActions.ShowSample
-                    };
-                }
-                case 'shuffle': {
-                    return {
-                        ...MainMenuActions.ApplyShuffle
-                    };
-                }
-                case 'edit_op': {
-                    const operationIdx = parseInt(fetchRequired('operationIdx'));
-                    if (isNaN(operationIdx)) {
-                        throw new Error(`Invalid operationIdx for edit_op: ${fetchRequired('operationIdx')}`);
+        switch (actionName as ActionUrlCodes) {
+            case 'filter': {
+                return {
+                    ...MainMenuActions.ShowFilter,
+                    payload: {
+                        within: args['within'],
+                        maincorp: args['maincorp'],
+                        pnfilter: fetchRequired('pnfilter')
                     }
-                    return {
-                        ...QueryActions.EditQueryOperation,
-                        payload: {
-                            operationIdx
-                        }
-                    };
-                }
-                default:
-                    throw new Error(`Unknown hashed action ${actionName}`);
+                };
             }
+            case 'sort': {
+                return {
+                    ...MainMenuActions.ShowSort
+                };
+            }
+            case 'sample': {
+                return {
+                    ...MainMenuActions.ShowSample
+                };
+            }
+            case 'shuffle': {
+                return {
+                    ...MainMenuActions.ApplyShuffle
+                };
+            }
+            case 'edit_op': {
+                const operationIdx = parseInt(fetchRequired('operationIdx'));
+                if (isNaN(operationIdx)) {
+                    throw new Error(`Invalid operationIdx for edit_op: ${fetchRequired('operationIdx')}`);
+                }
+                return {
+                    ...QueryActions.EditQueryOperation,
+                    payload: {
+                        operationIdx
+                    }
+                };
+            }
+            case 'show_permalink': {
+                return {
+                    ...MainMenuActions.MakeConcLinkPersistent
+                };
+            }
+            default:
+                throw new Error(`Unknown hashed action ${actionName}`);
+        }
     }
 
     /**
@@ -313,6 +319,7 @@ export class ViewPage {
                             name: Actions.ReloadConc.name,
                             payload: {
                                 concId: this.layoutModel.getConf<string>('concPersistenceOpId'),
+                                viewMode: this.layoutModel.getConcArgs().viewmode,
                                 isPopState: true
                             }
                         }
@@ -335,7 +342,8 @@ export class ViewPage {
     private initQueryForm(
         thPlugin:PluginInterfaces.TagHelper.IPlugin,
         queryFormArgs:formArgs.QueryFormArgsResponse,
-        ttSelections:Array<AnyTTSelection>
+        ttSelections:Array<AnyTTSelection>,
+        ttData:TTInitialData
     ):void {
         this.queryModels.queryHintModel = new UsageTipsModel(
             this.layoutModel.dispatcher,
@@ -389,7 +397,7 @@ export class ViewPage {
             currUseRegexpValues: queryFormArgs.curr_use_regexp_values,
             subcorpList: this.layoutModel.getConf<Array<Kontext.SubcorpListItem>>('SubcorpList'),
             currentSubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
-            origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
+            subcorpusId: this.layoutModel.getCorpusIdent().usesubcorp,
             isForeignSubcorpus: this.layoutModel.getCorpusIdent().foreignSubcorp,
             shuffleConcByDefault: this.layoutModel.getConf<boolean>('ShuffleConcByDefault'),
             forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
@@ -422,7 +430,8 @@ export class ViewPage {
             ),
             concViewPosAttrs: this.layoutModel.getConf<ConcServerArgs>('currentArgs').attrs,
             alignCommonPosAttrs: this.layoutModel.getConf<Array<string>>('AlignCommonPosAttrs'),
-            concPreflight: this.layoutModel.getConf<Kontext.PreflightConf|null>('concPreflight')
+            concPreflight: this.layoutModel.getConf<Kontext.PreflightConf|null>('concPreflight'),
+            bibIdAttr: ttData.bib_id_attr
         };
 
         this.queryModels.queryModel = new FirstQueryFormModel({
@@ -701,7 +710,7 @@ export class ViewPage {
                 corpname: this.layoutModel.getCorpusIdent().id,
                 humanCorpname: this.layoutModel.getCorpusIdent().name,
                 usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
-                origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
+                subcName: this.layoutModel.getCorpusIdent().subcName,
                 foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp,
                 queryFormProps: {
                     formType: Kontext.ConcFormTypes.QUERY,
@@ -762,7 +771,8 @@ export class ViewPage {
                 sampleFormProps: {
                     formType: Kontext.ConcFormTypes.SAMPLE,
                     sampleId: undefined
-                }
+                },
+                cutoff: this.layoutModel.getConcArgs().cutoff
             }
         );
     }
@@ -802,7 +812,6 @@ export class ViewPage {
         const freqFormProps:FreqFormProps = {
             structAttrList: structAttrs,
             fttattr: freqFormInputs.fttattr,
-            ftt_include_empty: freqFormInputs.ftt_include_empty,
             flimit: freqFormInputs.flimit,
             freq_sort: freqFormInputs.freq_sort,
             attrList: attrs,
@@ -892,14 +901,14 @@ export class ViewPage {
             'ConcFormsArgs'
         );
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
-        const attributes = importInitialTTData(ttData, {}, {});
+        const attributes = importInitialTTData(ttData, {});
         const textTypesModel = new TextTypesModel({
             dispatcher: this.layoutModel.dispatcher,
             pluginApi: this.layoutModel.pluginApi(),
             attributes,
             readonlyMode: true,
-            bibIdAttr: ttData.id_attr,
-            bibLabelAttr: ttData.bib_attr
+            bibIdAttr: ttData.bib_id_attr,
+            bibLabelAttr: ttData.bib_label_attr
         });
 
         // we restore checked text types but with no bib-mapping; hidden IDs are enough here as
@@ -935,7 +944,7 @@ export class ViewPage {
             baseViewAttr: this.layoutModel.getConcArgs().base_viewattr,
             activePosAttrs: this.layoutModel.getConcArgs().attrs,
             anonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
-            ViewMode: this.layoutModel.getConf<'kwic'|'sen'|'align'>('ViewMode'),
+            ViewMode: this.layoutModel.getConf<ConcViewMode>('ViewMode'),
             AttrViewMode: this.layoutModel.getConf<ViewOptions.AttrViewMode>('AttrViewMode'),
             ShowLineNumbers: this.layoutModel.getConf<boolean>('ShowLineNumbers'),
             KWICCorps: this.layoutModel.getConf<Array<string>>('KWICCorps'),
@@ -946,8 +955,8 @@ export class ViewPage {
             SortIdx: this.layoutModel.getConf<Array<{page:number; label:string}>>('SortIdx'),
             NumItemsInLockedGroups: this.layoutModel.getConf<number>('NumLinesInGroups'),
             baseCorpname: this.layoutModel.getCorpusIdent().id,
-            subCorpName: this.layoutModel.getCorpusIdent().usesubcorp,
-            origSubCorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
+            subcId: this.layoutModel.getCorpusIdent().usesubcorp,
+            subcName: this.layoutModel.getCorpusIdent().subcName,
             pagination: this.layoutModel.getConf<ServerPagination>('Pagination'),
             currentPage: this.layoutModel.getConf<number>('FromPage'),
             mainCorp: this.layoutModel.getConcArgs().maincorp,
@@ -1014,14 +1023,14 @@ export class ViewPage {
                 arf: lineViewProps.concSummary.arf,
                 baseCorpname: lineViewProps.baseCorpname,
                 fastAdHocIpm: lineViewProps.FastAdHocIpm,
-                subCorpName: lineViewProps.subCorpName,
-                origSubcorpName: lineViewProps.origSubCorpName,
+                subcId: lineViewProps.subcId,
+                subcName: lineViewProps.subcName,
                 providesAdHocIpm: !Dict.empty(queryFormArgs.selected_text_types),
                 baseCorpusSize: lineViewProps.concSummary.fullSize,
-                corpusSampleSize: this.layoutModel.getConf<number>('corpusSampleSize'),
                 queryChainSize: List.size(
                         this.layoutModel.getConf<Array<Kontext.QueryOperation>>(
                             'queryOverview') || []),
+                cutoff: this.layoutModel.getConcArgs().cutoff,
                 isBusy: false
             }
         );
@@ -1084,7 +1093,7 @@ export class ViewPage {
             contentType: 'multipart/form-data',
             url,
             args,
-        });
+        }).subscribe();
     }
 
     init():void {
@@ -1138,7 +1147,7 @@ export class ViewPage {
             });
             const tagHelperPlg = tagHelperPlugin(this.layoutModel.pluginApi());
             this.setupHistoryOnPopState();
-            this.initQueryForm(tagHelperPlg, queryFormArgs, ttInitialData);
+            this.initQueryForm(tagHelperPlg, queryFormArgs, ttInitialData, ttData);
             this.initFirsthitsForm();
             this.initShuffleForm();
             this.initFilterForm(
@@ -1147,7 +1156,7 @@ export class ViewPage {
             this.initSwitchMainCorpForm();
             this.initSampleForm(this.queryModels.switchMcModel);
             this.initQueryOverviewArea(tagHelperPlg);
-            this.initAnalysisViews(ttInitialData, ttData.id_attr, ttData.bib_attr);
+            this.initAnalysisViews(ttInitialData, ttData.bib_id_attr, ttData.bib_label_attr);
             this.layoutModel.initKeyShortcuts();
             this.updateHistory();
             if (this.layoutModel.getConf<boolean>('Unfinished')) {

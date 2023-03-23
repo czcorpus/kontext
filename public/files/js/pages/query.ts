@@ -113,41 +113,44 @@ export class QueryPage {
         );
     }
 
-    createTTViews(queryFormArgs:QueryFormArgs, textTypesData:TTInitialData, subcorpTTStructure:ExportedSelection):[QueryFormProps, Array<AnyTTSelection>] {
-        const attributes = importInitialTTData(textTypesData, {}, subcorpTTStructure || {});
+    createTTViews(
+        queryFormArgs:QueryFormArgs,
+        textTypesData:TTInitialData,
+        subcorpTTStructure:ExportedSelection
+    ):[QueryFormProps, Array<AnyTTSelection>] {
+        const attributes = importInitialTTData(
+            textTypesData, subcorpTTStructure, subcorpTTStructure);
         this.textTypesModel = new TextTypesModel({
                 dispatcher: this.layoutModel.dispatcher,
                 pluginApi: this.layoutModel.pluginApi(),
                 attributes,
                 readonlyMode: false,
-                bibIdAttr: textTypesData.id_attr,
-                bibLabelAttr: textTypesData.bib_attr
+                bibIdAttr: textTypesData.bib_id_attr,
+                bibLabelAttr: textTypesData.bib_label_attr
         });
-        this.textTypesModel.applyCheckedItems(
+        const hasSelectedItems = this.textTypesModel.applyCheckedItems(
             queryFormArgs.selected_text_types,
             queryFormArgs.bib_mapping
         );
 
+        const availableAlignedCorpora = this.layoutModel.getConf<Array<Kontext.AttrItem>>('availableAlignedCorpora');
         this.liveAttrsPlugin = liveAttributes(
             this.layoutModel.pluginApi(),
             this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES),
-            false,
             {
-                bibAttr: textTypesData.bib_attr,
-                availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>(
-                    'availableAlignedCorpora'
-                ),
-                refineEnabled: this.layoutModel.getConf<Array<string>>(
-                    'alignedCorpora').length > 0 ||
-                    Dict.keys(queryFormArgs.selected_text_types).length > 0,
+                bibIdAttr: textTypesData.bib_id_attr,
+                bibLabelAttr: textTypesData.bib_label_attr,
+                availableAlignedCorpora,
+                refineEnabled: hasSelectedItems,
                 manualAlignCorporaMode: false,
                 subcorpTTStructure,
+                textTypesData: this.layoutModel.getConf<TTInitialData>('textTypesData')
             }
         );
 
         let liveAttrsViews:PluginInterfaces.LiveAttributes.Views;
         if (this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES)) {
-            liveAttrsViews = this.liveAttrsPlugin.getViews(null, this.textTypesModel);
+            liveAttrsViews = this.liveAttrsPlugin.getViews(null, this.textTypesModel, !List.empty(availableAlignedCorpora));
             this.textTypesModel.enableAutoCompleteSupport();
 
         } else {
@@ -214,7 +217,7 @@ export class QueryPage {
                     'SubcorpList'
                 ),
                 currentSubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
-                origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
+                subcorpusId: this.layoutModel.getCorpusIdent().usesubcorp,
                 isForeignSubcorpus: this.layoutModel.getCorpusIdent().foreignSubcorp,
                 tagsets: queryFormArgs.tagsets,
                 shuffleConcByDefault: this.layoutModel.getConf<boolean>('ShuffleConcByDefault'),
@@ -227,6 +230,7 @@ export class QueryPage {
                     'InputLanguages'
                 ),
                 textTypesNotes: this.layoutModel.getConf<string>('TextTypesNotes'),
+                bibIdAttr,
                 selectedTextTypes: queryFormArgs.selected_text_types,
                 hasLemma: queryFormArgs.has_lemma,
                 useRichQueryEditor:this.layoutModel.getConf<boolean>('UseRichQueryEditor'),
@@ -383,8 +387,8 @@ export class QueryPage {
                 tagHelperPlg,
                 queryFormArgs,
                 ttSelection,
-                textTypesData.id_attr,
-                textTypesData.bib_attr
+                textTypesData.bib_id_attr,
+                textTypesData.bib_label_attr
             );
             const corparchWidgetId = Ident.puid()
             const [corparchWidget, corparchPlg]  = this.initCorplistComponent(corparchWidgetId);

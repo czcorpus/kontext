@@ -46,7 +46,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'lib'))  # appl
 
 CONF_PATH = os.getenv(
     'KONTEXT_CONF', os.path.realpath(f'{os.path.dirname(os.path.realpath(__file__))}/../conf/config.xml'))
-LOCALE_PATH = os.path.realpath(f'{os.path.dirname(__file__)}/../locale')
+LOCALE_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), '../locale'))
 JWT_COOKIE_NAME = 'kontext_jwt'
 JWT_ALGORITHM = 'HS256'
 DFLT_HTTP_CLIENT_TIMEOUT = 20
@@ -58,6 +58,7 @@ import jwt
 import plugins
 import plugins.export
 import settings
+from babel import support
 from action.context import ApplicationContext
 from action.cookie import KonTextCookie
 from action.plugin.initializer import install_plugin_actions, setup_plugins
@@ -65,7 +66,6 @@ from action.templating import TplEngine
 from jwt.exceptions import ExpiredSignatureError, InvalidSignatureError
 from sanic import Request, Sanic
 from sanic.response import HTTPResponse
-from sanic_babel import Babel
 from texttypes.cache import TextTypesCache
 from views.colls import bp as colls_bp
 from views.concordance import bp as conc_bp
@@ -170,6 +170,13 @@ async def sigusr1_handler():
             await fn()
     await tt_cache.clear_all()
 
+def load_translations(app: Sanic):
+    app.ctx.translations = {}
+    for loc in settings.get_list('global', 'translations'):
+        loc = loc.replace('-', '_')
+        catalog = support.Translations.load(LOCALE_PATH, [loc])
+        app.ctx.translations[loc] = catalog
+
 
 @application.listener('before_server_start')
 async def server_init(app: Sanic, loop: asyncio.BaseEventLoop):
@@ -184,6 +191,8 @@ async def server_init(app: Sanic, loop: asyncio.BaseEventLoop):
         logging.getLogger(__name__).warning(
             f'Internal HTTP client timeout not configured, using default {DFLT_HTTP_CLIENT_TIMEOUT} sec.')
     app.ctx.kontext_conf = {'http_client_timeout_secs': http_client_conf}
+    # load all translations
+    load_translations(app)
 
 
 @application.listener('after_server_stop')
@@ -209,6 +218,15 @@ async def extract_jwt(request: Request):
     request.ctx.session = {}
 
 
+@application.middleware('request')
+async def set_locale(request: Request):
+    request.ctx.locale = get_locale(request)
+    if request.ctx.locale in application.ctx.translations:
+        request.ctx.translations = application.ctx.translations[request.ctx.locale]
+    else:
+        request.ctx.translations = support.NullTranslations()
+        logging.getLogger(__name__).warning(f'Requested unsupported locale {request.ctx.locale}')
+
 @application.middleware('response')
 async def store_jwt(request: Request, response: HTTPResponse):
     ttl = settings.get_int('global', 'jwt_ttl_secs', 3600)
@@ -221,11 +239,15 @@ async def store_jwt(request: Request, response: HTTPResponse):
         or request.headers.get('x-forwarded-proto') == 'https')
 
 
-application.config['BABEL_TRANSLATION_DIRECTORIES'] = LOCALE_PATH
-babel = Babel(application, configure_jinja=False)
+@application.signal('kontext.internal.reset')
+async def handle_internal_soft_reset_signal():
+    for p in plugins.runtime:
+        fn = getattr(p.instance, 'on_soft_reset', None)
+        if callable(fn):
+            await fn()
+    logging.getLogger(__name__).warning('performed internal soft reset (Sanic signal)')
 
 
-@babel.localeselector
 def get_locale(request: Request) -> str:
     """
     Gets user locale based on request data

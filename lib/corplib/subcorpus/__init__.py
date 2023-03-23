@@ -28,7 +28,7 @@ from manatee import Concordance, Corpus, SubCorpus
 from manatee import create_subcorpus as m_create_subcorpus
 
 from ..abstract import SubcorpusIdent
-from ..corpus import KCorpus, AbstractKCorpus
+from ..corpus import AbstractKCorpus, KCorpus
 from ..errors import (
     CorpusInstantiationError, InvalidSubCorpFreqFileType,
     SubcorpusAlreadyExistsError)
@@ -76,6 +76,7 @@ class SubcorpusRecord(SubcorpusIdent):
         created: datetime of corpus creation
         public_description: a public description in a decoded format (HTML)
         public_description_raw: a public description in Markdown format - just like stored in db
+        version: allows handling distinction between older subcorpora accessed via name and the new ones with ID
         archived: datetime specifying when the subcorpus was archived (= not listed anywhere by default but URLs
             with the subcorpus are still available
         cql: (mutually exclusive with 'within_cond' and 'text_types') defines a raw CQL specification of the subcorpus;
@@ -85,7 +86,8 @@ class SubcorpusRecord(SubcorpusIdent):
         text_types (mutually exclusive with 'cql' and 'within_cond') defines an encoded set of individually selected
             structural attributes and their values:
             ({attrA: [value_A1, ...,value_Aa], ..., attrZ: [value_Z1, ...,valueZz)
-
+        bib_id_attr: a unique identifier used by live_attributres for corpora with bibliographical entries
+        bib_label_attr: a human readable version of bib_id_attr
     """
     name: str
     user_id: int
@@ -98,15 +100,16 @@ class SubcorpusRecord(SubcorpusIdent):
         decoder=datetime.fromtimestamp))
     public_description: str
     public_description_raw: str
+    version: int
     archived: Optional[datetime] = field(default=None, metadata=config(
-        encoder=serialize_datetime,
-        decoder=deserialize_datetime))
-    published: Optional[datetime] = field(default=None, metadata=config(
         encoder=serialize_datetime,
         decoder=deserialize_datetime))
     cql: Optional[str] = None
     within_cond: Optional[WithinType] = None
     text_types: Optional[TextTypesType] = None
+    bib_id_attr: Optional[str] = None
+    bib_label_attr: Optional[str] = None
+    aligned: Optional[List[str]] = None
 
 
 class KSubcorpus(KCorpus):
@@ -213,7 +216,7 @@ class KSubcorpus(KCorpus):
         return self._data_record.public_description
 
     def freq_precalc_file(self, attrname: str, ftype: str) -> str:
-        if ftype not in ('frq', 'docf', 'arf'):
+        if ftype not in ('frq', 'docf', 'arf', 'token:l'):
             raise InvalidSubCorpFreqFileType(
                 f'invalid subcorpus freq type file specification: {ftype}')
         return os.path.join(self._subcorp_root_dir, self._data_record.data_dir, f'data.{attrname}.{ftype}')

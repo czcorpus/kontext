@@ -59,19 +59,19 @@ class TaskWrapper:
 # ----------------------------- CONCORDANCE -----------------------------------
 
 @as_sync
-async def conc_register(user_id, corpus_ident, corp_cache_key, query, samplesize, time_limit):
+async def conc_register(user_id, corpus_ident, corp_cache_key, query, cutoff, time_limit):
     return await general.conc_register(
-        TaskWrapper(get_current_job()), user_id, corpus_ident, corp_cache_key, query, samplesize, time_limit, worker)
+        TaskWrapper(get_current_job()), user_id, corpus_ident, corp_cache_key, query, cutoff, time_limit, worker)
 
 
 @as_sync
-async def conc_calculate(initial_args, user_id, corpus_ident, corp_cache_key, query, samplesize):
-    return await general.conc_calculate(TaskWrapper(get_current_job()), initial_args, user_id, corpus_ident, corp_cache_key, query, samplesize)
+async def conc_calculate(initial_args, user_id, corpus_ident, corp_cache_key, query, cutoff):
+    return await general.conc_calculate(TaskWrapper(get_current_job()), initial_args, user_id, corpus_ident, corp_cache_key, query, cutoff)
 
 
 @as_sync
-async def conc_sync_calculate(user_id, corpus_name, subc_name, corp_cache_key, query, samplesize):
-    return await general.conc_sync_calculate(TaskWrapper(get_current_job()), user_id, corpus_name, subc_name, corp_cache_key, query, samplesize)
+async def conc_sync_calculate(user_id, corpus_name, subc_name, corp_cache_key, query, cutoff):
+    return await general.conc_sync_calculate(TaskWrapper(get_current_job()), user_id, corpus_name, subc_name, corp_cache_key, query, cutoff)
 
 
 # ----------------------------- COLLOCATIONS ----------------------------------

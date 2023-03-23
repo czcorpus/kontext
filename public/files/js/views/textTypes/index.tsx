@@ -26,7 +26,6 @@ import * as PluginInterfaces from '../../types/plugins';
 import * as Kontext from '../../types/kontext';
 import * as TextTypes from '../../types/textTypes';
 import { TTSelOps } from '../../models/textTypes/selectionOps';
-import * as CoreViews from '../../types/coreViews';
 import { TextTypesModelState } from '../../models/textTypes/main';
 import { Actions } from '../../models/textTypes/actions';
 import { WidgetView } from '../../models/textTypes/common';
@@ -136,7 +135,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             } else if (props.attrObj.type === 'regexp') {
                 if (props.widget.widget === 'days') {
                     if (props.attrObj.isLocked) {
-                        return <p>Selected: {props.attrObj.textFieldDecoded}</p>
+                        return (
+                            <p>
+                                {he.translate('query__tt_regexp_value_label')}:
+                                {'\u00a0' + props.attrObj.textFieldDecoded}
+                            </p>
+                        );
                     }
                     return <CalendarDaysSelector attrObj={props.attrObj} firstDayOfWeek={props.firstDayOfWeek} />;
                 }
@@ -184,7 +188,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         attrObj:TextTypes.AnyTTSelection;
         widget:{widget:WidgetView; active:boolean};
         isMinimized:boolean;
-        metaInfoHelpVisible:boolean;
         hasExtendedInfo:boolean;
         metaInfo:TextTypes.AttrSummary;
         textInputPlaceholder:string;
@@ -396,7 +399,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             </div>
             <div className="grid">
                 {props.LiveAttrsCustomTT
-                    ? <div><props.LiveAttrsCustomTT /></div>
+                    ? <props.LiveAttrsCustomTT />
                     : null}
                 {List.map((attrObj) => (
                     <div key={attrObj.name + ':list:' + TTSelOps.containsFullList(attrObj)}>
@@ -404,9 +407,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                                 attrObj={attrObj}
                                 widget={props.attributeWidgets[attrObj.name]}
                                 isMinimized={props.minimizedBoxes[attrObj.name]}
-                                metaInfoHelpVisible={props.metaInfoHelpVisible}
                                 hasExtendedInfo={props.bibLabelAttr === attrObj.name}
-                                metaInfo={props.metaInfo[attrObj.name]}
+                                metaInfo={attrObj.metaInfo}
                                 isBusy={props.busyAttributes[attrObj.name]}
                                 textInputPlaceholder={props.textInputPlaceholder}
                                 firstDayOfWeek={props.firstDayOfWeek}

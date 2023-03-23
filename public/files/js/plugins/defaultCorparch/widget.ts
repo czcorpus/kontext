@@ -74,19 +74,10 @@ interface SetFavItemResponse extends Kontext.AjaxResponse {
 }
 
 
-const importServerFavitem = (item:common.ServerFavlistItem):FavListItem => {
-    return {
-        id: item.id,
-        name: item.name,
-        subcorpus_id: item.subcorpus_id,
-        subcorpus_orig_id: item.subcorpus_orig_id,
-        size: item.size,
-        size_info: item.size_info,
-        corpora: item.corpora,
-        description: item.description,
-        trashTTL: null
-    };
-};
+const importServerFavitem = (item:common.ServerFavlistItem):FavListItem => ({
+    ...item,
+    trashTTL: null
+});
 
 const importServerFavitems = (items:Array<common.ServerFavlistItem>):Array<FavListItem> => {
     return List.map(importServerFavitem, items);
@@ -102,11 +93,21 @@ const importServerFavitems = (items:Array<common.ServerFavlistItem>):Array<FavLi
  */
 const findCurrFavitemId = (dataFav:Array<FavListItem>, item:common.GeneratedFavListItem):string => {
     const normalize = (v:string) => v ? v : '';
-    const srch = dataFav.filter(x => x.trashTTL === null).find(x => {
-            return normalize(x.subcorpus_id) === normalize(item.subcorpus_id) &&
-                item.corpora.join('') === x.corpora.map(x => x.id).join('');
-    });
-    return srch ? srch.id : undefined;
+    const itemsEqual = (item1:FavListItem, item2:common.GeneratedFavListItem):boolean => {
+        return normalize(item1.subcorpus_id) === normalize(item2.subcorpus_id) &&
+            pipe(
+                item1.corpora,
+                List.map(v => v.id),
+                List.zipAll(item2.corpora),
+                List.every(([v1, v2]) => v1 === v2)
+            );
+    }
+    const srch = pipe(
+        dataFav,
+        List.filter(x => x.trashTTL === null),
+        List.find(x => itemsEqual(x, item))
+    );
+    return srch?.id;
 }
 
 
@@ -202,9 +203,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 dataFavImp,
                 {
                     subcorpus_id: currCorp.usesubcorp,
-                    subcorpus_orig_id: currCorp.origSubcorpName,
-                    corpora: [...(pluginApi.getConf<Array<string>>('alignedCorpora') || []),
-                            currCorp.id]
+                    subcorpus_name: currCorp.subcName,
+                    corpora: [currCorp.id, ...(pluginApi.getConf<Array<string>>('alignedCorpora') || [])]
                 }
             ),
             isWaitingForSearchResults: false,
@@ -354,7 +354,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                                     name: response.name,
                                     subcorpus_id: response.subcorpus_id,
                                     // TODO !!! missing orig subc name
-                                    subcorpus_orig_id: response.subcorpus_id,
+                                    subcorpus_name: response.subcorpus_id,
                                     size: response.size,
                                     size_info: response.size_info,
                                     // TODO missing name
@@ -733,7 +733,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
     getFullCorpusSelection(state:CorplistWidgetModelState):common.GeneratedFavListItem {
         return {
             subcorpus_id: state.corpusIdent.usesubcorp,
-            subcorpus_orig_id: state.corpusIdent.origSubcorpName,
+            subcorpus_name: state.corpusIdent.subcName,
             corpora: [state.corpusIdent.id, ...state.alignedCorpora]
         };
     };
@@ -773,7 +773,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 {
                     corpora: List.map(v => v.id, trashedItem.corpora),
                     subcorpus_id: trashedItem.subcorpus_id,
-                    subcorpus_orig_id: trashedItem.subcorpus_orig_id,
+                    subcorpus_name: trashedItem.subcorpus_name,
                 }
             );
 

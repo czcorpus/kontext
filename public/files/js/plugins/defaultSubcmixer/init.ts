@@ -23,6 +23,7 @@ import { init as viewInit } from './view';
 import { SubcMixerModel } from './model';
 import * as Kontext from '../../types/kontext';
 import { IPluginApi } from '../../types/plugins/common';
+import { Ident } from 'cnc-tskit';
 
 
 class SubcmixerPlugin implements PluginInterfaces.SubcMixer.IPlugin {
@@ -44,7 +45,8 @@ class SubcmixerPlugin implements PluginInterfaces.SubcMixer.IPlugin {
         return viewInit(
             this.pluginApi.dispatcher(),
             this.pluginApi.getComponentHelpers(),
-            this.model
+            this.model,
+            Ident.puid()
         );
     }
 

@@ -18,21 +18,23 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
+import logging
 import urllib.parse
 from dataclasses import asdict
 from functools import partial
 from typing import (
-    Any, Callable, Dict, Iterable, List, Optional, Tuple, TypeVar, Union)
+    Any, Awaitable, Callable, Dict, Iterable, List, Optional, Tuple, TypeVar,
+    Union)
 
 import corplib
 import l10n
 import plugins
 import settings
-from action.argmapping import Args, ConcArgsMapping
+from action.argmapping import Args
 from action.argmapping.conc.query import ConcFormArgs
 from action.errors import (
-    AlignedCorpusForbiddenException, ImmediateRedirectException,
-    NotFoundException, UserReadableException)
+    AlignedCorpusForbiddenException, CorpusNotFoundException,
+    ImmediateRedirectException, NotFoundException, UserReadableException)
 from action.krequest import KRequest
 from action.model import ModelsSharedData
 from action.model.user import UserActionModel, UserPluginCtx
@@ -51,8 +53,19 @@ from texttypes.model import TextTypes
 
 T = TypeVar('T')
 
-PREFLIGHT_THRESHOLD_IPM = 50_000
-PREFLIGHT_MIN_LARGE_CORPUS = 100_000_00
+PREFLIGHT_THRESHOLD_FREQ = 10_000_000
+"""
+Specifies a minimum preflight frequency (after it is recalculated
+to the original corpus size) we consider too comp. demanding
+and offer users an alternative corpus
+"""
+
+PREFLIGHT_MIN_LARGE_CORPUS = 500_000_000
+"""Specifies a minimum size of a corpus to be used along with preflight queries"""
+
+
+async def empty_query_store(s, uh, res):
+    pass
 
 
 class CorpusActionModel(UserActionModel):
@@ -90,8 +103,8 @@ class CorpusActionModel(UserActionModel):
 
         self._auto_generated_conc_ops: List[Tuple[int, ConcFormArgs]] = []
 
-        self._on_query_store: List[Callable[[List[str], Optional[int], Dict[str, Any]], None]] = [
-            lambda s, uh, res: None]
+        self._on_query_store: List[Callable[[List[str], Optional[int],
+                                             Dict[str, Any]], Awaitable[None]]] = [empty_query_store]
 
         self._tt_cache = shared_data.tt_cache
 
@@ -119,7 +132,7 @@ class CorpusActionModel(UserActionModel):
     def active_q_data(self):
         return self._active_q_data
 
-    def on_query_store(self, fn: Callable[[List[str], Optional[int], Any], None]):
+    def on_query_store(self, fn: Callable[[List[str], Optional[int], Any], Awaitable[None]]):
         """
         Register a function called after a query (conc, pquery, wordlist) has been stored.
         The function arguments are:
@@ -201,7 +214,9 @@ class CorpusActionModel(UserActionModel):
                     if len(corpora) > 1:
                         req_args.add_forced_arg('align', *corpora[1:])
                         req_args.add_forced_arg('viewmode', 'align')
-                    if self._active_q_data.get('usesubcorp', None):
+                    if '_usesubcorp' in req_args:
+                        req_args.add_forced_arg('usesubcorp', req_args.getvalue('_usesubcorp'))
+                    elif self._active_q_data.get('usesubcorp', None):
                         req_args.add_forced_arg('usesubcorp', self._active_q_data['usesubcorp'])
                     return True
                 else:
@@ -219,14 +234,6 @@ class CorpusActionModel(UserActionModel):
 
     def clear_prev_conc_params(self):
         self._active_q_data = None
-
-    def get_curr_conc_args(self):
-        args = self.get_mapped_attrs(ConcArgsMapping)
-        if self._q_code:
-            args['q'] = f'~{self._q_code}'
-        else:
-            args['q'] = [q for q in self.args.q]
-        return args
 
     async def _check_corpus_access(self, req_args: Union[RequestArgsProxy, JSONRequestArgsProxy], action_props: ActionProps) -> Tuple[Union[str, None], str]:
         """
@@ -258,7 +265,7 @@ class CorpusActionModel(UserActionModel):
         """
         Runs before main action is processed. The action includes
         mapping of URL/form parameters to self.args, loading user
-        options, validating corpus access rights, scheduled actions.
+        options, validating corpus access rights.
 
         It is OK to override this method but the super().pre_dispatch()
         should be always called before performing custom actions.
@@ -266,7 +273,7 @@ class CorpusActionModel(UserActionModel):
         """
         req_args = await super().pre_dispatch(req_args)
         try:
-            await self._restore_prev_query_params(req_args)
+            q_loaded = await self._restore_prev_query_params(req_args)
             # corpus access check and modify path in case user cannot access currently requested corp.
             corpname, self._corpus_variant = await self._check_corpus_access(req_args, self._action_props)
             # now we can apply also corpus-dependent settings
@@ -282,12 +289,12 @@ class CorpusActionModel(UserActionModel):
                 req_args.set_forced_arg('corpname', corpname)
             # always prefer corpname returned by _check_corpus_access()
             # TODO we should reflect align here if corpus has changed
-
             # now we apply args from URL (highest priority)
             self.args.map_args_to_attrs(req_args)
             # validate self.args.maincorp which is dependent on 'corpname', 'align'
-            if self.args.maincorp and (self.args.maincorp != self.args.corpname and
-                                       self.args.maincorp not in self.args.align):
+            if (self.args.maincorp and
+                    self.args.maincorp != self.args.corpname and
+                    self.args.maincorp not in self.args.align):
                 raise UserReadableException(
                     f'Invalid argument value {self.args.maincorp} for "maincorp"',
                     code=422)
@@ -302,15 +309,24 @@ class CorpusActionModel(UserActionModel):
         if self._req.method == 'GET':
             self.return_url = self._req.updated_current_url(args)
         else:
-            self.return_url = '{}query?{}'.format(self._req.get_root_url(),
-                                                  '&'.join([f'{k}={v}' for k, v in list(args.items())]))
+            self.return_url = '{}query?{}'.format(
+                self._req.get_root_url(), '&'.join([f'{k}={v}' for k, v in list(args.items())]))
         self._curr_corpus = await self._load_corpus()
-        # plugins setup
-        for p in plugins.runtime:
-            if callable(getattr(p.instance, 'setup', None)):
-                p.instance.setup(self)
         if isinstance(self.corp, ErrorCorpus):
-            raise self.corp.get_error()
+            err = self.corp.get_error()
+            # in case user tries to open a non-existing subcorpus, we must test
+            # whether it is due to the older identifier and redirect if applicable
+            if isinstance(err, CorpusNotFoundException) and self.corp.subcorpus_id:
+                await self._redirect_old_subcorpus(err, q_loaded)
+            else:
+                raise err
+        # Restrict usage of special URL argument '_usesubcorp' we use to upgrade URLs with deprecated subc. access.
+        # Please note that here we know, the 'usesubcorp' has already been set at the beginning of pre_dispatch
+        # to the value of '_usesubcorp' arg.
+        elif '_usesubcorp' in req_args:
+            srec = self.corp.portable_ident
+            if not isinstance(srec, SubcorpusRecord) or srec.version > 1:
+                raise UserReadableException('Invalid argument: _usesubcorp', code=422)
         info = await self.get_corpus_info(self.args.corpname)
         if isinstance(info, BrokenCorpusInfo):
             raise NotFoundException(
@@ -318,6 +334,24 @@ class CorpusActionModel(UserActionModel):
                 internal_message=f'Failed to fetch configuration for {info.name}')
 
         return req_args
+
+    async def _redirect_old_subcorpus(self, orig_err: Exception, q_loaded: bool):
+        with plugins.runtime.SUBC_STORAGE as sr:
+            subc = await sr.get_info_by_name(self.args.corpname, self.args.usesubcorp, self.session_get('user', 'id'))
+            if subc and subc.version == 1:
+                logging.getLogger(__name__).warning(
+                    'Upgraded action with deprecated subcorpus identifier {}{}'.format(
+                        self.args.usesubcorp, ' (loaded from conc_persistence)' if q_loaded else ''))
+                args = {}
+                if q_loaded:
+                    # in case args are loaded from conc. persistence storage,
+                    # we must tell the target action pre_dispatch to overwrite
+                    # stored subc. identifier on the next try
+                    args['_usesubcorp'] = subc.id
+                else:
+                    args['usesubcorp'] = subc.id
+                raise ImmediateRedirectException(self._req.updated_current_url(args), code=301)
+            raise orig_err
 
     async def resolve_error_state(self, req, resp, result, err):
         await super().resolve_error_state(req, resp, result, err)
@@ -368,7 +402,10 @@ class CorpusActionModel(UserActionModel):
         async def test_fn(auth_plg, cname):
             return await auth_plg.validate_access(cname, self.session_get('user'))
 
-        if not cn:
+        if cn and cn.startswith('omezeni/'):  # legacy corpus ID; still can be encountered
+            cn = cn[len('omezeni/'):]
+            redirect = True
+        elif not cn:
             with plugins.runtime.AUTH as auth:
                 cn = await settings.get_default_corpus(partial(test_fn, auth))
                 redirect = True
@@ -381,7 +418,8 @@ class CorpusActionModel(UserActionModel):
         else:
             corpus_ident = self.args.corpname
         if corpus_ident is None:
-            return ErrorCorpus(Exception('Corpus not found'))
+            return ErrorCorpus(
+                CorpusNotFoundException('Corpus not found'), corpname=self.args.corpname, usesubcorp=self.args.usesubcorp)
         if self.args.corpname:
             try:
                 corp = await self.cf.get_corpus(
@@ -438,7 +476,7 @@ class CorpusActionModel(UserActionModel):
             variant=self._corpus_variant,
             name=self.corp.human_readable_corpname,
             usesubcorp=self.corp.subcorpus_id,
-            origSubcorpName=self.corp.subcorpus_name,
+            subcName=self.corp.subcorpus_name,
             foreignSubcorp=self.session_get('user', 'id') != self.corp.author_id,
             size=self.corp.size,
             searchSize=self.corp.search_size)
@@ -477,12 +515,11 @@ class CorpusActionModel(UserActionModel):
         corp_info = await self.get_corpus_info(getattr(self.args, 'corpname'))
         result['bib_conf'] = corp_info.metadata
         result['simple_query_default_attrs'] = corp_info.simple_query_default_attrs
-        result['corp_sample_size'] = corp_info.sample_size
         if corp_info.preflight_subcorpus:
             result['conc_preflight'] = dict(
                 corpname=corp_info.preflight_subcorpus.corpus_name,
                 subc=corp_info.preflight_subcorpus.id,
-                threshold_ipm=PREFLIGHT_THRESHOLD_IPM)
+                threshold_ipm=round(PREFLIGHT_THRESHOLD_FREQ / self.corp.size * 1_000_000))
         else:
             result['conc_preflight'] = None
 
@@ -571,7 +608,6 @@ class CorpusActionModel(UserActionModel):
         await self._add_corpus_related_globals(result, thecorp)
         result['uses_corp_instance'] = True
 
-        result['undo_q'] = urllib.parse.urlencode([('q', q) for q in getattr(self.args, 'q')[:-1]])
         result['shuffle_min_result_warning'] = settings.get_int(
             'global', 'shuffle_min_result_warning', 100000)
 
@@ -682,6 +718,10 @@ class CorpusActionModel(UserActionModel):
                         break
                 tpl_out['Wposlist_' + al] = [{'n': x.pos, 'v': x.pattern} for x in poslist]
                 tpl_out['input_languages'][al] = corp_info.collator_locale
+
+    async def create_preflight_subcorpus(self) -> str:
+        with plugins.runtime.SUBC_STORAGE as sc:
+            return await sc.create_preflight(self.subcpath, self.corp.corpname)
 
 
 class CorpusPluginCtx(UserPluginCtx, AbstractCorpusPluginCtx):

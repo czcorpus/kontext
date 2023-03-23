@@ -55,13 +55,16 @@ class ParadigmaticQueryActionModel(CorpusActionModel):
             self._plugin_ctx = PQueryPluginCtx(self, self._req, self._resp, self._plg_shared)
         return self._plugin_ctx
 
-    async def load_conc_queries(self, conc_ids: List[str], corpus_id: str,
-                                form_type: str) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    async def load_conc_queries(
+            self, conc_ids: List[str], corpus_id: str, form_type: str) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         """
-        Load both conc. query forms and respective raw Manatee queries
+        Load both conc. query forms and respective raw Manatee queries for provided
+        list of concordance operation IDs.
 
         form_type is either 'query' or 'filter'
         """
+        if form_type not in ('query', 'filter',):
+            raise RuntimeError('load_conc_queries requires either query or filter for type')
         forms = {}
         raw_queries = {}
         with plugins.runtime.QUERY_PERSISTENCE as qs:
@@ -138,7 +141,7 @@ class ParadigmaticQueryActionModel(CorpusActionModel):
                     user_id=self.session_get('user', 'id'),
                     query_id=query_id, q_supertype='pquery')
                 for fn in self._on_query_store:
-                    fn([query_id], ts, resp.result)
+                    await fn([query_id], ts, resp.result)
 
     def _add_save_menu_item(self, label: str, save_format: Optional[str] = None, hint: Optional[str] = None):
         if save_format is None:

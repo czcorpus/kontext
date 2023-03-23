@@ -30,6 +30,7 @@ import { KontextPage } from '../app/main';
 import { WordlistResultModel } from '../models/wordlist/main';
 import { ResultItem, WordlistSaveArgs } from '../models/wordlist/common';
 import { Actions } from '../models/wordlist/actions';
+import { Ident } from 'cnc-tskit';
 
 
 /**
@@ -61,16 +62,17 @@ export class WordlistPage {
             url,
             contentType: 'multipart/form-data',
             args,
-        });
+        }).subscribe();
     }
 
-    private initCorpnameLink(model:WordlistFormModel):void {
+    private initCorpnameLink(model:WordlistFormModel, corparchWidgetId:string):void {
         const queryOverviewViews = queryOverviewInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
             model,
             null,
-            this.layoutModel.getModels().mainMenuModel
+            this.layoutModel.getModels().mainMenuModel,
+            corparchWidgetId
         );
         this.layoutModel.renderReactComponent(
             queryOverviewViews,
@@ -87,7 +89,7 @@ export class WordlistPage {
             const formModel = new WordlistFormModel({
                 dispatcher: this.layoutModel.dispatcher,
                 layoutModel: this.layoutModel,
-                corpusIdent: this.layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
+                corpusIdent: this.layoutModel.getCorpusIdent(),
                 subcorpList: this.layoutModel.getConf<Array<string>>('SubcorpList'),
                 attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
                 structAttrList: Kontext.structsAndAttrsToStructAttrList(this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs')),
@@ -162,8 +164,8 @@ export class WordlistPage {
                     });
                 }
             });
-
-            this.initCorpnameLink(formModel);
+            const corparchWidgetId = Ident.puid()
+            this.initCorpnameLink(formModel, corparchWidgetId);
         });
     }
 }

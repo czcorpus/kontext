@@ -83,14 +83,25 @@ class AbstractSubcArchive(abc.ABC):
     @abc.abstractmethod
     async def create(
             self, ident: str, author: UserInfo, size: int, public_description,
-            data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs], is_draft: bool = False):
+            data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs],
+            aligned: List[str], is_draft: bool = False):
         """
         Create subcorpus in the database. It is assumed that actual subc. files are created somewhere else and
         the proper path is passed here. Also creates real subcorpus from draft.
         """
 
     @abc.abstractmethod
-    async def update_draft(self, ident: str, author: UserInfo, size: int, public_description: str, data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs]):
+    async def create_preflight(self, subc_root_dir, corpname) -> str:
+        """
+        Create a preflight subcorpus with defined size (ignoring corpus structures etc.).
+
+        Args:
+            subc_root_dir -- a global root directory for all subcorpora
+            corpname -- a source corpus ID
+        """
+
+    @abc.abstractmethod
+    async def update_draft(self, ident: str, author: UserInfo, size: int, public_description: str, data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs], aligned: List[str]):
         """
         Updates subcorpus draft in the database.
         """
@@ -135,6 +146,12 @@ class AbstractSubcArchive(abc.ABC):
         Returns an information about the most recent record matching provided ID
         """
 
+    async def get_info_by_name(self, corpname: str, subc_name: str, user_id: int) -> Optional[SubcorpusRecord]:
+        """
+        Returns an information about a subcorpus based on KonText <= 0.16 credentials.
+        This is for backwards compatibility
+        """
+
     @abc.abstractmethod
     async def get_names(self, subc_ids: List[str]) -> Dict[str, str]:
         """
@@ -155,7 +172,7 @@ class AbstractSubcArchive(abc.ABC):
     @abc.abstractmethod
     async def delete_query(self, user_id: int, corpname: str, subc_id: str) -> None:
         """
-        Makes sure subcorpus can not be used, restored and found anymore
+        Makes sure subcorpus cannot be used, restored and found anymore
         """
 
     @abc.abstractmethod

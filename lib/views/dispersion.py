@@ -75,7 +75,7 @@ def _get_freq_dispersion(conc: PyConc, resolution: int) -> List[FreqDispersionBi
 @bp.route('/ajax_get_freq_dispersion')
 @http_action(action_model=ConcActionModel, return_type='json')
 async def ajax_get_freq_dispersion(amodel: ConcActionModel, req: KRequest, resp: KResponse) -> List[FreqDispersionBin]:
-    conc = await require_existing_conc(amodel.corp, amodel.args.q)
+    conc = await require_existing_conc(amodel.corp, amodel.args.q, amodel.args.cutoff)
     resolution = int(req.args.get('resolution', 100))
     if 0 < resolution <= 1000:
         return _get_freq_dispersion(conc, resolution)
@@ -91,7 +91,7 @@ async def index(amodel: ConcActionModel, req: KRequest, response: KResponse):
         MainMenu.CONCORDANCE('query-overview'))
 
     try:
-        conc = await require_existing_conc(amodel.corp, amodel.args.q)
+        conc = await require_existing_conc(amodel.corp, amodel.args.q, amodel.args.cutoff)
     except ConcNotFoundException:
         args = list(req.args.items()) + [('next', 'dispersion')]
         raise ImmediateRedirectException(req.create_url('restore_conc', args))
@@ -110,6 +110,5 @@ async def index(amodel: ConcActionModel, req: KRequest, response: KResponse):
         'dispersion_resolution': resolution,
         'initial_data': _get_freq_dispersion(conc, resolution),
     }
-    await amodel.attach_query_params(result)
-    await amodel.attach_query_overview(result)
+    await amodel.export_query_forms(result)
     return result

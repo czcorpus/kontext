@@ -27,7 +27,10 @@ import * as Kontext from '../../types/kontext';
 import * as TextTypes from '../../types/textTypes';
 import * as PluginInterfaces from '../../types/plugins';
 import { TTSelOps } from './selectionOps';
-import { SelectionFilterMap, IntervalChar, WidgetView, importInitialTTData, textTypeSelectionEquals, extractTTSelectionValue } from './common';
+import {
+    SelectionFilterMap, IntervalChar, WidgetView, importInitialTTData,
+    textTypeSelectionEquals, extractTTSelectionValue
+} from './common';
 import { Actions } from './actions';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions } from '../common/actions';
@@ -70,12 +73,6 @@ export interface TextTypesModelState {
      */
     selectAll:{[key:string]:boolean};
 
-    /**
-     * Represents meta information related to the whole attribute
-     * (i.e. not just to a single value).
-     */
-    metaInfo:{[key:string]:TextTypes.AttrSummary};
-
     minimizedBoxes:{[key:string]:boolean};
 
     textInputPlaceholder:string;
@@ -92,8 +89,6 @@ export interface TextTypesModelState {
     }};
 
     intervalChars:Array<string>;
-
-    metaInfoHelpVisible:boolean;
 
     firstDayOfWeek:'mo'|'su'|'sa';
 
@@ -161,8 +156,9 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                     ),
                     Dict.fromEntries()
                 ),
-                metaInfo: {},
-                textInputPlaceholder: null,
+                textInputPlaceholder: pluginApi.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES) ?
+                    pluginApi.translate('query__tt_search_by_value') :
+                    pluginApi.translate('query__tt_exact_value'),
                 busyAttributes: {},
                 minimizedBoxes: pipe(
                     attributes,
@@ -180,7 +176,6 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                     Dict.fromEntries(),
                 ),
                 intervalChars: pluginApi.getConf<Array<string>>('ttIntervalChars'),
-                metaInfoHelpVisible: false,
                 firstDayOfWeek: pluginApi.getConf<'mo'|'su'|'sa'>('firstDayOfWeek'),
                 isLiveAttrsActive: pluginApi.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES),
             }
@@ -290,16 +285,20 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         this.addActionHandler(
             Actions.ExtendedInformationRequestDone,
             action => {
-                this.changeState(state => {
-                    state.busyAttributes[action.payload.attrName] = false;
-                    this.setExtendedInfo(
-                        state,
-                        action.payload.attrName,
-                        action.payload.ident,
-                        // TODO type?? !!!!
-                        action.payload.data
-                    );
-                });
+                if (!action.error) {
+                    this.changeState(state => {
+                        state.busyAttributes[action.payload.attrName] = false;
+                        this.setExtendedInfo(
+                            state,
+                            action.payload.attrName,
+                            action.payload.ident,
+                            // TODO type?? !!!!
+                            action.payload.data
+                        );
+                    });
+                } else {
+                    this.pluginApi.showMessage('error', action.error);
+                }
             }
         );
 
@@ -424,7 +423,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                             false,
                             true,
                         ),
-                        newSelections: this.getUnlockedSelections(this.state)
+                        newSelections: this.getSelectedValues(
+                            this.state, action.payload.onlyUnlockedSelections)
                     }
                 );
             }
@@ -443,14 +443,18 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             Actions.AttributeTextInputAutocompleteRequestDone,
             _ => !this.readonlyMode,
             action => {
-                this.changeState(state => {
-                    state.busyAttributes[action.payload.attrName] = false;
-                    this.setAutoComplete(
-                        state,
-                        action.payload.attrName,
-                        action.payload.autoCompleteData
-                    );
-                });
+                if (!action.error) {
+                    this.changeState(state => {
+                        state.busyAttributes[action.payload.attrName] = false;
+                        this.setAutoComplete(
+                            state,
+                            action.payload.attrName,
+                            action.payload.autoCompleteData,
+                        );
+                    });
+                } else {
+                    this.pluginApi.showMessage('error', action.error);
+                }
             }
         );
 
@@ -560,9 +564,18 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         this.addActionHandler(
             Actions.SetAttrSummary,
             action => {
-                this.changeState(state => {
-                    state.metaInfo[action.payload.attrName] = action.payload.value;
-                });
+                const index = List.findIndex(
+                    v => v.name === action.payload.attrName,
+                    this.state.attributes,
+                );
+                if (index === -1) {
+                    console.warn(`LiveAttrs: attribute '${action.payload.attrName}' not found`);
+
+                } else {
+                    this.changeState(state => {
+                        state.attributes[index].metaInfo = action.payload.value;
+                    });
+                }
             }
         );
 
@@ -661,9 +674,15 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 if (!action.error) {
                     const selection = action.payload.data.selections;
                     if (isTTSelection(selection)) {
-                        const attributes = importInitialTTData(action.payload.textTypes, selection, {});
+                        const attributes = importInitialTTData(
+                            action.payload.textTypes,
+                            selection,
+                            selection
+                        );
                         this.changeState(state => {
                             state.attributes = attributes;
+                            state.bibIdAttr = action.payload.data.bibIdAttr;
+                            state.bibLabelAttr = action.payload.data.bibLabelAttr;
                             state.attributeWidgets = pipe(
                                 attributes,
                                 List.map(item => tuple(item.name, {widget: item.widget, active: false})),
@@ -675,7 +694,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                                 attributes,
                                 List.map(v => tuple(v.name, false)),
                                 Dict.fromEntries()
-                            )
+                            );
                         });
                     }
                 }
@@ -730,7 +749,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
     }
 
     applyCheckedItems(checkedItems:TextTypes.ExportedSelection,
-            bibMapping:TextTypes.BibMapping):void {
+            bibMapping:TextTypes.BibMapping):boolean {
         this.changeState(state => {
             pipe(
                 checkedItems,
@@ -763,7 +782,6 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                                                 bibMapping[extractedVal] : extractedVal,
                                             selected: true,
                                             locked: false,
-                                            definesSubcorp: false,
                                             numGrouped: 0
                                         }
                                     );
@@ -797,7 +815,6 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                                             value: extractTTSelectionValue(checkedVal),
                                             selected: true,
                                             locked: false,
-                                            definesSubcorp: false,
                                             numGrouped: 0
                                         }
                                     );
@@ -829,6 +846,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             ));
             state.hasSelectedItems = TextTypesModel.findHasSelectedItems(state.attributes);
         });
+        return this.state.hasSelectedItems;
     }
 
     getRegistrationId():string {
@@ -882,7 +900,6 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             value: label,
             selected: true,
             locked: false,
-            definesSubcorp: false,
             numGrouped: 1
         };
         state.attributes[attrIdx] = append ?
@@ -957,7 +974,6 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         state.attributes = List.head(state.selectionHistory);
         state.selectionHistory = [List.head(state.selectionHistory)];
         state.selectAll = Dict.map(_ => false, state.selectAll);
-        state.metaInfo = {};
         state.hasSelectedItems = false;
     }
 
@@ -1018,7 +1034,6 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                                 value: block[i].v,
                                 selected: attrVal.selected,
                                 locked: attrVal.locked,
-                                definesSubcorp: attrVal.definesSubcorp,
                                 numGrouped: block[i].numGrouped,
                                 availItems: block[i].availItems,
                                 extendedInfo: attrVal.extendedInfo
@@ -1077,7 +1092,9 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                     label: srchAttr.label,
                     name: srchAttr.name,
                     values: [...srchAttr.values],
-                    type: 'full'
+                    definesSubcorpus: srchAttr.definesSubcorpus,
+                    type: 'full',
+                    metaInfo: null,
                 } :
                 state.attributes[attrIdx];
 
@@ -1092,7 +1109,6 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             value: item,
             selected: false,
             locked: false,
-            definesSubcorp: false,
             numGrouped: 1 // TODO is it always OK here?
         }));
         if (attrIdx > -1) {
@@ -1204,7 +1220,6 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 value: item.value,
                 locked: item.locked,
                 selected: item.selected,
-                definesSubcorp: item.definesSubcorp,
                 numGrouped: item.numGrouped
             };
             const interval = this.decodeRange(item.value);
@@ -1435,22 +1450,27 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         );
     }
 
-    private getUnlockedSelections(state:TextTypesModelState):Array<[string, string]> {
+    private getSelectedValues(
+        state:TextTypesModelState,
+        unlockedOnly:boolean
+    ):Array<[string, string]> {
         return pipe(
             state.attributes,
             List.flatMap(attr => {
                 if (attr.type === 'regexp' && !attr.isLocked && attr.textFieldValue) {
                     return [tuple(attr.name, attr.textFieldValue)];
 
-                } else if ((attr.type === 'full' || attr.type === 'text')  && !List.some(v => v.locked, attr.values)) {
-                    return pipe(
-                        attr.values,
-                        List.filter(val => val.selected),
-                        List.map(val => tuple(attr.name, val.value))
-                    );
+                } else if (attr.type === 'full' || attr.type === 'text') {
+                    if (!List.some(v => v.locked, attr.values) || !unlockedOnly) {
+                        return pipe(
+                            attr.values,
+                            List.filter(val => val.selected),
+                            List.map(val => tuple(attr.name, val.value))
+                        );
+                    }
                 }
                 return [];
             })
-        )
+        );
     }
 }

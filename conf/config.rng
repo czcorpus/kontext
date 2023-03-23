@@ -398,6 +398,11 @@
                             </a:documentation>
                         </element>
                     </optional>
+                    <optional>
+                        <element name="enabled_websockets">
+                            <ref name="boolValues" />
+                        </element>
+                    </optional>
                 </interleave>
             </element>
             <element name="calc_backend">
@@ -414,13 +419,6 @@
                             <data type="nonNegativeInteger" />
                         </element>
                     </optional>
-                    <element name="status_service_url">
-                        <a:documentation>In case a bgcalc module supports realtime status update,
-                                KonText can be set to perform some async checking via WebSockets to decrease
-                                load on Gunicorn workers and also to decrease number of requests.
-                        </a:documentation>
-                        <data type="anyURI" />
-                    </element>
                     <optional>
                         <choice>
                             <element name="conf">

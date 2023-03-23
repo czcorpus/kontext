@@ -23,7 +23,7 @@
 import { IFullActionControl } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap, map, concatMap, reduce } from 'rxjs/operators';
-import { Dict, tuple, List, pipe, HTTP } from 'cnc-tskit';
+import { Dict, tuple, List, pipe, HTTP, Rx } from 'cnc-tskit';
 
 import * as Kontext from '../../types/kontext';
 import * as TextTypes from '../../types/textTypes';
@@ -66,9 +66,10 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
     corpora:Array<string>;
     availableAlignedCorpora:Array<Kontext.AttrItem>;
     textTypesNotes:string;
+    bibIdAttr:string|null;
     subcorpList:Array<Kontext.SubcorpListItem>;
     currentSubcorp:string;
-    origSubcorpName:string;
+    subcorpusId:string;
     isForeignSubcorpus:boolean;
     shuffleConcByDefault:boolean;
     inputLanguages:{[corpname:string]:string};
@@ -87,6 +88,19 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
 export interface QueryInputSetQueryProps {
     sourceId:string;
     query:string;
+}
+
+export interface SubmitQueryResult {
+    response:ConcQueryResponse|null;
+    messages:Array<Kontext.ResponseMessage>;
+}
+
+interface CreateSubmitArgsArgs {
+    contextFormArgs:QueryContextArgs;
+    async:boolean;
+    ttSelection:TextTypes.ExportedSelection;
+    noQueryHistory?:boolean;
+    useAltCorp?:boolean;
 }
 
 /**
@@ -176,7 +190,8 @@ function importUserQueries(
                     querySuperType: 'conc',
                     he: {
                         translate: (s:string, values?:any) => s
-                    }
+                    },
+                    wrapLongQuery: false
                 });
                 return tuple<string, AdvancedQuery>(
                     corpus,
@@ -249,7 +264,7 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
      * the user-defined name. Otherwise (foreign published subc.) a public
      * identifier/code is used.
      */
-    origSubcorpName:string;
+    subcorpusId:string;
 
     isForeignSubcorpus:boolean;
 
@@ -289,6 +304,8 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
 
     quickSubcorpActive:boolean;
 
+    bibIdAttr:string;
+
     /**
      * Attributes user wants to display
      */
@@ -297,6 +314,10 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
      alignCommonPosAttrs:Array<string>;
 
      concPreflight:Kontext.PreflightConf|null;
+
+     suggestAltCorpVisible:boolean;
+
+     altCorp:string|null;
 }
 
 
@@ -363,7 +384,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 availableAlignedCorpora: props.availableAlignedCorpora,
                 subcorpList: props.subcorpList,
                 currentSubcorp: props.currentSubcorp || '',
-                origSubcorpName: props.origSubcorpName || '',
+                subcorpusId: props.subcorpusId || '',
                 isForeignSubcorpus: !!props.isForeignSubcorpus,
                 shuffleForbidden: false,
                 shuffleConcByDefault: props.shuffleConcByDefault,
@@ -437,10 +458,13 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 isLocalUiLang: props.isLocalUiLang,
                 quickSubcorpVisible: false,
                 quickSubcorpActive,
+                bibIdAttr: props.bibIdAttr,
                 concViewPosAttrs: props.concViewPosAttrs,
                 alignCommonPosAttrs: props.alignCommonPosAttrs,
                 compositionModeOn: false,
-                concPreflight: props.concPreflight
+                concPreflight: props.concPreflight,
+                suggestAltCorpVisible: false,
+                altCorp: pageModel.getConf<string|null>('AltCorp'),
         });
 
         this.addActionSubtypeHandler(
@@ -470,6 +494,29 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 });
             }
         );
+
+        this.addActionHandler(
+            Actions.ShowSuggestAltCorp,
+            action => {
+                this.changeState(
+                    state => {
+                        state.isBusy = false;
+                        state.suggestAltCorpVisible = true;
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            Actions.CloseSuggestAltCorp,
+            action => {
+                this.changeState(
+                    state => {
+                        state.suggestAltCorpVisible = false;
+                    }
+                );
+            }
+        )
 
         this.addActionHandler(
             Actions.QuerySubmit,
@@ -521,28 +568,43 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                             if (err !== null) {
                                 throw err;
                             }
-                            return this.state.concPreflight ?
+                            return this.state.concPreflight && this.state.altCorp && action.payload.useAltCorp === undefined ?
                                 this.submitPreflight(
                                     contextData,
                                     ttSelections,
-                                    this.state.concPreflight) :
-                                rxOf({contextData, ttSelections, preflightId: null});
+                                    this.state.concPreflight
+                                ) :
+                                rxOf({
+                                    contextData,
+                                    ttSelections,
+                                    preflightAlert: false,
+                                });
                         }
                     ),
                     concatMap(
-                        ({ttSelections, contextData}) => {
+                        ({ttSelections, contextData, preflightAlert}) => {
                             let err:Error;
                             err = this.testQueryTypeMismatch();
                             if (err !== null) {
                                 throw err;
                             }
-                            return this.submitQuery(contextData, true, ttSelections);
+                            return Rx.zippedWith(
+                                preflightAlert,
+                                preflightAlert ?
+                                    rxOf({ response: null, messages: [] }) :
+                                    this.submitQuery(contextData, true, ttSelections, undefined, action.payload.useAltCorp)
+                            );
                         }
                     )
 
                 ).subscribe({
-                    next: ([data, messages]) => {
-                        if (data === null) {
+                    next: ([{response, messages}, preflightAlert]) => {
+                        if (preflightAlert) {
+                            this.dispatchSideEffect(
+                                Actions.ShowSuggestAltCorp
+                            )
+
+                        } else if (response === null) {
                             if (!List.empty(messages)) {
                                 List.forEach(
                                     ([msgType, msg]) => {
@@ -564,8 +626,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
 
                         } else {
                             window.location.href = this.createViewUrl(
-                                data.conc_persistence_op_id,
-                                data.conc_args,
+                                response.conc_persistence_op_id,
+                                response.conc_args,
                                 false,
                                 true
                             );
@@ -795,17 +857,12 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
     private transferFormValues(
         state:FirstQueryFormModelState,
         data:FirstQueryFormModelSwitchPreserve,
-        oldCorp:string,
         newCorp:string,
         isAligned?:boolean
     ) {
         const oldQuery = data.queries[newCorp];
         let newQuery = state.queries[newCorp];
-        if (oldCorp === newCorp && oldQuery.qtype === newQuery.qtype) {
-            // for corpora that are not changed only copy query
-            newQuery = oldQuery;
-
-        } else if (newQuery.qtype === 'advanced' && oldQuery.qtype === 'simple') {
+        if (newQuery.qtype === 'advanced' && oldQuery.qtype === 'simple') {
             newQuery = advancedToSimpleQuery(newQuery, List.head(state.simpleQueryDefaultAttrs[newCorp]));
 
         } else if (newQuery.qtype === 'simple' && oldQuery.qtype === 'advanced') {
@@ -833,7 +890,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             pipe(
                 corpora,
                 List.filter(([oldCorp, newCorp]) => !!oldCorp && !!newCorp), // add/remove aligned corp
-                List.forEach(([oldCorp, newCorp], i) => this.transferFormValues(state, data, oldCorp, newCorp, i > 0)),
+                List.forEach(([, newCorp], i) => this.transferFormValues(
+                    state, data, newCorp, i > 0)),
             );
             state.alignedCorporaVisible = data.alignedCorporaVisible;
             state.supportedWidgets = determineSupportedWidgets(
@@ -950,13 +1008,13 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         }
     }
 
-    createSubmitArgs(
-        contextFormArgs:QueryContextArgs,
-        async:boolean,
-        ttSelection:TextTypes.ExportedSelection,
-        noQueryHistory:boolean
-    ):ConcQueryArgs {
-
+    createSubmitArgs({
+        contextFormArgs,
+        async,
+        ttSelection,
+        noQueryHistory,
+        useAltCorp
+    }:CreateSubmitArgsArgs):ConcQueryArgs {
         const currArgs = this.pageModel.getConcArgs();
         const args:ConcQueryArgs = {
             type: 'concQueryArgs',
@@ -975,7 +1033,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             text_types: this.disableRestrictSearch(this.state) ? {} : ttSelection,
             context: contextFormArgs,
             async,
-            no_query_history: noQueryHistory
+            no_query_history: !!noQueryHistory,
         };
 
         if (this.state.corpora.length > 1) {
@@ -986,6 +1044,19 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             corpus => this.exportQuery(this.state.queries[corpus]),
             this.state.corpora
         );
+
+        if (useAltCorp) {
+            const corp = this.pageModel.getCorpusIdent();
+            args.queries = List.map(
+                query => {
+                    if (query.corpname == corp.name) {
+                        query.corpname = this.state.altCorp;
+                    }
+                    return query;
+                },
+                args.queries,
+            );
+        }
 
         return args;
     }
@@ -1044,6 +1115,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
     ):Observable<{
         contextData:QueryContextArgs;
         ttSelections:TextTypes.ExportedSelection;
+        preflightAlert:boolean;
     }> {
 
         return this.pageModel.ajax$<PreflightResponse>(
@@ -1061,16 +1133,11 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         ).pipe(
             map(
-                ans => {
-                    if (ans.sizeIpm >= preflightSubc.threshold_ipm &&
-                            !window.confirm('Concordance might take a while to compute. Do you want to continue?')) {
-                        throw 'Query cancelled';
-                    }
-                    return {
-                        contextData,
-                        ttSelections
-                    }
-                }
+                ans => ({
+                    contextData,
+                    ttSelections,
+                    preflightAlert: ans.sizeIpm >= preflightSubc.threshold_ipm
+                })
             )
         );
     }
@@ -1079,8 +1146,9 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         contextFormArgs:QueryContextArgs,
         async:boolean,
         ttSelection:TextTypes.ExportedSelection,
-        noQueryHistory?:boolean
-    ):Observable<[ConcQueryResponse|null, Array<[Kontext.UserMessageTypes, string]>]> {
+        noQueryHistory?:boolean,
+        useAltCorp?:boolean,
+    ):Observable<SubmitQueryResult> {
 
         return this.pageModel.ajax$<ConcQueryResponse>(
             HTTP.Method.POST,
@@ -1088,12 +1156,13 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 'query_submit',
                 {format: 'json'}
             ),
-            this.createSubmitArgs(
+            this.createSubmitArgs({
                 contextFormArgs,
                 async,
                 ttSelection,
-                noQueryHistory
-            ),
+                noQueryHistory,
+                useAltCorp,
+            }),
             {
                 contentType: 'application/json'
             }
@@ -1102,22 +1171,18 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 502: this.pageModel.translate('global__human_readable_502')
             }),
             map(
-                ans => tuple(
-                    ans.finished !== true || ans.size > 0 ? ans : null,
-                    ans.messages || []
-                )
+                ans => ({
+                    response: ans.finished !== true || ans.size > 0 ? ans : null,
+                    messages: ans.messages || []
+                })
             )
         );
     }
 
     disableRestrictSearch(state:FirstQueryFormModelState):boolean {
-        if (!!state.currentSubcorp) {
-            if (!!this.pageModel.getConf('SubcorpTTStructure') && this.pageModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES)) {
-                return false;
-            }
-            return true;
-        }
-        return false;
+        return !!state.currentSubcorp &&
+                (!this.pageModel.getConf('SubcorpTTStructure') ||
+                !this.pageModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES));
     }
 
 }

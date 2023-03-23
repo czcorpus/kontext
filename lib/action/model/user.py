@@ -22,10 +22,9 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import corplib
 import plugins
-import scheduled
 import settings
 from action.argmapping import UserActionArgs
-from action.errors import UserReadableException
+from action.errors import UserReadableException, FunctionNotSupported
 from action.krequest import KRequest
 from action.model import ModelsSharedData
 from action.model.abstract import AbstractUserModel
@@ -33,6 +32,7 @@ from action.model.base import BaseActionModel, BasePluginCtx
 from action.plugin.ctx import AbstractUserPluginCtx
 from action.props import ActionProps
 from action.response import KResponse
+import bgcalc
 from bgcalc.task import AsyncTaskStatus
 from corplib import CorpusFactory
 from main_menu import MainMenu, generate_main_menu
@@ -88,8 +88,8 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
 
     async def pre_dispatch(self, req_args):
         """
-        pre_dispatch calls its descendant first and the it
-        initializes scheduled actions, user settings, user paths
+        pre_dispatch calls its descendant first,
+        then it initializes user settings, user paths
         and the CorpusFactory.
         """
         req_args = await super().pre_dispatch(req_args)
@@ -97,7 +97,6 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
             await dhook.pre_dispatch(self.plugin_ctx, self._action_props, self._req)
 
         options = {}
-        await self._scheduled_actions(options)
 
         # only general setting can be applied now because
         # we do not know final corpus name yet
@@ -160,7 +159,7 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
 
     @staticmethod
     def _get_save_excluded_attributes() -> Tuple[str, ...]:
-        return 'corpname', BaseActionModel.SCHEDULED_ACTIONS_KEY
+        return tuple('corpname', )
 
     async def save_options(self, optlist: Optional[Iterable] = None, corpus_id: Optional[str] = None):
         """
@@ -204,34 +203,6 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
                     options.update(sess_options)
                 merge_incoming_opts_to(options)
                 self._req.ctx.session['settings'] = options
-
-    async def _scheduled_actions(self, user_settings):
-        actions = []
-        if BaseActionModel.SCHEDULED_ACTIONS_KEY in user_settings:
-            value = user_settings[BaseActionModel.SCHEDULED_ACTIONS_KEY]
-            if type(value) is dict:
-                actions.append(value)
-            elif type(value):
-                actions += value
-            for action in actions:
-                func_name = action['action']
-                if hasattr(scheduled, func_name):
-                    fn = getattr(scheduled, func_name)
-                    if inspect.isclass(fn):
-                        fn = fn()
-                    if callable(fn):
-                        try:
-                            ans = fn(*(), **action)
-                            if 'message' in ans:
-                                self._resp.add_system_message('message', ans['message'])
-                            continue
-                        except Exception as e:
-                            logging.getLogger('SCHEDULING').error('task_id: {}, error: {} ({})'.format(
-                                action.get('id', '??'), e.__class__.__name__, e))
-                # avoided by 'continue' in case everything is OK
-                logging.getLogger('SCHEDULING').error('task_id: {}, Failed to invoke scheduled action: {}'.format(
-                    action.get('id', '??'), action,))
-            await self.save_options()  # this causes scheduled task to be removed from settings
 
     @property
     def plugin_ctx(self):
@@ -352,40 +323,76 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
     async def export_optional_plugins_conf(self, result):
         await self._export_optional_plugins_conf(result, [])
 
-    def get_async_tasks(self, category: Optional[str] = None) -> List[AsyncTaskStatus]:
+    async def update_async_task_status(self, curr_at: AsyncTaskStatus) -> bool:
         """
-        Returns a list of tasks user is explicitly informed about.
+        returns:
+            True if job was found (and updated) else False
+        """
+        backend = settings.get('calc_backend', 'type')
+        if backend in ('celery', 'rq'):
+            worker = bgcalc.calc_backend_client(settings)
+            aresult = worker.AsyncResult(curr_at.ident)
+            if aresult:
+                curr_at.status = aresult.status
+                if curr_at.status == 'FAILURE':
+                    result = aresult.get(timeout=2)
+                    curr_at.error = str(result)
+                    if not curr_at.error:
+                        curr_at.error = result.__class__.__name__
+                self._check_task_timeout(curr_at)
+                return True
+            else:
+                logging.getLogger(__name__).warning(f'Background job not found: {curr_at.ident}')
+                return False
+        else:
+            raise FunctionNotSupported(f'Backend {backend} does not support status checking')
+
+    async def get_async_tasks(
+            self,
+            category: Optional[str] = None,
+            no_refresh: Optional[bool] = False) -> List[AsyncTaskStatus]:
+        """
+        Returns a list of tasks user is explicitly informed about. In case there is
+        an unfinished task present, it is checked against the worker server
+        (unless 'no_refresh' is set to False).
 
         Args:
             category (str): task category filter
+            no_refresh: if true then the tasks are just loaded from user's session and
+                        no check with the worker server is performed
         Returns:
             (list of AsyncTaskStatus)
         """
         if 'async_tasks' in self._req.ctx.session:
-            ans = [AsyncTaskStatus.from_dict(d) for d in self._req.ctx.session['async_tasks']]
+            src = [AsyncTaskStatus.from_dict(d) for d in self._req.ctx.session['async_tasks']]
         else:
-            ans = []
+            src = []
         if category is not None:
-            return [item for item in ans if item.category == category]
-        else:
-            return ans
+            src = [item for item in src if item.category == category]
+        ans = []
+        for item in src:
+            if not item.is_finished() and no_refresh is False:
+                found = await self.update_async_task_status(item)
+                if found:
+                    ans.append(item)
+        return ans
 
     def set_async_tasks(self, task_list: Iterable[AsyncTaskStatus]):
         self._req.ctx.session['async_tasks'] = [at.to_dict() for at in task_list]
 
     @staticmethod
-    def mark_timeouted_tasks(*tasks):
+    def _check_task_timeout(task: AsyncTaskStatus):
         now = time.time()
         task_limit = settings.get_int('calc_backend', 'task_time_limit')
-        for at in tasks:
-            if (at.status == 'PENDING' or at.status == 'STARTED') and now - at.created > task_limit:
-                at.status = 'FAILURE'
-                if not at.error:
-                    at.error = 'task time limit exceeded'
+        if (task.status == 'PENDING' or task.status == 'STARTED') and now - task.created > task_limit:
+            task.status = 'FAILURE'
+            if not task.error:
+                task.error = 'task time limit exceeded'
 
-    def store_async_task(self, async_task_status) -> List[AsyncTaskStatus]:
-        at_list = [t for t in self.get_async_tasks() if t.status != 'FAILURE']
-        self.mark_timeouted_tasks(*at_list)
+    async def store_async_task(self, async_task_status) -> List[AsyncTaskStatus]:
+        at_list = [t for t in (await self.get_async_tasks()) if t.status != 'FAILURE']
+        for task in at_list:
+            self._check_task_timeout(task)
         at_list.append(async_task_status)
         self.set_async_tasks(at_list)
         return at_list
@@ -397,7 +404,6 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
         self.configure_auth_urls(result)
         result['conc_url_ttl_days'] = None
         result['corpus_ident'] = {}
-        result['corp_sample_size'] = None
         result['Globals'] = {}
         result['base_attr'] = BaseActionModel.BASE_ATTR
         result['user_info'] = self._req.ctx.session.get('user', {'fullname': None})
@@ -430,7 +436,7 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
         # the output of 'to_json' is actually only json-like (see the function val_to_js)
 
         # asynchronous tasks
-        result['async_tasks'] = [t.to_dict() for t in self.get_async_tasks()]
+        result['async_tasks'] = [t.to_dict() for t in (await self.get_async_tasks())]
         result['help_links'] = settings.get_help_links(self._req.ui_lang)
         result['integration_testing_env'] = settings.get_bool(
             'global', 'integration_testing_env', '0')

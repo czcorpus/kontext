@@ -28,6 +28,7 @@ export interface Props {
     scrollable?:boolean;
     autoWidth?:AutoWidth;
     fixedTop?:string;
+    icon?:React.ReactNode;
     label:string;
     children:React.ReactNode;
 }

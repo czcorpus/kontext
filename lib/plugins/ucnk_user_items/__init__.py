@@ -43,11 +43,11 @@ async def set_favorite_item(amodel: UserActionModel, req: KRequest, resp: KRespo
         with plugins.runtime.SUBC_STORAGE as sa:
             ident = await sa.get_info(subc)
             maincorp = await amodel.cf.get_corpus(ident)
-            subcorpus_orig_id = ident.name
+            subcorpus_name = ident.name
             subcorpus_id = ident.id
     else:
         maincorp = await amodel.cf.get_corpus(req_corpora[0])
-        subcorpus_orig_id = None
+        subcorpus_name = None
         subcorpus_id = None
 
     main_size = maincorp.search_size
@@ -60,10 +60,10 @@ async def set_favorite_item(amodel: UserActionModel, req: KRequest, resp: KRespo
     item = FavoriteItem(
         ident=None,  # will be updated after database insert (autoincrement)
         name=' || '.join(c['name'] for c in corpora) +
-        (' / ' + subcorpus_orig_id if subcorpus_orig_id else ''),
+        (' / ' + subcorpus_name if subcorpus_name else ''),
         corpora=corpora,
         subcorpus_id=subcorpus_id,
-        subcorpus_orig_id=subcorpus_orig_id,
+        subcorpus_name=subcorpus_name,
         size=main_size
     )
     with plugins.runtime.USER_ITEMS as uit:

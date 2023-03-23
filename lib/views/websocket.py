@@ -13,7 +13,7 @@
 # GNU General Public License for more details.
 
 import asyncio
-from typing import Type, TypeVar
+from typing import Type, TypeVar, Optional
 
 import settings
 import ujson as json
@@ -25,7 +25,8 @@ from action.model.user import UserActionModel
 from action.props import ActionProps
 from sanic import Blueprint, Request, Sanic, Websocket
 from views.concordance import _get_conc_cache_status
-from views.root import _check_tasks_status
+from views.root import _check_task_status
+from bgcalc.task import AsyncTaskStatus
 
 bp = Blueprint('websocket', 'ws')
 
@@ -77,29 +78,26 @@ async def _prepare_websocket_amodel(req: Request, ws: Websocket, amodel: Type[T]
     except PermissionError:
         await ws.close(code=1008, reason='Access forbidden - please log-in.')
 
+async def _send_status(amodel, task_id: str, ws: Websocket) -> Optional[AsyncTaskStatus]:
+    task = await _check_task_status(amodel, task_id)
+    if task:
+        await ws.send(json.dumps(task.to_dict()))
+    else:
+        await ws.close(reason=f'task {task_id} not found')
+    return task
+
 
 @bp.websocket('/task_status')
 async def check_tasks_status(req: Request, ws: Websocket):
     amodel = await _prepare_websocket_amodel(req, ws, UserActionModel, 1)
-    watched_tasks = req.args.get('taskId')
-    if not watched_tasks:
+    task_id = req.args.get('taskId')
+    if not task_id:
         await ws.close(code=1007, reason='Missing `taskId` parameter.')
 
-    tasks = {t.ident: t for t in (await _check_tasks_status(amodel, req, None))}
-    await ws.send(json.dumps([v.to_dict() for v in tasks.values()]))
-    watched_tasks = [x for x in watched_tasks if x in tasks]  # TODO remove?
-    while watched_tasks:
+    task = await _send_status(amodel, task_id, ws)
+    while task and not task.is_finished():
         await asyncio.sleep(WEBSOCKET_TASK_CHECK_INTERVAL)
-        changed = []
-        for t in await _check_tasks_status(amodel, req, None):
-            # AsyncTaskStatus has defined __eq__ method to check change
-            if t.ident in watched_tasks and (t.ident not in tasks or t != tasks[t.ident]):
-                tasks[t.ident] = t
-                changed.append(t.to_dict())
-                if t.is_finished():
-                    watched_tasks = [x for x in watched_tasks if x != t.ident]
-        if changed:
-            await ws.send(json.dumps(changed))
+        task = await _send_status(amodel, task_id, ws)
 
 
 @bp.websocket('/conc_cache_status')

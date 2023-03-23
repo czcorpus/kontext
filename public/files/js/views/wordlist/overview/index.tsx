@@ -43,11 +43,13 @@ export function init(
     he:Kontext.ComponentHelpers,
     wordlistFormModel:WordlistFormModel,
     CorparchWidget:PluginInterfaces.Corparch.WidgetView,
-    mainMenuModel:IModel<MainMenuModelState>
+    mainMenuModel:IModel<MainMenuModelState>,
+    corparchWidgetId:string
 ):React.ComponentClass<OverviewProps> {
 
     const basicOverview = basicOverviewViewsInit(dispatcher, he, mainMenuModel);
-    const WordlistViews = formInit({dispatcher, he, CorparchWidget, wordlistFormModel});
+    const WordlistViews = formInit({
+        dispatcher, he, CorparchWidget, wordlistFormModel, corparchWidgetId});
     const layoutViews = he.getLayoutViews();
 
     const Overview:React.FC<WordlistFormState & OverviewProps> = (props) => {

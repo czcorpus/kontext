@@ -27,7 +27,7 @@ import {
 } from '../../models/subcorp/list';
 import { createSelectId } from '../../models/subcorp/common';
 import * as PluginInterfaces from '../../types/plugins';
-import { List } from 'cnc-tskit';
+import { Dict, List, pipe, tuple } from 'cnc-tskit';
 import { Actions } from '../../models/subcorp/actions';
 import { init as editViewInit } from './edit';
 
@@ -53,13 +53,12 @@ export function init(
     const layoutViews = he.getLayoutViews();
     const SubcorpEdit = editViewInit(dispatcher, he, subcorpEditModel, textTypesModel, subcorpWithinFormModel, liveAttrsViews);
 
-    // ------------------------ <TrUnfinishedLine /> --------------------------
+    // ------------------------ <TrUnsavedSubc /> --------------------------
 
-    const TrUnfinishedLine:React.FC<{
+    const TrUnsavedSubc:React.FC<{
         item:UnfinishedSubcorp;
 
     }> = (props) => {
-
         return (
             <tr>
                 <td>
@@ -68,10 +67,12 @@ export function init(
                 <td>
                     {props.item.corpusName}
                 </td>
-                <td />
+                <td>
+                    <layoutViews.AjaxLoaderBarImage />
+                </td>
                 <td className="num">{he.formatDate(props.item.created, 1)}</td>
                 <td className="processing">
-                    {props.item.failed ?
+                    {props.item.error ?
                         he.translate('subclist__failed_item') :
                         he.translate('global__processing')
                     }
@@ -126,6 +127,7 @@ export function init(
         selectId:string;
         selected:boolean;
         actionButtonHandle:(idx:number)=>void;
+        error?:string;
 
     }> = (props) => {
 
@@ -183,7 +185,12 @@ export function init(
                 <td>
                     {he.formatDate(props.item.created, 1)}
                 </td>
-                <td>{notes.join(', ')}</td>
+                <td className={props.error ? 'processing' : null}>
+                    {props.error ?
+                        <span>{he.translate('subclist__failed_item')}</span> :
+                        notes.join(', ')
+                    }
+                </td>
                 <td>
                         <PropertiesButton onClick={()=>props.actionButtonHandle(props.idx)} />
                 </td>
@@ -289,59 +296,76 @@ export function init(
 
     // ------------------------ <DataTable /> --------------------------
 
-    class DataTable extends React.Component<{
+    const DataTable:React.FC<{
         actionButtonHandle:(action:string, idx:number)=>void;
         pattern:string;
         lines:Array<SubcorpListItem>;
         selectedItems:Array<string>;
         sortKey:SortKey;
         unfinished:Array<UnfinishedSubcorp>;
-    }> {
+    }> = (props) => {
 
-        constructor(props) {
-            super(props);
-        }
-
-        _exportSortKey(name) {
-            if (name === this.props.sortKey.name) {
-                return this.props.sortKey;
+        const exportSortKey = (name) => {
+            if (name === props.sortKey.name) {
+                return props.sortKey;
             }
             return null;
         }
 
-        render() {
-            const numSelected = this.props.selectedItems.length;
-            return (
-                <div>
-                    <table className="data">
-                        <tbody>
-                            <tr>
-                                <ThSortable ident="name" sortKey={this._exportSortKey('name')} label={he.translate('subclist__col_name')} />
-                                <ThSortable ident="corpus_name" sortKey={this._exportSortKey('corpus_name')} label={he.translate('global__corpus')} />
-                                <ThSortable ident="size" sortKey={this._exportSortKey('size')} label={he.translate('subclist__col_size')} />
-                                <ThSortable ident="created" sortKey={this._exportSortKey('created')} label={he.translate('subclist__col_created')} />
-                                <th>{he.translate('global__note_heading')}</th>
-                                <th />
-                                <th />
-                            </tr>
-                            {List.map(item => (
-                                <TrUnfinishedLine key={`${item.name}:${item.created}`} item={item} />
-                            ), this.props.unfinished)}
-                            {List.map((item, i) => {
-                                const selectId = createSelectId(item.corpus_name, item.id);
-                                return <TrDataLine key={`${i}:${item.name}`} idx={i} item={item} selectId={selectId}
-                                        selected={this.props.selectedItems.includes(selectId)}
-                                        actionButtonHandle={this.props.actionButtonHandle.bind(null, 'reuse')} />
-                            }, this.props.lines)}
-                        </tbody>
-                    </table>
-                    {numSelected > 0 ?
-                        <LineSelectionOps numSelected={numSelected} /> :
-                        null
-                    }
-                </div>
-            );
-        }
+        const numSelected = props.selectedItems.length;
+        const runningDrafts = pipe(
+            props.unfinished,
+            List.filter(x => !!x.subcorpusId),
+            List.map(
+                item => tuple(item.subcorpusId, item)
+            ),
+            Dict.fromEntries()
+        );
+
+        return (
+            <div>
+                <table className="data">
+                    <tbody>
+                        <tr>
+                            <ThSortable ident="name" sortKey={exportSortKey('name')} label={he.translate('subclist__col_name')} />
+                            <ThSortable ident="corpus_name" sortKey={exportSortKey('corpus_name')} label={he.translate('global__corpus')} />
+                            <ThSortable ident="size" sortKey={exportSortKey('size')} label={he.translate('subclist__col_size')} />
+                            <ThSortable ident="created" sortKey={exportSortKey('created')} label={he.translate('subclist__col_created')} />
+                            <th>{he.translate('global__note_heading')}</th>
+                            <th />
+                            <th />
+                        </tr>
+                        {pipe(
+                            props.unfinished,
+                            List.filter(x => !x.finished),
+                            List.map(item => (
+                                <TrUnsavedSubc key={`${item.name}:${item.created}`} item={item} />
+                            ))
+                        )}
+                        {pipe(
+                            props.lines,
+                            List.map(
+                                (item, i) => {
+                                    const selectId = createSelectId(item.corpus_name, item.id);
+                                    return <TrDataLine
+                                                key={`${i}:${item.name}`}
+                                                idx={i}
+                                                item={item}
+                                                selectId={selectId}
+                                                error={runningDrafts[item.id]?.error?.message}
+                                                selected={props.selectedItems.includes(selectId)}
+                                                actionButtonHandle={props.actionButtonHandle.bind(null, 'reuse')} />
+                                }
+                            )
+                        )}
+                    </tbody>
+                </table>
+                {numSelected > 0 ?
+                    <LineSelectionOps numSelected={numSelected} /> :
+                    null
+                }
+            </div>
+        );
     }
 
     // ------------------------ <FilterForm /> --------------------------
@@ -435,76 +459,68 @@ export function init(
 
     // ------------------------ <SubcorpList /> --------------------------
 
-    class SubcorpList extends React.Component<SubcorpListModelState> {
+    const SubcorpList:React.FC<SubcorpListModelState> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._handleActionButton = this._handleActionButton.bind(this);
-            this._handleActionsClose = this._handleActionsClose.bind(this);
-            this._handlePageChange = this._handlePageChange.bind(this);
-        }
-
-        _handleActionButton(action:string, idx:number) {
-            const item = this.props.lines[idx];
-            dispatcher.dispatch<typeof Actions.ShowSubcEditWindow>({
-                name: Actions.ShowSubcEditWindow.name,
-                payload: {
+        const handleActionButton = (action:string, idx:number) => {
+            const item = props.lines[idx];
+            dispatcher.dispatch(
+                Actions.ShowSubcEditWindow,
+                {
                     corpusName: item.corpus_name,
                     subcorpusId: item.id,
-                    subcorpusName: item.name
+                    subcorpusName: item.name,
+                    bibIdAttr: item.bib_id_attr
                 }
-            });
-        }
-
-        _handleActionsClose() {
-            dispatcher.dispatch<typeof Actions.HideSubcEditWindow>({
-                name: Actions.HideSubcEditWindow.name,
-                payload: {}
-            });
-        }
-
-        _handlePageChange = (page:string) => {
-            dispatcher.dispatch<typeof Actions.SetPage>({
-                name: Actions.SetPage.name,
-                payload: {page},
-            });
+            );
         };
 
-        render() {
-            return (
-                <S.SubcorpList>
-                    <section className="inner">
-                        <FilterForm filter={this.props.filter} relatedCorpora={this.props.relatedCorpora} />
-                    </section>
-                    {this.props.editWindowSubcorpus !== null
-                        ? (
-                            <layoutViews.ModalOverlay onCloseKey={this._handleActionsClose}>
-                                <layoutViews.CloseableFrame onCloseClick={this._handleActionsClose}
-                                        label={he.translate('subclist__subc_actions_{subc}', {subc: this.props.editWindowSubcorpus.subcorpusName})}
-                                        scrollable={true}>
-                                    <SubcorpEdit
-                                        corpname={this.props.editWindowSubcorpus.corpusName}
-                                        subcname={this.props.editWindowSubcorpus.subcorpusId}
-                                        userId={this.props.userId} />
-                                </layoutViews.CloseableFrame>
-                            </layoutViews.ModalOverlay>
-                        ) : null}
-                    <S.SubcPaginator className='ktx-pagination'>
-                        <layoutViews.SimplePaginator
-                            currentPage={this.props.filter.page}
-                            isLoading={this.props.isBusy}
-                            totalPages={this.props.totalPages}
-                            handlePageChange={this._handlePageChange} />
-                    </S.SubcPaginator>
-                    <DataTable actionButtonHandle={this._handleActionButton}
-                        pattern={this.props.filter.pattern}
-                        lines={this.props.lines}
-                        selectedItems={this.props.selectedItems}
-                        sortKey={this.props.sortKey}
-                        unfinished={this.props.unfinished} />
-                </S.SubcorpList>
+        const handleActionsClose = () => {
+            dispatcher.dispatch(
+                Actions.HideSubcEditWindow,
             );
-        }
+        };
+
+        const handlePageChange = (page:string) => {
+            dispatcher.dispatch(
+                Actions.SetPage,
+                {page}
+            );
+        };
+
+        return (
+            <S.SubcorpList>
+                <section className="inner">
+                    <FilterForm filter={props.filter} relatedCorpora={props.relatedCorpora} />
+                </section>
+                {props.editWindowSubcorpus !== null
+                    ? (
+                        <layoutViews.ModalOverlay onCloseKey={handleActionsClose}>
+                            <layoutViews.CloseableFrame onCloseClick={handleActionsClose}
+                                    label={he.translate('subclist__subc_actions_{subc}', {subc: props.editWindowSubcorpus.subcorpusName})}
+                                    scrollable={true}>
+                                <SubcorpEdit
+                                    corpname={props.editWindowSubcorpus.corpusName}
+                                    usesubcorp={props.editWindowSubcorpus.subcorpusId}
+                                    bibIdAttr={props.editWindowSubcorpus.bibIdAttr}
+                                    userId={props.userId} />
+                            </layoutViews.CloseableFrame>
+                        </layoutViews.ModalOverlay>
+                    ) : null}
+                <S.SubcPaginator className='ktx-pagination'>
+                    <layoutViews.SimplePaginator
+                        currentPage={props.filter.page}
+                        isLoading={props.isBusy}
+                        totalPages={props.totalPages}
+                        handlePageChange={handlePageChange} />
+                </S.SubcPaginator>
+                <DataTable actionButtonHandle={handleActionButton}
+                    pattern={props.filter.pattern}
+                    lines={props.lines}
+                    selectedItems={props.selectedItems}
+                    sortKey={props.sortKey}
+                    unfinished={props.processedItems} />
+            </S.SubcorpList>
+        );
     }
 
     return {

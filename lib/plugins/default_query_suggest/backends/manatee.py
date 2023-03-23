@@ -50,17 +50,16 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
             subcpath=[],
             user_id=user_id,
             pagesize=100,
-            samplesize=0,
+            cutoff=0,
             flimit=1,
             fcrit=[fcrit],
-            ftt_include_empty=0,
             rel_mode=1,
             freq_sort='freq',
             collator_locale='en_US',  # TODO use data provided by corparch plg
             fmaxitems=1,
             fpage=1)
         freqs = [conc.xfreq_dist(
-            cr, args.flimit, args.freq_sort, args.ftt_include_empty, args.rel_mode, args.collator_locale)
+            cr, args.flimit, args.freq_sort, args.rel_mode, args.collator_locale)
             for cr in args.fcrit]
         return freqs[0].Items
 

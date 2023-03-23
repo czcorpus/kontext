@@ -21,6 +21,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import List, Tuple
 from sanic import Blueprint
+import time
 
 import plugins
 from action.argmapping.action import IntOpt, ListStrOpt, StrOpt
@@ -41,6 +42,7 @@ from conclib.search import get_conc
 from main_menu import MainMenu
 from strings import escape_attr_val
 import settings
+import mailing
 
 bp = Blueprint('freqs')
 
@@ -79,7 +81,7 @@ async def freqs(amodel: ConcActionModel, req: KRequest[GeneralFreqArgs], resp: K
     Alternatively, 'freqml', 'freqtt' actions can be used for more high-level access.
     """
     try:
-        await require_existing_conc(amodel.corp, amodel.args.q)
+        await require_existing_conc(amodel.corp, amodel.args.q, amodel.args.cutoff)
         ans = await _freqs(
             amodel,
             req,
@@ -123,7 +125,7 @@ async def shared_freqs(amodel: ConcActionModel, req: KRequest[SharedFreqArgs], r
     Alternatively, 'freqml', 'freqtt' actions can be used for more high-level access.
     """
     try:
-        await require_existing_conc(amodel.corp, amodel.args.q)
+        await require_existing_conc(amodel.corp, amodel.args.q, amodel.args.cutoff)
         ans = await _freqs(
             amodel,
             req,
@@ -199,11 +201,10 @@ async def _freqs(
         user_id=req.session_get('user', 'id'),
         q=amodel.args.q,
         pagesize=amodel.args.pagesize,
-        samplesize=0,
+        cutoff=0,
         flimit=flimit,
         fcrit=fcrit,
         freq_sort=freq_sort,
-        ftt_include_empty=amodel.args.ftt_include_empty,
         rel_mode=rel_mode,
         collator_locale=corp_info.collator_locale,
         fmaxitems=amodel.args.fmaxitems,
@@ -338,8 +339,7 @@ async def _freqs(
     result['ctfreq_form_args'] = CTFreqFormArgs().update(amodel.args).to_dict()
     result['text_types_data'] = await amodel.tt.export_with_norms(ret_nums=True)
     result['quick_save_row_limit'] = amodel.FREQ_QUICK_SAVE_MAX_LINES
-    await amodel.attach_query_params(result)
-    await amodel.attach_query_overview(result)
+    await amodel.export_query_forms(result)
     return result
 
 
@@ -361,8 +361,10 @@ async def _freqml(amodel: ConcActionModel, req: KRequest[MLFreqRequestArgs], res
         tmp['mlxctx'].append(getattr(args, 'ml{0}ctx'.format(i), '0'))
         tmp['mlxpos'].append(getattr(args, 'ml{0}pos'.format(i), 1))
         tmp['mlxicase'].append(getattr(args, 'ml{0}icase'.format(i), ''))
-        tmp['flimit'].append(args.flimit)
-        tmp['freq_sort'].append(args.freq_sort)
+    tmp = dict(tmp)
+    tmp['flimit'] = args.flimit
+    tmp['freq_sort'] = args.freq_sort
+
     result['freq_form_args'] = tmp
     result['freq_type'] = 'tokens'
     result['alpha_level'] = '0.05'
@@ -375,7 +377,7 @@ async def _freqml(amodel: ConcActionModel, req: KRequest[MLFreqRequestArgs], res
     mapped_args=MLFreqRequestArgs)
 async def freqml(amodel: ConcActionModel, req: KRequest[MLFreqRequestArgs], resp: KResponse):
     try:
-        await require_existing_conc(amodel.corp, amodel.args.q)
+        await require_existing_conc(amodel.corp, amodel.args.q, amodel.args.cutoff)
         return await _freqml(amodel, req, resp)
     except ConcNotFoundException:
         amodel.go_to_restore_conc('freqml')
@@ -415,6 +417,7 @@ async def _freqct(amodel: ConcActionModel, req: KRequest, resp: KResponse, max_r
         subcorpora_dir=amodel.subcpath,
         user_id=req.session_get('user', 'id'),
         q=amodel.args.q,
+        cutoff=amodel.args.cutoff,
         ctminfreq=int(req.args.get('ctminfreq', '1')),
         ctminfreq_type=req.args.get('ctminfreq_type'),
         fcrit=f'{amodel.args.ctfcrit1} {amodel.args.ctfcrit2}',
@@ -437,7 +440,7 @@ async def _freqct(amodel: ConcActionModel, req: KRequest, resp: KResponse, max_r
     )
     ans['text_types_data'] = await amodel.tt.export_with_norms(ret_nums=True)
     ans['quick_save_row_limit'] = 0
-    await amodel.attach_query_params(ans)
+    await amodel.export_query_forms(ans)
     return ans
 
 
@@ -449,7 +452,7 @@ async def freqct(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     no_anonym_acc = settings.get_bool('global', 'no_anonymous_access', False)
     max_result_size = CT_MAX_RESULT_SIZE_UNLIMITED if no_anonym_acc else CT_MAX_RESULT_SIZE_LIMITED
     try:
-        await require_existing_conc(amodel.corp, amodel.args.q)
+        await require_existing_conc(amodel.corp, amodel.args.q, amodel.args.cutoff)
         return await _freqct(amodel, req, resp, max_result_size)
     except ConcNotFoundException:
         amodel.go_to_restore_conc('freqct')
@@ -512,8 +515,35 @@ async def savefreq(amodel: ConcActionModel, req: KRequest[SavefreqArgs], resp: K
         resp.set_header('Content-Type', writer.content_type())
         resp.set_header(
             'Content-Disposition', f'attachment; filename="{mkfilename(req.mapped_args.saveformat)}"')
-
         await writer.write_freq(amodel, result, req.mapped_args)
         output = writer.raw_content()
 
     return output
+
+
+@bp.route('/share_freq_table_via_mail', ['POST'])
+@http_action(return_type='json', action_model=UserActionModel)
+async def share_freq_table_via_mail(amodel: UserActionModel, req: KRequest, resp: KResponse):
+    with plugins.runtime.AUTH as auth:
+        user_info = await auth.get_user_info(amodel.plugin_ctx)
+        user_email = user_info['email']
+        username = user_info['username']
+        smtp_server = mailing.smtp_factory()
+        url = req.json.get('url')
+        recip_email = req.json.get('email')
+        if not recip_email:
+            raise UserReadableException('Missing recipient e-mail')
+
+        text = req.translate('KonText user {} has sent to you a link to a frequency distribution table').format(username,) + ':'
+        text += '\n\n'
+        text += url + '\n\n'
+        text += '\n---------------------\n'
+        text += time.strftime('%d.%m. %Y %H:%M')
+        text += '\n'
+
+        msg = mailing.message_factory(
+            recipients=[recip_email],
+            subject=req.translate('KonText frequency table link'),
+            text=text,
+            reply_to=user_email)
+        return dict(ok=mailing.send_mail(smtp_server, msg, [recip_email]))

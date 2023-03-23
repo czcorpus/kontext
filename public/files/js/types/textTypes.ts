@@ -40,8 +40,6 @@ export interface AttributeValue {
 
     locked:boolean;
 
-    definesSubcorp:boolean;
-
     /**
      * How many items are actually hidden behind the value (= have the same name).
      * Value 1 means there is a single unique value available (such a value should
@@ -86,43 +84,59 @@ export function isEncodedSelectionType(sel:TTSelectionTypes):boolean {
     return sel === 'regexp';
 }
 
-export interface FullAttributeSelection {
-    attrInfo:AttrInfo;
-    isInterval:boolean;
-    widget:WidgetView;
-    isNumeric:boolean;
+interface BaseAttributeSelection {
     label:string;
     name:string;
+    attrInfo:AttrInfo;
+    widget:WidgetView;
+    metaInfo:AttrSummary;
+    definesSubcorpus:boolean;
+}
+
+/**
+ * Text type selection based on full value listing with 'checked' flag.
+ */
+export interface FullAttributeSelection extends BaseAttributeSelection {
+    isInterval:boolean;
+    isNumeric:boolean;
     values:Array<AttributeValue>;
     type:'full';
 }
 
-export interface TextInputAttributeSelection {
-    attrInfo:AttrInfo;
+/**
+ * Text type selection for long lists we cannot fully display. It shows
+ * an input box along with possible selected values obtained by auto-complete
+ * function. I.e. it is a combination of a list (but showing only selected items)
+ * with a search input box (for accessing a long list)
+ */
+export interface TextInputAttributeSelection extends BaseAttributeSelection {
     isInterval:boolean;
-    widget:WidgetView;
     isNumeric:boolean;
-    label:string;
-    name:string;
     autoCompleteHints:Array<AutoCompleteItem>;
     values:Array<AttributeValue>; // it supports appending values via a single text input
     textFieldValue:string;
     type:'text';
 }
 
-export interface RegexpAttributeSelection {
-    attrInfo:AttrInfo;
-    widget:WidgetView;
-    label:string;
-    name:string;
+/**
+ * Text type selection where we have to encode the selected values into
+ * a regular expression. This is e.g. used to encode publication date
+ * range.
+ */
+export interface RegexpAttributeSelection extends BaseAttributeSelection {
     textFieldValue:string;
     textFieldDecoded:string;
     isLocked:boolean;
     type:'regexp';
 }
 
-export type AnyTTSelection = TextInputAttributeSelection|FullAttributeSelection|
-        RegexpAttributeSelection;
+export type AnyTTSelection =
+    TextInputAttributeSelection |
+    FullAttributeSelection |
+    RegexpAttributeSelection;
+
+
+// exported selection types (i.e. selections as stored on server)
 
 
 export interface ExportedRegexpSelection {
@@ -136,7 +150,6 @@ export type AnyExportedTTSelection = Array<string>|SingleValueExportedTTSelectio
 export function isExportedRegexpSelection(v:AnyExportedTTSelection):v is ExportedRegexpSelection {
     return typeof v['regexp'] === 'string';
 }
-
 
 export type ExportedSelection = {[sca:string]:AnyExportedTTSelection};
 
@@ -160,6 +173,8 @@ export interface AlignedLanguageItem {
 
 export type ExtendedInfo = Array<[string, string]>|{__message__:string};
 
+export type AvailItemsList = Array<[string, string, string, number, number]>;
+
 export interface ValueDomainsSizes {
-    [key:string]:{length:number}|Array<[string, string, string, number, number]>
+    [key:string]:{length:number}|AvailItemsList
 }
