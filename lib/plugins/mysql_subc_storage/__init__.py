@@ -74,7 +74,7 @@ def _subc_from_row(row: Dict) -> SubcorpusRecord:
         text_types=json.loads(row['text_types']) if row['text_types'] else None,
         bib_id_attr=row['bib_id_attr'],
         bib_label_attr=row['bib_label_attr'],
-        aligned=json.loads(row['aligned']) if row['aligned'] else None,
+        aligned=json.loads(row['aligned']) if row['aligned'] else [],
     )
 
 
