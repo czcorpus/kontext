@@ -219,6 +219,7 @@ export class QueryPage {
                 currentSubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
                 subcorpusId: this.layoutModel.getCorpusIdent().usesubcorp,
                 isForeignSubcorpus: this.layoutModel.getCorpusIdent().foreignSubcorp,
+                subcAligned: this.layoutModel.getConf<Array<string>>('SubcorpAligned'),
                 tagsets: queryFormArgs.tagsets,
                 shuffleConcByDefault: this.layoutModel.getConf<boolean>('ShuffleConcByDefault'),
                 forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
