@@ -258,9 +258,17 @@ export function init({
             });
         };
 
+        const handleLabelClick = (evt:React.MouseEvent) => {
+            handleSelection(props.queryType !== 'advanced');
+            evt.stopPropagation();
+            evt.preventDefault();
+        };
+
         return (
             <S.TRQueryTypeField>
-                <label htmlFor={'query-switch-'+props.sourceId}><a>{he.translate('query__qt_advanced')}</a></label>
+                <label htmlFor={'query-switch-'+props.sourceId}>
+                    <a onClick={handleLabelClick}>{he.translate('query__qt_advanced')}</a>
+                </label>
                 <layoutViews.ToggleSwitch
                     id={'query-switch-'+props.sourceId}
                     onChange={handleSelection}

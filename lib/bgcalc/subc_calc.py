@@ -30,7 +30,7 @@ class EmptySubcorpusException(Exception):
     pass
 
 
-class CreateSubcorpusTask(object):
+class CreateSubcorpusTask:
 
     def __init__(self, author: UserInfo):
         self._author = author
@@ -48,12 +48,11 @@ class CreateSubcorpusTask(object):
         In case of an empty subcorus, EmptySubcorpusException is thrown
         """
         if isinstance(specification, CreateSubcorpusWithinArgs):
-            full_cql = f'aword,[] {specification.deserialize()}'
+            full_cql = specification.deserialize()
         elif isinstance(specification, CreateSubcorpusRawCQLArgs):
             full_cql = f'aword,[] {specification.cql}'
         else:
-            full_cql = f'aword,[] {specification.text_types_cql}'
-
+            full_cql = specification.text_types_cql
         corp = await self._cf.get_corpus(subcorpus_id.corpus_name)
         conc = await conclib.search.get_conc(corp, self._author['id'], q=(full_cql,), asnc=0)
         conc.sync()
@@ -74,5 +73,6 @@ class CreateSubcorpusTask(object):
                 author=self._author,
                 size=conc.size(),
                 public_description=specification.description,
-                data=specification)
+                data=specification,
+                aligned=specification.aligned_corpora)
         return ans

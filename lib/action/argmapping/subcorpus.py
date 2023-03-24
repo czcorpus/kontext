@@ -87,8 +87,11 @@ class CreateSubcorpusWithinArgs(_SubcGenerateArgsBase):
         ).join(' ');
         }
         """
-        return ' '.join([('!within' if item['negated'] else 'within') + ' <%s %s />' % (
-            item['structure_name'], item['attribute_cql']) for item in [item for item in self.within if bool(item)]])
+        elms = ['aword,[] {} <{} {} />'.format(
+            '!within' if item['negated'] else 'within',
+            item['structure_name'],
+            item['attribute_cql']) for item in self.within if bool(item)]
+        return ' '.join(elms)
 
 
 @dataclass

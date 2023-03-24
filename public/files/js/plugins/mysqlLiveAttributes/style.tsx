@@ -98,3 +98,62 @@ export const CustomizedDataRows = styled.div`
     }
 
 `;
+
+
+export const DocumentListWidget = styled.div`
+
+
+`;
+
+export const DocumentListFieldset = styled.fieldset`
+
+    > ul {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+
+        > li {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        > li:not(:first-child) {
+            margin-top: 1em;
+        }
+    }
+
+    > ul ul {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+
+        li {
+            display: inline-block;
+        }
+    }
+
+    .attrs {
+
+        li {
+            margin-left: 0.4em;
+        }
+
+        li label {
+            display: inline-flex;
+            align-items: center;
+        }
+
+        li.selected label {
+            color: ${theme.colorLogoPink};
+        }
+    }
+`;
+
+export const Label = styled(theme.GeneralLabel)`
+    display: block;
+    margin-top: 0;
+    padding-top: 0;
+    padding-right: 1em;
+`;

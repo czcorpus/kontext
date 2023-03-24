@@ -44,6 +44,7 @@ export interface AlignedCorporaProps {
     primaryCorpus:string; // do not confuse with the maincorp
     alignedCorpora:Array<string>;
     subcorpus:string|undefined;
+    subcAligned:Array<string>;
     queries:{[key:string]:AnyQuery};
     supportedWidgets:{[key:string]:Array<string>};
     wPoSList:Array<{n:string; v:string}>;
@@ -66,6 +67,24 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
 
     const layoutViews = he.getLayoutViews();
 
+    // -------------- <DisabledControlsWarn /> -----------------------------
+
+    const DisabledControlsWarn:React.FC<{onClose:()=>void}> = ({onClose}) => {
+
+        return (
+            <layoutViews.ModalOverlay onCloseKey={onClose}>
+                <layoutViews.CloseableFrame onCloseClick={onClose} label={he.translate('global__note_heading')}>
+                    <p>{he.translate('query__subc_aligned_controls_disabled_explain')}</p>
+                    <p>
+                        <button type="button" className="default-button" onClick={onClose}>
+                            {he.translate('global__ok')}
+                        </button>
+                    </p>
+                </layoutViews.CloseableFrame>
+            </layoutViews.ModalOverlay>
+        )
+    }
+
     // ------------------ <AlignedCorpBlock /> -----------------------------
     /*
      TODO, important note: I had to define this component as stateful
@@ -78,7 +97,7 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
      but the logic behind query form is already quite complicated so
      it would take same time.
      */
-    class AlignedCorpBlock extends React.Component<{
+    const AlignedCorpBlock:React.FC<{
         corpname:string;
         queries:{[corpus:string]:AnyQuery};
         label:string;
@@ -92,69 +111,95 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
         useRichQueryEditor:boolean;
         tagsets:Array<PluginInterfaces.TagHelper.TagsetInfo>;
         tagHelperView:PluginInterfaces.TagHelper.View;
+        removeDisabled:boolean;
         onEnterKey:()=>void;
         onChangePrimaryCorp:(corp:string)=>void;
         onRemoveCorp:(corpname:string)=>void;
 
-    }, {}> {
+    }> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this.handleMakeMainClick = this.handleMakeMainClick.bind(this);
-        }
+        const [warningVisible, setWarningVisible] = React.useState(false);
 
-        handleMakeMainClick() {
-            this.props.onChangePrimaryCorp(this.props.corpname);
-        }
+        const handleMakeMainClick = () => {
+            props.onChangePrimaryCorp(props.corpname);
+        };
 
-        render() {
-            return (
-                <S.AlignedCorpBlock>
-                    <S.AlignedCorpBlockHeading>
-                        <h3>{this.props.label}</h3>
-                        <span className="icons">
-                            <a className="make-primary" title={he.translate('query__make_corpus_primary')}
-                                    onClick={this.handleMakeMainClick}>
-                                <img src={he.createStaticUrl('img/make-main.svg')}
-                                    alt={he.translate('query__make_corpus_primary')} />
-                            </a>
-                            <a className="close-button" title={he.translate('query__remove_corpus')}
-                                    onClick={()=>this.props.onRemoveCorp(this.props.corpname)}>
-                                <img src={he.createStaticUrl('img/close-icon.svg')}
-                                        alt={he.translate('query__close_icon')} />
-                            </a>
-                        </span>
-                    </S.AlignedCorpBlockHeading>
-                    <div className="form">
-                        <inputViews.TRQueryInputField
-                            sourceId={this.props.corpname}
-                            corpname={this.props.corpname}
-                            widgets={this.props.widgets}
-                            wPoSList={this.props.wPoSList}
-                            lposValue={this.props.lposValue}
-                            forcedAttr={this.props.forcedAttr}
-                            attrList={this.props.attrList}
-                            inputLanguage={this.props.inputLanguage}
-                            useRichQueryEditor={this.props.useRichQueryEditor}
-                            onEnterKey={this.props.onEnterKey}
-                            tagHelperView={this.props.tagHelperView}
-                            tagsets={this.props.tagsets}
-                            qsuggPlugin={null}
-                            isNested={true}
-                            customOptions={[
-                                <inputViews.TRPcqPosNegField sourceId={this.props.corpname}
-                                    span={2}
-                                    value={this.props.queries[this.props.corpname].pcq_pos_neg}
-                                    formType={Kontext.ConcFormTypes.QUERY} />,
-                                <inputViews.TRIncludeEmptySelector
-                                    value={this.props.queries[this.props.corpname].include_empty}
-                                    corpname={this.props.corpname}
-                                    span={1} />
-                            ]} />
-                    </div>
-                </S.AlignedCorpBlock>
-            );
-        }
+        const handleDisabledClick = () => {
+            setWarningVisible(true);
+        };
+
+        const handleWarningClose = () => {
+            setWarningVisible(false);
+        };
+
+        return (
+            <S.AlignedCorpBlock>
+                <S.AlignedCorpBlockHeading>
+                    {warningVisible ? <DisabledControlsWarn onClose={handleWarningClose} /> : null}
+                    <h3>{props.label}</h3>
+                    <span className="icons">
+                        {props.removeDisabled ?
+                            <>
+                                <a
+                                    className="make-primary disabled"
+                                    title={he.translate('query__make_corpus_primary')}
+                                    aria-disabled="true"
+                                    onClick={handleDisabledClick}
+                                    >
+                                    <img src={he.createStaticUrl('img/make-main_grey.svg')}
+                                        alt={he.translate('query__make_corpus_primary')} />
+                                </a>
+                                <a className="close-button disabled"
+                                        aria-disabled="true"
+                                        onClick={handleDisabledClick}>
+                                    <img src={he.createStaticUrl('img/close-icon_grey.svg')}
+                                            alt={he.translate('query__close_icon')} />
+                                </a>
+                            </> :
+                            <>
+                                <a className="make-primary" title={he.translate('query__make_corpus_primary')}
+                                        onClick={handleMakeMainClick}>
+                                    <img src={he.createStaticUrl('img/make-main.svg')}
+                                        alt={he.translate('query__make_corpus_primary')} />
+                                </a>
+                                <a className="close-button" title={he.translate('query__remove_corpus')}
+                                        onClick={()=>props.onRemoveCorp(props.corpname)}>
+                                    <img src={he.createStaticUrl('img/close-icon.svg')}
+                                            alt={he.translate('query__close_icon')} />
+                                </a>
+                            </>
+                        }
+                    </span>
+                </S.AlignedCorpBlockHeading>
+                <div className="form">
+                    <inputViews.TRQueryInputField
+                        sourceId={props.corpname}
+                        corpname={props.corpname}
+                        widgets={props.widgets}
+                        wPoSList={props.wPoSList}
+                        lposValue={props.lposValue}
+                        forcedAttr={props.forcedAttr}
+                        attrList={props.attrList}
+                        inputLanguage={props.inputLanguage}
+                        useRichQueryEditor={props.useRichQueryEditor}
+                        onEnterKey={props.onEnterKey}
+                        tagHelperView={props.tagHelperView}
+                        tagsets={props.tagsets}
+                        qsuggPlugin={null}
+                        isNested={true}
+                        customOptions={[
+                            <inputViews.TRPcqPosNegField sourceId={props.corpname}
+                                span={2}
+                                value={props.queries[props.corpname].pcq_pos_neg}
+                                formType={Kontext.ConcFormTypes.QUERY} />,
+                            <inputViews.TRIncludeEmptySelector
+                                value={props.queries[props.corpname].include_empty}
+                                corpname={props.corpname}
+                                span={1} />
+                        ]} />
+                </div>
+            </S.AlignedCorpBlock>
+        );
     }
 
     // ------------------ <HeadingListOfAlignedCorpora /> ------------------
@@ -273,6 +318,7 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                                 hasLemmaAttr={props.hasLemmaAttr[item]}
                                 useRichQueryEditor={props.useRichQueryEditor}
                                 tagsets={props.tagsets[item]}
+                                removeDisabled={!!List.find(x => x === item, props.subcAligned)}
                                 onEnterKey={props.onEnterKey}
                                 onChangePrimaryCorp={handleMainCorpChange}
                                 onRemoveCorp={handleRemoveAlignedCorp} />,
@@ -281,7 +327,7 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                         {props.alignedCorpora.length < props.availableCorpora.length ?
                             <S.NewAlignedCorpBlock>
                                 <S.AlignedCorpBlockHeading>
-                                    <select onChange={handleAddAlignedCorpus} value="">
+                                    <select onChange={handleAddAlignedCorpus} disabled={List.size(props.subcAligned) > 0} value="">
                                         <option value="" disabled={true}>
                                             {`-- ${he.translate('query__add_a_corpus')} --`}</option>
                                         {pipe(

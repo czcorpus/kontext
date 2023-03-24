@@ -15,6 +15,7 @@
 import hashlib
 import os.path
 from dataclasses import dataclass
+from dataclasses_json import dataclass_json
 from functools import wraps
 from typing import List
 
@@ -74,6 +75,7 @@ def stored_to_fs(f):
     return wrapper
 
 
+@dataclass_json
 @dataclass
 class PqueryDataLine:
     value: str

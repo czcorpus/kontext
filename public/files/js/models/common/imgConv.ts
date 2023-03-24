@@ -81,7 +81,7 @@ export class ImageConversionModel extends StatelessModel<ImageConversionModelSta
                         ),
                         contentType: action.payload.format.startsWith('png') ? 'image/png' : 'image/svg+xml',
                         args: src // the naming is a bit confusing here
-                    });
+                    }).subscribe();
             }
         );
     }

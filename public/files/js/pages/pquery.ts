@@ -51,11 +51,12 @@ class ParadigmaticQueryPage {
         this.layoutModel = layoutModel;
     }
 
-    private initCorplistComponent():[React.ComponentClass, PluginInterfaces.Corparch.IPlugin] {
+    private initCorplistComponent():[React.ComponentClass, PluginInterfaces.Corparch.IPlugin, string] {
         const plg = corplistComponent(this.layoutModel.pluginApi());
+        const widgetId = Ident.puid();
         return tuple(
             plg.createWidget(
-                Ident.puid(),
+                widgetId,
                 'pquery/index',
                 (corpora:Array<string>, subcorpId:string) => {
                     this.layoutModel.dispatcher.dispatch<typeof GlobalActions.SwitchCorpus>({
@@ -67,7 +68,8 @@ class ParadigmaticQueryPage {
                     });
                 }
             ),
-            plg
+            plg,
+            widgetId,
         );
     }
 
@@ -138,12 +140,13 @@ class ParadigmaticQueryPage {
                 model: formModel,
                 helpModel
             });
-            const [corparchWidget, corparchPlg]  = this.initCorplistComponent();
+            const [corparchWidget, corparchPlg, corparchWidgetId]  = this.initCorplistComponent();
             this.pqueryFormRoot = this.layoutModel.renderReactComponent(
                 pqueryView.PqueryForm,
                 window.document.getElementById('pquery-form-mount'),
                 {
-                    corparchWidget
+                    corparchWidget,
+                    corparchWidgetId,
                 }
             );
 
@@ -178,7 +181,7 @@ class ParadigmaticQueryPage {
             contentType: 'multipart/form-data',
             url,
             args,
-        });
+        }).subscribe();
     }
 }
 

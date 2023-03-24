@@ -16,6 +16,9 @@
                 </a:documentation>
                 <data type="anyURI" />
             </element>
+            <element name="doclist_cache_dir">
+                <text />
+            </element>
         </element>
     </start>
 </grammar>

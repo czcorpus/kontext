@@ -42,6 +42,7 @@ __conf.QSEnabled = {{ qs_enabled|to_json }};
 __conf.DefaultVirtKeyboard = {{ default_virt_keyboard|to_json }};
 __conf.SimpleQueryDefaultAttrs = {{ simple_query_default_attrs|to_json }};
 __conf.SubcorpTTStructure = {{ subcorp_tt_structure|to_json }};
+__conf.SubcorpAligned = {{ subcorp_aligned|to_json }};
 __conf.AltCorp = {{ alt_corp|to_json }};
 queryPage.init(__conf);
 {% endblock %}
@@ -50,5 +51,6 @@ queryPage.init(__conf);
 <section class="query">
     <div class="bar"><h2>{{ "Search in the corpus"|_ }}</h2><span id="topbar-help-mount"></span></div>
     <div id="query-form-mount"></div>
+    <a id="download-link" style="display:none"></a>
 </section>
 {% endblock %}

@@ -44,20 +44,23 @@ export const CorpusInfoBox = styled.div`
         font-size: 1.2em;
     }
 
-    dl dd a {
+    dl dd a,
+    table.tagset-list a {
         color: ${theme.colorDefaultText};
     }
 
-    dl dd a:hover {
+    dl dd a:hover,
+    table.tagset-list a:hover {
         color: ${theme.colorLogoBlue};
+        text-decoration: none;
     }
 
     h2.subcorpus-name,
     h2.corpus-name {
-        font-size: 2.3em;
+        font-size: 2.4em;
         font-weight: normal;
-        margin: 0 0 0.1em 0;
-        padding: 0.2em 0.3em;
+        margin: 0 0 0.5em 0;
+        padding: 0.2em 0.3em 0.2em 0;
         display: inline-block;
         color: ${theme.colorDefaultText};
     }
@@ -88,8 +91,13 @@ export const CorpusInfoBox = styled.div`
     }
 
     table.attrib-list,
-    table.struct-list {
+    table.struct-list,
+    table.tagset-list {
         border-collapse: collapse;
+    }
+
+    table.tagset-list {
+        margin-top: 1em;
     }
 
     table.attrib-list tr:nth-child(2) th,
@@ -107,15 +115,21 @@ export const CorpusInfoBox = styled.div`
     }
 
     table.attrib-list th,
-    table.struct-list th {
+    table.struct-list th,
+    table.tagset-list td.name {
         color: ${theme.colorLogoPink};
-        padding: 0.2em 1em;
         text-align: left;
         font-weight: normal;
     }
 
+    table.attrib-list th,
+    table.struct-list th {
+        padding: 0.2em 1em;
+    }
+
     table.attrib-list th.attrib-heading,
-    table.struct-list th.attrib-heading {
+    table.struct-list th.attrib-heading,
+    table.tagset-list th.attrib-heading {
         background-color: transparent;
         border-color: ${theme.colorLightText};
         border-style: solid;
@@ -124,6 +138,36 @@ export const CorpusInfoBox = styled.div`
         font-size: 1em;
         text-align: center;
         font-weight: normal;
+        padding-bottom: 0.3em;
+    }
+
+    table.tagset-list {
+
+        tbody tr:first-child td {
+            padding-top: 0.4em;
+        }
+
+        tr.col-headings {
+            border-color: ${theme.colorFrameFieldset};
+            border-style: solid;
+            border-width: 0 0 1px;
+            color: ${theme.colorDefaultText};
+
+            th {
+                font-weight: normal;
+                font-size: 0.9em;
+                padding-top: 0.2em;
+                padding-bottom: 0.2em;
+            }
+
+            th:not(:first-child) {
+                padding-left: 1em;
+            }
+        }
+
+        td:not(:first-child) {
+            padding-left: 1em;
+        }
     }
 
     table.structs-and-attrs {

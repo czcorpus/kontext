@@ -289,7 +289,6 @@ class CorpusActionModel(UserActionModel):
                 req_args.set_forced_arg('corpname', corpname)
             # always prefer corpname returned by _check_corpus_access()
             # TODO we should reflect align here if corpus has changed
-
             # now we apply args from URL (highest priority)
             self.args.map_args_to_attrs(req_args)
             # validate self.args.maincorp which is dependent on 'corpname', 'align'

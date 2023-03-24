@@ -86,7 +86,8 @@ class SubcorpusRecord(SubcorpusIdent):
         text_types (mutually exclusive with 'cql' and 'within_cond') defines an encoded set of individually selected
             structural attributes and their values:
             ({attrA: [value_A1, ...,value_Aa], ..., attrZ: [value_Z1, ...,valueZz)
-
+        bib_id_attr: a unique identifier used by live_attributres for corpora with bibliographical entries
+        bib_label_attr: a human readable version of bib_id_attr
     """
     name: str
     user_id: int
@@ -106,6 +107,9 @@ class SubcorpusRecord(SubcorpusIdent):
     cql: Optional[str] = None
     within_cond: Optional[WithinType] = None
     text_types: Optional[TextTypesType] = None
+    bib_id_attr: Optional[str] = None
+    bib_label_attr: Optional[str] = None
+    aligned: List[str] = field(default_factory=list)
 
 
 class KSubcorpus(KCorpus):

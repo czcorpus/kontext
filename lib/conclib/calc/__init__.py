@@ -209,7 +209,7 @@ async def find_cached_conc_base(
                 await cache_map.del_full_entry(corp.cache_key, q, cutoff)
         else:
             logging.getLogger(__name__).warning(
-                'Removed failed calculation cache record (error: {0}'.format(calc_status.error))
+                'Removed failed calculation cache record (reason: {0})'.format(calc_status.error))
             await cache_map.del_full_entry(corp.cache_key, q, cutoff)
             raise calc_status.normalized_error
 

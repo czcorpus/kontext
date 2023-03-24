@@ -405,6 +405,11 @@ class MysqlLiveAttributes(CachedLiveAttributes):
                 ans[data[search]] = {k: v for k, v in data.items() if not (k == search)}
         return dict(data=ans)
 
+    async def document_list(self, plugin_ctx, corpus_id, attr_map, aligned_corpora, save_format) -> List[Any]:
+        return []  # TODO
+
+    async def num_matching_documents(self, plugin_ctx, corpus_id, attr_map, aligned_corpora):
+        return 0  # TODO
 
 @inject(plugins.runtime.CORPARCH, plugins.runtime.DB, plugins.runtime.INTEGRATION_DB)
 def create_instance(

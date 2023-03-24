@@ -20,7 +20,7 @@
 
 import { Action } from 'kombo';
 import { CorplistDataResponse, Filters } from './corplist';
-import { CorpusInfo } from '../../models/common/layout';
+import { CorpusInfo } from '../../models/common/corpusInfo';
 import { ServerFavlistItem } from './common';
 import { SearchResultRow } from './search';
 

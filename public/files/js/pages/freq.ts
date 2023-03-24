@@ -40,15 +40,14 @@ import { FreqCTResultsSaveModel } from '../models/freqs/twoDimension/save';
 import { TextTypesModel } from '../models/textTypes/main';
 import { KontextPage } from '../app/main';
 import { IndirectQueryReplayModel } from '../models/query/replay/indirect';
-import { Dict, List, Maths, pipe, tuple, URL as CURL } from 'cnc-tskit';
+import { Dict, List, Maths, pipe, tuple } from 'cnc-tskit';
 import { CTFormInputs, CTFormProperties, CTFreqResultData,
     AlignTypes } from '../models/freqs/twoDimension/common';
-import { Actions as MainMenuActions } from '../models/mainMenu/actions';
 import { Actions } from '../models/freqs/regular/actions';
 import { Block, FreqResultViews } from '../models/freqs/common';
 import { ConcFormArgs } from '../models/query/formArgs';
 import { FreqChartsModel } from '../models/freqs/regular/freqCharts';
-import { FreqDataLoader, FreqDataRowsModelState } from '../models/freqs/regular/common';
+import { FreqDataLoader } from '../models/freqs/regular/common';
 import { init as viewFreqCommonInit } from '../views/freqs/common';
 import { ImageConversionModel } from '../models/common/imgConv';
 import { DispersionResultModel } from '../models/dispersion/result';
@@ -310,7 +309,7 @@ class FreqPage {
             url,
             contentType: 'multipart/form-data',
             args,
-        });
+        }).subscribe();
     }
 
     private initFreqResult():void {
@@ -476,14 +475,14 @@ class FreqPage {
             'ConcFormsArgs'
         );
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
-        const attributes = importInitialTTData(ttData, {}, {});
+        const attributes = importInitialTTData(ttData, {});
         const ttModel = new TextTypesModel({
             dispatcher: this.layoutModel.dispatcher,
             pluginApi: this.layoutModel.pluginApi(),
             attributes,
             readonlyMode: true,
-            bibIdAttr: ttData.id_attr,
-            bibLabelAttr: ttData.bib_attr
+            bibIdAttr: ttData.bib_id_attr,
+            bibLabelAttr: ttData.bib_label_attr
         });
         ttModel.applyCheckedItems(queryFormArgs.selected_text_types, {});
         return tuple(ttModel, attributes);
@@ -586,7 +585,7 @@ class FreqPage {
             );
             const ttData = this.layoutModel.getConf<TTInitialData>('textTypesData');
             const [,ttSelection] = this.initTTModel(ttData);
-            this.initAnalysisViews(ttSelection, ttData.id_attr, ttData.bib_attr);
+            this.initAnalysisViews(ttSelection, ttData.bib_id_attr, ttData.bib_label_attr);
             this.initQueryOpNavigation();
             this.initHelp();
             this.initFreqResult();

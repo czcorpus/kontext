@@ -23,7 +23,6 @@ from urllib.parse import quote
 from babel import Locale
 from plugin_types.auth import UserInfo
 from sanic.request import Request, RequestParameters
-from sanic_babel import get_locale, gettext
 M_args = TypeVar('M_args')
 
 
@@ -36,7 +35,7 @@ class KRequest(Generic[M_args]):
     def __init__(self, request: Request, app_prefix: str, mapped_args: Optional[M_args]):
         self._request = request
         self._app_prefix = app_prefix if app_prefix else ''
-        self._locale: Locale = get_locale(request)
+        self._locale: Locale = Locale(*request.ctx.locale.split('_'))
         self._mapped_args = mapped_args
         self._start_time = time.time()
 
@@ -197,21 +196,25 @@ class KRequest(Generic[M_args]):
         returns:
         updated URL
         """
-        import urllib.error
         import urllib.parse
+
+        def append_opt_multivalue(target: List, kx: str, vx: Any):
+            tmpv = vx if type(vx) in (list, tuple) else [vx]
+            for vxt in tmpv:
+                target.append((kx, vxt))
 
         parsed_url = list(urllib.parse.urlparse(self.get_current_url()))
         old_params = dict(urllib.parse.parse_qsl(parsed_url[4]))
         new_params = []
         for k, v in old_params.items():
             if k in params:
-                new_params.append((k, params[k]))
+                append_opt_multivalue(new_params, k, params[k])
             else:
                 new_params.append((k, v))
 
         for k, v in list(params.items()):
             if k not in old_params:
-                new_params.append((k, v))
+                append_opt_multivalue(new_params, k, v)
 
         parsed_url[4] = urllib.parse.urlencode(new_params)
         return urllib.parse.urlunparse(parsed_url)
@@ -240,4 +243,4 @@ class KRequest(Generic[M_args]):
             return f'{root}{action}'
 
     def translate(self, string: str) -> str:
-        return gettext(string, self._request)
+        return self._request.ctx.translations.gettext(string)

@@ -67,7 +67,9 @@ export function init(
                 <td>
                     {props.item.corpusName}
                 </td>
-                <td />
+                <td>
+                    <layoutViews.AjaxLoaderBarImage />
+                </td>
                 <td className="num">{he.formatDate(props.item.created, 1)}</td>
                 <td className="processing">
                     {props.item.error ?
@@ -335,7 +337,7 @@ export function init(
                         </tr>
                         {pipe(
                             props.unfinished,
-                            List.filter(x => !x.subcorpusId),
+                            List.filter(x => !x.finished),
                             List.map(item => (
                                 <TrUnsavedSubc key={`${item.name}:${item.created}`} item={item} />
                             ))
@@ -457,75 +459,68 @@ export function init(
 
     // ------------------------ <SubcorpList /> --------------------------
 
-    class SubcorpList extends React.Component<SubcorpListModelState> {
+    const SubcorpList:React.FC<SubcorpListModelState> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._handleActionButton = this._handleActionButton.bind(this);
-            this._handleActionsClose = this._handleActionsClose.bind(this);
-            this._handlePageChange = this._handlePageChange.bind(this);
-        }
-
-        _handleActionButton(action:string, idx:number) {
-            const item = this.props.lines[idx];
-            dispatcher.dispatch<typeof Actions.ShowSubcEditWindow>({
-                name: Actions.ShowSubcEditWindow.name,
-                payload: {
+        const handleActionButton = (action:string, idx:number) => {
+            const item = props.lines[idx];
+            dispatcher.dispatch(
+                Actions.ShowSubcEditWindow,
+                {
                     corpusName: item.corpus_name,
                     subcorpusId: item.id,
-                    subcorpusName: item.name
+                    subcorpusName: item.name,
+                    bibIdAttr: item.bib_id_attr
                 }
-            });
-        }
-
-        _handleActionsClose() {
-            dispatcher.dispatch<typeof Actions.HideSubcEditWindow>({
-                name: Actions.HideSubcEditWindow.name,
-                payload: {}
-            });
-        }
-
-        _handlePageChange = (page:string) => {
-            dispatcher.dispatch<typeof Actions.SetPage>({
-                name: Actions.SetPage.name,
-                payload: {page},
-            });
+            );
         };
 
-        render() {
-            return (
-                <S.SubcorpList>
-                    <section className="inner">
-                        <FilterForm filter={this.props.filter} relatedCorpora={this.props.relatedCorpora} />
-                    </section>
-                    {this.props.editWindowSubcorpus !== null
-                        ? (
-                            <layoutViews.ModalOverlay onCloseKey={this._handleActionsClose}>
-                                <layoutViews.CloseableFrame onCloseClick={this._handleActionsClose}
-                                        label={he.translate('subclist__subc_actions_{subc}', {subc: this.props.editWindowSubcorpus.subcorpusName})}
-                                        scrollable={true}>
-                                    <SubcorpEdit
-                                        corpname={this.props.editWindowSubcorpus.corpusName}
-                                        usesubcorp={this.props.editWindowSubcorpus.subcorpusId} />
-                                </layoutViews.CloseableFrame>
-                            </layoutViews.ModalOverlay>
-                        ) : null}
-                    <S.SubcPaginator className='ktx-pagination'>
-                        <layoutViews.SimplePaginator
-                            currentPage={this.props.filter.page}
-                            isLoading={this.props.isBusy}
-                            totalPages={this.props.totalPages}
-                            handlePageChange={this._handlePageChange} />
-                    </S.SubcPaginator>
-                    <DataTable actionButtonHandle={this._handleActionButton}
-                        pattern={this.props.filter.pattern}
-                        lines={this.props.lines}
-                        selectedItems={this.props.selectedItems}
-                        sortKey={this.props.sortKey}
-                        unfinished={this.props.processedItems} />
-                </S.SubcorpList>
+        const handleActionsClose = () => {
+            dispatcher.dispatch(
+                Actions.HideSubcEditWindow,
             );
-        }
+        };
+
+        const handlePageChange = (page:string) => {
+            dispatcher.dispatch(
+                Actions.SetPage,
+                {page}
+            );
+        };
+
+        return (
+            <S.SubcorpList>
+                <section className="inner">
+                    <FilterForm filter={props.filter} relatedCorpora={props.relatedCorpora} />
+                </section>
+                {props.editWindowSubcorpus !== null
+                    ? (
+                        <layoutViews.ModalOverlay onCloseKey={handleActionsClose}>
+                            <layoutViews.CloseableFrame onCloseClick={handleActionsClose}
+                                    label={he.translate('subclist__subc_actions_{subc}', {subc: props.editWindowSubcorpus.subcorpusName})}
+                                    scrollable={true}>
+                                <SubcorpEdit
+                                    corpname={props.editWindowSubcorpus.corpusName}
+                                    usesubcorp={props.editWindowSubcorpus.subcorpusId}
+                                    bibIdAttr={props.editWindowSubcorpus.bibIdAttr}
+                                    userId={props.userId} />
+                            </layoutViews.CloseableFrame>
+                        </layoutViews.ModalOverlay>
+                    ) : null}
+                <S.SubcPaginator className='ktx-pagination'>
+                    <layoutViews.SimplePaginator
+                        currentPage={props.filter.page}
+                        isLoading={props.isBusy}
+                        totalPages={props.totalPages}
+                        handlePageChange={handlePageChange} />
+                </S.SubcPaginator>
+                <DataTable actionButtonHandle={handleActionButton}
+                    pattern={props.filter.pattern}
+                    lines={props.lines}
+                    selectedItems={props.selectedItems}
+                    sortKey={props.sortKey}
+                    unfinished={props.processedItems} />
+            </S.SubcorpList>
+        );
     }
 
     return {

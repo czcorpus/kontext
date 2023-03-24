@@ -312,6 +312,6 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel<Freq2DFlatViewModelS
             url: this.pageModel.createActionUrl('export_freqct', args),
             contentType: 'application/json',
             args: this.exportData()
-        });
+        }).subscribe();
     }
 }

@@ -122,6 +122,11 @@ export const AlignedCorpBlockHeading = styled.div`
         font-weight: normal;
         margin: 0;
     }
+
+    .make-primary.disabled,
+    .close-button.disabled {
+        cursor: default;
+    }
 `;
 
 // -------------- <NewAlignedCorpBlock /> --------------------------------------

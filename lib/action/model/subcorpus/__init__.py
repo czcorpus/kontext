@@ -125,7 +125,8 @@ class SubcorpusActionModel(CorpusActionModel):
                     author=author,
                     size=subc.search_size,
                     public_description=specification.description,
-                    data=specification)
+                    data=specification,
+                    aligned=specification.aligned_corpora)
         else:
             worker = bgcalc.calc_backend_client(settings)
             res = await worker.send_task(
@@ -162,8 +163,9 @@ class SubcorpusActionModel(CorpusActionModel):
                     size=specification.size,
                     public_description=specification.description,
                     data=specification,
-                    is_draft=True)
+                    is_draft=True,
+                    aligned=specification.aligned_corpora)
                 return dict(subc_id=asdict(subc_id))
             else:
-                await sr.update_draft(ident=usesubcorp, author=self.plugin_ctx.user_dict, size=0, public_description=specification.description, data=specification)
+                await sr.update_draft(ident=usesubcorp, author=self.plugin_ctx.user_dict, size=0, public_description=specification.description, data=specification, aligned=specification.aligned_corpora)
                 return dict(subc_id={'id': usesubcorp, 'corpus_name': self.corp.corpname})

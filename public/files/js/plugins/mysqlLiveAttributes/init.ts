@@ -21,7 +21,7 @@ import * as PluginInterfaces from '../../types/plugins';
 import { TextTypesModel } from '../../models/textTypes/main';
 import * as liveAttrsModel from './models';
 import { init as viewInit } from './view';
-import { List } from 'cnc-tskit';
+import { List, pipe } from 'cnc-tskit';
 import { IPluginApi } from '../../types/plugins/common';
 import { PluginName } from '../../app/plugin';
 
@@ -32,14 +32,15 @@ export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPl
 
     private readonly model:liveAttrsModel.LiveAttrsModel;
 
-    private readonly useAlignedCorpBox:boolean;
-
     private readonly isEnabled:boolean;
 
-    constructor(pluginApi:IPluginApi, store:liveAttrsModel.LiveAttrsModel, useAlignedCorpBox:boolean, isEnabled:boolean) {
+    constructor(
+        pluginApi:IPluginApi,
+        store:liveAttrsModel.LiveAttrsModel,
+        isEnabled:boolean
+    ) {
         this.pluginApi = pluginApi;
         this.model = store;
-        this.useAlignedCorpBox = useAlignedCorpBox;
         this.isEnabled = isEnabled;
     }
 
@@ -49,7 +50,8 @@ export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPl
 
     getViews(
         subcMixerView:PluginInterfaces.SubcMixer.View,
-        textTypesModel:TextTypesModel
+        textTypesModel:TextTypesModel,
+        useAlignedCorpBox:boolean,
     ):PluginInterfaces.LiveAttributes.Views {
 
         const views = viewInit({
@@ -59,7 +61,7 @@ export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPl
             textTypesModel: textTypesModel,
             liveAttrsModel: this.model
         });
-        if (!this.useAlignedCorpBox) {
+        if (!useAlignedCorpBox) {
             views.LiveAttrsCustomTT = null;
         }
         return views;
@@ -90,7 +92,6 @@ export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPl
 const create:PluginInterfaces.LiveAttributes.Factory = (
         pluginApi,
         isEnabled,
-        controlsAlignedCorpora,
         args
 ) => {
 
@@ -102,15 +103,20 @@ const create:PluginInterfaces.LiveAttributes.Factory = (
             value: item.n,
             label: item.label,
             selected: currAligned.indexOf(item.n) > -1,
-            locked: !controlsAlignedCorpora
+            locked: !args.manualAlignCorporaMode
         }),
         args.availableAlignedCorpora
     );
-
     const store = new liveAttrsModel.LiveAttrsModel(
         pluginApi.dispatcher(),
         pluginApi,
         {
+            structAttrs: pipe(
+                args.textTypesData,
+                x => x.Blocks[0].Line,
+                List.map(x => x.name),
+                List.map(n => ({n, selected: n === args.bibLabelAttr}))
+            ),
             selectionSteps: [],
             selectionTypes: {},
             lastRemovedStep: null,
@@ -118,17 +124,21 @@ const create:PluginInterfaces.LiveAttributes.Factory = (
             firstCorpus,
             alignedCorpora,
             initialAlignedCorpora: alignedCorpora,
-            bibliographyAttribute: args.bibAttr,
+            bibIdAttr: args.bibIdAttr,
+            bibLabelAttr: args.bibLabelAttr,
             bibliographyIds: [],
             manualAlignCorporaMode: args.manualAlignCorporaMode,
             controlsEnabled: args.refineEnabled,
             isBusy: false,
+            docSaveIsBusy: false,
             isTTListMinimized: false,
             isEnabled: isEnabled,
             resetConfirmed: false,
             subcorpDefinition: args.subcorpTTStructure,
+            documentListWidgetVisible: false,
+            documentListSaveFormat: 'csv',
+            documentListTotalSize: undefined,
         },
-        controlsAlignedCorpora
     );
 
     let numSelectionSteps = 0;
@@ -149,7 +159,7 @@ const create:PluginInterfaces.LiveAttributes.Factory = (
         _ => numSelectionSteps === 0 || window.confirm(pluginApi.translate('ucnkLA__are_you_sure_to_mod_align_lang'))
     );
 
-    return new LiveAttributesPlugin(pluginApi, store, !List.empty(alignedCorpora), isEnabled);
+    return new LiveAttributesPlugin(pluginApi, store, isEnabled);
 }
 
 export default create;

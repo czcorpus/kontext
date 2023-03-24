@@ -72,6 +72,9 @@ def _subc_from_row(row: Dict) -> SubcorpusRecord:
         cql=row['cql'],
         within_cond=json.loads(row['within_cond']) if row['within_cond'] else None,
         text_types=json.loads(row['text_types']) if row['text_types'] else None,
+        bib_id_attr=row['bib_id_attr'],
+        bib_label_attr=row['bib_label_attr'],
+        aligned=json.loads(row['aligned']) if row['aligned'] else [],
     )
 
 
@@ -79,6 +82,7 @@ def _subc_from_row(row: Dict) -> SubcorpusRecord:
 class BackendConfig:
     user_table: str = 'kontext_user'
     subccorp_table: str = 'kontext_subcorpus'
+    corpora_table: str = 'kontext_corpus'
     user_table_firstname_col: str = 'firstname'
     user_table_lastname_col: str = 'lastname'
 
@@ -115,7 +119,8 @@ class MySQLSubcArchive(AbstractSubcArchive):
             size: int,
             public_description: str,
             data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs],
-            is_draft: bool = False
+            aligned: List[str],
+            is_draft: bool = False,
     ):
         async with self._db.cursor() as cursor:
             if isinstance(data, CreateSubcorpusRawCQLArgs):
@@ -127,10 +132,10 @@ class MySQLSubcArchive(AbstractSubcArchive):
             try:
                 await cursor.execute(
                     f'INSERT INTO {self._bconf.subccorp_table} '
-                    f'(id, user_id, author_id, corpus_name, name, {column}, created, public_description, size, is_draft) '
-                    'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
+                    f'(id, user_id, author_id, corpus_name, name, {column}, created, public_description, size, is_draft, aligned) '
+                    'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
                     (ident, author['id'], author['id'], data.corpname, data.subcname, value, datetime.now(), public_description,
-                     size, 1 if is_draft else 0))
+                     size, 1 if is_draft else 0, json.dumps(aligned) if aligned else ''))
                 await cursor.connection.commit()
             except IntegrityError as ex:
                 await cursor.execute(
@@ -140,9 +145,9 @@ class MySQLSubcArchive(AbstractSubcArchive):
                 if row['is_draft'] == 1:
                     await cursor.execute(
                         f'UPDATE {self._bconf.subccorp_table} '
-                        f'SET name = %s, {column} = %s, public_description = %s, size = %s, is_draft = 0 '
+                        f'SET name = %s, {column} = %s, public_description = %s, size = %s, is_draft = 0, aligned = %s '
                         'WHERE id = %s AND author_id = %s',
-                        (data.subcname, value, public_description, size, ident, author['id']))
+                        (data.subcname, value, public_description, size, ident, author['id'], json.dumps(aligned) if aligned else ''))
                 else:
                     raise ex
 
@@ -163,10 +168,10 @@ class MySQLSubcArchive(AbstractSubcArchive):
         async with self._db.cursor() as cursor:
             await cursor.execute(
                 f'INSERT INTO {self._bconf.subccorp_table} '
-                f'(id, user_id, author_id, corpus_name, name, created, size, is_draft) '
+                f'(id, user_id, author_id, corpus_name, name, created, size, is_draft, aligned) '
                 'VALUES (%s, %s, %s, %s, %s, %s, %s, %s)',
                 (subc_id.id, self.shared_subc_user_id, self.shared_subc_user_id, corpname, subcname, datetime.now(),
-                 self.preflight_subcorpus_size, 0))
+                 self.preflight_subcorpus_size, 0, ''))
             await cursor.execute(
                 'INSERT INTO kontext_preflight_subc (id, corpus_name) '
                 'VALUES (%s, %s)',
@@ -181,7 +186,8 @@ class MySQLSubcArchive(AbstractSubcArchive):
             author: UserInfo,
             size: int,
             public_description: str,
-            data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs]
+            data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs],
+            aligned: List[str],
     ):
         async with self._db.cursor() as cursor:
             column1, column2, column3 = 'cql', 'within_cond', 'text_types'
@@ -194,9 +200,9 @@ class MySQLSubcArchive(AbstractSubcArchive):
 
             await cursor.execute(
                 f'UPDATE {self._bconf.subccorp_table} '
-                f'SET name = %s, {column1} = %s, {column2} = %s, {column3} = %s, public_description = %s, size = %s '
+                f'SET name = %s, {column1} = %s, {column2} = %s, {column3} = %s, public_description = %s, size = %s, aligned = %s '
                 'WHERE id = %s AND author_id = %s AND is_draft = 1',
-                (data.subcname, value1, value2, value3, public_description, size, ident, author['id']))
+                (data.subcname, value1, value2, value3, public_description, size, ident, author['id'], json.dumps(aligned) if aligned else ''))
 
     async def archive(self, user_id: int, corpname: str, subc_id: str) -> datetime:
         async with self._db.cursor() as cursor:
@@ -207,7 +213,7 @@ class MySQLSubcArchive(AbstractSubcArchive):
             )
             await cursor.connection.commit()
 
-            result = await cursor.execute(
+            await cursor.execute(
                 f'SELECT archived FROM {self._bconf.subccorp_table} '
                 'WHERE user_id = %s AND corpus_name = %s AND id = %s',
                 (user_id, corpname, subc_id)
@@ -277,10 +283,12 @@ class MySQLSubcArchive(AbstractSubcArchive):
             where.append('t1.is_draft = 0')
 
         sql = f"""SELECT
-            t1.*,
+            t1.*, CONCAT(t3.bib_id_struct, '.', t3.bib_id_attr) AS bib_id_attr,
+            CONCAT(t3.bib_label_struct, '.', t3.bib_label_attr) AS bib_label_attr,
             CONCAT(t2.{self._bconf.user_table_firstname_col}, ' ', {self._bconf.user_table_lastname_col}) AS fullname
             FROM {self._bconf.subccorp_table} AS t1
-            JOIN {self._bconf.user_table} as t2 ON t1.author_id = t2.id
+            JOIN {self._bconf.user_table} AS t2 ON t1.author_id = t2.id
+            JOIN {self._bconf.corpora_table} AS t3 ON t3.name = t1.corpus_name
             WHERE {" AND ".join(where)} ORDER BY t1.id LIMIT %s OFFSET %s"""
         async with self._db.cursor() as cursor:
             await cursor.execute(sql, args)
@@ -290,10 +298,12 @@ class MySQLSubcArchive(AbstractSubcArchive):
         async with self._db.cursor() as cursor:
             await cursor.execute(
                 f"""SELECT
-                t1.*,
+                t1.*, CONCAT(t3.bib_id_struct, '.', t3.bib_id_attr) AS bib_id_attr,
+                CONCAT(t3.bib_label_struct, '.', t3.bib_label_attr) AS bib_label_attr,
                 CONCAT(t2.{self._bconf.user_table_firstname_col}, ' ', {self._bconf.user_table_lastname_col}) AS fullname
                 FROM {self._bconf.subccorp_table} AS t1
                 JOIN {self._bconf.user_table} AS t2 ON t1.author_id = t2.id
+                JOIN {self._bconf.corpora_table} AS t3 ON t3.name = t1.corpus_name
                 WHERE t1.id = %s
                 ORDER BY t1.created
                 LIMIT 1""",
@@ -343,6 +353,7 @@ class MySQLSubcArchive(AbstractSubcArchive):
                 **row,
                 'within_cond': json.loads(row['within_cond']) if row['within_cond'] else None,
                 'text_types': json.loads(row['text_types']) if row['text_types'] else None,
+                'aligned': json.loads(row['aligned']) if row['aligned'] else None,
             })
 
     async def delete_query(self, user_id: int, corpname: str, subc_id: str) -> None:

@@ -162,7 +162,9 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                     this.changeState(state => {
                         state.asyncTasks.push(newTask);
                     });
-                    this.startWatchingTask(newTask);
+                    if (!Dict.hasValue(newTask.category, DownloadType)) {
+                        this.startWatchingTask(newTask);
+                    }
 
                 } else {
                     this.pageModel.showMessage('error', action.error);
@@ -261,7 +263,10 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
 
     private startWatchingTask(task:Kontext.AsyncTaskInfo) {
         if (this.pageModel.supportsWebSocket()) {
-            const [,statusSocket] = this.pageModel.openWebSocket<undefined, Kontext.AsyncTaskInfo>(
+            const [,statusSocket] = this.pageModel.openWebSocket<
+                undefined,
+                Kontext.AsyncTaskInfo
+            >(
                 this.pageModel.createActionUrl<{taskId: string}>(
                     'ws/task_status',
                     {taskId: task.ident},
@@ -282,7 +287,11 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                     if (err instanceof CloseEvent) {
                         if (err.code > 1001) {
                             this.pageModel.showMessage('error', err.reason);
+
+                        } else {
+                            this.pageModel.showMessage('warning', err.reason);
                         }
+
                     } else {
                         this.pageModel.showMessage('error', err);
                     }

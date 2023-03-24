@@ -19,7 +19,7 @@
  */
 
 import { Observable } from 'rxjs';
-import { IEventEmitter, IModel, StatelessModel } from 'kombo';
+import { IModel, StatelessModel } from 'kombo';
 
 import * as CoreViews from './coreViews';
 import { MainMenuModel } from '../models/mainMenu';
@@ -30,6 +30,7 @@ import { CorpusSwitchModel } from '../models/common/corpusSwitch';
 import { SearchHistoryModel } from '../models/searchHistory';
 import { ScreenProps } from '../views/document/responsiveWrapper';
 import { Dict, List, pipe } from 'cnc-tskit';
+import { CorpusInfoModel } from '../models/common/corpusInfo';
 
 
 /**
@@ -198,11 +199,6 @@ export interface FullCorpusIdent {
     searchSize:number;
 }
 
-export interface ICorpusInfoModel extends IEventEmitter {
-    getCurrentInfoData():any; // TODO
-    isLoading():boolean;
-}
-
 
 // ---------------------- main menu ---------------------------------
 
@@ -346,7 +342,7 @@ export interface AjaxResponse {
 }
 
 export interface LayoutModel {
-    corpusInfoModel:ICorpusInfoModel,
+    corpusInfoModel:CorpusInfoModel,
     userInfoModel:IModel<{}>,
     corpusViewOptionsModel:CorpusViewOptionsModel,
     generalViewOptionsModel:StatelessModel<GeneralViewOptionsModelState>;
@@ -370,7 +366,7 @@ export interface AsyncTaskInfo<T=GeneralProps> {
     category:string;
     status:AsyncTaskStatus;
     created:number;
-    error:string; // = Celery's "result" property in case status == 'FAILURE'
+    error:string; // = Worker's "result" property in case status == 'FAILURE'
     args:T;
     url:string;
 }

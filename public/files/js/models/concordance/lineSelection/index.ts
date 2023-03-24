@@ -570,7 +570,7 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
                         corpname: this.state.corpusId,
                         cformat: action.payload.format,
                     }
-                })
+                }).subscribe();
             }
         );
 

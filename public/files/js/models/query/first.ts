@@ -66,9 +66,11 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
     corpora:Array<string>;
     availableAlignedCorpora:Array<Kontext.AttrItem>;
     textTypesNotes:string;
+    bibIdAttr:string|null;
     subcorpList:Array<Kontext.SubcorpListItem>;
     currentSubcorp:string;
     subcorpusId:string;
+    subcAligned:Array<string>;
     isForeignSubcorpus:boolean;
     shuffleConcByDefault:boolean;
     inputLanguages:{[corpname:string]:string};
@@ -265,6 +267,8 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
      */
     subcorpusId:string;
 
+    subcAligned:Array<string>;
+
     isForeignSubcorpus:boolean;
 
     shuffleConcByDefault:boolean;
@@ -302,6 +306,8 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
     quickSubcorpVisible:boolean;
 
     quickSubcorpActive:boolean;
+
+    bibIdAttr:string;
 
     /**
      * Attributes user wants to display
@@ -382,6 +388,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 subcorpList: props.subcorpList,
                 currentSubcorp: props.currentSubcorp || '',
                 subcorpusId: props.subcorpusId || '',
+                subcAligned: props.subcAligned,
                 isForeignSubcorpus: !!props.isForeignSubcorpus,
                 shuffleForbidden: false,
                 shuffleConcByDefault: props.shuffleConcByDefault,
@@ -455,6 +462,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 isLocalUiLang: props.isLocalUiLang,
                 quickSubcorpVisible: false,
                 quickSubcorpActive,
+                bibIdAttr: props.bibIdAttr,
                 concViewPosAttrs: props.concViewPosAttrs,
                 alignCommonPosAttrs: props.alignCommonPosAttrs,
                 compositionModeOn: false,

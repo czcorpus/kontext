@@ -342,7 +342,8 @@ export class ViewPage {
     private initQueryForm(
         thPlugin:PluginInterfaces.TagHelper.IPlugin,
         queryFormArgs:formArgs.QueryFormArgsResponse,
-        ttSelections:Array<AnyTTSelection>
+        ttSelections:Array<AnyTTSelection>,
+        ttData:TTInitialData
     ):void {
         this.queryModels.queryHintModel = new UsageTipsModel(
             this.layoutModel.dispatcher,
@@ -398,6 +399,7 @@ export class ViewPage {
             currentSubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
             subcorpusId: this.layoutModel.getCorpusIdent().usesubcorp,
             isForeignSubcorpus: this.layoutModel.getCorpusIdent().foreignSubcorp,
+            subcAligned: this.layoutModel.getConf<Array<string>>('SubcorpAligned'),
             shuffleConcByDefault: this.layoutModel.getConf<boolean>('ShuffleConcByDefault'),
             forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
             attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
@@ -429,7 +431,8 @@ export class ViewPage {
             ),
             concViewPosAttrs: this.layoutModel.getConf<ConcServerArgs>('currentArgs').attrs,
             alignCommonPosAttrs: this.layoutModel.getConf<Array<string>>('AlignCommonPosAttrs'),
-            concPreflight: this.layoutModel.getConf<Kontext.PreflightConf|null>('concPreflight')
+            concPreflight: this.layoutModel.getConf<Kontext.PreflightConf|null>('concPreflight'),
+            bibIdAttr: ttData.bib_id_attr
         };
 
         this.queryModels.queryModel = new FirstQueryFormModel({
@@ -899,14 +902,14 @@ export class ViewPage {
             'ConcFormsArgs'
         );
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
-        const attributes = importInitialTTData(ttData, {}, {});
+        const attributes = importInitialTTData(ttData, {});
         const textTypesModel = new TextTypesModel({
             dispatcher: this.layoutModel.dispatcher,
             pluginApi: this.layoutModel.pluginApi(),
             attributes,
             readonlyMode: true,
-            bibIdAttr: ttData.id_attr,
-            bibLabelAttr: ttData.bib_attr
+            bibIdAttr: ttData.bib_id_attr,
+            bibLabelAttr: ttData.bib_label_attr
         });
 
         // we restore checked text types but with no bib-mapping; hidden IDs are enough here as
@@ -1091,7 +1094,7 @@ export class ViewPage {
             contentType: 'multipart/form-data',
             url,
             args,
-        });
+        }).subscribe();
     }
 
     init():void {
@@ -1145,7 +1148,7 @@ export class ViewPage {
             });
             const tagHelperPlg = tagHelperPlugin(this.layoutModel.pluginApi());
             this.setupHistoryOnPopState();
-            this.initQueryForm(tagHelperPlg, queryFormArgs, ttInitialData);
+            this.initQueryForm(tagHelperPlg, queryFormArgs, ttInitialData, ttData);
             this.initFirsthitsForm();
             this.initShuffleForm();
             this.initFilterForm(
@@ -1154,7 +1157,7 @@ export class ViewPage {
             this.initSwitchMainCorpForm();
             this.initSampleForm(this.queryModels.switchMcModel);
             this.initQueryOverviewArea(tagHelperPlg);
-            this.initAnalysisViews(ttInitialData, ttData.id_attr, ttData.bib_attr);
+            this.initAnalysisViews(ttInitialData, ttData.bib_id_attr, ttData.bib_label_attr);
             this.layoutModel.initKeyShortcuts();
             this.updateHistory();
             if (this.layoutModel.getConf<boolean>('Unfinished')) {

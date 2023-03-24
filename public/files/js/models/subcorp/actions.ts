@@ -70,6 +70,7 @@ export class Actions {
         corpusName:string;
         subcorpusId:string;
         subcorpusName:string;
+        bibIdAttr:string;
     }> = {
         name: 'SUBCORP_SHOW_SUBC_EDIT_WINDOW'
     };
@@ -88,6 +89,7 @@ export class Actions {
         textTypes:TTInitialData;
         structsAndAttrs:Kontext.StructsAndAttrs;
         liveAttrsEnabled:boolean;
+        alignedSelection:Array<TextTypes.AlignedLanguageItem>;
     }> = {
         name: 'SUBCORP_LOAD_SUBCORPUS_DONE'
     }

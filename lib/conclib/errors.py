@@ -66,22 +66,20 @@ class UnreadableConcordanceException(ConcordanceException):
 
 def extract_manatee_error(err: Exception) -> Optional[ConcordanceException]:
     """
-    Test and extract some of Manatee errors. If nothing known is found, None
+    Test and extract some Manatee errors. If nothing known is found, None
     is returned (In such case the caller should probably provide the original error).
     """
     if isinstance(err, ConcordanceException):
         return err
     msg = str(err)
     if isinstance(err, RuntimeError):
-        if 'syntax error' in msg or 'unexpected character' in msg:
-            srch = re.match(r'unexpected character(.*)at position (\d+)', msg)
-            if srch:
-                return ConcordanceQuerySyntaxError(
-                    'Syntax error at position {}. Please check the query and its type.'.format(srch.group(2)))
-            else:
-                return ConcordanceQuerySyntaxError('Syntax error. Please check the query and its type')
+        srch = re.match(r'^.*syntax error,\s*(.+)$', msg)
+        if srch:
+            return ConcordanceQuerySyntaxError(f'Query syntax error: {srch.group(1)}')
         elif 'AttrNotFound' in msg:
             srch = re.match(r'AttrNotFound \(([^)]+)\)', msg)
             attr = srch.group(1) if srch else '??'
             return ConcordanceQueryParamsError(f'Attribute not found: {attr}')
-        return None
+        else:
+            return ConcordanceException(msg)
+    return None

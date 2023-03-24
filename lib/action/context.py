@@ -30,9 +30,6 @@ class ApplicationContext:
             for x in os.listdir(os.path.join(os.path.dirname(__file__), '..', '..', 'locale'))
         }
         self._tt_cache = tt_cache
-        # required by sanic_babel
-        self.babel_instance = None
-        self.babel_translations = None
 
     @property
     def templating(self):

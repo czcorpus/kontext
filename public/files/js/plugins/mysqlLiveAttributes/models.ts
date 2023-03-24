@@ -34,6 +34,8 @@ import { Actions as GlobalActions } from '../../models/common/actions';
 import { IUnregistrable } from '../../models/common/common';
 import { IPluginApi } from '../../types/plugins/common';
 import { isTTSelection } from '../../models/subcorp/common';
+import { DataSaveFormat } from '../../app/navigation/save';
+import { DownloadType } from '../../app/page';
 
 
 
@@ -78,21 +80,27 @@ export function isAlignedSelectionStep(v:TTSelectionStep|AlignedLangSelectionSte
 
 export interface LiveAttrsModelState {
     initialCorpusSize:number|null; // if null then we need to load the info
+    structAttrs:Array<{n:string; selected:boolean}>;
     selectionSteps:Array<TTSelectionStep|AlignedLangSelectionStep>;
     lastRemovedStep:TTSelectionStep|AlignedLangSelectionStep|null;
     firstCorpus:string;
     alignedCorpora:Array<TextTypes.AlignedLanguageItem>;
     initialAlignedCorpora:Array<TextTypes.AlignedLanguageItem>;
-    bibliographyAttribute:string;
+    bibIdAttr:string;
+    bibLabelAttr:string;
     bibliographyIds:Array<string>;
     selectionTypes:{[attr:string]:[TextTypes.TTSelectionTypes, string]}; // 2nd val = decoded val.
     manualAlignCorporaMode:boolean;
     controlsEnabled:boolean;
     isBusy:boolean;
+    docSaveIsBusy:boolean;
     isTTListMinimized:boolean;
     isEnabled:boolean;
     resetConfirmed:boolean;
     subcorpDefinition:TextTypes.ExportedSelection;
+    documentListWidgetVisible:boolean;
+    documentListSaveFormat:DataSaveFormat;
+    documentListTotalSize:number|undefined;
 }
 
 /**
@@ -113,19 +121,15 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
 
     private readonly pluginApi:IPluginApi;
 
-    private readonly controlsAlignedCorpora:boolean;
-
     /**
      */
     constructor(
         dispatcher:IActionDispatcher,
         pluginApi:IPluginApi,
         initialState:LiveAttrsModelState,
-        controlsAlignedCorpora:boolean,
     ) {
         super(dispatcher, initialState);
         this.pluginApi = pluginApi;
-        this.controlsAlignedCorpora = controlsAlignedCorpora;
 
         this.addActionHandler(
             PluginInterfaces.LiveAttributes.Actions.RefineClicked,
@@ -168,7 +172,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                                     poscount: data.poscount,
                                     filterData: filterData,
                                     selectedTypes: selections,
-                                    bibAttrValsAreListed: Array.isArray(data.attr_values[state.bibliographyAttribute]),
+                                    bibAttrValsAreListed: Array.isArray(data.attr_values[state.bibIdAttr]),
                                     isSubcorpDefinitionFilter: false,
                                 }
                             );
@@ -301,7 +305,10 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                         alignedCorpora: List.filter(v => v.selected, state.alignedCorpora)
                     }
                 });
-                this.reloadSizes(state, dispatch);
+                //
+                if (!state.manualAlignCorporaMode) {
+                    this.reloadSizes(state, dispatch);
+                }
             }
         );
 
@@ -318,8 +325,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
         this.addActionHandler(
             TTActions.SelectionChanged,
             (state, action) => {
-                state.controlsEnabled = action.payload.hasSelectedItems ||
-                        List.some(v => v.selected, state.alignedCorpora);
+                state.controlsEnabled = action.payload.hasSelectedItems || this.hasSelectedLanguages(state);
             }
         );
 
@@ -401,12 +407,12 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             (state, action, dispatch) => {
                 const ident:string = action.payload.ident;
                 if (List.some(v => v === ident, state.bibliographyIds)) {
-                    this.loadBibInfo(ident).subscribe({
+                    this.loadBibInfo(state, ident).subscribe({
                         next: serverData => {
                             dispatch<typeof TTActions.ExtendedInformationRequestDone>({
                                 name: TTActions.ExtendedInformationRequestDone.name,
                                 payload: {
-                                    attrName: state.bibliographyAttribute,
+                                    attrName: state.bibLabelAttr,
                                     ident: ident,
                                     data: serverData.bib_data
                                 }
@@ -432,7 +438,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
         this.addActionHandler(
             TTActions.AttributeTextInputAutocompleteRequestDone,
             (state, action) => {
-                if (!action.error && Array.isArray(action.payload.filterData[state.bibliographyAttribute])) {
+                if (!action.error && Array.isArray(action.payload.filterData[state.bibIdAttr])) {
                     this.attachBibData(state, action.payload.filterData);
                 }
             }
@@ -467,7 +473,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                     this.reloadSizes(state, dispatch);
                 }
             }
-        )
+        );
 
         this.addActionHandler(
             SubcActions.LoadSubcorpusDone,
@@ -477,16 +483,199 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                     if (isTTSelection(selections)) {
                         this.reset(state)
                         state.firstCorpus = action.payload.data.corpname;
-                        state.bibliographyAttribute = action.payload.textTypes.bib_attr;
+                        state.bibIdAttr = action.payload.textTypes.bib_id_attr;
+                        state.bibLabelAttr = action.payload.textTypes.bib_label_attr;
                         state.controlsEnabled = Dict.size(selections) > 0;
+                        state.structAttrs = pipe(
+                            action.payload.textTypes,
+                            x => x.Blocks[0].Line,
+                            List.map(x => x.name),
+                            List.map(n => ({n, selected: n === action.payload.data.bibLabelAttr}))
+                        );
+                        state.manualAlignCorporaMode = action.payload.data.isDraft;
+                        state.initialAlignedCorpora = action.payload.alignedSelection;
+                        state.alignedCorpora = action.payload.alignedSelection;
                     }
                 }
+            },
+        );
+
+        this.addActionHandler(
+            PluginInterfaces.LiveAttributes.Actions.ToggleDocumentListWidget,
+            (state, action) => {
+                state.documentListWidgetVisible = !state.documentListWidgetVisible;
+            }
+        );
+
+        this.addActionHandler(
+            PluginInterfaces.LiveAttributes.Actions.SelectDownloadStructAttr,
+            (state, action) => {
+                const srch = List.find(x => x.n === action.payload.name, state.structAttrs);
+                if (srch) {
+                    srch.selected = action.payload.checked;
+                }
+            }
+        );
+
+        this.addActionHandler(
+            PluginInterfaces.LiveAttributes.Actions.DownloadNumMatchingDocuments,
+            (state, action) => {
+                state.docSaveIsBusy = true;
+            },
+            (state, action, dispatch) => {
+                this.pluginApi.ajax$<{num_documents:number}>(
+                    HTTP.Method.POST,
+                    this.pluginApi.createActionUrl(
+                        '/num_matching_documents',
+                        {corpname: state.firstCorpus}
+                    ),
+                    {...this.selectionStepsToAttrSel(state)},
+                    {contentType: 'application/json'}
+
+                ).subscribe({
+                    next: data => {
+                        dispatch(
+                            PluginInterfaces.LiveAttributes.Actions.DownloadNumMatchingDocumentsDone,
+                            {
+                                value: data.num_documents
+                            }
+                        );
+                    },
+                    error: error => {
+                        this.pluginApi.showMessage('error', error);
+                    }
+                })
+            }
+        );
+
+        this.addActionHandler(
+            PluginInterfaces.LiveAttributes.Actions.DownloadNumMatchingDocumentsDone,
+            (state, action) => {
+                state.docSaveIsBusy = false;
+                state.documentListTotalSize = action.payload.value;
+            },
+            (state, action, dispatch) => {
+                if (action.error) {
+                    this.pluginApi.showMessage('error', action.error);
+                }
+            }
+        );
+
+        this.addActionHandler(
+            PluginInterfaces.LiveAttributes.Actions.SetDocumentListDataFormat,
+            (state, action) => {
+                state.documentListSaveFormat = action.payload.value;
+            }
+        );
+
+        this.addActionHandler(
+            PluginInterfaces.LiveAttributes.Actions.DownloadDocumentList,
+            (state, action) => {
+                state.docSaveIsBusy = true;
+            },
+            (state, action, dispatch) => {
+                const args = pipe(
+                    state.selectionSteps,
+                    List.foldl(
+                        (acc, v) => {
+                            if (isAlignedSelectionStep(v)) {
+                                acc.laligned = v.attributes;
+                                return acc;
+
+                            } else {
+                                acc.lattrs = Dict.mergeDict((o, n) => n, v.values, acc.lattrs);
+                                return acc;
+                            }
+                        },
+                        {
+                            corpname: state.firstCorpus,
+                            laligned: [],
+                            lattrs: {}
+                        }
+                    )
+                );
+                this.pluginApi.bgDownload({
+                    format: state.documentListSaveFormat,
+                    datasetType: DownloadType.DOCUMENT_LIST,
+                    url: this.pluginApi.createActionUrl(
+                        'save_document_list',
+                        {
+                            lattr: pipe(
+                                state.structAttrs,
+                                List.filter(x => x.selected),
+                                List.map(x => x.n)
+                            ),
+                            save_format: state.documentListSaveFormat
+                        }
+                    ),
+                    contentType: 'application/json',
+                    args
+
+                }).subscribe(() => {
+                    dispatch(
+                        PluginInterfaces.LiveAttributes.Actions.DownloadDocumentListDone
+                    )
+                })
+            }
+        );
+
+        this.addActionHandler(
+            PluginInterfaces.LiveAttributes.Actions.DownloadDocumentListDone,
+            (state, action) => {
+                state.docSaveIsBusy = false;
+                state.documentListWidgetVisible = false;
             }
         );
     }
 
     getRegistrationId():string {
         return 'ucnk-live-attributes-plugin';
+    }
+
+    private selectionStepsToAttrSel(state:LiveAttrsModelState):{
+        corpname:string;
+        laligned:Array<string>;
+        lattrs:{[k:string]:Array<string>};
+    } {
+        return pipe(
+            state.selectionSteps,
+            List.foldl<
+                TTSelectionStep|AlignedLangSelectionStep,
+                {
+                    corpname:string,
+                    laligned:Array<string>,
+                    lattrs: {[k:string]:Array<string>}
+                }
+            >(
+                (acc, v) => {
+                    if (isAlignedSelectionStep(v)) {
+                        acc.laligned = v.attributes;
+                        return acc;
+
+                    } else {
+                        acc.lattrs = Dict.mergeDict(
+                            (o, n) => n,
+                            Dict.map(
+                                (v, k) => {
+                                    if (v.type === 'encoded') {
+                                        return [v.decodedValue];
+                                    }
+                                    return v.selections;
+                                },
+                                v.values
+                            ),
+                            acc.lattrs,
+                        );
+                        return acc;
+                    }
+                },
+                {
+                    corpname: state.firstCorpus,
+                    laligned: [],
+                    lattrs: {}
+                }
+            )
+        );
     }
 
     private reloadSizes(state:LiveAttrsModelState, dispatch:SEDispatcher):void {
@@ -503,7 +692,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                     HTTP.Method.POST,
                     this.pluginApi.createActionUrl('filter_attributes'),
                     {
-                        corpname: this.pluginApi.getCorpusIdent().id||state.firstCorpus,
+                        corpname: state.firstCorpus,
                         attrs: JSON.stringify(state.subcorpDefinition || {}),
                         aligned: JSON.stringify(pipe(
                             state.alignedCorpora,
@@ -523,15 +712,15 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                         total: data.poscount
                     }
                 );
-                this.updateSummary(data.attr_values, dispatch);
-                if (state.subcorpDefinition) {
+                this.updateSummary(state, data.attr_values, dispatch);
+                if (state.subcorpDefinition || (state.alignedCorpora && !state.manualAlignCorporaMode)) {
                     dispatch(
                         TTActions.FilterWholeSelection,
                         {
                             poscount: data.poscount,
                             filterData: this.importFilter(data.attr_values),
                             selectedTypes: state.subcorpDefinition,
-                            bibAttrValsAreListed: Array.isArray(data.attr_values[state.bibliographyAttribute]),
+                            bibAttrValsAreListed: Array.isArray(data.attr_values[state.bibIdAttr]),
                             isSubcorpDefinitionFilter: true,
                         }
                     );
@@ -547,22 +736,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
         });
     }
 
-    private updateAlignedItem(
-        state:LiveAttrsModelState,
-        corpname:string,
-        upd:(orig:TextTypes.AlignedLanguageItem)=>TextTypes.AlignedLanguageItem
-    ):boolean {
-        const srchIdx = state.alignedCorpora.findIndex(v => v.value === corpname);
-        if (srchIdx > -1) {
-            const item = state.alignedCorpora[srchIdx];
-            state.alignedCorpora[srchIdx] = upd(item);
-            return true;
-        }
-        return false;
-    }
-
     private attachBibData(state:LiveAttrsModelState, filterData:SelectionFilterMap) {
-        const newBibData = filterData[state.bibliographyAttribute];
+        const newBibData = filterData[state.bibIdAttr];
         // set the data iff server data are full-fledget (i.e. including unique 'ident')
         if (newBibData.length > 0 && !!newBibData[0].ident) {
             state.bibliographyIds = pipe(
@@ -576,7 +751,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
 
     reset(state:LiveAttrsModelState):void {
         state.selectionSteps = [];
-        if (this.controlsAlignedCorpora) {
+        if (state.manualAlignCorporaMode) {
             state.alignedCorpora = state.initialAlignedCorpora;
         }
         state.bibliographyIds = [];
@@ -669,27 +844,28 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
     }
 
     hasSelectedLanguages(state:LiveAttrsModelState):boolean {
-        return state.alignedCorpora.find((item)=>item.selected) !== undefined;
-    }
-
-    hasLockedAlignedLanguages(state:LiveAttrsModelState):boolean {
-        return this.hasSelectedLanguages(state) && !List.empty(state.selectionSteps);
+        return List.some(item => item.selected && !item.locked, state.alignedCorpora);
     }
 
     private setAttrSummary(attrName:string, value:TextTypes.AttrSummary, dispatch:SEDispatcher):void {
-        dispatch<typeof TTActions.SetAttrSummary>({
-            name: TTActions.SetAttrSummary.name,
-            payload: {
-                attrName: attrName,
-                value: value
+        dispatch(
+            TTActions.SetAttrSummary,
+            {
+                attrName,
+                value
             }
-        });
+        );
     }
 
-    private updateSummary(data:ServerRefineResponse['attr_values'], dispatch:SEDispatcher) {
+    private updateSummary(
+        state:LiveAttrsModelState,
+        data:ServerRefineResponse['attr_values'],
+        dispatch:SEDispatcher
+    ) {
         Dict.forEach(
             (item, k) => {
-                if (k.indexOf('.') > 0) { // is the key an attribute? (there are other values there too)
+                // is the key an attribute? (there are other values there too)
+                if (k.indexOf('.') > 0 && k !== state.bibIdAttr) {
                     if (Array.isArray(item) || !item.length) {
                         this.setAttrSummary(k, null, dispatch);
 
@@ -729,12 +905,12 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
         );
     }
 
-    private loadBibInfo(bibId:string):Observable<ServerBibInfoResponse> {
+    private loadBibInfo(state:LiveAttrsModelState, bibId:string):Observable<ServerBibInfoResponse> {
         return this.pluginApi.ajax$<ServerBibInfoResponse>(
             HTTP.Method.GET,
             this.pluginApi.createActionUrl('corpora/bibliography'),
             {
-                corpname: this.pluginApi.getCorpusIdent().id,
+                corpname: state.firstCorpus,
                 id: bibId
             }
         );
@@ -754,7 +930,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             HTTP.Method.POST,
             this.pluginApi.createActionUrl('filter_attributes'),
             {
-                corpname: this.pluginApi.getCorpusIdent().id||state.firstCorpus,
+                corpname: state.firstCorpus,
                 attrs: JSON.stringify(selections),
                 aligned: JSON.stringify(aligned)
             }
@@ -767,7 +943,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                             fixedAttrVals[k] = resp.attr_values[k];
                         }
                     });
-                    this.updateSummary(resp.attr_values, dispatch);
+                    this.updateSummary(state, resp.attr_values, dispatch);
                     return tuple(
                         selections,
                         {
@@ -799,7 +975,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             HTTP.Method.POST,
             this.pluginApi.createActionUrl('attr_val_autocomplete'),
             {
-                corpname: this.pluginApi.getCorpusIdent().id,
+                corpname: state.firstCorpus,
                 pattern: pattern,
                 patternAttr: patternAttr,
                 attrs: JSON.stringify(selections),

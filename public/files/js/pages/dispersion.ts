@@ -85,14 +85,14 @@ export class DispersionPage {
             'ConcFormsArgs'
         );
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
-        const attributes = importInitialTTData(ttData, {}, {});
+        const attributes = importInitialTTData(ttData, {});
         const ttModel = new TextTypesModel({
             dispatcher: this.layoutModel.dispatcher,
             pluginApi: this.layoutModel.pluginApi(),
             attributes,
             readonlyMode: true,
-            bibIdAttr: ttData.id_attr,
-            bibLabelAttr: ttData.bib_attr
+            bibIdAttr: ttData.bib_id_attr,
+            bibLabelAttr: ttData.bib_label_attr
         });
         ttModel.applyCheckedItems(queryFormArgs.selected_text_types, {});
         return tuple(ttModel, attributes);
@@ -144,7 +144,8 @@ export class DispersionPage {
             ctminfreq: ctFormInputs.ctminfreq,
             ctminfreq_type: ctFormInputs.ctminfreq_type,
             usesAdHocSubcorpus: TextTypesModel.findHasSelectedItems(ttSelection),
-            selectedTextTypes: TextTypesModel.exportSelections(ttSelection, ttData.id_attr, ttData.bib_attr, false, true)
+            selectedTextTypes: TextTypesModel.exportSelections(
+                ttSelection, ttData.bib_id_attr, ttData.bib_label_attr, false, true)
         };
 
         this.cTFreqFormModel = new Freq2DFormModel(

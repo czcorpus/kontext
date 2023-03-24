@@ -327,8 +327,8 @@ class Args(UserActionArgs):
                             else:
                                 setattr(self, key, self._upgrade_legacy_value(
                                     key, values[-1], in_args))
-                    except ValueError as ex:
-                        raise ValueError('Request attribute \'{}\': {}'.format(key, ex))
+                    except Exception as ex:
+                        raise RuntimeError(f'Failed to map request attribute \'{key}\': {ex}')
         if len(in_args.corpora) > 0:
             self.corpname = in_args.corpora[0]
             self.align = in_args.corpora[1:] if len(in_args.corpora) > 1 else []

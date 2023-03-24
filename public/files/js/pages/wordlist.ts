@@ -62,7 +62,7 @@ export class WordlistPage {
             url,
             contentType: 'multipart/form-data',
             args,
-        });
+        }).subscribe();
     }
 
     private initCorpnameLink(model:WordlistFormModel, corparchWidgetId:string):void {

@@ -19,7 +19,9 @@
  */
 
 import { Action, IModel } from 'kombo';
+import { DataSaveFormat } from '../../app/navigation/save';
 import { IUnregistrable } from '../../models/common/common';
+import { TTInitialData } from '../../models/textTypes/common';
 import { AttrItem } from '../kontext';
 import { ExportedSelection } from '../textTypes';
 import { BasePlugin, IPluginApi } from './common';
@@ -35,6 +37,13 @@ export type CustomAttribute = React.ComponentClass|React.FC;
 export class Actions {
 
     static RefineClicked:Action<{
+        /**
+         * If false, then we do not consider just newSelections
+         * but anything currently selected (even if some values
+         * are locked). This can be e.g. used to restore saved
+         * checkbox selections.
+         */
+        onlyUnlockedSelections:boolean;
     }> = {
         name: 'LIVE_ATTRIBUTES_REFINE_CLICKED'
     };
@@ -82,6 +91,45 @@ export class Actions {
     }> = {
         name: 'LIVE_ATTRIBUTES_ALIGNED_CORP_CHANGED'
     };
+
+    static ToggleDocumentListWidget:Action<{
+    }> = {
+        name: 'LIVE_ATTRIBUTES_TOGGLE_DOCUMENT_LIST_WIDGET'
+    }
+
+    static SelectDownloadStructAttr:Action<{
+        name:string;
+        checked:boolean;
+    }> = {
+        name: 'LIVE_ATTRIBUTES_SELECT_DOWNLOAD_STRUCTATTR'
+    }
+
+    static SetDocumentListDataFormat:Action<{
+        value:DataSaveFormat;
+    }> = {
+        name: 'LIVE_ATTRIBUTES_SET_DOCUMENT_LIST_DATA_FORMAT'
+    }
+
+    static DownloadNumMatchingDocuments:Action<{
+    }> = {
+        name: 'LIVE_ATTRIBUTES_DOWNLOAD_NUM_MATCHING_DOCUMENTS'
+    }
+
+    static DownloadNumMatchingDocumentsDone:Action<{
+        value:number;
+    }> = {
+        name: 'LIVE_ATTRIBUTES_DOWNLOAD_NUM_MATCHING_DOCUMENTS_DONE'
+    }
+
+    static DownloadDocumentList:Action<{
+    }> = {
+        name: 'LIVE_ATTRIBUTES_DOWNLOAD_DOCUMENT_LIST'
+    }
+
+    static DownloadDocumentListDone:Action<{
+    }> = {
+        name: 'LIVE_ATTRIBUTES_DOWNLOAD_DOCUMENT_LIST_DONE'
+    }
 }
 
 export interface Views {
@@ -91,7 +139,7 @@ export interface Views {
 
 export interface IPlugin extends IUnregistrable, BasePlugin {
 
-    getViews(subcMixerView:View, textTypesModel:IModel<{}>):Views;
+    getViews(subcMixerView:View, textTypesModel:IModel<{}>, useAlignedCorpBox:boolean):Views;
 
 }
 
@@ -104,7 +152,18 @@ export interface InitArgs {
      * A structural attribute used to uniquely identify a bibliographic
      * item (i.e. a book). Typically something like "doc.id".
      */
-    bibAttr:string;
+    bibIdAttr:string;
+
+    /**
+     * A structural attribute providing human readable counterpart
+     * to the 'bibIdAttr'. Typically something like "doc.title".
+     */
+    bibLabelAttr:string;
+
+    /**
+     *
+     */
+    textTypesData:TTInitialData;
 
     /**
      * A list of aligned corpora available to be attached to
@@ -135,7 +194,6 @@ export interface Factory {
     (
         pluginApi:IPluginApi,
         isEnabled:boolean,
-        controlsAlignedCorpora:boolean,
         args:InitArgs
     ):IPlugin;
 }
