@@ -467,6 +467,7 @@
         "qhistory__qs_conc": "concordance",
         "qhistory__qs_pquery": "paradigmatic query",
         "qhistory__qs_wlist": "word list",
+        "qhistory__qs_kwords": "keywords",
         "qhistory__remove_from_list": "Remove from the list",
         "qhistory__item_removed": "Removed from the list",
         "qhistory__blank_query": "blank",
@@ -679,6 +680,7 @@
         "task__type_chart_download": "Frequency chart download",
         "task__type_wordlist": "Word list",
         "task__type_document_list_download": "Document list download",
+        "task__type_kwords": "Keywords",
         "task__status_PENDING": "Running",
         "task__status_STARTED": "Running",
         "task__status_RETRY": "Retrying",
@@ -935,6 +937,7 @@
         "dispersion__resolution": "resolution",
         "dispersion__download_chart": "download the chart",
         "dispersion__print_quality": "for printing",
-        "dispersion__max_resolution_is_{value}": "The resolution value must be between 1 and {value}"
+        "dispersion__max_resolution_is_{value}": "The resolution value must be between 1 and {value}",
+        "kwordsRestore__please_wait_msg": "Please wait. Keywords are being prepared."
     }
 }

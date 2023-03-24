@@ -54,6 +54,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 return he.translate('qhistory__qs_pquery');
             case 'wlist':
                 return he.translate('qhistory__qs_wlist');
+            case 'kwords':
+                return he.translate('qhistory__qs_kwords');
         }
     };
 
@@ -86,7 +88,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 </option>
                 {List.map(
                     v => <option key={v} value={v}>{supertypeToHuman(v)}</option>,
-                    ['conc', 'pquery', 'wlist'] as Array<Kontext.QuerySupertype>
+                    ['conc', 'pquery', 'wlist', 'kwords'] as Array<Kontext.QuerySupertype>
                 )}
             </S.SearchKindSelector>
         );
@@ -344,6 +346,25 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         </S.QueryInfoDiv>
     );
 
+    // -------------------- <KWordsQueryInfo /> ------------------------
+
+    const KWordsQueryInfo:React.FC<{
+        itemIdx:number;
+        isEdited:boolean;
+        query_sh:string;
+        query:string;
+    }> = (props) => (
+        <S.QueryInfoDiv onClick={handleAreaClick(props.itemIdx)} title={he.translate('qhistory__open_in_form')}>
+            <S.QueryAndTypeDiv>
+                {
+                    props.query_sh ?
+                    <QS.SyntaxHighlight className="query" dangerouslySetInnerHTML={{__html: props.query_sh}} /> :
+                    <span className="query">{props.query}</span>
+                }
+            </S.QueryAndTypeDiv>
+        </S.QueryInfoDiv>
+    );
+
     // -------------------- <SavedNameInfo /> ------------------------
 
     const SavedNameInfo:React.FC<{
@@ -586,6 +607,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             query_sh={data.query_sh}
                             pfilter={data.pfilter_words}
                             nfilter={data.nfilter_words} />;
+            case 'kwords':
+                return <KWordsQueryInfo
+                            itemIdx={data.idx}
+                            isEdited={toolbarVisible}
+                            query={data.query}
+                            query_sh={data.query_sh} />;
             }
         };
         return (

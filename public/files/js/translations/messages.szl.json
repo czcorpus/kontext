@@ -466,6 +466,7 @@
         "qhistory__qs_conc": "concordance UNTRANSLATED",
         "qhistory__qs_pquery": "paradigmatic query UNTRANSLATED",
         "qhistory__qs_wlist": "word list UNTRANSLATED",
+        "qhistory__qs_kwords": "keywords UNTRANSLATED",
         "qhistory__remove_from_list": "Remove from the list UNTRANSLATED",
         "qhistory__item_removed": "Removed from the list UNTRANSLATED",
         "qhistory__blank_query": "blank UNTRANSLATED",
@@ -678,6 +679,7 @@
         "task__type_chart_download": "Frequency chart download UNTRANSLATED",
         "task__type_wordlist": "Word list UNTRANSLATED",
         "task__type_document_list_download": "Document list download UNTRANSLATED",
+        "task__type_kwords": "Keywords UNTRANSLATED",
         "task__status_PENDING": "Running",
         "task__status_STARTED": "Running",
         "task__status_RETRY": "Prōbowanie zaś",
@@ -933,6 +935,7 @@
         "dispersion__resolution": "resolution UNTRANSLATED",
         "dispersion__download_chart": "download the chart UNTRANSLATED",
         "dispersion__print_quality": "for printing UNTRANSLATED",
-        "dispersion__max_resolution_is_{value}": "The resolution value must be between 1 and {value} UNTRANSLATED"
+        "dispersion__max_resolution_is_{value}": "The resolution value must be between 1 and {value} UNTRANSLATED",
+        "kwordsRestore__please_wait_msg": "Please wait. Keywords are being prepared. UNTRANSLATED"
     }
 }

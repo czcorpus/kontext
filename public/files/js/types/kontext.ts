@@ -74,7 +74,7 @@ export function structsAndAttrsToStructAttrList(structsAndAttrs: StructsAndAttrs
 
 export type ResponseFormat = 'plain'|'json'|'template'|'xml';
 
-export type QuerySupertype = 'conc'|'pquery'|'wlist';
+export type QuerySupertype = 'conc'|'pquery'|'wlist'|'kwords';
 
 export type PqueryExpressionRoles = 'specification'|'subset'|'superset';
 

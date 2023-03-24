@@ -419,16 +419,10 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                         }
                         this.trashTimerSubsc = src.subscribe({
                             next: () => {
-                                dispatch(
-                                    Actions.WidgetCheckTrashedItems,
-                                    {widgetId: this.widgetId},
-                                );
+                                dispatch(Actions.WidgetCheckTrashedItems, {widgetId: this.widgetId});
                             },
                             complete: () => {
-                                dispatch(
-                                    Actions.WidgetCheckTrashedItems,
-                                    {widgetId: this.widgetId},
-                                );
+                                dispatch(Actions.WidgetCheckTrashedItems, {widgetId: this.widgetId});
                             }
                         });
                     }
