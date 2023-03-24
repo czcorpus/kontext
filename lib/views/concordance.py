@@ -743,7 +743,10 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
             subc_aligned = info.aligned
     else:
         subc_aligned = []
-    true_aligned = amodel.args.align if set(amodel.args.align) == set(subc_aligned) else subc_aligned
+    if len(subc_aligned) > 0 and set(amodel.args.align) != set(subc_aligned):
+        true_aligned = subc_aligned
+    else:
+        true_aligned = amodel.args.align
 
     if corpus_info.preflight_subcorpus:
         preflight_conf = dict(
