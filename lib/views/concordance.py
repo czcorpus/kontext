@@ -772,6 +772,7 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
             searchSize=amodel.corp.search_size),
         currentArgs=conc_args,
         concPersistenceOpId=None,
+        ShuffleConcByDefault=amodel.args.shuffle,
         alignedCorpora=true_aligned,
         availableAlignedCorpora=avail_al_corp,
         activePlugins=plg_status['active_plugins'],
