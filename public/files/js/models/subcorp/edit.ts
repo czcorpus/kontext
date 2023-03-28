@@ -201,7 +201,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                                     corpname: state.data.corpname,
                                     subcname: action.payload.newName,
                                     description: state.data.descriptionRaw,
-                                    aligned_corpora: [], // TODO what to do with this?
+                                    aligned_corpora: state.data.aligned,
                                     text_types: readyAction.payload.selections,
                                     form_type: 'tt-sel',
                                     usesubcorp: action.payload.usesubcorp,

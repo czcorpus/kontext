@@ -115,6 +115,10 @@ export class Actions {
         name: 'GENERAL_VIEW_OPTIONS_SUBMIT_DONE'
     };
 
+    static isGeneralSubmitDone(a: Action):a is typeof Actions.GeneralSubmitDone {
+        return a.name === Actions.GeneralSubmitDone.name;
+    }
+
     static LoadDataDone:Action<{
         data:ViewOptions.PageData;
     }> = {
