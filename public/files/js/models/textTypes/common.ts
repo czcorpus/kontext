@@ -298,7 +298,7 @@ export function importInitialTTData(
                     Dict.hasKey(attrItem.name, subcorpStructure) : false;
 
                 if (isRegexpGeneratingWidgetView(attrItem.widget)) {
-                    const sel = nSelectedItems[attrItem.name];
+                    const sel = nSelectedItems[attrItem.name] || {regexp: ''};
                     if (TextTypes.isExportedRegexpSelection(sel)) {
                         return createRegexpAttributeSelection(
                             sel, attrItem, attrInSubc);
