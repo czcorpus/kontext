@@ -933,8 +933,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             this.registerCorpusSwitchAwareModels(
                 () => undefined,
                 this.appBarPlugin
-            )
-
+            );
             pageInitFn();
 
         } catch (err) {

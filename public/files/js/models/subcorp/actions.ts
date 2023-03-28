@@ -34,14 +34,14 @@ export class Actions {
         reverse:boolean;
     }> = {
         name: 'SUBCORP_LIST_SORT_LINES'
-    };
+    }
 
     static ArchiveSubcorpus:Action<{
         corpname:string;
         subcname:string;
     }> = {
         name: 'SUBCORP_LIST_ARCHIVE_SUBCORPUS'
-    };
+    }
 
     static ArchiveSubcorpusDone:Action<{
         archived:Array<{
@@ -51,20 +51,24 @@ export class Actions {
         }>;
     }> = {
         name: 'SUBCORP_LIST_ARCHIVE_SUBCORPUS_DONE'
-    };
+    }
+
+    static isArchiveSubcorpusDone(a:Action):a is typeof Actions.ArchiveSubcorpusDone {
+        return a.name === Actions.ArchiveSubcorpusDone.name;
+    }
 
     static UpdateFilter:Action<{
         filter:SubcListFilter;
         debounced:boolean;
     }> = {
         name: 'SUBCORP_LIST_UPDATE_FILTER'
-    };
+    }
 
     static SetPage:Action<{
         page:string;
     }> = {
         name: 'SUBCORP_LIST_SET_PAGE'
-    };
+    }
 
     static ShowSubcEditWindow:Action<{
         corpusName:string;
@@ -73,7 +77,7 @@ export class Actions {
         bibIdAttr:string;
     }> = {
         name: 'SUBCORP_SHOW_SUBC_EDIT_WINDOW'
-    };
+    }
 
     static LoadSubcorpus:Action<{
         corpname:string;
@@ -97,28 +101,32 @@ export class Actions {
     static HideSubcEditWindow:Action<{
     }> = {
         name: 'SUBCORP_HIDE_SUBC_EDIT_WINDOW'
-    };
+    }
 
     static WipeSubcorpus:Action<{
     }> = {
         name: 'SUBCORP_LIST_WIPE_SUBCORPUS'
-    };
+    }
 
     static WipeSubcorpusDone:Action<{
         numWiped:number;
     }> = {
         name: 'SUBCORP_LIST_WIPE_SUBCORPUS_DONE'
-    };
+    }
+
+    static isWipeSubcorpusDone(a:Action):a is typeof Actions.WipeSubcorpusDone {
+        return a.name === Actions.WipeSubcorpusDone.name;
+    }
 
     static RestoreSubcorpus:Action<{
     }> = {
         name: 'SUBCORP_LIST_RESTORE_SUBCORPUS'
-    };
+    }
 
     static RestoreSubcorpusDone:Action<{
     }> = {
         name: 'SUBCORP_LIST_RESTORE_SUBCORPUS_DONE'
-    };
+    }
 
     static ReuseQuery:Action<{
         selectionType:FormType;
@@ -127,7 +135,7 @@ export class Actions {
         asDraft?:boolean;
     }> = {
         name: 'SUBCORP_LIST_REUSE_QUERY'
-    };
+    }
 
     static isReuseQuery(a:Action):a is typeof Actions.ReuseQuery {
         return a.name === Actions.ReuseQuery.name;
@@ -145,23 +153,27 @@ export class Actions {
     static ReuseQueryDone:Action<{
     }> = {
         name: 'SUBCORP_LIST_REUSE_QUERY_DONE'
-    };
+    }
+
+    static isReuseQueryDone(a:Action):a is typeof Actions.ReuseQueryDone {
+        return a.name === Actions.ReuseQueryDone.name;
+    }
 
     static UpdateDraft:Action<{
     }> = {
         name: 'SUBCORP_LIST_UPDATE_DRAFT'
-    };
+    }
 
     static UpdateDraftDone:Action<{
     }> = {
         name: 'SUBCORP_LIST_UPDATE_DRAFT_DONE'
-    };
+    }
 
     static UpdateSubcName:Action<{
         value:string;
     }> = {
         name: 'SUBCORP_LIST_UPDATE_NAME'
-    };
+    }
 
     static UpdatePublicDescription:Action<{
         value:string;
@@ -177,7 +189,7 @@ export class Actions {
     static SubmitNameAndPublicDescription:Action<{
     }> = {
         name: 'SUBCORP_LIST_NAME_AND_PUBLIC_DESCRIPTION_SUBMIT'
-    };
+    }
 
     static SubmitNameAndPublicDescriptionDone:Action<{
         name:string;
@@ -193,39 +205,43 @@ export class Actions {
         saved:boolean;
     }> = {
         name: 'SUBCORP_LIST_NAME_AND_PUBLIC_DESCRIPTION_SUBMIT_DONE'
-    };
+    }
+
+    static isSubmitNameAndPublicDescriptionDone(a:Action):a is typeof Actions.SubmitNameAndPublicDescriptionDone {
+        return a.name === Actions.SubmitNameAndPublicDescriptionDone.name;
+    }
 
     static FormSetSubcName:Action<{
         value:string;
     }> = {
         name: 'SUBCORP_FORM_SET_SUBCNAME'
-    };
+    }
 
     static FormSetInputMode:Action<{
         value:FormType;
     }> = {
         name: 'SUBCORP_FORM_SET_INPUT_MODE'
-    };
+    }
 
     static FormSetDescription:Action<{
         value:string;
     }> = {
         name: 'SUBCORP_FORM_SET_DESCRIPTION'
-    };
+    }
 
     static FormSubmit:Action<{
         selectionType:FormType;
         asDraft:boolean;
     }> = {
         name: 'SUBCORP_FORM_SUBMIT'
-    };
+    }
 
     static FormWithinSubmitArgsReady:Action<{
         data:Array<ServerWithinSelection>;
         firstValidationError:string|undefined;
     }> = {
         name: 'SUBCORP_FORM_WITHIN_SUBMIT_ARGS_READY'
-    };
+    }
 
     static isFormWithinSubmitArgsReady(a:Action):a is typeof Actions.FormWithinSubmitArgsReady {
         return a.name === Actions.FormWithinSubmitArgsReady.name;
@@ -235,32 +251,32 @@ export class Actions {
         alignedCorpora:Array<TextTypes.AlignedLanguageItem>;
     }> = {
         name: 'SUBCORP_FORM_SET_ALIGNED_CORPORA'
-    };
+    }
 
     static SetSearchQuery:Action<{
         value:string;
     }> = {
         name: 'PUBSUBC_SET_SEARCH_QUERY'
-    };
+    }
 
     static SubmitSearchQuery:Action<{
         query:string;
     }> = {
         name: 'PUBSUBC_SUBMIT_SEARCH_QUERY'
-    };
+    }
 
     static DataLoadDone:Action<{
         data:LoadDataResponse;
     }> = {
         name: 'PUBSUBC_DATA_LOAD_DONE'
-    };
+    }
 
     static UseInQuery:Action<{
         corpname:string;
         id:string;
     }> = {
         name: 'PUBSUBC_USE_IN_QUERY'
-    };
+    }
 
     static FormWithinLineAdded:Action<{
         structureName:string;
@@ -268,21 +284,21 @@ export class Actions {
         attributeCql:string;
     }> = {
         name: 'SUBCORP_FORM_WITHIN_LINE_ADDED'
-    };
+    }
 
     static FormWithinLineSetType:Action<{
         rowIdx:number;
         value:boolean;
     }> = {
         name: 'SUBCORP_FORM_WITHIN_LINE_SET_WITHIN_TYPE'
-    };
+    }
 
     static FormWithinLineSetStruct:Action<{
         rowIdx:number;
         value:string;
     }> = {
         name: 'SUBCORP_FORM_WITHIN_LINE_SET_STRUCT'
-    };
+    }
 
     static FormWithinLineSetCQL:Action<{
         rowIdx:number;
@@ -295,7 +311,7 @@ export class Actions {
         rowIdx:number;
     }> = {
         name: 'SUBCORP_FORM_WITHIN_LINE_REMOVED'
-    };
+    }
 
     static FormRawCQLSetValue:Action<{
         value:string;
@@ -306,49 +322,49 @@ export class Actions {
     static FormShowRawWithinHint:Action<{
     }> = {
         name: 'SUBCORP_FORM_SHOW_RAW_WITHIN_HINT'
-    };
+    }
 
     static FormHideRawWithinHint:Action<{
     }> = {
         name: 'SUBCORP_FORM_HIDE_RAW_WITHIN_HINT'
-    };
+    }
 
     static QuickSubcorpSubmit:Action<{
     }> = {
         name: 'QUICK_SUBCORP_SUBMIT'
-    };
+    }
 
     static QuickSubcorpSubmitDone:Action<{
     }> = {
         name: 'QUICK_SUBCORP_SUBMIT_DONE'
-    };
+    }
 
     static QuickSubcorpChangeName:Action<{
         value:string;
     }> = {
         name: 'QUICK_SUBCORP_CHANGE_NAME'
-    };
+    }
 
     static ToggleSelectLine:Action<{
         selectId:string;
     }> = {
         name: 'SUBCORP_LIST_TOGGLE_SELECT_LINE'
-    };
+    }
 
     static ArchiveSelectedLines:Action<{
     }> = {
         name: 'SUBCORP_LIST_ARCHIVE_SELECTED_LINES'
-    };
+    }
 
     static DeleteSelectedLines:Action<{
     }> = {
         name: 'SUBCORP_LIST_DELETE_SELECTED_LINES'
-    };
+    }
 
     static ClearSelectedLines:Action<{
     }> = {
         name: 'SUBCORP_LIST_CLEAR_SELECTED_LINES'
-    };
+    }
 
     static AttachTaskToSubcorpus:Action<{
         subcorpusId:string;
