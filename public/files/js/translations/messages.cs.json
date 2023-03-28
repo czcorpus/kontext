@@ -612,6 +612,7 @@
         "subcform__at_least_one_type_must_be_selected": "Musí být vybrán alespoň jeden typ textu",
         "subcform__cql_cannot_be_empty": "CQL dotaz nesmí být prázdný",
         "subcform__public_description": "Veřejný popis",
+        "subcform__public_description_help": "Vyplňte, má-li být subkorpus dohledatelný na stránce \"Veřejné subkorpusy\"",
         "subcform__public_desc_preview_switch": "Zobrazit náhled",
         "subcform__unsaved_changes": "Změny nejsou uloženy",
         "subcform__subcorpus_name": "Název subkorpusu",
