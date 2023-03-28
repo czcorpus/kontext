@@ -147,7 +147,8 @@ class MySQLSubcArchive(AbstractSubcArchive):
                         f'UPDATE {self._bconf.subccorp_table} '
                         f'SET name = %s, {column} = %s, public_description = %s, size = %s, is_draft = 0, aligned = %s '
                         'WHERE id = %s AND author_id = %s',
-                        (data.subcname, value, public_description, size, ident, author['id'], json.dumps(aligned) if aligned else ''))
+                        (data.subcname, value, public_description, size, json.dumps(aligned) if aligned else '',
+                         ident, author['id']))
                 else:
                     raise ex
 

@@ -62,7 +62,8 @@ export class Actions {
     /**
      * RefineCancelled is used in case we want to
      * perform an "empty" refine action (e.g. nothing really changed
-     * from the last refine but the whole machinery already running).
+     * from the last refine but we want other models to update according
+     * to the current refine just like if it actually happened).
      * In such case we just pass empty data and dispatch this action.
      */
      static RefineCancelled:Action<{

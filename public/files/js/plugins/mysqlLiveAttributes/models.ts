@@ -183,7 +183,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                                 {
                                     currentSubcorpSize: List.empty(state.selectionSteps) ?
                                         undefined :
-                                        List.head(state.selectionSteps).numPosInfo
+                                        List.last(state.selectionSteps).numPosInfo
                                 }
                             );
                         }

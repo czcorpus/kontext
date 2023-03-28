@@ -342,11 +342,11 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                 Actions.SubmitNameAndPublicDescriptionDone,
             ],
             action => {
-                if (action.name === GlobalOptionsActions.GeneralSubmitDone.name) {
-                    if (action.payload['subcpagesize'] === this.state.filter.pagesize) return;
+                if (GlobalOptionsActions.isGeneralSubmitDone(action)) {
+                    if (action.payload.subcpagesize === this.state.filter.pagesize) return;
                     this.changeState(state => {
                         state.filter.page = '1';
-                        state.filter.pagesize = action.payload['subcpagesize'];
+                        state.filter.pagesize = action.payload.subcpagesize;
                     });
 
                 } else if (
@@ -362,7 +362,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                         this.layoutModel.showMessage('error', action.error);
 
                     } else {
-                        if (action.name === Actions.WipeSubcorpusDone.name) {
+                        if (Actions.isWipeSubcorpusDone(action)) {
                             this.layoutModel.showMessage(
                                 'info',
                                 action.payload['numWiped'] > 1 ?
@@ -370,10 +370,10 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                                     this.layoutModel.translate('subclist__subc_deleted')
                             );
 
-                        } else if (action.name === Actions.ArchiveSubcorpusDone.name) {
+                        } else if (Actions.isArchiveSubcorpusDone(action)) {
                             this.layoutModel.showMessage(
                                 'info',
-                                List.size(action.payload['archived']) > 1 ?
+                                List.size(action.payload.archived) > 1 ?
                                     this.layoutModel.translate('subclist__multi_subc_archived') :
                                     this.layoutModel.translate('subclist__subc_archived')
                             );
@@ -386,10 +386,17 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                         }
                     }
 
-                } else if (action.name === Actions.SubmitNameAndPublicDescriptionDone.name) {
+                } else if (Actions.isSubmitNameAndPublicDescriptionDone(action)) {
                     this.changeState(state => {
-                        state.editWindowSubcorpus.subcorpusName = action.payload['name'];
+                        state.editWindowSubcorpus.subcorpusName = action.payload.name;
                     });
+
+                } else if (Actions.isReuseQueryDone(action)) {
+                    this.changeState(
+                        state => {
+                            state.editWindowSubcorpus = null;
+                        }
+                    );
                 }
 
                 this.reloadItems().subscribe({
@@ -537,15 +544,16 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         state:SubcorpListModelState,
         task:Kontext.AsyncTaskInfo
     ):UnfinishedSubcorp|undefined {
+        const unfinished = SubcorpListModel.importProcessed([task]);
         const srchIdx = List.findIndex(x => x.taskId === task.ident, state.processedItems);
         if (srchIdx > -1) {
-            const unfinished = SubcorpListModel.importProcessed([task]);
             if (List.size(unfinished) > 0) {
                 state.processedItems[srchIdx] = List.head(unfinished);
             }
             return state.processedItems[srchIdx];
         }
-        return undefined;
+        state.processedItems = List.push(List.head(unfinished), state.processedItems);
+        return List.last(state.processedItems);
     }
 
     private static importProcessed(

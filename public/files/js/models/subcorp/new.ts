@@ -84,17 +84,20 @@ export interface SubcorpFormModelState {
 
 export class SubcorpFormModel extends BaseTTSubcorpFormModel<SubcorpFormModelState> implements IUnregistrable {
 
-    constructor(
+    constructor({
+        dispatcher, pageModel, corpname, alignedCorpora, inputMode, initialSubc
+    }:{
         dispatcher:IFullActionControl,
         pageModel:PageModel,
         corpname:string,
+        alignedCorpora:Array<TextTypes.AlignedLanguageItem>,
         inputMode:FormType,
         initialSubc:{
             subcname:string;
             description:string;
             subcorpusId:string;
         }|undefined
-    ) {
+    }) {
         super(
             dispatcher,
             pageModel,
@@ -113,7 +116,7 @@ export class SubcorpFormModel extends BaseTTSubcorpFormModel<SubcorpFormModelSta
                 },
                 initialSubcorpusId: initialSubc ? initialSubc.subcorpusId : undefined,
                 isBusy: false,
-                alignedCorpora: [],
+                alignedCorpora,
                 otherValidationError: null
             }
         );
@@ -218,7 +221,7 @@ export class SubcorpFormModel extends BaseTTSubcorpFormModel<SubcorpFormModelSta
         );
 
         this.addActionHandler(
-            GlobalActions.SwitchCorpus.name,
+            GlobalActions.SwitchCorpus,
             action => {
                 this.dispatchSideEffect<typeof GlobalActions.SwitchCorpusReady>({
                     name: GlobalActions.SwitchCorpusReady.name,
@@ -230,8 +233,6 @@ export class SubcorpFormModel extends BaseTTSubcorpFormModel<SubcorpFormModelSta
             }
         );
     }
-
-    unregister():void {}
 
     getRegistrationId():string {
         return 'subcorp-form-model';

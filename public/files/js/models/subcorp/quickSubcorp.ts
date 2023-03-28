@@ -77,7 +77,7 @@ export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelS
                     });
                 }
             }
-        )
+        );
 
         this.addActionHandler(
             TTActions.FilterWholeSelection,
