@@ -612,6 +612,7 @@
         "subcform__at_least_one_type_must_be_selected": "At least one text type must be selected",
         "subcform__cql_cannot_be_empty": "CQL query cannot be empty",
         "subcform__public_description": "Ôpis publiczny",
+        "subcform__public_description_help": "Fill in to make the subcorpus discoverable on the \"Public Subcorpora\" page UNTRANSLATED",
         "subcform__public_desc_preview_switch": "Show preview UNTRANSLATED",
         "subcform__unsaved_changes": "There are unsaved changes UNTRANSLATED",
         "subcform__subcorpus_name": "Subcorpus name UNTRANSLATED",
