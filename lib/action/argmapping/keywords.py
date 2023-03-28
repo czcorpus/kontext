@@ -13,7 +13,7 @@
 # GNU General Public License for more details.
 
 from dataclasses import asdict, dataclass
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 
 @dataclass
@@ -30,6 +30,7 @@ class KeywordsFormArgs:
     wlnums: str = 'frq'
     wltype: str = 'simple'
     include_nonwords: str = '0'
+    score_type: Optional[str] = None
 
     def update_by_user_query(self, data):
         self.corpname = data['corpname']
@@ -42,6 +43,7 @@ class KeywordsFormArgs:
         self.wlnums = data['wlnums']
         self.wltype = data['wltype']
         self.include_nonwords = data['include_nonwords']
+        self.score_type = data['score_type']
 
     def to_dict(self) -> Dict[str, Any]:
         return {k: v for k, v in asdict(self).items() if not k.startswith('_')}

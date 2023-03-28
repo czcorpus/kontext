@@ -69,6 +69,13 @@ export function init({
             );
         }
 
+        const handleScoreTypeChange = (evt:React.ChangeEvent<HTMLSelectElement>) => {
+            dispatcher.dispatch(
+                Actions.SetScoreType,
+                {value: evt.target.value}
+            );
+        }
+
         const handleSubmit = (evt) => {
             dispatcher.dispatch(Actions.SubmitQuery);
         }
@@ -84,6 +91,11 @@ export function init({
                     <input onChange={handleAttrChange} type='text' value={props.attr}/>
                     <label>Pattern</label>
                     <input onChange={handlePatternChange} type='text' value={props.pattern}/>
+                    <label>Score type</label>
+                    <select value={props.scoreType} onChange={handleScoreTypeChange}>
+                        <option value='logL'>log-likelihood</option>
+                        <option value='chi2'>chi square</option>
+                    </select>
                 </S.MainFieldset>
                 <div className="buttons">
                     {

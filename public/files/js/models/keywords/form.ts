@@ -30,6 +30,7 @@ import { KeywordsSubmitArgs, KeywordsSubmitResponse } from './common';
 import { WlnumsTypes } from '../wordlist/common';
 
 
+export type ScoreType = null|'logL'|'chi2';
 
 export interface KeywordsFormState {
     isBusy:boolean;
@@ -37,6 +38,7 @@ export interface KeywordsFormState {
     refSubcorp:string;
     attr:string;
     pattern:string;
+    scoreType:ScoreType;
 }
 
 export interface KeywordsFormCorpSwitchPreserve {
@@ -51,6 +53,7 @@ export interface KeywordsFormModelArgs {
         ref_usesubcorp:string;
         wlattr:string;
         wlpat:string;
+        scoreType:ScoreType;
     };
 }
 
@@ -77,6 +80,7 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
                 refSubcorp: initialArgs ? initialArgs.ref_usesubcorp : layoutModel.getNestedConf('refCorpusIdent', 'usesubcorp'),
                 attr: initialArgs ? initialArgs.wlattr : 'lemma',
                 pattern: initialArgs ? initialArgs.wlpat : '.*',
+                scoreType: initialArgs ? initialArgs.scoreType : 'logL',
             }
         );
         this.layoutModel = layoutModel;
@@ -119,6 +123,13 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
             Actions.SetPattern,
             (state, action) => {
                 state.pattern = action.payload.value;
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SetScoreType,
+            (state, action) => {
+                state.scoreType = action.payload.value;
             }
         );
 
@@ -179,6 +190,7 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
             wlnums: WlnumsTypes.FRQ,
             wlpat: state.pattern,
             wltype: 'simple',
+            score_type: state.scoreType,
         }
     }
 

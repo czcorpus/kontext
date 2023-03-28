@@ -20,6 +20,7 @@
  */
 
 import { Action } from 'kombo';
+import { ScoreType } from './form';
 
 
 export class Actions {
@@ -41,5 +42,11 @@ export class Actions {
         value: string
     }> = {
         name: 'KEYWORDS_SET_PATTERN'
+    };
+
+    static SetScoreType:Action<{
+        value: ScoreType
+    }> = {
+        name: 'KEYWORDS_SET_SCORE_TYPE'
     };
 }
