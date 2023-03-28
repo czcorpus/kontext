@@ -624,6 +624,7 @@
         "subcform__at_least_one_type_must_be_selected": "Izbrana mora biti vsaj ena vrsta besedil",
         "subcform__cql_cannot_be_empty": "Poizvedba CQL ne sme ostati prazna",
         "subcform__public_description": "Javni opis",
+        "subcform__public_description_help": "Fill in to make the subcorpus discoverable on the \"Public Subcorpora\" page UNTRANSLATED",
         "subcform__public_desc_preview_switch": "Show preview UNTRANSLATED",
         "subcform__unsaved_changes": "There are unsaved changes UNTRANSLATED",
         "subcform__subcorpus_name": "Subcorpus name UNTRANSLATED",
