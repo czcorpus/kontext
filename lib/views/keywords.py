@@ -107,7 +107,7 @@ async def create_result(amodel: KeywordsActionModel, form_args: KeywordsFormArgs
     # TODO get rid of private variable
     amodel.set_curr_kwform_args(form_args)
 
-    def on_query_store(query_ids, history_ts, result):
+    async def on_query_store(query_ids, history_ts, result):
         result['kw_query_id'] = query_ids[0]
         if history_ts:
             amodel.store_last_search('kwords', query_ids[0])
