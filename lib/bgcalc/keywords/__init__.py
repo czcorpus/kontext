@@ -114,10 +114,10 @@ async def keywords(corp: KCorpus, ref_corp: KCorpus, args: KeywordsFormArgs, max
         s = s.replace("_", " ")  # XXX remove in data
         if s.endswith("-x"):  # XXX remove in data
             s = s[:-2]
-        freqs = kw.get_freqs(2 * len([]) + 4 + 2)  # 2 additional slots
+        freqs = kw.get_freqs(2 * len([]) + 4 + 1)  # 1 additional slot for size effect
         item.update({'item': s,
                      'score': round(kw.score, 3),
-                     'relative_risk': round(float(freqs[5]), 5),
+                     'size_effect': round(float(freqs[4]), 5),
                      'frq1': int(freqs[0]),
                      'frq2': int(freqs[1]),
                      'rel_frq1': round(float(freqs[2]), 5),
