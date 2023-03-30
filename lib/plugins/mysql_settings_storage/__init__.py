@@ -70,8 +70,6 @@ class SettingsStorage(AbstractSettingsStorage):
                 corp_set[tmp[0]][tmp[1]] = v
             else:
                 gen[k] = v
-        logging.getLogger(__name__).warning('corp_set: {}'.format(corp_set))
-        logging.getLogger(__name__).warning('gen: {}'.format(gen))
         for corp, data in corp_set.items():
             await self.save(user_id, corp, data)
 
