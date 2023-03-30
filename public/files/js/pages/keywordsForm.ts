@@ -61,6 +61,7 @@ export class KeywordsFormPage {
                     payload: {
                         corpora,
                         subcorpus: subcorpId,
+                        widgetId,
                     }
                 });
             }

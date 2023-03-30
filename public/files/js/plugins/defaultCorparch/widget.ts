@@ -122,7 +122,8 @@ export interface CorplistWidgetModelState {
     alignedCorpora:Array<string>;
     dataFav:Array<FavListItem>;
     dataFeat:Array<common.CorplistItem>;
-    isBusy:boolean;
+    isBusyFav:boolean;
+    isBusySwitching:boolean;
     currFavitemId:string;
     anonymousUser:boolean;
     isWaitingForSearchResults:boolean;
@@ -198,7 +199,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             anonymousUser,
             dataFav: dataFavImp,
             dataFeat: [...dataFeat],
-            isBusy: false,
+            isBusyFav: false,
+            isBusySwitching: false,
             currFavitemId: findCurrFavitemId(
                 dataFavImp,
                 {
@@ -271,7 +273,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             Actions.WidgetFavItemClick,
             action => action.payload.widgetId === this.widgetId,
             (state, action) => {
-                state.isBusy = true;
+                state.isBusyFav = true;
             },
             (state, action, dispatch) => {
                 dispatch(Actions.WidgetFavItemClickDone, {widgetId: this.widgetId});
@@ -283,7 +285,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             Actions.WidgetFavItemClickDone,
             action => action.payload.widgetId === this.widgetId,
             (state, action) => {
-                state.isBusy = false;
+                state.isBusyFav = false;
                 state.isVisible = false;
             }
         );
@@ -292,7 +294,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             Actions.WidgetFeatItemClick,
             action => action.payload.widgetId === this.widgetId,
             (state, action) => {
-                state.isBusy = true;
+                state.isBusyFav = true;
             },
             (state, action, dispatch) => {
                 dispatch(Actions.WidgetFeatItemClickDone, {widgetId: this.widgetId});
@@ -304,7 +306,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             Actions.WidgetFeatItemClickDone,
             action => action.payload.widgetId === this.widgetId,
             (state, action) => {
-                state.isBusy = false;
+                state.isBusyFav = false;
                 state.isVisible = false;
             }
         );
@@ -313,7 +315,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             Actions.WidgetSearchResultItemClicked,
             action => action.payload.widgetId === this.widgetId,
             (state, action) => {
-                state.isBusy = true;
+                state.isBusyFav = true;
             },
             (state, action, dispatch) => {
                 dispatch(Actions.WidgetSearchResultItemClickedDone, {widgetId: this.widgetId});
@@ -326,7 +328,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.focusedRowIdx = -1;
-                state.isBusy = false;
+                state.isBusyFav = false;
                 state.isVisible = false;
             }
         );
@@ -335,7 +337,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             Actions.WidgetFavItemAdd,
             action => action.payload.widgetId === this.widgetId,
             (state, action) => {
-                state.isBusy = true;
+                state.isBusyFav = true;
                 const idx = List.findIndex(x => x.id === action.payload.itemId, state.dataFav);
                 if (idx > -1) {
                     state.dataFav[idx] = {...state.dataFav[idx], trashTTL: null};
@@ -379,7 +381,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             Actions.WidgetFavItemAddDone,
             action => action.payload.widgetId === this.widgetId,
             (state, action) => {
-                state.isBusy = false;
+                state.isBusyFav = false;
                 if (!action.error) {
                     const idx = List.findIndex(
                         v => v.id === action.payload.trashedItemId,
@@ -455,7 +457,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             Actions.WidgetStarIconClick,
             action => action.payload.widgetId === this.widgetId,
             (state, action) => {
-                state.isBusy = true;
+                state.isBusyFav = true;
             },
             (state, action, dispatch) => {
                 (action.payload.status ?
@@ -486,7 +488,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             Actions.WidgetStarIconClickDone,
             action => action.payload.widgetId === this.widgetId,
             (state, action) => {
-                state.isBusy = false;
+                state.isBusyFav = false;
                 if (!action.error) {
                     state.dataFav = importServerFavitems(action.payload.data);
                     state.currFavitemId = findCurrFavitemId(
@@ -501,7 +503,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             Actions.KeywordResetClicked,
             action => action.payload.widgetId === this.widgetId,
             (state, action) => {
-                state.isBusy = true;
+                state.isBusyFav = true;
                 this.resetKeywordSelectStatus(state);
                 state.currSearchResult = []
                 state.focusedRowIdx = -1;
@@ -536,7 +538,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             Actions.KeywordClicked,
             action => action.payload.widgetId === this.widgetId,
             (state, action) => {
-                state.isBusy = true;
+                state.isBusyFav = true;
                 state.focusedRowIdx = -1;
                 this.setKeywordSelectedStatus(
                     state,
@@ -551,7 +553,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             Actions.WidgetSearchDone,
             action => action.payload.widgetId === this.widgetId,
             (state, action) => {
-                state.isBusy = false;
+                state.isBusyFav = false;
                 state.focusedRowIdx = -1;
                 if (!action.error && action.payload.data !== null) {
                     state.currSearchResult = action.payload.data;
@@ -585,7 +587,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             Actions.WidgetFocusedItemSelect,
             action => action.payload.widgetId === this.widgetId,
             (state, action) => {
-                state.isBusy = true;
+                state.isBusyFav = true;
             },
             (state, action, dispatch) => {
                 if (state.focusedRowIdx > -1) {
@@ -601,7 +603,11 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
 
         this.addActionHandler(
             GlobalActions.SwitchCorpus,
-            null,
+            (state, action) => {
+                if (action.payload.widgetId === undefined || action.payload.widgetId === this.widgetId) {
+                    state.isBusySwitching = true;
+                }
+            },
             (state, action, dispatch) => {
                 dispatch<typeof GlobalActions.SwitchCorpusReady>({
                     name: GlobalActions.SwitchCorpusReady.name,
@@ -632,6 +638,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                         );
                     }
                 }
+                state.isBusySwitching = false;
             }
         );
 
@@ -660,7 +667,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             Actions.WidgetEnterOnActiveListItem,
             action => action.payload.widgetId === this.widgetId,
             (state, action) => {
-                state.isBusy = false;
+                state.isBusyFav = false;
             },
             (state, action, dispatch) => {
                 if (state.activeListItem[0] === 0) {
@@ -690,7 +697,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             CorparchActions.WidgetCorpusChange,
             action => action.payload.widgetId === this.widgetId,
             (state, action) => {
-                state.isBusy = false;
+                state.isBusyFav = false;
                 if (!action.error) {
                     state.corpusIdent = action.payload.corpusIdent;
                     state.availableSubcorpora = action.payload.availableSubcorpora;
