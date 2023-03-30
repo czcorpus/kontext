@@ -345,9 +345,9 @@ async def view_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse, asn
             raise ex
 
     if amodel.corp.get_conf('ALIGNED'):
-        out['Aligned'] = [{'n': w,
-                           'label': (await amodel.cf.get_corpus(w)).human_readable_corpname}
-                          for w in amodel.corp.get_conf('ALIGNED').split(',')]
+        out['Aligned'] = [
+            {'n': w, 'label': (await amodel.cf.get_corpus(w)).human_readable_corpname}
+            for w in amodel.corp.get_conf('ALIGNED').split(',')]
     if amodel.args.align and not amodel.args.maincorp:
         amodel.args.maincorp = amodel.args.corpname
     if conc.size() == 0 and conc.finished():
