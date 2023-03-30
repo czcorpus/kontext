@@ -939,6 +939,17 @@
         "dispersion__download_chart": "stáhnout graf",
         "dispersion__print_quality": "pro tisk",
         "dispersion__max_resolution_is_{value}": "Hodnota rozlišení musí být mezi 1 a {value}",
-        "kwordsRestore__please_wait_msg": "Počkejte prosím. Připravuje se seznam klíčových slov."
+        "kwords__please_wait_while_restore_msg": "Počkejte prosím. Připravuje se seznam klíčových slov.",
+        "kwords__focus_corpus": "Zkoumaný korpus",
+        "kwords__reference_corpus": "Referenční korpus",
+        "kwords__pattern": "Hledaný výraz",
+        "kwords__score_type": "Typ odhadu",
+        "kwords__score_col_hd": "Skóre",
+        "kwords__effect_size": "Velikost účinku (Effect Size)",
+        "kwords__freq_in_corp1_hd": "Frekv. (zkoumaný korpus)",
+        "kwords__freq_in_corp2_hd": "Frekv. (referenční korpus)",
+        "kwords__rel_freq_in_corp1_hd": "Rel. frekv. (zkoumaný korpus)",
+        "kwords__rel_freq_in_corp2_hd": "Rel. frekv. (referenční korpus)",
+        "kwords__result_word_hd": "Slovo"
     }
 }

@@ -96,7 +96,7 @@ class NewQuery:
 
     keywords_extraction: MenuItemInternal = field(
         default_factory=lambda: lambda args: MenuItemInternal(
-            MainMenu.NEW_QUERY('wordlist'), 'Keywords extraction', 'keywords/form'
+            MainMenu.NEW_QUERY('wordlist'), 'Keywords analysis', 'keywords/form'
         ).add_args(
             ('corpname', args['corpname']),
             ('usesubcorp', args['usesubcorp'])

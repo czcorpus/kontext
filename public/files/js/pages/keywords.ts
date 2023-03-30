@@ -25,6 +25,7 @@ import { KontextPage } from '../app/main';
 import { init as viewInit } from '../views/keywords/result';
 import { Root } from 'react-dom/client';
 import { KeywordsResultModel } from '../models/keywords/result';
+import { KeywordsSubmitArgs } from '../models/keywords/common';
 
 
 /**
@@ -46,7 +47,11 @@ export class KeywordsResultPage {
         this.layoutModel.init(true, [], () => {
             this.resultModel = new KeywordsResultModel({
                 dispatcher: this.layoutModel.dispatcher,
-                layoutModel: this.layoutModel
+                layoutModel: this.layoutModel,
+                refCorpname: this.layoutModel.getConf<KeywordsSubmitArgs>('KeywordsForm').ref_corpname,
+                refSubcorpname: this.layoutModel.getConf<KeywordsSubmitArgs>('KeywordsForm').ref_usesubcorp,
+                focusCorpname: this.layoutModel.getCorpusIdent().id,
+                focusSubcorpname: this.layoutModel.getCorpusIdent().subcName,
             });
             const view = viewInit({
                 dispatcher: this.layoutModel.dispatcher,

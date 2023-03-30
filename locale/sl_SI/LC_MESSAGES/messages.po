@@ -664,3 +664,6 @@ msgstr "KonText frequency table link UNTRANSLATED"
 
 msgid "KonText user {} has sent a link to a frequency distribution table"
 msgstr "Uživatel KonTextu {} vám zaslal odkaz na tabulku frekvenční distribuce UNTRANSLATED"
+
+msgid "Keywords analysis"
+msgstr "Keywords analysis UNTRANSLATED"

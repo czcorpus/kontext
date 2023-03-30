@@ -82,6 +82,7 @@ export class KeywordsFormPage {
                 layoutModel: this.layoutModel,
                 initialArgs: kwForm,
                 refWidgetId: refCorpWidgetId,
+                availAttrs: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList')
             });
             const view = viewInit({
                 dispatcher: this.layoutModel.dispatcher,

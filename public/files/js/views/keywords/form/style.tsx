@@ -27,6 +27,12 @@ import * as theme from '../../theme/default';
 
 export const KeywordsForm = styled.form`
 
+    .corp-sel {
+        display: grid;
+        grid-template-columns: 10em 100%;
+        grid-row-gap: 0.7em;
+        align-items: center;
+    }
 
 `;
 
@@ -40,5 +46,6 @@ export const MainFieldset = styled.div`
     align-items: center;
     margin-top: 3.4em;
     margin-bottom: 1.6em;
+    max-width: 20em;
 
 `;

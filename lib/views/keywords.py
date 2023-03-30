@@ -152,6 +152,7 @@ async def view_result(amodel: KeywordsActionModel, req: KRequest):
     result['tasks'] = []
     result['SubcorpList'] = []
     result['query_id'] = amodel.q_code
+    result['keywords_form'] = amodel.curr_kwform_args.to_dict()
     await amodel.export_subcorpora_list(result)
     return result
 

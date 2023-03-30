@@ -26,6 +26,7 @@ import { Bound, IActionDispatcher } from 'kombo';
 import * as Kontext from '../../../types/kontext';
 import { KeywordsResultModel, KeywordsResultState } from '../../../models/keywords/result';
 import { List } from 'cnc-tskit';
+import * as S from './style';
 
 
 export interface KeywordsResultViewArgs {
@@ -46,36 +47,47 @@ export function init({
     const KeywordsResult:React.FC<KeywordsResultState> = (props) => {
 
         return (
-            <div>
-                <table>
+            <S.KeywordsResult>
+
+                <dl className="corpora">
+                    <dt>{he.translate('kwords__focus_corpus')}:</dt>
+                    <dd>{props.focusCorpname} {props.focusSubcorpname ? ` / ${props.focusSubcorpname}` : ''}</dd>
+                    <dt>{he.translate('kwords__reference_corpus')}:</dt>
+                    <dd>{props.refCorpname} {props.refSubcorpname ? ` / ${props.refSubcorpname}` : ''}</dd>
+                </dl>
+
+                <table className="data">
                     <thead>
                         <tr>
-                            <th>item</th>
-                            <th>score</th>
-                            <th>size effect</th>
-                            <th>frq1</th>
-                            <th>frq2</th>
-                            <th>rel_frq1</th>
-                            <th>rel_frq2</th>
-                            <th>query</th>
+                            <th>{he.translate('kwords__result_word_hd')}</th>
+                            <th>{he.translate('kwords__score_col_hd')}</th>
+                            <th>{he.translate('kwords__effect_size')}</th>
+                            <th>{he.translate('kwords__freq_in_corp1_hd')}</th>
+                            <th>{he.translate('kwords__freq_in_corp2_hd')}</th>
+                            <th>{he.translate('kwords__rel_freq_in_corp1_hd')}</th>
+                            <th>{he.translate('kwords__rel_freq_in_corp2_hd')}</th>
                         </tr>
                     </thead>
                     <tbody>
                         {
-                            List.map(kw => <tr>
-                                <td>{kw.item}</td>
-                                <td>{kw.score}</td>
-                                <td>{kw.size_effect}</td>
-                                <td>{kw.frq1}</td>
-                                <td>{kw.frq2}</td>
-                                <td>{kw.rel_frq1}</td>
-                                <td>{kw.rel_frq2}</td>
-                                <td>{kw.query}</td>
-                            </tr>, props.data)
+                            List.map(
+                                kw => (
+                                    <tr key={`item:${kw.item}`}>
+                                        <td className="kword">{kw.item}</td>
+                                        <td className="num">{he.formatNumber(kw.score, 2)}</td>
+                                        <td className="num">{he.formatNumber(kw.size_effect, 2)}</td>
+                                        <td className="num">{he.formatNumber(kw.frq1, 0)}</td>
+                                        <td className="num">{he.formatNumber(kw.frq2, 0)}</td>
+                                        <td className="num">{he.formatNumber(kw.rel_frq1, 2)}</td>
+                                        <td className="num">{he.formatNumber(kw.rel_frq2, 2)}</td>
+                                    </tr>
+                                ),
+                                props.data
+                            )
                         }
                     </tbody>
                 </table>
-            </div>
+            </S.KeywordsResult>
         );
     }
 

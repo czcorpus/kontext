@@ -29,7 +29,7 @@ import { Actions as CorparchActions } from '../../types/plugins/corparch';
 import { Actions as ATActions } from '../../models/asyncTask/actions';
 import { KeywordsSubmitArgs, KeywordsSubmitResponse } from './common';
 import { WlnumsTypes } from '../wordlist/common';
-import { AsyncTaskInfo } from '../../types/kontext';
+import { AsyncTaskInfo, AttrItem } from '../../types/kontext';
 
 
 export type ScoreType = null|'logL'|'chi2';
@@ -39,6 +39,7 @@ export interface KeywordsFormState {
     refCorp:string;
     refSubcorp:string;
     attr:string;
+    availAttrs:Array<AttrItem>;
     pattern:string;
     scoreType:ScoreType;
     precalcTasks:Array<AsyncTaskInfo<{}>>;
@@ -56,6 +57,7 @@ export interface KeywordsFormModelArgs {
     dispatcher:IActionDispatcher;
     layoutModel:PageModel;
     refWidgetId:string;
+    availAttrs:Array<AttrItem>;
     initialArgs:{
         ref_corpname:string;
         ref_usesubcorp:string;
@@ -79,6 +81,7 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
         layoutModel,
         initialArgs,
         refWidgetId,
+        availAttrs
     }:KeywordsFormModelArgs) {
         super(
             dispatcher,
@@ -86,10 +89,11 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
                 isBusy: false,
                 refCorp: initialArgs ? initialArgs.ref_corpname : layoutModel.getNestedConf('refCorpusIdent', 'name'),
                 refSubcorp: initialArgs ? initialArgs.ref_usesubcorp : layoutModel.getNestedConf('refCorpusIdent', 'usesubcorp'),
-                attr: initialArgs ? initialArgs.wlattr : 'lemma',
+                attr: initialArgs ? initialArgs.wlattr : List.head(availAttrs).n,
                 pattern: initialArgs ? initialArgs.wlpat : '.*',
                 scoreType: initialArgs ? initialArgs.score_type : 'logL',
-                precalcTasks: []
+                precalcTasks: [],
+                availAttrs
             }
         );
         this.layoutModel = layoutModel;
