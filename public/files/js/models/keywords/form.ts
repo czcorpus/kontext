@@ -45,6 +45,11 @@ export interface KeywordsFormState {
 }
 
 export interface KeywordsFormCorpSwitchPreserve {
+    refCorp:string;
+    refSubcorp:string;
+    attr:string;
+    pattern:string;
+    scoreType:ScoreType;
 }
 
 export interface KeywordsFormModelArgs {
@@ -213,6 +218,11 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
 
     private serialize(state:KeywordsFormState):KeywordsFormCorpSwitchPreserve {
         return {
+            refCorp: state.refCorp,
+            refSubcorp: state.refSubcorp,
+            attr: state.attr,
+            pattern: state.pattern,
+            scoreType: state.scoreType,
         };
     }
 
@@ -222,6 +232,11 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
         corpora:Array<[string, string]>
     ):void {
         if (data) {
+            state.refCorp = data.refCorp;
+            state.refSubcorp = data.refSubcorp;
+            state.attr = data.attr;
+            state.pattern = data.pattern;
+            state.scoreType = data.scoreType;
         }
     }
 

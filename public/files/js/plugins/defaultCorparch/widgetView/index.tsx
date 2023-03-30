@@ -27,7 +27,7 @@ import { CorplistItem } from '../common';
 import { SearchKeyword, SearchResultRow } from '../search';
 import { Actions } from '../actions';
 import { Keyboard, Strings, List } from 'cnc-tskit';
-import { CorpusSwitchModel, CorpusSwitchModelState } from '../../../models/common/corpusSwitch';
+import { CorpusSwitchModel } from '../../../models/common/corpusSwitch';
 import * as S from './style';
 import * as S2 from '../commonStyle';
 
@@ -604,11 +604,12 @@ export function init({
 
     interface CorpusButtonProps {
         corpusIdent:Kontext.FullCorpusIdent;
+        isBusy:boolean;
         isWidgetVisible:boolean;
         onClick:()=>void;
     }
 
-    const CorpusButton:React.FC<CorpusSwitchModelState & CorpusButtonProps> = (props) => {
+    const CorpusButton:React.FC<CorpusButtonProps> = (props) => {
 
         const handleKeyDown = (evt:React.KeyboardEvent) => {
             if (evt.key === Keyboard.Value.ENTER || evt.key === Keyboard.Value.ESC) {
@@ -632,10 +633,6 @@ export function init({
             </button>
         );
     };
-
-    // ----------------------------- <BoundCorpusButton /> --------------------------
-
-    const BoundCorpusButton = BoundWithProps<CorpusButtonProps, CorpusSwitchModelState>(CorpusButton, corpusSwitchModel);
 
     // ------------------------------- <SubcorpSelection /> -----------------------------
 
@@ -791,10 +788,11 @@ export function init({
             return (
                 <S.CorplistWidget>
                     <div>
-                        <BoundCorpusButton
+                        <CorpusButton
                             corpusIdent={this.props.corpusIdent}
                             onClick={this._handleWidgetButtonClick}
-                            isWidgetVisible={this.props.isVisible} />
+                            isWidgetVisible={this.props.isVisible}
+                            isBusy={this.props.isBusySwitching} />
                         {this.props.isVisible ? this._renderWidget() : null}
                         {this.props.availableSubcorpora.length > 0 ?
                             (<span>
@@ -810,7 +808,7 @@ export function init({
                         }
                         {!this.props.anonymousUser ?
                             <StarComponent widgetId={this.props.widgetId}
-                                currFavitemId={this.props.currFavitemId} isBusy={this.props.isBusy} /> :
+                                currFavitemId={this.props.currFavitemId} isBusy={this.props.isBusyFav} /> :
                             null
                         }
                     </div>

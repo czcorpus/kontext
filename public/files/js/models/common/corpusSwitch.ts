@@ -224,7 +224,8 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
                             payload: {
                                 data: storedStates,
                                 corpora: List.zipAll(action.payload.corpora, prevCorpora),
-                                newPrimaryCorpus: action.payload.newPrimaryCorpus
+                                newPrimaryCorpus: action.payload.newPrimaryCorpus,
+                                widgetId: action.payload.widgetId,
                             }
                         });
                     },

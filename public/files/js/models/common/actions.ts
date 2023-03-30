@@ -28,6 +28,7 @@ export interface CorpusSwitchModelRestorePayload {
     data:{[key:string]:any};
     corpora:Array<[string, string]>; // [from, to] corpus
     newPrimaryCorpus?:string;
+    widgetId?:string;
 }
 
 export class Actions {
@@ -58,6 +59,7 @@ export class Actions {
         corpora:Array<string>;
         subcorpus:string;
         newPrimaryCorpus?:string;
+        widgetId?:string;
     }> = {
         name: 'SWITCH_CORPUS'
     };
