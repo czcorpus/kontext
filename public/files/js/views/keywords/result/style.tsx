@@ -27,5 +27,25 @@ import * as theme from '../../theme/default';
 
 export const KeywordsResult = styled.form`
 
+    .kword {
+        font-size: 1.2em;
+    }
+
+    table.data tr:hover {
+        background-color: ${theme.colorLightPink};
+    }
+
+    dl.corpora {
+        max-width: 50em;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        grid-column-gap: 0.7em;
+
+        dd {
+            margin-inline-start: 0;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+    }
 
 `;

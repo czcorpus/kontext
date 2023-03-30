@@ -28,12 +28,20 @@ import { Keyword } from './common';
 export interface KeywordsResultState {
     data:Array<Keyword>;
     isBusy:boolean;
+    refCorpname:string;
+    refSubcorpname:string|undefined;
+    focusCorpname:string;
+    focusSubcorpname:string|undefined;
 }
 
 
 export interface KeywordsResultModelArgs {
     dispatcher:IActionDispatcher;
     layoutModel:PageModel;
+    refCorpname:string;
+    refSubcorpname:string|undefined;
+    focusCorpname:string;
+    focusSubcorpname:string|undefined;
 }
 
 /**
@@ -45,13 +53,21 @@ export class KeywordsResultModel extends StatelessModel<KeywordsResultState> {
 
     constructor({
         dispatcher,
-        layoutModel
+        layoutModel,
+        refCorpname,
+        refSubcorpname,
+        focusCorpname,
+        focusSubcorpname
     }:KeywordsResultModelArgs) {
         super(
             dispatcher,
             {
                 data: layoutModel.getConf('Keywords'),
                 isBusy: false,
+                refCorpname,
+                refSubcorpname,
+                focusCorpname,
+                focusSubcorpname
             }
         );
         this.layoutModel = layoutModel;

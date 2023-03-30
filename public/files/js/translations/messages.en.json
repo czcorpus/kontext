@@ -939,6 +939,17 @@
         "dispersion__download_chart": "download the chart",
         "dispersion__print_quality": "for printing",
         "dispersion__max_resolution_is_{value}": "The resolution value must be between 1 and {value}",
-        "kwordsRestore__please_wait_msg": "Please wait. Keywords are being prepared."
+        "kwords__please_wait_while_restore_msg": "Please wait. Keywords are being prepared.",
+        "kwords__focus_corpus": "Focus corpus",
+        "kwords__reference_corpus": "Reference corpus",
+        "kwords__pattern": "Searched expression",
+        "kwords__score_type": "Estimation type",
+        "kwords__score_col_hd": "Score",
+        "kwords__effect_size": "Effect Size",
+        "kwords__freq_in_corp1_hd": "Freq. (focus corpus)",
+        "kwords__freq_in_corp2_hd": "Freq. (ref. corpus)",
+        "kwords__rel_freq_in_corp1_hd": "Rel. freq. (focus corpus)",
+        "kwords__rel_freq_in_corp2_hd": "Rel. freq. (ref. corpus)",
+        "kwords__result_word_hd": "Word"
     }
 }

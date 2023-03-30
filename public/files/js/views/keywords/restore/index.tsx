@@ -29,7 +29,7 @@ export function init(utils:Kontext.ComponentHelpers):React.FC<{}> {
 
     const Page:React.FC<{}> = (props) => (
         <S.Restore>
-            <p>{utils.translate('kwordsRestore__please_wait_msg')}</p>
+            <p>{utils.translate('kwords__please_wait_while_restore_msg')}</p>
             <p className="loader">
                 <layoutViews.AjaxLoaderImage />
             </p>

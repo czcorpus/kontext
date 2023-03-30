@@ -28,6 +28,7 @@ import * as S from './style';
 import * as PluginInterfaces from '../../../types/plugins';
 import { Actions } from '../../../models/keywords/actions';
 import { KeywordsFormModel, KeywordsFormState } from '../../../models/keywords/form';
+import { List } from 'cnc-tskit';
 
 
 export interface KeywordsFormViewArgs {
@@ -55,7 +56,7 @@ export function init({
 
     const KeywordsForm:React.FC<KeywordsFormState> = (props) => {
 
-        const handleAttrChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
+        const handleAttrChange = (evt:React.ChangeEvent<HTMLSelectElement>) => {
             dispatcher.dispatch(
                 Actions.SetAttr,
                 {value: evt.target.value}
@@ -82,16 +83,23 @@ export function init({
 
         return (
             <S.KeywordsForm>
-                <label>Focus corp</label>
-                {FocusCorpWidget ? <FocusCorpWidget widgetId={focusCorpWidgetId} /> : null}
-                <label>Reference corp</label>
-                {RefCorpWidget ? <RefCorpWidget widgetId={refCorpWidgetId} /> : null}
+                <div className="corp-sel">
+                    <label>{he.translate('kwords__focus_corpus')}</label>
+                    {FocusCorpWidget ? <FocusCorpWidget widgetId={focusCorpWidgetId} /> : null}
+                    <label>{he.translate('kwords__reference_corpus')}</label>
+                    {RefCorpWidget ? <RefCorpWidget widgetId={refCorpWidgetId} /> : null}
+                </div>
                 <S.MainFieldset>
-                    <label>Attr</label>
-                    <input onChange={handleAttrChange} type='text' value={props.attr}/>
-                    <label>Pattern</label>
+                    <label>{he.translate('global__attribute')}</label>
+                    <select value={props.attr} onChange={handleAttrChange}>
+                        {List.map(
+                            item => <option key={item.n} value={item.n}>{item.label}</option>,
+                            props.availAttrs
+                        )}
+                    </select>
+                    <label>{he.translate('kwords__pattern')}</label>
                     <input onChange={handlePatternChange} type='text' value={props.pattern}/>
-                    <label>Score type</label>
+                    <label>{he.translate('kwords__score_type')}</label>
                     <select value={props.scoreType} onChange={handleScoreTypeChange}>
                         <option value='logL'>log-likelihood</option>
                         <option value='chi2'>chi square</option>

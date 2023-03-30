@@ -21,7 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 {% extends "document.html" %}
 
-{% block title%}KonText - {{ "Keywords extraction Form"|_ }}{% endblock %}
+{% block title%}KonText - {{ "Keywords analysis Form"|_ }}{% endblock %}
 
 {% block bodyonload %}
 __conf.SubcorpList = {{ SubcorpList|to_json }};
@@ -34,7 +34,7 @@ keywordsFormPage.init(__conf);
 
 {% block main %}
 <section>
-    <div class="bar"><h2>{{ "Keywords extraction"|_ }}</h2></div>
+    <div class="bar"><h2>{{ "Keywords analysis"|_ }}</h2></div>
     <div id="keywords-form-mount"></div>
 </section>
 {% endblock %}
