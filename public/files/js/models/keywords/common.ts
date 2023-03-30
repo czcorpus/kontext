@@ -20,6 +20,7 @@
  */
 
 import { WlnumsTypes } from '../wordlist/common';
+import { ScoreType } from './form';
 
 export interface KeywordsSubmitArgs {
     corpname:string;
@@ -32,7 +33,7 @@ export interface KeywordsSubmitArgs {
     wlnums:WlnumsTypes;
     wltype:string;
     include_nonwords:boolean;
-    score_type:string;
+    score_type:ScoreType;
 }
 
 export interface KeywordsSubmitResponse {

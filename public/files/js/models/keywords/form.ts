@@ -53,7 +53,7 @@ export interface KeywordsFormModelArgs {
         ref_usesubcorp:string;
         wlattr:string;
         wlpat:string;
-        scoreType:ScoreType;
+        score_type:ScoreType;
     };
 }
 
@@ -80,7 +80,7 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
                 refSubcorp: initialArgs ? initialArgs.ref_usesubcorp : layoutModel.getNestedConf('refCorpusIdent', 'usesubcorp'),
                 attr: initialArgs ? initialArgs.wlattr : 'lemma',
                 pattern: initialArgs ? initialArgs.wlpat : '.*',
-                scoreType: initialArgs ? initialArgs.scoreType : 'logL',
+                scoreType: initialArgs ? initialArgs.score_type : 'logL',
             }
         );
         this.layoutModel = layoutModel;
