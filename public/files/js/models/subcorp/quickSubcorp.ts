@@ -101,18 +101,7 @@ export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelS
                     }
                 );
             }
-        )
-
-        this.addActionHandler(
-            QueryActions.QueryAddSubcorp,
-            action => {
-                this.changeState(
-                    state => {
-                        state.isBusy = false;
-                    }
-                )
-            }
-        )
+        );
 
         this.addActionHandler(
             Actions.QuickSubcorpSubmit,

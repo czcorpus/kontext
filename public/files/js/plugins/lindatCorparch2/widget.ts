@@ -28,7 +28,6 @@ import * as PluginInterfaces from '../../types/plugins';
 import { SearchEngine, SearchKeyword, SearchResultRow } from './search';
 import { IActionDispatcher, StatelessModel, Action, SEDispatcher } from 'kombo';
 import { Actions } from './actions';
-import { Actions as QueryActions } from '../../models/query/actions';
 import { Actions as CommonActions } from '../../models/common/actions';
 import { IUnregistrable } from '../../models/common/common';
 import { IPluginApi } from '../../types/plugins/common';
@@ -599,13 +598,6 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                     });
                     this.handleFeatItemClick(state, state.dataFeat[state.activeListItem[1]].id);
                 }
-            }
-        );
-
-        this.addActionHandler<typeof QueryActions.QueryAddSubcorp>(
-            QueryActions.QueryAddSubcorp.name,
-            (state, action) => {
-                state.availableSubcorpora.push(action.payload);
             }
         );
     }

@@ -30,7 +30,6 @@ import { SearchEngine, SearchKeyword, SearchResultRow} from './search';
 import { Actions } from './actions';
 import { Actions as CorparchActions } from '../../types/plugins/corparch';
 import { Actions as GlobalActions } from '../../models/common/actions';
-import { Actions as QueryActions } from '../../models/query/actions';
 import { IUnregistrable } from '../../models/common/common';
 import { IPluginApi } from '../../types/plugins/common';
 
@@ -676,13 +675,6 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                         dispatch, state, state.dataFeat[state.activeListItem[1]].id
                     );
                 }
-            }
-        );
-
-        this.addActionHandler(
-            QueryActions.QueryAddSubcorp,
-            (state, action) => {
-                state.availableSubcorpora.push(action.payload);
             }
         );
 

@@ -760,16 +760,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         );
 
         this.addActionHandler(
-            Actions.QueryAddSubcorp,
-            action => {
-                this.changeState(state => {
-                    state.subcorpList.push(action.payload);
-                    state.quickSubcorpVisible = false;
-                });
-            }
-        );
-
-        this.addActionHandler(
             QuickSubcorpActions.QuickSubcorpSubmitDone,
             action => {
                 this.changeState(state => {
