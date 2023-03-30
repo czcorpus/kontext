@@ -46,7 +46,6 @@ MAX_LOG_FILE_AGE = 1800  # in seconds
 TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
 
 
-
 def is_compiled(corp: AbstractKCorpus, attr, method):
     """
     Test whether pre-calculated data for particular
@@ -80,8 +79,7 @@ def corp_freqs_cache_paths(corp: AbstractKCorpus, attrname) -> Dict[str, str]:
     return {
         'arf': corp.freq_precalc_file(attrname, 'arf'),
         'frq': corp.freq_precalc_file(attrname, 'frq'),
-        'docf': corp.freq_precalc_file(attrname, 'docf'),
-        'token:l': corp.freq_precalc_file(attrname, 'token:l'),
+        'docf': corp.freq_precalc_file(attrname, 'docf')
     }
 
 
@@ -267,6 +265,7 @@ def compute_norms(corp: AbstractKCorpus, struct: str, subcpath: str):
     if p.returncode > 0:
         logging.getLogger(__name__).error('Failed to run mktokencov: {}'.format(errors[:550]))
         raise RuntimeError(f'Failed to run mktokencov with error code {p.returncode}')
+
 
 def clean_freqs_cache():
     root_dir = settings.get('corpora', 'freqs_cache_dir')

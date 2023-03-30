@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { AsyncTaskInfo } from "../../types/kontext";
 import { WlnumsTypes } from "../wordlist/common";
 
 export interface KeywordsSubmitArgs {
@@ -38,7 +39,7 @@ export interface KeywordsSubmitResponse {
     corpname:string;
     usesubcorp:string;
     freq_files_avail:boolean;
-    subtasks:Array<string>;
+    subtasks:Array<AsyncTaskInfo<{}>>;
     kw_query_id:string;
 }
 

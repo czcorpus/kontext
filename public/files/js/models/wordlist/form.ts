@@ -545,6 +545,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
     private submitAction(state:WordlistFormState, dispatch:SEDispatcher):void {
         this.submit(state).subscribe({
             next: resp => {
+                // TODO this branch may not be in actual use any more
                 if (isConcFreqRedirectResponse(resp)) {
                     window.location.href = resp.location;
 
