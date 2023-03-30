@@ -191,7 +191,6 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         availableSubcorpora,
     }:CorplistWidgetModelArgs) {
         const dataFavImp = importServerFavitems(dataFav);
-        const currCorp = pluginApi.getCorpusIdent();
         super(dispatcher, {
             isVisible: false,
             activeTab: 0,
@@ -206,9 +205,9 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             currFavitemId: findCurrFavitemId(
                 dataFavImp,
                 {
-                    subcorpus_id: currCorp.usesubcorp,
-                    subcorpus_name: currCorp.subcName,
-                    corpora: [currCorp.id, ...(pluginApi.getConf<Array<string>>('alignedCorpora') || [])]
+                    subcorpus_id: corpusIdent.usesubcorp,
+                    subcorpus_name: corpusIdent.subcName,
+                    corpora: [corpusIdent.id, ...(pluginApi.getConf<Array<string>>('alignedCorpora') || [])]
                 }
             ),
             isWaitingForSearchResults: false,
@@ -686,6 +685,10 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 if (!action.error) {
                     state.corpusIdent = action.payload.corpusIdent;
                     state.availableSubcorpora = action.payload.availableSubcorpora;
+                    state.currFavitemId = findCurrFavitemId(
+                        state.dataFav,
+                        this.getFullCorpusSelection(state),
+                    );
                 }
             }
         );
