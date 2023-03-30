@@ -150,6 +150,9 @@ export interface CorplistWidgetModelArgs {
 }
 
 export interface CorplistWidgetModelCorpusSwitchPreserve {
+    corpusIdent:Kontext.FullCorpusIdent;
+    currFavitemId:string;
+    alignedCorpora:Array<string>;
     dataFav:Array<FavListItem>;
 }
 
@@ -625,18 +628,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 if (!action.error) {
                     const storedData:CorplistWidgetModelCorpusSwitchPreserve = action.payload.data[
                         this.getRegistrationId()];
-                    if (storedData) {
-                        state.dataFav = storedData.dataFav.filter(v => v.trashTTL === null);
-                        state.currFavitemId = findCurrFavitemId(
-                            state.dataFav,
-                            this.getFullCorpusSelection(state)
-                        );
-                        state.alignedCorpora = pipe(
-                            action.payload.corpora,
-                            List.tail(),
-                            List.map(([,newCorp]) => newCorp)
-                        );
-                    }
+                    const preserveOldCorpus = action.payload.widgetId !== this.widgetId;
+                    this.deserialize(state, storedData, action.payload.corpora, preserveOldCorpus);
                 }
                 state.isBusySwitching = false;
             }
@@ -713,23 +706,37 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
 
     serialize(state:CorplistWidgetModelState):CorplistWidgetModelCorpusSwitchPreserve {
         return {
-            dataFav: [...state.dataFav]
+            corpusIdent: state.corpusIdent,
+            currFavitemId: state.currFavitemId,
+            alignedCorpora: state.alignedCorpora,
+            dataFav: [...state.dataFav],
         };
     }
 
     deserialize(
         state:CorplistWidgetModelState,
         data:CorplistWidgetModelCorpusSwitchPreserve,
-        corpora:Array<[string, string]>
+        corpora:Array<[string, string]>,
+        preserveOldCorpus:boolean,
     ):void {
-
         if (data) {
-            List.forEach(
-                ([oldCorp, newCorp]) => {
-                    state.dataFav[newCorp] = data.dataFav[oldCorp];
-                },
-                corpora
-            )
+            state.dataFav = data.dataFav.filter(v => v.trashTTL === null);
+            if (preserveOldCorpus) {
+                state.corpusIdent = data.corpusIdent;
+                state.currFavitemId = data.currFavitemId;
+                state.alignedCorpora = data.alignedCorpora;
+
+            } else {
+                state.currFavitemId = findCurrFavitemId(
+                    state.dataFav,
+                    this.getFullCorpusSelection(state),
+                );
+                state.alignedCorpora = pipe(
+                    corpora,
+                    List.tail(),
+                    List.map(([,newCorp]) => newCorp),
+                );
+            }
         }
     }
 

@@ -28,7 +28,6 @@ import { KeywordsFormModel } from '../models/keywords/form';
 import { init as viewInit } from '../views/keywords/form';
 import { Actions as GlobalActions } from '../models/common/actions';
 import { Root } from 'react-dom/client';
-import { Ident } from 'cnc-tskit';
 import { KeywordsSubmitArgs } from '../models/keywords/common';
 
 
@@ -72,8 +71,10 @@ export class KeywordsFormPage {
         this.layoutModel.init(true, [], () => {
             this.focusCorparchPlugin = createCorparch(this.layoutModel.pluginApi());
             this.refCorparchPlugin = createCorparch(this.layoutModel.pluginApi());
-            const focusCorpWidgetId = Ident.puid();
-            const refCorpWidgetId = Ident.puid();
+            // We can not use `Ident.puid()` if we want to use corpus switch restore on widgets
+            // because identificator changes after switching
+            const focusCorpWidgetId = '1';
+            const refCorpWidgetId = '2';
 
             const kwForm = this.layoutModel.getConf<KeywordsSubmitArgs>('FormData');
             this.formModel = new KeywordsFormModel({
