@@ -652,12 +652,6 @@ export class Actions {
     }> = {
         name: 'QUERY_HIDE_QUICK_SUBCORP_WIDGET'
     };
-
-    static QueryAddSubcorp: Action<
-        Kontext.SubcorpListItem
-    > = {
-        name: 'QUERY_ADD_SUBCORP'
-    };
 }
 
 export function isSetActiveInputWidgetAction(a: Action): a is typeof Actions.SetActiveInputWidget {
