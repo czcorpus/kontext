@@ -36,7 +36,7 @@ class KeywordsResultNotFound(Exception):
 
 def _create_cache_path(form: KeywordsFormArgs) -> str:
     key = (f'{form.corpname}:{form.usesubcorp}:{form.ref_corpname}:{form.ref_usesubcorp}:{form.wlattr}:{form.wlpat}:'
-           f'{form.include_nonwords}:{form.wltype}:{form.wlnums}:{form.wlminfreq}')
+           f'{form.include_nonwords}:{form.wltype}:{form.wlnums}:{form.wlminfreq}:{form.score_type}')
     result_id = hashlib.sha1(key.encode('utf-8')).hexdigest()
     return os.path.join(settings.get('corpora', 'freqs_cache_dir'), f'kwords_{result_id}.jsonl')
 
@@ -104,7 +104,7 @@ async def keywords(corp: KCorpus, ref_corp: KCorpus, args: KeywordsFormArgs, max
                                           attrfreq=attrfreq)
     words = [x[0] for x in items]
     keyword = Keyword(corp.unwrap(), ref_corp.unwrap(), c_wl, rc_wl,
-                      1.0, 100, 5, 0, [], words, 'frq', [], [], [], None)
+                      1.0, 100, 5, 0, [], words, f'frq;{args.score_type}' if args.score_type else 'frq', [], [], [], None)
     results = []
     kw = keyword.next()
     while kw:
@@ -114,9 +114,10 @@ async def keywords(corp: KCorpus, ref_corp: KCorpus, args: KeywordsFormArgs, max
         s = s.replace("_", " ")  # XXX remove in data
         if s.endswith("-x"):  # XXX remove in data
             s = s[:-2]
-        freqs = kw.get_freqs(2 * len([]) + 4)
+        freqs = kw.get_freqs(2 * len([]) + 4 + 1)  # 1 additional slot for size effect
         item.update({'item': s,
                      'score': round(kw.score, 3),
+                     'size_effect': round(float(freqs[4]), 5),
                      'frq1': int(freqs[0]),
                      'frq2': int(freqs[1]),
                      'rel_frq1': round(float(freqs[2]), 5),

@@ -32,6 +32,7 @@ import { WlnumsTypes } from '../wordlist/common';
 import { AsyncTaskInfo } from '../../types/kontext';
 
 
+export type ScoreType = null|'logL'|'chi2';
 
 export interface KeywordsFormState {
     isBusy:boolean;
@@ -39,6 +40,7 @@ export interface KeywordsFormState {
     refSubcorp:string;
     attr:string;
     pattern:string;
+    scoreType:ScoreType;
     precalcTasks:Array<AsyncTaskInfo<{}>>;
 }
 
@@ -54,6 +56,7 @@ export interface KeywordsFormModelArgs {
         ref_usesubcorp:string;
         wlattr:string;
         wlpat:string;
+        score_type:ScoreType;
     };
 }
 
@@ -80,6 +83,7 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
                 refSubcorp: initialArgs ? initialArgs.ref_usesubcorp : layoutModel.getNestedConf('refCorpusIdent', 'usesubcorp'),
                 attr: initialArgs ? initialArgs.wlattr : 'lemma',
                 pattern: initialArgs ? initialArgs.wlpat : '.*',
+                scoreType: initialArgs ? initialArgs.score_type : 'logL',
                 precalcTasks: []
             }
         );
@@ -123,6 +127,13 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
             Actions.SetPattern,
             (state, action) => {
                 state.pattern = action.payload.value;
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SetScoreType,
+            (state, action) => {
+                state.scoreType = action.payload.value;
             }
         );
 
@@ -226,6 +237,7 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
             wlnums: WlnumsTypes.FRQ,
             wlpat: state.pattern,
             wltype: 'simple',
+            score_type: state.scoreType,
         }
     }
 

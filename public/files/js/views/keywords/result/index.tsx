@@ -52,6 +52,7 @@ export function init({
                         <tr>
                             <th>item</th>
                             <th>score</th>
+                            <th>size effect</th>
                             <th>frq1</th>
                             <th>frq2</th>
                             <th>rel_frq1</th>
@@ -64,6 +65,7 @@ export function init({
                             List.map(kw => <tr>
                                 <td>{kw.item}</td>
                                 <td>{kw.score}</td>
+                                <td>{kw.size_effect}</td>
                                 <td>{kw.frq1}</td>
                                 <td>{kw.frq2}</td>
                                 <td>{kw.rel_frq1}</td>

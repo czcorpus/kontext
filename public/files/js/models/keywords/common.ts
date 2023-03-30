@@ -19,8 +19,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { AsyncTaskInfo } from "../../types/kontext";
-import { WlnumsTypes } from "../wordlist/common";
+import { WlnumsTypes } from '../wordlist/common';
+import { AsyncTaskInfo } from '../../types/kontext';
+import { ScoreType } from './form';
 
 export interface KeywordsSubmitArgs {
     corpname:string;
@@ -33,6 +34,7 @@ export interface KeywordsSubmitArgs {
     wlnums:WlnumsTypes;
     wltype:string;
     include_nonwords:boolean;
+    score_type:ScoreType;
 }
 
 export interface KeywordsSubmitResponse {
@@ -46,6 +48,7 @@ export interface KeywordsSubmitResponse {
 export interface Keyword {
     item:string;
     score:number;
+    size_effect:number;
     frq1:number;
     frq2:number;
     rel_frq1:number;
