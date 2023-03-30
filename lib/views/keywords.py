@@ -96,7 +96,7 @@ async def create_result(amodel: KeywordsActionModel, form_args: KeywordsFormArgs
         if type(data_calc) is list:
             for subtask in data_calc:
                 # TODO get rid of private method
-                amodel.store_async_task(subtask)
+                await amodel.store_async_task(subtask)
                 ans['subtasks'].append(subtask.to_dict())
             ans['freq_files_avail'] = False
         else:
@@ -104,10 +104,9 @@ async def create_result(amodel: KeywordsActionModel, form_args: KeywordsFormArgs
             raise KeywordsError('The data calculation is already running')
     elif isinstance(bg_result, Exception):
         raise bg_result
-    # TODO get rid of private variable
     amodel.set_curr_kwform_args(form_args)
 
-    def on_query_store(query_ids, history_ts, result):
+    async def on_query_store(query_ids, history_ts, result):
         result['kw_query_id'] = query_ids[0]
         if history_ts:
             amodel.store_last_search('kwords', query_ids[0])
@@ -171,13 +170,14 @@ async def result(amodel: KeywordsActionModel, req: KRequest, _: KResponse):
     mutates_result=True, action_log_mapper=log_mapping.wordlist, action_model=KeywordsActionModel)
 async def restore(amodel: KeywordsActionModel, req: KRequest, _: KResponse):
     worker = calc_backend_client(settings)
-    ref_corp_ident = SubcorpusIdent(amodel.curr_kwform_args.ref_usesubcorp,
-                                    amodel.curr_kwform_args.ref_corpname) if amodel.curr_kwform_args.ref_usesubcorp else amodel.curr_kwform_args.ref_corpname
+    ref_corp_ident = SubcorpusIdent(
+        amodel.curr_kwform_args.ref_usesubcorp,
+        amodel.curr_kwform_args.ref_corpname) if amodel.curr_kwform_args.ref_usesubcorp else amodel.curr_kwform_args.ref_corpname
     async_res = await worker.send_task(
         'get_keywords', object.__class__,
         args=(amodel.corp.portable_ident, ref_corp_ident, amodel.curr_kwform_args.to_dict(), amodel.corp.size))
 
-    def on_query_store(query_ids, history_ts, result):
+    async def on_query_store(query_ids, history_ts, result):
         async_task = AsyncTaskStatus(
             status=async_res.status, ident=async_res.id,
             category=AsyncTaskStatus.CATEGORY_KWORDS,
@@ -185,7 +185,7 @@ async def restore(amodel: KeywordsActionModel, req: KRequest, _: KResponse):
             args=dict(query_id=query_ids[0], last_update=time.time()),
             url=req.create_url('keywords/result', dict(q=f'~{query_ids[0]}')),
             auto_redirect=True)
-        amodel.store_async_task(async_task)
+        await amodel.store_async_task(async_task)
         result['task'] = async_task.to_dict()
 
     amodel.on_query_store(on_query_store)

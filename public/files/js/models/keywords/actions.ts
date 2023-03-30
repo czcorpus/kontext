@@ -20,6 +20,7 @@
  */
 
 import { Action } from 'kombo';
+import { AsyncTaskInfo } from '../../types/kontext';
 
 
 export class Actions {
@@ -41,5 +42,11 @@ export class Actions {
         value: string
     }> = {
         name: 'KEYWORDS_SET_PATTERN'
+    };
+
+    static RegisterPrecalcTasks:Action<{
+        tasks:Array<AsyncTaskInfo<{}>>;
+    }> = {
+        name: 'KEYWORDS_REGISTER_PRECALC_TASKS'
     };
 }
