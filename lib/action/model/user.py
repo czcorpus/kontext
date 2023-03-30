@@ -123,7 +123,7 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
         with plugins.runtime.ACTION_LOG as alog:
             alog.log_action(
                 self._req, self.args, action_props.action_log_mapper,
-                f'{action_props.action_prefix}{action_props.action_name}',
+                f'{action_props.action_prefix}/{action_props.action_name}',
                 err_desc=err_desc)
 
         with plugins.runtime.DISPATCH_HOOK as dhook:
