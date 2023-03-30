@@ -41,7 +41,7 @@ from action.argmapping.conc.other import (
     KwicSwitchArgs, LgroupOpArgs, LockedOpFormsArgs, SampleFormArgs)
 from action.argmapping.conc.sort import SortFormArgs
 from action.control import http_action
-from action.errors import NotFoundException, UserReadableException
+from action.errors import NotFoundException, UserReadableException, ImmediateRedirectException
 from action.krequest import KRequest
 from action.model.base import BaseActionModel
 from action.model.concordance import ConcActionModel
@@ -103,10 +103,18 @@ async def query(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     out['default_virt_keyboard'] = corp_info.metadata.default_virt_keyboard
 
     out['subcorp_tt_structure'] = None
+    out['subcorp_aligned'] = []
     corp_ident = amodel.corp.portable_ident
     if isinstance(corp_ident, SubcorpusIdent):
         with plugins.runtime.SUBC_STORAGE as sr:
             info = await sr.get_info(corp_ident.id)
+            out['subcorp_aligned'] = info.aligned
+            if set(info.aligned) != set(amodel.args.align):
+                args = dict(req.args)
+                args['align'] = info.aligned
+                raise ImmediateRedirectException(
+                    req.updated_current_url(dict(align=info.aligned))
+                )
             if info.text_types:
                 out['subcorp_tt_structure'] = info.text_types
 
@@ -337,9 +345,9 @@ async def view_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse, asn
             raise ex
 
     if amodel.corp.get_conf('ALIGNED'):
-        out['Aligned'] = [{'n': w,
-                           'label': (await amodel.cf.get_corpus(w)).human_readable_corpname}
-                          for w in amodel.corp.get_conf('ALIGNED').split(',')]
+        out['Aligned'] = [
+            {'n': w, 'label': (await amodel.cf.get_corpus(w)).human_readable_corpname}
+            for w in amodel.corp.get_conf('ALIGNED').split(',')]
     if amodel.args.align and not amodel.args.maincorp:
         amodel.args.maincorp = amodel.args.corpname
     if conc.size() == 0 and conc.finished():
@@ -732,6 +740,14 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
             info = await sr.get_info(corp_ident.id)
             if info.text_types:
                 subcorp_tt_structure = info.text_types
+            subc_aligned = info.aligned
+    else:
+        subc_aligned = []
+    if len(subc_aligned) > 0 and set(amodel.args.align) != set(subc_aligned):
+        true_aligned = subc_aligned
+    else:
+        true_aligned = amodel.args.align
+
     if corpus_info.preflight_subcorpus:
         preflight_conf = dict(
             subc=corpus_info.preflight_subcorpus.id,
@@ -739,6 +755,7 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
             threshold_ipm=round(PREFLIGHT_THRESHOLD_FREQ / amodel.corp.size * 1_000_000))
     else:
         preflight_conf = None
+
     ans = dict(
         corpname=amodel.args.corpname,
         subcorpname=amodel.corp.subcorpus_id,
@@ -755,7 +772,8 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
             searchSize=amodel.corp.search_size),
         currentArgs=conc_args,
         concPersistenceOpId=None,
-        alignedCorpora=amodel.args.align,
+        ShuffleConcByDefault=amodel.args.shuffle,
+        alignedCorpora=true_aligned,
         availableAlignedCorpora=avail_al_corp,
         activePlugins=plg_status['active_plugins'],
         queryOverview=[],
@@ -775,6 +793,7 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
         SimpleQueryDefaultAttrs=corpus_info.simple_query_default_attrs,
         QSEnabled=amodel.args.qs_enabled,
         SubcorpTTStructure=subcorp_tt_structure,
+        SubcorpAligned=subc_aligned,
         concPreflight=preflight_conf,
         AltCorp=corpus_info.alt_corp,
     )

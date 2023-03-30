@@ -19,15 +19,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { HTTP } from 'cnc-tskit';
+import { HTTP, List } from 'cnc-tskit';
 import { IActionDispatcher, SEDispatcher, StatelessModel } from 'kombo';
 import { PageModel } from '../../app/page';
 import { IUnregistrable } from '../common/common';
 import { Actions } from './actions';
 import { Actions as GlobalActions } from '../common/actions';
 import { Actions as CorparchActions } from '../../types/plugins/corparch';
+import { Actions as ATActions } from '../../models/asyncTask/actions';
 import { KeywordsSubmitArgs, KeywordsSubmitResponse } from './common';
 import { WlnumsTypes } from '../wordlist/common';
+import { AsyncTaskInfo } from '../../types/kontext';
 
 
 export type ScoreType = null|'logL'|'chi2';
@@ -39,6 +41,7 @@ export interface KeywordsFormState {
     attr:string;
     pattern:string;
     scoreType:ScoreType;
+    precalcTasks:Array<AsyncTaskInfo<{}>>;
 }
 
 export interface KeywordsFormCorpSwitchPreserve {
@@ -53,7 +56,7 @@ export interface KeywordsFormModelArgs {
         ref_usesubcorp:string;
         wlattr:string;
         wlpat:string;
-        scoreType:ScoreType;
+        score_type:ScoreType;
     };
 }
 
@@ -80,7 +83,8 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
                 refSubcorp: initialArgs ? initialArgs.ref_usesubcorp : layoutModel.getNestedConf('refCorpusIdent', 'usesubcorp'),
                 attr: initialArgs ? initialArgs.wlattr : 'lemma',
                 pattern: initialArgs ? initialArgs.wlpat : '.*',
-                scoreType: initialArgs ? initialArgs.scoreType : 'logL',
+                scoreType: initialArgs ? initialArgs.score_type : 'logL',
+                precalcTasks: []
             }
         );
         this.layoutModel = layoutModel;
@@ -158,6 +162,49 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
                 state.refSubcorp = action.payload.corpusIdent.usesubcorp;
             }
         );
+
+        this.addActionHandler(
+            Actions.RegisterPrecalcTasks,
+            (state, action) => {
+                state.precalcTasks = action.payload.tasks;
+            }
+        );
+
+        this.addActionHandler(
+            ATActions.AsyncTasksChecked,
+            (state, action) => {
+                if (!List.empty(state.precalcTasks)) {
+                    const updated:Array<AsyncTaskInfo<{}>> = [];
+                    List.forEach(
+                        (ourTask, i) => {
+                            const srch = List.find(t => t.ident === ourTask.ident, action.payload.tasks);
+                            updated.push(srch ? srch : ourTask);
+                        },
+                        state.precalcTasks
+                    );
+                    state.precalcTasks = updated;
+                    if (!List.some(t => t.status === 'PENDING' || t.status === 'STARTED', state.precalcTasks)) {
+                        state.isBusy = false;
+                    }
+                }
+            },
+            (state, action, dispatch) => {
+                if (List.empty(state.precalcTasks)) {
+                    return;
+
+                } else if (List.every(t => t.status === 'SUCCESS' || t.status === 'FAILURE', state.precalcTasks)) {
+
+                    if (List.every(t => t.status === 'SUCCESS', state.precalcTasks)) {
+                        this.submitRequest(state, dispatch);
+
+                    } else {
+                        this.layoutModel.showMessage(
+                            'error', this.layoutModel.translate('wordlist__failed_to_precalculate')
+                        );
+                    }
+                }
+            }
+        );
     }
 
     getRegistrationId():string {
@@ -204,17 +251,44 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
             ),
             this.createKeywordsArgs(state, corp.name, corp.usesubcorp),
             {contentType: 'application/json'}
+
         ).subscribe({
-            next: (data) => {
+            next: (resp) => {
                 dispatch(Actions.SubmitQueryDone);
-                window.location.href = this.layoutModel.createActionUrl(
-                    'keywords/result',
-                    {
-                        corpname: corp.name,
-                        usesubcorp: corp.usesubcorp,
-                        q: `~${data.kw_query_id}`,
+
+                if (resp.freq_files_avail) {
+                    window.location.href = this.layoutModel.createActionUrl(
+                        'keywords/result',
+                        {
+                            corpname: corp.name,
+                            usesubcorp: corp.usesubcorp,
+                            q: `~${resp.kw_query_id}`,
+                        }
+                    );
+
+                } else {
+                    this.layoutModel.showMessage(
+                        'info',
+                        this.layoutModel.translate('wordlist__aux_data_must_be_precalculated')
+                    );
+                    if (!List.empty(resp.subtasks)) {
+                        List.forEach(
+                            payload => {
+                                dispatch<typeof ATActions.InboxAddAsyncTask>({
+                                    name: ATActions.InboxAddAsyncTask.name,
+                                    payload
+                                })
+                            },
+                            resp.subtasks
+                        );
+                        dispatch<typeof Actions.RegisterPrecalcTasks>({
+                            name: Actions.RegisterPrecalcTasks.name,
+                            payload: {
+                                tasks: resp.subtasks
+                            }
+                        });
                     }
-                );
+                }
             },
             error: (err) => {
                 dispatch(Actions.SubmitQueryDone, err);

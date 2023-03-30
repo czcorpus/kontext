@@ -399,6 +399,7 @@ export class ViewPage {
             currentSubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
             subcorpusId: this.layoutModel.getCorpusIdent().usesubcorp,
             isForeignSubcorpus: this.layoutModel.getCorpusIdent().foreignSubcorp,
+            subcAligned: this.layoutModel.getConf<Array<string>>('SubcorpAligned'),
             shuffleConcByDefault: this.layoutModel.getConf<boolean>('ShuffleConcByDefault'),
             forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
             attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),

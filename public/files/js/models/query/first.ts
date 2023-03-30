@@ -70,6 +70,7 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
     subcorpList:Array<Kontext.SubcorpListItem>;
     currentSubcorp:string;
     subcorpusId:string;
+    subcAligned:Array<string>;
     isForeignSubcorpus:boolean;
     shuffleConcByDefault:boolean;
     inputLanguages:{[corpname:string]:string};
@@ -266,6 +267,8 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
      */
     subcorpusId:string;
 
+    subcAligned:Array<string>;
+
     isForeignSubcorpus:boolean;
 
     shuffleConcByDefault:boolean;
@@ -385,6 +388,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 subcorpList: props.subcorpList,
                 currentSubcorp: props.currentSubcorp || '',
                 subcorpusId: props.subcorpusId || '',
+                subcAligned: props.subcAligned,
                 isForeignSubcorpus: !!props.isForeignSubcorpus,
                 shuffleForbidden: false,
                 shuffleConcByDefault: props.shuffleConcByDefault,

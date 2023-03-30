@@ -46,6 +46,13 @@ export const SubcorpForm = styled.form`
             margin-left: 0.7em;
         }
     }
+
+    .public-desc-help {
+        margin-top: 0.7em;
+        width: 10em;
+        white-space: normal;
+        color: ${theme.colorLightText};
+    }
 `;
 
 // ---------------- <TRWithinBuilderWrapper /> --------------------------------------

@@ -209,7 +209,10 @@ class ConcActionModel(CorpusActionModel):
                     tpl_data['user_owns_conc'] = True
                 if '__latest__' in tpl_data.get('conc_forms_args', {}):
                     tpl_data['conc_forms_args'][op_id] = tpl_data['conc_forms_args']['__latest__']
+                    # TODO here we update already serialized objects which is not very readable/type safe
+                    tpl_data['conc_forms_args'][op_id]['op_key'] = op_id
                     del tpl_data['conc_forms_args']['__latest__']
+                    tpl_data['query_overview'][-1]['conc_persistence_op_id'] = op_id
             else:
                 tpl_data['Q'] = []
                 tpl_data['conc_persistence_op_id'] = None

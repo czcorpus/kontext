@@ -74,7 +74,7 @@ def _subc_from_row(row: Dict) -> SubcorpusRecord:
         text_types=json.loads(row['text_types']) if row['text_types'] else None,
         bib_id_attr=row['bib_id_attr'],
         bib_label_attr=row['bib_label_attr'],
-        aligned=json.loads(row['aligned']) if row['aligned'] else None,
+        aligned=json.loads(row['aligned']) if row['aligned'] else [],
     )
 
 
@@ -147,7 +147,8 @@ class MySQLSubcArchive(AbstractSubcArchive):
                         f'UPDATE {self._bconf.subccorp_table} '
                         f'SET name = %s, {column} = %s, public_description = %s, size = %s, is_draft = 0, aligned = %s '
                         'WHERE id = %s AND author_id = %s',
-                        (data.subcname, value, public_description, size, ident, author['id'], json.dumps(aligned) if aligned else ''))
+                        (data.subcname, value, public_description, size, json.dumps(aligned) if aligned else '',
+                         ident, author['id']))
                 else:
                     raise ex
 

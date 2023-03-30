@@ -41,7 +41,8 @@ import { ConcFormArgs } from '../models/query/formArgs';
 import { fetchQueryFormArgs } from '../models/query/first';
 import { ServerWithinSelection } from '../models/subcorp/common';
 import { Root } from 'react-dom/client';
-import { Ident, List } from 'cnc-tskit';
+import { Ident, List, pipe } from 'cnc-tskit';
+import { IUnregistrable } from '../models/common/common';
 
 
 interface TTProps {
@@ -99,8 +100,6 @@ export class SubcorpForm {
             }
         );
     }
-
-    unregister():void {}
 
     private createTextTypesComponents(selectedTextTypes:TextTypes.ExportedSelection):TTInitData {
         const ttData = this.layoutModel.getConf<TTInitialData>('textTypesData');
@@ -189,6 +188,21 @@ export class SubcorpForm {
         );
     }
 
+    registerCorpusSwitchAwareModels(
+        onDone:()=>void,
+        ...models:Array<IUnregistrable>
+    ):void {
+        this.layoutModel.registerCorpusSwitchAwareModels(
+            () => {
+                this.textTypesModel.unregister();
+                this.subcorpFormModel.unregister();
+                this.subcorpWithinFormModel.unregister();
+                onDone();
+            },
+            ...models
+        );
+    }
+
     init():void {
         this.layoutModel.init(true, [], () => {
             const ttComponent = this.createTextTypesComponents(
@@ -196,19 +210,36 @@ export class SubcorpForm {
             );
             const withinCond = this.layoutModel.getConf<Array<ServerWithinSelection>>('WithinCond');
             const formType = withinCond ? 'within' : 'tt-sel';
-            this.subcorpFormModel = new SubcorpFormModel(
-                this.layoutModel.dispatcher,
-                this.layoutModel,
-                this.layoutModel.getCorpusIdent().id,
-                formType,
-                this.corpusIdent.usesubcorp ?
+            this.subcorpFormModel = new SubcorpFormModel({
+                dispatcher: this.layoutModel.dispatcher,
+                pageModel: this.layoutModel,
+                corpname: this.layoutModel.getCorpusIdent().id,
+                alignedCorpora: pipe(
+                    this.layoutModel.getConf<Array<{n:string; label:string}>>('availableAlignedCorpora'),
+                    List.filter(
+                        x => List.findIndex(
+                            x2 => x2 === x.n,
+                            this.layoutModel.getConf<Array<string>>('alignedCorpora'),
+                        ) > -1
+                    ),
+                    List.map(
+                        ({n, label}) => ({
+                            value: n,
+                            label,
+                            selected: true,
+                            locked: false
+                        })
+                    )
+                ),
+                inputMode: formType,
+                initialSubc: this.corpusIdent.usesubcorp ?
                     {
                         subcname: this.layoutModel.getConf<string>('SubcorpusName'),
                         description: this.layoutModel.getConf<string>('SubcorpusDesc'),
                         subcorpusId: this.corpusIdent.usesubcorp
                     } :
                     undefined
-            );
+            });
             this.subcorpWithinFormModel = new SubcorpWithinFormModel(
                 this.layoutModel.dispatcher,
                 this.layoutModel,

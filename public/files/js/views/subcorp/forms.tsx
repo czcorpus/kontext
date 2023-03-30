@@ -97,7 +97,7 @@ export function init({
 
         return <>
             <layoutViews.ValidatedItem invalid={props.value.isInvalid}>
-                <textarea rows={5} cols={60} value={props.value.value} onChange={handleChange} />
+                <textarea rows={8} cols={60} value={props.value.value} onChange={handleChange} />
             </layoutViews.ValidatedItem>
             <p className="note">({he.translate('global__markdown_supported')})</p>
             </>;
@@ -150,7 +150,12 @@ export function init({
                             </td>
                         </tr>
                         <tr>
-                            <th>{he.translate('subcform__public_description')}:</th>
+                            <th>
+                                {he.translate('subcform__public_description')}:
+                                <p className="public-desc-help">
+                                    ({he.translate('subcform__public_description_help')})
+                                </p>
+                            </th>
                             <td>
                                 <SubcDescription value={props.description} />
                             </td>

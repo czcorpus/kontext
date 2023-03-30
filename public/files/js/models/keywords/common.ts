@@ -20,6 +20,8 @@
  */
 
 import { WlnumsTypes } from '../wordlist/common';
+import { AsyncTaskInfo } from '../../types/kontext';
+import { ScoreType } from './form';
 
 export interface KeywordsSubmitArgs {
     corpname:string;
@@ -32,14 +34,14 @@ export interface KeywordsSubmitArgs {
     wlnums:WlnumsTypes;
     wltype:string;
     include_nonwords:boolean;
-    score_type:string;
+    score_type:ScoreType;
 }
 
 export interface KeywordsSubmitResponse {
     corpname:string;
     usesubcorp:string;
     freq_files_avail:boolean;
-    subtasks:Array<string>;
+    subtasks:Array<AsyncTaskInfo<{}>>;
     kw_query_id:string;
 }
 

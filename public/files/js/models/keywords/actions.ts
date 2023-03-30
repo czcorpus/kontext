@@ -21,6 +21,7 @@
 
 import { Action } from 'kombo';
 import { ScoreType } from './form';
+import { AsyncTaskInfo } from '../../types/kontext';
 
 
 export class Actions {
@@ -48,5 +49,11 @@ export class Actions {
         value: ScoreType
     }> = {
         name: 'KEYWORDS_SET_SCORE_TYPE'
+    };
+
+    static RegisterPrecalcTasks:Action<{
+        tasks:Array<AsyncTaskInfo<{}>>;
+    }> = {
+        name: 'KEYWORDS_REGISTER_PRECALC_TASKS'
     };
 }

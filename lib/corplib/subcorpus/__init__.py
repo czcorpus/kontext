@@ -109,7 +109,7 @@ class SubcorpusRecord(SubcorpusIdent):
     text_types: Optional[TextTypesType] = None
     bib_id_attr: Optional[str] = None
     bib_label_attr: Optional[str] = None
-    aligned: Optional[List[str]] = None
+    aligned: List[str] = field(default_factory=list)
 
 
 class KSubcorpus(KCorpus):

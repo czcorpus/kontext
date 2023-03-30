@@ -119,7 +119,7 @@ export function init({
         querySuggest,
         searchHistoryModel
     });
-    const alignedViews = alignedInit({
+    const {AlignedCorpora} = alignedInit({
             dispatcher: dispatcher,
             he: he,
             inputViews: inputViews
@@ -247,10 +247,11 @@ export function init({
                         </div>
                     </div>
                     {props.corpora.length > 1 || props.availableAlignedCorpora.length > 0 ?
-                        <alignedViews.AlignedCorpora
+                        <AlignedCorpora
                                 availableCorpora={props.availableAlignedCorpora}
                                 primaryCorpus={primaryCorpname}
                                 subcorpus={props.subcorpusId}
+                                subcAligned={props.subcAligned}
                                 alignedCorpora={List.tail(props.corpora)}
                                 sectionVisible={props.alignedCorporaVisible}
                                 supportedWidgets={props.supportedWidgets}

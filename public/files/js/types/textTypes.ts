@@ -148,7 +148,7 @@ export type SingleValueExportedTTSelection = string|ExportedRegexpSelection;
 export type AnyExportedTTSelection = Array<string>|SingleValueExportedTTSelection;
 
 export function isExportedRegexpSelection(v:AnyExportedTTSelection):v is ExportedRegexpSelection {
-    return typeof v['regexp'] === 'string';
+    return typeof v === 'object' && typeof v['regexp'] === 'string';
 }
 
 export type ExportedSelection = {[sca:string]:AnyExportedTTSelection};
