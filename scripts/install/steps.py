@@ -206,38 +206,55 @@ class SetupManatee(InstallationStep):
     def abort(self):
         pass
 
-    def run(self, manatee_version: str, patch_path: str = None, make_symlinks: bool = True):
+    def run(self, manatee_version: str, patch_path: str = None, make_symlinks: bool = True, ucnk_manatee: bool = False):
         # install manatee with ucnk patch
         print('Installing Manatee-Open...')
+        src_working_dir = f'/usr/local/src/manatee-open-{manatee_version}'
 
-        if manatee_version == '2.214.1':
-            url = 'https://corpora.fi.muni.cz/noske/current/src/manatee-open-2.214.1.tar.gz'
-        else:
-            url = f'http://corpora.fi.muni.cz/noske/src/manatee-open/manatee-open-{manatee_version}.tar.gz'
-        # build manatee from source using patch
-        subprocess.check_call(wget_cmd(url, self._ncc), cwd='/usr/local/src', stdout=self.stdout)
-        subprocess.check_call(
-            ['tar', 'xzvf', f'manatee-open-{manatee_version}.tar.gz'], cwd='/usr/local/src', stdout=self.stdout)
+        version_found = False
+        if ucnk_manatee:
+            subprocess.check_call(['git', 'clone', 'https://github.com/czcorpus/manatee-open.git',
+                                   f'manatee-open-{manatee_version}'], cwd='/usr/local/src', stdout=self.stdout)
+            try:
+                subprocess.check_call(
+                    ['git', 'checkout', f'release-{manatee_version}'], cwd=src_working_dir, stdout=self.stdout)
+                version_found = True
+            except subprocess.CalledProcessError:
+                pass
+            if version_found:
+                subprocess.check_call(['autoreconf', '--install', '--force'],
+                                      cwd=src_working_dir, stdout=self.stdout)
 
-        if patch_path is not None:
-            if os.path.isfile(os.path.join(self.kontext_path, patch_path)):
-                subprocess.check_call(['cp', os.path.join(self.kontext_path, patch_path), './'],
-                                      cwd=f'/usr/local/src/manatee-open-{manatee_version}', stdout=self.stdout)
-                subprocess.check_call(['patch', '-p0', '-i', os.path.basename(patch_path)],
-                                      cwd=f'/usr/local/src/manatee-open-{manatee_version}', stdout=self.stdout)
+        if not ucnk_manatee or not version_found:
+            if manatee_version == '2.214.1':
+                url = 'https://corpora.fi.muni.cz/noske/current/src/manatee-open-2.214.1.tar.gz'
             else:
-                raise FileNotFoundError(
-                    f'Patch file `{os.path.join(self.kontext_path, patch_path)}` not found!')
+                url = f'http://corpora.fi.muni.cz/noske/src/manatee-open/manatee-open-{manatee_version}.tar.gz'
+            # build manatee from source using patch
+            subprocess.check_call(wget_cmd(url, self._ncc),
+                                  cwd='/usr/local/src', stdout=self.stdout)
+            subprocess.check_call(
+                ['tar', 'xzvf', f'manatee-open-{manatee_version}.tar.gz'], cwd='/usr/local/src', stdout=self.stdout)
+
+            if patch_path is not None:
+                if os.path.isfile(os.path.join(self.kontext_path, patch_path)):
+                    subprocess.check_call(['cp', os.path.join(self.kontext_path, patch_path), './'],
+                                          cwd=src_working_dir, stdout=self.stdout)
+                    subprocess.check_call(['patch', '-p0', '-i', os.path.basename(patch_path)],
+                                          cwd=src_working_dir, stdout=self.stdout)
+                else:
+                    raise FileNotFoundError(
+                        f'Patch file `{os.path.join(self.kontext_path, patch_path)}` not found!')
 
         python_path = subprocess.check_output(['which', 'python3']).decode().split()[0]
         env_variables = os.environ.copy()
         env_variables['PYTHON'] = python_path
         subprocess.check_call(['./configure', '--with-pcre'],
-                              cwd=f'/usr/local/src/manatee-open-{manatee_version}', stdout=self.stdout, env=env_variables)
+                              cwd=src_working_dir, stdout=self.stdout, env=env_variables)
         subprocess.check_call(
-            ['make'], cwd=f'/usr/local/src/manatee-open-{manatee_version}', stdout=self.stdout)
+            ['make'], cwd=src_working_dir, stdout=self.stdout)
         subprocess.check_call(
-            ['make', 'install'], cwd=f'/usr/local/src/manatee-open-{manatee_version}', stdout=self.stdout)
+            ['make', 'install'], cwd=src_working_dir, stdout=self.stdout)
         subprocess.check_call(['ldconfig'], stdout=self.stdout)
 
         if make_symlinks:
@@ -371,6 +388,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser('Run step')
     parser.add_argument('step_name', metavar='NAME', type=str, help='Step name')
+    parser.add_argument('--ucnk', action='store_true', default=False, help='Use UCNK sources')
     parser.add_argument('--step-args', metavar='ARGS', type=str,
                         nargs='+', help='Step arguments', default=[])
     args = parser.parse_args()
@@ -391,7 +409,7 @@ if __name__ == '__main__':
         obj.run()
     elif args.step_name == 'SetupManatee':
         obj = SetupManatee(*init_step_args, True)
-        obj.run(args.step_args[0], args.step_args[1], bool(int(args.step_args[2])))
+        obj.run(args.step_args[0], args.step_args[1], bool(int(args.step_args[2])), args.ucnk)
     else:
         raise Exception(f'Unknown action: {args.step_name}')
 

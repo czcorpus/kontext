@@ -4,11 +4,11 @@ SHELL ["/bin/bash", "--login", "-c"]
 WORKDIR /opt/kontext
 COPY ./scripts/install/steps.py ./scripts/install/*.patch ./scripts/install/
 
-RUN apt-get update && apt-get install -y swig libpcre++ locales python3 python3-dev wget build-essential libltdl-dev libpcre3-dev \
+RUN apt-get update && apt-get install -y git autoconf-archive swig libpcre++ locales python3 python3-dev wget build-essential libltdl-dev libpcre3-dev \
   && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && dpkg-reconfigure --frontend=noninteractive locales \
-  && python3 scripts/install/steps.py SetupManatee --step-args 2.214.1 scripts/install/ucnk-manatee-2.214.1.patch 0 \
+  && python3 scripts/install/steps.py SetupManatee --ucnk --step-args 2.214.1 scripts/install/ucnk-manatee-2.214.1.patch 0 \
   && rm -r /usr/local/src/manatee-open-2.214.1 \
-  && apt-get -y remove python3-dev build-essential libltdl-dev libpcre3-dev ocaml-base-nox \
+  && apt-get -y remove python3-dev build-essential libltdl-dev libpcre3-dev ocaml-base-nox git autoconf-archive \
     # for some reason, the installation of Manatee produces incorrect target path /usr/local/local/lib/...
   && if [[ -d /usr/local/local/lib/python3.10/dist-packages ]]; then mv /usr/local/local/lib/python3.10/dist-packages/* /usr/local/lib/python3.10/dist-packages/; fi \
   && if [[ -f /usr/local/local/lib/python3.10/dist-packages/__pycache__ ]]; then rm -rf /usr/local/local/lib/python3.10/dist-packages/__pycache__; fi \
