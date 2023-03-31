@@ -63,7 +63,7 @@ async def col_lemma(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     amodel.args.base_viewattr = 'word'
     amodel.args.structs = ''
     amodel.args.viewmode = 'sen'
-    return await view_conc(amodel, req, resp, False, req.session_get('user', 'id'))
+    return await view_conc(amodel, req, resp, 0, req.session_get('user', 'id'))
 
 
 @bp.route('/ic_tags')
