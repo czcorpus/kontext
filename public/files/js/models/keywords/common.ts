@@ -31,6 +31,7 @@ export interface KeywordsSubmitArgs {
     wlattr:string;
     wlpat:string;
     wlminfreq:number;
+    wlmaxfreq:number;
     wlnums:WlnumsTypes;
     wltype:string;
     include_nonwords:boolean;

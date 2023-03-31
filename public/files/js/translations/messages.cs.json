@@ -950,6 +950,8 @@
         "kwords__freq_in_corp2_hd": "Frekv. (referenční korpus)",
         "kwords__rel_freq_in_corp1_hd": "Rel. frekv. (zkoumaný korpus)",
         "kwords__rel_freq_in_corp2_hd": "Rel. frekv. (referenční korpus)",
-        "kwords__result_word_hd": "Slovo"
+        "kwords__result_word_hd": "Slovo",
+        "kwords__min_freq": "Min. frekvence",
+        "kwords__max_freq": "Max. frekvence"
     }
 }

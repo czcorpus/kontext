@@ -29,7 +29,10 @@ import { Actions as CorparchActions } from '../../types/plugins/corparch';
 import { Actions as ATActions } from '../../models/asyncTask/actions';
 import { KeywordsSubmitArgs, KeywordsSubmitResponse } from './common';
 import { WlnumsTypes } from '../wordlist/common';
-import { AsyncTaskInfo, AttrItem } from '../../types/kontext';
+import { AsyncTaskInfo, AttrItem, FormValue, newFormValue } from '../../types/kontext';
+import { Subject, debounceTime } from 'rxjs';
+import { TEXT_INPUT_WRITE_THROTTLE_INTERVAL_MS } from '../../types/kontext';
+import { validateGzNumber, validateNumber } from '../base';
 
 
 export type ScoreType = null|'logL'|'chi2';
@@ -42,6 +45,8 @@ export interface KeywordsFormState {
     availAttrs:Array<AttrItem>;
     pattern:string;
     scoreType:ScoreType;
+    wlMinFreqInput:FormValue<string>;
+    wlMaxFreqInput:FormValue<string>;
     precalcTasks:Array<AsyncTaskInfo<{}>>;
 }
 
@@ -67,6 +72,11 @@ export interface KeywordsFormModelArgs {
     };
 }
 
+type DebouncedActions =
+    typeof Actions.SetMinFreq |
+    typeof Actions.SetMinFreq;
+
+
 /**
  *
  */
@@ -75,6 +85,9 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
     private readonly layoutModel:PageModel;
 
     private readonly refWidgetId:string;
+
+    private readonly debouncedAction$:Subject<DebouncedActions>;
+
 
     constructor({
         dispatcher,
@@ -92,12 +105,26 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
                 attr: initialArgs ? initialArgs.wlattr : List.head(availAttrs).n,
                 pattern: initialArgs ? initialArgs.wlpat : '.*',
                 scoreType: initialArgs ? initialArgs.score_type : 'logL',
+                wlMinFreqInput: newFormValue('5', true),
+                wlMaxFreqInput: newFormValue('', true),
                 precalcTasks: [],
                 availAttrs
             }
         );
         this.layoutModel = layoutModel;
         this.refWidgetId = refWidgetId;
+        this.debouncedAction$ = new Subject();
+        this.debouncedAction$.pipe(
+            debounceTime(TEXT_INPUT_WRITE_THROTTLE_INTERVAL_MS)
+
+        ).subscribe({
+            next: value => {
+                dispatcher.dispatch({
+                    ...value,
+                    payload: {...value.payload, debounced: true}
+                });
+            }
+        });
 
         this.addActionHandler(
             GlobalActions.CorpusSwitchModelRestore,
@@ -143,6 +170,42 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
             Actions.SetScoreType,
             (state, action) => {
                 state.scoreType = action.payload.value;
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SetMinFreq,
+            (state, action) => {
+                state.wlMinFreqInput.value = action.payload.value;
+                if (action.payload.debounced) {
+                    state.wlMinFreqInput = this.validateMinFreq(state.wlMinFreqInput, action.payload.value);
+
+                } else {
+                    this.debouncedAction$.next(action);
+                }
+            },
+            (state, action) => {
+                if (action.payload.debounced && state.wlMinFreqInput.errorDesc) {
+                    this.layoutModel.showMessage('error', state.wlMinFreqInput.errorDesc);
+                }
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SetMaxFreq,
+            (state, action) => {
+                state.wlMaxFreqInput.value = action.payload.value;
+                if (action.payload.debounced) {
+                    state.wlMaxFreqInput = this.validateMaxFreq(state.wlMaxFreqInput, action.payload.value);
+
+                } else {
+                    this.debouncedAction$.next(action);
+                }
+            },
+            (state, action) => {
+                if (action.payload.debounced && state.wlMaxFreqInput.errorDesc) {
+                    this.layoutModel.showMessage('error', state.wlMaxFreqInput.errorDesc);
+                }
             }
         );
 
@@ -220,6 +283,40 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
         return 'KeywordsFormModel';
     }
 
+    private validateMaxFreq(formItem:FormValue<string>, input:string):FormValue<string> {
+        if (input && (!validateNumber(input) || parseInt(input) < 1)) {
+            return {
+                ...formItem,
+                isInvalid: true,
+                errorDesc: this.layoutModel.translate('options__value_must_be_gt_0')
+            };
+
+        } else {
+            return {
+                ...formItem,
+                isInvalid: false,
+                errorDesc: undefined
+            };
+        }
+    }
+
+    private validateMinFreq(formItem:FormValue<string>, input:string):FormValue<string> {
+        if (!validateNumber(input) || parseInt(input) < 0) {
+            return {
+                ...formItem,
+                isInvalid: true,
+                errorDesc: this.layoutModel.translate('global__invalid_gz_number_value')
+            };
+
+        } else {
+            return {
+                ...formItem,
+                isInvalid: false,
+                errorDesc: undefined
+            };
+        }
+    }
+
     private serialize(state:KeywordsFormState):KeywordsFormCorpSwitchPreserve {
         return {
             refCorp: state.refCorp,
@@ -252,7 +349,8 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
             ref_usesubcorp: state.refSubcorp,
             include_nonwords: false,
             wlattr: state.attr,
-            wlminfreq: 5,
+            wlminfreq: parseInt(state.wlMinFreqInput.value),
+            wlmaxfreq: parseInt(state.wlMaxFreqInput.value),
             wlnums: WlnumsTypes.FRQ,
             wlpat: state.pattern,
             wltype: 'simple',

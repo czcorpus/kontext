@@ -440,6 +440,7 @@ export const ValidatedItem = styled.span`
 
     .error-desc {
         position: absolute;
+        z-index: 100000,
         font-size: 80%;
         background-color: #444444;
         color: #ffb4b4;
