@@ -210,11 +210,8 @@ export class Actions {
         name: 'DEFAULT_CORPARCH_WIDGET_FAV_ITEM_REMOVE'
     };
 
-    static WidgetFavItemRemoveDone:Action<{
-        widgetId:string;
-        itemId:string;
-    }> = {
-        name: 'DEFAULT_CORPARCH_WIDGET_FAV_ITEM_REMOVE_DONE'
+    static WidgetCheckTrashedItems:Action<{}> = {
+        name: 'DEFAULT_CORPARCH_WIDGET_CHECK_TRASHED_ITEMS'
     };
 
     static WidgetFavItemAdd:Action<{
@@ -230,12 +227,6 @@ export class Actions {
         rescuedItem:ServerFavlistItem;
     }> = {
         name: 'DEFAULT_CORPARCH_WIDGET_FAV_ITEM_ADD_DONE'
-    };
-
-    static WidgetCheckTrashedItems:Action<{
-        widgetId:string;
-    }> = {
-        name: 'DEFAULT_CORPARCH_WIDGET_CHECK_TRASHED_ITEMS'
     };
 
     static WidgetSearchDone:Action<{

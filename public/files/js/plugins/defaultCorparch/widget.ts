@@ -334,9 +334,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionSubtypeHandler(
+        this.addActionHandler(
             Actions.WidgetFavItemAdd,
-            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusyFav = true;
                 const idx = List.findIndex(x => x.id === action.payload.itemId, state.dataFav);
@@ -345,7 +344,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 }
             },
             (state, action, dispatch) => {
-                this.removeItemFromTrash(state, action.payload.itemId).subscribe({
+                this.removeItemFromTrash(state, action.payload.itemId, action.payload.widgetId).subscribe({
                     next: response => {
                         dispatch<typeof Actions.WidgetFavItemAddDone>({
                             name: Actions.WidgetFavItemAddDone.name,
@@ -378,9 +377,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionSubtypeHandler(
+        this.addActionHandler(
             Actions.WidgetFavItemAddDone,
-            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusyFav = false;
                 if (!action.error) {
@@ -398,57 +396,46 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                         state.dataFav,
                         this.getFullCorpusSelection(state)
                     );
-                    this.pluginApi.showMessage(
-                        'info',
-                        this.pluginApi.translate('defaultCorparch__item_added_to_fav')
+                    if (action.payload.widgetId === this.widgetId) {
+                        this.pluginApi.showMessage(
+                            'info',
+                            this.pluginApi.translate('defaultCorparch__item_added_to_fav')
+                        );
+                    }
+                }
+            }
+        );
+
+        this.addActionHandler(
+            Actions.WidgetFavItemRemove,
+            (state, action) => {
+                this.moveItemToTrash(state, action.payload.itemId);
+            },
+            (state, action, dispatch) => {
+                if (action.payload.widgetId === this.widgetId) {
+                    this.removeFavItemFromServer(action.payload.itemId).subscribe(
+                        (favItem) => {
+                            const src = rxTimer(0, 1000).pipe(
+                                take(CorplistWidgetModel.TRASH_TTL_TICKS));
+                            if (this.trashTimerSubsc) {
+                                this.trashTimerSubsc.unsubscribe();
+                            }
+                            this.trashTimerSubsc = src.subscribe({
+                                next: () => {
+                                    dispatch(Actions.WidgetCheckTrashedItems);
+                                },
+                                complete: () => {
+                                    dispatch(Actions.WidgetCheckTrashedItems);
+                                }
+                            });
+                        }
                     );
                 }
             }
         );
 
-        this.addActionSubtypeHandler(
-            Actions.WidgetFavItemRemove,
-            action => action.payload.widgetId === this.widgetId,
-            (state, action) => {
-                this.moveItemToTrash(state, action.payload.itemId);
-            },
-            (state, action, dispatch) => {
-                this.removeFavItemFromServer(action.payload.itemId).subscribe(
-                    (favItem) => {
-                        const src = rxTimer(0, 1000).pipe(
-                            take(CorplistWidgetModel.TRASH_TTL_TICKS));
-                        if (this.trashTimerSubsc) {
-                            this.trashTimerSubsc.unsubscribe();
-                        }
-                        this.trashTimerSubsc = src.subscribe({
-                            next: () => {
-                                dispatch(Actions.WidgetCheckTrashedItems, {widgetId: this.widgetId});
-                            },
-                            complete: () => {
-                                dispatch(Actions.WidgetCheckTrashedItems, {widgetId: this.widgetId});
-                            }
-                        });
-                    }
-                );
-            }
-        );
-
-        this.addActionSubtypeHandler(
-            Actions.WidgetFavItemRemoveDone,
-            action => action.payload.widgetId === this.widgetId,
-            (state, action) => {
-                if (!action.error) {
-                    const idx = List.findIndex(v => v.id === action.payload.itemId, state.dataFav);
-                    if (idx > -1) {
-                        delete state.dataFav[idx];
-                    }
-                }
-            }
-        );
-
-        this.addActionSubtypeHandler(
+        this.addActionHandler(
             Actions.WidgetCheckTrashedItems,
-            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 this.checkTrashedItems(state);
             }
@@ -485,9 +472,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionSubtypeHandler(
+        this.addActionHandler(
             Actions.WidgetStarIconClickDone,
-            action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusyFav = false;
                 if (!action.error) {
@@ -769,13 +755,13 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
      * as a result of "rescue" operation or null if the item is lost.
      */
     private removeItemFromTrash(state:CorplistWidgetModelState,
-            itemId:string):Observable<SetFavItemResponse|null> {
+            itemId:string, widgetId:string):Observable<SetFavItemResponse|null> {
 
         if (this.trashTimerSubsc && state.dataFav.find(x => x.trashTTL !== null) === undefined) {
             this.trashTimerSubsc.unsubscribe();
         }
         const trashedItem = state.dataFav.find(x => x.id === itemId);
-        if (trashedItem) {
+        if (trashedItem && widgetId === this.widgetId) {
             return this.pluginApi.ajax$<SetFavItemResponse>(
                 HTTP.Method.POST,
                 this.pluginApi.createActionUrl('user/set_favorite_item'),
