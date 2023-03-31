@@ -434,6 +434,10 @@ async def create_view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     This is intended for direct conc. access via external pages (i.e. no query_submit + view and just directly
     to the result by providing raw CQL query
     """
+    form_args = await QueryFormArgs.create(amodel.plugin_ctx, [amodel.args.corpname], True)
+    form_args.data.curr_queries = {amodel.args.corpname: amodel.args.q[len(amodel.args.q)-1][1:]} # 1: = we strip 'q' prefix
+    form_args.data.curr_query_types = {amodel.args.corpname: 'advanced'}
+    amodel.set_curr_conc_form_args(form_args)
     asnc = int(req.args.get('asnc')) if 'asnc' in req.args else 0
     return await view_conc(amodel, req, resp, asnc, req.session_get('user', 'id'))
 
@@ -442,6 +446,10 @@ async def create_view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 @http_action(mutates_result=True, template='view.html', page_model='view', action_log_mapper=log_mapping.view,
              action_model=ConcActionModel)
 async def create_lazy_view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    form_args = await QueryFormArgs.create(amodel.plugin_ctx, [amodel.args.corpname], True)
+    form_args.data.curr_queries = {amodel.args.corpname: amodel.args.q[len(amodel.args.q)-1][1:]} # 1: = we strip 'q' prefix
+    form_args.data.curr_query_types = {amodel.args.corpname: 'advanced'}
+    amodel.set_curr_conc_form_args(form_args)
     return await view_conc(amodel, req, resp, 2, req.session_get('user', 'id'))
 
 
