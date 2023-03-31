@@ -61,49 +61,79 @@ export function init({
                 Actions.SetAttr,
                 {value: evt.target.value}
             );
-        }
+        };
 
         const handlePatternChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
             dispatcher.dispatch(
                 Actions.SetPattern,
                 {value: evt.target.value}
             );
-        }
+        };
 
         const handleScoreTypeChange = (evt:React.ChangeEvent<HTMLSelectElement>) => {
             dispatcher.dispatch(
                 Actions.SetScoreType,
                 {value: evt.target.value}
             );
-        }
+        };
 
         const handleSubmit = (evt) => {
             dispatcher.dispatch(Actions.SubmitQuery);
-        }
+        };
+
+        const handleMinFreq = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch(
+                Actions.SetMinFreq,
+                {value: evt.target.value}
+            );
+        };
+
+        const handleMaxFreq = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch(
+                Actions.SetMaxFreq,
+                {value: evt.target.value}
+            );
+        };
 
         return (
             <S.KeywordsForm>
                 <div className="corp-sel">
-                    <label>{he.translate('kwords__focus_corpus')}</label>
+                    <label>{he.translate('kwords__focus_corpus')}:</label>
                     {FocusCorpWidget ? <FocusCorpWidget widgetId={focusCorpWidgetId} /> : null}
-                    <label>{he.translate('kwords__reference_corpus')}</label>
+                    <label>{he.translate('kwords__reference_corpus')}:</label>
                     {RefCorpWidget ? <RefCorpWidget widgetId={refCorpWidgetId} /> : null}
                 </div>
                 <S.MainFieldset>
-                    <label>{he.translate('global__attribute')}</label>
-                    <select value={props.attr} onChange={handleAttrChange}>
+                    <label htmlFor="kw-attribute">{he.translate('global__attribute')}:</label>
+                    <select id="kw-attribute" value={props.attr} onChange={handleAttrChange}>
                         {List.map(
                             item => <option key={item.n} value={item.n}>{item.label}</option>,
                             props.availAttrs
                         )}
                     </select>
-                    <label>{he.translate('kwords__pattern')}</label>
-                    <input onChange={handlePatternChange} type='text' value={props.pattern}/>
-                    <label>{he.translate('kwords__score_type')}</label>
-                    <select value={props.scoreType} onChange={handleScoreTypeChange}>
-                        <option value='logL'>log-likelihood</option>
-                        <option value='chi2'>chi square</option>
+
+                    <label htmlFor="kw-pattern">{he.translate('kwords__pattern')}:</label>
+                    <input id="kw-pattern" className="pattern" onChange={handlePatternChange} type='text' value={props.pattern}/>
+
+                    <label htmlFor="kw-score">{he.translate('kwords__score_type')}:</label>
+                    <select id="kw-score" value={props.scoreType} onChange={handleScoreTypeChange}>
+                        <option value='logL'>Log-likelihood</option>
+                        <option value='chi2'>Chi-square</option>
                     </select>
+
+                    <label htmlFor="kw-minfreq">{he.translate('kwords__min_freq')}:</label>
+                    <layoutViews.ValidatedItem invalid={props.wlMinFreqInput.isInvalid}
+                            errorDesc={props.wlMinFreqInput.errorDesc}
+                            htmlClass="freq">
+                        <input id="kw-minfreq" type="text" value={props.wlMinFreqInput.value} onChange={handleMinFreq} />
+                    </layoutViews.ValidatedItem>
+
+                    <label htmlFor="kw-maxfreq">{he.translate('kwords__max_freq')}:</label>
+                    <layoutViews.ValidatedItem invalid={props.wlMaxFreqInput.isInvalid}
+                            errorDesc={props.wlMaxFreqInput.errorDesc}
+                            htmlClass="freq">
+                        <input id="kw-maxfreq" type="text" value={props.wlMaxFreqInput.value} onChange={handleMaxFreq} />
+                    </layoutViews.ValidatedItem>
                 </S.MainFieldset>
                 <div className="buttons">
                     {

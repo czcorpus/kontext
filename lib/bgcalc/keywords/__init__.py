@@ -98,13 +98,17 @@ async def keywords(corp: KCorpus, ref_corp: KCorpus, args: KeywordsFormArgs, max
         nwre = corp.get_conf('NONWORDRE')
     else:
         nwre = ''
-    items = wordlist._wordlist_by_pattern(attr=c_wl, enc_pattern=args.wlpat.strip(), excl_pattern=nwre,
-                                          wlminfreq=args.wlminfreq, pfilter_words=[],
-                                          nfilter_words=[], wlnums=args.wlnums,
-                                          attrfreq=attrfreq)
+    items = wordlist._wordlist_by_pattern(
+        attr=c_wl, enc_pattern=args.wlpat.strip(), excl_pattern=nwre,
+        wlminfreq=args.wlminfreq, pfilter_words=[],
+        nfilter_words=[], wlnums=args.wlnums,
+        attrfreq=attrfreq)
     words = [x[0] for x in items]
-    keyword = Keyword(corp.unwrap(), ref_corp.unwrap(), c_wl, rc_wl,
-                      1.0, 100, 5, 0, [], words, f'frq;{args.score_type}' if args.score_type else 'frq', [], [], [], None)
+    simple_n = 1.0  # this does not apply for CNC-custom manatee-open keywords
+    keyword = Keyword(
+        corp.unwrap(), ref_corp.unwrap(), c_wl, rc_wl,
+        simple_n, 100, args.wlminfreq, args.wlmaxfreq, [], words,
+        f'frq;{args.score_type}' if args.score_type else 'frq', [], [], [], None)
     results = []
     kw = keyword.next()
     while kw:

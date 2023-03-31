@@ -48,4 +48,13 @@ export const MainFieldset = styled.div`
     margin-bottom: 1.6em;
     max-width: 20em;
 
+    .freq input[type=text] {
+        width: 4em;
+    }
+
+    .pattern {
+        font-size: 1.4em;
+        font-family: ${theme.monospaceFontFamily};
+    }
+
 `;

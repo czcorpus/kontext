@@ -56,4 +56,18 @@ export class Actions {
     }> = {
         name: 'KEYWORDS_REGISTER_PRECALC_TASKS'
     };
+
+    static SetMinFreq:Action<{
+        value:string;
+        debounced?:boolean;
+    }> = {
+        name: 'KEYWORDS_SET_MIN_FREQ'
+    };
+
+    static SetMaxFreq:Action<{
+        value:string;
+        debounced?:boolean;
+    }> = {
+        name: 'KEYWORDS_SET_MAX_FREQ'
+    };
 }

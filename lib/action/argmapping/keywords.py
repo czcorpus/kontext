@@ -27,6 +27,7 @@ class KeywordsFormArgs:
     wlattr: str = None
     wlpat: str = None
     wlminfreq: int = 1
+    wlmaxfreq: Optional[int] = None
     wlnums: str = 'frq'
     wltype: str = 'simple'
     include_nonwords: str = '0'
@@ -40,6 +41,8 @@ class KeywordsFormArgs:
         self.wlattr = data['wlattr']
         self.wlpat = data['wlpat']
         self.wlminfreq = data['wlminfreq']
+        wlmaxfreq = data.get('wlmaxfreq')
+        self.wlmaxfreq = wlmaxfreq if wlmaxfreq is not None else 0
         self.wlnums = data['wlnums']
         self.wltype = data['wltype']
         self.include_nonwords = data['include_nonwords']
