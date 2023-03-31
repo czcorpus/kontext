@@ -282,7 +282,7 @@ async def get_conc_cache_status(amodel: ConcActionModel, req: KRequest, resp: KR
     return await _get_conc_cache_status(amodel)
 
 
-async def view_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse, asnc: bool, user_id: int):
+async def view_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse, asnc: int, user_id: int):
     corpus_info = await amodel.get_corpus_info(amodel.args.corpname)
     ml_position_filters = {}
     if corpus_info.part_of_ml_corpus:
@@ -422,7 +422,7 @@ async def view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     """
     Concordance view
     """
-    asnc = bool(int(req.args.get('asnc'))) if 'asnc' in req.args else False
+    asnc = int(req.args.get('asnc')) if 'asnc' in req.args else 0
     return await view_conc(
         amodel, req, resp, asnc, req.session_get('user', 'id'))
 
@@ -834,7 +834,7 @@ async def switch_main_corp(amodel: ConcActionModel, req: KRequest, resp: KRespon
     amodel.args.q.append('x-{0}'.format(maincorp))
     ksargs = KwicSwitchArgs(maincorp=maincorp, persist=True)
     amodel.set_curr_conc_form_args(ksargs)
-    return await view_conc(amodel, req, resp, False, req.session_get('user', 'id'))
+    return await view_conc(amodel, req, resp, 0, req.session_get('user', 'id'))
 
 
 @bp.route('/filter', methods=['POST'])
@@ -885,7 +885,7 @@ async def filter(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     amodel.on_query_store(store_last_op)
     resp.set_http_status(201)
     try:
-        return await view_conc(amodel, req, resp, False, req.session_get('user', 'id'))
+        return await view_conc(amodel, req, resp, 0, req.session_get('user', 'id'))
     except Exception as ex:
         logging.getLogger(__name__).error(f'Failed to apply filter: {ex}')
         if ff_args.data.within:
@@ -915,7 +915,7 @@ async def quick_filter(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         amodel.acknowledge_auto_generated_conc_op(op_idx, ff_args)
         amodel.args.q.append(q)
         op_idx += 1
-    return await view_conc(amodel, req, resp, False, req.session_get('user', 'id'))
+    return await view_conc(amodel, req, resp, 0, req.session_get('user', 'id'))
 
 
 @bp.route('/filter_subhits')
@@ -926,7 +926,7 @@ async def filter_subhits(amodel: ConcActionModel, req: KRequest, resp: KResponse
             'Cannot apply the function once a group of lines has been saved')
     amodel.set_curr_conc_form_args(SubHitsFilterFormArgs(persist=True))
     amodel.args.q.append('D')
-    return await view_conc(amodel, req, resp, False, req.session_get('user', 'id'))
+    return await view_conc(amodel, req, resp, 0, req.session_get('user', 'id'))
 
 
 @bp.route('/filter_firsthits', ['POST'])
@@ -940,7 +940,7 @@ async def filter_firsthits(amodel: ConcActionModel, req: KRequest, resp: KRespon
     amodel.set_curr_conc_form_args(FirstHitsFilterFormArgs(
         persist=True, doc_struct=amodel.corp.get_conf('DOCSTRUCTURE')))
     amodel.args.q.append('F{0}'.format(req.args.get('fh_struct')))
-    return await view_conc(amodel, req, resp, False, req.session_get('user', 'id'))
+    return await view_conc(amodel, req, resp, 0, req.session_get('user', 'id'))
 
 
 @bp.route('/sortx', ['POST'])
@@ -970,7 +970,7 @@ async def sortx(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         ctx = ctx.split('~')[0]
 
     amodel.args.q.append(f's{qinfo.data.sattr}/{qinfo.data.sicase}{qinfo.data.sbward} {ctx}')
-    return await view_conc(amodel, req, resp, False, req.session_get('user', 'id'))
+    return await view_conc(amodel, req, resp, 0, req.session_get('user', 'id'))
 
 
 @bp.route('/mlsortx', ['POST'])
@@ -993,7 +993,7 @@ async def mlsortx(amodel: ConcActionModel, req: KRequest, resp: KResponse):
             crit += one_level_crit(' ', qinfo.data.ml3attr, qinfo.data.ml3ctx, qinfo.data.ml3pos, mlxfcode,
                                    qinfo.data.ml3icase, qinfo.data.ml3bward)
     amodel.args.q.append(crit)
-    return await view_conc(amodel, req, resp, False, req.session_get('user', 'id'))
+    return await view_conc(amodel, req, resp, 0, req.session_get('user', 'id'))
 
 
 @bp.route('/shuffle')
@@ -1003,7 +1003,7 @@ async def shuffle(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         raise UserReadableException('Cannot apply a shuffle once a group of lines has been saved')
     amodel.set_curr_conc_form_args(ShuffleFormArgs(persist=True))
     amodel.args.q.append('f')
-    return await view_conc(amodel, req, resp, False, req.session_get('user', 'id'))
+    return await view_conc(amodel, req, resp, 0, req.session_get('user', 'id'))
 
 
 @bp.route('/ajax_apply_lines_groups', ['POST'])
@@ -1325,7 +1325,7 @@ async def reduce(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     qinfo.rlines = amodel.args.rlines
     amodel.set_curr_conc_form_args(qinfo)
     amodel.args.q.append('r' + amodel.args.rlines)
-    return await view_conc(amodel, req, resp, False, req.session_get('user', 'id'))
+    return await view_conc(amodel, req, resp, 0, req.session_get('user', 'id'))
 
 
 @dataclass
