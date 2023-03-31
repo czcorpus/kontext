@@ -292,6 +292,7 @@ export class ViewPage {
         switch (currAction) {
             case 'quick_filter':
             case 'create_view':
+            case 'create_lazy_view':
             case 'filter_subhits':
             case 'switch_main_corp':
             case 'shuffle': {
