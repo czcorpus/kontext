@@ -105,12 +105,12 @@ async def wait_for_conc(
     time_limit = 7 if minsize >= 0 else 20   # 7 => ~2s, 20 => ~19s
     t0 = t1 = time.time()
     i = 1
-    has_min_result, finished = await _check_result(cache_map, corp_cache_key, q, cutoff, minsize)
+    has_min_result, finished = await check_result(cache_map, corp_cache_key, q, cutoff, minsize)
     while not (finished or has_min_result) and t1 - t0 < time_limit:
         time.sleep(i * 0.1)
         i += 1
         t1 = time.time()
-        has_min_result, finished = await _check_result(cache_map, corp_cache_key, q, cutoff, minsize)
+        has_min_result, finished = await check_result(cache_map, corp_cache_key, q, cutoff, minsize)
     if not has_min_result:
         if finished:  # cache vs. filesystem mismatch
             await cache_map.del_entry(corp_cache_key, q, cutoff)
@@ -118,7 +118,7 @@ async def wait_for_conc(
     return True
 
 
-async def _check_result(
+async def check_result(
         cache_map: AbstractConcCache,
         corp_cache_key: Optional[str],
         q: Tuple[str, ...],
@@ -134,7 +134,7 @@ async def _check_result(
     2-tuple ["has min. acceptable result", "is finished"]
     Return True if a specific concordance calculation
     has not reached a minimal viewable size yet.
-    Otherwise it returns False (= we can show a partial
+    Otherwise, it returns False (= we can show a partial
     result).
 
     In case the calculation finished due to an error
@@ -235,7 +235,7 @@ async def find_cached_conc_base(
                         logging.getLogger(__name__).warning(
                             'Removed unfinished concordance cache record due to exceeded time limit')
                     continue
-                _, finished = await _check_result(
+                _, finished = await check_result(
                     cache_map=cache_map, corp_cache_key=corp.cache_key, q=q[:i], cutoff=cutoff, minsize=minsize)
                 if finished:
                     mcorp = corp
