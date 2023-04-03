@@ -183,7 +183,6 @@ export class ConcSummaryModel extends StatelessModel<ConcSummaryModelState> {
         state:ConcSummaryModelState,
         ttSelection:TextTypes.ExportedSelection
     ):Observable<number> {
-
         return this.layoutModel.ajax$<WithinMaxHits>(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl(
@@ -193,6 +192,7 @@ export class ConcSummaryModel extends StatelessModel<ConcSummaryModelState> {
                 corpname: state.baseCorpname,
                 usesubcorp: state.subcId,
                 ...this.layoutModel.getConcArgs(),
+                align: this.layoutModel.getConf<Array<string>>('alignedCorpora'),
                 type:'adHocIpmArgs',
                 text_types: ttSelection
             },
