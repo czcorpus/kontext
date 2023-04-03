@@ -167,7 +167,8 @@ class JSONRequestArgsProxy:
             return [self.getlist('corpname')[0]] + self.getlist('align')
         else:
             cn = self._json.get('corpname')
-            return [cn] if cn is not None else []
+            align = self.getlist('align')
+            return [cn] + align if cn is not None else []
 
     def keys(self):
         if type(self._json) is dict:
