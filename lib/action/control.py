@@ -96,7 +96,7 @@ async def _output_result(
 
 
 async def resolve_error(
-        amodel: BaseActionModel, req: KRequest, resp: KResponse, err: Exception):
+        amodel: BaseActionModel, req: KRequest, resp: KResponse, err: Exception, is_debug: bool):
     """
     resolve_error provides a way how to finish an action with some
     reasonable output in case the action has thrown an error.
@@ -109,11 +109,21 @@ async def resolve_error(
     }
     await amodel.resolve_error_state(req, resp, ans, err)
     if isinstance(err, UserReadableException):
+        resp.add_system_message('error', str(err))
         resp.set_http_status(err.code)
         if err.error_args:
             ans['error_args'] = err.error_args
     else:
+        resp.add_system_message('error', 'System problem detected. Please contact administrator.')
         resp.set_http_status(500)
+
+    if is_debug:
+        import traceback
+        err_id = hashlib.sha1(str(uuid.uuid1()).encode('ascii')).hexdigest()
+        logging.getLogger(__name__).error(
+            '{0}\n@{1}\n{2}'.format(err, err_id, ''.join(get_traceback())))
+        resp.add_system_message('error', traceback.format_exc())
+
     resp.set_result(ans)
 
 
@@ -234,8 +244,7 @@ def http_action(
             except Exception as ex:
                 if aprops.return_type == 'plain':
                     raise
-                resp.add_system_message('error', str(ex))
-                await resolve_error(amodel, req, resp, ex)
+                await resolve_error(amodel, req, resp, ex, settings.is_debug_mode())
                 if aprops.template:
                     aprops.template = 'message.html'
                     aprops.page_model = 'message'
@@ -244,12 +253,6 @@ def http_action(
                         amodel.disable_menu_on_forbidden_corpus()
                 if not aprops.return_type:
                     aprops.return_type = 'template'
-                if settings.is_debug_mode():
-                    import traceback
-                    err_id = hashlib.sha1(str(uuid.uuid1()).encode('ascii')).hexdigest()
-                    logging.getLogger(__name__).error(
-                        '{0}\n@{1}\n{2}'.format(ex, err_id, ''.join(get_traceback())))
-                    resp.add_system_message('error', traceback.format_exc())
 
             if resp.result is None:
                 resp_body = None
