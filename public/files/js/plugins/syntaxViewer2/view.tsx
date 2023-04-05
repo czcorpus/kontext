@@ -23,7 +23,6 @@ import { ComponentHelpers } from '../../types/kontext';
 import { Bound, IActionDispatcher } from 'kombo';
 import * as React from 'react';
 import { Actions } from './actions';
-import { SyntaxTreeViewerState } from './init';
 import { SyntaxTreeModel, SyntaxTreeModelState } from './model';
 import { createGenerator } from './treeView';
 
@@ -92,7 +91,7 @@ export function init(
                 paddingLeft: 20,
                 paddingRight: 20,
                 onOverflow: (width:number, height:number) => {
-                    const box = document.querySelector('.syntax-tree.tooltip-box') as HTMLElement;
+                    const box = document.querySelector('.tooltip-box .syntax-tree-frame') as HTMLElement;
                     if (box !== null) {
                         box.style['top'] = '0';
                         box.style['left'] = '50%';
