@@ -147,6 +147,15 @@ export function init(
             );
         };
 
+        const textTypesControls = [];
+        if (props.liveAttrsEnabled) {
+            textTypesControls.push(
+                <a onClick={handleShowDownloadDocumentsWidget}
+                    className={"util-button" + (props.bibIdAttr ? "" : " disabled")}>
+                    {he.translate('subc__save_list_of_documents')}
+                </a>
+            );
+        }
         return (
             <TabContentWrapper htmlClass="reuse">
                 <S.ReuseTabContentWrapper>
@@ -165,12 +174,7 @@ export function init(
                     {isTTSelection(props.data.selections) ?
                         <ttViews.TextTypesPanel LiveAttrsCustomTT={props.liveAttrsEnabled ?
                                     liveAttrsViews.LiveAttrsCustomTT : null}
-                                    controls={[
-                                        <a onClick={handleShowDownloadDocumentsWidget}
-                                            className={"util-button" + (props.bibIdAttr ? "" : " disabled")}>
-                                            {he.translate('subc__save_list_of_documents')}
-                                        </a>
-                                    ]}
+                                    controls={textTypesControls}
                             LiveAttrsView={props.liveAttrsEnabled ?
                                 liveAttrsViews.LiveAttrsView : null} /> :
                         null}
