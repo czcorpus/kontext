@@ -32,7 +32,7 @@ import { WlnumsTypes } from '../wordlist/common';
 import { AsyncTaskInfo, AttrItem, FormValue, newFormValue } from '../../types/kontext';
 import { Subject, debounceTime } from 'rxjs';
 import { TEXT_INPUT_WRITE_THROTTLE_INTERVAL_MS } from '../../types/kontext';
-import { validateGzNumber, validateNumber } from '../base';
+import { validateNumber } from '../base';
 
 
 export type ScoreType = null|'logL'|'chi2';
@@ -56,6 +56,8 @@ export interface KeywordsFormCorpSwitchPreserve {
     attr:string;
     pattern:string;
     scoreType:ScoreType;
+    wlMinFreqInput:FormValue<string>;
+    wlMaxFreqInput:FormValue<string>;
 }
 
 export interface KeywordsFormModelArgs {
@@ -324,6 +326,8 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
             attr: state.attr,
             pattern: state.pattern,
             scoreType: state.scoreType,
+            wlMinFreqInput: {...state.wlMinFreqInput},
+            wlMaxFreqInput: {...state.wlMaxFreqInput}
         };
     }
 
@@ -335,9 +339,17 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
         if (data) {
             state.refCorp = data.refCorp;
             state.refSubcorp = data.refSubcorp;
+            if (List.find(v => v.n === data.attr, state.availAttrs)) {
+                state.attr = data.attr;
+
+            } else {
+                state.attr = List.head(state.availAttrs).n;
+            }
             state.attr = data.attr;
             state.pattern = data.pattern;
             state.scoreType = data.scoreType;
+            state.wlMinFreqInput = data.wlMinFreqInput;
+            state.wlMaxFreqInput = data.wlMaxFreqInput;
         }
     }
 
