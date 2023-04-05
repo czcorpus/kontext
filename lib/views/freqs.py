@@ -17,13 +17,14 @@
 import logging
 import re
 import sys
+import time
 from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import List, Tuple
-from sanic import Blueprint
-import time
 
+import mailing
 import plugins
+import settings
 from action.argmapping.action import IntOpt, ListStrOpt, StrOpt
 from action.argmapping.analytics import (
     CollFormArgs, CTFreqFormArgs, FreqFormArgs)
@@ -40,9 +41,8 @@ from conclib.errors import ConcNotFoundException, ConcordanceQueryParamsError
 from conclib.freq import MLFreqArgs, multi_level_crit
 from conclib.search import get_conc
 from main_menu import MainMenu
+from sanic import Blueprint
 from strings import escape_attr_val
-import settings
-import mailing
 
 bp = Blueprint('freqs')
 
@@ -62,7 +62,7 @@ class MLFreqRequestArgs(MLFreqArgs):
 class GeneralFreqArgs:
     fcrit: List[str]
     fcrit_async: ListStrOpt = field(default_factory=list)
-    flimit: IntOpt = 0
+    flimit: IntOpt = 1
     alpha_level: StrOpt = '0.05'
     freq_sort: StrOpt = ''
     freq_type: StrOpt = ''
@@ -534,7 +534,8 @@ async def share_freq_table_via_mail(amodel: UserActionModel, req: KRequest, resp
         if not recip_email:
             raise UserReadableException('Missing recipient e-mail')
 
-        text = req.translate('KonText user {} has sent to you a link to a frequency distribution table').format(username,) + ':'
+        text = req.translate(
+            'KonText user {} has sent to you a link to a frequency distribution table').format(username,) + ':'
         text += '\n\n'
         text += url + '\n\n'
         text += '\n---------------------\n'
