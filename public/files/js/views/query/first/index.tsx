@@ -217,6 +217,20 @@ export function init({
         };
 
         const primaryCorpname = List.head(props.corpora);
+        const textTypesControls = [
+            <a onClick={handleShowQuickSubcorpWidget}
+                className={"util-button" + (props.quickSubcorpActive ? "" : " disabled")}>
+                {he.translate('subc__quick_subcorpus')}
+            </a>
+        ];
+        if (props.LiveAttrsView) {
+            textTypesControls.push(
+                <a onClick={handleShowDownloadDocumentsWidget}
+                    className={"util-button" + (props.bibIdAttr ? "" : " disabled")}>
+                    {he.translate('subc__save_list_of_documents')}
+                </a>
+            );
+        }
         return (
             <S.QueryForm>
                 {props.suggestAltCorpVisible ?
@@ -290,17 +304,7 @@ export function init({
                     <ttViews.TextTypesPanel
                             LiveAttrsView={props.LiveAttrsView}
                             LiveAttrsCustomTT={props.LiveAttrsCustomTT}
-                            controls={[
-                                <a onClick={handleShowQuickSubcorpWidget}
-                                    className={"util-button" + (props.quickSubcorpActive ? "" : " disabled")}>
-                                        {he.translate('subc__quick_subcorpus')}
-                                </a>,
-                                <a onClick={handleShowDownloadDocumentsWidget}
-                                    className={"util-button" + (props.bibIdAttr ? "" : " disabled")}>
-                                    {he.translate('subc__save_list_of_documents')}
-                                </a>
-                                ]}
-                            />
+                            controls={textTypesControls} />
                     </inputViews.AdvancedFormFieldset>
                     <div className="submit-block">
                         <div className="buttons">

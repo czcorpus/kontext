@@ -574,26 +574,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                 state.docSaveIsBusy = true;
             },
             (state, action, dispatch) => {
-                const args = pipe(
-                    state.selectionSteps,
-                    List.foldl(
-                        (acc, v) => {
-                            if (isAlignedSelectionStep(v)) {
-                                acc.laligned = v.attributes;
-                                return acc;
-
-                            } else {
-                                acc.lattrs = Dict.mergeDict((o, n) => n, v.values, acc.lattrs);
-                                return acc;
-                            }
-                        },
-                        {
-                            corpname: state.firstCorpus,
-                            laligned: [],
-                            lattrs: {}
-                        }
-                    )
-                );
+                const args = this.selectionStepsToAttrSel(state);
                 this.pluginApi.bgDownload({
                     format: state.documentListSaveFormat,
                     datasetType: DownloadType.DOCUMENT_LIST,
@@ -609,7 +590,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                         }
                     ),
                     contentType: 'application/json',
-                    args
+                    args,
 
                 }).subscribe(() => {
                     dispatch(
@@ -671,8 +652,19 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                 },
                 {
                     corpname: state.firstCorpus,
-                    laligned: [],
-                    lattrs: {}
+                    laligned: pipe(
+                        state.initialAlignedCorpora,
+                        List.filter(v => v.selected),
+                        List.map(v => v.value),
+                    ),
+                    lattrs: pipe(
+                        state.subcorpDefinition,
+                        Dict.map((selections, k) => {
+                            if (Array.isArray(selections))
+                                return selections
+                            return [TextTypes.isExportedRegexpSelection(selections) ? selections.regexp : selections]
+                        })
+                    ),
                 }
             )
         );
