@@ -155,6 +155,7 @@ class TreeGenerator {
         this.generateNodeCoords(tokens, nodeMap);
         const edges = this.generateEdges(nodeMap);
         this.d3Draw(tokens, nodeMap, edges, target, rowCount);
+        this.onOverflow(this.params.width, this.params.height); // using to fit data properly
     }
 
     private importSentence(data:srcData.Data, nodes:Array<srcData.Node>):Sentence {
