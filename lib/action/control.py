@@ -112,6 +112,9 @@ async def resolve_error(
         resp.set_http_status(err.code)
         if err.error_args:
             ans['error_args'] = err.error_args
+    elif is_debug:
+        resp.add_system_message('error', str(err))
+        resp.set_http_status(500)
     else:
         resp.set_http_status(500)
     resp.set_result(ans)
