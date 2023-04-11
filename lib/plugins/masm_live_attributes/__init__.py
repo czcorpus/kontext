@@ -91,8 +91,8 @@ async def num_matching_documents(amodel: CorpusActionModel, req: KRequest, resp:
 @bp.route('/save_document_list', methods=['POST'])
 @http_action(return_type='plain', action_model=CorpusActionModel)
 async def save_document_list(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
-    attrs = ujson.loads(req.form.get('attrs', '{}'))
-    aligned = ujson.loads(req.form.get('aligned', '[]'))
+    attrs = req.json.get('lattrs', {})
+    aligned = req.json.get('laligned', [])
     save_format = req.args.get('save_format')
     with plugins.runtime.LIVE_ATTRIBUTES as lattr:
         nm, ttype = await lattr.document_list(
