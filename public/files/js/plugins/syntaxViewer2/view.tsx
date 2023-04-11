@@ -91,17 +91,18 @@ export function init(
                 paddingLeft: 20,
                 paddingRight: 20,
                 onOverflow: (width:number, height:number) => {
-                    const box = document.querySelector('.tooltip-box .syntax-tree-frame') as HTMLElement;
-                    if (box !== null) {
-                        box.style['top'] = '0';
-                        box.style['left'] = '50%';
-                        box.style['transform'] = 'translate(-50%, 0%)';
-
-                    } else {
-                        throw new Error('Failed to correct overflowing box - wrapping element not found');
+                    const viewBox = document.querySelector('.tooltip-box .syntax-tree-frame') as HTMLElement;
+                    if (viewBox) {
+                        const popupBox = viewBox.closest('.tooltip-box') as HTMLElement;
+                        if (popupBox !== null) {
+                            popupBox.style['position'] = 'relative';
+                            popupBox.style['top'] = '0';
+                            popupBox.style['left'] = '50%';
+                            popupBox.style['transform'] = 'translate(-50%, 0%)';
+                            return [width, height];
+                        }
                     }
-                    return [width, height];
-
+                    throw new Error('Failed to correct overflowing box - wrapping element not found');
                 }
             }
         );
