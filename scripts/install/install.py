@@ -57,8 +57,6 @@ REQUIREMENTS = [
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser('Kontext instalation script')
-    argparser.add_argument('--celery', dest='install_celery', action='store_true',
-                           default=False, help='Install celery instead of rq')
     argparser.add_argument('--ucnk', action='store_true', default=False, help='Use UCNK sources')
     argparser.add_argument('--patch', dest='patch_path', action='store',
                            default=None, help='Path to UCNK Manatee patch')
@@ -75,7 +73,6 @@ if __name__ == "__main__":
 
     subprocess.call(['systemctl', 'stop', 'rq-all.target'])
     subprocess.call(['systemctl', 'stop', 'rqscheduler'])
-    subprocess.call(['systemctl', 'stop', 'celery'])
 
     # install prerequisites
     print('Installing requirements...')
@@ -85,7 +82,7 @@ if __name__ == "__main__":
         subprocess.check_call(['apt-get', 'install', '-y'] + REQUIREMENTS, stdout=stdout)
         subprocess.check_call(['python3', '-m', 'pip', 'install',
                                'pip', '--upgrade'], stdout=stdout)
-        subprocess.check_call(['pip3 install simplejson \'celery==4.4.*\' signalfd -r requirements.txt'],
+        subprocess.check_call(['pip3 install simplejson signalfd -r requirements.txt'],
                               cwd=KONTEXT_PATH, stdout=stdout, shell=True)
         subprocess.check_call(
             'curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -', shell=True)
@@ -97,23 +94,19 @@ if __name__ == "__main__":
     import steps
 
     # run installation steps
-    steps.SetupBgCalc(KONTEXT_PATH, stdout, stderr).run(args.install_celery)
+    steps.SetupBgCalc(KONTEXT_PATH, stdout, stderr).run()
     steps.SetupNginx(KONTEXT_PATH, stdout, stderr).run()
     steps.SetupManatee(KONTEXT_PATH, stdout, stderr, args.no_cert_check).run(
         args.manatee_version, args.patch_path, ucnk_manatee=args.ucnk)
     steps.SetupKontext(
         kontext_path=KONTEXT_PATH, kontext_conf=KONTEXT_INSTALL_CONF,
-        scheduler_conf=SCHEDULER_INSTALL_CONF,  stdout=stdout, stderr=stderr).run(args.install_celery)
+        scheduler_conf=SCHEDULER_INSTALL_CONF,  stdout=stdout, stderr=stderr).run()
     steps.SetupDefaultUsers(KONTEXT_PATH, stdout, stderr).run()
 
     # finalize instalation
-    if args.install_celery:
-        print('Initializing Celery...')
-        subprocess.check_call(['systemctl', 'start', 'celery'], stdout=stdout)
-    else:
-        print('Initializing Rq...')
-        subprocess.check_call(['systemctl', 'start', 'rq-all.target'], stdout=stdout)
-        subprocess.check_call(['systemctl', 'start', 'rqscheduler'], stdout=stdout)
+    print('Initializing Rq...')
+    subprocess.check_call(['systemctl', 'start', 'rq-all.target'], stdout=stdout)
+    subprocess.check_call(['systemctl', 'start', 'rqscheduler'], stdout=stdout)
 
     print('Initializing Nginx...')
     subprocess.check_call(['systemctl', 'restart', 'nginx'], stdout=stdout)

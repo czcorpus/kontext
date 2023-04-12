@@ -1,2 +1,0 @@
-d /var/run/celery 0755 bg-calc www-data -
-d /var/log/celery 0755 bg-calc www-data -

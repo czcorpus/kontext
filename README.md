@@ -58,7 +58,7 @@ KonText is an **advanced corpus query interface** and corpus data **integration 
 ## Internal features
 
 * modern client-side application (written in TypeScript, event stream architecture, React components, extensible)
-* server-side written using the [Sanic](https://sanic.dev/en/) framework with fully **decoupled background concordance/frequency/collocation calculation** (using an integrated Rq/Celery worker server)
+* server-side written using the [Sanic](https://sanic.dev/en/) framework with fully **decoupled background concordance/frequency/collocation calculation** (using an integrated Rq worker server)
 * modular code design with dynamically loadable plug-ins providing custom functionality implementation (e.g. custom database
 adapters, authentication method, corpus listing widgets, HTTP session management)
 
@@ -67,7 +67,7 @@ adapters, authentication method, corpus listing widgets, HTTP session management
 
 ### Docker
 
-Running KonText as a set of Docker containers is the most convenient and flexible way. To run a basic 
+Running KonText as a set of Docker containers is the most convenient and flexible way. To run a basic
 configuration instance (i.e. no MySQL/MariaDB server, no WebSocket server) use:
 
 ```shell
@@ -91,14 +91,14 @@ docker-compose -f docker-compose.yml -f docker-compose.mysql.yml --env-file .env
 * [Manatee](http://nlp.fi.muni.cz/trac/noske) corpus search engine - version *2.167.8* and onwards (for KonText *v0.17*, Manatee *v2.2xx* is recommended)
 * a key-value storage
     * [Redis](http://redis.io/) (recommended), [SQLite](https://sqlite.org/) (supported), custom implementations possible
-* a task queue - [Rq](https://python-rq.org/) (recommended), [Celery task queue](http://www.celeryproject.org/) (supported)
+* a task queue - [Rq](https://python-rq.org/)
 * HTTP proxy server
   + [Nginx](http://nginx.org/) (recommended), [Apache](http://httpd.apache.org/),...
 
 
-For Ubuntu OS users, it is recommended to use the [install script](scripts/install/install.py) which should 
+For Ubuntu OS users, it is recommended to use the [install script](scripts/install/install.py) which should
 perform most of the actions necessary to install and run KonText. For other Linux distributions we recommend
-running KonText within a container or a virtual machine. Please refer to the [doc/INSTALL.md](doc/INSTALL.md) 
+running KonText within a container or a virtual machine. Please refer to the [doc/INSTALL.md](doc/INSTALL.md)
 file for details.
 
 
