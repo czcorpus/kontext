@@ -137,7 +137,8 @@ class MySqlQueryHistory(AbstractQueryHistory):
         return await self._query_persistence.open(q_id) is not None
 
     async def _merge_conc_data(self, data, qdata):
-        def get_ac_val(data, name, corp): return data[name][corp] if name in data else None
+        def get_ac_val(data, name, corp):
+            return data.get(name, {}).get(corp, None)
 
         if qdata and 'lastop_form' in qdata:
             ans = {}
