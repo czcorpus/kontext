@@ -19,7 +19,7 @@
  */
 import * as React from 'react';
 import * as Kontext from '../../types/kontext';
-import { IActionDispatcher, IFullActionControl } from 'kombo';
+import { IFullActionControl } from 'kombo';
 import { Dict, List, pipe, tuple } from 'cnc-tskit';
 import { Actions as QueryActions } from '../../models/query/actions';
 import { Actions as ConcActions } from '../../models/concordance/actions';

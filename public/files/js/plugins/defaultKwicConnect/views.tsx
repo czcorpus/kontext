@@ -68,6 +68,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                                         {output.data.length > 0 ?
                                             <>
                                                 {List.map((item, j) =>
+                                                    item.contents && typeof(item.contents) === 'string' ?
+                                                    <div className="provider-block">{item.contents}</div> :
                                                     React.createElement(
                                                         output.renderer,
                                                         {
