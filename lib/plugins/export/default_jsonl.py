@@ -21,10 +21,10 @@ A plug-in allowing export of miscellaneous KonText data sets (conc, freq, coll,.
 to JSONL.
 """
 
-from typing import Any, Dict, List, Tuple
-import ujson
 import io
+from typing import Any, Dict, List, Tuple
 
+import ujson
 from action.argmapping.wordlist import WordlistSaveFormArgs
 from action.model.concordance import ConcActionModel
 from action.model.pquery import ParadigmaticQueryActionModel
@@ -39,6 +39,7 @@ from views.colls import SavecollArgs
 from views.concordance import SaveConcArgs
 from views.freqs import SavefreqArgs
 from views.pquery import SavePQueryArgs
+
 from . import AbstractExport
 
 
@@ -80,12 +81,12 @@ class JSONLExport(AbstractExport):
         for row_num, line in enumerate(data.Lines, args.from_line):
             row_obj = {}
             exported_line = self._process_lang(
-                line, left_key, kwic_key, right_key, add_linegroup=amodel.lines_groups.is_defined())
+                line, left_key, kwic_key, right_key, add_linegroup=amodel.lines_groups.is_defined(), attr_vmode=amodel.args.attr_vmode)
             self._enhance_refs(exported_line[0], used_refs)
             row_obj.update(exported_line[0])  # primary lang.
             if 'Align' in line:
                 aligned = self._process_lang(
-                    line['Align'], left_key, kwic_key, right_key, add_linegroup=False)
+                    line['Align'], left_key, kwic_key, right_key, add_linegroup=False, attr_vmode=amodel.args.attr_vmode)
                 for aitem in aligned:
                     self._enhance_refs(aitem, used_refs)
                 row_obj['aligned'] = aligned
