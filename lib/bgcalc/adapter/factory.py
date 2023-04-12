@@ -13,8 +13,6 @@
 # GNU General Public License for more details.
 
 
-from importlib.machinery import SourceFileLoader
-
 from bgcalc.adapter.abstract import AbstractBgClient
 
 from .errors import BgCalcAdapterError
@@ -25,24 +23,7 @@ _backend_app = None
 def init_backend(conf, fn_prefix) -> AbstractBgClient:
     worker_type = conf.get('calc_backend', 'type')
     worker_conf = conf.get('calc_backend', 'conf')
-    if worker_type == 'celery':
-        import celery
-        from bgcalc.adapter.celery import CeleryClient, Config
-
-        if worker_conf:
-            cconf = SourceFileLoader('celeryconfig', worker_conf).load_module()
-        else:
-            cconf = Config()
-            cconf.broker_url = conf.get('calc_backend', 'celery_broker_url')
-            cconf.result_backend = conf.get('calc_backend', 'celery_result_backend')
-            cconf.task_serializer = conf.get('calc_backend', 'celery_task_serializer')
-            cconf.result_serializer = conf.get('calc_backend', 'celery_result_serializer')
-            cconf.accept_content = conf.get('calc_backend', 'celery_accept_content')
-            cconf.timezone = conf.get('calc_backend', 'celery_timezone')
-        worker = celery.Celery('bgcalc')
-        worker.config_from_object(cconf)
-        return CeleryClient(worker)
-    elif worker_type == 'rq':
+    if worker_type == 'rq':
         from bgcalc.adapter.rq import RqClient, RqConfig
         rqconf = RqConfig()
         rqconf.HOST = conf.get('calc_backend', 'rq_redis_host')
@@ -53,4 +34,3 @@ def init_backend(conf, fn_prefix) -> AbstractBgClient:
     else:
         raise BgCalcAdapterError(
             'Failed to init calc backend {0} (conf: {1})'.format(worker_type, worker_conf))
-

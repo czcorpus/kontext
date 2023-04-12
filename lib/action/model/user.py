@@ -13,18 +13,18 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import inspect
 import logging
 import os
 import time
 from dataclasses import fields
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
+import bgcalc
 import corplib
 import plugins
 import settings
 from action.argmapping import UserActionArgs
-from action.errors import UserReadableException, FunctionNotSupported
+from action.errors import FunctionNotSupported, UserReadableException
 from action.krequest import KRequest
 from action.model import ModelsSharedData
 from action.model.abstract import AbstractUserModel
@@ -32,7 +32,6 @@ from action.model.base import BaseActionModel, BasePluginCtx
 from action.plugin.ctx import AbstractUserPluginCtx
 from action.props import ActionProps
 from action.response import KResponse
-import bgcalc
 from bgcalc.task import AsyncTaskStatus
 from corplib import CorpusFactory
 from main_menu import MainMenu, generate_main_menu
@@ -329,7 +328,7 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
             True if job was found (and updated) else False
         """
         backend = settings.get('calc_backend', 'type')
-        if backend in ('celery', 'rq'):
+        if backend in ['rq']:
             worker = bgcalc.calc_backend_client(settings)
             aresult = worker.AsyncResult(curr_at.ident)
             if aresult:

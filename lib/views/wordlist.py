@@ -15,24 +15,24 @@
 
 
 import logging
-from typing import List
 import time
+from typing import List
 
 import plugins
 import settings
 from action.argmapping import log_mapping
 from action.argmapping.wordlist import WordlistFormArgs, WordlistSaveFormArgs
 from action.control import http_action
+from action.errors import ImmediateRedirectException
 from action.krequest import KRequest
 from action.model.wordlist import WordlistActionModel, WordlistError
-from action.errors import ImmediateRedirectException
 from action.response import KResponse
 from bgcalc import calc_backend_client
 from bgcalc.errors import BgCalcError
 from bgcalc.freqs import build_arf_db, build_arf_db_status
+from bgcalc.task import AsyncTaskStatus
 from bgcalc.wordlist import make_wl_query, require_existing_wordlist
 from bgcalc.wordlist.errors import WordlistResultNotFound
-from bgcalc.task import AsyncTaskStatus
 from corplib.errors import MissingSubCorpFreqFile
 from main_menu import MainMenu
 from sanic import Blueprint
@@ -146,7 +146,8 @@ async def view_result(amodel: WordlistActionModel, req: KRequest):
             limit=amodel.args.wlpagesize, wlsort=wlsort,
             collator_locale=(await amodel.get_corpus_info(amodel.corp.corpname)).collator_locale)
     except WordlistResultNotFound:
-        raise ImmediateRedirectException(req.create_url('wordlist/restore', dict(q=req.args_getlist('q')[0])))
+        raise ImmediateRedirectException(req.create_url(
+            'wordlist/restore', dict(q=req.args_getlist('q')[0])))
 
     result = dict(
         data=data, total=total, form=amodel.curr_wlform_args.to_dict(),
@@ -154,7 +155,7 @@ async def view_result(amodel: WordlistActionModel, req: KRequest):
         wlpagesize=amodel.args.wlpagesize)
     try:
         result['wlattr_label'] = (
-                amodel.corp.get_conf(amodel.curr_wlform_args.wlattr + '.LABEL') or amodel.curr_wlform_args.wlattr)
+            amodel.corp.get_conf(amodel.curr_wlform_args.wlattr + '.LABEL') or amodel.curr_wlform_args.wlattr)
     except Exception as e:
         result['wlattr_label'] = amodel.curr_wlform_args.wlattr
         logging.getLogger(__name__).warning(f'wlattr_label set failed: {e}')
@@ -279,7 +280,7 @@ async def savewl(amodel: WordlistActionModel, req: KRequest[WordlistSaveFormArgs
 async def process(amodel: WordlistActionModel, req: KRequest, _: KResponse):
     worker_tasks: List[str] = req.args.get('worker_tasks')
     backend = settings.get('calc_backend', 'type')
-    if worker_tasks and backend in ('celery', 'rq'):
+    if worker_tasks and backend in ['rq']:
         import bgcalc
         worker = bgcalc.calc_backend_client(settings)
         for t in worker_tasks:

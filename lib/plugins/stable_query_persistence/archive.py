@@ -163,7 +163,7 @@ def _create_archive(conf, dry_run):
         print(('Created a new concordance archive file {0}.'.format(arch_db_path)))
         print('Please do not forget to set proper ownership and read+write permissions')
         print('for web server user (www-data on Ubuntu)')
-        print('When done, please restart KonText Gunicorn server and also worker server (Celery)')
+        print('When done, please restart KonText server and also worker server')
         print('')
 
 
