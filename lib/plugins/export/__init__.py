@@ -48,7 +48,7 @@ class UnknownExporterException(Exception):
 
 class AbstractConcExportMixin(object):
 
-    def _merge_conc_line_parts(self, items: List[Dict[str, Any]]) -> str:
+    def _merge_conc_line_parts(self, items: List[Dict[str, Any]], add_tail: bool = True) -> str:
         """
         converts a list of dicts of the format [{'class': u'col0 coll', 'str': u' \\u0159ekl'},
             {'class': u'attr', 'str': u'/j\xe1/PH-S3--1--------'},...] to a CSV compatible form
@@ -59,15 +59,19 @@ class AbstractConcExportMixin(object):
                 ans.append([str(item['str']).strip()])
             else:
                 ans.append([str(item['str']).strip()])
-            for tp in item.get('tail_posattrs', []):
-                ans[-1].append(tp)
+            if add_tail:
+                for tp in item.get('tail_posattrs', []):
+                    ans[-1].append(tp)
         return ' '.join('/'.join(x) for x in ans).strip()
 
     def _process_lang(
             self,
             root: Union[List[Dict[str, Any]], Dict[str, Any]],
-            left_key: str, kwic_key: str,
-            right_key: str, add_linegroup: bool
+            left_key: str,
+            kwic_key: str,
+            right_key: str,
+            add_linegroup: bool,
+            attr_vmode: str,
     ) -> List[Dict[str, str]]:
 
         if isinstance(root, dict):
@@ -80,9 +84,12 @@ class AbstractConcExportMixin(object):
                 ans_item['ref'] = items['ref']
             if add_linegroup:
                 ans_item['linegroup'] = items.get('linegroup', '')
-            ans_item['left_context'] = self._merge_conc_line_parts(items[left_key])
-            ans_item['kwic'] = self._merge_conc_line_parts(items[kwic_key])
-            ans_item['right_context'] = self._merge_conc_line_parts(items[right_key])
+            ans_item['left_context'] = self._merge_conc_line_parts(
+                items[left_key], attr_vmode not in ['visible-kwic', 'mouseover'])
+            ans_item['kwic'] = self._merge_conc_line_parts(
+                items[kwic_key], attr_vmode not in ['mouseover'])
+            ans_item['right_context'] = self._merge_conc_line_parts(
+                items[right_key], attr_vmode not in ['visible-kwic', 'mouseover'])
             ans.append(ans_item)
         return ans
 
