@@ -157,6 +157,8 @@ class MasmSubcmixer(AbstractSubcMixer):
                     'textTypes': args
                 }) as resp:
             data = await proc_masm_response(resp)
+        if data.error:
+            raise SubcMixerException(data.error)
         if data.size_assembled > 0:
             return {
                 'attrs':  [(cs.expression, cs.ratio) for cs in data.category_sizes],
