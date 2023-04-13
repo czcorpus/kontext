@@ -170,9 +170,9 @@ class MySQLSubcArchive(AbstractSubcArchive):
             await cursor.execute(
                 f'INSERT INTO {self._bconf.subccorp_table} '
                 f'(id, user_id, author_id, corpus_name, name, created, size, is_draft, aligned) '
-                'VALUES (%s, %s, %s, %s, %s, %s, %s, %s)',
+                'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NULL)',
                 (subc_id.id, self.shared_subc_user_id, self.shared_subc_user_id, corpname, subcname, datetime.now(),
-                 self.preflight_subcorpus_size, 0, ''))
+                 self.preflight_subcorpus_size, 0))
             await cursor.execute(
                 'INSERT INTO kontext_preflight_subc (id, corpus_name) '
                 'VALUES (%s, %s)',
