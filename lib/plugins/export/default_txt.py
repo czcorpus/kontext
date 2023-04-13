@@ -71,6 +71,10 @@ class TXTExport(AbstractExport):
         output['align_kwic'] = args.align_kwic
         output['human_corpname'] = amodel.corp.human_readable_corpname
         output['usesubcorp'] = amodel.args.usesubcorp
+        if args.align_kwic:
+            kwic_lengths = [len(' '.join(k['str'] for k in line['Kwic'])) for line in data.Lines]
+            max_kwic_length = max(kwic_lengths)
+            output['kwic_spaces'] = [' ' * (max_kwic_length - l) for l in kwic_lengths]
 
         for line in data.Lines:
             line['ref'] = ', '.join(line['ref'])
