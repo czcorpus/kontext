@@ -355,7 +355,7 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
 
     createKeywordsArgs(state:KeywordsFormState, corpname:string, subcorp:string):KeywordsSubmitArgs {
         return {
-            corpname: corpname,
+            corpname,
             usesubcorp: subcorp,
             ref_corpname: state.refCorp,
             ref_usesubcorp: state.refSubcorp,
@@ -378,7 +378,7 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
                 'keywords/submit',
                 {format: 'json'}
             ),
-            this.createKeywordsArgs(state, corp.name, corp.usesubcorp),
+            this.createKeywordsArgs(state, corp.id, corp.usesubcorp),
             {contentType: 'application/json'}
 
         ).subscribe({
