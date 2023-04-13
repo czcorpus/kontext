@@ -27,6 +27,7 @@ import * as Kontext from '../../../types/kontext';
 import { KeywordsResultModel, KeywordsResultState } from '../../../models/keywords/result';
 import { List } from 'cnc-tskit';
 import * as S from './style';
+import { Actions } from '../../../models/keywords/actions';
 
 
 export interface KeywordsResultViewArgs {
@@ -46,6 +47,13 @@ export function init({
 
     const KeywordsResult:React.FC<KeywordsResultState> = (props) => {
 
+        const handlePageChange = (value:string) => {
+            dispatcher.dispatch(
+                Actions.ResultSetPage,
+                {page: value},
+            );
+        };
+
         return (
             <S.KeywordsResult>
 
@@ -55,6 +63,12 @@ export function init({
                     <dt>{he.translate('kwords__reference_corpus')}:</dt>
                     <dd>{props.refCorpname} {props.refSubcorpname ? ` / ${props.refSubcorpname}` : ''}</dd>
                 </dl>
+
+                <layoutViews.SimplePaginator
+                    isLoading={false}
+                    currentPage={`${props.kwpage}`}
+                    totalPages={props.totalPages}
+                    handlePageChange={handlePageChange} />
 
                 <table className="data">
                     <thead>

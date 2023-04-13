@@ -70,4 +70,10 @@ export class Actions {
     }> = {
         name: 'KEYWORDS_SET_MAX_FREQ'
     };
+
+    static ResultSetPage:Action<{
+        page:string;
+    }> = {
+        name: 'KEYWORDS_RESULT_SET_PAGE'
+    };
 }

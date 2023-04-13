@@ -22,6 +22,8 @@
 import { IActionDispatcher, StatelessModel } from 'kombo';
 import { PageModel } from '../../app/page';
 import { Keyword } from './common';
+import { Actions } from './actions';
+import { validateGzNumber } from '../base';
 
 
 
@@ -32,6 +34,11 @@ export interface KeywordsResultState {
     refSubcorpname:string|undefined;
     focusCorpname:string;
     focusSubcorpname:string|undefined;
+    total:number;
+    kwpage:number;
+    kwpagesize:number;
+    reverse:boolean;
+    totalPages:number;
 }
 
 
@@ -62,15 +69,36 @@ export class KeywordsResultModel extends StatelessModel<KeywordsResultState> {
         super(
             dispatcher,
             {
-                data: layoutModel.getConf('Keywords'),
+                data: layoutModel.getConf<Array<Keyword>>('Keywords'),
                 isBusy: false,
                 refCorpname,
                 refSubcorpname,
                 focusCorpname,
-                focusSubcorpname
+                focusSubcorpname,
+                kwpage: layoutModel.getConf<number>('Page'),
+                kwpagesize: layoutModel.getConf<number>('PageSize'),
+                reverse: layoutModel.getConf<boolean>('Reverse'),
+                total: layoutModel.getConf<number>('Total'),
+                totalPages: Math.ceil(layoutModel.getConf<number>('Total')/layoutModel.getConf<number>('PageSize')),
             }
         );
         this.layoutModel = layoutModel;
+
+        this.addActionHandler(
+            Actions.ResultSetPage,
+            (state, action) => {
+                if (validateGzNumber(action.payload.page)) {
+                    if (parseInt(action.payload.page) > state.totalPages) {
+                        state.kwpage = state.totalPages;
+                        this.layoutModel.showMessage('info', this.layoutModel.translate('global__no_more_pages'));
+                    } else {
+                        state.kwpage = parseInt(action.payload.page);
+                    }
+                } else {
+                    this.layoutModel.showMessage('error', this.layoutModel.translate('freq__page_invalid_val'));
+                }
+            }
+        );
 
     }
 

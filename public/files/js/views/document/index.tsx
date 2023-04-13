@@ -840,7 +840,7 @@ export function init(
                 return (
                     <input type="text" value={value}
                         title={he.translate('global__curr_page_num')}
-                        onKeyPress={handleKeyPress}
+                        onKeyDown={handleKeyPress}
                         onChange={e => setValue(e.target.value)}
                         disabled={props.totalPages === 1}
                         style={{width: '3em'}} />
