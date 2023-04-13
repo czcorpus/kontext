@@ -361,7 +361,8 @@ export function init({
                 break;
                 case Keyboard.Value.ENTER:
                     dispatcher.dispatch<typeof Actions.WidgetEnterOnActiveListItem>({
-                        name: Actions.WidgetEnterOnActiveListItem.name
+                        name: Actions.WidgetEnterOnActiveListItem.name,
+                        payload: {widgetId: props.widgetId},
                     });
                     evt.preventDefault();
                     evt.stopPropagation();
@@ -448,7 +449,7 @@ export function init({
     const SearchInput:React.FC<{
         widgetId:string;
         value:string;
-        handleTab:()=>void;
+        handleTab?:()=>void;
 
     }> = (props) => {
 
@@ -479,14 +480,18 @@ export function init({
                 break;
                 case Keyboard.Value.ENTER:
                     dispatcher.dispatch<typeof Actions.WidgetFocusedItemSelect>({
-                        name: Actions.WidgetFocusedItemSelect.name
+                        name: Actions.WidgetFocusedItemSelect.name,
+                        payload: {widgetId: props.widgetId},
                     });
                     evt.stopPropagation();
                     evt.preventDefault();
                 break;
                 case Keyboard.Value.TAB:
-                    props.handleTab();
-                    evt.stopPropagation();
+                    if (props.handleTab) {
+                        props.handleTab();
+                        evt.stopPropagation();
+                        evt.preventDefault();
+                    }
                 break;
             }
         };
@@ -569,7 +574,7 @@ export function init({
         currSearchPhrase:string;
         hasSelectedKeywords:boolean;
         focusedRowIdx:number;
-        handleTab:()=>void;
+        handleTab?:()=>void;
 
     }> = (props) => {
         return (
@@ -770,8 +775,7 @@ export function init({
                                 currSearchPhrase={this.props.currSearchPhrase}
                                 hasSelectedKeywords={List.find(
                                     x => x.selected, this.props.availSearchKeywords) !== undefined}
-                                focusedRowIdx={this.props.focusedRowIdx}
-                                handleTab={this._handleCloseClick} />
+                                focusedRowIdx={this.props.focusedRowIdx} />
                     }
                     <div className="footer">
                         <span>
