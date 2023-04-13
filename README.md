@@ -23,6 +23,7 @@ KonText is an **advanced corpus query interface** and corpus data **integration 
     * concordance,
     * paradigmatic query,
     * word list
+    * keywords analysis
 * simple and advanced query types
     * **advanced CQL editor** with **syntax highlighting** and **attribute recognition**
     * **interactive PoS tag composing tool** for positional and key-value tagsets
@@ -36,9 +37,13 @@ KonText is an **advanced corpus query interface** and corpus data **integration 
     * **user-defined line groups** - filtering, reviewing groups ratios
     * tokens and KWICs can be connected to external data services (e.g. dictionaries, encyclopedias)
 * **rich subcorpus-related functionality**
-    * a subcorpus can be either private or published
+    * any subcorpus is accesible by other users (in case they obtain a URL, otherwise the subcorpus is not discoverable by default)
+      * once a public description is set, the subcorpus can be discovered on the "public subcorpora" page
     * text types metadata can be gradually refined to a specific subcorpus ("which publishers are there in case only *fiction* is selected?")
     * a **custom text types ratio** can be defined ("give me 20% fiction and 80% journalism")
+    * unused subcorpora can be archived (URLs with the subcorpus are still valid) or completely removed (URLs will become invalid)
+    * searching within a subcorpous can be further refined with ad-hoc text type selection
+    * a subcorpus can be created with respect to corpora aligned ("give me fiction in Czech but only if there is an English translation for it")
 * **frequency distribution**
     * univariate
         * positional attributes (including tuples of multiple attributes per token)
@@ -50,17 +55,17 @@ KonText is an **advanced corpus query interface** and corpus data **integration 
 * convenient corpus access
     * finding corpus by a keyword (tag), size, description
     * adding corpus to **favorites** (incl. subcorpora, aligned corpora)
-* saving result to Excel, CSV, XML, TXT
+* saving result to Excel, CSV, XML, JSONL, TXT
 * [HTTP API](https://github.com/czcorpus/kontext/wiki/HTTP-API) access
-* integrability with existing information systems
 
 
 ## Internal features
 
 * modern client-side application (written in TypeScript, event stream architecture, React components, extensible)
-* server-side written using the [Sanic](https://sanic.dev/en/) framework with fully **decoupled background concordance/frequency/collocation calculation** (using an integrated Rq worker server)
+* server-side written using the [Sanic](https://sanic.dev/en/) framework with fully **decoupled background concordance/frequency/collocation calculation** (using an integrated [Rq](https://python-rq.org/) worker server)
 * modular code design with dynamically loadable plug-ins providing custom functionality implementation (e.g. custom database
 adapters, authentication method, corpus listing widgets, HTTP session management)
+   * integrability with existing information systems
 
 
 ## Installation
