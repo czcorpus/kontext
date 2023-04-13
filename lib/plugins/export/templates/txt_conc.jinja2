@@ -35,13 +35,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 {# main concordances -#}
 {% if numbering %}{{ loop.index }}) {% endif %}{% if num_lines_in_groups > 0 %}{{ line.linegroup }}{% endif -%}
 {{ line.ref }} | {% if align_kwic %}{{ line.leftspace }}{% endif -%}
-{% for left in line.Left %}{% if left.class != 'strc' %}{{ left.str }}{% endif %}{% endfor %} <{% for kw in line.Kwic %}{{ kw.str }}{% endfor %}> {% for right in line.Right %}{% if right.class != 'strc' %}{{ right.str }}{% endif %}{% endfor -%}
+{% for left in line.Left %}{% if left.class != 'strc' %}{{ left.str }}{% endif %}{% endfor %} <{% for kw in line.Kwic %}{{ kw.str }}{% endfor %}> {% if align_kwic %}{{kwic_spaces[loop.index-1]}}{% endif %}{% for right in line.Right %}{% if right.class != 'strc' %}{{ right.str }}{% endif %}{% endfor -%}
 {% if align_kwic %}{{ line.rightspace }}{% endif %}
 {# aligned concordances -#}
 {% for al in line.get('Align', []) -%}
 {{ al['ref'] }} | {% if align_kwic %}{{ al['leftspace'] }}{% endif -%}
 {% if align_kwic %}{{ al['leftspace'] }}{% endif -%}
 {% for left in al['Left'] %}{% if left['class'] != 'strc' %}{{ left['str'] }}{% endif %}{% endfor %} <{% for kw in al['Kwic'] %}{{ kw.str }}{% endfor %}> {% for right in al['Right'] %}{% if right['class'] != 'strc' %}{{ right['str'] }}{% endif %}{% endfor -%}
-{% if align_kwic %}{{ al['rightspace'] }}{% endif -%}
+{% if align_kwic %}{{ al['rightspace'] }}{% endif %}
 {% endfor -%}
-{% endfor %}
+{% endfor -%}
