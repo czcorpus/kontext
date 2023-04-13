@@ -96,7 +96,7 @@ async def _output_result(
 
 
 async def resolve_error(
-        amodel: BaseActionModel, req: KRequest, resp: KResponse, err: Exception):
+        amodel: BaseActionModel, req: KRequest, resp: KResponse, err: Exception, is_debug: bool):
     """
     resolve_error provides a way how to finish an action with some
     reasonable output in case the action has thrown an error.
@@ -238,7 +238,7 @@ def http_action(
                 if aprops.return_type == 'plain':
                     raise
                 resp.add_system_message('error', str(ex))
-                await resolve_error(amodel, req, resp, ex)
+                await resolve_error(amodel, req, resp, ex, settings.is_debug_mode())
                 if aprops.template:
                     aprops.template = 'message.html'
                     aprops.page_model = 'message'
