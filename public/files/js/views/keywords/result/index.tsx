@@ -65,7 +65,7 @@ export function init({
                 </dl>
 
                 <layoutViews.SimplePaginator
-                    isLoading={false}
+                    isLoading={props.isLoading}
                     currentPage={`${props.kwpage}`}
                     totalPages={props.totalPages}
                     handlePageChange={handlePageChange} />

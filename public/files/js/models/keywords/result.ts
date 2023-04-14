@@ -19,11 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { IActionDispatcher, StatelessModel } from 'kombo';
+import * as Kontext from '../../types/kontext';
+import { IActionDispatcher, SEDispatcher, StatelessModel } from 'kombo';
 import { PageModel } from '../../app/page';
 import { Keyword } from './common';
 import { Actions } from './actions';
 import { validateGzNumber } from '../base';
+import { Observable, tap, throwError } from 'rxjs';
+import { HTTP } from 'cnc-tskit';
 
 
 
@@ -37,10 +40,12 @@ export interface KeywordsResultState {
     total:number;
     kwpage:number;
     kwpagesize:number;
+    kwsort:string;
     reverse:boolean;
     totalPages:number;
+    queryId:string;
+    isLoading:boolean;
 }
-
 
 export interface KeywordsResultModelArgs {
     dispatcher:IActionDispatcher;
@@ -49,6 +54,16 @@ export interface KeywordsResultModelArgs {
     refSubcorpname:string|undefined;
     focusCorpname:string;
     focusSubcorpname:string|undefined;
+}
+
+export interface DataAjaxResponse extends Kontext.AjaxResponse {
+    data:Array<Keyword>;
+    total:number;
+    query_id:string;
+    kwpagesize:number;
+    kwpage:number;
+    kwsort:string;
+    reverse:boolean;
 }
 
 /**
@@ -77,9 +92,12 @@ export class KeywordsResultModel extends StatelessModel<KeywordsResultState> {
                 focusSubcorpname,
                 kwpage: layoutModel.getConf<number>('Page'),
                 kwpagesize: layoutModel.getConf<number>('PageSize'),
+                kwsort: layoutModel.getConf<string>('Sort'),
                 reverse: layoutModel.getConf<boolean>('Reverse'),
                 total: layoutModel.getConf<number>('Total'),
                 totalPages: Math.ceil(layoutModel.getConf<number>('Total')/layoutModel.getConf<number>('PageSize')),
+                queryId: layoutModel.getConf<string>('QueryId'),
+                isLoading: false,
             }
         );
         this.layoutModel = layoutModel;
@@ -94,12 +112,98 @@ export class KeywordsResultModel extends StatelessModel<KeywordsResultState> {
                     } else {
                         state.kwpage = parseInt(action.payload.page);
                     }
+                    state.isLoading = true;
                 } else {
                     this.layoutModel.showMessage('error', this.layoutModel.translate('freq__page_invalid_val'));
                 }
+            },
+            (state, action, dispatch) => {
+                this.processPageLoad(state, dispatch, false);
             }
         );
 
+        this.addActionHandler(
+            Actions.ResultPageLoadDone,
+            (state, action) => {
+                state.isLoading = false;
+                if (!action.error) {
+                    state.data = action.payload.data;
+                    state.kwpage = action.payload.page;
+                    state.kwsort = action.payload.sort;
+                    state.reverse = action.payload.reverse;
+                }
+            }
+        );
+    }
+
+    private processPageLoad(
+        state:KeywordsResultState,
+        dispatch:SEDispatcher,
+        skipHistory=false
+    ):void {
+        this.pageLoad(state, skipHistory).subscribe({
+            next: resp => {
+                dispatch<typeof Actions.ResultPageLoadDone>({
+                    name: Actions.ResultPageLoadDone.name,
+                    payload: {
+                        page: resp.kwpage,
+                        sort: resp.kwsort,
+                        reverse: resp.reverse,
+                        data: resp.data,
+                    }
+                });
+            },
+            error: error => {
+                this.layoutModel.showMessage('error', error);
+                dispatch<typeof Actions.ResultPageLoadDone>({
+                    name: Actions.ResultPageLoadDone.name,
+                    error,
+                });
+            }
+        });
+    }
+
+    private pageLoad(state:KeywordsResultState, skipHistory=false):Observable<DataAjaxResponse> {
+        return this.loadData(state).pipe(
+            tap(
+                () => {
+                    if (!skipHistory) {
+                        this.layoutModel.getHistory().pushState(
+                            'keywords/result',
+                            {
+                                q: `~${state.queryId}`,
+                                kwpage: state.kwpage,
+                                kwsort: state.kwsort,
+                                reverse: state.reverse,
+                            },
+                            {
+                                q: `~${state.queryId}`,
+                                kwpage: state.kwpage,
+                                kwsort: state.kwsort,
+                                reverse: state.reverse,
+                            }
+                        );
+                    }
+                }
+            )
+        );
+    }
+
+    private loadData(state:KeywordsResultState):Observable<DataAjaxResponse> {
+        return this.layoutModel.ajax$<DataAjaxResponse>(
+            HTTP.Method.GET,
+            this.layoutModel.createActionUrl(
+                'keywords/result',
+                {
+                    q: `~${state.queryId}`,
+                    kwpage: state.kwpage,
+                    kwsort: state.kwsort,
+                    reverse: state.reverse,
+                    format: 'json',
+                }
+            ),
+            {}
+        );
     }
 
 }

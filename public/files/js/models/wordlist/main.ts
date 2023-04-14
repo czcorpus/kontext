@@ -146,7 +146,7 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
             Actions.WordlistResultViewConc.name,
             null,
             (state, action, dispatch) => {
-                this.suspend({}, (otherAction, syncData) => {
+                this.waitForAction({}, (otherAction, syncData) => {
                     if (otherAction.name === Actions.WordlistFormSubmitReady.name) {
                         return null;
                     }
@@ -170,8 +170,8 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                             );
                         }
                     )
-                ).subscribe(
-                    (data:ConcQueryResponse) => {
+                ).subscribe({
+                    next: (data:ConcQueryResponse) => {
                         window.location.href = this.layoutModel.createActionUrl(
                             'view',
                             {
@@ -181,10 +181,10 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                         );
 
                     },
-                    err => {
+                    error: err => {
                         this.layoutModel.showMessage('error', err);
                     }
-                );
+                });
             }
         );
 
@@ -392,7 +392,7 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
         skipHistory=false
     ):Observable<[Array<IndexedResultItem>, number]> {
         return newPage < 1 || newPage > state.numPages ?
-            throwError(new Error(this.layoutModel.translate('wordlist__page_not_found_err'))) :
+            throwError(() => new Error(this.layoutModel.translate('wordlist__page_not_found_err'))) :
             this.loadData(state, newPage, sortColumn).pipe(
                 tap(
                     () => {

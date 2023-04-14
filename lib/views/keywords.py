@@ -153,10 +153,11 @@ async def view_result(amodel: KeywordsActionModel, req: KRequest):
     result['query_id'] = amodel.q_code
     result['keywords_form'] = amodel.curr_kwform_args.to_dict()
 
-    result['Total'] = total
-    result['Reverse'] = rev
-    result['Page'] = page
-    result['PageSize'] = amodel.args.kwpagesize
+    result['total'] = total
+    result['kwsort'] = kwsort
+    result['reverse'] = rev
+    result['kwpage'] = page
+    result['kwpagesize'] = amodel.args.kwpagesize
 
     await amodel.export_subcorpora_list(result)
     return result
