@@ -86,4 +86,13 @@ export class Actions {
     }> = {
         name: 'KEYWORDS_RESULT_PAGE_LOAD_DONE'
     };
+
+    static KeywordsHistoryPopState:Action<{
+        q:string;
+        kwpage:number;
+        kwsort:string;
+        reverse:boolean;
+    }> = {
+        name: 'KEYWORDS_HISTORY_POP_STATE'
+    };
 }

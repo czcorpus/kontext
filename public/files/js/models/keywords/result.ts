@@ -123,6 +123,19 @@ export class KeywordsResultModel extends StatelessModel<KeywordsResultState> {
         );
 
         this.addActionHandler(
+            Actions.KeywordsHistoryPopState,
+            (state, action) => {
+                state.kwpage = action.payload.kwpage;
+                state.kwsort = action.payload.kwsort;
+                state.queryId = action.payload.q;
+                state.reverse = action.payload.reverse;
+            },
+            (state, action, dispatch) => {
+                this.processPageLoad(state, dispatch, true);
+            }
+        );
+
+        this.addActionHandler(
             Actions.ResultPageLoadDone,
             (state, action) => {
                 state.isLoading = false;

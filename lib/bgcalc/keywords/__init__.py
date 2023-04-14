@@ -48,19 +48,30 @@ async def require_existing_keywords(
     if not await aiofiles.os.path.exists(path):
         raise KeywordsResultNotFound('The result does not exist')
     else:
-        if kwsort == 'f':
-            if reverse:
-                return await load_cached_partial(path, offset, limit)
-            else:
-                total, rows = await load_cached_full(path)
-                return (
-                    total,
-                    sorted(rows, key=lambda x: x[1], reverse=reverse)[offset:offset + limit]
-                )
+        if kwsort == 'score' and reverse:
+            return await load_cached_partial(path, offset, limit)
+
         else:
             total, rows = await load_cached_full(path)
-            rows = l10n.sort(rows, key=lambda x: x[0], loc=collator_locale, reverse=reverse)
-            return total, rows[offset:offset + limit]
+            # handle number sort
+            if kwsort in ('score', 'size_effect', 'frq1', 'frq2', 'rel_frq1', 'rel_frq2'):
+                return (
+                    total,
+                    sorted(rows, key=lambda x: x[kwsort], reverse=reverse)[offset:offset + limit]
+                )
+            # handle string sort
+            elif kwsort in ('item', 'query'):
+                return (
+                    total,
+                    l10n.sort(rows, key=lambda x: x[kwsort], loc=collator_locale, reverse=reverse)[
+                        offset:offset + limit]
+                )
+            # default sort
+            return (
+                total,
+                l10n.sort(rows, key=lambda x: x[0], loc=collator_locale, reverse=reverse)[
+                    offset:offset + limit]
+            )
 
 
 def cached(f):

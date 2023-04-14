@@ -123,10 +123,10 @@ async def view_result(amodel: KeywordsActionModel, req: KRequest):
         MainMenu.COLLOCATIONS,
         MainMenu.CONCORDANCE)
 
-    kwsort = req.args.get('kwsort', 'f')
-    rev = bool(int(req.args.get('reverse', '1')))
     page = int(req.args.get('kwpage', '1'))
     offset = (page - 1) * amodel.args.kwpagesize
+    kwsort = req.args.get('kwsort', 'score')
+    rev = bool(int(req.args.get('reverse', '1')))
 
     try:
         total, data = await require_existing_keywords(
@@ -137,10 +137,7 @@ async def view_result(amodel: KeywordsActionModel, req: KRequest):
         raise ImmediateRedirectException(req.create_url(
             'keywords/restore', dict(q=req.args_getlist('q')[0])))
 
-    result = dict(
-        data=data, total=total, form=amodel.curr_kwform_args.to_dict(),
-        query_id=amodel.curr_kwform_args.id, reverse=rev, wlsort=kwsort, kwpage=page,
-        kwpagesize=amodel.args.kwpagesize)
+    result = dict(data=data, total=total, keywords_form=amodel.curr_kwform_args.to_dict())
     try:
         result['wlattr_label'] = (
             amodel.corp.get_conf(amodel.curr_kwform_args.wlattr + '.LABEL') or amodel.curr_kwform_args.wlattr)
@@ -151,13 +148,11 @@ async def view_result(amodel: KeywordsActionModel, req: KRequest):
     result['tasks'] = []
     result['SubcorpList'] = []
     result['query_id'] = amodel.q_code
-    result['keywords_form'] = amodel.curr_kwform_args.to_dict()
 
-    result['total'] = total
-    result['kwsort'] = kwsort
-    result['reverse'] = rev
     result['kwpage'] = page
     result['kwpagesize'] = amodel.args.kwpagesize
+    result['kwsort'] = kwsort
+    result['reverse'] = rev
 
     await amodel.export_subcorpora_list(result)
     return result

@@ -26,6 +26,7 @@ import { init as viewInit } from '../views/keywords/result';
 import { Root } from 'react-dom/client';
 import { KeywordsResultModel } from '../models/keywords/result';
 import { KeywordsSubmitArgs } from '../models/keywords/common';
+import { Actions } from '../models/keywords/actions';
 
 
 /**
@@ -62,6 +63,18 @@ export class KeywordsResultPage {
                 view,
                 window.document.getElementById('keywords-result-mount'),
             );
+
+            this.layoutModel.getHistory().setOnPopState(
+                (evt:PopStateEvent) => {
+                    if ('kwsort' in evt.state && 'kwpage' in evt.state) {
+                        this.layoutModel.dispatcher.dispatch(
+                            Actions.KeywordsHistoryPopState,
+                            {...evt.state}
+                        );
+                    }
+                }
+            );
+            this.layoutModel.initKeyShortcuts();
         });
     }
 }

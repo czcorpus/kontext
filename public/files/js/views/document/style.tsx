@@ -601,7 +601,7 @@ export const UnsupportedRenderer = styled.div`
 
 // ---------------- <SimplePaginator /> --------------------------------------
 
-export const SimplePaginator = styled.form`
+export const SimplePaginator = styled.div`
 
 `;
 
