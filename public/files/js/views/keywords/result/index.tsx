@@ -64,15 +64,18 @@ export function init({
                     <dd>{props.refCorpname} {props.refSubcorpname ? ` / ${props.refSubcorpname}` : ''}</dd>
                 </dl>
 
-                <layoutViews.SimplePaginator
-                    isLoading={props.isLoading}
-                    currentPage={`${props.kwpage}`}
-                    totalPages={props.totalPages}
-                    handlePageChange={handlePageChange} />
+                <div className="ktx-pagination">
+                    <layoutViews.SimplePaginator
+                        isLoading={props.isLoading}
+                        currentPage={`${props.kwpage}`}
+                        totalPages={props.totalPages}
+                        handlePageChange={handlePageChange} />
+                </div>
 
                 <table className="data">
                     <thead>
                         <tr>
+                            <th />
                             <th>{he.translate('kwords__result_word_hd')}</th>
                             <th>{he.translate('kwords__score_col_hd')}</th>
                             <th>{he.translate('kwords__effect_size')}</th>
@@ -85,8 +88,9 @@ export function init({
                     <tbody>
                         {
                             List.map(
-                                kw => (
+                                (kw, i) => (
                                     <tr key={`item:${kw.item}`}>
+                                        <td>{(props.kwpage-1)*props.kwpagesize + i + 1}.</td>
                                         <td className="kword">{kw.item}</td>
                                         <td className="num">{he.formatNumber(kw.score, 2)}</td>
                                         <td className="num">{he.formatNumber(kw.size_effect, 2)}</td>
