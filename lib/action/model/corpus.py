@@ -717,7 +717,7 @@ class CorpusActionModel(UserActionModel):
                         poslist = tagset.pos_category
                         break
                 tpl_out['Wposlist_' + al] = [{'n': x.pos, 'v': x.pattern} for x in poslist]
-                tpl_out['input_languages'][al] = corp_info.collator_locale
+                tpl_out['input_languages'][al] = corp_info.metadata.default_virt_keyboard if corp_info.metadata.default_virt_keyboard else corp_info.collator_locale
 
     async def create_preflight_subcorpus(self) -> str:
         with plugins.runtime.SUBC_STORAGE as sc:

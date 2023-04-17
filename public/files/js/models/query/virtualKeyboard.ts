@@ -63,10 +63,7 @@ export class VirtualKeyboardModel extends StatelessModel<VirtualKeyboardState>
             capsOn: false,
             layouts: kbLayouts,
             activeKey: null,
-            currentLayoutIdx: List.findIndex(
-                v => v.name === pageModel.getConf('DefaultVirtKeyboard'),
-                kbLayouts
-            ),
+            currentLayoutIdx: 0,
             activeDeadKeyIndex: null
         });
         this.pageModel = pageModel;
@@ -130,6 +127,26 @@ export class VirtualKeyboardModel extends StatelessModel<VirtualKeyboardState>
             Actions.QueryInputSetVirtualKeyboardLayout.name,
             (state, action) => {
                 state.currentLayoutIdx = action.payload.idx;
+            }
+        );
+
+        this.addActionHandler<typeof Actions.QueryInputSetVirtualKeyboardLayoutFromCode>(
+            Actions.QueryInputSetVirtualKeyboardLayoutFromCode.name,
+            (state, action) => {
+                let idx = List.findIndex(
+                    v => v.codes.includes(action.payload.code),
+                    kbLayouts
+                );
+                if (idx === -1) {
+                    const layoutCode = action.payload.code.split('_')[0];
+                    idx = List.findIndex(
+                        v => v.codes.includes(layoutCode),
+                        kbLayouts
+                    );
+                }
+                if (idx !== -1) {
+                    state.currentLayoutIdx = idx;
+                }
             }
         );
 
