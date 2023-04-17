@@ -133,6 +133,26 @@ export class VirtualKeyboardModel extends StatelessModel<VirtualKeyboardState>
             }
         );
 
+        this.addActionHandler<typeof Actions.QueryInputSetVirtualKeyboardLayoutFromCode>(
+            Actions.QueryInputSetVirtualKeyboardLayoutFromCode.name,
+            (state, action) => {
+                let idx = List.findIndex(
+                    v => v.codes.includes(action.payload.code),
+                    kbLayouts
+                );
+                if (idx === -1) {
+                    const layoutCode = action.payload.code.split('_')[0];
+                    idx = List.findIndex(
+                        v => v.codes.includes(layoutCode),
+                        kbLayouts
+                    );
+                }
+                if (idx !== -1) {
+                    state.currentLayoutIdx = idx;
+                }
+            }
+        );
+
         this.addActionHandler<typeof GlobalActions.SwitchCorpus>(
             GlobalActions.SwitchCorpus.name,
             null,

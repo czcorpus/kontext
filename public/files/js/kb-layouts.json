@@ -213,7 +213,7 @@
         ]
     ]
 }, {
-    "codes": ["nl-BE", "fr-BE"],
+    "codes": ["nl_BE", "fr_BE"],
     "label": "Belgische / Belge",
     "name": "Belgian",
     "keys": [
@@ -286,7 +286,7 @@
     ]
 }, {
     "label": "Български",
-    "codes": ["bg-BG"],
+    "codes": ["bg_BG"],
     "name": "Bulgarian BDS",
     "keys": [
         [
@@ -427,7 +427,7 @@
         ]
     ]
 }, {
-    "codes": ["fr-CA"],
+    "codes": ["fr_CA"],
     "label": "Canadienne-française",
     "name": "Canadian French",
     "keys": [
@@ -861,7 +861,7 @@
         ]
     ]
 }, {
-    "codes": ["en-gb"],
+    "codes": ["en_GB"],
     "label": "United Kingdom",
     "name": "English (UK)",
     "keys": [
@@ -933,7 +933,7 @@
         ]
     ]
 }, {
-    "codes": ["en-us"],
+    "codes": ["en_US"],
     "label": "US Standard",
     "name": "English (USA)",
     "keys": [
@@ -2082,7 +2082,7 @@
         ]
     ]
 }, {
-    "codes": ["pt-BR"],
+    "codes": ["pt_BR"],
     "label": "Português Brasileiro",
     "name": "Portuguese (Brazil)",
     "keys": [
@@ -2370,7 +2370,7 @@
         ]
     ]
 }, {
-    "codes": ["sr-Cyrl"],
+    "codes": ["sr_Cyrl"],
     "label": "српски",
     "name": "Serbian Cyrillic",
     "keys": [
