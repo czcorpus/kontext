@@ -354,7 +354,7 @@ if __name__ == '__main__':
                 'KONTEXT_INSTALL_CONF', 'config.default.xml'),
             scheduler_conf=os.environ.get('SCHEDULER_INSTALL_CONF', 'rq-schedule-conf.sample.json'),
             stdout=None, stderr=None)
-        obj.run(False, False)
+        obj.run(False)
     elif args.step_name == 'SetupDefaultUsers':
         obj = SetupDefaultUsers(*init_step_args, args.step_args[0], int(args.step_args[1]))
         obj.run()
