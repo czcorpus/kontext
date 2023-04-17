@@ -45,6 +45,7 @@ interface GeneralOptionsArgsSubmit {
     pqueryitemsperpage:number;
     rich_query_editor:boolean;
     subcpagesize:number;
+    kwpagesize:number;
 }
 
 export interface GeneralViewOptionsModelState {
@@ -78,6 +79,8 @@ export interface GeneralViewOptionsModelState {
     userIsAnonymous:boolean;
 
     subcpagesize:Kontext.FormValue<string>;
+
+    kwpagesize:Kontext.FormValue<string>;
 }
 
 
@@ -122,6 +125,7 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                 isBusy: false,
                 loaded: false,
                 subcpagesize: Kontext.newFormValue('0', true),
+                kwpagesize: Kontext.newFormValue('0', true),
             }
         );
         this.layoutModel = layoutModel;
@@ -211,6 +215,11 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                     state.useRichQueryEditor = action.payload.data.rich_query_editor;
                     state.subcpagesize = {
                         value: action.payload.data.subcpagesize + '',
+                        isInvalid: false,
+                        isRequired: true
+                    };
+                    state.kwpagesize = {
+                        value: action.payload.data.kwpagesize + '',
                         isInvalid: false,
                         isRequired: true
                     };
@@ -343,6 +352,19 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
         );
 
         this.addActionHandler(
+            Actions.GeneralSetKwPageSize,
+            (state, action) => {
+                state.kwpagesize.value = action.payload.value;
+                if (action.payload.debounced) {
+                    state.kwpagesize = this.validateGt1Value(state.kwpagesize, action.payload.value);
+
+                } else {
+                    this.debouncedAction$.next(action);
+                }
+            }
+        );
+
+        this.addActionHandler(
             Actions.GeneralSubmit,
             (state, action) => {
                 state.isBusy = true;
@@ -371,6 +393,7 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                                     citemsperpage: parseInt(state.citemsperpage.value),
                                     pqueryitemsperpage: parseInt(state.pqueryitemsperpage.value),
                                     subcpagesize: parseInt(state.subcpagesize.value),
+                                    kwpagesize: parseInt(state.kwpagesize.value),
                                 }
                             });
                             List.forEach(fn => fn(this), this.submitResponseHandlers);
@@ -482,6 +505,7 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
             pqueryitemsperpage: parseInt(state.pqueryitemsperpage.value),
             rich_query_editor: state.useRichQueryEditor,
             subcpagesize: parseInt(state.subcpagesize.value),
+            kwpagesize: parseInt(state.kwpagesize.value),
         };
     }
 

@@ -102,6 +102,9 @@ class GeneralOptionsArgs:
     # wordlist
     wlpagesize: int = field(default=25, metadata=mk_metdata(Persistence.PERSISTENT))
 
+    # keywords
+    kwpagesize: int = field(default=25, metadata=mk_metdata(Persistence.PERSISTENT))
+
     # frequency
     fmaxitems: int = field(default=50, metadata=mk_metdata())
     fdefault_view: str = field(default='tables', metadata=mk_metdata(Persistence.PERSISTENT))
@@ -112,7 +115,7 @@ class GeneralOptionsArgs:
     # collocations
     citemsperpage: int = field(default=50, metadata=mk_metdata(Persistence.PERSISTENT))
 
-    # wordlist
+    # subcpage
     subcpagesize: int = field(default=40, metadata=mk_metdata(Persistence.PERSISTENT))
 
     def map_args_to_attrs(self, args: Union[RequestArgsProxy, JSONRequestArgsProxy, Dict[str, Any]]):
@@ -267,8 +270,10 @@ class Args(UserActionArgs):
     ctminfreq: int = field(default=80, metadata=mk_metdata())
     ctminfreq_type: str = field(
         default='pabs', metadata=mk_metdata())  # percentile as a default filter mode
-    ctfcrit1: str = field(default='word 0<0', metadata=mk_metdata())  # freq. crit. for the 1st dim. in 2D freq. dist.
-    ctfcrit2: str = field(default='word 0<0', metadata=mk_metdata())  # freq. crit. for the 2nd dim. in 2D freq. dist.
+    # freq. crit. for the 1st dim. in 2D freq. dist.
+    ctfcrit1: str = field(default='word 0<0', metadata=mk_metdata())
+    # freq. crit. for the 2nd dim. in 2D freq. dist.
+    ctfcrit2: str = field(default='word 0<0', metadata=mk_metdata())
 
     maxsavelines: int = field(default=1000, metadata=mk_metdata())
     fcrit: List[str] = field(default_factory=list, metadata=mk_metdata())

@@ -583,6 +583,8 @@
         "options__pquery_page_size": "Page size (number of lines)",
         "options__subclist_fieldset_heading": "Subcorpora",
         "options__subclist_page_size": "Page size (number of lines)",
+        "options__kwords_fieldset_heading": "Keywords",
+        "options__kwords_page_size": "Page size (number of lines)",
         "options__this_applies_for_all_the_corpora": "Following settings apply for all the corpora.",
         "options__submit": "Apply view options",
         "options__max_items_per_page_exceeded_{num}": "Maximum number of {num, plural, one{# item} other{# items}} per page exceeded",

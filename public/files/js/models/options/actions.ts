@@ -106,6 +106,13 @@ export class Actions {
         name: 'GENERAL_VIEW_OPTIONS_SET_SUBCLISTPAGESIZE'
     };
 
+    static GeneralSetKwPageSize:Action<{
+        value:string;
+        debounced?:boolean;
+    }> = {
+        name: 'GENERAL_VIEW_OPTIONS_SET_KWPAGESIZE'
+    };
+
     static GeneralSubmit:Action<{
     }> = {
         name: 'GENERAL_VIEW_OPTIONS_SUBMIT'

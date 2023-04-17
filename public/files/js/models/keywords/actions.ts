@@ -22,6 +22,7 @@
 import { Action } from 'kombo';
 import { ScoreType } from './form';
 import { AsyncTaskInfo } from '../../types/kontext';
+import { Keyword } from './common';
 
 
 export class Actions {
@@ -69,5 +70,29 @@ export class Actions {
         debounced?:boolean;
     }> = {
         name: 'KEYWORDS_SET_MAX_FREQ'
+    };
+
+    static ResultSetPage:Action<{
+        page:string;
+    }> = {
+        name: 'KEYWORDS_RESULT_SET_PAGE'
+    };
+
+    static ResultPageLoadDone:Action<{
+        data:Array<Keyword>;
+        page:number;
+        sort:string;
+        reverse:boolean;
+    }> = {
+        name: 'KEYWORDS_RESULT_PAGE_LOAD_DONE'
+    };
+
+    static KeywordsHistoryPopState:Action<{
+        q:string;
+        kwpage:number;
+        kwsort:string;
+        reverse:boolean;
+    }> = {
+        name: 'KEYWORDS_HISTORY_POP_STATE'
     };
 }

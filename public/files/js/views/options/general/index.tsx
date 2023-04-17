@@ -521,6 +521,57 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         );
     };
 
+    // ------------- <KWordsPageSizeInput /> ---------------------
+
+    const KWordsPageSizeInput:React.FC<{
+        value:Kontext.FormValue<string>;
+
+    }> = (props) => {
+
+        const handleInputChange = (evt) => {
+            dispatcher.dispatch<typeof Actions.GeneralSetKwPageSize>({
+                name: Actions.GeneralSetKwPageSize.name,
+                payload: {
+                    value: evt.target.value
+                }
+            });
+        };
+
+        return (
+            <tr>
+                <th>
+                    {he.translate('options__kwords_page_size')}:
+                </th>
+                <td>
+                    <layoutViews.ValidatedItem invalid={props.value.isInvalid}>
+                        <input type="text" value={props.value.value} onChange={handleInputChange}
+                                style={{width: '2em'}} min={0} />
+                    </layoutViews.ValidatedItem>
+                </td>
+            </tr>
+        );
+    }
+
+    // ------------- <FieldsetKWords /> ---------------------
+
+    const FieldsetKWords:React.FC<{
+        kwPageSize:Kontext.FormValue<string>;
+
+    }> = (props) => {
+        return (
+            <fieldset className="FieldsetKWords">
+                <legend>
+                    {he.translate('options__kwords_fieldset_heading')}
+                </legend>
+                <S.ResultRangeAndPagingTable>
+                    <tbody>
+                        <KWordsPageSizeInput value={props.kwPageSize} />
+                    </tbody>
+                </S.ResultRangeAndPagingTable>
+            </fieldset>
+        );
+    };
+
     // --------------------- <SubmitButton /> -------------------------
 
     const SubmitButton:React.FC<{
@@ -572,6 +623,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                     fdefaultView={this.props.fdefaultView} />
                                 <FieldsetColl citemsPerPage={this.props.citemsperpage} />
                                 <FieldsetPquery resultsPerPage={this.props.pqueryitemsperpage} />
+                                <FieldsetKWords kwPageSize={this.props.kwpagesize} />
                                 <FieldsetSubcList subcPageSize={this.props.subcpagesize} />
                             </> :
                             <p className='data-loader'>

@@ -48,4 +48,13 @@ export const KeywordsResult = styled.form`
         }
     }
 
+    .ktx-pagination {
+        text-align: right;
+        padding: 0.7em;
+    }
+
+    .data {
+        margin: 1em;
+    }
+
 `;
