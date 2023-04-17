@@ -138,7 +138,7 @@ export class VirtualKeyboardModel extends StatelessModel<VirtualKeyboardState>
                     kbLayouts
                 );
                 if (idx === -1) {
-                    const layoutCode = action.payload.code.split('-')[0];
+                    const layoutCode = action.payload.code.split('_')[0];
                     idx = List.findIndex(
                         v => v.codes.includes(layoutCode),
                         kbLayouts

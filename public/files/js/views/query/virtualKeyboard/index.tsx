@@ -322,8 +322,6 @@ export function init({dispatcher, he, virtualKeyboardModel}:VirtualKeyboardModul
 
         componentDidMount(): void {
             if (this.props.inputLanguage) {
-                console.log('dispatching ' + this.props.inputLanguage);
-
                 dispatcher.dispatch(
                     Actions.QueryInputSetVirtualKeyboardLayoutFromCode,
                     {code: this.props.inputLanguage},

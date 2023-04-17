@@ -319,7 +319,7 @@ class ConcActionModel(CorpusActionModel):
         tpl_out['metadata_desc'] = corpus_info.metadata.desc
         tpl_out['input_languages'] = {}
         tpl_out['input_languages'][getattr(
-            self.args, 'corpname')] = corpus_info.metadata.default_virt_keyboard if corpus_info.metadata.default_virt_keyboard else corpus_info.collator_locale.lower().replace('_', '-')
+            self.args, 'corpname')] = corpus_info.metadata.default_virt_keyboard if corpus_info.metadata.default_virt_keyboard else corpus_info.collator_locale
 
         conc_forms_args: OrderedDict[str, Dict[str, Any]] = OrderedDict()
         query_overview = await self.concdesc_json()
