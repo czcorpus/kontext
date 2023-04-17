@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { List, pipe } from 'cnc-tskit';
+import { List, Strings, pipe } from 'cnc-tskit';
 import { BoundWithProps, IActionDispatcher } from 'kombo';
 import * as React from 'react';
 import { Actions, QueryFormType } from '../../../models/query/actions';
@@ -38,6 +38,7 @@ interface QueryStructureWidgetProps {
     formType:QueryFormType;
 }
 
+
 export function init({dispatcher, he, queryModel}:InputModuleArgs) {
 
     const layoutViews = he.getLayoutViews();
@@ -53,25 +54,37 @@ export function init({dispatcher, he, queryModel}:InputModuleArgs) {
         const mkExpr = (attr:string|Array<string>, val:string) => {
             const csFlag = props.matchCase ? '' : '(?i)';
             if (Array.isArray(attr)) {
-                return <React.Fragment key={`v:${props.value.value}:${props.value.position[0]}`}>
-                {pipe(
-                    attr,
-                    List.map((attr, i) => (
-                        <div key={`item:${attr}:${i}`}>
-                            <span className="attr">{attr}</span>=<span className="value">"{`${csFlag}${val}`}"</span>
-                        </div>
-                    )),
-                    List.join((i) => (
-                        <div key={`op:${i}`} className="operator">
-                            <span>
-                                {he.translate('global__logic_or')}
-                            </span>
-                        </div>
-                    ))
-                )}
-                </React.Fragment>;
+                return (
+                    <React.Fragment key={`v:${props.value.value}:${props.value.position[0]}`}>
+                        {pipe(
+                            attr,
+                            List.map((attr, i) => {
+                                const escVal = props.value.isExtended ? Strings.escapeRegexp(val) : val;
+                                return (
+                                    <div key={`item:${attr}:${i}`}>
+                                        <span className="attr">{attr}</span>=
+                                        <span className="value">"{`${csFlag}${escVal}`}"</span>
+                                    </div>
+                                );
+                            }),
+                            List.join((i) => (
+                                <div key={`op:${i}`} className="operator">
+                                    <span>
+                                        {he.translate('global__logic_or')}
+                                    </span>
+                                </div>
+                            ))
+                        )}
+                    </React.Fragment>
+                );
             }
-            return <div key={`item:${attr}:0`}><span className="attr">{attr}</span>=<span className="value">"{`${csFlag}${val}`}"</span></div>;
+            const escVal = props.value.isExtended ? Strings.escapeRegexp(val) : val;
+            return (
+                <div key={`item:${attr}:0`}>
+                    <span className="attr">{attr}</span>=
+                    <span className="value">"{`${csFlag}${escVal}`}"</span>
+                </div>
+            );
         }
 
         return (
