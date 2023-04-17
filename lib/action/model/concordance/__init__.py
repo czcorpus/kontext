@@ -17,12 +17,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import hashlib
 import os
 import re
 import urllib.parse
-from typing import Any, Dict, List, Optional, Tuple, Union
-import hashlib
 from collections import OrderedDict
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import conclib
 import plugins
@@ -104,7 +104,8 @@ class ConcActionModel(CorpusActionModel):
                 curr_subcorp = self.args.usesubcorp
 
                 if prev_corpora and len(curr_corpora) == 1 and prev_corpora[0] == curr_corpora[0]:
-                    args = [('corpname', prev_corpora[0])] + [('align', a) for a in prev_corpora[1:]]
+                    args = [('corpname', prev_corpora[0])] + [('align', a)
+                                                              for a in prev_corpora[1:]]
 
                     subcorpora = await subc_arch.list(
                         self._req.ctx.session.get('user')['id'], SubcListFilterArgs(), corpname=prev_corpora[0])
@@ -317,7 +318,8 @@ class ConcActionModel(CorpusActionModel):
         corpus_info = await self.get_corpus_info(self.args.corpname)
         tpl_out['metadata_desc'] = corpus_info.metadata.desc
         tpl_out['input_languages'] = {}
-        tpl_out['input_languages'][getattr(self.args, 'corpname')] = corpus_info.collator_locale
+        tpl_out['input_languages'][getattr(
+            self.args, 'corpname')] = corpus_info.metadata.default_virt_keyboard if corpus_info.metadata.default_virt_keyboard else corpus_info.collator_locale.lower().replace('_', '-')
 
         conc_forms_args: OrderedDict[str, Dict[str, Any]] = OrderedDict()
         query_overview = await self.concdesc_json()
@@ -330,7 +332,8 @@ class ConcActionModel(CorpusActionModel):
                     if i < len(query_overview):
                         query_overview[i].conc_persistence_op_id = item.op_key
                     elif item.form_type != 'lgroup':
-                        raise RuntimeError('Found a mismatch between Manatee query encoding and stored metadata')
+                        raise RuntimeError(
+                            'Found a mismatch between Manatee query encoding and stored metadata')
 
         # Attach new form args added by the current action.
         if len(self._auto_generated_conc_ops) > 0:

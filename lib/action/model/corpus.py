@@ -717,7 +717,7 @@ class CorpusActionModel(UserActionModel):
                         poslist = tagset.pos_category
                         break
                 tpl_out['Wposlist_' + al] = [{'n': x.pos, 'v': x.pattern} for x in poslist]
-                tpl_out['input_languages'][al] = corp_info.collator_locale
+                tpl_out['input_languages'][al] = corp_info.collator_locale.lower().replace('_', '-')
 
     async def create_preflight_subcorpus(self) -> str:
         with plugins.runtime.SUBC_STORAGE as sc:

@@ -110,6 +110,12 @@ export class Actions {
         name: 'QUERY_INPUT_SET_VIRTUAL_KEYBOARD_LAYOUT'
     };
 
+    static QueryInputSetVirtualKeyboardLayoutFromCode: Action<{
+        code:string;
+    }> = {
+        name: 'QUERY_INPUT_SET_VIRTUAL_KEYBOARD_LAYOUT_FROM_CODE'
+    };
+
     static QueryInputToggleVirtualKeyboardShift: Action<{
     }> = {
         name: 'QUERY_INPUT_TOGGLE_VIRTUAL_KEYBOARD_SHIFT'

@@ -320,6 +320,17 @@ export function init({dispatcher, he, virtualKeyboardModel}:VirtualKeyboardModul
             this._handleAltGr = this._handleAltGr.bind(this);
         }
 
+        componentDidMount(): void {
+            if (this.props.inputLanguage) {
+                console.log('dispatching ' + this.props.inputLanguage);
+
+                dispatcher.dispatch(
+                    Actions.QueryInputSetVirtualKeyboardLayoutFromCode,
+                    {code: this.props.inputLanguage},
+                );
+            }
+        }
+
         _handleClick(chunk:string) {
             const deadKeys = this.getCurrentLayout().deadKeys;
             let deadKeyIndex;

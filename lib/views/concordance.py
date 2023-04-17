@@ -41,7 +41,8 @@ from action.argmapping.conc.other import (
     KwicSwitchArgs, LgroupOpArgs, LockedOpFormsArgs, SampleFormArgs)
 from action.argmapping.conc.sort import SortFormArgs
 from action.control import http_action
-from action.errors import NotFoundException, UserReadableException, ImmediateRedirectException
+from action.errors import (
+    ImmediateRedirectException, NotFoundException, UserReadableException)
 from action.krequest import KRequest
 from action.model.base import BaseActionModel
 from action.model.concordance import ConcActionModel
@@ -435,7 +436,8 @@ async def create_view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     to the result by providing raw CQL query
     """
     form_args = await QueryFormArgs.create(amodel.plugin_ctx, [amodel.args.corpname], True)
-    form_args.data.curr_queries = {amodel.args.corpname: amodel.args.q[len(amodel.args.q)-1][1:]} # 1: = we strip 'q' prefix
+    form_args.data.curr_queries = {amodel.args.corpname: amodel.args.q[len(
+        amodel.args.q) - 1][1:]}  # 1: = we strip 'q' prefix
     form_args.data.curr_query_types = {amodel.args.corpname: 'advanced'}
     amodel.set_curr_conc_form_args(form_args)
     asnc = int(req.args.get('asnc')) if 'asnc' in req.args else 0
@@ -447,7 +449,8 @@ async def create_view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
              action_model=ConcActionModel)
 async def create_lazy_view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     form_args = await QueryFormArgs.create(amodel.plugin_ctx, [amodel.args.corpname], True)
-    form_args.data.curr_queries = {amodel.args.corpname: amodel.args.q[len(amodel.args.q)-1][1:]} # 1: = we strip 'q' prefix
+    form_args.data.curr_queries = {amodel.args.corpname: amodel.args.q[len(
+        amodel.args.q) - 1][1:]}  # 1: = we strip 'q' prefix
     form_args.data.curr_query_types = {amodel.args.corpname: 'advanced'}
     amodel.set_curr_conc_form_args(form_args)
     return await view_conc(amodel, req, resp, 2, req.session_get('user', 'id'))
@@ -804,7 +807,6 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
         TextTypesNotes=corpus_info.metadata.desc,
         TextDirectionRTL=True if amodel.corp.get_conf('RIGHTTOLEFT') else False,
         structsAndAttrs=struct_and_attrs,
-        DefaultVirtKeyboard=corpus_info.metadata.default_virt_keyboard,
         SimpleQueryDefaultAttrs=corpus_info.simple_query_default_attrs,
         QSEnabled=amodel.args.qs_enabled,
         SubcorpTTStructure=subcorp_tt_structure,
