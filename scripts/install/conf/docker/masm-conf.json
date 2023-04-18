@@ -19,7 +19,7 @@
         "wordSketchDefDirPath": "/var/lib/manatee/ske-wsdef",
         "manateeDynlibPath": "/a/path/to/ucnkdynfn.so"
     },
-    "kontextSoftResetURL": "http://localhost:8989/kontext-services/soft-reset-all",
+    "kontextSoftResetURL": ["http://localhost:8989/kontext-services/soft-reset-all"],
     "cncDb": {
         "host": "kontext_mariadb_1:3306",
         "user": "kontext",

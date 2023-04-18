@@ -58,12 +58,13 @@ import jwt
 import plugins
 import plugins.export
 import settings
-from babel import support
 from action.context import ApplicationContext
 from action.cookie import KonTextCookie
 from action.plugin.initializer import install_plugin_actions, setup_plugins
 from action.templating import TplEngine
+from babel import support
 from jwt.exceptions import ExpiredSignatureError, InvalidSignatureError
+from log_formatter import KontextLogFormatter
 from sanic import Request, Sanic
 from sanic.response import HTTPResponse
 from texttypes.cache import TextTypesCache
@@ -74,6 +75,7 @@ from views.dispersion import bp as dispersion_bp
 from views.fcs import bp_common as fcs_common_bp
 from views.fcs import bp_v1 as fcs_v1_bp
 from views.freqs import bp as freqs_bp
+from views.keywords import bp as keywords_bp
 from views.options import bp as options_bp
 from views.pquery import bp as pquery_bp
 from views.root import bp as root_bp
@@ -82,7 +84,6 @@ from views.tools import bp as tools_bp
 from views.user import bp as user_bp
 from views.websocket import bp as websocket_bp
 from views.wordlist import bp as wordlist_bp
-from views.keywords import bp as keywords_bp
 
 # we ensure that the application's locale is always the same
 locale.setlocale(locale.LC_ALL, 'en_US.utf-8')
@@ -107,7 +108,15 @@ def setup_logger(conf) -> Optional[logging.handlers.QueueListener]:
         queue = Queue()
         listener = QueueListener(queue, handler)
         listener.start()
-    handler.setFormatter(logging.Formatter(fmt='%(asctime)s [%(name)s] %(levelname)s: %(message)s'))
+
+    handler.setFormatter(KontextLogFormatter(
+        fields={
+            "level": "levelname",
+            "time": "asctime",
+            "logger": "name",
+        },
+        # datefmt='%Y-%m-%dT%H:%M:%S.%f%Z',
+    ))
     logger.addHandler(handler)
     logger.setLevel(logging.INFO if not settings.is_debug_mode() else logging.DEBUG)
     return listener
@@ -170,6 +179,7 @@ async def sigusr1_handler():
             await fn()
     await tt_cache.clear_all()
 
+
 def load_translations(app: Sanic):
     app.ctx.translations = {}
     for loc in settings.get_list('global', 'translations'):
@@ -226,6 +236,7 @@ async def set_locale(request: Request):
     else:
         request.ctx.translations = support.NullTranslations()
         logging.getLogger(__name__).warning(f'Requested unsupported locale {request.ctx.locale}')
+
 
 @application.middleware('response')
 async def store_jwt(request: Request, response: HTTPResponse):

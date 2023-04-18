@@ -16,18 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import sys
 from typing import Union
-
-
-def get_traceback():
-    """
-    Returns python-generated traceback information
-    """
-    import traceback
-
-    err_type, err_value, err_trace = sys.exc_info()
-    return traceback.format_exception(err_type, err_value, err_trace)
 
 
 class UserReadableException(Exception):
@@ -78,10 +67,12 @@ class ForbiddenException(UserReadableException):
     def __init__(self, message, internal_message=None):
         super().__init__(message, 403, internal_message=internal_message)
 
+
 class CorpusNotFoundException(UserReadableException):
 
     def __init__(self, message, internal_message=None):
         super().__init__(message, 404, internal_message=internal_message)
+
 
 class CorpusForbiddenException(ForbiddenException):
     def __init__(self, corpname, variant):
