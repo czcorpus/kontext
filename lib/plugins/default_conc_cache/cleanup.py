@@ -28,7 +28,6 @@ import time
 from typing import Dict, Tuple
 
 import aiofiles.os
-import ujson as json
 from plugin_types.general_storage import KeyValueStorage
 
 DEFAULT_TTL = 60  # in minutes
@@ -100,11 +99,11 @@ class CacheCleanup(CacheFiles):
     @staticmethod
     def _log_stats(files):
         for k, v in list(files.items()):
-            logging.getLogger(__name__).info(json.dumps({
+            logging.getLogger(__name__).info({
                 'type': 'file_count',
                 'directory': k,
                 'count': len(v)
-            }))
+            })
 
     async def run(self, dry_run=False):
         """
@@ -178,7 +177,7 @@ class CacheCleanup(CacheFiles):
                     logging.getLogger().warning('deleted unbound cache file: %s' % unbound_file)
 
         ans = {'type': 'summary', 'processed': num_processed, 'deleted': num_deleted}
-        logging.getLogger(__name__).info(json.dumps(ans))
+        logging.getLogger(__name__).info(ans)
         return ans
 
 

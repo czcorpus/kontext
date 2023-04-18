@@ -14,10 +14,9 @@
 
 import datetime
 import logging
-from typing import Optional, Tuple, Union
+from typing import Any, Dict, Optional, Tuple, Union
 
 import settings
-import ujson as json
 from action.errors import ImmediateRedirectException, UserReadableException
 from plugin_types.action_log import AbstractActionLog
 
@@ -73,8 +72,8 @@ class DefaultActionLog(AbstractActionLog):
         }
         return log_data
 
-    def write_action(self, data: str) -> None:
-        logging.getLogger('QUERY').info(json.dumps(data))
+    def write_action(self, data: Dict[str, Any]) -> None:
+        logging.getLogger('QUERY').info(data)
 
 
 def create_instance(_):
