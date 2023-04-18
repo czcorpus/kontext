@@ -44,6 +44,7 @@ from action.argmapping.subcorpus import (
     CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs)
 from bgcalc.adapter.factory import init_backend
 from corplib.abstract import SubcorpusIdent
+from log_formatter import KontextLogFormatter
 
 uvloop.install()
 
@@ -178,8 +179,14 @@ if __name__ == "__main__":
             handler = logging.FileHandler(settings.get('calc_backend', 'rq_log_path'))
 
         if handler:
-            handler.setFormatter(logging.Formatter(
-                fmt='%(asctime)s [%(name)s] %(levelname)s: %(message)s'))
+            handler.setFormatter(KontextLogFormatter(
+                fields={
+                    "level": "levelname",
+                    "time": "asctime",
+                    "logger": "name",
+                },
+                # datefmt='%Y-%m-%dT%H:%M:%S.%f%Z',
+            ))
             logging_handlers.append(handler)
 
         logging.basicConfig(

@@ -67,7 +67,8 @@ def init_plugin(name, module=None, optional=False):
             logging.getLogger(__name__).warning(
                 f'Plugin [{name}] configured but the following error occurred: {e}')
         except (PluginException, Exception) as e:
-            logging.getLogger(__name__).critical('Failed to initiate plug-in %s', name, exc_info=e)
+            logging.getLogger(__name__).critical(
+                'Failed to initiate plug-in %s: %s', name, e, exc_info=e)
             raise e
     else:
         plugins.add_missing_plugin(name)

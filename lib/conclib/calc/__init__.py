@@ -66,7 +66,7 @@ async def del_silent(path: str):
     try:
         await aiofiles.os.remove(path)
     except (OSError, TypeError) as ex:
-        logging.getLogger(__name__).warning(f'del_silent problem: {ex} (file: {path}', exc_info=ex)
+        logging.getLogger(__name__).warning(f'del_silent problem: {ex} (file: {path})', exc_info=ex)
 
 
 async def cancel_conc_task(
