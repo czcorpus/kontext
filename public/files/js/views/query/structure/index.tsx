@@ -48,6 +48,7 @@ export function init({dispatcher, he, queryModel}:InputModuleArgs) {
     const ParsedToken:React.FC<{
         value:ParsedSimpleQueryToken;
         matchCase:boolean;
+        regexpEnabled:boolean;
 
     }> = (props) => {
 
@@ -59,7 +60,7 @@ export function init({dispatcher, he, queryModel}:InputModuleArgs) {
                         {pipe(
                             attr,
                             List.map((attr, i) => {
-                                const escVal = props.value.isExtended ? Strings.escapeRegexp(val) : val;
+                                const escVal = props.regexpEnabled ? val : Strings.escapeRegexp(val);
                                 return (
                                     <div key={`item:${attr}:${i}`}>
                                         <span className="attr">{attr}</span>=
@@ -78,7 +79,7 @@ export function init({dispatcher, he, queryModel}:InputModuleArgs) {
                     </React.Fragment>
                 );
             }
-            const escVal = props.value.isExtended ? Strings.escapeRegexp(val) : val;
+            const escVal = props.regexpEnabled ? val : Strings.escapeRegexp(val);
             return (
                 <div key={`item:${attr}:0`}>
                     <span className="attr">{attr}</span>=
@@ -167,7 +168,8 @@ export function init({dispatcher, he, queryModel}:InputModuleArgs) {
                                             <tr className="interpretation">
                                                 {List.map(
                                                     (v, i) => <ParsedToken key={`${v.value}:${i}`} value={v}
-                                                                    matchCase={queryObj.qmcase} />,
+                                                                    matchCase={queryObj.qmcase}
+                                                                    regexpEnabled={queryObj.use_regexp} />,
                                                     queryObj.queryParsed
                                                 )}
                                             </tr>
