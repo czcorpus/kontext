@@ -136,6 +136,13 @@ export class Actions {
         name: 'QUERY_INPUT_HIT_VIRTUAL_KEYBOARD_DEAD_KEY'
     };
 
+    static QueryInputSetVirtualKeyboardLayoutFromCode: Action<{
+        code:string;
+
+    }> = {
+        name: 'QUERY_INPUT_SET_VIRTUAL_KEYBOARD_LAYOUT_FROM_CODE'
+    }
+
     static QueryContextSetLemwordWsize: Action<{
         value:[number, number];
     }> = {
