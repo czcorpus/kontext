@@ -31,7 +31,8 @@ from bgcalc.errors import CalcTaskNotFoundError
 from conclib.calc.base import GeneralWorker
 from conclib.empty import InitialConc
 from conclib.errors import (
-    UnreadableConcordanceException, ConcCalculationStatusException, ConcNotFoundException, extract_manatee_error)
+    ConcCalculationStatusException, ConcNotFoundException,
+    UnreadableConcordanceException, extract_manatee_error)
 from conclib.pyconc import PyConc
 from corplib import CorpusFactory
 from corplib.corpus import AbstractKCorpus
@@ -65,7 +66,7 @@ async def del_silent(path: str):
     try:
         await aiofiles.os.remove(path)
     except (OSError, TypeError) as ex:
-        logging.getLogger(__name__).warning(f'del_silent problem: {ex} (file: {path}')
+        logging.getLogger(__name__).warning(f'del_silent problem: {ex} (file: {path}', exc_info=ex)
 
 
 async def cancel_conc_task(
@@ -389,7 +390,8 @@ class ConcSyncCalculation(GeneralWorker):
             else:
                 for i in range(calc_from, len(query)):
                     await self.cache_map.add_to_map(
-                        corp_cache_key, query[:i + 1], cutoff, ConcCacheStatus(task_id=self._task_id),
+                        corp_cache_key, query[:i +
+                                              1], cutoff, ConcCacheStatus(task_id=self._task_id),
                         overwrite=True)
         except Exception as ex:
             logging.getLogger(__name__).error(ex)

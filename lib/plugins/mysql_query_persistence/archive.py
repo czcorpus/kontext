@@ -127,9 +127,7 @@ class Archiver(object):
                             await self._from_db.list_append(
                                 self._archive_queue_key, dict(key=conc_prefix + rm, revoke=True))
         except Exception as ex:
-            logging.getLogger(__name__).error('Failed to archive items: {}'.format(ex))
-            from action.errors import get_traceback
-            logging.getLogger(__name__).error(get_traceback())
+            logging.getLogger(__name__).error('Failed to archive items', exc_info=ex)
             for item in inserts:
                 await self._from_db.list_append(self._archive_queue_key, dict(key=conc_prefix + item[0]))
             return dict(

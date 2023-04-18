@@ -54,20 +54,20 @@ def init_plugin(name, module=None, optional=False):
                 plugin_module = module
             plg = plugins.install_plugin(name, plugin_module, settings)
             if hasattr(plg, 'wait_for_environment') and callable(plg.wait_for_environment):
-                logging.getLogger(__name__).info(f'Plug-in {plg.__class__.__name__} is waiting for environment')
+                logging.getLogger(__name__).info(
+                    f'Plug-in {plg.__class__.__name__} is waiting for environment')
                 err = plg.wait_for_environment()
                 if err:
                     logging.getLogger(__name__).error(f'{plg.__class__.__name__}: {err}')
                 else:
-                    logging.getLogger(__name__).info(f'Plug-in {plg.__class__.__name__} environment OK')
+                    logging.getLogger(__name__).info(
+                        f'Plug-in {plg.__class__.__name__} environment OK')
 
         except ImportError as e:
             logging.getLogger(__name__).warning(
                 f'Plugin [{name}] configured but the following error occurred: {e}')
         except (PluginException, Exception) as e:
-            from action.errors import get_traceback
-            logging.getLogger(__name__).critical('Failed to initiate plug-in %s: %s' % (name, e))
-            logging.getLogger(__name__).error(''.join(get_traceback()))
+            logging.getLogger(__name__).critical('Failed to initiate plug-in %s', name, exc_info=e)
             raise e
     else:
         plugins.add_missing_plugin(name)

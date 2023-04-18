@@ -2,6 +2,7 @@
 # pip install -r requirements.txt
 #
 concurrent_log_handler >= 0.9.20
+logging-json >= 0.4.0
 PyICU >= 1.5
 babel >= 2.9.1
 jinja2 >= 2.11.3

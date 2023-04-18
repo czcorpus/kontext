@@ -146,6 +146,8 @@ export class VirtualKeyboardModel extends StatelessModel<VirtualKeyboardState>
                 }
                 if (idx !== -1) {
                     state.currentLayoutIdx = idx;
+                } else {
+                    console.warn(`virtual keyboard layout not found: ${action.payload.code}`);
                 }
             }
         );

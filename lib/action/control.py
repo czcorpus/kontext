@@ -13,10 +13,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import hashlib
 import json
 import logging
-import uuid
 from functools import wraps
 from typing import Any, Callable, Coroutine, Optional, Type, Union
 
@@ -24,8 +22,7 @@ import settings
 from action.argmapping.action import create_mapped_args
 from action.errors import (
     AlignedCorpusForbiddenException, CorpusForbiddenException,
-    ForbiddenException, ImmediateRedirectException, UserReadableException,
-    get_traceback)
+    ForbiddenException, ImmediateRedirectException, UserReadableException)
 from action.krequest import KRequest
 from action.model import ModelsSharedData
 from action.model.abstract import AbstractPageModel, AbstractUserModel
@@ -121,10 +118,8 @@ async def resolve_error(
         resp.set_http_status(500)
 
     if is_debug:
+        logging.getLogger(__name__).error(err)
         import traceback
-        err_id = hashlib.sha1(str(uuid.uuid1()).encode('ascii')).hexdigest()
-        logging.getLogger(__name__).error(
-            '{0}\n@{1}\n{2}'.format(err, err_id, ''.join(get_traceback())))
         resp.add_system_message('error', traceback.format_exc())
 
     resp.set_result(ans)
