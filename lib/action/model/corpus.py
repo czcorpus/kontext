@@ -19,7 +19,6 @@
 
 
 import logging
-import urllib.parse
 from dataclasses import asdict
 from functools import partial
 from typing import (
@@ -53,12 +52,7 @@ from texttypes.model import TextTypes
 
 T = TypeVar('T')
 
-PREFLIGHT_THRESHOLD_FREQ = 10_000_000
-"""
-Specifies a minimum preflight frequency (after it is recalculated
-to the original corpus size) we consider too comp. demanding
-and offer users an alternative corpus
-"""
+
 
 PREFLIGHT_MIN_LARGE_CORPUS = 500_000_000
 """Specifies a minimum size of a corpus to be used along with preflight queries"""
@@ -519,7 +513,7 @@ class CorpusActionModel(UserActionModel):
             result['conc_preflight'] = dict(
                 corpname=corp_info.preflight_subcorpus.corpus_name,
                 subc=corp_info.preflight_subcorpus.id,
-                threshold_ipm=round(PREFLIGHT_THRESHOLD_FREQ / self.corp.size * 1_000_000))
+                threshold_ipm=self.corp.preflight_warn_ipm)
         else:
             result['conc_preflight'] = None
 
@@ -717,7 +711,8 @@ class CorpusActionModel(UserActionModel):
                         poslist = tagset.pos_category
                         break
                 tpl_out['Wposlist_' + al] = [{'n': x.pos, 'v': x.pattern} for x in poslist]
-                tpl_out['input_languages'][al] = corp_info.collator_locale
+                tpl_out['input_languages'][al] = corp_info.metadata.default_virt_keyboard \
+                    if corp_info.metadata.default_virt_keyboard else corp_info.collator_locale
 
     async def create_preflight_subcorpus(self) -> str:
         with plugins.runtime.SUBC_STORAGE as sc:
