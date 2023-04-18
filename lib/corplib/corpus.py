@@ -26,6 +26,14 @@ from corplib.subcorpus import SubcorpusIdent
 from manatee import Corpus
 
 
+PREFLIGHT_THRESHOLD_FREQ = 10_000_000
+"""
+Specifies a minimum preflight frequency (after it is recalculated
+to the original corpus size) we consider too comp. demanding
+and offer users an alternative corpus
+"""
+
+
 class KCorpus(AbstractKCorpus):
     """
     KCorpus is an abstraction of a corpus/subcorpus used by KonText.
@@ -137,6 +145,11 @@ class KCorpus(AbstractKCorpus):
 
     def compile_docf(self, attr, doc_attr):
         return self._corp.compile_docf(attr, doc_attr)
+
+    def preflight_warn_ipm(self):
+        if self.corp.size > 0:
+            return round(PREFLIGHT_THRESHOLD_FREQ / self.corp.size * 1_000_000)
+        return 1_000_000
 
     @property
     def subcorpus_id(self):

@@ -46,8 +46,7 @@ from action.krequest import KRequest
 from action.model.base import BaseActionModel
 from action.model.concordance import ConcActionModel
 from action.model.concordance.linesel import LinesGroups
-from action.model.corpus import (
-    PREFLIGHT_MIN_LARGE_CORPUS, PREFLIGHT_THRESHOLD_FREQ, CorpusActionModel)
+from action.model.corpus import PREFLIGHT_MIN_LARGE_CORPUS, CorpusActionModel
 from action.model.user import UserActionModel
 from action.response import KResponse
 from action.result.concordance import QueryAction
@@ -767,7 +766,7 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
         preflight_conf = dict(
             subc=corpus_info.preflight_subcorpus.id,
             corpname=corpus_info.preflight_subcorpus.corpus_name,
-            threshold_ipm=round(PREFLIGHT_THRESHOLD_FREQ / amodel.corp.size * 1_000_000))
+            threshold_ipm=amodel.corp.preflight_warn_ipm)
     else:
         preflight_conf = None
 
