@@ -203,7 +203,7 @@ async def extract_jwt(request: Request):
     if JWT_COOKIE_NAME in request.cookies:
         try:
             request.ctx.session = jwt.decode(
-                request.cookies[JWT_COOKIE_NAME], settings.get('global', 'jwt_secret'), algorithms=[JWT_ALGORITHM])
+                request.cookies.get(JWT_COOKIE_NAME), settings.get('global', 'jwt_secret'), algorithms=[JWT_ALGORITHM])
             return
         except InvalidSignatureError as ex:
             logging.getLogger(__name__).warning(f'failed to extract JWT token: {ex}')
