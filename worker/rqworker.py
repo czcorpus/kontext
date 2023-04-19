@@ -179,14 +179,7 @@ if __name__ == "__main__":
             handler = logging.FileHandler(settings.get('calc_backend', 'rq_log_path'))
 
         if handler:
-            handler.setFormatter(KontextLogFormatter(
-                fields={
-                    "level": "levelname",
-                    "time": "asctime",
-                    "logger": "name",
-                },
-                # datefmt='%Y-%m-%dT%H:%M:%S.%f%Z',
-            ))
+            handler.setFormatter(KontextLogFormatter())
             logging_handlers.append(handler)
 
         logging.basicConfig(

@@ -118,7 +118,7 @@ async def resolve_error(
         resp.set_http_status(500)
 
     if is_debug:
-        logging.getLogger(__name__).error(err)
+        logging.getLogger(__name__).exception(err)
         import traceback
         resp.add_system_message('error', traceback.format_exc())
 

@@ -176,3 +176,6 @@ class ErrorCorpus(EmptyCorpus):
     @property
     def portable_ident(self):
         return SubcorpusIdent(id=self.subcorpus_id, corpus_name=self._corpname) if self._usesubcorp else self._corpname
+
+    def preflight_warn_ipm(self):
+        return 1_000_000

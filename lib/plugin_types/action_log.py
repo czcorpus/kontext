@@ -29,8 +29,13 @@ class AbstractActionLog:
     """
 
     def log_action(
-            self, request: KRequest, args_map: MinArgs, action_log_mapper: Callable[[KRequest], Any],
-            full_action_name: str, err_desc: Optional[Tuple[Exception, Optional[str]]]):
+            self,
+            request: KRequest,
+            args_map: MinArgs,
+            action_log_mapper: Callable[[KRequest], Any],
+            full_action_name: str,
+            err_desc: Optional[Tuple[Exception, Optional[str]]]
+    ):
         self.write_action(
             self.collect_args(request, args_map, action_log_mapper, full_action_name, err_desc))
 
