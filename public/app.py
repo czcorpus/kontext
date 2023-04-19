@@ -87,7 +87,7 @@ from views.wordlist import bp as wordlist_bp
 
 # we ensure that the application's locale is always the same
 locale.setlocale(locale.LC_ALL, 'en_US.utf-8')
-logger = logging.getLogger('')  # root logger
+logger = logging.getLogger()  # root logger
 
 
 def setup_logger(conf) -> Optional[logging.handlers.QueueListener]:
@@ -109,14 +109,7 @@ def setup_logger(conf) -> Optional[logging.handlers.QueueListener]:
         listener = QueueListener(queue, handler)
         listener.start()
 
-    handler.setFormatter(KontextLogFormatter(
-        fields={
-            "level": "levelname",
-            "time": "asctime",
-            "logger": "name",
-        },
-        # datefmt='%Y-%m-%dT%H:%M:%S.%f%Z',
-    ))
+    handler.setFormatter(KontextLogFormatter())
     logger.addHandler(handler)
     logger.setLevel(logging.INFO if not settings.is_debug_mode() else logging.DEBUG)
     return listener
@@ -215,7 +208,7 @@ async def extract_jwt(request: Request):
     if JWT_COOKIE_NAME in request.cookies:
         try:
             request.ctx.session = jwt.decode(
-                request.cookies[JWT_COOKIE_NAME], settings.get('global', 'jwt_secret'), algorithms=[JWT_ALGORITHM])
+                request.cookies.get(JWT_COOKIE_NAME), settings.get('global', 'jwt_secret'), algorithms=[JWT_ALGORITHM])
             return
         except InvalidSignatureError as ex:
             logging.getLogger(__name__).warning(f'failed to extract JWT token: {ex}')

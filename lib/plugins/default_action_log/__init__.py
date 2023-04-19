@@ -14,7 +14,7 @@
 
 import datetime
 import logging
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Optional, Tuple, Union
 
 import settings
 from action.errors import ImmediateRedirectException, UserReadableException
@@ -59,8 +59,6 @@ class DefaultActionLog(AbstractActionLog):
         if self.is_error(err_desc):
             err_name, err_msg, err_anchor = self.expand_error_desc(err_desc)
             log_data['error'] = dict(name=err_name, message=err_msg, anchor=err_anchor)
-        log_data['date'] = datetime.datetime.today().strftime(
-            '%s.%%f' % settings.DEFAULT_DATETIME_FORMAT)
         log_data['action'] = full_action_name
         log_data['user_id'] = request.ctx.session.get('user', {}).get('id')
         if request.current_proc_time:
@@ -72,7 +70,7 @@ class DefaultActionLog(AbstractActionLog):
         }
         return log_data
 
-    def write_action(self, data: Dict[str, Any]) -> None:
+    def write_action(self, data):
         logging.getLogger('QUERY').info(data)
 
 

@@ -2,7 +2,8 @@
 # pip install -r requirements.txt
 #
 concurrent_log_handler >= 0.9.20
-logging-json >= 0.4.0
+python-json-logger >= 2.0.7
+tzdata >= 2023.3
 PyICU >= 1.5
 babel >= 2.9.1
 jinja2 >= 2.11.3
@@ -16,17 +17,17 @@ Markdown >= 3.4.1
 openpyxl >= 3.0.10
 # aioredis will be part of redis in the future
 aioredis >= 2.0.1
-redis >= 4.3.3
+redis >= 4.3.4
 uvloop >= 0.16.0
 aiomysql >= 0.1.1
 aiofiles >= 0.8.0
 aiocsv >= 1.2.2
-aiohttp >= 3.8.1
+aiohttp >= 3.8.2
 dataclasses-json >= 0.5.7
 couchdb >= 1.2
-cairosvg >= 2.5.2
+cairosvg >= 2.5.3
 aiosqlite >= 0.17.0  # just for development purposes
-ujson >= 5.3.0
+ujson >= 5.3.1
 setproctitle >= 1.2.2
 markupsafe >= 2.1.1
 
