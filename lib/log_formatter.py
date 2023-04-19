@@ -24,14 +24,6 @@ import traceback
 from pythonjsonlogger import jsonlogger
 
 
-def get_exc_info(exc: Exception):
-    return {
-        'id': hashlib.sha1(str(uuid.uuid1()).encode('ascii')).hexdigest(),
-        'type': type(exc).__name__,
-        'stack': traceback.format_exception(None, exc, exc.__traceback__),
-    }
-
-
 class KontextLogFormatter(jsonlogger.JsonFormatter):
 
     def add_fields(self, log_record, record, message_dict):
@@ -44,13 +36,18 @@ class KontextLogFormatter(jsonlogger.JsonFormatter):
         log_record['logger'] = record.name
         if 'message' in log_record and not log_record['message']:
             del log_record['message']
-        del log_record['exc_info']
+        if 'exc_info' in log_record:
+            del log_record['exc_info']
 
 
     def format(self, record: logging.LogRecord):
         if record.exc_info:
-            _, _, st = record.exc_info
-            record.__dict__['exception'] = [s.strip() for s in traceback.format_tb(st)]
+            _, ex, st = record.exc_info
+            record.__dict__['exception'] = {
+                'id': hashlib.sha1(str(uuid.uuid1()).encode('ascii')).hexdigest(),
+                'type': type(ex).__name__,
+                'stack': [s.strip() for s in traceback.format_tb(st)]
+            }
         return super().format(record)
 
     @staticmethod
