@@ -15,6 +15,7 @@
 
 import hashlib
 import logging
+import os
 import uuid
 import time
 from datetime import datetime
@@ -39,7 +40,6 @@ class KontextLogFormatter(jsonlogger.JsonFormatter):
         if 'exc_info' in log_record:
             del log_record['exc_info']
 
-
     def format(self, record: logging.LogRecord):
         if record.exc_info:
             _, ex, st = record.exc_info
@@ -52,9 +52,14 @@ class KontextLogFormatter(jsonlogger.JsonFormatter):
 
     @staticmethod
     def _tz_offset() -> str:
-        z = zoneinfo.ZoneInfo(time.tzname[0])
+        try:
+            z = zoneinfo.ZoneInfo(time.tzname[0])
+        except:
+            z = zoneinfo.ZoneInfo(os.environ.get('TZ', 'UTC'))
         tos = z.utcoffset(datetime.now()).seconds
-        if tos < 0:
+        if tos == 0:
+            return 'Z'
+        elif tos < 0:
             sgn = '-'
             tos = abs(tos)
         else:
