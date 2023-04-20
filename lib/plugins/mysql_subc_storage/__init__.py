@@ -201,9 +201,12 @@ class MySQLSubcArchive(AbstractSubcArchive):
 
             await cursor.execute(
                 f'UPDATE {self._bconf.subccorp_table} '
-                f'SET name = %s, {column1} = %s, {column2} = %s, {column3} = %s, public_description = %s, size = %s, aligned = %s '
+                f'SET name = %s, {column1} = %s, {column2} = %s, {column3} = %s, '
+                'public_description = %s, size = %s, aligned = %s '
                 'WHERE id = %s AND author_id = %s AND is_draft = 1',
-                (data.subcname, value1, value2, value3, public_description, size, ident, author['id'], json.dumps(aligned) if aligned else ''))
+                (data.subcname, value1, value2, value3,
+                 public_description, size, json.dumps(aligned) if aligned else None,
+                 ident, author['id']))
 
     async def archive(self, user_id: int, corpname: str, subc_id: str) -> datetime:
         async with self._db.cursor() as cursor:
