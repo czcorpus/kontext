@@ -29,7 +29,7 @@ class KontextLogFormatter(jsonlogger.JsonFormatter):
 
     def add_fields(self, log_record, record, message_dict):
         super().add_fields(log_record, record, message_dict)
-        log_record['date'] = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f') + self._tz_offset()
+        log_record['date'] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f') + self._tz_offset()
         if log_record.get('level'):
             log_record['level'] = log_record['level'].upper()
         else:
