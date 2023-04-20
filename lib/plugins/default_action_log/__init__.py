@@ -12,11 +12,9 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import datetime
 import logging
 from typing import Optional, Tuple, Union
 
-import settings
 from action.errors import ImmediateRedirectException, UserReadableException
 from plugin_types.action_log import AbstractActionLog
 
