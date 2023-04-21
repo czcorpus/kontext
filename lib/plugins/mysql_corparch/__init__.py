@@ -35,8 +35,8 @@ from plugin_types.corparch import (
     AbstractSearchableCorporaArchive, CorpusListItem)
 from plugin_types.corparch.backend import DatabaseBackend
 from plugin_types.corparch.corpus import (
-    BrokenCorpusInfo, CorpusInfo, KwicConnect, MLPositionFilter, QuerySuggest,
-    StructAttrInfo, TokenConnect)
+    BrokenCorpusInfo, CorpusInfo, KwicConnect, KwicRowConnect,
+    MLPositionFilter, QuerySuggest, StructAttrInfo, TokenConnect)
 from plugin_types.user_items import AbstractUserItems
 from plugins import inject
 from plugins.common.mysql import MySQLConf, MySQLOps
@@ -98,6 +98,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
         self._tt_desc_i18n = defaultdict(lambda: {})
         self._tc_providers = {}
         self._kc_providers = {}
+        self._krc_providers = {}
         self._qs_providers = {}
 
     @property
@@ -265,6 +266,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
         if corpus_id not in self._tc_providers and corpus_id not in self._kc_providers:
             self._tc_providers[corpus_id] = TokenConnect()
             self._kc_providers[corpus_id] = KwicConnect()
+            self._krc_providers[corpus_id] = KwicRowConnect()
             self._qs_providers[corpus_id] = QuerySuggest()
             data = await self._backend.load_tckc_providers(cursor, corpus_id)
             for row in data:
@@ -273,9 +275,11 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
                         (row['provider'], row['is_kwic_view']))
                 elif row['type'] == 'kc':
                     self._kc_providers[corpus_id].providers.append(row['provider'])
+                elif row['type'] == 'krc':
+                    self._krc_providers[corpus_id].providers.append(row['provider'])
                 elif row['type'] == 'qs':
                     self._qs_providers[corpus_id].providers.append(row['provider'])
-        return self._tc_providers[corpus_id], self._kc_providers[corpus_id], self._qs_providers[corpus_id]
+        return self._tc_providers[corpus_id], self._kc_providers[corpus_id], self._krc_providers[corpus_id], self._qs_providers[corpus_id]
 
     async def _fetch_corpus_info(self, cursor: Cursor, corpus_id: str, user_lang: str) -> CorpusInfo:
         if corpus_id not in self._corpus_info_cache:
@@ -318,7 +322,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
                         else:
                             ans = corp_info
                         ans.manatee = await plugin_ctx.corpus_factory.get_info(corp_name)
-                        ans.token_connect, ans.kwic_connect, ans.query_suggest = await self._get_tckcqs_providers(
+                        ans.token_connect, ans.kwic_connect, ans.kwic_row_connect, ans.query_suggest = await self._get_tckcqs_providers(
                             cursor, corp_name)
                         ans.metadata.interval_attrs = await self._backend.load_interval_attrs(cursor, corp_name)
 

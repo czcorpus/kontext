@@ -104,6 +104,12 @@ class KwicConnect:
     providers: List[Any] = field(default_factory=list)
 
 
+@dataclass_json
+@dataclass
+class KwicRowConnect:
+    providers: List[Any] = field(default_factory=list)
+
+
 class PosCategoryItem(NamedTuple):
     pattern: str
     pos: str
@@ -212,6 +218,7 @@ class CorpusInfo:
     metadata: CorpusMetadata = field(default_factory=lambda: CorpusMetadata())
     token_connect: TokenConnect = field(default_factory=lambda: TokenConnect())
     kwic_connect: KwicConnect = field(default_factory=lambda: KwicConnect())
+    kwic_row_connect: KwicRowConnect = field(default_factory=lambda: KwicRowConnect())
     manatee: ManateeCorpusInfo = field(default_factory=lambda: ManateeCorpusInfo())
     default_view_opts: Dict[str, Any] = field(default_factory=dict)
     query_suggest: QuerySuggest = field(default_factory=lambda: QuerySuggest())

@@ -41,7 +41,10 @@ class DefaultKwicRowConnect(AbstractKwicRowConnect):
     async def is_enabled_for(self, plugin_ctx, corpora):
         if len(corpora) == 0:
             return False
-        return True
+        corpus_info = await self._corparch.get_corpus_info(plugin_ctx, corpora[0])
+        tst = [p.enabled_for_corpora([corpora[0]] + plugin_ctx.aligned_corpora)
+               for p, _ in self.map_providers(corpus_info.kwic_row_connect.providers)]
+        return len(tst) > 0 and True in tst
 
     @as_async
     def export(self, plugin_ctx):
