@@ -101,6 +101,15 @@ export interface Token {
         attr:string;
         s:string;
     }
+
+    /**
+     * Specifies kwic row connect related data
+     */
+    krcData?:{
+        attrs: {[name:string]:string};
+        highlightGroup: number|undefined;
+        comment: string|undefined;
+    }
 }
 
 
