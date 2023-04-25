@@ -343,11 +343,13 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         isAlignedMainCorp:boolean;
         corpsWithKwic:Array<string>;
         supportsTokenConnect:boolean;
+        supportsKwicRowConnect:boolean;
         lineIdx:number;
         output:KWICSection;
         kwicLength:number;
         attrViewMode:ViewOptions.AttrViewMode;
         tokenConnectClickHandler:(corpusId:string, tokenNumber:number, kwicLength:number, lineIdx:number)=>void;
+        kwicRowConnectClickHandler:(corpusId:string, tokenNumber:number, kwicLength:number, lineIdx:number)=>void;
         audioPlayerStatus:PlayerStatus;
 
     }> = (props) => {
@@ -362,22 +364,26 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             return ans.join(' ');
         };
 
-        const handleNonKwicTokenClick = (corpusId, lineIdx, tokenNumber) => {
-            props.tokenConnectClickHandler(corpusId, tokenNumber, -1, lineIdx);
-        };
-
         const handleTokenClick = (evt) => {
-            if (props.supportsTokenConnect) {
-                const tokenId = evt.target.getAttribute('data-tokenid');
+            if (props.supportsTokenConnect || props.supportsKwicRowConnect) {
+                let tokenId = evt.target.getAttribute('data-tokenid');
                 if (tokenId !== null) {
-                    handleNonKwicTokenClick(
-                        props.corpname, props.lineIdx, parseInt(evt.target.getAttribute('data-tokenid')));
+                    tokenId = parseInt(tokenId);
+                    if (props.supportsTokenConnect) {
+                        props.tokenConnectClickHandler(props.corpname, props.lineIdx, -1, tokenId);
+                    }
+                    if (props.supportsKwicRowConnect) {
+                        props.kwicRowConnectClickHandler(props.corpname, tokenId, -1, props.lineIdx);
+                    }
                 }
             }
         };
 
         const handleKwicClick = (corpusId, tokenNumber, lineIdx) => {
             props.tokenConnectClickHandler(corpusId, tokenNumber, props.kwicLength, lineIdx);
+            if (props.supportsKwicRowConnect) {
+                props.kwicRowConnectClickHandler(corpusId, tokenNumber, props.kwicLength, lineIdx);
+            }
         };
 
         return <>
@@ -573,6 +579,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         baseCorpname:string;
         mainCorp:string;
         supportsTokenConnect:boolean;
+        supportsKwicRowConnect:boolean;
         corpsWithKwic:Array<string>;
         viewMode:string; // TODO enum
         attrViewMode:ViewOptions.AttrViewMode;
@@ -591,7 +598,16 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         constructor(props) {
             super(props);
             this._detailClickHandler = this._detailClickHandler.bind(this);
+            this._kwicRowConnectHandler = this._kwicRowConnectHandler.bind(this);
             this._refsDetailClickHandler = this._refsDetailClickHandler.bind(this);
+        }
+
+        _kwicRowConnectHandler(corpusId:string, tokenNumber:number, kwicLength:number, lineIdx:number) {
+            dispatcher.dispatch(
+                Actions.HandleKwicRowConnect,
+                {corpusId, tokenNumber, lineIdx, kwicLength},
+                undefined
+            );
         }
 
         _detailClickHandler(corpusId, tokenNumber, kwicLength, lineIdx) {
@@ -696,10 +712,12 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                             isAlignedMainCorp={this.props.mainCorp === corpname && this.props.cols.length > 1}
                             corpsWithKwic={this.props.corpsWithKwic}
                             supportsTokenConnect={this.props.supportsTokenConnect}
+                            supportsKwicRowConnect={this.props.supportsKwicRowConnect}
                             lineIdx={this.props.lineIdx}
                             output={corpusOutput}
                             kwicLength={this.props.data.kwicLength}
                             tokenConnectClickHandler={this._detailClickHandler}
+                            kwicRowConnectClickHandler={this._kwicRowConnectHandler}
                             attrViewMode={this.props.attrViewMode}
                             audioPlayerStatus={this.props.audioPlayerStatus}
                         />;
@@ -720,10 +738,16 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
 
         _handleKwicClick(corpusId, tokenNumber, lineIdx) {
             this._detailClickHandler(corpusId, tokenNumber, this.props.data.kwicLength, lineIdx);
+            if (this.props.supportsKwicRowConnect) {
+                this._kwicRowConnectHandler(corpusId, tokenNumber, this.props.data.kwicLength, lineIdx);
+            }
         }
 
         _handleNonKwicTokenClick(corpusId, lineIdx, tokenNumber) {
             this._detailClickHandler(corpusId, tokenNumber, -1, lineIdx);
+            if (this.props.supportsKwicRowConnect) {
+                this._kwicRowConnectHandler(corpusId, tokenNumber, -1, lineIdx);
+            }
         }
 
         _refsDetailClickHandler(corpusId, tokenNumber, lineIdx) {
@@ -856,6 +880,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                             emptyRefValPlaceholder={this.props.emptyRefValPlaceholder}
                             supportsSyntaxView={this.props.supportsSyntaxView}
                             supportsTokenConnect={this.props.supportsTokenConnect}
+                            supportsKwicRowConnect={this.props.supportsKwicRowConnect}
                             audioPlayerStatus={this.props.audioPlayerStatus}
                         />
                     },

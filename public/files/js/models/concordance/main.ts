@@ -160,6 +160,8 @@ export interface ConcordanceModelState {
 
     supportsTokenConnect:boolean;
 
+    supportsKwicRowConnect:boolean;
+
     emptyRefValPlaceholder:string;
 
     saveFormVisible:boolean;
@@ -238,6 +240,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 playerAttachedChunk: '',
                 showAnonymousUserWarn: lineViewProps.anonymousUser,
                 supportsTokenConnect: lineViewProps.supportsTokenConnect,
+                supportsKwicRowConnect: lineViewProps.supportsKwicRowConnect,
                 emptyRefValPlaceholder: '\u2014',
                 lineGroupIds: attachColorsToIds(
                     layoutModel.getConf<Array<number>>('LinesGroupsNumbers'),
@@ -861,6 +864,14 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                     }
                 });
                 this.reloadAlignedHighlights(action.payload.matchPosAttr, false);
+            }
+        );
+
+        // TODO - for debugging, remove this
+        this.addActionHandler(
+            Actions.HandleKwicRowConnect,
+            action => {
+                console.log('KwicRowConnect dispatched', action.payload);
             }
         );
     }

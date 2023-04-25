@@ -978,6 +978,8 @@ export class ViewPage {
             supportsSyntaxView: this.layoutModel.pluginTypeIsActive(
                 PluginName.SYNTAX_VIEWER),
             supportsTokenConnect: tokenConnect.providesAnyTokenInfo(),
+            supportsKwicRowConnect: this.layoutModel.pluginTypeIsActive(
+                PluginName.KWIC_ROW_CONNECT),
             anonymousUserConcLoginPrompt: this.layoutModel.getConf<boolean>(
                 'anonymousUserConcLoginPrompt'
             )
