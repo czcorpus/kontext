@@ -107,8 +107,8 @@ export interface Token {
      */
     krcData?:{
         attrs: {[name:string]:string};
-        highlightGroup: number|undefined;
-        comment: string|undefined;
+        highlightGroup?: number;
+        comment?: string;
     }
 }
 
@@ -217,6 +217,7 @@ export interface ServerTextChunk {
     close_link?:{speech_path:string};
     continued?:boolean;
     tail_posattrs?:Array<string>;
+    attrs?:{[name:string]:string};
 }
 
 export interface MLPositionsData {

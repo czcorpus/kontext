@@ -35,15 +35,14 @@ function importTextChunk(item:ServerTextChunk, mainAttrIdx:number, id:string, st
         return {
             id,
             className: item.class,
-            text: List.map(
-                (s, i) => ({ s, h: false, idx: startWlIdx + i }),
+            text: List.map((s, i) => ({s, h: false, idx: startWlIdx + i, krcData: {attrs: item.attrs || {}}}),
                 item.str.trim().split(' ')
             ),
             openLink: item.open_link ? {speechPath: item.open_link.speech_path} : undefined,
             closeLink: item.close_link ? {speechPath: item.close_link.speech_path} : undefined,
             continued: item.continued,
             showAudioPlayer: false,
-            tailPosAttrs: item.tail_posattrs || []
+            tailPosAttrs: item.tail_posattrs || [],
         };
 
     } else {
@@ -53,12 +52,12 @@ function importTextChunk(item:ServerTextChunk, mainAttrIdx:number, id:string, st
         return {
             id,
             className: item.class,
-            text: [{s: text, h: false, idx: startWlIdx}],
+            text: [{s: text, h: false, idx: startWlIdx, krcData: {attrs: item.attrs || {}}}],
             openLink: item.open_link ? {speechPath: item.open_link.speech_path} : undefined,
             closeLink: item.close_link ? {speechPath: item.close_link.speech_path} : undefined,
             continued: item.continued,
             showAudioPlayer: false,
-            tailPosAttrs: tailPosattrs
+            tailPosAttrs: tailPosattrs,
         };
     }
 }
