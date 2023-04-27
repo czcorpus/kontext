@@ -54,6 +54,11 @@ def format_labelmap(labelmap: Mapping[str, str], separator: str = '.') -> LabelM
     return lines
 
 
+class AttrRole:
+    USER = 0b01
+    INTERNAL = 0b10
+
+
 class EmptyKWiclines:
 
     def nextline(self):
@@ -462,27 +467,28 @@ class Kwic:
     def speech_segment_has_audio(self, s):
         return s and s[1]
 
-    def postproc_text_chunk(self, tokens, token_attrs):
+    def postproc_text_chunk(self, tokens, posattrs: Dict[str, int]):
         prev = {}
         ans = []
         for item in tokens:
             if item.get('class') == 'attr':
                 # TODO configurable delimiter
                 # a list is used for future compatibility
-                attrs_values = item['str'].strip('/').split('/')
-                if token_attrs:
-                    prev['tail_posattrs'] = attrs_values[:-len(token_attrs)]
-                    prev['attrs'] = {token_attrs[i]: v for i,
-                                     v in enumerate(attrs_values[-len(token_attrs):])}
-                else:
-                    prev['tail_posattrs'] = attrs_values
-                    prev['attrs'] = {}
+                attrs_values: List[str] = item['str'].strip('/').split('/')
+                prev['posattrs'] = [
+                    {
+                        'name': name,
+                        'value': value,
+                        'role': role,
+                    }
+                    for value, (name, role) in zip(attrs_values, list(posattrs.items())[1:])
+                ]
             else:
                 ans.append(item)
             prev = item
         return ans
 
-    def kwiclines(self, args: KwicLinesArgs, corpname: str, token_attrs: List[str] = []):
+    def kwiclines(self, args: KwicLinesArgs, corpname: str, internal_attrs: List[str] = []):
         """
         Generates list of 'kwic' (= keyword in context) lines according to
         the provided Concordance object and additional parameters (like
@@ -508,8 +514,12 @@ class Kwic:
 
         lines = []
 
-        merged_attrs = ','.join([args.attrs, *token_attrs])
-        merged_ctxattrs = ','.join([args.ctxattrs, *token_attrs])
+        merged_attrs = {attr: AttrRole.USER for attr in args.attrs.split(',')}
+        merged_ctxattrs = {attr: AttrRole.USER for attr in args.ctxattrs.split(',')}
+        for attr in internal_attrs:
+            merged_attrs[attr] = (AttrRole.INTERNAL | merged_attrs.get(attr, 0))
+            merged_ctxattrs[attr] = (AttrRole.INTERNAL | merged_ctxattrs.get(attr, 0))
+
         if args.righttoleft:
             rightlabel, leftlabel = 'Left', 'Right'
             args.structs += ',ltr'
@@ -524,7 +534,7 @@ class Kwic:
         else:
             kl = manatee.KWICLines(
                 self.conc.corp(), self.conc.RS(True, args.fromline, args.toline), args.leftctx, args.rightctx,
-                merged_attrs, merged_ctxattrs, all_structs, args.refs)
+                ','.join(merged_attrs), ','.join(merged_ctxattrs), all_structs, args.refs)
         labelmap = args.labelmap.copy()
         labelmap['_'] = '_'
         maxleftsize = 0
@@ -567,9 +577,9 @@ class Kwic:
                             index += 1
                     ml_positions[side] = pos_list
 
-            leftwords = self.postproc_text_chunk(leftwords, token_attrs)
-            kwicwords = self.postproc_text_chunk(kwicwords, token_attrs)
-            rightwords = self.postproc_text_chunk(rightwords, token_attrs)
+            leftwords = self.postproc_text_chunk(leftwords, merged_ctxattrs)
+            kwicwords = self.postproc_text_chunk(kwicwords, merged_attrs)
+            rightwords = self.postproc_text_chunk(rightwords, merged_ctxattrs)
 
             if args.righttoleft and Kwic.isengword(kwicwords[0]):
                 leftwords, rightwords = Kwic.update_right_to_left(leftwords, rightwords)

@@ -35,7 +35,8 @@ import {
     KWICSection, LineSelectionModes, TextChunk,
     Line as ConcLine,
     ConcToken,
-    Token} from '../../../models/concordance/common';
+    Token,
+    PosAttrRole} from '../../../models/concordance/common';
 import * as S from './style';
 import { PlayerStatus } from '../../../models/concordance/media';
 import { SentenceToken } from '../../../types/plugins/syntaxViewer';
@@ -239,7 +240,12 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
 
         } else if (props.viewMode === ViewOptions.AttrViewMode.MOUSEOVER ||
                 props.viewMode === ViewOptions.AttrViewMode.VISIBLE_KWIC && !props.isKwic) {
-            const title = props.data.tailPosAttrs.length > 0 ? props.data.tailPosAttrs.join(ATTR_SEPARATOR) : null;
+            const tailPosAttrs = pipe(
+                props.data.posAttrs,
+                List.filter(attr => (attr.role & PosAttrRole.USER) === PosAttrRole.USER),
+                List.map(attr => attr.value),
+            );
+            const title = tailPosAttrs.length > 0 ? tailPosAttrs.join(ATTR_SEPARATOR) : null;
             return (
                 <mark data-tokenid={props.tokenId} className={mkClass()} title={title}>
                     {renderTokens(props.data.text)}
@@ -247,15 +253,20 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             );
 
         } else {
+            const tailPosAttrs = pipe(
+                props.data.posAttrs,
+                List.filter(attr => (attr.role & PosAttrRole.USER) === PosAttrRole.USER),
+                List.map(attr => attr.value),
+            );
             return (
                 <>
                     <mark data-tokenid={props.tokenId} className={mkClass()}>
                         {renderTokens(props.data.text)}
                     </mark>
-                    {props.data.tailPosAttrs.length > 0 ?
-                        <span className="tail attr" style={props.viewMode === ViewOptions.AttrViewMode.VISIBLE_MULTILINE && props.data.tailPosAttrs.length === 0 ? {display: 'none'} : null}>
+                    {tailPosAttrs.length > 0 ?
+                        <span className="tail attr">
                             {props.viewMode !== ViewOptions.AttrViewMode.VISIBLE_MULTILINE ? ATTR_SEPARATOR : ''}
-                            {props.data.tailPosAttrs.join(ATTR_SEPARATOR) || '\u00a0'}
+                            {tailPosAttrs.join(ATTR_SEPARATOR) || '\u00a0'}
                         </span> :
                         null
                     }
@@ -286,9 +297,14 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             return props.kwicTokenNum + props.chunkOffset + i;
         };
 
-        const title = getViewModeTitle(props.attrViewMode, false, props.supportsTokenConnect, props.data.tailPosAttrs || []);
+        const tailPosAttrs = pipe(
+            props.data.posAttrs,
+            List.filter(attr => (attr.role & PosAttrRole.USER) === PosAttrRole.USER),
+            List.map(attr => attr.value),
+        );
+        const title = getViewModeTitle(props.attrViewMode, false, props.supportsTokenConnect, tailPosAttrs);
 
-        if (props.data.tailPosAttrs.length > 0) {
+        if (tailPosAttrs.length > 0) {
             if (hasClass('coll') && !hasClass('col0')) {
                 return(
                     <em className={`${props.data.className} ${getViewModeClass(props.attrViewMode)}`} title={title}>
@@ -316,7 +332,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                         (token) => ({
                             text: [token],
                             className: props.data.className,
-                            tailPosAttrs: []
+                            tailPosAttrs: [],
+                            posAttrs: props.data.posAttrs,
                         })
                     ),
                     List.map(
@@ -501,9 +518,14 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
 
         const renderSecond = () => {
             if (props.hasKwic) {
+                const tailPosAttrs = pipe(
+                    props.item.posAttrs,
+                    List.filter(attr => (attr.role & PosAttrRole.USER) === PosAttrRole.USER),
+                    List.map(attr => attr.value),
+                );
                 return (
                     <strong className={getViewModeClass(props.attrViewMode)}
-                            title={getViewModeTitle(props.attrViewMode, true, props.supportsTokenConnect, props.item.tailPosAttrs)}>
+                            title={getViewModeTitle(props.attrViewMode, true, props.supportsTokenConnect, tailPosAttrs)}>
                         <Token tokenId={props.kwicTokenNum} isKwic={true} data={props.item} viewMode={props.attrViewMode}
                                 supportsTokenConnect={props.supportsTokenConnect}
                             />

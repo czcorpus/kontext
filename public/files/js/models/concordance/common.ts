@@ -27,7 +27,7 @@ import { DataSaveFormat } from '../../app/navigation/save';
 export interface ConcToken {
     className:string;
     text:Array<Token>; // array => multiple words per 'pseudo-position'
-    tailPosAttrs:Array<string>; // array => multiple pos attrs per whole 'pseudo-position'
+    posAttrs:Array<PosAttr>;
 }
 
 
@@ -101,17 +101,18 @@ export interface Token {
         attr:string;
         s:string;
     }
-
-    /**
-     * Specifies kwic row connect related data
-     */
-    krcData?:{
-        attrs: {[name:string]:string};
-        highlightGroup?: number;
-        comment?: string;
-    }
 }
 
+export enum PosAttrRole {
+    USER = 0b01,
+    INTERNAL = 0b10,
+}
+
+export interface PosAttr {
+    name:string;
+    value:string;
+    role:number;
+}
 
 export class TextChunk {
     id:string;
@@ -121,7 +122,7 @@ export class TextChunk {
     closeLink:{speechPath:string};
     continued:boolean;
     showAudioPlayer:boolean;
-    tailPosAttrs:Array<string>; // array => multiple pos attrs per whole 'pseudo-position'
+    posAttrs:Array<PosAttr>; // array => multiple pos attrs per whole 'pseudo-position'
 }
 
 export interface Line {
@@ -216,8 +217,7 @@ export interface ServerTextChunk {
     open_link?:{speech_path:string};
     close_link?:{speech_path:string};
     continued?:boolean;
-    tail_posattrs?:Array<string>;
-    attrs?:{[name:string]:string};
+    posattrs?:Array<PosAttr>;
 }
 
 export interface MLPositionsData {

@@ -19,7 +19,7 @@
  */
 
 import { Dict, List, pipe } from 'cnc-tskit';
-import { HighlightWords, KWICSection, Line, ServerLineData, ServerTextChunk, TextChunk, Token } from './common';
+import { HighlightWords, KWICSection, Line, PosAttrRole, ServerLineData, ServerTextChunk, TextChunk, Token } from './common';
 import { ConclineSectionOps } from './line';
 
 
@@ -35,29 +35,30 @@ function importTextChunk(item:ServerTextChunk, mainAttrIdx:number, id:string, st
         return {
             id,
             className: item.class,
-            text: List.map((s, i) => ({s, h: false, idx: startWlIdx + i, krcData: {attrs: item.attrs || {}}}),
+            text: List.map(
+                (s, i) => ({s, h: false, idx: startWlIdx + i}),
                 item.str.trim().split(' ')
             ),
             openLink: item.open_link ? {speechPath: item.open_link.speech_path} : undefined,
             closeLink: item.close_link ? {speechPath: item.close_link.speech_path} : undefined,
             continued: item.continued,
             showAudioPlayer: false,
-            tailPosAttrs: item.tail_posattrs || [],
+            posAttrs: item.posattrs || [],
         };
 
     } else {
-        const tailPosattrs = item.tail_posattrs || [];
-        const text = item.class === 'strc' ?  item.str : tailPosattrs[mainAttrIdx];
-        tailPosattrs.splice(mainAttrIdx, 1, item.str.trim());
+        const posAttrs = item.posattrs || [];
+        const text = item.class === 'strc' ?  item.str : posAttrs[mainAttrIdx].value;
+        posAttrs.splice(mainAttrIdx, 1, {name: undefined, value: item.str.trim(), role: PosAttrRole.USER});
         return {
             id,
             className: item.class,
-            text: [{s: text, h: false, idx: startWlIdx, krcData: {attrs: item.attrs || {}}}],
+            text: [{s: text, h: false, idx: startWlIdx}],
             openLink: item.open_link ? {speechPath: item.open_link.speech_path} : undefined,
             closeLink: item.close_link ? {speechPath: item.close_link.speech_path} : undefined,
             continued: item.continued,
             showAudioPlayer: false,
-            tailPosAttrs: tailPosattrs,
+            posAttrs: item.posattrs || [],
         };
     }
 }
