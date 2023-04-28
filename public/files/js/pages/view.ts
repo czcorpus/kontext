@@ -982,7 +982,9 @@ export class ViewPage {
                 PluginName.KWIC_ROW_CONNECT),
             anonymousUserConcLoginPrompt: this.layoutModel.getConf<boolean>(
                 'anonymousUserConcLoginPrompt'
-            )
+            ),
+            mergedAttrs: this.layoutModel.getConf<Array<[string, number]>>('MergedAttrs'),
+            mergedCtxAttrs: this.layoutModel.getConf<Array<[string, number]>>('MergedCtxAttrs'),
         };
 
         this.viewModels = new ViewPageModels();

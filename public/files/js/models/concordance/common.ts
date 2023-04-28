@@ -27,7 +27,8 @@ import { DataSaveFormat } from '../../app/navigation/save';
 export interface ConcToken {
     className:string;
     text:Array<Token>; // array => multiple words per 'pseudo-position'
-    posAttrs:Array<PosAttr>;
+    posAttrs:Array<string>;
+    displayPosAttrs:Array<string>;
 }
 
 
@@ -108,12 +109,6 @@ export enum PosAttrRole {
     INTERNAL = 0b10,
 }
 
-export interface PosAttr {
-    name:string;
-    value:string;
-    role:number;
-}
-
 export class TextChunk {
     id:string;
     className:string;
@@ -122,7 +117,8 @@ export class TextChunk {
     closeLink:{speechPath:string};
     continued:boolean;
     showAudioPlayer:boolean;
-    posAttrs:Array<PosAttr>; // array => multiple pos attrs per whole 'pseudo-position'
+    posAttrs:Array<string>; // array => multiple pos attrs per whole 'pseudo-position'
+    displayPosAttrs:Array<string>;
 }
 
 export interface Line {
@@ -217,7 +213,7 @@ export interface ServerTextChunk {
     open_link?:{speech_path:string};
     close_link?:{speech_path:string};
     continued?:boolean;
-    posattrs?:Array<PosAttr>;
+    posattrs?:Array<string>;
 }
 
 export interface MLPositionsData {
@@ -392,6 +388,8 @@ export interface AjaxConcResponse extends ConcQueryResponse {
     result_shuffled:boolean;
     result_arf:number;
     sampled_size:number;
+    merged_attrs:Array<[string, number]>;
+    merged_ctxattrs:Array<[string, number]>;
 }
 
 /**
@@ -566,6 +564,10 @@ export interface ViewConfiguration {
     supportsKwicRowConnect:boolean;
 
     anonymousUserConcLoginPrompt:boolean;
+
+    mergedAttrs:Array<[string, number]>;
+
+    mergedCtxAttrs:Array<[string, number]>;
 
 }
 
