@@ -514,10 +514,10 @@ class CorpusActionModel(UserActionModel):
             result['conc_preflight'] = dict(
                 corpname=corp_info.preflight_subcorpus.corpus_name,
                 subc=corp_info.preflight_subcorpus.id,
-                threshold_ipm=self.corp.preflight_warn_ipm)
+                threshold_ipm=self.corp.preflight_warn_ipm,
+                alt_corp=corp_info.alt_corp)
         else:
             result['conc_preflight'] = None
-
         poslist = []
         for tagset in corp_info.tagsets:
             if tagset.ident == corp_info.default_tagset:
