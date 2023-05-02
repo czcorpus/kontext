@@ -448,7 +448,7 @@
         "query__help": "Help - query form",
         "query__current_posattrs_not_covered_by_all_aligned_corpora": "The current positional attribute display preferences are not compatible with the currently selected aligned corpora.",
         "query__altcorp_heading": "Alternative corpus",
-        "query__altcorp_suggested_{alt_corpus}": "The query you entered will likely take a long time to evaluate. It may even be unsuccessful and the execution of the query can be discontinued. The reason is a very large resulting concordance, which means extremely slow retrieval and also working with it. Please consider using the \u0022{alt_corpus}\u0022. corpus instead for this query, as it is smaller, which means that the query itself and all subsequent operations will run much faster.",
+        "query__altcorp_suggested_{alt_corpus}": "The entered query is likely to demand a considerable amount of time for evaluation and could be interrupted before completion. To improve the efficiency of your query and subsequent operations, please consider using the \"{alt_corpus}\" corpus as an alternative, as its smaller size ensures a much quicker processing time.",
         "query__subc_aligned_controls_disabled_explain": "You are using a subcorpus created with respect to other corpora alignment. In such case, aligned corpora cannot be added or removed.",
         "pquery__help": "Help - paradigmatic query",
         "qhistory__attached_text_types": "Text types",

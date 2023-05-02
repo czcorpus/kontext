@@ -319,8 +319,6 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
      concPreflight:Kontext.PreflightConf|null;
 
      suggestAltCorpVisible:boolean;
-
-     altCorp:string|null;
 }
 
 
@@ -467,8 +465,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 alignCommonPosAttrs: props.alignCommonPosAttrs,
                 compositionModeOn: false,
                 concPreflight: props.concPreflight,
-                suggestAltCorpVisible: false,
-                altCorp: pageModel.getConf<string|null>('AltCorp'),
+                suggestAltCorpVisible: false
         });
 
         this.addActionSubtypeHandler(
@@ -572,7 +569,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                             if (err !== null) {
                                 throw err;
                             }
-                            return this.state.concPreflight && this.state.altCorp && action.payload.useAltCorp === undefined ?
+                            return this.state.concPreflight && action.payload.useAltCorp === undefined ?
                                 this.submitPreflight(
                                     contextData,
                                     ttSelections,
@@ -1054,7 +1051,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             args.queries = List.map(
                 query => {
                     if (query.corpname == corp.name) {
-                        query.corpname = this.state.altCorp;
+                        query.corpname = this.state.concPreflight.alt_corp;
                     }
                     return query;
                 },

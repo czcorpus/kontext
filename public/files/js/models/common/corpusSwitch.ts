@@ -75,7 +75,6 @@ export interface CorpusSwitchResponse extends AjaxConcResponse {
     SubcorpTTStructure:ExportedSelection;
     SubcorpAligned:Array<string>;
     concPreflight:Kontext.PreflightConf;
-    AltCorp:string|null;
 }
 
 
@@ -198,7 +197,6 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
                             this.conf.setConf<ExportedSelection>('SubcorpTTStructure', data.SubcorpTTStructure);
                             this.conf.setConf<Array<string>>('SubcorpAligned', data.SubcorpAligned);
                             this.conf.setConf<Kontext.PreflightConf>('concPreflight', data.concPreflight);
-                            this.conf.setConf<string|null>('AltCorp', data.AltCorp);
                         }
                     )
 

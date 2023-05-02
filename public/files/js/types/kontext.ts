@@ -517,4 +517,5 @@ export interface PreflightConf {
     corpname:string;
     subc:string;
     threshold_ipm:number;
+    alt_corp:string;
 }

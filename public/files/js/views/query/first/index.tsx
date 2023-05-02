@@ -234,7 +234,7 @@ export function init({
         return (
             <S.QueryForm>
                 {props.suggestAltCorpVisible ?
-                    <AltCorpSuggestion altCorp={props.altCorp} /> :
+                    <AltCorpSuggestion altCorp={props.concPreflight.alt_corp} /> :
                     null
                 }
                 <div onKeyDown={keyEventHandler}>
