@@ -594,21 +594,13 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         groupColor:string|undefined;
         groupTextColor:string|undefined;
         audioPlayerStatus:PlayerStatus;
+        kwicRowConnectHandler:(corpusId: string, tokenNumber: number, kwicLength: number, lineIdx: number) => void;
     }> {
 
         constructor(props) {
             super(props);
             this._detailClickHandler = this._detailClickHandler.bind(this);
-            this._kwicRowConnectHandler = this._kwicRowConnectHandler.bind(this);
             this._refsDetailClickHandler = this._refsDetailClickHandler.bind(this);
-        }
-
-        _kwicRowConnectHandler(corpusId:string, tokenNumber:number, kwicLength:number, lineIdx:number) {
-            dispatcher.dispatch(
-                Actions.HandleKwicRowConnect,
-                {corpusId, tokenNumber, lineIdx, kwicLength},
-                undefined
-            );
         }
 
         _detailClickHandler(corpusId, tokenNumber, kwicLength, lineIdx) {
@@ -718,7 +710,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                             output={corpusOutput}
                             kwicLength={this.props.data.kwicLength}
                             tokenConnectClickHandler={this._detailClickHandler}
-                            kwicRowConnectClickHandler={this._kwicRowConnectHandler}
+                            kwicRowConnectClickHandler={this.props.kwicRowConnectHandler}
                             attrViewMode={this.props.attrViewMode}
                             audioPlayerStatus={this.props.audioPlayerStatus}
                         />;
@@ -740,14 +732,14 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         _handleKwicClick(corpusId, tokenNumber, lineIdx) {
             this._detailClickHandler(corpusId, tokenNumber, this.props.data.kwicLength, lineIdx);
             if (this.props.supportsKwicRowConnect) {
-                this._kwicRowConnectHandler(corpusId, tokenNumber, this.props.data.kwicLength, lineIdx);
+                this.props.kwicRowConnectHandler(corpusId, tokenNumber, this.props.data.kwicLength, lineIdx);
             }
         }
 
         _handleNonKwicTokenClick(corpusId, lineIdx, tokenNumber) {
             this._detailClickHandler(corpusId, tokenNumber, -1, lineIdx);
             if (this.props.supportsKwicRowConnect) {
-                this._kwicRowConnectHandler(corpusId, tokenNumber, -1, lineIdx);
+                this.props.kwicRowConnectHandler(corpusId, tokenNumber, -1, lineIdx);
             }
         }
 
@@ -845,10 +837,50 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
 
     class LinesWithSelection extends React.PureComponent<ConcordanceModelState & LineSelectionModelState> {
 
+        constructor(props) {
+            super(props);
+            this._kwicRowConnectHandler = this._kwicRowConnectHandler.bind(this);
+        }
+
         componentDidMount() {
             dispatcher.dispatch<typeof Actions.ApplyStoredLineSelections>({
                 name: Actions.ApplyStoredLineSelections.name
             });
+        }
+
+        _kwicRowConnectHandler(corpusId:string, tokenNumber:number, kwicLength:number, lineIdx:number) {
+            const corpIndex = List.findIndex(col => col.n === corpusId, this.props.corporaColumns);
+            const left = List.map(l => {
+                const attrs = {};
+                attrs[this.props.baseViewAttr] = List.map(v => v.s, l.text).join(' ');
+                List.forEach((a, i) => {
+                    attrs[a[0]] = l.posAttrs[i];
+                }, this.props.mergedCtxAttrs.slice(1));
+                return attrs;
+            }, this.props.lines[lineIdx].languages[corpIndex].left);
+            const kwic = List.map(k => {
+                const attrs = {};
+                attrs[this.props.baseViewAttr] = List.map(v => v.s, k.text).join(' ');
+                List.forEach((a, i) => {
+                    attrs[a[0]] = k.posAttrs[i];
+                }, this.props.mergedAttrs.slice(1));
+                return attrs;
+            }, this.props.lines[lineIdx].languages[corpIndex].kwic);
+            const right = List.map(r => {
+                const attrs = {};
+                attrs[this.props.baseViewAttr] = List.map(v => v.s, r.text).join(' ');
+                List.forEach((a, i) => {
+                    attrs[a[0]] = r.posAttrs[i];
+                }, this.props.mergedCtxAttrs.slice(1));
+                return attrs;
+            }, this.props.lines[lineIdx].languages[corpIndex].right);
+            const tokens = [...left, ...kwic, ...right];
+
+            dispatcher.dispatch(
+                Actions.HandleKwicRowConnect,
+                {corpusId, tokenNumber, kwicLength, tokens},
+                undefined
+            );
         }
 
         private findGroupColor(id:number):[string, string]|[undefined, undefined] {
@@ -883,6 +915,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                             supportsTokenConnect={this.props.supportsTokenConnect}
                             supportsKwicRowConnect={this.props.supportsKwicRowConnect}
                             audioPlayerStatus={this.props.audioPlayerStatus}
+                            kwicRowConnectHandler={this._kwicRowConnectHandler}
                         />
                     },
                     this.props.lines
