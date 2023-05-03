@@ -45,14 +45,13 @@ export interface ConcSaveModelState {
     toLine:Kontext.FormValue<string>;
     alignKwic:boolean;
     includeLineNumbers:boolean;
+    concSize:number;
 }
 
 
 export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
 
     private layoutModel:PageModel;
-
-    private concSize:number;
 
     private saveLinkFn:SaveLinkHandler;
 
@@ -69,22 +68,22 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
                 alignKwic: false,
                 includeLineNumbers: false,
                 includeHeading: false,
+                concSize
             }
         );
         this.layoutModel = layoutModel;
-        this.concSize = concSize;
         this.saveLinkFn = saveLinkFn;
         this.quickSaveRowLimit = quickSaveRowLimit;
 
-        this.addActionHandler<typeof MainMenuActions.ShowSaveForm>(
-            MainMenuActions.ShowSaveForm.name,
+        this.addActionHandler(
+            MainMenuActions.ShowSaveForm,
             action => {
                 this.changeState(state => {state.formIsActive = true});
             }
         );
 
-        this.addActionHandler<typeof MainMenuActions.DirectSave>(
-            MainMenuActions.DirectSave.name,
+        this.addActionHandler(
+            MainMenuActions.DirectSave,
             action => {
                 if (window.confirm(this.layoutModel.translate(
                     'global__quicksave_limit_warning_{format}{lines}',
@@ -93,7 +92,7 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
                     const tmp = this.state.toLine;
                     this.changeState(state => {
                         state.saveformat = action.payload.saveformat;
-                        state.toLine.value = String(Math.min(this.quickSaveRowLimit, this.concSize));
+                        state.toLine.value = String(Math.min(this.quickSaveRowLimit, state.concSize));
                     });
                     this.submit();
                     this.changeState(state => {state.toLine = tmp});
@@ -101,57 +100,57 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.ResultCloseSaveForm>(
-            Actions.ResultCloseSaveForm.name,
+        this.addActionHandler(
+            Actions.ResultCloseSaveForm,
             action => {
                 this.changeState(state => {state.formIsActive = false});
             }
         );
 
-        this.addActionHandler<typeof Actions.SaveFormSetFormat>(
-            Actions.SaveFormSetFormat.name,
+        this.addActionHandler(
+            Actions.SaveFormSetFormat,
             action => {
                 this.changeState(state => {state.saveformat = action.payload.value});
             }
         );
 
-        this.addActionHandler<typeof Actions.SaveFormSetFromLine>(
-            Actions.SaveFormSetFromLine.name,
+        this.addActionHandler(
+            Actions.SaveFormSetFromLine,
             action => {
                 this.changeState(state => {state.fromLine.value = action.payload.value});
             }
         );
 
-        this.addActionHandler<typeof Actions.SaveFormSetToLine>(
-            Actions.SaveFormSetToLine.name,
+        this.addActionHandler(
+            Actions.SaveFormSetToLine,
             action => {
                 this.changeState(state => {state.toLine.value = action.payload.value});
             }
         );
 
-        this.addActionHandler<typeof Actions.SaveFormSetAlignKwic>(
-            Actions.SaveFormSetAlignKwic.name,
+        this.addActionHandler(
+            Actions.SaveFormSetAlignKwic,
             action => {
                 this.changeState(state => {state.alignKwic = action.payload.value});
             }
         );
 
-        this.addActionHandler<typeof Actions.SaveFormSetInclLineNumbers>(
-            Actions.SaveFormSetInclLineNumbers.name,
+        this.addActionHandler(
+            Actions.SaveFormSetInclLineNumbers,
             action => {
                 this.changeState(state => {state.includeLineNumbers = action.payload.value});
             }
         );
 
-        this.addActionHandler<typeof Actions.SaveFormSetHeading>(
-            Actions.SaveFormSetHeading.name,
+        this.addActionHandler(
+            Actions.SaveFormSetHeading,
             action => {
                 this.changeState(state => {state.includeHeading = action.payload.value});
             }
         );
 
-        this.addActionHandler<typeof Actions.SaveFormSubmit>(
-            Actions.SaveFormSubmit.name,
+        this.addActionHandler(
+            Actions.SaveFormSubmit,
             action => {
                 const err = this.validateForm();
                 if (err) {
@@ -165,8 +164,8 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.AsyncCalculationUpdated>(
-            Actions.AsyncCalculationUpdated.name,
+        this.addActionHandler(
+            Actions.AsyncCalculationUpdated,
             action => {
                 this.changeState(state => {
                     state.toLine.value = `${action.payload.concsize}`;
@@ -177,23 +176,23 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
 
     private validateForm():Error|null {
         if (validateNumber(this.state.fromLine.value) && parseInt(this.state.fromLine.value, 10) >= 1 &&
-                parseInt(this.state.fromLine.value) <= this.concSize) {
+                parseInt(this.state.fromLine.value) <= this.state.concSize) {
             this.changeState(state => {state.fromLine.isInvalid = false});
 
         } else {
             this.changeState(state => {state.fromLine.isInvalid = true});
             return Error(this.layoutModel.translate('concview__save_form_line_from_err_msg_{value}',
-                                {value: this.concSize}));
+                                {value: this.state.concSize}));
         }
 
         if (validateNumber(this.state.toLine.value) && parseInt(this.state.toLine.value, 10) > parseInt(this.state.fromLine.value) &&
-                parseInt(this.state.toLine.value) <= this.concSize) {
+                parseInt(this.state.toLine.value) <= this.state.concSize) {
             this.changeState(state => {state.toLine.isInvalid = false});
 
         } else {
             this.changeState(state => {state.toLine.isInvalid = true});
             return Error(this.layoutModel.translate('concview__save_form_line_to_err_msg_{value1}{value2}',
-                            {value1: parseInt(this.state.fromLine.value, 10) + 1, value2: this.concSize}));
+                            {value1: parseInt(this.state.fromLine.value, 10) + 1, value2: this.state.concSize}));
         }
     }
 
