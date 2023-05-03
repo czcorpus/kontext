@@ -45,14 +45,13 @@ export interface ConcSaveModelState {
     toLine:Kontext.FormValue<string>;
     alignKwic:boolean;
     includeLineNumbers:boolean;
+    concSize:number;
 }
 
 
 export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
 
     private layoutModel:PageModel;
-
-    private concSize:number;
 
     private saveLinkFn:SaveLinkHandler;
 
@@ -69,10 +68,10 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
                 alignKwic: false,
                 includeLineNumbers: false,
                 includeHeading: false,
+                concSize
             }
         );
         this.layoutModel = layoutModel;
-        this.concSize = concSize;
         this.saveLinkFn = saveLinkFn;
         this.quickSaveRowLimit = quickSaveRowLimit;
 
@@ -93,7 +92,7 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
                     const tmp = this.state.toLine;
                     this.changeState(state => {
                         state.saveformat = action.payload.saveformat;
-                        state.toLine.value = String(Math.min(this.quickSaveRowLimit, this.concSize));
+                        state.toLine.value = String(Math.min(this.quickSaveRowLimit, state.concSize));
                     });
                     this.submit();
                     this.changeState(state => {state.toLine = tmp});
@@ -177,23 +176,23 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
 
     private validateForm():Error|null {
         if (validateNumber(this.state.fromLine.value) && parseInt(this.state.fromLine.value, 10) >= 1 &&
-                parseInt(this.state.fromLine.value) <= this.concSize) {
+                parseInt(this.state.fromLine.value) <= this.state.concSize) {
             this.changeState(state => {state.fromLine.isInvalid = false});
 
         } else {
             this.changeState(state => {state.fromLine.isInvalid = true});
             return Error(this.layoutModel.translate('concview__save_form_line_from_err_msg_{value}',
-                                {value: this.concSize}));
+                                {value: this.state.concSize}));
         }
 
         if (validateNumber(this.state.toLine.value) && parseInt(this.state.toLine.value, 10) > parseInt(this.state.fromLine.value) &&
-                parseInt(this.state.toLine.value) <= this.concSize) {
+                parseInt(this.state.toLine.value) <= this.state.concSize) {
             this.changeState(state => {state.toLine.isInvalid = false});
 
         } else {
             this.changeState(state => {state.toLine.isInvalid = true});
             return Error(this.layoutModel.translate('concview__save_form_line_to_err_msg_{value1}{value2}',
-                            {value1: parseInt(this.state.fromLine.value, 10) + 1, value2: this.concSize}));
+                            {value1: parseInt(this.state.fromLine.value, 10) + 1, value2: this.state.concSize}));
         }
     }
 
