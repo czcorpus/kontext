@@ -119,6 +119,7 @@ export class TextChunk {
     showAudioPlayer:boolean;
     posAttrs:Array<string>; // array => multiple pos attrs per whole 'pseudo-position'
     displayPosAttrs:Array<string>;
+    description?:string;
 }
 
 export interface Line {
