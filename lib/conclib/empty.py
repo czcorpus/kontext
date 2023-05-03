@@ -47,7 +47,6 @@ class InitialConc:
     def get_conc_file(self):
         return self._cache_path
 
-    @property
     def size(self) -> int:
         return 0
 
