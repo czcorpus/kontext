@@ -872,14 +872,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 this.reloadAlignedHighlights(action.payload.matchPosAttr, false);
             }
         );
-
-        // TODO - for debugging, remove this
-        this.addActionHandler(
-            Actions.HandleKwicRowConnect,
-            action => {
-                console.log('KwicRowConnect dispatched', action.payload);
-            }
-        );
     }
 
     private stopBusyTimer(subs:Subscription):null {

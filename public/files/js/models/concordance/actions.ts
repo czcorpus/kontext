@@ -528,13 +528,4 @@ export class Actions {
     }> = {
         name: 'CONCORDANCE_HIGHLIGHTED_TOKEN_MOUSEOUT'
     }
-
-    static HandleKwicRowConnect:Action<{
-        corpusId:string;
-        tokenNumber:number;
-        kwicLength:number;
-        tokens:Array<{[attr:string]:string}>;
-    }> = {
-        name: 'CONCORDANCE_HANDLE_KWIC_ROW_CONNECT'
-    };
 }
