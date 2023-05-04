@@ -37,6 +37,7 @@ import { AlignTypes } from '../../../models/freqs/twoDimension/common';
 import { HtmlHelpModel, HtmlHelpModelState } from '../../../models/help/help';
 import { Actions as HelpActions } from '../../../models/help/actions';
 import { AdvancedFormFieldsetProps } from '../../query/input';
+import { init as concQueryCommonInit} from '../../query/first/common';
 
 export interface PqueryFormViewsArgs {
     dispatcher:IActionDispatcher;
@@ -62,6 +63,7 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
 
     const layoutViews = he.getLayoutViews();
     const cqlEditorViews = cqlEditoInit(dispatcher, he, model);
+    const { AltCorpSuggestion } = concQueryCommonInit(he);
 
     // ------------------- <PqueryInputTypeSymbol /> --------------------------------
 
@@ -555,9 +557,29 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
             </S.StylelessFieldset>
         );
 
+        const onAltCorpClose = () => {
+            dispatcher.dispatch(
+                Actions.CloseSuggestAltCorp
+            );
+        };
+
+        const onAltCorpSubmit = (useAltCorp: boolean) => {
+            dispatcher.dispatch<typeof Actions.SubmitQuery>({
+                name: Actions.SubmitQuery.name,
+                payload: {useAltCorp}
+            });
+        };
+
         return (
             <S.PqueryFormSection>
                 {props.corparchWidget ? <props.corparchWidget widgetId={props.corparchWidgetId} /> : null}
+                {props.suggestAltCorpVisible ?
+                        <AltCorpSuggestion
+                            altCorp={props.concPreflight.alt_corp}
+                            onClose={onAltCorpClose}
+                            onSubmit={onAltCorpSubmit} /> :
+                        null
+                }
                 <S.PqueryForm>
                     <S.PQueryToolbar>
                         <PQTypeSwitch qtype={props.pqueryType} />

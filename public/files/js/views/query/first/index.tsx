@@ -28,6 +28,7 @@ import { init as alignedInit } from '../aligned';
 import { init as contextInit } from '../context';
 import { init as ttViewsInit } from '../../textTypes';
 import { init as quickSubcorpViewsInit } from '../../subcorp/quickSubcorp';
+import { init as commonInit} from './common';
 import * as Kontext from '../../../types/kontext';
 import * as TextTypes from '../../../types/textTypes';
 import * as PluginInterfaces from '../../../types/plugins';
@@ -127,6 +128,7 @@ export function init({
     const contextViews = contextInit(dispatcher, he, queryContextModel);
     const ttViews = ttViewsInit(dispatcher, he, textTypesModel);
     const quickSubcorpViews = quickSubcorpModel ? quickSubcorpViewsInit({ dispatcher, he, quickSubcorpModel }) : null;
+    const { AltCorpSuggestion } = commonInit(he);
     const layoutViews = he.getLayoutViews();
 
 
@@ -231,10 +233,27 @@ export function init({
                 </a>
             );
         }
+
+        const onAltCorpClose = () => {
+            dispatcher.dispatch(
+                Actions.CloseSuggestAltCorp
+            );
+        };
+
+        const onAltCorpSubmit = (useAltCorp: boolean) => {
+            dispatcher.dispatch<typeof Actions.QuerySubmit>({
+                name: Actions.QuerySubmit.name,
+                payload: {useAltCorp}
+            });
+        };
+
         return (
             <S.QueryForm>
                 {props.suggestAltCorpVisible ?
-                    <AltCorpSuggestion altCorp={props.concPreflight.alt_corp} /> :
+                    <AltCorpSuggestion
+                        altCorp={props.concPreflight.alt_corp}
+                        onClose={onAltCorpClose}
+                        onSubmit={onAltCorpSubmit} /> :
                     null
                 }
                 <div onKeyDown={keyEventHandler}>
@@ -425,49 +444,6 @@ export function init({
 
     const BoundSelectedTextTypesLite = Bound(SelectedTextTypesLite, textTypesModel);
 
-    // -------- <AltCorpSuggestion /> ------------------------------------
-
-    const AltCorpSuggestion:React.FC<{
-        altCorp:string;
-    }> = (props) => {
-
-        const onClose = () => {
-            dispatcher.dispatch(
-                Actions.CloseSuggestAltCorp
-            );
-        };
-
-        const onSubmit = (useAltCorp: boolean) => {
-            dispatcher.dispatch<typeof Actions.QuerySubmit>({
-                name: Actions.QuerySubmit.name,
-                payload: {useAltCorp}
-            });
-        };
-
-        return (
-            <layoutViews.ModalOverlay onCloseKey={onClose}>
-                <layoutViews.CloseableFrame onCloseClick={onClose} label={he.translate('query__altcorp_heading')}>
-                    <S.CutOffBox>
-                        <div className="message">
-                            <layoutViews.StatusIcon status="warning" />
-                            <p>
-                                {he.translate('query__altcorp_suggested_{alt_corpus}', {alt_corpus: props.altCorp})}
-                            </p>
-                        </div>
-                        <p className="submit">
-                            <button type='button' className='default-button' onClick={() => onSubmit(false)}>
-                                {he.translate('query__search_anyway_btn')}
-                            </button>
-
-                            <button type='button' className='default-button' onClick={() => onSubmit(true)}>
-                                {he.translate('query__search_in_{corpus}_btn', {corpus: props.altCorp})}
-                            </button>
-                        </p>
-                    </S.CutOffBox>
-                </layoutViews.CloseableFrame>
-            </layoutViews.ModalOverlay>
-        );
-    }
 
     // -------- <QueryFormLite /> ------------------------------------
 

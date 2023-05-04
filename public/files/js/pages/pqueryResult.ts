@@ -84,7 +84,8 @@ class ParadigmaticQueryPage {
                     ),
                     this.layoutModel.getConf('AttrList'),
                     Kontext.structsAndAttrsToStructAttrList(this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs')),
-                    this.layoutModel.getConf<boolean>('UseRichQueryEditor')
+                    this.layoutModel.getConf<boolean>('UseRichQueryEditor'),
+                    this.layoutModel.getConf<Kontext.PreflightConf>('concPreflight')
                 ),
                 this.layoutModel,
                 attrHelper

@@ -29,11 +29,13 @@ import { DataSaveFormat } from '../../app/navigation/save';
 
 export class Actions {
 
-    static SubmitQuery:Action<{}> = {
+    static SubmitQuery:Action<{
+        useAltCorp?:boolean;
+    }> = {
         name: 'PQUERY_SUBMIT_QUERY'
     };
 
-    static SubmitQueryDone: Action<{
+    static SubmitQueryDone:Action<{
         corpname: string;
         usesubcorp: string;
         task: Kontext.AsyncTaskInfo<AsyncTaskArgs>;
@@ -42,123 +44,131 @@ export class Actions {
         name: 'PQUERY_SUBMIT_QUERY_DONE'
     };
 
+    static SubmitQueryInterruptedWithPreflightAlert:Action<{}> = {
+        name: 'PQUERY_SUBMIT_QUERY_INTERRUPTED_WITH_PREFLIGHT_ALERT'
+    };
+
+    static CloseSuggestAltCorp:Action<{}> = {
+        name: 'PQUERY_CLOSE_SUGGEST_ALT_CORP'
+    };
+
     static isSubmitQueryDone(a:Action):a is typeof Actions.SubmitQueryDone {
         return a.name === Actions.SubmitQueryDone.name;
-    }
+    };
 
     static ChangePQueryType:Action<{
         qtype:'split'|'full';
     }> = {
         name: 'PQUERY_CHANGE_PQUERY_TYPE'
-    }
+    };
 
     static AddQueryItem:Action<{}> = {
         name: 'PQUERY_ADD_QUERY_ITEM'
-    }
+    };
 
     static RemoveQueryItem:Action<{
         sourceId: string;
     }> = {
         name: 'PQUERY_REMOVE_QUERY_ITEM'
-    }
+    };
 
     static FreqChange:Action<{
         value: string;
     }> = {
         name: 'PQUERY_FREQ_CHANGE'
-    }
+    };
 
     static SetPositionIndex:Action<{
         valueLeft: number;
         valueRight: number;
     }> = {
         name: 'PQUERY_SET_POSITION_IDX'
-    }
+    };
 
     static SetAlignType:Action<{
         value: AlignTypes|PqueryAlignTypes;
     }> = {
         name: 'PQUERY_SET_ALIGN_TYPE'
-    }
+    };
 
     static AttrChange:Action<{
         value: string;
     }> = {
         name: 'PQUERY_ATTR_CHANGE'
-    }
+    };
 
     static SortLines:Action<SortColumn> = {
         name: 'PQUERY_RESULTS_SORT_LINES'
-    }
+    };
 
     static ConcordanceReady:Action<{
         sourceId:string;
     }> = {
         name: 'PQUERY_ASYNC_CONC_READY'
-    }
+    };
 
     static StatePushToHistory:Action<{
         queryId:string;
     }> = {
         name: 'PQUERY_STATE_PUSH_TO_HISTORY'
-    }
+    };
 
     static PopHistory:Action<HistoryArgs> = {
         name: 'PQUERY_POP_HISTORY'
-    }
+    };
 
     static SetPage:Action<{
         value:string;
     }> = {
         name: 'PQUERY_SET_PAGE'
-    }
+    };
 
     static SetPageInput:Action<{
         value:string;
     }> = {
         name: 'PQUERY_SET_PAGE_INPUT'
-    }
+    };
 
     static ToggleModalForm:Action<{
         visible:boolean;
     }> = {
         name: 'PQUERY_TOGGLE_MODAL_FORM'
-    }
+    };
 
     static SaveFormSetFormat:Action<{
         value:DataSaveFormat;
     }> = {
         name: 'PQUERY_SAVE_FORM_SET_FORMAT'
-    }
+    };
 
     static SaveFormSetFromLine:Action<{
         value:string;
     }> = {
         name: 'PQUERY_SAVE_FORM_SET_FROM_LINE'
-    }
+    };
 
     static SaveFormSetToLine:Action<{
         value:string;
     }> = {
         name: 'PQUERY_SAVE_FORM_SET_TO_LINE'
-    }
+    };
 
     static SaveFormSetIncludeHeading:Action<{
         value:boolean;
     }> = {
         name: 'PQUERY_SAVE_FORM_SET_INCLUDE_HEADING'
-    }
+    };
 
     static SaveFormSetIncludeColHeading:Action<{
         value:boolean;
     }> = {
         name: 'PQUERY_SAVE_FORM_SET_INCLUDE_COL_HEADERS'
-    }
+    };
 
     static SaveFormSubmit:Action<{
     }> = {
         name: 'PQUERY_SAVE_FORM_SUBMIT'
-    }
+    };
 
     static SaveFormPrepareSubmitArgsDone:Action<{
         queryId:string;
@@ -166,17 +176,17 @@ export class Actions {
         reverse:number;
     }> = {
         name: 'PQUERY_SAVE_FORM_PREPARE_SUBMIT_ARGS_DONE'
-    }
+    };
 
     static ResultCloseSaveForm:Action<{
     }> = {
         name: 'PQUERY_RESULT_CLOSE_SAVE_FORM'
-    }
+    };
 
     static ParamsToggleForm:Action<{
     }> = {
         name: 'PQUERY_PARAMS_TOGGLE_FORM'
-    }
+    };
 
     static ResultApplyQuickFilter:Action<{
         value:string;
@@ -184,7 +194,7 @@ export class Actions {
         blankWindow:boolean;
     }> = {
         name: 'PQUERY_RESULT_APPLY_QUICK_FILTER'
-    }
+    };
 
     static ResultApplyQuickFilterArgsReady:Action<{
         attr:string;
@@ -193,21 +203,21 @@ export class Actions {
         posRight:number;
     }> = {
         name: 'PQUERY_RESULT_APPLY_QUICK_FILTER_ARGS_READY'
-    }
+    };
 
     static SetExpressionRoleType:Action<{
         sourceId:string;
         value:Kontext.PqueryExpressionRoles;
     }> = {
         name: 'PQUERY_SET_EXPRESSION_ROLE_TYPE'
-    }
+    };
 
     static SetExpressionRoleRatio:Action<{
         sourceId:string;
         value:string;
     }> = {
         name: 'PQUERY_SET_EXPRESSION_ROLE_RATIO'
-    }
+    };
 
     static isResultApplyQuickFilterArgsReady(a:Action):a is typeof Actions.ResultApplyQuickFilterArgsReady {
         return a.name === Actions.ResultApplyQuickFilterArgsReady.name;
