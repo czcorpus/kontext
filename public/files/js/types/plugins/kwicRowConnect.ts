@@ -27,12 +27,14 @@ import { BasePlugin, IPluginApi } from './common';
 export interface IPlugin extends BasePlugin {
 }
 
+type AttrSet = {[attr:string]:string};
+
 export class Actions {
     static FetchInfo:Action<{
         corpusId:string;
-        tokenNumber:number;
-        kwicLength:number;
-        tokens:Array<{[attr:string]:string}>;
+        tokenIdx:number;
+        tokenLength:number;
+        tokens:Array<AttrSet>;
     }> = {
         name: 'KWIC_ROW_CONNECT_FETCH_INFO'
     };

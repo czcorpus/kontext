@@ -350,7 +350,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         kwicLength:number;
         attrViewMode:ViewOptions.AttrViewMode;
         tokenConnectClickHandler:(corpusId:string, tokenNumber:number, kwicLength:number, lineIdx:number)=>void;
-        kwicRowConnectClickHandler?:(corpusId:string, tokenNumber:number, kwicLength:number, lineIdx:number)=>void;
+        kwicRowConnectClickHandler?:(corpusId:string, tokenNumber:number, lineIdx:number)=>void;
         audioPlayerStatus:PlayerStatus;
 
     }> = (props) => {
@@ -374,7 +374,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                         props.tokenConnectClickHandler(props.corpname, props.lineIdx, -1, tokenId);
                     }
                     if (props.kwicRowConnectClickHandler) {
-                        props.kwicRowConnectClickHandler(props.corpname, tokenId, -1, props.lineIdx);
+                        props.kwicRowConnectClickHandler(props.corpname, tokenId, props.lineIdx);
                     }
                 }
             }
@@ -383,7 +383,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         const handleKwicClick = (corpusId, tokenNumber, lineIdx) => {
             props.tokenConnectClickHandler(corpusId, tokenNumber, props.kwicLength, lineIdx);
             if (props.kwicRowConnectClickHandler) {
-                props.kwicRowConnectClickHandler(corpusId, tokenNumber, props.kwicLength, lineIdx);
+                props.kwicRowConnectClickHandler(corpusId, tokenNumber, lineIdx);
             }
         };
 
@@ -593,7 +593,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         groupColor:string|undefined;
         groupTextColor:string|undefined;
         audioPlayerStatus:PlayerStatus;
-        kwicRowConnectHandler?:(corpusId: string, tokenNumber: number, kwicLength: number, lineIdx: number) => void;
+        kwicRowConnectHandler?:(corpusId: string, tokenNumber: number, lineIdx: number) => void;
     }> {
 
         constructor(props) {
@@ -730,14 +730,14 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         _handleKwicClick(corpusId, tokenNumber, lineIdx) {
             this._detailClickHandler(corpusId, tokenNumber, this.props.data.kwicLength, lineIdx);
             if (this.props.kwicRowConnectHandler) {
-                this.props.kwicRowConnectHandler(corpusId, tokenNumber, this.props.data.kwicLength, lineIdx);
+                this.props.kwicRowConnectHandler(corpusId, tokenNumber, lineIdx);
             }
         }
 
         _handleNonKwicTokenClick(corpusId, lineIdx, tokenNumber) {
             this._detailClickHandler(corpusId, tokenNumber, -1, lineIdx);
             if (this.props.kwicRowConnectHandler) {
-                this.props.kwicRowConnectHandler(corpusId, tokenNumber, -1, lineIdx);
+                this.props.kwicRowConnectHandler(corpusId, tokenNumber, lineIdx);
             }
         }
 
@@ -846,37 +846,43 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             });
         }
 
-        _kwicRowConnectHandler(corpusId:string, tokenNumber:number, kwicLength:number, lineIdx:number) {
+        _kwicRowConnectHandler(corpusId:string, tokenNumber:number, lineIdx:number) {
             const corpIndex = List.findIndex(col => col.n === corpusId, this.props.corporaColumns);
-            const left = List.map(l => {
+            const kwicNumber = this.props.lines[lineIdx].languages[corpIndex].tokenNumber;
+
+            const left = List.map(token => {
                 const attrs = {};
-                attrs[this.props.baseViewAttr] = List.map(v => v.s, l.text).join(' ');
+                attrs[this.props.baseViewAttr] = List.map(v => v.s, token.text).join(' ');
                 List.forEach((a, i) => {
-                    attrs[a[0]] = l.posAttrs[i];
+                    attrs[a[0]] = token.posAttrs[i];
                 }, this.props.mergedCtxAttrs.slice(1));
                 return attrs;
             }, this.props.lines[lineIdx].languages[corpIndex].left);
-            const kwic = List.map(k => {
+            const kwic = List.map(token => {
                 const attrs = {};
-                attrs[this.props.baseViewAttr] = List.map(v => v.s, k.text).join(' ');
+                attrs[this.props.baseViewAttr] = List.map(v => v.s, token.text).join(' ');
                 List.forEach((a, i) => {
-                    attrs[a[0]] = k.posAttrs[i];
+                    attrs[a[0]] = token.posAttrs[i];
                 }, this.props.mergedAttrs.slice(1));
                 return attrs;
             }, this.props.lines[lineIdx].languages[corpIndex].kwic);
-            const right = List.map(r => {
+            const right = List.map(token => {
                 const attrs = {};
-                attrs[this.props.baseViewAttr] = List.map(v => v.s, r.text).join(' ');
+                attrs[this.props.baseViewAttr] = List.map(v => v.s, token.text).join(' ');
                 List.forEach((a, i) => {
-                    attrs[a[0]] = r.posAttrs[i];
+                    attrs[a[0]] = token.posAttrs[i];
                 }, this.props.mergedCtxAttrs.slice(1));
                 return attrs;
             }, this.props.lines[lineIdx].languages[corpIndex].right);
-            const tokens = [...left, ...kwic, ...right];
 
             dispatcher.dispatch(
                 KwicRowConnectActions.FetchInfo,
-                {corpusId, tokenNumber, kwicLength, tokens},
+                {
+                    corpusId,
+                    tokenIdx: tokenNumber - kwicNumber + left.length + (tokenNumber > kwicNumber ? kwic.length - 1 : 0),
+                    tokenLength: tokenNumber === kwicNumber ? kwic.length : 1,
+                    tokens: [...left, ...kwic, ...right],
+                },
                 undefined
             );
         }
