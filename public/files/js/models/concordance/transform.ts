@@ -35,26 +35,16 @@ function importTextChunk(item:ServerTextChunk, mainAttrIdx:number, id:string, st
     // manatee also uses `/` as separator of attrs
     // in this case there will be more items in `item.possattrs` after splitting the attr string
     // we can not confidently assign values to its requested attributes
-    if ((item.posattrs || []).length + 1 > roles.length) {
-        return {
-            id,
-            className: item.class,
-            text: List.map(
-                (s, i) => ({s: mainAttrIdx === -1 ? s : `${roles[0][0]}:${s}`, h: false, idx: startWlIdx + i}),
-                item.str.trim().split(' ')
-            ),
-            openLink: item.open_link ? {speechPath: item.open_link.speech_path} : undefined,
-            closeLink: item.close_link ? {speechPath: item.close_link.speech_path} : undefined,
-            continued: item.continued,
-            showAudioPlayer: false,
-            posAttrs: item.posattrs || [],
-            displayPosAttrs: [':', ...roles.slice(1).map(v => v[0]), ':', ...(item.posattrs || [])],
-            description: 'unparseable token',
-        };
-    }
+    const description = ((item.posattrs || []).length + 1 > roles.length) ?
+        [
+            'concview__unparseable_token',
+            `${roles[0][0]}: ${item.str}`,
+            `${roles.slice(1).map(v => v[0]).join('/')}: ${item.posattrs.join('/')}`,
+        ] :
+        undefined;
 
     const displayPosAttrs = List.filter(
-        (_, i) => (roles[i+1][1] & PosAttrRole.USER) === PosAttrRole.USER,
+        (_, i) => i+1 > roles.length-1 ? false : (roles[i+1][1] & PosAttrRole.USER) === PosAttrRole.USER,
         item.posattrs || [],
     );
     if (mainAttrIdx === -1) {
@@ -71,6 +61,7 @@ function importTextChunk(item:ServerTextChunk, mainAttrIdx:number, id:string, st
             showAudioPlayer: false,
             posAttrs: item.posattrs || [],
             displayPosAttrs,
+            description,
         };
 
     } else {
@@ -86,6 +77,7 @@ function importTextChunk(item:ServerTextChunk, mainAttrIdx:number, id:string, st
             showAudioPlayer: false,
             posAttrs: item.posattrs || [],
             displayPosAttrs,
+            description,
         };
     }
 }

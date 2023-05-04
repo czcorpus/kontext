@@ -235,7 +235,14 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
 
         if (props.data.className === 'strc') {
             return (
-                <span className="strc">{renderTokens(props.data.text)}</span>
+                <span className="strc">
+                    {props.data.description ?
+                        <img className="warning"
+                             src={he.createStaticUrl('img/warning-icon.svg')}
+                             alt={he.translate('global__warning_icon')}
+                             title={props.data.description.map(v => he.translate(v)).join('\n')}/> : null}
+                    {renderTokens(props.data.text)}
+                </span>
             );
 
         } else if (props.viewMode === ViewOptions.AttrViewMode.MOUSEOVER ||
@@ -243,6 +250,11 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             const title = props.data.displayPosAttrs.length > 0 ? props.data.displayPosAttrs.join(ATTR_SEPARATOR) : null;
             return (
                 <mark data-tokenid={props.tokenId} className={mkClass()} title={title}>
+                    {props.data.description ?
+                        <img className="warning"
+                             src={he.createStaticUrl('img/warning-icon.svg')}
+                             alt={he.translate('global__warning_icon')}
+                             title={props.data.description.map(v => he.translate(v)).join('\n')}/> : null}
                     {renderTokens(props.data.text)}
                 </mark>
             );
@@ -251,6 +263,11 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             return (
                 <>
                     <mark data-tokenid={props.tokenId} className={mkClass()}>
+                        {props.data.description ?
+                            <img className="warning"
+                                src={he.createStaticUrl('img/warning-icon.svg')}
+                                alt={he.translate('global__warning_icon')}
+                                title={props.data.description.map(v => he.translate(v)).join('\n')}/> : null}
                         {renderTokens(props.data.text)}
                     </mark>
                     {props.data.displayPosAttrs.length > 0 ?

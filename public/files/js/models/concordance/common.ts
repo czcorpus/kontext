@@ -29,6 +29,7 @@ export interface ConcToken {
     text:Array<Token>; // array => multiple words per 'pseudo-position'
     posAttrs:Array<string>;
     displayPosAttrs:Array<string>;
+    description?:Array<string>;
 }
 
 
@@ -119,7 +120,7 @@ export class TextChunk {
     showAudioPlayer:boolean;
     posAttrs:Array<string>; // array => multiple pos attrs per whole 'pseudo-position'
     displayPosAttrs:Array<string>;
-    description?:string;
+    description?:Array<string>;
 }
 
 export interface Line {
