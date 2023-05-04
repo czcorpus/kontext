@@ -130,6 +130,7 @@ export function importLines(data:Array<ServerLineData>, mainAttrIdx:number, merg
             const main_line = ConclineSectionOps.newKWICSection(
                 item.toknum,
                 item.linenum,
+                item.kwiclen,
                 item.ref,
                 leftText,
                 kwicText,
@@ -161,6 +162,7 @@ export function importLines(data:Array<ServerLineData>, mainAttrIdx:number, merg
                         return ConclineSectionOps.newKWICSection(
                             align_item.toknum,
                             align_item.linenum,
+                            align_item.kwiclen,
                             align_item.ref,
                             leftText,
                             kwicText,
