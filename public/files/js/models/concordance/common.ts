@@ -472,7 +472,7 @@ export interface ViewConfiguration {
      * For private subcorpus this is just what user entered
      * as a subc. name. In the current corpus is published, a
      * special code is used here instead and the original
-     * name is moved to the 'origSubCorpName' attribute.
+     * name is moved to the 'subcName' attribute.
      */
     subcId:string;
 
