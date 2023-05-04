@@ -145,6 +145,8 @@ export interface PqueryFormModelState {
     paramsVisible:boolean;
     posRangeNotSupported:boolean;  // for structural attributes pos range makes no sense
     compositionModeOn:boolean;
+    concPreflight:Kontext.PreflightConf|null;
+    suggestAltCorpVisible:boolean;
 }
 
 /**
@@ -163,7 +165,8 @@ export function newModelState(
     attrs:Array<Kontext.AttrItem>,
     structAttrs:Array<Kontext.AttrItem>,
     useRichQueryEditor:boolean,
-    defaultAttr:string
+    defaultAttr:string,
+    concPreflight:Kontext.PreflightConf|null
 ):PqueryFormModelState {
 
     return {
@@ -225,6 +228,8 @@ export function newModelState(
         paramsVisible: true,
         posRangeNotSupported: defaultAttr.includes('.'),
         compositionModeOn: false,
+        concPreflight,
+        suggestAltCorpVisible: false
     };
 }
 
@@ -428,7 +433,8 @@ export function storedQueryToModel(
     concQueries:ConcQueries,
     attrs:Array<Kontext.AttrItem>,
     structAttrs:Array<Kontext.AttrItem>,
-    useRichQueryEditor:boolean
+    useRichQueryEditor:boolean,
+    concPreflight:Kontext.PreflightConf|null
 ):PqueryFormModelState {
     const queries = importQueries(sq, concQueries);
     return {
@@ -469,6 +475,8 @@ export function storedQueryToModel(
         paramsVisible: true,
         posRangeNotSupported: sq.attr.includes('.'),
         compositionModeOn: false,
+        concPreflight,
+        suggestAltCorpVisible: false
     }
 }
 

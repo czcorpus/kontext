@@ -110,7 +110,8 @@ class ParadigmaticQueryPage {
                         ),
                         this.layoutModel.getConf('AttrList'),
                         Kontext.structsAndAttrsToStructAttrList(this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs')),
-                        this.layoutModel.getConf<boolean>('UseRichQueryEditor')
+                        this.layoutModel.getConf<boolean>('UseRichQueryEditor'),
+                        this.layoutModel.getConf<Kontext.PreflightConf>('concPreflight')
                     ) :
                     newModelState(
                         this.layoutModel.getCorpusIdent().id,
@@ -118,7 +119,8 @@ class ParadigmaticQueryPage {
                         this.layoutModel.getConf('AttrList'),
                         Kontext.structsAndAttrsToStructAttrList(this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs')),
                         this.layoutModel.getConf<boolean>('UseRichQueryEditor'),
-                        this.layoutModel.getConf<string>('DefaultAttr')
+                        this.layoutModel.getConf<string>('DefaultAttr'),
+                        this.layoutModel.getConf<Kontext.PreflightConf>('concPreflight')
                     ),
                 this.layoutModel,
                 attrHelper

@@ -31,8 +31,8 @@ import { Actions as ATActions } from '../../models/asyncTask/actions';
 import { AdvancedQuery, AdvancedQuerySubmit } from '../query/query';
 import * as Kontext from '../../types/kontext';
 import * as TextTypes from '../../types/textTypes';
-import { ConcQueryResponse } from '../concordance/common';
-import { catchError, concatMap, map, reduce, tap } from 'rxjs/operators';
+import { ConcQueryResponse, PreflightResponse } from '../concordance/common';
+import { catchError, concatMap, every, map, mergeMap, reduce, tap } from 'rxjs/operators';
 import { ConcQueryArgs, QueryContextArgs } from '../query/common';
 import {
     AsyncTaskArgs, FreqIntersectionArgs, FreqIntersectionResponse, createSourceId,
@@ -48,8 +48,7 @@ import { AjaxError } from 'rxjs/ajax';
 interface PqueryFormModelSwitchPreserve {
     queries:string;
     minFreq:Kontext.FormValue<string>;
-    attr:string;
-    posLeft:number;
+    attr:string;    posLeft:number;
     posRight:number;
     posAlign:AlignTypes|PqueryAlignTypes;
 }
@@ -83,23 +82,44 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                     this.layoutModel.showMessage('error', validationErr);
                     return;
                 }
-                const partialQueries = this.partializeQueries(this.state);
+
                 this.changeState(state => {
                     state.isBusy = true;
                     state.calcProgress = 0;
+
+                    if (action.payload.useAltCorp) {
+                        state.queries = Dict.map(
+                            (v, _) => ({
+                                ...v, corpname: state.concPreflight.alt_corp
+                            }),
+                            state.queries
+                        );
+                        state.corpname = state.concPreflight.alt_corp;
+                        state.usesubcorp = undefined;
+                    }
+
+                    const partialQueries = this.partializeQueries(state);
                     state.concWait = Dict.map(_ => 'running', partialQueries);
                 });
 
-                this.submitForm(this.state, partialQueries).subscribe({
-                    next: task => {
-                        this.dispatchSideEffect(
-                            Actions.SubmitQueryDone,
-                            {
-                                corpname: this.state.corpname,
-                                usesubcorp: this.state.usesubcorp,
-                                task
-                            },
-                        );
+                const partialQueries = this.partializeQueries(this.state);
+                this.submitForm(this.state, partialQueries, action.payload.useAltCorp).subscribe({
+                    next: ([task, showAlert]) => {
+                        if (showAlert) {
+                            this.dispatchSideEffect(
+                                Actions.SubmitQueryInterruptedWithPreflightAlert
+                            );
+
+                        } else {
+                            this.dispatchSideEffect(
+                                Actions.SubmitQueryDone,
+                                {
+                                    corpname: this.state.corpname,
+                                    usesubcorp: this.state.usesubcorp,
+                                    task
+                                },
+                            );
+                        }
                     },
                     error: (error:Error) => {
                         this.layoutModel.showMessage('error', error);
@@ -165,6 +185,28 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                         state.task = action.payload.task;
                     }
                 });
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SubmitQueryInterruptedWithPreflightAlert,
+            action => {
+                this.changeState(state => {
+                    state.isBusy = false;
+                    state.concWait = Dict.map(() => 'none', state.concWait);
+                    state.suggestAltCorpVisible = true;
+                });
+            }
+        );
+
+        this.addActionHandler(
+            Actions.CloseSuggestAltCorp,
+            action => {
+                this.changeState(
+                    state => {
+                        state.suggestAltCorpVisible = false;
+                    }
+                );
             }
         );
 
@@ -650,10 +692,10 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             splitFullQuery(state.queries, state.corpname);
     }
 
-    private submitForm(
+    private submitQueries(
         state:PqueryFormModelState,
         partialQueries:{[sourceId:string]:ParadigmaticPartialQuery}
-    ):Observable<Kontext.AsyncTaskInfo<AsyncTaskArgs>> {
+    ):Observable<[Kontext.AsyncTaskInfo<AsyncTaskArgs>, boolean]> {
         return forkJoin([
             rxOf(...pipe(
                 partialQueries,
@@ -752,9 +794,59 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                 }
             ),
             map(
-                fiResponse => fiResponse.task as Kontext.AsyncTaskInfo<AsyncTaskArgs>
+                fiResponse => tuple(fiResponse.task as Kontext.AsyncTaskInfo<AsyncTaskArgs>, false)
             )
         );
+    }
+
+    submitPreflight(
+        query:ParadigmaticPartialQuery,
+    ):Observable<boolean> {
+
+        return this.layoutModel.ajax$<PreflightResponse>(
+            HTTP.Method.POST,
+            this.layoutModel.createActionUrl(
+                'preflight',
+                {
+                    target_corpname: this.state.corpname,
+                    format: 'json'
+                }
+            ),
+            this.createConcSubmitArgs(this.state.concPreflight.subc, query, false),
+            {
+                contentType: 'application/json'
+            }
+        ).pipe(
+            map(
+                ans => ans.sizeIpm >= this.state.concPreflight.threshold_ipm
+            )
+        );
+    }
+
+    private submitForm(
+        state:PqueryFormModelState,
+        partialQueries:{[sourceId:string]:ParadigmaticPartialQuery},
+        usesAltCorpus:boolean
+    ):Observable<[Kontext.AsyncTaskInfo<AsyncTaskArgs>|null, boolean]> {
+        if (state.concPreflight && usesAltCorpus === undefined) {
+            return rxOf(...pipe(
+                partialQueries,
+                Dict.toEntries()
+            )).pipe(
+                mergeMap(
+                    ([,q]) => this.submitPreflight(q)
+                ),
+                every(v => !v),
+                concatMap(
+                    v => v ?
+                        this.submitQueries(state, partialQueries) :
+                        rxOf(tuple(null, true))
+                )
+            );
+
+        } else {
+            return this.submitQueries(state, partialQueries);
+        }
     }
 
     private submitFreqIntersection(

@@ -517,7 +517,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                     }
                 );
             }
-        )
+        );
 
         this.addActionHandler(
             Actions.QuerySubmit,
