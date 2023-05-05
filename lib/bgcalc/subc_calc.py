@@ -73,6 +73,5 @@ class CreateSubcorpusTask:
                 author=self._author,
                 size=conc.size(),
                 public_description=specification.description,
-                data=specification,
-                aligned=specification.aligned_corpora)
+                data=specification)
         return ans

@@ -84,7 +84,7 @@ class AbstractSubcArchive(abc.ABC):
     async def create(
             self, ident: str, author: UserInfo, size: int, public_description,
             data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs],
-            aligned: List[str], is_draft: bool = False):
+            is_draft: bool = False):
         """
         Create subcorpus in the database. It is assumed that actual subc. files are created somewhere else and
         the proper path is passed here. Also creates real subcorpus from draft.
