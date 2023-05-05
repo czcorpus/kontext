@@ -310,9 +310,10 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
 
         this.addActionHandler(
             Actions.CreateSubcorpusDone,
-            null,
-            (state, action, dispatch) => {
+            (state, action) => {
                 state.isBusy = false;
+            },
+            (state, action, dispatch) => {
                 if (!action.error) {
                     // we leave the app here
                     window.location.href = this.pluginApi.createActionUrl('subcorpus/list');
