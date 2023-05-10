@@ -26,12 +26,6 @@ from corplib import CorpusFactory
 from corplib.corpus import KCorpus
 from plugin_types.query_suggest import AbstractBackend
 from strings import simple_query_escape
-from util import as_sync
-
-
-@as_sync
-async def _load_corp_sync(name: str):
-    return await CorpusFactory().get_corpus(name) if name else None
 
 
 class PosAttrPairRelManateeBackend(AbstractBackend):
@@ -40,8 +34,13 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
         super().__init__(ident)
         self._conf = conf
         self._translate = translate
-        fixed_corp = conf.get('corpus')
-        self._preset_corp = _load_corp_sync(fixed_corp)
+        self._fixed_corp_name = conf.get('corpus')
+        self._preset_corp = None
+
+    async def get_preset_corp(self):
+        if self._fixed_corp_name and self._preset_corp is None:
+            self._preset_corp = await CorpusFactory().get_corpus(self._fixed_corp_name)
+        return self._preset_corp
 
     def _freq_dist(self, corp: KCorpus, conc: PyConc, fcrit: str, user_id: int):
         args = bgcalc.freqs.FreqCalcArgs(
@@ -88,7 +87,8 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
     async def find_suggestion(
             self, user_id, ui_lang, maincorp, corpora, subcorpus, value, value_type, value_subformat,
             query_type, p_attr, struct, s_attr):
-        used_corp = self._preset_corp if self._preset_corp is not None else maincorp
+        pres_corp = self.get_preset_corp()
+        used_corp = pres_corp if pres_corp is not None else maincorp
         value_norm = value if value_subformat in ('regexp', 'advanced') else simple_query_escape(value)
         icase = '(?i)' if value_subformat in ('simple_ic',) else ''
         rels = defaultdict(lambda: set())
