@@ -87,9 +87,10 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
     async def find_suggestion(
             self, user_id, ui_lang, maincorp, corpora, subcorpus, value, value_type, value_subformat,
             query_type, p_attr, struct, s_attr):
-        pres_corp = self.get_preset_corp()
+        pres_corp = await self.get_preset_corp()
         used_corp = pres_corp if pres_corp is not None else maincorp
-        value_norm = value if value_subformat in ('regexp', 'advanced') else simple_query_escape(value)
+        value_norm = value if value_subformat in (
+            'regexp', 'advanced') else simple_query_escape(value)
         icase = '(?i)' if value_subformat in ('simple_ic',) else ''
         rels = defaultdict(lambda: set())
         try:

@@ -309,7 +309,7 @@ if __name__ == '__main__':
     if args.debugpy:
         if '_DEBUGPY_RUNNING' not in os.environ:
             import debugpy
-            debugpy.listen(('0.0.0.0', 5678))
+            debugpy.listen((args.address, 5678))
             os.environ['_DEBUGPY_RUNNING'] = '1'
 
     try:
