@@ -157,7 +157,7 @@ class MySQLSubcArchive(AbstractSubcArchive):
         user.
 
         Returns:
-            new ID of the subcorpsu
+            new ID of the subcorpus
         """
         subc_id = await create_new_subc_ident(subc_root_dir, corpname)
         async with aiofiles.open(os.path.join(subc_root_dir, subc_id.data_path), 'wb') as fw:

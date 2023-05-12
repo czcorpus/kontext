@@ -27,8 +27,11 @@ import logging
 import os
 import signal
 import sys
+import hashlib
 from datetime import datetime, timedelta, timezone
 from logging.handlers import QueueListener
+import secrets
+import tempfile
 
 from concurrent_log_handler import ConcurrentRotatingFileHandler
 
@@ -50,6 +53,7 @@ LOCALE_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), '../local
 JWT_COOKIE_NAME = 'kontext_jwt'
 JWT_ALGORITHM = 'HS256'
 DFLT_HTTP_CLIENT_TIMEOUT = 20
+SOFT_RESET_TOKEN_DIR = 'kontext_srt'  # the token allows for remote soft reset; it is auto generated on each startup
 
 from typing import Optional
 
@@ -65,7 +69,8 @@ from action.plugin.initializer import install_plugin_actions, setup_plugins
 from action.templating import TplEngine
 from jwt.exceptions import ExpiredSignatureError, InvalidSignatureError
 from sanic import Request, Sanic
-from sanic.response import HTTPResponse
+from sanic.exceptions import NotFound
+from sanic.response import HTTPResponse, json
 from texttypes.cache import TextTypesCache
 from views.colls import bp as colls_bp
 from views.concordance import bp as conc_bp
@@ -191,6 +196,16 @@ async def server_init(app: Sanic, loop: asyncio.BaseEventLoop):
     app.ctx.kontext_conf = {'http_client_timeout_secs': http_client_conf}
     # load all translations
     load_translations(app)
+    # create a token file for soft restart
+    srt_dir = os.path.join(tempfile.gettempdir(), SOFT_RESET_TOKEN_DIR)
+    if not os.path.isdir(srt_dir):
+        os.mkdir(srt_dir)
+    key = secrets.token_hex(32)
+    app.ctx.soft_restart_token = key
+    fname = hashlib.sha1(CONF_PATH.encode()).hexdigest()
+    with open(os.path.join(srt_dir, fname), 'w') as ttf:
+        ttf.write(key)
+    logging.getLogger(__name__).warning(f'setting soft restart token {key[:5]}..., file {fname[:5]}...')
 
 
 @application.listener('after_server_stop')
@@ -244,6 +259,15 @@ async def handle_internal_soft_reset_signal():
         if callable(fn):
             await fn()
     logging.getLogger(__name__).warning('performed internal soft reset (Sanic signal)')
+
+
+@application.route('/soft-reset', methods=['POST'])
+async def soft_reset(req):
+    if req.args.get('key') == application.ctx.soft_restart_token:
+        await application.dispatch('kontext.internal.reset')
+        return json(dict(ok=True))
+    else:
+        raise NotFound()
 
 
 def get_locale(request: Request) -> str:
