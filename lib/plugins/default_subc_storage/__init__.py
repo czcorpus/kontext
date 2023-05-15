@@ -116,7 +116,6 @@ class SQLiteSubcArchive(AbstractSubcArchive):
             size: int,
             public_description,
             data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs],
-            aligned: List[str],
             is_draft: bool = False,
     ):
         if isinstance(data, CreateSubcorpusRawCQLArgs):
@@ -132,7 +131,7 @@ class SQLiteSubcArchive(AbstractSubcArchive):
                 f'INSERT INTO {self.SUBC_TABLE_NAME} '
                 f'(id, user_id, author_id, author_fullname, corpus_name, name, {column}, created, public_description, size, is_draft, aligned) '
                 'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                (ident, author['id'], author['id'], author['fullname'], data.corpname, data.subcname, value, datetime.now().timestamp(), public_description, size, 1 if is_draft else 0, json.dumps(aligned) if aligned else ''))
+                (ident, author['id'], author['id'], author['fullname'], data.corpname, data.subcname, value, datetime.now().timestamp(), public_description, size, 1 if is_draft else 0, json.dumps(data.aligned_corpora) if data.aligned_corpora else ''))
             self._db.commit()
         except sqlite3.IntegrityError as ex:
             cursor.execute(
@@ -144,7 +143,7 @@ class SQLiteSubcArchive(AbstractSubcArchive):
                     f'UPDATE {self.SUBC_TABLE_NAME} '
                     f'SET name = ?, {column} = ?, public_description = ?, size = ?, is_draft = 0, aligned = ? '
                     'WHERE id = ? AND author_id = ?',
-                    (data.subcname, value, public_description, size, ident, author['id'], json.dumps(aligned) if aligned else ''))
+                    (data.subcname, value, public_description, size, ident, author['id'], json.dumps(data.aligned_corpora) if data.aligned_corpora else ''))
             else:
                 raise ex
         finally:
