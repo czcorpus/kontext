@@ -25,7 +25,6 @@ import asyncio
 import locale
 import logging
 import os
-import signal
 import sys
 import hashlib
 from datetime import datetime, timedelta, timezone
@@ -169,15 +168,6 @@ application.ctx = ApplicationContext(
     tt_cache=tt_cache)
 
 
-async def sigusr1_handler():
-    logging.getLogger(__name__).warning('Caught signal SIGUSR1')
-    for p in plugins.runtime:
-        fn = getattr(p.instance, 'on_soft_reset', None)
-        if callable(fn):
-            await fn()
-    await tt_cache.clear_all()
-
-
 def load_translations(app: Sanic):
     app.ctx.translations = {}
     for loc in settings.get_list('global', 'translations'):
@@ -189,7 +179,6 @@ def load_translations(app: Sanic):
 @application.listener('before_server_start')
 async def server_init(app: Sanic, loop: asyncio.BaseEventLoop):
     setproctitle(f'sanic-kontext [{CONF_PATH}][worker]')
-    loop.add_signal_handler(signal.SIGUSR1, lambda: asyncio.create_task(sigusr1_handler()))
     # init extensions fabrics
     app.ctx.client_session = aiohttp.ClientSession()
     # runtime conf (this should have its own module in the future)
@@ -259,7 +248,7 @@ async def store_jwt(request: Request, response: HTTPResponse):
 
 
 @application.signal('kontext.internal.reset')
-async def handle_internal_soft_reset_signal():
+async def handle_soft_reset_signal():
     for p in plugins.runtime:
         fn = getattr(p.instance, 'on_soft_reset', None)
         if callable(fn):
@@ -269,6 +258,8 @@ async def handle_internal_soft_reset_signal():
 
 @application.route('/soft-reset', methods=['POST'])
 async def soft_reset(req):
+    logging.getLogger(__name__).warning("key = {}".format(req.args.get('key')))
+    logging.getLogger(__name__).warning("expected = {}".format(application.ctx.soft_restart_token))
     if req.args.get('key') == application.ctx.soft_restart_token:
         await application.dispatch('kontext.internal.reset')
         return json(dict(ok=True))
