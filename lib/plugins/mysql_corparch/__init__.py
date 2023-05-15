@@ -305,6 +305,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
 
     async def on_soft_reset(self):
         self._corpus_info_cache = {}
+        logging.getLogger(__name__).warning('mysql_corparch flush corpus_info_cache (soft reset)')
 
     async def get_corpus_info(self, plugin_ctx: AbstractCorpusPluginCtx, corp_name: str) -> CorpusInfo:
         """
