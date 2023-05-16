@@ -23,11 +23,20 @@ from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.tokens_linking import AbstractTokensLinking
 from plugin_types.token_connect import AbstractBackend, AbstractFrontend
 from plugins.default_token_connect import setup_providers
+from action.control import http_action
+from action.model.concordance import ConcActionModel
+from action.krequest import KRequest
+from action.response import KResponse
 from sanic.blueprints import Blueprint
 from util import as_async
 
 bp = Blueprint('default_tokens_linking')
 
+
+@bp.route('/fetch_tokens_linking', methods=['POST'])
+@http_action(return_type='json', action_model=ConcActionModel)
+async def fetch_token_detail(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    return dict(data=req.json)
 
 class DefaultTokensLinking(AbstractTokensLinking):
 

@@ -30,6 +30,7 @@ export interface IPlugin extends BasePlugin {
 type AttrSet = {[attr:string]:string};
 
 export class Actions {
+
     static FetchInfo:Action<{
         corpusId:string;
         tokenIdx:number;
@@ -38,6 +39,12 @@ export class Actions {
     }> = {
         name: 'TOKENS_LINKING_FETCH_INFO'
     };
+
+    static FetchInfoDone:Action<{
+        data:unknown;
+    }> = {
+        name: 'TOKENS_LINKING_FETCH_INFO_DONE'
+    }
 }
 
 export type Factory = (

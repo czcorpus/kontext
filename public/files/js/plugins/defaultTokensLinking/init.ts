@@ -21,6 +21,7 @@
 import * as PluginInterfaces from '../../types/plugins';
 import { TokensLinkingModel } from './model';
 import { IPluginApi } from '../../types/plugins/common';
+import { List, pipe } from 'cnc-tskit';
 
 
 interface PluginData {
@@ -41,6 +42,10 @@ export class DefaultTokensLinkingPlugin implements PluginInterfaces.TokensLinkin
         this.model = new TokensLinkingModel({
             dispatcher: pluginApi.dispatcher(),
             pluginApi,
+            corpora: pipe(
+                pluginApi.getConf<Array<string>>('alignedCorpora'),
+                List.concatr([pluginApi.getCorpusIdent().id])
+            )
         });
     }
 
@@ -49,6 +54,7 @@ export class DefaultTokensLinkingPlugin implements PluginInterfaces.TokensLinkin
     }
 
     init():void {
+        console.log('___________ INIT_____')
     }
 }
 

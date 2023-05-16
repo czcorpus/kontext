@@ -21,9 +21,12 @@
 import * as PluginInterfaces from '../../types/plugins';
 import { StatefulModel, IFullActionControl } from 'kombo';
 import { IPluginApi } from '../../types/plugins/common';
+import { HTTP, List } from 'cnc-tskit';
+import { AjaxResponse } from '../../types/kontext';
 
 
 export interface TokensLinkingState {
+    corpora:Array<string>;
     isBusy:boolean;
 }
 
@@ -31,6 +34,11 @@ export interface TokensLinkingState {
 export interface TokensLinkingModelArgs {
     dispatcher:IFullActionControl;
     pluginApi:IPluginApi;
+    corpora:Array<string>;
+}
+
+export interface FetchDataResponse extends AjaxResponse {
+    data:unknown;
 }
 
 export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
@@ -40,11 +48,14 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
     constructor({
             dispatcher,
             pluginApi,
+            corpora
+
     }:TokensLinkingModelArgs) {
         super(
             dispatcher,
             {
                 isBusy: false,
+                corpora
             }
         );
         this.pluginApi = pluginApi;
@@ -52,8 +63,46 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
         this.addActionHandler(
             PluginInterfaces.TokensLinking.Actions.FetchInfo,
             action => {
+                this.pluginApi.ajax$<FetchDataResponse>(
+                    HTTP.Method.POST,
+                    this.pluginApi.createActionUrl('/fetch_tokens_linking'),
+                    {
+                        ...action.payload,
+                        corpname: List.head(this.state.corpora),
+                        align: List.tail(this.state.corpora)
+                    },
+                    {
+                        contentType: 'application/json'
+                    }
+                ).subscribe({
+                    next: resp => {
+                        this.dispatchSideEffect({
+                            ...PluginInterfaces.TokensLinking.Actions.FetchInfoDone,
+                            payload: {data: resp.data}
+                        })
+                    },
+                    error: error => {
+                        this.dispatchSideEffect({
+                            ...PluginInterfaces.TokensLinking.Actions.FetchInfoDone,
+                            error
+                        })
+
+                    }
+                });
                 console.log('TokensLinking dispatched', action.payload);
             }
         );
+
+        this.addActionHandler(
+            PluginInterfaces.TokensLinking.Actions.FetchInfoDone,
+            action => {
+                if (action.error) {
+                    this.pluginApi.showMessage('error', action.error);
+
+                } else {
+                    console.log('we have backend data: ', action.payload.data);
+                }
+            }
+        )
     }
 }
