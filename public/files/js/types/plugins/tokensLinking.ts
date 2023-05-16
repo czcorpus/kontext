@@ -22,7 +22,7 @@ import { Action } from 'kombo';
 import { BasePlugin, IPluginApi } from './common';
 
 // ------------------------------------------------------------------------
-// ------------------------- [kwic_row_connect] plug-in -----------------------
+// ------------------------- [tokens_linking] plug-in -----------------------
 
 export interface IPlugin extends BasePlugin {
 }
@@ -36,7 +36,7 @@ export class Actions {
         tokenLength:number;
         tokens:Array<AttrSet>;
     }> = {
-        name: 'KWIC_ROW_CONNECT_FETCH_INFO'
+        name: 'TOKENS_LINKING_FETCH_INFO'
     };
 }
 

@@ -39,7 +39,7 @@ import {
 import * as S from './style';
 import { PlayerStatus } from '../../../models/concordance/media';
 import { SentenceToken } from '../../../types/plugins/syntaxViewer';
-import { Actions as KwicRowConnectActions } from '../../../types/plugins/kwicRowConnect';
+import { Actions as TokensLinkingActions } from '../../../types/plugins/tokensLinking';
 
 
 export interface LinesModuleArgs {
@@ -367,7 +367,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         kwicLength:number;
         attrViewMode:ViewOptions.AttrViewMode;
         tokenConnectClickHandler:(corpusId:string, tokenNumber:number, kwicLength:number, lineIdx:number)=>void;
-        kwicRowConnectClickHandler?:(corpusId:string, tokenNumber:number, lineIdx:number, tokenLength:number)=>void;
+        tokensLinkingClickHandler?:(corpusId:string, tokenNumber:number, lineIdx:number, tokenLength:number)=>void;
         audioPlayerStatus:PlayerStatus;
 
     }> = (props) => {
@@ -383,15 +383,15 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         };
 
         const handleTokenClick = (evt) => {
-            if (props.supportsTokenConnect || props.kwicRowConnectClickHandler) {
+            if (props.supportsTokenConnect || props.tokensLinkingClickHandler) {
                 let tokenId = evt.target.getAttribute('data-tokenid');
                 if (tokenId !== null) {
                     tokenId = parseInt(tokenId);
                     if (props.supportsTokenConnect) {
                         props.tokenConnectClickHandler(props.corpname, props.lineIdx, -1, tokenId);
                     }
-                    if (props.kwicRowConnectClickHandler) {
-                        props.kwicRowConnectClickHandler(props.corpname, tokenId, props.lineIdx, 1);
+                    if (props.tokensLinkingClickHandler) {
+                        props.tokensLinkingClickHandler(props.corpname, tokenId, props.lineIdx, 1);
                     }
                 }
             }
@@ -399,8 +399,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
 
         const handleKwicClick = (corpusId, tokenNumber, lineIdx) => {
             props.tokenConnectClickHandler(corpusId, tokenNumber, props.kwicLength, lineIdx);
-            if (props.kwicRowConnectClickHandler) {
-                props.kwicRowConnectClickHandler(corpusId, tokenNumber, lineIdx, props.kwicLength);
+            if (props.tokensLinkingClickHandler) {
+                props.tokensLinkingClickHandler(corpusId, tokenNumber, lineIdx, props.kwicLength);
             }
         };
 
@@ -610,7 +610,12 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         groupColor:string|undefined;
         groupTextColor:string|undefined;
         audioPlayerStatus:PlayerStatus;
-        kwicRowConnectHandler?:(corpusId:string, tokenNumber:number, lineIdx:number, tokenLength:number) => void;
+        tokensLinkingHandler?:(
+            corpusId:string,
+            tokenNumber:number,
+            lineIdx:number,
+            tokenLength:number
+        ) => void;
     }> {
 
         constructor(props) {
@@ -725,7 +730,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                             output={corpusOutput}
                             kwicLength={this.props.data.kwicLength}
                             tokenConnectClickHandler={this._detailClickHandler}
-                            kwicRowConnectClickHandler={this.props.kwicRowConnectHandler}
+                            tokensLinkingClickHandler={this.props.tokensLinkingHandler}
                             attrViewMode={this.props.attrViewMode}
                             audioPlayerStatus={this.props.audioPlayerStatus}
                         />;
@@ -746,15 +751,15 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
 
         _handleKwicClick(corpusId, tokenNumber, lineIdx) {
             this._detailClickHandler(corpusId, tokenNumber, this.props.data.kwicLength, lineIdx);
-            if (this.props.kwicRowConnectHandler) {
-                this.props.kwicRowConnectHandler(corpusId, tokenNumber, lineIdx, this.props.data.kwicLength);
+            if (this.props.tokensLinkingHandler) {
+                this.props.tokensLinkingHandler(corpusId, tokenNumber, lineIdx, this.props.data.kwicLength);
             }
         }
 
         _handleNonKwicTokenClick(corpusId, lineIdx, tokenNumber) {
             this._detailClickHandler(corpusId, tokenNumber, -1, lineIdx);
-            if (this.props.kwicRowConnectHandler) {
-                this.props.kwicRowConnectHandler(corpusId, tokenNumber, lineIdx, 1);
+            if (this.props.tokensLinkingHandler) {
+                this.props.tokensLinkingHandler(corpusId, tokenNumber, lineIdx, 1);
             }
         }
 
@@ -854,7 +859,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
 
         constructor(props) {
             super(props);
-            this._kwicRowConnectHandler = this._kwicRowConnectHandler.bind(this);
+            this._tokensLinkingHandler = this._tokensLinkingHandler.bind(this);
         }
 
         componentDidMount() {
@@ -863,7 +868,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             });
         }
 
-        _kwicRowConnectHandler(corpusId:string, tokenNumber:number, lineIdx:number, tokenLength:number) {
+        _tokensLinkingHandler(corpusId:string, tokenNumber:number, lineIdx:number, tokenLength:number) {
             const corpIndex = List.findIndex(col => col.n === corpusId, this.props.corporaColumns);
             const kwicNumber = this.props.lines[lineIdx].languages[corpIndex].tokenNumber;
 
@@ -893,7 +898,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             }, this.props.lines[lineIdx].languages[corpIndex].right);
 
             dispatcher.dispatch(
-                KwicRowConnectActions.FetchInfo,
+                TokensLinkingActions.FetchInfo,
                 {
                     corpusId,
                     tokenIdx: tokenNumber - kwicNumber + left.length,
@@ -935,7 +940,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                             supportsSyntaxView={this.props.supportsSyntaxView}
                             supportsTokenConnect={this.props.supportsTokenConnect}
                             audioPlayerStatus={this.props.audioPlayerStatus}
-                            kwicRowConnectHandler={this.props.supportsKwicRowConnect ? this._kwicRowConnectHandler : null}
+                            tokensLinkingHandler={this.props.supportsTokensLinking ? this._tokensLinkingHandler : null}
                         />
                     },
                     this.props.lines

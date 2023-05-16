@@ -20,16 +20,16 @@ from typing import Dict, List, Tuple
 
 import plugins
 from plugin_types.corparch import AbstractCorporaArchive
-from plugin_types.kwic_row_connect import AbstractKwicRowConnect
+from plugin_types.tokens_linking import AbstractTokensLinking
 from plugin_types.token_connect import AbstractBackend, AbstractFrontend
 from plugins.default_token_connect import setup_providers
 from sanic.blueprints import Blueprint
 from util import as_async
 
-bp = Blueprint('default_kwic_row_connect')
+bp = Blueprint('default_tokens_linking')
 
 
-class DefaultKwicRowConnect(AbstractKwicRowConnect):
+class DefaultTokensLinking(AbstractTokensLinking):
 
     def __init__(self, providers: Dict[str, Tuple[AbstractBackend, AbstractFrontend]], corparch: AbstractCorporaArchive):
         self._providers = providers
@@ -43,7 +43,7 @@ class DefaultKwicRowConnect(AbstractKwicRowConnect):
             return False
         corpus_info = await self._corparch.get_corpus_info(plugin_ctx, corpora[0])
         tst = [p.enabled_for_corpora([corpora[0]] + plugin_ctx.aligned_corpora)
-               for p, _ in self.map_providers(corpus_info.kwic_row_connect.providers)]
+               for p, _ in self.map_providers(corpus_info.tokens_linking.providers)]
         return len(tst) > 0 and True in tst
 
     @as_async
@@ -60,7 +60,6 @@ class DefaultKwicRowConnect(AbstractKwicRowConnect):
 
 @plugins.inject(plugins.runtime.DB, plugins.runtime.CORPARCH)
 def create_instance(settings, db, corparch):
-    providers = setup_providers(settings.get('plugins', 'kwic_row_connect'), db)
-    plg_conf = settings.get('plugins', 'kwic_row_connect')
-    kwic_conn = DefaultKwicRowConnect(providers, corparch)
-    return kwic_conn
+    providers = setup_providers(settings.get('plugins', 'tokens_linking'), db)
+    plg_conf = settings.get('plugins', 'tokens_linking')
+    return DefaultTokensLinking(providers, corparch)

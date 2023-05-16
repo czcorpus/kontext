@@ -563,7 +563,7 @@ export interface ViewConfiguration {
 
     supportsTokenConnect:boolean;
 
-    supportsKwicRowConnect:boolean;
+    supportsTokensLinking:boolean;
 
     anonymousUserConcLoginPrompt:boolean;
 

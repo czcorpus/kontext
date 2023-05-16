@@ -23,7 +23,7 @@ from action.plugin.ctx import PluginCtx
 from plugin_types import CorpusDependentPlugin
 
 
-class AbstractKwicRowConnect(CorpusDependentPlugin):
+class AbstractTokensLinking(CorpusDependentPlugin):
 
     @abc.abstractmethod
     def map_providers(self, provider_ids):

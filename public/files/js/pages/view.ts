@@ -81,7 +81,7 @@ import tagHelperPlugin from 'plugins/taghelper/init';
 import syntaxViewerInit from 'plugins/syntaxViewer/init';
 import tokenConnectInit from 'plugins/tokenConnect/init';
 import kwicConnectInit from 'plugins/kwicConnect/init';
-import kwicRowConnectInit from 'plugins/kwicRowConnect/init';
+import tokensLinkingInit from 'plugins/tokensLinking/init';
 import { importInitialTTData, TTInitialData } from '../models/textTypes/common';
 import { QueryType } from '../models/query/query';
 import { HitReloader } from '../models/concordance/concStatus';
@@ -92,7 +92,7 @@ import { DispersionResultModel } from '../models/dispersion/result';
 import { AnyTTSelection } from '../types/textTypes';
 import { ShuffleModel } from '../models/query/shuffle';
 import { ActionUrlCodes } from '../app/navigation/interpage';
-import { KwicRowConnectModel } from '../plugins/defaultKwicRowConnect/model';
+import { TokensLinkingModel } from '../plugins/defaultTokensLinking/model';
 
 
 export class QueryModels {
@@ -980,8 +980,8 @@ export class ViewPage {
             supportsSyntaxView: this.layoutModel.pluginTypeIsActive(
                 PluginName.SYNTAX_VIEWER),
             supportsTokenConnect: tokenConnect.providesAnyTokenInfo(),
-            supportsKwicRowConnect: this.layoutModel.pluginTypeIsActive(
-                PluginName.KWIC_ROW_CONNECT),
+            supportsTokensLinking: this.layoutModel.pluginTypeIsActive(
+                PluginName.TOKENS_LINKING),
             anonymousUserConcLoginPrompt: this.layoutModel.getConf<boolean>(
                 'anonymousUserConcLoginPrompt'
             ),
@@ -1175,8 +1175,8 @@ export class ViewPage {
                 this.viewModels.lineSelectionModel
             );
 
-            const kwicRowConnect = this.layoutModel.pluginTypeIsActive(PluginName.KWIC_ROW_CONNECT) ?
-                kwicRowConnectInit(
+            const tokensLinking = this.layoutModel.pluginTypeIsActive(PluginName.TOKENS_LINKING) ?
+                tokensLinkingInit(
                     this.layoutModel.pluginApi()
                 ) : null;
 

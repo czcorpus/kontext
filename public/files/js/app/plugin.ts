@@ -34,7 +34,7 @@ export enum PluginName {
     TAGHELPER = 'taghelper',
     TOKEN_CONNECT = 'token_connect',
     KWIC_CONNECT = 'kwic_connect',
-    KWIC_ROW_CONNECT = 'kwic_row_connect',
+    TOKENS_LINKING = 'tokens_linking',
     APP_BAR = 'app_bar',
     FOOTER_BAR = 'footer_bar',
     CORPARCH = 'corparch',
