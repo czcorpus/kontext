@@ -106,7 +106,7 @@ class KwicConnect:
 
 @dataclass_json
 @dataclass
-class KwicRowConnect:
+class TokensLinking:
     providers: List[Any] = field(default_factory=list)
 
 
@@ -218,7 +218,7 @@ class CorpusInfo:
     metadata: CorpusMetadata = field(default_factory=lambda: CorpusMetadata())
     token_connect: TokenConnect = field(default_factory=lambda: TokenConnect())
     kwic_connect: KwicConnect = field(default_factory=lambda: KwicConnect())
-    kwic_row_connect: KwicRowConnect = field(default_factory=lambda: KwicRowConnect())
+    tokens_linking: TokensLinking = field(default_factory=lambda: TokensLinking())
     manatee: ManateeCorpusInfo = field(default_factory=lambda: ManateeCorpusInfo())
     default_view_opts: Dict[str, Any] = field(default_factory=dict)
     query_suggest: QuerySuggest = field(default_factory=lambda: QuerySuggest())

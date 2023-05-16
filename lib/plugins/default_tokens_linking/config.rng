@@ -3,12 +3,12 @@
          datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"
          xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0">
     <start>
-        <element name="kwic_row_connect">
+        <element name="tokens_linking">
             <element name="module">
-                <value>default_kwic_row_connect</value>
+                <value>default_tokens_linking</value>
             </element>
             <element name="js_module">
-                <value>defaultKwicRowConnect</value>
+                <value>defaultTokensLinking</value>
             </element>
             <element name="ttl">
                 <data type="nonNegativeInteger" />

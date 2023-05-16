@@ -160,7 +160,7 @@ export interface ConcordanceModelState {
 
     supportsTokenConnect:boolean;
 
-    supportsKwicRowConnect:boolean;
+    supportsTokensLinking:boolean;
 
     emptyRefValPlaceholder:string;
 
@@ -244,7 +244,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 playerAttachedChunk: '',
                 showAnonymousUserWarn: lineViewProps.anonymousUser,
                 supportsTokenConnect: lineViewProps.supportsTokenConnect,
-                supportsKwicRowConnect: lineViewProps.supportsKwicRowConnect,
+                supportsTokensLinking: lineViewProps.supportsTokensLinking,
                 emptyRefValPlaceholder: '\u2014',
                 lineGroupIds: attachColorsToIds(
                     layoutModel.getConf<Array<number>>('LinesGroupsNumbers'),

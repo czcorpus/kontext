@@ -44,7 +44,7 @@ from plugin_types.getlang import AbstractGetLang
 from plugin_types.integration_db import IntegrationDatabase
 from plugin_types.issue_reporting import AbstractIssueReporting
 from plugin_types.kwic_connect import AbstractKwicConnect
-from plugin_types.kwic_row_connect import AbstractKwicRowConnect
+from plugin_types.tokens_linking import AbstractTokensLinking
 from plugin_types.live_attributes import AbstractLiveAttributes
 from plugin_types.menu_items import AbstractMenuItems
 from plugin_types.query_history import AbstractQueryHistory
@@ -189,7 +189,7 @@ class _Names(object):
     ISSUE_REPORTING: _ID[AbstractIssueReporting] = _ID('issue_reporting', optional=True)
     TOKEN_CONNECT: _ID[AbstractTokenConnect] = _ID('token_connect', optional=True)
     KWIC_CONNECT: _ID[AbstractKwicConnect] = _ID('kwic_connect', optional=True)
-    KWIC_ROW_CONNECT: _ID[AbstractKwicRowConnect] = _ID('kwic_row_connect', optional=True)
+    TOKENS_LINKING: _ID[AbstractTokensLinking] = _ID('tokens_linking', optional=True)
     DISPATCH_HOOK: _ID[AbstractDispatchHook] = _ID('dispatch_hook', optional=True)
     QUERY_SUGGEST: _ID[AbstractQuerySuggest] = _ID('query_suggest', optional=True)
     ACTION_LOG: _ID[AbstractActionLog] = _ID('action_log', optional=True)
@@ -206,7 +206,7 @@ class _Names(object):
             self.MENU_ITEMS, self.AUDIO_PROVIDER, self.GETLANG, self.CORPARCH, self.SUBC_STORAGE, self.QUERY_HISTORY,
             self.APPLICATION_BAR, self.FOOTER_BAR, self.LIVE_ATTRIBUTES, self.TAGHELPER,
             self.SYNTAX_VIEWER, self.SUBCMIXER, self.CHART_EXPORT, self.ISSUE_REPORTING, self.TOKEN_CONNECT,
-            self.KWIC_CONNECT, self.KWIC_ROW_CONNECT, self.DISPATCH_HOOK, self.QUERY_SUGGEST, self.ACTION_LOG, self.BACKLINKS])
+            self.KWIC_CONNECT, self.TOKENS_LINKING, self.DISPATCH_HOOK, self.QUERY_SUGGEST, self.ACTION_LOG, self.BACKLINKS])
 
 
 runtime: _Names = _Names()

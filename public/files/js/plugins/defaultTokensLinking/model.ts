@@ -19,50 +19,41 @@
  */
 
 import * as PluginInterfaces from '../../types/plugins';
-import { KwicRowConnectModel } from './model';
+import { StatefulModel, IFullActionControl } from 'kombo';
 import { IPluginApi } from '../../types/plugins/common';
 
 
-interface PluginData {
-    kwic_row_connect: {
-    }
+export interface TokensLinkingState {
+    isBusy:boolean;
 }
 
 
-export class DefaultKwicRowConnectPlugin implements PluginInterfaces.KwicRowConnect.IPlugin {
+export interface TokensLinkingModelArgs {
+    dispatcher:IFullActionControl;
+    pluginApi:IPluginApi;
+}
+
+export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
 
     private pluginApi:IPluginApi;
 
-    private model:KwicRowConnectModel;
-
-    constructor(
-        pluginApi:IPluginApi,
-    ) {
-        this.pluginApi = pluginApi;
-        this.model = new KwicRowConnectModel({
-            dispatcher: pluginApi.dispatcher(),
+    constructor({
+            dispatcher,
             pluginApi,
-        });
-    }
+    }:TokensLinkingModelArgs) {
+        super(
+            dispatcher,
+            {
+                isBusy: false,
+            }
+        );
+        this.pluginApi = pluginApi;
 
-    isActive():boolean {
-        return true;
-    }
-
-    init():void {
+        this.addActionHandler(
+            PluginInterfaces.TokensLinking.Actions.FetchInfo,
+            action => {
+                console.log('TokensLinking dispatched', action.payload);
+            }
+        );
     }
 }
-
-
-export const create:PluginInterfaces.KwicRowConnect.Factory = (
-            pluginApi:IPluginApi,
-    ) => {
-    const conf = pluginApi.getConf<PluginData>('pluginData');
-    const plg = new DefaultKwicRowConnectPlugin(
-        pluginApi,
-    );
-    plg.init();
-    return plg;
-}
-
-export default create;

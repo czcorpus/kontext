@@ -24,7 +24,7 @@ export * as Corparch from './corparch';
 export * as FooterBar from './footerBar';
 export * as IssueReporting from './issueReporting';
 export * as KwicConnect from './kwicConnect';
-export * as KwicRowConnect from './kwicRowConnect';
+export * as TokensLinking from './tokensLinking';
 export * as LiveAttributes from './liveAttributes';
 export * as QuerySuggest from './querySuggest';
 export * as SubcMixer from './subcMixer';
