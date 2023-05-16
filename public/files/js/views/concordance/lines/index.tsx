@@ -855,47 +855,59 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
 
     // --------------------------- <LinesWithSelection /> ------------------------------
 
-    class LinesWithSelection extends React.PureComponent<ConcordanceModelState & LineSelectionModelState> {
+    const LinesWithSelection:React.FC<ConcordanceModelState & LineSelectionModelState> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._tokensLinkingHandler = this._tokensLinkingHandler.bind(this);
-        }
+        React.useEffect(
+            () => {
+                dispatcher.dispatch<typeof Actions.ApplyStoredLineSelections>({
+                    name: Actions.ApplyStoredLineSelections.name
+                });
+            },
+            []
+        );
 
-        componentDidMount() {
-            dispatcher.dispatch<typeof Actions.ApplyStoredLineSelections>({
-                name: Actions.ApplyStoredLineSelections.name
-            });
-        }
+        const tokensLinkingHandler = (
+            corpusId:string,
+            tokenNumber:number,
+            lineIdx:number,
+            tokenLength:number
+        ) => {
+            const corpIndex = List.findIndex(col => col.n === corpusId, props.corporaColumns);
+            const kwicNumber = props.lines[lineIdx].languages[corpIndex].tokenNumber;
 
-        _tokensLinkingHandler(corpusId:string, tokenNumber:number, lineIdx:number, tokenLength:number) {
-            const corpIndex = List.findIndex(col => col.n === corpusId, this.props.corporaColumns);
-            const kwicNumber = this.props.lines[lineIdx].languages[corpIndex].tokenNumber;
-
-            const left = List.map(token => {
-                const attrs = {};
-                attrs[this.props.baseViewAttr] = List.map(v => v.s, token.text).join(' ');
-                List.forEach((a, i) => {
-                    attrs[a[0]] = token.posAttrs[i];
-                }, this.props.mergedCtxAttrs.slice(1));
-                return attrs;
-            }, this.props.lines[lineIdx].languages[corpIndex].left);
-            const kwic = List.map(token => {
-                const attrs = {};
-                attrs[this.props.baseViewAttr] = List.map(v => v.s, token.text).join(' ');
-                List.forEach((a, i) => {
-                    attrs[a[0]] = token.posAttrs[i];
-                }, this.props.mergedAttrs.slice(1));
-                return attrs;
-            }, this.props.lines[lineIdx].languages[corpIndex].kwic);
-            const right = List.map(token => {
-                const attrs = {};
-                attrs[this.props.baseViewAttr] = List.map(v => v.s, token.text).join(' ');
-                List.forEach((a, i) => {
-                    attrs[a[0]] = token.posAttrs[i];
-                }, this.props.mergedCtxAttrs.slice(1));
-                return attrs;
-            }, this.props.lines[lineIdx].languages[corpIndex].right);
+            const left = List.map(
+                token => {
+                    const attrs = {};
+                    attrs[props.baseViewAttr] = List.map(v => v.s, token.text);
+                    List.forEach((a, i) => {
+                        attrs[a[0]] = token.posAttrs[i];
+                    }, props.mergedCtxAttrs.slice(1));
+                    return attrs;
+                },
+                props.lines[lineIdx].languages[corpIndex].left
+            );
+            const kwic = List.map(
+                token => {
+                    const attrs = {};
+                    attrs[props.baseViewAttr] = List.map(v => v.s, token.text);
+                    List.forEach((a, i) => {
+                        attrs[a[0]] = token.posAttrs[i];
+                    }, props.mergedAttrs.slice(1));
+                    return attrs;
+                },
+                props.lines[lineIdx].languages[corpIndex].kwic
+            );
+            const right = List.map(
+                token => {
+                    const attrs = {};
+                    attrs[props.baseViewAttr] = List.map(v => v.s, token.text);
+                    List.forEach((a, i) => {
+                        attrs[a[0]] = token.posAttrs[i];
+                    }, props.mergedCtxAttrs.slice(1));
+                    return attrs;
+                },
+                props.lines[lineIdx].languages[corpIndex].right
+            );
 
             dispatcher.dispatch(
                 TokensLinkingActions.FetchInfo,
@@ -907,46 +919,44 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                 },
                 undefined
             );
-        }
+        };
 
-        private findGroupColor(id:number):[string, string]|[undefined, undefined] {
-            const groupId = List.find(v => v.id === id, this.props.lineGroupIds);
+        const findGroupColor = (id:number):[string, string]|[undefined, undefined] => {
+            const groupId = List.find(v => v.id === id, props.lineGroupIds);
             return groupId ? [groupId.bgColor, groupId.fgColor] : [undefined, undefined];
-        }
+        };
 
-        render() {
-            if (this.props.forceScroll) {
-                window.scrollTo(null, this.props.forceScroll);
-            }
-            return (<>
-                {List.map(
-                    (line, i) => {
-                        const [bgColor, fgColor] = this.findGroupColor(line.lineGroup);
-                        return <Line key={`${i}:${List.head(line.languages).tokenNumber}`}
-                            lineIdx={i}
-                            data={line}
-                            groupColor={bgColor}
-                            groupTextColor={fgColor}
-                            cols={this.props.corporaColumns}
-                            viewMode={this.props.viewMode}
-                            attrViewMode={this.props.attrViewMode}
-                            baseCorpname={this.props.baseCorpname}
-                            mainCorp={this.props.maincorp}
-                            corpsWithKwic={this.props.kwicCorps}
-                            showLineNumbers={this.props.showLineNumbers}
-                            lineSelMode={LineSelectionModel.actualSelection(this.props).mode}
-                            numItemsInLockedGroups={this.props.numItemsInLockedGroups}
-                            emptyRefValPlaceholder={this.props.emptyRefValPlaceholder}
-                            supportsSyntaxView={this.props.supportsSyntaxView}
-                            supportsTokenConnect={this.props.supportsTokenConnect}
-                            audioPlayerStatus={this.props.audioPlayerStatus}
-                            tokensLinkingHandler={this.props.supportsTokensLinking ? this._tokensLinkingHandler : null}
-                        />
-                    },
-                    this.props.lines
-                )}
-            </>);
+        if (props.forceScroll) {
+            window.scrollTo(null, props.forceScroll);
         }
+        return (<>
+            {List.map(
+                (line, i) => {
+                    const [bgColor, fgColor] = findGroupColor(line.lineGroup);
+                    return <Line key={`${i}:${List.head(line.languages).tokenNumber}`}
+                        lineIdx={i}
+                        data={line}
+                        groupColor={bgColor}
+                        groupTextColor={fgColor}
+                        cols={props.corporaColumns}
+                        viewMode={props.viewMode}
+                        attrViewMode={props.attrViewMode}
+                        baseCorpname={props.baseCorpname}
+                        mainCorp={props.maincorp}
+                        corpsWithKwic={props.kwicCorps}
+                        showLineNumbers={props.showLineNumbers}
+                        lineSelMode={LineSelectionModel.actualSelection(props).mode}
+                        numItemsInLockedGroups={props.numItemsInLockedGroups}
+                        emptyRefValPlaceholder={props.emptyRefValPlaceholder}
+                        supportsSyntaxView={props.supportsSyntaxView}
+                        supportsTokenConnect={props.supportsTokenConnect}
+                        audioPlayerStatus={props.audioPlayerStatus}
+                        tokensLinkingHandler={props.supportsTokensLinking ? tokensLinkingHandler : null}
+                    />
+                },
+                props.lines
+            )}
+        </>);
     }
 
     const BoundLinesWithSelection = BoundWithProps<ConcordanceModelState,

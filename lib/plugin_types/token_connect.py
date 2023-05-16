@@ -73,7 +73,7 @@ class Response:
         """
 
         Arguments:
-            contents -- any JSON serializable data understood by renderer
+            contents -- any JSON serializable data understood by the renderer
             renderer -- a string ID of a client-side compnent able to render 'contents'
             status -- a bool representing FOUND/NOT_FOUND
             heading -- a (possibly localized) heading to be displayed along with the data
@@ -140,7 +140,7 @@ class AbstractBackend(abc.ABC):
         Return False if the backend cannot
         be used for a specific combination(s)
         of corpora (primary corp + optional aligned ones).
-        By default the method returns True for all.
+        By default, the method returns True for all.
         """
         return True
 
