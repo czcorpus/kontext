@@ -324,16 +324,20 @@ if __name__ == '__main__':
     if args.debugpy:
         if '_DEBUGPY_RUNNING' not in os.environ:
             import debugpy
-            debugpy.listen(('0.0.0.0', 5678))
+            debugpy.listen((args.address, 5678))
             os.environ['_DEBUGPY_RUNNING'] = '1'
 
     try:
         setproctitle(f'sanic-kontext [{CONF_PATH}][master]')
         if args.debugmode and not settings.is_debug_mode():
             settings.activate_debug()
+        if settings.is_debug_mode():
+            application.config.INSPECTOR = True
+            application.config.INSPECTOR_HOST = args.address
+            application.config.INSPECTOR_PORT = 6457
         application.run(
             host=args.address, port=int(args.port_num), workers=args.workers, debug=settings.is_debug_mode(),
-            access_log=False)
+            access_log=False, auto_reload=args.use_reloader)
     finally:
         if log_listener:
             log_listener.stop()
