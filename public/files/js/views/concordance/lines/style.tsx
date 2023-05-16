@@ -183,5 +183,10 @@ export const ConcLines = styled.table`
         }
     }
 
+    .warning {
+        height: 1em;
+        margin-right: 0.1em;
+    }
+
 `;
 

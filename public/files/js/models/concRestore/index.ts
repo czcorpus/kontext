@@ -18,10 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Dict } from 'cnc-tskit';
 import { IActionDispatcher, StatelessModel } from 'kombo';
 import { PageModel } from '../../app/page';
-import { ConcServerArgs } from '../concordance/common';
 import { Actions } from './actions';
 import { Actions as ConcActions } from '../concordance/actions';
 

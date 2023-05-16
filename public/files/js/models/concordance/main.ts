@@ -160,6 +160,8 @@ export interface ConcordanceModelState {
 
     supportsTokenConnect:boolean;
 
+    supportsKwicRowConnect:boolean;
+
     emptyRefValPlaceholder:string;
 
     saveFormVisible:boolean;
@@ -177,6 +179,10 @@ export interface ConcordanceModelState {
     forceScroll:number|null;
 
     audioPlayerStatus:PlayerStatus;
+
+    mergedAttrs:Array<[string, number]>;
+
+    mergedCtxAttrs:Array<[string, number]>;
 }
 
 
@@ -224,7 +230,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 concSize: lineViewProps.concSummary.concSize,
                 concId: layoutModel.getConf<string>('concPersistenceOpId'),
                 baseViewAttr: lineViewProps.baseViewAttr,
-                lines: importLines(initialData, viewAttrs.indexOf(lineViewProps.baseViewAttr) - 1),
+                lines: importLines(initialData, viewAttrs.indexOf(lineViewProps.baseViewAttr) - 1, lineViewProps.mergedAttrs, lineViewProps.mergedCtxAttrs),
                 highlightWordsStore: {},
                 highlightItems: [],
                 highlightConcId: null,
@@ -238,6 +244,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 playerAttachedChunk: '',
                 showAnonymousUserWarn: lineViewProps.anonymousUser,
                 supportsTokenConnect: lineViewProps.supportsTokenConnect,
+                supportsKwicRowConnect: lineViewProps.supportsKwicRowConnect,
                 emptyRefValPlaceholder: '\u2014',
                 lineGroupIds: attachColorsToIds(
                     layoutModel.getConf<Array<number>>('LinesGroupsNumbers'),
@@ -250,7 +257,9 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 lineSelOptionsVisible: false,
                 syntaxViewVisible: false,
                 forceScroll: null,
-                audioPlayerStatus: null
+                audioPlayerStatus: null,
+                mergedAttrs: lineViewProps.mergedAttrs,
+                mergedCtxAttrs: lineViewProps.mergedAttrs,
             }
         );
         this.layoutModel = layoutModel;
@@ -1183,7 +1192,9 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
     private importData(state:ConcordanceModelState, data:AjaxConcResponse):void {
         state.lines = importLines(
             data.Lines,
-            this.getViewAttrs().indexOf(state.baseViewAttr) - 1
+            this.getViewAttrs().indexOf(state.baseViewAttr) - 1,
+            state.mergedAttrs,
+            state.mergedCtxAttrs,
         );
         state.kwicCorps = data.KWICCorps;
         state.numItemsInLockedGroups = data.num_lines_in_groups;
@@ -1191,6 +1202,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         state.unfinishedCalculation = !!data.running_calc;
         state.lineGroupIds = [];
         state.concId = data.conc_persistence_op_id;
+        state.mergedAttrs = data.merged_attrs;
+        state.mergedCtxAttrs = data.merged_ctxattrs;
     }
 
     private changeGroupNaming(state:ConcordanceModelState, data:ConcGroupChangePayload):void {

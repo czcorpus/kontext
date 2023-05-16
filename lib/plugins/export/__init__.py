@@ -31,6 +31,7 @@ from action.model.wordlist import WordlistActionModel
 from babel import Locale
 from bgcalc.coll_calc import CalculateCollsResult
 from bgcalc.pquery.storage import PqueryDataLine
+from kwiclib import AttrRole
 from kwiclib.common import KwicPageData
 from views.colls import SavecollArgs
 from views.concordance import SaveConcArgs
@@ -60,8 +61,8 @@ class AbstractConcExportMixin(object):
             else:
                 ans.append([str(item['str']).strip()])
             if add_tail:
-                for tp in item.get('tail_posattrs', []):
-                    ans[-1].append(tp)
+                for tp in item.get('posattrs', []):
+                    ans[-1].append(tp['value'])  # TODO take into account attr role
         return ' '.join('/'.join(x) for x in ans).strip()
 
     def _process_lang(

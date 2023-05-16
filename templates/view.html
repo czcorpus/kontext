@@ -92,6 +92,8 @@ __conf.UseRichQueryEditor = {{ rich_query_editor|default(false)|to_json }};
 __conf.QSEnabled = {{ qs_enabled|to_json }};
 __conf.QuickSaveRowLimit = {{ quick_save_row_limit|to_json }};
 __conf.SimpleQueryDefaultAttrs = {{ simple_query_default_attrs|to_json }};
+__conf.MergedAttrs = {{ merged_attrs|to_json }};
+__conf.MergedCtxAttrs = {{ merged_ctxattrs|to_json }};
 {%if running_calc %}
 __conf.numLines = {{ Lines|length }};
 __conf.Unfinished = true;

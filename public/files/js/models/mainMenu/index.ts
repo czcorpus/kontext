@@ -27,7 +27,6 @@ import { Actions } from './actions';
 import { Actions as ConcActions } from '../concordance/actions';
 import { Actions as GeneralOptsActions } from '../options/actions';
 import { Actions as GlobalActions } from '../common/actions';
-import { Actions as QueryActions } from '../query/actions';
 import { Actions as FreqActions } from '../freqs/regular/actions';
 import { ConcServerArgs } from '../concordance/common';
 import { FreqResultViews } from '../freqs/common';

@@ -528,7 +528,7 @@ class ConcActionModel(CorpusActionModel):
         return dict(
             Lines=[], CorporaColumns=[], KWICCorps=[], pagination=pagination, Sort_idx=[],
             concsize=0, fullsize=0, sampled_size=0, result_relative_freq=0, result_arf=0,
-            result_shuffled=False, finished=True)
+            result_shuffled=False, finished=True, merged_attrs=[], merged_ctxattrs=[])
 
     def apply_linegroups(self, conc: KConc):
         """

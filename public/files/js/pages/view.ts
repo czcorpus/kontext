@@ -81,6 +81,7 @@ import tagHelperPlugin from 'plugins/taghelper/init';
 import syntaxViewerInit from 'plugins/syntaxViewer/init';
 import tokenConnectInit from 'plugins/tokenConnect/init';
 import kwicConnectInit from 'plugins/kwicConnect/init';
+import kwicRowConnectInit from 'plugins/kwicRowConnect/init';
 import { importInitialTTData, TTInitialData } from '../models/textTypes/common';
 import { QueryType } from '../models/query/query';
 import { HitReloader } from '../models/concordance/concStatus';
@@ -91,6 +92,7 @@ import { DispersionResultModel } from '../models/dispersion/result';
 import { AnyTTSelection } from '../types/textTypes';
 import { ShuffleModel } from '../models/query/shuffle';
 import { ActionUrlCodes } from '../app/navigation/interpage';
+import { KwicRowConnectModel } from '../plugins/defaultKwicRowConnect/model';
 
 
 export class QueryModels {
@@ -978,9 +980,13 @@ export class ViewPage {
             supportsSyntaxView: this.layoutModel.pluginTypeIsActive(
                 PluginName.SYNTAX_VIEWER),
             supportsTokenConnect: tokenConnect.providesAnyTokenInfo(),
+            supportsKwicRowConnect: this.layoutModel.pluginTypeIsActive(
+                PluginName.KWIC_ROW_CONNECT),
             anonymousUserConcLoginPrompt: this.layoutModel.getConf<boolean>(
                 'anonymousUserConcLoginPrompt'
-            )
+            ),
+            mergedAttrs: this.layoutModel.getConf<Array<[string, number]>>('MergedAttrs'),
+            mergedCtxAttrs: this.layoutModel.getConf<Array<[string, number]>>('MergedCtxAttrs'),
         };
 
         this.viewModels = new ViewPageModels();
@@ -1168,6 +1174,11 @@ export class ViewPage {
             this.layoutModel.registerPageLeaveVoters(
                 this.viewModels.lineSelectionModel
             );
+
+            const kwicRowConnect = this.layoutModel.pluginTypeIsActive(PluginName.KWIC_ROW_CONNECT) ?
+                kwicRowConnectInit(
+                    this.layoutModel.pluginApi()
+                ) : null;
 
             this.renderLines(
                 {
