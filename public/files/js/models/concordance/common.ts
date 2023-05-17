@@ -26,7 +26,7 @@ import { DataSaveFormat } from '../../app/navigation/save';
 
 export interface ConcToken {
     className:string;
-    text:Array<Token>; // array => multiple words per 'pseudo-position'
+    text:Token;
     posAttrs:Array<string>;
     displayPosAttrs:Array<string>;
     description?:Array<string>;
@@ -69,11 +69,8 @@ export interface KWICSection {
 export function getKwicSectionToken(ks:KWICSection, idx:number):Token {
     return pipe(
         [...ks.left, ...ks.kwic, ...ks.right],
-        List.flatMap(item => item.text),
-        List.find(
-            x => x.idx === idx,
-        )
-    );
+        List.find(x => x.text.idx === idx),
+    ).text;
 }
 
 export interface Token {
@@ -113,7 +110,7 @@ export enum PosAttrRole {
 export class TextChunk {
     id:string;
     className:string;
-    text:Array<Token>; // array => multiple words per 'pseudo-position'
+    text:Token;
     openLink:{speechPath:string};
     closeLink:{speechPath:string};
     continued:boolean;

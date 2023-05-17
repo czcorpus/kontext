@@ -43,7 +43,7 @@ export class ConclineSectionOps {
             leftOffsets: pipe(
                 left,
                 List.foldr(
-                    (r, v) => [(v.className ? 0 : v.text.length) + (r.length > 0 ? r[0] : 0)].concat(r), []
+                    (r, v) => [(v.className ? 0 : 1) + (r.length > 0 ? r[0] : 0)].concat(r), []
                 )
             ),
             kwic,
@@ -51,7 +51,7 @@ export class ConclineSectionOps {
             rightOffsets: pipe(
                 right,
                 List.foldr(
-                    (r, v) => r.concat((v.className ? 0 : v.text.length) + (r.length > 0 ? r[r.length - 1] : 0)), [1 + (kwicLength > 0 ? kwicLength - 1 : 0)]),
+                    (r, v) => r.concat((v.className ? 0 : 1) + (r.length > 0 ? r[r.length - 1] : 0)), [1 + (kwicLength > 0 ? kwicLength - 1 : 0)]),
                 List.slice(0, -1)
             ),
             highlightMLPositions: refMlPositions ?
