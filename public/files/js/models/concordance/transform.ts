@@ -44,6 +44,7 @@ function importTextChunk(item:ServerTextChunk, mainAttrIdx:number, id:string, st
         undefined;
 
     const displayPosAttrs = List.filter(
+        // tslint:disable-next-line:no-bitwise
         (_, i) => i+1 > roles.length-1 ? false : (roles[i+1][1] & PosAttrRole.USER) === PosAttrRole.USER,
         item.posattrs || [],
     );
@@ -51,10 +52,7 @@ function importTextChunk(item:ServerTextChunk, mainAttrIdx:number, id:string, st
         return {
             id,
             className: item.class,
-            text: List.map(
-                (s, i) => ({s, h: false, idx: startWlIdx + i}),
-                item.str.trim().split(' ')
-            ),
+            text: {s: item.str, h: false, idx: startWlIdx},
             openLink: item.open_link ? {speechPath: item.open_link.speech_path} : undefined,
             closeLink: item.close_link ? {speechPath: item.close_link.speech_path} : undefined,
             continued: item.continued,
@@ -70,7 +68,7 @@ function importTextChunk(item:ServerTextChunk, mainAttrIdx:number, id:string, st
         return {
             id,
             className: item.class,
-            text: [{s: text, h: false, idx: startWlIdx}],
+            text: {s: text, h: false, idx: startWlIdx},
             openLink: item.open_link ? {speechPath: item.open_link.speech_path} : undefined,
             closeLink: item.close_link ? {speechPath: item.close_link.speech_path} : undefined,
             continued: item.continued,
@@ -84,10 +82,10 @@ function importTextChunk(item:ServerTextChunk, mainAttrIdx:number, id:string, st
 
 
 function nextWithinLineIdx(tc:Array<TextChunk>, currWlIdx:number) {
-    if (List.empty(tc) || List.empty(List.last(tc).text)) {
+    if (List.empty(tc) || !List.last(tc).text) {
         return currWlIdx + 1;
     }
-    return List.last(List.last(tc).text).idx + 1;
+    return List.last(tc).text.idx + 1;
 }
 
 
@@ -224,7 +222,7 @@ export function highlightConcLineTokens(
 ):KWICSection {
     const tokens = pipe(
         [...concLine.left, ...concLine.kwic, ...concLine.right],
-        List.flatMap(x => x.text),
+        List.map(x => x.text),
         List.map(token => {
             token.h = false;
             return token;

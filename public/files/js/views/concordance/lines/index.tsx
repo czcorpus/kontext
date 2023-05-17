@@ -93,7 +93,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
     }
 
 
-    function renderTokens(data:Array<Token>):JSX.Element {
+    function renderTokens(data:Token):JSX.Element {
 
         const handleMouseover = ({attr, s}:{attr:string; s:string}) => () => {
             dispatcher.dispatch(
@@ -115,20 +115,15 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             );
         }
 
-        return <>
-        {pipe(
-            data,
-            List.map(({s, h, kcConnection}, i) => h ?
-                <em key={i} className="highlight"
-                        onMouseOver={handleMouseover(kcConnection)}
-                        onMouseOut={handleMouseout(kcConnection)}>
-                    {s}
-                </em> :
-                s
-            ),
-            List.join<string|JSX.Element>(_ => ' ')
-        )}
-        </>;
+        return <>{
+            data.h ?
+            <em className="highlight"
+                    onMouseOver={handleMouseover(data.kcConnection)}
+                    onMouseOut={handleMouseout(data.kcConnection)}>
+                {data.s}
+            </em> :
+            data.s
+        }</>;
     }
 
     // ------------------------- <ConcColHideSwitch /> ---------------------------
@@ -299,17 +294,14 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         const hasClass = (cls:string) => {
             return props.data.className.indexOf(cls) > -1;
         };
-
-        const mkTokenId = (i:number) => {
-            return props.kwicTokenNum + props.chunkOffset + i;
-        };
+        const tokenId = props.kwicTokenNum + props.chunkOffset
 
         const title = getViewModeTitle(props.attrViewMode, false, props.supportsTokenConnect, props.data.displayPosAttrs);
         if (props.data.displayPosAttrs.length > 0) {
             if (hasClass('coll') && !hasClass('col0')) {
                 return(
                     <em className={`${props.data.className} ${getViewModeClass(props.attrViewMode)}`} title={title}>
-                        <Token tokenId={mkTokenId(0)} data={props.data}
+                        <Token tokenId={tokenId} data={props.data}
                                 viewMode={props.attrViewMode} isKwic={false} supportsTokenConnect={props.supportsTokenConnect}
                             />
                     </em>
@@ -318,7 +310,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             } else {
                 return (
                     <span className={`${props.data.className} ${getViewModeClass(props.attrViewMode)}`} title={title}>
-                        <Token tokenId={mkTokenId(0)} data={props.data}
+                        <Token tokenId={tokenId} data={props.data}
                                 viewMode={props.attrViewMode} isKwic={false} supportsTokenConnect={props.supportsTokenConnect}
                             />
                     </span>
@@ -326,32 +318,13 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             }
 
         } else {
-            return (<>{
-                pipe(
-                    props.data.text,
-                    List.map(
-                        (token) => ({
-                            text: [token],
-                            className: props.data.className,
-                            tailPosAttrs: [],
-                            posAttrs: props.data.posAttrs,
-                            displayPosAttrs: props.data.displayPosAttrs,
-                        })
-                    ),
-                    List.map(
-                        (data, i) => (
-                            <React.Fragment key={`${props.position}:${props.idx}:${i}`}>
-                                {i > 0 ? ' ' : ''}
-                                <span className={getViewModeClass(props.attrViewMode)}>
-                                    <Token tokenId={mkTokenId(i)} data={data} viewMode={props.attrViewMode} isKwic={false}
-                                            supportsTokenConnect={props.supportsTokenConnect}
-                                        />
-                                </span>
-                            </React.Fragment>
-                        )
-                    )
-                )
-            }</>);
+            return <React.Fragment key={`${props.position}:${props.idx}`}>
+                <span className={getViewModeClass(props.attrViewMode)}>
+                    <Token tokenId={tokenId} data={props.data} viewMode={props.attrViewMode} isKwic={false}
+                            supportsTokenConnect={props.supportsTokenConnect}
+                        />
+                </span>
+            </React.Fragment>;
         }
     };
 
@@ -743,8 +716,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         _renderTextSimple(corpusOutput:KWICSection):string {
             return pipe(
                 [...corpusOutput.left, ...corpusOutput.kwic, ...corpusOutput.right],
-                List.flatMap(v => v.text),
-                List.map(v => v.s),
+                List.map(v => v.text.s),
                 x => x.join(' ')
             );
         }
@@ -878,7 +850,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             const left = List.map(
                 token => {
                     const attrs = {};
-                    attrs[props.baseViewAttr] = List.map(v => v.s, token.text);
+                    attrs[props.baseViewAttr] = token.text.s
                     List.forEach((a, i) => {
                         attrs[a[0]] = token.posAttrs[i];
                     }, props.mergedCtxAttrs.slice(1));
@@ -889,7 +861,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             const kwic = List.map(
                 token => {
                     const attrs = {};
-                    attrs[props.baseViewAttr] = List.map(v => v.s, token.text);
+                    attrs[props.baseViewAttr] = token.text.s
                     List.forEach((a, i) => {
                         attrs[a[0]] = token.posAttrs[i];
                     }, props.mergedAttrs.slice(1));
@@ -900,7 +872,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             const right = List.map(
                 token => {
                     const attrs = {};
-                    attrs[props.baseViewAttr] = List.map(v => v.s, token.text);
+                    attrs[props.baseViewAttr] = token.text.s
                     List.forEach((a, i) => {
                         attrs[a[0]] = token.posAttrs[i];
                     }, props.mergedCtxAttrs.slice(1));
