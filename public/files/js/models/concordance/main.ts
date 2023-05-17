@@ -997,7 +997,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         const pageNum:number = action === 'customPage' ?
             pageNumber : this.state.pagination[action];
         if (!this.pageNumIsValid(pageNum) || !this.pageIsInRange(pageNum)) {
-            return throwError(new Error(this.layoutModel.translate(
+            return throwError(() => new Error(this.layoutModel.translate(
                 'concview__invalid_page_num_err')));
         }
 
@@ -1193,8 +1193,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         state.lines = importLines(
             data.Lines,
             this.getViewAttrs().indexOf(state.baseViewAttr) - 1,
-            state.mergedAttrs,
-            state.mergedCtxAttrs,
+            data.merged_attrs,
+            data.merged_ctxattrs,
         );
         state.kwicCorps = data.KWICCorps;
         state.numItemsInLockedGroups = data.num_lines_in_groups;
