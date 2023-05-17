@@ -37,6 +37,18 @@ def pair(data: Union[Iterable[T], Iterator[T]]) -> Generator[Tuple[T, T], None, 
             break
 
 
+def split_chunk(pseudo_token: Tuple[str, str]):
+    """
+    Because Manatee sometimes (based on selected attributes
+    to be displayed) produces chunks like
+    ('This is a single string', '{class3}')
+    ... and we prefer items split like this:
+    ('This', '{class3}'), ('is', '{class3}'), ... etc.
+    """
+    pt, cls = pseudo_token
+    return [(t, cls) for t in re.split(r'\s+', pt)]
+
+
 def tokens2strclass(tokens):
     """
     Converts internal data structure produced by KwicLine and CorpRegion containing tokens and
@@ -48,8 +60,9 @@ def tokens2strclass(tokens):
     returns:
     a list of dicts {'str': '[token]', 'class': '[classes]'}
     """
+    pairs = [y for x in [split_chunk(p) for p in pair(tokens)] for y in x]
     return [{'str': str_token, 'class': class_token.strip('{}')}
-            for str_token, class_token in pair(tokens)]
+            for str_token, class_token in pairs]
 
 
 def lngrp_sortcrit(lab: str, separator: str = '.') -> SortCritType:
