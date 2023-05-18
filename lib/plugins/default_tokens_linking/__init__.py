@@ -16,17 +16,17 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import plugins
-from plugin_types.corparch import AbstractCorporaArchive
-from plugin_types.tokens_linking import AbstractTokensLinking
-from plugin_types.token_connect import AbstractBackend, AbstractFrontend
-from plugins.default_token_connect import setup_providers
 from action.control import http_action
-from action.model.concordance import ConcActionModel
 from action.krequest import KRequest
+from action.model.concordance import ConcActionModel
 from action.response import KResponse
+from plugin_types.corparch import AbstractCorporaArchive
+from plugin_types.token_connect import AbstractBackend, AbstractFrontend
+from plugin_types.tokens_linking import AbstractTokensLinking
+from plugins.default_token_connect import setup_providers
 from sanic.blueprints import Blueprint
 from util import as_async
 
@@ -38,9 +38,10 @@ bp = Blueprint('default_tokens_linking')
 async def fetch_token_detail(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     return dict(data=req.json)
 
+
 class DefaultTokensLinking(AbstractTokensLinking):
 
-    def __init__(self, providers: Dict[str, Tuple[AbstractBackend, AbstractFrontend]], corparch: AbstractCorporaArchive):
+    def __init__(self, providers: Dict[str, Tuple[AbstractBackend, Optional[AbstractFrontend]]], corparch: AbstractCorporaArchive):
         self._providers = providers
         self._corparch = corparch
 

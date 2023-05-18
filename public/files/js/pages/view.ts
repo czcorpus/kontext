@@ -92,7 +92,6 @@ import { DispersionResultModel } from '../models/dispersion/result';
 import { AnyTTSelection } from '../types/textTypes';
 import { ShuffleModel } from '../models/query/shuffle';
 import { ActionUrlCodes } from '../app/navigation/interpage';
-import { TokensLinkingModel } from '../plugins/defaultTokensLinking/model';
 
 
 export class QueryModels {

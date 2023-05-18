@@ -33,7 +33,7 @@ Required XML configuration: please see config.rng
 """
 
 import logging
-from typing import Any, Dict, Sequence, Tuple
+from typing import Any, Dict, Optional, Sequence, Tuple
 
 import manatee
 import plugins
@@ -133,7 +133,7 @@ def add_structattr_support(corp: KCorpus, attrs, token_id):
 
 class DefaultTokenConnect(AbstractTokenConnect):
 
-    def __init__(self, providers: Dict[str, Tuple[AbstractBackend, AbstractFrontend]], corparch: AbstractCorporaArchive):
+    def __init__(self, providers: Dict[str, Tuple[AbstractBackend, Optional[AbstractFrontend]]], corparch: AbstractCorporaArchive):
         self._corparch = corparch
         self._providers = providers
 
@@ -181,7 +181,10 @@ class DefaultTokenConnect(AbstractTokenConnect):
                     cookies[cname] = plugin_ctx.cookies[cname]
                 data, status = await backend.fetch(
                     corpora, corpus, token_id, num_tokens, args, lang, plugin_ctx.user_is_anonymous, context, cookies)
-                ans.append(frontend.export_data(data, status, lang, is_kwic_view).to_dict())
+                if frontend is not None:
+                    ans.append(frontend.export_data(data, status, lang, is_kwic_view).to_dict())
+                else:
+                    ans.append(data)
             except TypeError as ex:
                 logging.getLogger(__name__).error('TokenConnect backend error: {0}'.format(ex))
                 err_frontend = ErrorFrontend(dict(heading=frontend.headings))
@@ -207,7 +210,7 @@ class DefaultTokenConnect(AbstractTokenConnect):
         return bp
 
 
-def init_provider(conf: Dict[str, Any], ident: str, db: KeyValueStorage, ttl: int) -> Tuple[AbstractBackend, AbstractFrontend]:
+def init_provider(conf: Dict[str, Any], ident: str, db: KeyValueStorage, ttl: int) -> Tuple[AbstractBackend, Optional[AbstractFrontend]]:
     """
     Create and return both backend and frontend.
 
@@ -218,14 +221,17 @@ def init_provider(conf: Dict[str, Any], ident: str, db: KeyValueStorage, ttl: in
     a 2-tuple (backend instance, frontend instance)
     """
     backend_class = find_implementation(conf['backend'])
-    frontend_class = find_implementation(conf['frontend'])
+    frontend_path = conf.get('frontend', None)
+    if frontend_path is None:
+        return backend_class(conf['conf'], ident, db, ttl), None
+    frontend_class = find_implementation(frontend_path)
     return backend_class(conf['conf'], ident, db, ttl), frontend_class(conf)
 
 
-def setup_providers(plg_conf: Dict[str, Any], db: KeyValueStorage) -> Dict[str, Tuple[AbstractBackend, AbstractFrontend]]:
+def setup_providers(plg_conf: Dict[str, Any], db: KeyValueStorage) -> Dict[str, Tuple[AbstractBackend, Optional[AbstractFrontend]]]:
     with open(plg_conf['providers_conf'], 'rb') as fr:
         providers_conf = json.load(fr)
-    providers: Dict[str, Tuple[AbstractBackend, AbstractFrontend]] = {
+    providers: Dict[str, Tuple[AbstractBackend, Optional[AbstractFrontend]]] = {
         b['ident']: init_provider(b, b['ident'], db, plg_conf['ttl'])
         for b in providers_conf
     }
