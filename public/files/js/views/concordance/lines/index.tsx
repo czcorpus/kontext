@@ -361,10 +361,20 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                 if (tokenId !== null) {
                     tokenId = parseInt(tokenId);
                     if (props.supportsTokenConnect) {
-                        props.tokenConnectClickHandler(props.corpname, props.lineIdx, -1, tokenId);
+                        props.tokenConnectClickHandler(
+                            props.corpname,
+                            tokenId,
+                            props.kwicLength,
+                            props.lineIdx
+                        );
                     }
                     if (props.tokensLinkingClickHandler) {
-                        props.tokensLinkingClickHandler(props.corpname, tokenId, props.lineIdx, 1);
+                        props.tokensLinkingClickHandler(
+                            props.corpname,
+                            tokenId,
+                            props.lineIdx,
+                            1
+                        );
                     }
                 }
             }
@@ -597,15 +607,15 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             this._refsDetailClickHandler = this._refsDetailClickHandler.bind(this);
         }
 
-        _detailClickHandler(corpusId, tokenNumber, kwicLength, lineIdx) {
+        _detailClickHandler(corpusId:string, tokenNumber:number, kwicLength:number, lineIdx:number) {
             if (this.props.viewMode === 'speech') {
                 dispatcher.dispatch<typeof Actions.ShowSpeechDetail>({
                     name: Actions.ShowSpeechDetail.name,
                     payload: {
-                        corpusId: corpusId,
-                        tokenNumber: tokenNumber,
-                        kwicLength: kwicLength,
-                        lineIdx: lineIdx
+                        corpusId,
+                        tokenNumber,
+                        kwicLength,
+                        lineIdx
                     }
                 });
 
@@ -614,9 +624,9 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                     dispatcher.dispatch<typeof Actions.ShowTokenDetail>({
                         name: Actions.ShowTokenDetail.name,
                         payload: {
-                            corpusId: corpusId,
-                            tokenNumber: tokenNumber,
-                            lineIdx: lineIdx
+                            corpusId,
+                            tokenNumber,
+                            lineIdx
                         }
                     });
 
@@ -624,10 +634,10 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                     dispatcher.dispatch<typeof Actions.ShowKwicDetail>({
                         name: Actions.ShowKwicDetail.name,
                         payload: {
-                            corpusId: corpusId,
-                            tokenNumber: tokenNumber,
-                            kwicLength: kwicLength,
-                            lineIdx: lineIdx
+                            corpusId,
+                            tokenNumber,
+                            kwicLength,
+                            lineIdx
                         }
                     });
                 }
@@ -645,7 +655,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         _renderTextParMode(corpname, corpusOutput:KWICSection) {
             const hasKwic = this.props.corpsWithKwic.indexOf(corpname) > -1;
             const handleTokenClick = (evt) => this._handleNonKwicTokenClick(
-                corpname, this.props.lineIdx, Number(evt.target.getAttribute('data-tokenid'))
+                corpname, this.props.lineIdx, parseInt(evt.target.getAttribute('data-tokenid'))
             );
 
             return (
@@ -846,11 +856,21 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         ) => {
             const corpIndex = List.findIndex(col => col.n === corpusId, props.corporaColumns);
             const kwicNumber = props.lines[lineIdx].languages[corpIndex].tokenNumber;
+            const tokenIdx = tokenNumber - kwicNumber + props.lines[lineIdx].languages[corpIndex].left.length;
+            const numLeftTokens = List.size(props.lines[lineIdx].languages[corpIndex].left);
+            const numKwicTokens = List.size(props.lines[lineIdx].languages[corpIndex].kwic);
+            const numRightTokens = List.size(props.lines[lineIdx].languages[corpIndex].right);
+            const calculatedTokenIds = List.range(
+                tokenNumber - tokenIdx,
+                tokenNumber - tokenIdx + numLeftTokens + numKwicTokens + numRightTokens
+            );
 
             const left = List.map(
-                token => {
-                    const attrs = {};
-                    attrs[props.baseViewAttr] = token.text.s
+                (token, i) => {
+                    const attrs = {
+                        [props.baseViewAttr]: token.text.s,
+                        __token_id__: calculatedTokenIds[i]
+                    };
                     List.forEach((a, i) => {
                         attrs[a[0]] = token.posAttrs[i];
                     }, props.mergedCtxAttrs.slice(1));
@@ -859,9 +879,11 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                 props.lines[lineIdx].languages[corpIndex].left
             );
             const kwic = List.map(
-                token => {
-                    const attrs = {};
-                    attrs[props.baseViewAttr] = token.text.s
+                (token, i) => {
+                    const attrs = {
+                        [props.baseViewAttr]: token.text.s,
+                        __token_id__: calculatedTokenIds[i + numLeftTokens]
+                    };
                     List.forEach((a, i) => {
                         attrs[a[0]] = token.posAttrs[i];
                     }, props.mergedAttrs.slice(1));
@@ -870,9 +892,11 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                 props.lines[lineIdx].languages[corpIndex].kwic
             );
             const right = List.map(
-                token => {
-                    const attrs = {};
-                    attrs[props.baseViewAttr] = token.text.s
+                (token, i) => {
+                    const attrs = {
+                        [props.baseViewAttr]: token.text.s,
+                        __token_id__: calculatedTokenIds[i + numLeftTokens + numKwicTokens]
+                    };
                     List.forEach((a, i) => {
                         attrs[a[0]] = token.posAttrs[i];
                     }, props.mergedCtxAttrs.slice(1));
@@ -885,8 +909,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                 TokensLinkingActions.FetchInfo,
                 {
                     corpusId,
-                    tokenIdx: tokenNumber - kwicNumber + left.length,
-                    tokenLength: tokenLength,
+                    tokenIdx,
+                    tokenLength,
                     tokens: [...left, ...kwic, ...right],
                 },
                 undefined

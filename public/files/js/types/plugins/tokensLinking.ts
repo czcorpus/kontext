@@ -27,7 +27,10 @@ import { BasePlugin, IPluginApi } from './common';
 export interface IPlugin extends BasePlugin {
 }
 
-type AttrSet = {[attr:string]:string};
+type AttrSet = {
+    __token_id__:number;
+    [attr:string]:string|number;
+};
 
 export class Actions {
 
