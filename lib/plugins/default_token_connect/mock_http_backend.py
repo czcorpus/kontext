@@ -27,10 +27,6 @@ from plugins.default_token_connect.backends import cached
 
 class MockHTTPBackend(AbstractBackend):
 
-    def __init__(self, conf, ident):
-        super(MockHTTPBackend, self).__init__(ident)
-        self._conf = conf
-
     @cached
     def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None, cookies=None):
         lemma = query_args.get('lemma', None)
