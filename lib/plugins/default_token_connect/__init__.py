@@ -37,7 +37,6 @@ from typing import Any, Dict, Optional, Sequence, Tuple
 
 import manatee
 import plugins
-import ujson as json
 from action.control import http_action
 from action.krequest import KRequest
 from action.model.concordance import ConcActionModel
@@ -45,9 +44,9 @@ from action.response import KResponse
 from corplib.corpus import KCorpus
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.general_storage import KeyValueStorage
+from plugin_types.providers import setup_providers
 from plugin_types.token_connect import (
-    AbstractBackend, AbstractFrontend, AbstractTokenConnect,
-    find_implementation)
+    AbstractBackend, AbstractFrontend, AbstractTokenConnect)
 from plugins.default_token_connect.frontends import ErrorFrontend
 from sanic.blueprints import Blueprint
 
@@ -210,36 +209,9 @@ class DefaultTokenConnect(AbstractTokenConnect):
         return bp
 
 
-def init_provider(conf: Dict[str, Any], ident: str, db: KeyValueStorage, ttl: int) -> Tuple[AbstractBackend, Optional[AbstractFrontend]]:
-    """
-    Create and return both backend and frontend.
-
-    arguments:
-    conf -- a dict representing plug-in detailed configuration
-
-    returns:
-    a 2-tuple (backend instance, frontend instance)
-    """
-    backend_class = find_implementation(conf['backend'])
-    frontend_path = conf.get('frontend', None)
-    if frontend_path is None:
-        return backend_class(conf['conf'], ident, db, ttl), None
-    frontend_class = find_implementation(frontend_path)
-    return backend_class(conf['conf'], ident, db, ttl), frontend_class(conf)
-
-
-def setup_providers(plg_conf: Dict[str, Any], db: KeyValueStorage) -> Dict[str, Tuple[AbstractBackend, Optional[AbstractFrontend]]]:
-    with open(plg_conf['providers_conf'], 'rb') as fr:
-        providers_conf = json.load(fr)
-    providers: Dict[str, Tuple[AbstractBackend, Optional[AbstractFrontend]]] = {
-        b['ident']: init_provider(b, b['ident'], db, plg_conf['ttl'])
-        for b in providers_conf
-    }
-    return providers
-
-
 @plugins.inject(plugins.runtime.CORPARCH, plugins.runtime.DB)
 def create_instance(settings, corparch: AbstractCorporaArchive, db: KeyValueStorage):
-    providers = setup_providers(settings.get('plugins', 'token_connect'), db)
+    providers = setup_providers(settings.get('plugins', 'token_connect'),
+                                db, be_type=AbstractBackend, fe_type=AbstractFrontend)
     tok_det = DefaultTokenConnect(providers, corparch)
     return tok_det

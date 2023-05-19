@@ -154,7 +154,8 @@ class DefaultKwicConnect(AbstractKwicConnect):
 
 @plugins.inject(plugins.runtime.DB, plugins.runtime.CORPARCH)
 def create_instance(settings, db, corparch):
-    providers = setup_providers(settings.get('plugins', 'kwic_connect'), db)
+    providers = setup_providers(settings.get('plugins', 'kwic_connect'),
+                                db, be_type=AbstractBackend, fe_type=AbstractFrontend)
     plg_conf = settings.get('plugins', 'kwic_connect')
     kwic_conn = DefaultKwicConnect(
         providers, corparch, max_kwic_words=plg_conf['max_kwic_words'],

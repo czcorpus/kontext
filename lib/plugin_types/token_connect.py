@@ -45,16 +45,15 @@ add your frontend or backend (depending on what needs to be customized).
 """
 import abc
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Sequence, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Tuple
 
 from corplib.corpus import KCorpus
-from plugin_types.general_storage import KeyValueStorage
+from plugin_types.providers import (
+    AbstractProviderBackend, AbstractProviderFrontend)
 
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
     from action.plugin.ctx import PluginCtx
-
-import importlib
 
 from plugin_types import CorpusDependentPlugin
 
@@ -90,17 +89,12 @@ class Response:
         return self.__dict__
 
 
-class AbstractBackend(abc.ABC):
+class AbstractBackend(AbstractProviderBackend):
     """
     A general description of a service providing
     external data for (word, lemma, pos, corpora, lang)
     combination.
     """
-
-    def __init__(self, provider_id: str, db: KeyValueStorage, ttl: int):
-        self._db: KeyValueStorage = db
-        self._ttl: int = ttl
-        self._provider_id: str = provider_id
 
     def get_required_cookies(self) -> List[str]:
         """
@@ -108,17 +102,6 @@ class AbstractBackend(abc.ABC):
          an internal request to a specified backend service.
         """
         return []
-
-    def get_cache_db(self) -> KeyValueStorage:
-        return self._db
-
-    @property
-    def provider_id(self) -> str:
-        return self._provider_id
-
-    @property
-    def cache_ttl(self) -> int:
-        return self._ttl
 
     @abc.abstractmethod
     async def fetch(
@@ -134,15 +117,6 @@ class AbstractBackend(abc.ABC):
             cookies: Dict[str, str] = None,
     ) -> Tuple[Any, bool]:
         pass
-
-    def enabled_for_corpora(self, corpora: Iterable[str]) -> bool:
-        """
-        Return False if the backend cannot
-        be used for a specific combination(s)
-        of corpora (primary corp + optional aligned ones).
-        By default, the method returns True for all.
-        """
-        return True
 
     def get_required_attrs(self) -> List[str]:
         """
@@ -160,39 +134,13 @@ class AbstractBackend(abc.ABC):
             return self._conf.get('attrs', [])
 
 
-class AbstractFrontend(abc.ABC):
+class AbstractFrontend(AbstractProviderFrontend):
     """
     A general server-side frontend. All the implementations
     should call its 'export_data' method which performs
     some core initialization of Response. Concrete implementation
     then can continue with specific data filling.
     """
-
-    def __init__(self, conf: Dict[str, Any]) -> None:
-        self._headings: Dict[str, str] = conf.get('heading', {})
-        self._notes: Dict[str, str] = conf.get('note', {})
-
-    def _fetch_localized_prop(self, prop: str, lang: str) -> str:
-        value = ''
-        if lang in getattr(self, prop):
-            value = getattr(self, prop)[lang]
-        else:
-            srch_lang = lang.split('_')[0]
-            for k, v in list(getattr(self, prop).items()):
-                v_lang = k.split('_')[0]
-                if v_lang == srch_lang:
-                    value = v
-                    break
-            if not value:
-                value = getattr(self, prop).get('en_US', '')
-        return value
-
-    @property
-    def headings(self) -> Dict[str, str]:
-        return self._headings
-
-    def get_heading(self, lang: str) -> str:
-        return self._fetch_localized_prop('_headings', lang)
 
     def export_data(self, data: Any, status: bool, lang: str, is_kwic_view: bool) -> Response:
         return Response(contents='', renderer='', status=status,
@@ -201,30 +149,9 @@ class AbstractFrontend(abc.ABC):
                         note=self._fetch_localized_prop('_notes', lang))
 
 
-def find_implementation(path: str) -> Any:
-    """
-    Find a class identified by a string.
-    This is used to decode frontends and backends
-    defined in a respective JSON configuration file.
-
-    arguments:
-    path -- a full identifier of a class, e.g. plugins.default_token_connect.backends.Foo
-
-    returns:
-    a class matching the path
-    """
-    try:
-        md, cl = path.rsplit('.', 1)
-    except ValueError:
-        raise ValueError(
-            'Frontend path must contain both package and class name. Found: {0}'.format(path))
-    the_module = importlib.import_module(md)
-    return getattr(the_module, cl)
-
-
 class AbstractTokenConnect(CorpusDependentPlugin):
 
-    def map_providers(self, providers: Sequence[Tuple[str, bool]]) -> Tuple[AbstractBackend, AbstractFrontend, bool]:
+    def map_providers(self, providers: Sequence[Tuple[str, bool]]) -> Tuple[AbstractBackend, Optional[AbstractFrontend], bool]:
         """
         Based on provider selection (identifier and bool specifying whether it should be a KWIC view alternative),
         list all respective backends, frontends and "is kwic view" info into 3-tuples.

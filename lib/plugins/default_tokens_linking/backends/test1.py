@@ -16,11 +16,22 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from typing import Any, Dict, List, Tuple
+
+from corplib.corpus import KCorpus
+
 from .abstract import AbstractBackend
 
 
 class Test1Backend(AbstractBackend):
 
-    def __init__(self, conf, provider_id, db, ttl):
-        super().__init__(provider_id, db, ttl)
-        self._conf = conf
+    async def fetch(
+            self,
+            corpora: List[str],
+            maincorp: KCorpus,
+            token_id: int,
+            row: List[Dict[str, str]],
+            lang: str,
+    ) -> Tuple[Any, bool]:
+        # TODO
+        return None, True

@@ -12,8 +12,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import importlib
-from typing import Any, Dict, List, Tuple
+from typing import Dict, List, Tuple
 
 import plugin_types.corparch
 import plugins
@@ -22,6 +21,7 @@ from action.krequest import KRequest
 from action.model.corpus import CorpusActionModel
 from action.plugin.ctx import PluginCtx
 from action.response import KResponse
+from plugin_types.providers import find_implementation
 from plugin_types.query_suggest import (
     AbstractBackend, AbstractFrontend, AbstractQuerySuggest)
 from sanic.blueprints import Blueprint
@@ -100,27 +100,6 @@ class DefaultQuerySuggest(AbstractQuerySuggest):
         return bp
 
 
-def find_implementation(path: str) -> Any:
-    """
-    Find a class identified by a string.
-    This is used to decode frontends and backends
-    defined in a respective JSON configuration file.
-
-    arguments:
-    path -- a full identifier of a class, e.g. plugins.default_query_suggest.backends.Foo
-
-    returns:
-    a class matching the path
-    """
-    try:
-        md, cl = path.rsplit('.', 1)
-    except ValueError:
-        raise ValueError(
-            'Frontend path must contain both package and class name. Found: {0}'.format(path))
-    the_module = importlib.import_module(md)
-    return getattr(the_module, cl)
-
-
 def init_provider(conf, ident) -> Tuple[AbstractBackend, AbstractFrontend]:
     """
     Create and return both backend and frontend.
@@ -136,16 +115,16 @@ def init_provider(conf, ident) -> Tuple[AbstractBackend, AbstractFrontend]:
     return backend_class(conf['conf'], ident), frontend_class(conf)
 
 
-def setup_providers(plg_conf, db) -> Dict[str, Tuple[AbstractBackend, AbstractFrontend]]:
+def setup_providers(plg_conf) -> Dict[str, Tuple[AbstractBackend, AbstractFrontend]]:
     return dict((prov['ident'], init_provider(prov, prov['ident'])) for prov in plg_conf.get('providers', []))
 
 
-@plugins.inject(plugins.runtime.DB, plugins.runtime.CORPARCH)
-def create_instance(settings, db, corparch):
+@plugins.inject(plugins.runtime.CORPARCH)
+def create_instance(settings, corparch):
     """
     arguments:
     settings -- the settings.py module
     db -- a 'db' plugin implementation
     """
-    conf = setup_providers(settings.get_plugin_custom_conf(plugins.runtime.QUERY_SUGGEST.name), db)
+    conf = setup_providers(settings.get_plugin_custom_conf(plugins.runtime.QUERY_SUGGEST.name))
     return DefaultQuerySuggest(conf, corparch)

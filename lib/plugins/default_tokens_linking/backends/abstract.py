@@ -17,17 +17,21 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import abc
-from typing import Iterable
-from plugin_types.general_storage import KeyValueStorage
+from typing import Any, Dict, List, Tuple
 
-class AbstractBackend(abc.ABC):
-
-    def __init__(self, provider_id: str, db: KeyValueStorage, ttl: int):
-        self._db: KeyValueStorage = db
-        self._ttl: int = ttl
-        self._provider_id: str = provider_id
+from corplib.corpus import KCorpus
+from plugin_types.providers import AbstractProviderBackend
 
 
-    def enabled_for_corpora(self, corpora: Iterable[str]) -> bool:
-        # TODO
-        return True
+class AbstractBackend(AbstractProviderBackend):
+
+    @abc.abstractmethod
+    async def fetch(
+            self,
+            corpora: List[str],
+            maincorp: KCorpus,
+            token_id: int,
+            row: List[Dict[str, str]],
+            lang: str,
+    ) -> Tuple[Any, bool]:
+        pass
