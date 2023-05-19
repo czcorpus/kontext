@@ -33,7 +33,8 @@ class AbstractProviderBackend(abc.ABC):
     combination.
     """
 
-    def __init__(self, provider_id: str, db: KeyValueStorage, ttl: int):
+    def __init__(self, conf: Dict[str, Any], provider_id: str, db: KeyValueStorage, ttl: int):
+        self._conf = conf
         self._db: KeyValueStorage = db
         self._ttl: int = ttl
         self._provider_id: str = provider_id

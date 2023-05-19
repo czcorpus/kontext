@@ -30,10 +30,6 @@ class DisplayLinkBackend(AbstractBackend):
     load any content from the target service in this case.
     """
 
-    def __init__(self, conf, ident, db, ttl):
-        super().__init__(ident, db, ttl)
-        self._conf = conf
-
     def get_required_attrs(self):
         return self._conf.get('posAttrs', [])
 
@@ -65,8 +61,7 @@ class HTTPBackend(AbstractBackend):
     """
 
     def __init__(self, conf, ident, db, ttl):
-        super().__init__(ident, db, ttl)
-        self._conf = conf
+        super().__init__(conf, ident, db, ttl)
         port_str = '' if self._conf.get('port', 80) else ':{}'.format(self._conf.get('port'))
         if self._conf['ssl']:
             self._client = HTTPClient('https://{}{}'.format(self._conf['server'], port_str))
