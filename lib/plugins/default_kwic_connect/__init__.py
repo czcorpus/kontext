@@ -22,7 +22,7 @@ Required XML configuration: please see ./config.rng
 
 import asyncio
 import logging
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import plugins
 from action.control import http_action
@@ -96,7 +96,7 @@ async def get_corpus_kc_providers(amodel: ConcActionModel, req: KRequest, resp: 
 
 class DefaultKwicConnect(AbstractKwicConnect):
 
-    def __init__(self, providers: Dict[str, Tuple[AbstractBackend, AbstractFrontend]], corparch: AbstractCorporaArchive, max_kwic_words: int, load_chunk_size: int):
+    def __init__(self, providers: Dict[str, Tuple[AbstractBackend, Optional[AbstractFrontend]]], corparch: AbstractCorporaArchive, max_kwic_words: int, load_chunk_size: int):
         self._corparch = corparch
         self._max_kwic_words = max_kwic_words
         self._load_chunk_size = load_chunk_size
@@ -141,8 +141,11 @@ class DefaultKwicConnect(AbstractKwicConnect):
                         cookies[cname] = plugin_ctx.cookies[cname]
                     data, status = await backend.fetch(
                         corpora, None, None, 1, dict(lemma=lemma), lang, plugin_ctx.user_is_anonymous, (-1, 1), cookies)
-                    ans.append(frontend.export_data(
-                        data, status, lang, is_kwic_view=False).to_dict())
+                    if frontend is not None:
+                        ans.append(frontend.export_data(
+                            data, status, lang, is_kwic_view=False).to_dict())
+                    else:
+                        ans.append(data)
             except EnvironmentError as ex:
                 logging.getLogger(__name__).error('KwicConnect backend error: {0}'.format(ex))
                 raise ex
@@ -151,7 +154,8 @@ class DefaultKwicConnect(AbstractKwicConnect):
 
 @plugins.inject(plugins.runtime.DB, plugins.runtime.CORPARCH)
 def create_instance(settings, db, corparch):
-    providers = setup_providers(settings.get('plugins', 'kwic_connect'), db)
+    providers = setup_providers(settings.get('plugins', 'kwic_connect'),
+                                db, be_type=AbstractBackend, fe_type=AbstractFrontend)
     plg_conf = settings.get('plugins', 'kwic_connect')
     kwic_conn = DefaultKwicConnect(
         providers, corparch, max_kwic_words=plg_conf['max_kwic_words'],
