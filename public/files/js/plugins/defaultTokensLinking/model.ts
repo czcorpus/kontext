@@ -79,14 +79,13 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                         this.dispatchSideEffect({
                             ...PluginInterfaces.TokensLinking.Actions.FetchInfoDone,
                             payload: {data: resp.data}
-                        })
+                        });
                     },
                     error: error => {
                         this.dispatchSideEffect({
                             ...PluginInterfaces.TokensLinking.Actions.FetchInfoDone,
                             error
-                        })
-
+                        });
                     }
                 });
                 console.log('TokensLinking dispatched', action.payload);

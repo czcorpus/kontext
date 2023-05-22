@@ -32,3 +32,7 @@ class AbstractTokensLinking(CorpusDependentPlugin):
     @abc.abstractmethod
     async def fetch_data(self, plugin_ctx: PluginCtx, provider_ids, corpora, row, lang) -> List[Dict[str, Any]]:
         pass
+
+    @abc.abstractmethod
+    async def get_required_attrs(self, plugin_ctx: PluginCtx, provider_ids, corpora, row, lang) -> List[str]:
+        pass

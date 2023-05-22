@@ -18,20 +18,37 @@
 
 from typing import Any, Dict, List, Tuple
 
-from corplib.corpus import KCorpus
+from plugin_types.general_storage import KeyValueStorage
 
 from .abstract import AbstractBackend
+
+#
+# Example provider conf:
+# {
+#     "attr": "word",
+#     "highlightAttr": "word",
+# }
+#
 
 
 class Test1Backend(AbstractBackend):
 
+    def required_attrs(self) -> List[str]:
+        return [self._conf['attr']]
+
     async def fetch(
             self,
             corpora: List[str],
-            maincorp: KCorpus,
             token_id: int,
+            token_length: int,
             row: List[Dict[str, str]],
             lang: str,
     ) -> Tuple[Any, bool]:
-        # TODO
-        return None, True
+        return (
+            {
+                'provider': self.provider_id,
+                'highlight': row[token_id][self._conf['attr']][0] + '.*',
+                'highlightAttr': self._conf['highlightAttr'],
+            },
+            True,
+        )

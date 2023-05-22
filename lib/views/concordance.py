@@ -327,6 +327,9 @@ async def view_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse, asn
             kwic_args.alignlist = [(await amodel.cf.get_corpus(c)) for c in amodel.args.align if c]
             kwic_args.structs = amodel.get_struct_opts()
             kwic_args.ml_position_filters = ml_position_filters
+            with plugins.runtime.TOKENS_LINKING as tl:
+                kwic_args.internal_attrs = await tl.get_required_attrs(corpus_info.tokens_linking.providers)
+
             kwic = Kwic(amodel.corp, amodel.args.corpname, conc)
 
             out['Sort_idx'] = kwic.get_sort_idx(q=amodel.args.q, pagesize=amodel.args.pagesize)
@@ -495,6 +498,9 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
             kwic_args.labelmap = {}
             kwic_args.alignlist = [(await amodel.cf.get_corpus(c)) for c in amodel.args.align if c]
             kwic_args.structs = amodel.get_struct_opts()
+            corpus_info = await amodel.get_corpus_info(amodel.args.corpname)
+            with plugins.runtime.TOKENS_LINKING as tl:
+                kwic_args.internal_attrs = await tl.get_required_attrs(corpus_info.tokens_linking.providers)
 
             kwic = Kwic(amodel.corp, amodel.args.corpname, conc)
 
@@ -1288,6 +1294,8 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
         kwic_args.leftctx = amodel.args.leftctx
         kwic_args.rightctx = amodel.args.rightctx
         kwic_args.structs = amodel.get_struct_opts()
+        with plugins.runtime.TOKENS_LINKING as tl:
+            kwic_args.internal_attrs = await tl.get_required_attrs(corpus_info.tokens_linking.providers)
 
         data = kwic.kwicpage(kwic_args)
 

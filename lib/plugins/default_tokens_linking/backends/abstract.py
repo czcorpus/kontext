@@ -19,18 +19,21 @@
 import abc
 from typing import Any, Dict, List, Tuple
 
-from corplib.corpus import KCorpus
 from plugin_types.providers import AbstractProviderBackend
 
 
 class AbstractBackend(AbstractProviderBackend):
 
     @abc.abstractmethod
+    def required_attrs(self) -> List[str]:
+        pass
+
+    @abc.abstractmethod
     async def fetch(
             self,
             corpora: List[str],
-            maincorp: KCorpus,
             token_id: int,
+            token_length: int,
             row: List[Dict[str, str]],
             lang: str,
     ) -> Tuple[Any, bool]:
