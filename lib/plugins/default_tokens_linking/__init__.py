@@ -16,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import plugins
 from action.control import http_action
@@ -24,7 +24,6 @@ from action.krequest import KRequest
 from action.model.concordance import ConcActionModel
 from action.response import KResponse
 from plugin_types.corparch import AbstractCorporaArchive
-from plugin_types.providers import AbstractProviderFrontend
 from plugin_types.tokens_linking import AbstractTokensLinking
 from plugins.default_token_connect import setup_providers
 from sanic.blueprints import Blueprint
@@ -38,7 +37,18 @@ bp = Blueprint('default_tokens_linking')
 @bp.route('/fetch_tokens_linking', methods=['POST'])
 @http_action(return_type='json', action_model=ConcActionModel)
 async def fetch_token_detail(amodel: ConcActionModel, req: KRequest, resp: KResponse):
-    return dict(data=req.json)
+    with plugins.runtime.TOKENS_LINKING as tl, plugins.runtime.CORPARCH as ca:
+        corpus_info = await ca.get_corpus_info(amodel.plugin_ctx, amodel.corp.corpname)
+        data = await tl.fetch_data(
+            amodel.plugin_ctx,
+            corpus_info.tokens_linking.providers,
+            [amodel.corp.corpname] + amodel.args.align,
+            req.json['tokenIdx'],
+            req.json['tokenLength'],
+            req.json['tokens'],
+            req.ui_lang,
+        )
+    return dict(data=data)
 
 
 class DefaultTokensLinking(AbstractTokensLinking):
@@ -66,8 +76,15 @@ class DefaultTokensLinking(AbstractTokensLinking):
     def export_actions():
         return bp
 
-    async def fetch_data(self, plugin_ctx, provider_ids, corpora, row, lang) -> List[Dict]:
-        return []
+    async def fetch_data(self, plugin_ctx, providers, corpora, token_id, token_length, tokens, lang) -> List[Dict]:
+        ans = []
+        for backend, _ in self.map_providers(providers):
+            data, status = await backend.fetch(corpora, token_id, token_length, tokens, lang)
+            ans.append(data)
+        return ans
+
+    async def get_required_attrs(self, providers):
+        return list(set(attr for backend, _ in self.map_providers(providers) for attr in backend.required_attrs()))
 
 
 @plugins.inject(plugins.runtime.DB, plugins.runtime.CORPARCH)
