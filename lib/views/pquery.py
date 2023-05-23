@@ -23,6 +23,7 @@ import settings
 from action.argmapping.pquery import PqueryFormArgs
 from action.control import http_action
 from action.argmapping.action import IntOpt
+from action.argmapping import log_mapping
 from action.errors import NotFoundException
 from action.krequest import KRequest
 from action.model.pquery import ParadigmaticQueryActionModel
@@ -98,7 +99,9 @@ async def result(amodel: ParadigmaticQueryActionModel, req: KRequest, resp: KRes
 
 
 @bp.route('/freq_intersection', ['POST'])
-@http_action(return_type='json', mutates_result=True, action_model=ParadigmaticQueryActionModel)
+@http_action(
+    return_type='json', mutates_result=True, action_model=ParadigmaticQueryActionModel,
+    action_log_mapper=log_mapping.pquery)
 async def freq_intersection(amodel: ParadigmaticQueryActionModel, req: KRequest, resp: KResponse):
     """
     Run a paradigmatic query out of existing concordances.
