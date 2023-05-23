@@ -38,7 +38,8 @@ def query_submit(request: KRequest):
             qmcase=q0.get('qmcase'),
             extended_query=any(p for p in parsed if p[1] is True),
             uses_context=request.json.get('fc_lemword') or len(request.json.get('fc_pos', [])),
-            uses_tt=len(request.json.get('text_types', {})) > 0)
+            uses_tt=len(request.json.get('text_types', {})) > 0
+        )
     return {}
 
 
@@ -52,14 +53,24 @@ def view(request: KRequest):
 
 def wordlist(request: KRequest):
     return dict(
-        corpname=request.form.get('corpname'), wlsort=request.form.get('wlsort'),
-        wlnums=request.form.get('wlnums'), wltype=request.form.get('wltype'))
+        corpname=request.form.get('corpname'),
+        wlsort=request.form.get('wlsort'),
+        wlnums=request.form.get('wlnums'),
+        wltype=request.form.get('wltype'))
 
 def keywords(request: KRequest):
     # TODO !!!
     import logging
     logging.getLogger(__name__).warning('keywords log mapping not implemented yet')
     return {}
+
+def pquery(request: KRequest):
+    return dict(
+        corpname=request.json.get('corpname'),
+        pquery_type=request.json.get('pquery_type'),
+        attr=request.json.get('attr'),
+        num_conc=len(request.json.get('conc_ids', []))
+    )
 
 def widectx(request: KRequest):
     attrs = request.args.get('attrs', '').split(',')

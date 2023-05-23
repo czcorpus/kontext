@@ -44,7 +44,10 @@ class DefaultActionLog(AbstractActionLog):
             return e[0].__class__.__name__, str(e[0]), e[1]
 
     def collect_args(self, request, args_map, action_log_mapper, full_action_name, err_desc):
-        log_data = {'args': {}}
+        log_data = {
+            'args': {},
+            'is_indirect_call': 'x-indirect-call' in request.headers
+        }
         if action_log_mapper:
             try:
                 log_data['args'] = action_log_mapper(request)
