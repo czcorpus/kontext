@@ -27,8 +27,7 @@ import { BasePlugin, IPluginApi } from './common';
 export interface IPlugin extends BasePlugin {
 }
 
-type AttrSet = {
-    __token_id__:number;
+export type AttrSet = {
     [attr:string]:string|number;
 };
 
@@ -36,9 +35,9 @@ export class Actions {
 
     static FetchInfo:Action<{
         corpusId:string;
-        tokenIdx:number;
+        tokenId:number;
         tokenLength:number;
-        tokens:Array<AttrSet>;
+        tokens:{[corpusId:string]:Array<{attrs:AttrSet, tokenId:number}>};
     }> = {
         name: 'TOKENS_LINKING_FETCH_INFO'
     };

@@ -18,15 +18,12 @@
 
 from typing import Any, Dict, List, Tuple
 
-from plugin_types.general_storage import KeyValueStorage
-
 from .abstract import AbstractBackend
 
 #
 # Example provider conf:
 # {
-#     "attr": "word",
-#     "highlightAttr": "word",
+#     "attr": "word"
 # }
 #
 
@@ -38,17 +35,25 @@ class Test1Backend(AbstractBackend):
 
     async def fetch(
             self,
-            corpora: List[str],
+            corpus_id: str,
             token_id: int,
             token_length: int,
-            row: List[Dict[str, str]],
+            tokens: Dict[str, List[Dict[str, Any]]],
             lang: str,
     ) -> Tuple[Any, bool]:
-        return (
+        token = None
+        for t in tokens[corpus_id]:
+            if t['tokenId'] == token_id:
+                token = t
+                break
+
+        token['link'] = [
             {
-                'provider': self.provider_id,
-                'highlight': row[token_id][self._conf['attr']][0] + '.*',
-                'highlightAttr': self._conf['highlightAttr'],
-            },
-            True,
-        )
+                'corpname': corpus_id,
+                'tokenId': token_id,
+                'highlightCategory': 1,
+                'comment': 'Test1Backend highlighted clicked token',
+            }
+        ]
+
+        return [token], True

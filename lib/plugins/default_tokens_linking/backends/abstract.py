@@ -31,10 +31,10 @@ class AbstractBackend(AbstractProviderBackend):
     @abc.abstractmethod
     async def fetch(
             self,
-            corpora: List[str],
+            corpus_id: str,
             token_id: int,
             token_length: int,
-            row: List[Dict[str, str]],
+            tokens: Dict[str, List[Dict[str, Any]]],
             lang: str,
     ) -> Tuple[Any, bool]:
         pass

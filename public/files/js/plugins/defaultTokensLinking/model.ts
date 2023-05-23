@@ -23,6 +23,7 @@ import { StatefulModel, IFullActionControl } from 'kombo';
 import { IPluginApi } from '../../types/plugins/common';
 import { HTTP, List } from 'cnc-tskit';
 import { AjaxResponse } from '../../types/kontext';
+import { AttrSet } from '../../types/plugins/tokensLinking';
 
 
 export interface TokensLinkingState {
@@ -38,7 +39,18 @@ export interface TokensLinkingModelArgs {
 }
 
 export interface FetchDataResponse extends AjaxResponse {
-    data:unknown;
+    data:{
+        [provider:string]:Array<{
+            attrs:AttrSet;
+            tokenId:number;
+            link:Array<{
+                corpname:string;
+                tokenId:number;
+                highlightCategory:number;
+                comment?:string;
+            }>;
+        }>;
+    };
 }
 
 export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
