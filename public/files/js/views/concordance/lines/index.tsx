@@ -118,8 +118,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         return <>{
             data.h ?
             <em className="highlight"
-                    onMouseOver={handleMouseover(data.kcConnection)}
-                    onMouseOut={handleMouseout(data.kcConnection)}>
+                    onMouseOver={data.kcConnection ? handleMouseover(data.kcConnection) : null}
+                    onMouseOut={data.kcConnection ? handleMouseout(data.kcConnection) : null}>
                 {data.s}
             </em> :
             data.s

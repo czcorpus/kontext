@@ -46,14 +46,16 @@ class Test1Backend(AbstractBackend):
             if t['tokenId'] == token_id:
                 token = t
                 break
-
+        first_letter = token['attrs'][self._conf['attr']][0].lower()
         token['link'] = [
             {
                 'corpname': corpus_id,
-                'tokenId': token_id,
+                'tokenId': token['tokenId'],
                 'highlightCategory': 1,
-                'comment': 'Test1Backend highlighted clicked token',
+                'comment': 'Test1Backend highlights tokens with the same starting letter',
             }
+            for token in tokens[corpus_id]
+            if token['attrs'][self._conf['attr']][0].lower() == first_letter
         ]
 
         return [token], True

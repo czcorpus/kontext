@@ -528,4 +528,11 @@ export class Actions {
     }> = {
         name: 'CONCORDANCE_HIGHLIGHTED_TOKEN_MOUSEOUT'
     }
+
+    static HighlightTokenById:Action<{
+        corpusId:string;
+        tokenId:number;
+    }> = {
+        name: 'CONCORDANCE_HIGHLIGHT_TOKEN_BY_ID'
+    };
 }
