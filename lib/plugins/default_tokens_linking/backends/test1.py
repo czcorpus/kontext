@@ -18,15 +18,13 @@
 
 from typing import Any, Dict, List, Tuple
 
-from plugin_types.general_storage import KeyValueStorage
-
 from .abstract import AbstractBackend
 
 #
 # Example provider conf:
 # {
 #     "attr": "word",
-#     "highlightAttr": "word",
+#     "color": "rgba(255, 99, 71, 0.5)"
 # }
 #
 
@@ -38,17 +36,28 @@ class Test1Backend(AbstractBackend):
 
     async def fetch(
             self,
-            corpora: List[str],
+            corpus_id: str,
             token_id: int,
             token_length: int,
-            row: List[Dict[str, str]],
+            tokens: Dict[str, List[Dict[str, Any]]],
             lang: str,
     ) -> Tuple[Any, bool]:
-        return (
+        selected_token = None
+        for token in tokens[corpus_id]:
+            if token['tokenId'] == token_id:
+                selected_token = token
+                break
+        first_letter = selected_token['attrs'][self._conf['attr']][0].lower()
+        selected_token['link'] = [
             {
-                'provider': self.provider_id,
-                'highlight': row[token_id][self._conf['attr']][0] + '.*',
-                'highlightAttr': self._conf['highlightAttr'],
-            },
-            True,
-        )
+                'corpname': corpname,
+                'tokenId': token['tokenId'],
+                'highlightCategory': self._conf['color'],
+                'comment': 'Test1Backend highlights tokens with the same starting letter',
+            }
+            for corpname, corp_tokens in tokens.items()
+            for token in corp_tokens
+            if token['attrs'][self._conf['attr']][0].lower() == first_letter
+        ]
+
+        return [selected_token], True

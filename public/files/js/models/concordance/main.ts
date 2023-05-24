@@ -872,6 +872,33 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 this.reloadAlignedHighlights(action.payload.matchPosAttr, false);
             }
         );
+
+        this.addActionHandler(
+            Actions.HighlightTokenById,
+            action => {
+                const corpusIdx = List.findIndex(v => v.n === action.payload.corpusId, this.state.corporaColumns);
+                if (corpusIdx !== -1) {
+                    const lineIdx = List.findIndex(line => {
+                        const offset = action.payload.tokenId - line.languages[corpusIdx].tokenNumber;
+                        return (offset >= -line.languages[corpusIdx].leftOffsets[0]) && (offset < (line.languages[corpusIdx].rightOffsets[line.languages[corpusIdx].rightOffsets.length-1] + line.languages[corpusIdx].kwic.length));
+                    }, this.state.lines);
+                    if (lineIdx !== -1) {
+                        this.changeState(state => {
+                            const offset = action.payload.tokenId - state.lines[lineIdx].languages[corpusIdx].tokenNumber;
+                            if (offset < 0) {
+                                const leftIdx = List.findIndex(v => -v === offset, state.lines[lineIdx].languages[corpusIdx].leftOffsets);
+                                state.lines[lineIdx].languages[corpusIdx].left[leftIdx].text.h = action.payload.color ? action.payload.color : true;
+                            } else if (offset >= 0 && offset < state.lines[lineIdx].languages[corpusIdx].kwic.length) {
+                                state.lines[lineIdx].languages[corpusIdx].kwic[offset].text.h = action.payload.color ? action.payload.color : true;
+                            } else {
+                                const rightIdx = List.findIndex(v => v === offset - (state.lines[lineIdx].languages[corpusIdx].kwic.length - 1), state.lines[lineIdx].languages[corpusIdx].rightOffsets);
+                                state.lines[lineIdx].languages[corpusIdx].right[rightIdx].text.h = action.payload.color ? action.payload.color : true;
+                            }
+                        });
+                    };
+                }
+            },
+        );
     }
 
     private stopBusyTimer(subs:Subscription):null {

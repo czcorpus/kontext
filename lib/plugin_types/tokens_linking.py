@@ -30,7 +30,7 @@ class AbstractTokensLinking(CorpusDependentPlugin):
         pass
 
     @abc.abstractmethod
-    async def fetch_data(self, plugin_ctx: PluginCtx, provider_ids, corpora, row, lang) -> List[Dict[str, Any]]:
+    async def fetch_data(self, plugin_ctx: PluginCtx, provider_ids, corpusId, tokens, lang) -> List[Dict[str, Any]]:
         pass
 
     @abc.abstractmethod

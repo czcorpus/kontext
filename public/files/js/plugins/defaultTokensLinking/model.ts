@@ -21,8 +21,10 @@
 import * as PluginInterfaces from '../../types/plugins';
 import { StatefulModel, IFullActionControl } from 'kombo';
 import { IPluginApi } from '../../types/plugins/common';
-import { HTTP, List } from 'cnc-tskit';
+import { Dict, HTTP, List } from 'cnc-tskit';
 import { AjaxResponse } from '../../types/kontext';
+import { AttrSet } from '../../types/plugins/tokensLinking';
+import { Actions as ConcActions } from '../../models/concordance/actions';
 
 
 export interface TokensLinkingState {
@@ -38,7 +40,18 @@ export interface TokensLinkingModelArgs {
 }
 
 export interface FetchDataResponse extends AjaxResponse {
-    data:unknown;
+    data:{
+        [provider:string]:Array<{
+            attrs:AttrSet;
+            tokenId:number;
+            link:Array<{
+                corpname:string;
+                tokenId:number;
+                highlightCategory:string;
+                comment?:string;
+            }>;
+        }>;
+    };
 }
 
 export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
@@ -80,6 +93,20 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                             ...PluginInterfaces.TokensLinking.Actions.FetchInfoDone,
                             payload: {data: resp.data}
                         });
+                        Dict.forEach((data, provider) => {
+                            List.forEach(token => {
+                                List.forEach(link => {
+                                    this.dispatchSideEffect({
+                                        ...ConcActions.HighlightTokenById,
+                                        payload: {
+                                            corpusId: link['corpname'],
+                                            tokenId: link['tokenId'],
+                                            color: link['highlightCategory'],
+                                        }
+                                    });
+                                }, token['link']);
+                            }, data);
+                        }, resp.data);
                     },
                     error: error => {
                         this.dispatchSideEffect({

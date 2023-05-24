@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { List, pipe } from 'cnc-tskit';
+import { Dict, List, pipe } from 'cnc-tskit';
 
 import * as Kontext from '../../../types/kontext';
 import * as ViewOptions from '../../../types/viewOptions';
@@ -39,7 +39,7 @@ import {
 import * as S from './style';
 import { PlayerStatus } from '../../../models/concordance/media';
 import { SentenceToken } from '../../../types/plugins/syntaxViewer';
-import { Actions as TokensLinkingActions } from '../../../types/plugins/tokensLinking';
+import { AttrSet, Actions as TokensLinkingActions } from '../../../types/plugins/tokensLinking';
 
 
 export interface LinesModuleArgs {
@@ -117,9 +117,9 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
 
         return <>{
             data.h ?
-            <em className="highlight"
-                    onMouseOver={handleMouseover(data.kcConnection)}
-                    onMouseOut={handleMouseout(data.kcConnection)}>
+            <em className="highlight" style={typeof data.h === 'string' ? {backgroundColor: data.h} : null}
+                    onMouseOver={data.kcConnection ? handleMouseover(data.kcConnection) : null}
+                    onMouseOut={data.kcConnection ? handleMouseout(data.kcConnection) : null}>
                 {data.s}
             </em> :
             data.s
@@ -850,68 +850,62 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
 
         const tokensLinkingHandler = (
             corpusId:string,
-            tokenNumber:number,
-            lineIdx:number,
+            tokenId:number,
+            lineId:number,
             tokenLength:number
         ) => {
-            const corpIndex = List.findIndex(col => col.n === corpusId, props.corporaColumns);
-            const kwicNumber = props.lines[lineIdx].languages[corpIndex].tokenNumber;
-            const tokenIdx = tokenNumber - kwicNumber + props.lines[lineIdx].languages[corpIndex].left.length;
-            const numLeftTokens = List.size(props.lines[lineIdx].languages[corpIndex].left);
-            const numKwicTokens = List.size(props.lines[lineIdx].languages[corpIndex].kwic);
-            const numRightTokens = List.size(props.lines[lineIdx].languages[corpIndex].right);
-            const calculatedTokenIds = List.range(
-                tokenNumber - tokenIdx,
-                tokenNumber - tokenIdx + numLeftTokens + numKwicTokens + numRightTokens
-            );
+            const tokens:{[corpusId:string]:Array<{attrs:AttrSet, tokenId:number}>} = {};
+            List.forEach((lang, langId) => {
+                const kwicNumber = lang.tokenNumber;
+                const tokenIdx = tokenId - kwicNumber + lang.left.length;
+                const numLeftTokens = List.size(lang.left);
+                const numKwicTokens = List.size(lang.kwic);
+                const numRightTokens = List.size(lang.right);
+                const calculatedTokenIds = List.range(
+                    tokenId - tokenIdx,
+                    tokenId - tokenIdx + numLeftTokens + numKwicTokens + numRightTokens,
+                );
 
-            const left = List.map(
-                (token, i) => {
-                    const attrs = {
-                        [props.baseViewAttr]: token.text.s,
-                        __token_id__: calculatedTokenIds[i]
-                    };
-                    List.forEach((a, i) => {
-                        attrs[a[0]] = token.posAttrs[i];
-                    }, props.mergedCtxAttrs.slice(1));
-                    return attrs;
-                },
-                props.lines[lineIdx].languages[corpIndex].left
-            );
-            const kwic = List.map(
-                (token, i) => {
-                    const attrs = {
-                        [props.baseViewAttr]: token.text.s,
-                        __token_id__: calculatedTokenIds[i + numLeftTokens]
-                    };
-                    List.forEach((a, i) => {
-                        attrs[a[0]] = token.posAttrs[i];
-                    }, props.mergedAttrs.slice(1));
-                    return attrs;
-                },
-                props.lines[lineIdx].languages[corpIndex].kwic
-            );
-            const right = List.map(
-                (token, i) => {
-                    const attrs = {
-                        [props.baseViewAttr]: token.text.s,
-                        __token_id__: calculatedTokenIds[i + numLeftTokens + numKwicTokens]
-                    };
-                    List.forEach((a, i) => {
-                        attrs[a[0]] = token.posAttrs[i];
-                    }, props.mergedCtxAttrs.slice(1));
-                    return attrs;
-                },
-                props.lines[lineIdx].languages[corpIndex].right
-            );
+                const left = List.map(
+                    (token, i) => {
+                        const attrs = {[props.baseViewAttr]: token.text.s};
+                        List.forEach((a, i) => {
+                            attrs[a[0]] = token.posAttrs[i];
+                        }, props.mergedCtxAttrs.slice(1));
+                        return {attrs, tokenId: calculatedTokenIds[i]};
+                    },
+                    lang.left
+                );
+                const kwic = List.map(
+                    (token, i) => {
+                        const attrs = {[props.baseViewAttr]: token.text.s};
+                        List.forEach((a, i) => {
+                            attrs[a[0]] = token.posAttrs[i];
+                        }, props.mergedAttrs.slice(1));
+                        return {attrs, tokenId: calculatedTokenIds[i + numLeftTokens]};
+                    },
+                    lang.kwic
+                );
+                const right = List.map(
+                    (token, i) => {
+                        const attrs = {[props.baseViewAttr]: token.text.s};
+                        List.forEach((a, i) => {
+                            attrs[a[0]] = token.posAttrs[i];
+                        }, props.mergedCtxAttrs.slice(1));
+                        return {attrs, tokenId: calculatedTokenIds[i + numLeftTokens + numKwicTokens]};
+                    },
+                    lang.right
+                );
+                tokens[props.corporaColumns[langId].n] = [...left, ...kwic, ...right]
+            }, props.lines[lineId].languages);
 
             dispatcher.dispatch(
                 TokensLinkingActions.FetchInfo,
                 {
                     corpusId,
-                    tokenIdx,
+                    tokenId: tokenId,
                     tokenLength,
-                    tokens: [...left, ...kwic, ...right],
+                    tokens,
                 },
                 undefined
             );

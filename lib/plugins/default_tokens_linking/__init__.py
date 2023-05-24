@@ -42,8 +42,8 @@ async def fetch_token_detail(amodel: ConcActionModel, req: KRequest, resp: KResp
         data = await tl.fetch_data(
             amodel.plugin_ctx,
             corpus_info.tokens_linking.providers,
-            [amodel.corp.corpname] + amodel.args.align,
-            req.json['tokenIdx'],
+            req.json['corpusId'],
+            req.json['tokenId'],
             req.json['tokenLength'],
             req.json['tokens'],
             req.ui_lang,
@@ -76,11 +76,11 @@ class DefaultTokensLinking(AbstractTokensLinking):
     def export_actions():
         return bp
 
-    async def fetch_data(self, plugin_ctx, providers, corpora, token_id, token_length, tokens, lang) -> List[Dict]:
-        ans = []
-        for backend, _ in self.map_providers(providers):
-            data, status = await backend.fetch(corpora, token_id, token_length, tokens, lang)
-            ans.append(data)
+    async def fetch_data(self, plugin_ctx, provider_ids, corpus_id, token_id, token_length, tokens, lang) -> List[Dict]:
+        ans = {}
+        for backend, _ in self.map_providers(provider_ids):
+            data, status = await backend.fetch(corpus_id, token_id, token_length, tokens, lang)
+            ans[backend.provider_id] = data
         return ans
 
     async def get_required_attrs(self, providers):
