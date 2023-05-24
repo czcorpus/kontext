@@ -23,7 +23,8 @@ from .abstract import AbstractBackend
 #
 # Example provider conf:
 # {
-#     "attr": "word"
+#     "attr": "word",
+#     "color": "rgba(255, 99, 71, 0.5)"
 # }
 #
 
@@ -41,21 +42,22 @@ class Test1Backend(AbstractBackend):
             tokens: Dict[str, List[Dict[str, Any]]],
             lang: str,
     ) -> Tuple[Any, bool]:
-        token = None
-        for t in tokens[corpus_id]:
-            if t['tokenId'] == token_id:
-                token = t
+        selected_token = None
+        for token in tokens[corpus_id]:
+            if token['tokenId'] == token_id:
+                selected_token = token
                 break
-        first_letter = token['attrs'][self._conf['attr']][0].lower()
-        token['link'] = [
+        first_letter = selected_token['attrs'][self._conf['attr']][0].lower()
+        selected_token['link'] = [
             {
-                'corpname': corpus_id,
+                'corpname': corpname,
                 'tokenId': token['tokenId'],
-                'highlightCategory': 1,
+                'highlightCategory': self._conf['color'],
                 'comment': 'Test1Backend highlights tokens with the same starting letter',
             }
-            for token in tokens[corpus_id]
+            for corpname, corp_tokens in tokens.items()
+            for token in corp_tokens
             if token['attrs'][self._conf['attr']][0].lower() == first_letter
         ]
 
-        return [token], True
+        return [selected_token], True

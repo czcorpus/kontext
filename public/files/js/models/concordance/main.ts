@@ -887,12 +887,12 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                             const offset = action.payload.tokenId - state.lines[lineIdx].languages[corpusIdx].tokenNumber;
                             if (offset < 0) {
                                 const leftIdx = List.findIndex(v => -v === offset, state.lines[lineIdx].languages[corpusIdx].leftOffsets);
-                                state.lines[lineIdx].languages[corpusIdx].left[leftIdx].text.h = true;
+                                state.lines[lineIdx].languages[corpusIdx].left[leftIdx].text.h = action.payload.color ? action.payload.color : true;
                             } else if (offset >= 0 && offset < state.lines[lineIdx].languages[corpusIdx].kwic.length) {
-                                state.lines[lineIdx].languages[corpusIdx].kwic[offset].text.h = true;
+                                state.lines[lineIdx].languages[corpusIdx].kwic[offset].text.h = action.payload.color ? action.payload.color : true;
                             } else {
                                 const rightIdx = List.findIndex(v => v === offset - (state.lines[lineIdx].languages[corpusIdx].kwic.length - 1), state.lines[lineIdx].languages[corpusIdx].rightOffsets);
-                                state.lines[lineIdx].languages[corpusIdx].right[rightIdx].text.h = true;
+                                state.lines[lineIdx].languages[corpusIdx].right[rightIdx].text.h = action.payload.color ? action.payload.color : true;
                             }
                         });
                     };

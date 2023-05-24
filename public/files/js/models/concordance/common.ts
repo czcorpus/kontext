@@ -88,9 +88,9 @@ export interface Token {
     idx:number;
 
     /**
-     * Specifies whether the token is highlighed
+     * Specifies whether the token is highlighed or which color the highlight is
      */
-    h:boolean;
+    h:boolean|string;
 
     /**
      * Specifies a possible connetion with a kwic_connect result

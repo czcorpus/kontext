@@ -117,7 +117,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
 
         return <>{
             data.h ?
-            <em className="highlight"
+            <em className="highlight" style={typeof data.h === 'string' ? {backgroundColor: data.h} : null}
                     onMouseOver={data.kcConnection ? handleMouseover(data.kcConnection) : null}
                     onMouseOut={data.kcConnection ? handleMouseout(data.kcConnection) : null}>
                 {data.s}

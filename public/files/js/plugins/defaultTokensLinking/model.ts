@@ -47,7 +47,7 @@ export interface FetchDataResponse extends AjaxResponse {
             link:Array<{
                 corpname:string;
                 tokenId:number;
-                highlightCategory:number;
+                highlightCategory:string;
                 comment?:string;
             }>;
         }>;
@@ -101,6 +101,7 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                                         payload: {
                                             corpusId: link['corpname'],
                                             tokenId: link['tokenId'],
+                                            color: link['highlightCategory'],
                                         }
                                     });
                                 }, token['link']);
