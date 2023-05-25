@@ -37,7 +37,6 @@ import { Actions, ConcGroupChangePayload,
 import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { Block } from '../freqs/common';
 import { highlightConcLineTokens, importLines } from './transform';
-import { colorGreenBgHighlighted } from '../../views/theme/default';
 
 export interface HighlightItem {
 
@@ -877,29 +876,33 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         this.addActionHandler(
             Actions.HighlightTokenById,
             action => {
-                const corpusIdx = List.findIndex(v => v.n === action.payload.corpusId, this.state.corporaColumns);
-                if (corpusIdx !== -1) {
-                    const lineIdx = List.findIndex(line => {
-                        const offset = action.payload.tokenId - line.languages[corpusIdx].tokenNumber;
-                        return (offset >= -line.languages[corpusIdx].leftOffsets[0]) && (offset < (line.languages[corpusIdx].rightOffsets[line.languages[corpusIdx].rightOffsets.length-1] + line.languages[corpusIdx].kwic.length));
-                    }, this.state.lines);
-                    if (lineIdx !== -1) {
-                        this.changeState(state => {
-                            const offset = action.payload.tokenId - state.lines[lineIdx].languages[corpusIdx].tokenNumber;
-                            if (offset < 0) {
-                                const leftIdx = List.findIndex(v => -v === offset, state.lines[lineIdx].languages[corpusIdx].leftOffsets);
-                                state.lines[lineIdx].languages[corpusIdx].left[leftIdx].text.hColor = action.payload.color;
-                            } else if (offset >= 0 && offset < state.lines[lineIdx].languages[corpusIdx].kwic.length) {
-                                state.lines[lineIdx].languages[corpusIdx].kwic[offset].text.hColor = action.payload.color;
-                            } else {
-                                const rightIdx = List.findIndex(v => v === offset - (state.lines[lineIdx].languages[corpusIdx].kwic.length - 1), state.lines[lineIdx].languages[corpusIdx].rightOffsets);
-                                state.lines[lineIdx].languages[corpusIdx].right[rightIdx].text.hColor = action.payload.color;
-                            }
-                        });
-                    };
-                }
+                this.applyHighlightById(action.payload.corpusId, action.payload.tokenId, action.payload.color);
             },
         );
+    }
+
+    private applyHighlightById(corpname:string, tokenId:number, color:string) {
+        const corpusIdx = List.findIndex(v => v.n === corpname, this.state.corporaColumns);
+        if (corpusIdx !== -1) {
+            const lineIdx = List.findIndex(line => {
+                const offset = tokenId - line.languages[corpusIdx].tokenNumber;
+                return (offset >= -line.languages[corpusIdx].leftOffsets[0]) && (offset < (line.languages[corpusIdx].rightOffsets[line.languages[corpusIdx].rightOffsets.length-1] + line.languages[corpusIdx].kwic.length));
+            }, this.state.lines);
+            if (lineIdx !== -1) {
+                this.changeState(state => {
+                    const offset = tokenId - state.lines[lineIdx].languages[corpusIdx].tokenNumber;
+                    if (offset < 0) {
+                        const leftIdx = List.findIndex(v => -v === offset, state.lines[lineIdx].languages[corpusIdx].leftOffsets);
+                        state.lines[lineIdx].languages[corpusIdx].left[leftIdx].text.hColor = color;
+                    } else if (offset >= 0 && offset < state.lines[lineIdx].languages[corpusIdx].kwic.length) {
+                        state.lines[lineIdx].languages[corpusIdx].kwic[offset].text.hColor = color;
+                    } else {
+                        const rightIdx = List.findIndex(v => v === offset - (state.lines[lineIdx].languages[corpusIdx].kwic.length - 1), state.lines[lineIdx].languages[corpusIdx].rightOffsets);
+                        state.lines[lineIdx].languages[corpusIdx].right[rightIdx].text.hColor = color;
+                    }
+                });
+            };
+        }
     }
 
     private stopBusyTimer(subs:Subscription):null {
