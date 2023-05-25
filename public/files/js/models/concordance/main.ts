@@ -37,6 +37,7 @@ import { Actions, ConcGroupChangePayload,
 import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { Block } from '../freqs/common';
 import { highlightConcLineTokens, importLines } from './transform';
+import { colorGreenBgHighlighted } from '../../views/theme/default';
 
 export interface HighlightItem {
 
@@ -44,7 +45,7 @@ export interface HighlightItem {
      * level specifies target lang./corp. column for highlighting:
      *  -  0: first corpus,
      *  -  1: second corpus,
-     *  -  N: (N-1)th corpus
+     *  -  N: (N+1)th corpus
      *  - -1: all corpora
      */
     level:number;
@@ -887,12 +888,12 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                             const offset = action.payload.tokenId - state.lines[lineIdx].languages[corpusIdx].tokenNumber;
                             if (offset < 0) {
                                 const leftIdx = List.findIndex(v => -v === offset, state.lines[lineIdx].languages[corpusIdx].leftOffsets);
-                                state.lines[lineIdx].languages[corpusIdx].left[leftIdx].text.h = action.payload.color ? action.payload.color : true;
+                                state.lines[lineIdx].languages[corpusIdx].left[leftIdx].text.hColor = action.payload.color;
                             } else if (offset >= 0 && offset < state.lines[lineIdx].languages[corpusIdx].kwic.length) {
-                                state.lines[lineIdx].languages[corpusIdx].kwic[offset].text.h = action.payload.color ? action.payload.color : true;
+                                state.lines[lineIdx].languages[corpusIdx].kwic[offset].text.hColor = action.payload.color;
                             } else {
                                 const rightIdx = List.findIndex(v => v === offset - (state.lines[lineIdx].languages[corpusIdx].kwic.length - 1), state.lines[lineIdx].languages[corpusIdx].rightOffsets);
-                                state.lines[lineIdx].languages[corpusIdx].right[rightIdx].text.h = action.payload.color ? action.payload.color : true;
+                                state.lines[lineIdx].languages[corpusIdx].right[rightIdx].text.hColor = action.payload.color;
                             }
                         });
                     };

@@ -21,6 +21,7 @@
 import { Dict, List, pipe } from 'cnc-tskit';
 import { HighlightWords, KWICSection, Line, PosAttrRole, ServerLineData, ServerTextChunk, TextChunk, Token } from './common';
 import { ConclineSectionOps } from './line';
+import { defaultBgHighlighted } from '../../views/theme/default';
 
 
 /**
@@ -52,7 +53,7 @@ function importTextChunk(item:ServerTextChunk, mainAttrIdx:number, id:string, st
         return {
             id,
             className: item.class,
-            text: {s: item.str, h: false, idx: startWlIdx},
+            text: {s: item.str, hColor: null, idx: startWlIdx},
             openLink: item.open_link ? {speechPath: item.open_link.speech_path} : undefined,
             closeLink: item.close_link ? {speechPath: item.close_link.speech_path} : undefined,
             continued: item.continued,
@@ -68,7 +69,7 @@ function importTextChunk(item:ServerTextChunk, mainAttrIdx:number, id:string, st
         return {
             id,
             className: item.class,
-            text: {s: text, h: false, idx: startWlIdx},
+            text: {s: text, hColor: null, idx: startWlIdx},
             openLink: item.open_link ? {speechPath: item.open_link.speech_path} : undefined,
             closeLink: item.close_link ? {speechPath: item.close_link.speech_path} : undefined,
             continued: item.continued,
@@ -191,7 +192,7 @@ function highlightWordInTokens(tokens:Array<Token>, mword:string, attr:string) {
         if (List.size(word) === List.size(currSrch)) {
             List.forEach(
                 item => {
-                    item.h = true;
+                    item.hColor = defaultBgHighlighted;
                     item.kcConnection = {attr, s: mword};
                 },
                 currSrch
@@ -202,7 +203,7 @@ function highlightWordInTokens(tokens:Array<Token>, mword:string, attr:string) {
     if (List.size(word) === List.size(currSrch)) {
         List.forEach(
             item => {
-                item.h = true;
+                item.hColor = defaultBgHighlighted;
                 item.kcConnection = {attr, s: mword};
             },
             currSrch
@@ -224,7 +225,7 @@ export function highlightConcLineTokens(
         [...concLine.left, ...concLine.kwic, ...concLine.right],
         List.map(x => x.text),
         List.map(token => {
-            token.h = false;
+            token.hColor = null;
             return token;
         })
     );

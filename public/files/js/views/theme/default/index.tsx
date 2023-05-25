@@ -61,6 +61,7 @@ export const colorSectionBg = '#f3fbed';
 export const colorDefaultGreen = '#D1ECBF';
 export const colorLightGreen = '#EEF7F1';
 export const colorGreenBgHighlighted = '#F0FDBE';
+export const defaultBgHighlighted = colorGreenBgHighlighted;
 
 export const colorLogoPink = '#E2007A';
 export const colorLightPink = '#FFC8AD';
