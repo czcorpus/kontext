@@ -48,16 +48,15 @@ class Test1Backend(AbstractBackend):
                 selected_token = token
                 break
         first_letter = selected_token['attrs'][self._conf['attr']][0].lower()
-        selected_token['link'] = [
-            {
-                'corpname': corpname,
-                'tokenId': token['tokenId'],
-                'highlightCategory': self._conf['color'],
-                'comment': 'Test1Backend highlights tokens with the same starting letter',
-            }
-            for corpname, corp_tokens in tokens.items()
-            for token in corp_tokens
-            if token['attrs'][self._conf['attr']][0].lower() == first_letter
-        ]
-
+        selected_token['link'] = []
+        user_attr = self._conf['attr']
+        for corpname, corp_tokens in tokens.items():
+            for token in corp_tokens:
+                if token['attrs'].get(user_attr, [''])[0].lower() == first_letter:
+                    selected_token['link'].append({
+                        'corpname': corpname,
+                        'tokenId': token['tokenId'],
+                        'highlightCategory': self._conf['color'],
+                        'comment': 'Test1Backend highlights tokens with the same starting letter',
+                    })
         return [selected_token], True
