@@ -102,6 +102,7 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                                             corpusId: link['corpname'],
                                             tokenId: link['tokenId'],
                                             color: link['highlightColor'],
+                                            comment: link['comment'],
                                         }
                                     });
                                 }, token['link']);

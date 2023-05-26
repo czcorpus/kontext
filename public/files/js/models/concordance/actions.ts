@@ -533,6 +533,7 @@ export class Actions {
         corpusId:string;
         tokenId:number;
         color:string;
+        comment?:string;
     }> = {
         name: 'CONCORDANCE_HIGHLIGHT_TOKEN_BY_ID'
     };
