@@ -56,7 +56,7 @@ class Test1Backend(AbstractBackend):
                     selected_token['link'].append({
                         'corpname': corpname,
                         'tokenId': token['tokenId'],
-                        'highlightCategory': self._conf['color'],
+                        'highlightColor': self._conf['color'],
                         'comment': 'Test1Backend highlights tokens with the same starting letter',
                     })
         return [selected_token], True

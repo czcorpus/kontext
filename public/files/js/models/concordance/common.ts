@@ -90,7 +90,7 @@ export interface Token {
     /**
      * Specifies whether the token is highlighed or which color the highlight is
      */
-    h:boolean|string;
+    hColor:string;
 
     /**
      * Specifies a possible connetion with a kwic_connect result

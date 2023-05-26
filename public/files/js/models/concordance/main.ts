@@ -44,7 +44,7 @@ export interface HighlightItem {
      * level specifies target lang./corp. column for highlighting:
      *  -  0: first corpus,
      *  -  1: second corpus,
-     *  -  N: (N-1)th corpus
+     *  -  N: (N+1)th corpus
      *  - -1: all corpora
      */
     level:number;
@@ -183,6 +183,8 @@ export interface ConcordanceModelState {
     mergedAttrs:Array<[string, number]>;
 
     mergedCtxAttrs:Array<[string, number]>;
+
+    tokenLinks:Array<{[tokenId:string]:{color:string; comment?:string}}>;
 }
 
 
@@ -260,6 +262,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 audioPlayerStatus: null,
                 mergedAttrs: lineViewProps.mergedAttrs,
                 mergedCtxAttrs: lineViewProps.mergedAttrs,
+                tokenLinks: List.map(_ => ({}), lineViewProps.CorporaColumns),
             }
         );
         this.layoutModel = layoutModel;
@@ -331,6 +334,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         }
                         state.unfinishedCalculation = false;
                         state.playerAttachedChunk = null;
+                        this.reapplyTokenLinkHighlights(state);
                     });
                     this.pushHistoryState({
                         name: Actions.ReloadConc.name,
@@ -878,27 +882,44 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             action => {
                 const corpusIdx = List.findIndex(v => v.n === action.payload.corpusId, this.state.corporaColumns);
                 if (corpusIdx !== -1) {
-                    const lineIdx = List.findIndex(line => {
-                        const offset = action.payload.tokenId - line.languages[corpusIdx].tokenNumber;
-                        return (offset >= -line.languages[corpusIdx].leftOffsets[0]) && (offset < (line.languages[corpusIdx].rightOffsets[line.languages[corpusIdx].rightOffsets.length-1] + line.languages[corpusIdx].kwic.length));
-                    }, this.state.lines);
-                    if (lineIdx !== -1) {
-                        this.changeState(state => {
-                            const offset = action.payload.tokenId - state.lines[lineIdx].languages[corpusIdx].tokenNumber;
-                            if (offset < 0) {
-                                const leftIdx = List.findIndex(v => -v === offset, state.lines[lineIdx].languages[corpusIdx].leftOffsets);
-                                state.lines[lineIdx].languages[corpusIdx].left[leftIdx].text.h = action.payload.color ? action.payload.color : true;
-                            } else if (offset >= 0 && offset < state.lines[lineIdx].languages[corpusIdx].kwic.length) {
-                                state.lines[lineIdx].languages[corpusIdx].kwic[offset].text.h = action.payload.color ? action.payload.color : true;
-                            } else {
-                                const rightIdx = List.findIndex(v => v === offset - (state.lines[lineIdx].languages[corpusIdx].kwic.length - 1), state.lines[lineIdx].languages[corpusIdx].rightOffsets);
-                                state.lines[lineIdx].languages[corpusIdx].right[rightIdx].text.h = action.payload.color ? action.payload.color : true;
-                            }
-                        });
-                    };
+                    this.changeState(state => {
+                        state.tokenLinks[corpusIdx][`${action.payload.tokenId}`] = {
+                            color: action.payload.color,
+                            comment: action.payload.comment,
+                        };
+                        this.highlightTokenLink(state, corpusIdx, action.payload.tokenId, action.payload.color);
+                    });
                 }
             },
         );
+    }
+
+    private highlightTokenLink(state:ConcordanceModelState, corpusIdx:number, tokenId:number, color:string) {
+        const lineIdx = List.findIndex(line => {
+            const offset = tokenId - line.languages[corpusIdx].tokenNumber;
+            return (offset >= -line.languages[corpusIdx].leftOffsets[0]) && (offset < (line.languages[corpusIdx].rightOffsets[line.languages[corpusIdx].rightOffsets.length-1] + line.languages[corpusIdx].kwic.length));
+        }, state.lines);
+        if (lineIdx !== -1) {
+            const offset = tokenId - state.lines[lineIdx].languages[corpusIdx].tokenNumber;
+            if (offset < 0) {
+                const leftIdx = List.findIndex(v => -v === offset, state.lines[lineIdx].languages[corpusIdx].leftOffsets);
+                state.lines[lineIdx].languages[corpusIdx].left[leftIdx].text.hColor = color;
+            } else if (offset >= 0 && offset < state.lines[lineIdx].languages[corpusIdx].kwic.length) {
+                state.lines[lineIdx].languages[corpusIdx].kwic[offset].text.hColor = color;
+            } else {
+                const rightIdx = List.findIndex(v => v === offset - (state.lines[lineIdx].languages[corpusIdx].kwic.length - 1), state.lines[lineIdx].languages[corpusIdx].rightOffsets);
+                state.lines[lineIdx].languages[corpusIdx].right[rightIdx].text.hColor = color;
+            }
+        };
+    }
+
+    private reapplyTokenLinkHighlights(state:ConcordanceModelState) {
+        List.forEach((v, i) => {
+            Dict.forEach((v, k) => {
+                this.highlightTokenLink(state, i, parseInt(k), v.color);
+            }, v);
+        }, this.state.tokenLinks);
+
     }
 
     private stopBusyTimer(subs:Subscription):null {
@@ -1053,6 +1074,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                             v => v,
                             mapIdToIdWithColors
                         );
+                        this.reapplyTokenLinkHighlights(state);
                     });
                 }
             ),
@@ -1269,6 +1291,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 data => {
                     this.changeState(state => {
                         this.importData(state, data);
+                        this.reapplyTokenLinkHighlights(state);
                     });
                     this.pushHistoryState({
                         name: Actions.ReloadConc.name,

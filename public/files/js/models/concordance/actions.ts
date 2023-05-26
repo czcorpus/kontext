@@ -532,7 +532,8 @@ export class Actions {
     static HighlightTokenById:Action<{
         corpusId:string;
         tokenId:number;
-        color?:string;
+        color:string;
+        comment?:string;
     }> = {
         name: 'CONCORDANCE_HIGHLIGHT_TOKEN_BY_ID'
     };
