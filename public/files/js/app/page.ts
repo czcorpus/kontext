@@ -577,7 +577,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             const concIds = pipe(
                 value,
                 List.filter(v => v[0] === '~'),
-                List.map(v => v.substr(1))
+                List.map(v => v.substring(1))
             );
             if (!List.empty(concIds)) {
                 this.setConf<string>('concPersistenceOpId', List.head(concIds));
