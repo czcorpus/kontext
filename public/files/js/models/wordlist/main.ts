@@ -146,7 +146,7 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
             Actions.WordlistResultViewConc.name,
             null,
             (state, action, dispatch) => {
-                this.suspend({}, (otherAction, syncData) => {
+                this.waitForAction({}, (otherAction, syncData) => {
                     if (otherAction.name === Actions.WordlistFormSubmitReady.name) {
                         return null;
                     }

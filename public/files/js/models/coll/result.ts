@@ -306,7 +306,7 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
     }
 
     private processDataReload(state:CollResultModelState):Observable<[AjaxResponse, CollServerArgs]> {
-        return this.suspend({}, (action, syncData) => {
+        return this.waitForAction({}, (action, syncData) => {
             if (action.name === Actions.FormPrepareSubmitArgsDone.name) {
                 return null;
             }

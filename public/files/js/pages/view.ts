@@ -321,7 +321,13 @@ export class ViewPage {
                             payload: {
                                 concId: this.layoutModel.getConf<string>('concPersistenceOpId'),
                                 viewMode: this.layoutModel.getConcArgs().viewmode,
-                                isPopState: true
+                                arf: this.layoutModel.getConf<number>('ResultArf'),
+                                concSize: this.layoutModel.getConf<number>('ConcSize'),
+                                fullSize: this.layoutModel.getConf<number>('FullSize'),
+                                corpusIpm: this.layoutModel.getConf<number>('ResultIpm'),
+                                queryChainSize: 1, // TODO size 1 even for attached default shuffle?
+                                isPopState: true,
+
                             }
                         }
                     },

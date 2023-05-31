@@ -171,7 +171,6 @@ function importUserQueries(
     simpleQueryDefaultAttrs:{[sourceId:string]:Array<string|Array<string>>},
     attrList:Array<Kontext.AttrItem>
 ):{[corpus:string]:AnyQuery} {
-
     return pipe(
         corpora,
         List.filter(corpus => Dict.hasKey(corpus, data.currQueryTypes)),

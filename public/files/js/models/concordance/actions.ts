@@ -42,6 +42,16 @@ export interface PublishLineSelectionPayload {
 
 export class Actions {
 
+    static ReadyToAddNewOperation:Action<{
+        lastConcId:string;
+    }> = {
+        name: 'CONCORDANCE_READY_TO_ADD_NEW_OPERATION'
+    };
+
+    static isReadyToAddNewOperation(a:Action):a is typeof Actions.ReadyToAddNewOperation {
+        return a.name === Actions.ReadyToAddNewOperation.name;
+    };
+
     static AddedNewOperation:Action<{
         concId:string;
         data:AjaxConcResponse;
@@ -98,8 +108,16 @@ export class Actions {
         return a.name === Actions.ChangePage.name;
     }
 
+    /**
+     * defines a reload of an already known operation
+     */
     static ReloadConc:Action<{
         concId:string;
+        arf:number;
+        concSize:number;
+        fullSize:number;
+        corpusIpm:number;
+        queryChainSize:number;
         isPopState?:boolean;
         viewMode?:ConcViewMode;
     }> = {
@@ -433,6 +451,10 @@ export class Actions {
     }> = {
         name: 'CONCORDANCE_PUBLISH_STORED_LINE_SELECTIONS'
     };
+
+    static isPublishStoredLineSelections(a:Action):a is typeof Actions.PublishStoredLineSelections {
+        return a.name == Actions.PublishStoredLineSelections.name;
+    }
 
     static DownloadSelectionOverview:Action<{
         format:string;

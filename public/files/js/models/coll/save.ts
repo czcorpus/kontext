@@ -185,7 +185,7 @@ export class CollResultsSaveModel extends StatelessModel<CollResultsSaveModelSta
     }
 
     private submit(state:CollResultsSaveModelState):void {
-        this.suspend({}, (action, syncData) => {
+        this.waitForAction({}, (action, syncData) => {
             if (action.name === Actions.FormPrepareSubmitArgsDone.name) {
                 return null;
             }

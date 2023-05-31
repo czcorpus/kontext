@@ -20,7 +20,7 @@
 
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
-import { tap, map } from 'rxjs/operators';
+import { tap, map, concatMap } from 'rxjs/operators';
 
 import * as Kontext from '../../../types/kontext';
 import { PageModel } from '../../../app/page';
@@ -104,10 +104,29 @@ export class ConcSortModel extends StatefulModel<ConcSortModelState> {
                 this.changeState(state => {
                     state.isBusy = true;
                 });
-                this.submitQuery(
-                    action.payload.sortId,
-                    this.pageModel.getConf<string>('concPersistenceOpId')
+                this.waitForActionWithTimeout(
+                    5000,
+                    {},
+                    (action, syncData) => {
+                        if (ConcActions.isReadyToAddNewOperation(action)) {
+                            return null;
+                        }
+                        return syncData;
+                    }
                 ).pipe(
+                    concatMap(
+                        wAction => {
+                            if (ConcActions.isReadyToAddNewOperation(wAction)) {
+                                return this.submitQuery(
+                                    action.payload.sortId,
+                                    wAction.payload.lastConcId
+                                );
+
+                            } else {
+                                throw new Error('failed to handle sorting submit - unexpected action ' + wAction.name);
+                            }
+                        }
+                    ),
                     tap(
                         (data) => {
                             this.pageModel.updateConcPersistenceId(data.conc_persistence_op_id);
@@ -116,8 +135,8 @@ export class ConcSortModel extends StatefulModel<ConcSortModelState> {
                             });
                         }
                     )
-                ).subscribe(
-                    (data) => {
+                ).subscribe({
+                    next: data => {
                         dispatcher.dispatch<typeof ConcActions.AddedNewOperation>({
                             name: ConcActions.AddedNewOperation.name,
                             payload: {
@@ -127,10 +146,10 @@ export class ConcSortModel extends StatefulModel<ConcSortModelState> {
                         });
 
                     },
-                    (err) => {
-                        this.pageModel.showMessage('error', err);
+                    error: error => {
+                        this.pageModel.showMessage('error', error);
                     }
-                );
+                });
             }
         );
 

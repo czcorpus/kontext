@@ -336,7 +336,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             Actions.ResultSetMinFreqVal,
             null,
             (state, action, dispatch) => {
-                this.suspendWithTimeout(
+                this.waitForActionWithTimeout(
                     5000,
                     {},
                     (action, syncData) => {

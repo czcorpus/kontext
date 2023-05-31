@@ -19,7 +19,7 @@
  */
 
 import { concatMap, map, Observable, tap, throwError } from 'rxjs';
-import { IActionQueue, SEDispatcher, StatelessModel } from 'kombo';
+import { Action, IActionQueue, SEDispatcher, StatelessModel } from 'kombo';
 
 import { PageModel } from '../../app/page';
 import { Actions } from './actions';
@@ -50,6 +50,7 @@ export interface SubcorpusEditModelState {
     prevRawDescription:string|undefined;
 }
 
+type PayloadType<T> = T extends Action<infer P> ? P : never;
 
 export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> {
 
@@ -440,7 +441,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                                 error: task.error,
                                 args: task.args,
                                 url: undefined
-                            }
+                            } as PayloadType<typeof ATActions.InboxAddAsyncTask>
                         );
                         if ((args.form_type === 'tt-sel' || args.form_type === 'within') &&
                                 args.usesubcorp) {

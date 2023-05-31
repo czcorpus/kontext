@@ -27,7 +27,7 @@ import { SortFormProperties, importMultiLevelArg } from './common';
 import { PageModel } from '../../../app/page';
 import { Actions as MainMenuActions } from '../../mainMenu/actions';
 import { Actions } from '../actions';
-import { tap, map } from 'rxjs/operators';
+import { tap, map, concatMap } from 'rxjs/operators';
 import { MLSortServerArgs } from '../common';
 import { AjaxConcResponse } from '../../concordance/common';
 import { Actions as ConcActions } from '../../concordance/actions';
@@ -115,11 +115,26 @@ export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortMod
         this.addActionHandler<typeof Actions.MLSortFormSubmit>(
             Actions.MLSortFormSubmit.name,
             action => {
-                this.submitQuery(
-                    action.payload.sortId,
-                    this.pageModel.getConf('concPersistenceOpId')
-
+                this.waitForActionWithTimeout(
+                    5000,
+                    {},
+                    (action, syncData) => {
+                        if (ConcActions.isReadyToAddNewOperation(action)) {
+                            return null;
+                        }
+                        return syncData;
+                    }
                 ).pipe(
+                    concatMap(
+                        wAction => {
+                            if (ConcActions.isReadyToAddNewOperation(wAction)) {
+                                return this.submitQuery(
+                                    action.payload.sortId,
+                                    wAction.payload.lastConcId
+                                );
+                            }
+                        }
+                    ),
                     tap(
                         (data) => {
                             this.pageModel.updateConcPersistenceId(data.conc_persistence_op_id);
@@ -128,8 +143,8 @@ export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortMod
                             });
                         }
                     )
-                ).subscribe(
-                    (data) => {
+                ).subscribe({
+                    next: data => {
                         dispatcher.dispatch<typeof ConcActions.AddedNewOperation>({
                             name: ConcActions.AddedNewOperation.name,
                             payload: {
@@ -139,10 +154,10 @@ export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortMod
                         });
 
                     },
-                    (err) => {
-                        this.pageModel.showMessage('error', err);
+                    error: error => {
+                        this.pageModel.showMessage('error', error);
                     }
-                );
+                });
             }
         );
 

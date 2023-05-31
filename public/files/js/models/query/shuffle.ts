@@ -20,7 +20,7 @@
 
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
-import { tap, map } from 'rxjs/operators';
+import { tap, map, concatMap } from 'rxjs/operators';
 
 import { PageModel } from '../../app/page';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
@@ -73,9 +73,28 @@ export class ShuffleModel extends StatefulModel<ShuffleModelState> {
         this.addActionHandler(
             Actions.ShuffleFormSubmit,
             action => {
-                const concId = List.head(this.layoutModel.getConcArgs().q).substring(1);
-                this.submitForm(
-                    action.payload.opKey, concId
+                this.waitForActionWithTimeout(
+                    5000,
+                    {},
+                    (action, syncData) => {
+                        if (ConcActions.isReadyToAddNewOperation(action)) {
+                            return null;
+                        }
+                        return syncData;
+                    }
+                ).pipe(
+                    concatMap(
+                        wAction => {
+                            if (ConcActions.isReadyToAddNewOperation(wAction)) {
+                                return this.submitForm(
+                                    action.payload.opKey, wAction.payload.lastConcId
+                                );
+
+                            } else {
+                                throw new Error('failed to handle shuffle submit - unexpected action ' + wAction.name);
+                            }
+                        }
+                    )
 
                 ).subscribe({
                     next: data => {
