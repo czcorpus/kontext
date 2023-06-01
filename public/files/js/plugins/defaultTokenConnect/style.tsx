@@ -23,6 +23,11 @@ import * as theme from '../../views/theme/default';
 
 export const TokenConnectContainer = styled.div`
 
+    .not-avail {
+        color: ${theme.colorDarkGreenText};
+        font-weight: bold;
+    }
+
     p.keywords {
         line-height: 1.7em;
         word-spacing: 0.4em;

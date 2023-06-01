@@ -90,7 +90,7 @@ def fetch_posattr(corp, attr, token_id, num_tokens):
     mattr = corp.get_attr(attr)
     for i in range(num_tokens):
         ans.append(mattr.pos2str(int(token_id) + i))
-    return ' '.join(ans)
+    return ' '.join(ans).strip()
 
 
 def add_structattr_support(corp: KCorpus, attrs, token_id):
@@ -151,7 +151,7 @@ class DefaultTokenConnect(AbstractTokenConnect):
             lang,
             context=None):
         ans = []
-        # first, we pre-load all possible required (struct/pos) attributes all
+        # first, we preload all possible required (struct/pos) attributes all
         # the defined providers need
         all_attrs = set()
         for backend, _, _ in self.map_providers(providers):
@@ -165,7 +165,7 @@ class DefaultTokenConnect(AbstractTokenConnect):
             try:
                 args = {}
                 for attr in backend.get_required_attrs():
-                    v = fetch_any_attr(corpus, attr, token_id, num_tokens)
+                    v = fetch_any_attr(corpus, attr, token_id, num_tokens if backend.supports_multi_tokens() else 1)
                     if '.' in attr:
                         s, sa = attr.split('.')
                         if s not in args:

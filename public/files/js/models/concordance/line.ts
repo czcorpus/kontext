@@ -34,6 +34,7 @@ export class ConclineSectionOps {
         mlPositions:MLPositionsData,
         refMlPositions?:MLPositionsData,
     ) {
+        const kwicLen = List.size(kwic);
         const ans:KWICSection = {
             tokenNumber,
             lineNumber,
@@ -49,8 +50,12 @@ export class ConclineSectionOps {
             right,
             rightOffsets: pipe(
                 right,
-                List.foldr(
-                    (r, v) => r.concat((v.className ? 0 : v.text.length) + (r.length > 0 ? r[r.length - 1] : 0)), [1]),
+                List.foldl(
+                    (r, v) => r.concat(
+                        (pipe(v.text, List.filter(x => !!x.s), List.size())) + r[r.length - 1]
+                    ),
+                    [kwicLen]
+                ),
                 List.slice(0, -1)
             ),
             highlightMLPositions: refMlPositions ?

@@ -363,7 +363,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         };
 
         const handleNonKwicTokenClick = (corpusId, lineIdx, tokenNumber) => {
-            props.tokenConnectClickHandler(corpusId, tokenNumber, -1, lineIdx);
+            props.tokenConnectClickHandler(corpusId, tokenNumber, 1, lineIdx);
         };
 
         const handleTokenClick = (evt) => {
