@@ -122,7 +122,7 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
                 }
             },
             (state, action, dispatch) => {
-                this.suspend({}, (action, syncData) => {
+                this.waitForAction({}, (action, syncData) => {
                     if (action.name === Actions.WordlistFormSubmitReady.name) {
                         return null;
                     }
@@ -166,7 +166,7 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
                 state.toLine.value = '';
             },
             (state, action, dispatch) => {
-                this.suspend({}, (action, syncData) => {
+                this.waitForAction({}, (action, syncData) => {
                     if (action.name === Actions.WordlistFormSubmitReady.name) {
                         return null;
                     }

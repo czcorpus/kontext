@@ -21,7 +21,7 @@
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
-import { Dict, HTTP, List, tuple } from 'cnc-tskit';
+import { Dict, HTTP, List } from 'cnc-tskit';
 
 import { PageModel } from '../../app/page';
 import { SampleServerArgs } from './common';

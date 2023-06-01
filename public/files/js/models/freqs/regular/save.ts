@@ -93,7 +93,7 @@ export class FreqResultsSaveModel extends StatefulModel<FreqResultsSaveModelStat
                         state.saveformat = action.payload.saveformat,
                         state.toLine.value = `${state.quickSaveRowLimit}`
                     });
-                    this.suspend({}, (action, syncData) =>
+                    this.waitForAction({}, (action, syncData) =>
                         action.name === Actions.ResultPrepareSubmitArgsDone.name ? null : syncData
 
                     ).subscribe(
@@ -151,7 +151,7 @@ export class FreqResultsSaveModel extends StatefulModel<FreqResultsSaveModelStat
 
                 } else {
                     this.changeState(state => {state.formIsActive = false});
-                    this.suspend({}, (action, syncData) => {
+                    this.waitForAction({}, (action, syncData) => {
                         return action.name === Actions.ResultPrepareSubmitArgsDone.name ? null : syncData
                     }).subscribe(
                         (action) => {

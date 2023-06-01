@@ -171,7 +171,7 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
         this.addActionHandler<typeof Actions.ResultApplyQuickFilter>(
             Actions.ResultApplyQuickFilter.name,
             action => {
-                this.suspendWithTimeout(
+                this.waitForActionWithTimeout(
                     1000,
                     {},
                     (action2, syncData) => Actions.isResultApplyQuickFilterArgsReady(action2) ? null : syncData

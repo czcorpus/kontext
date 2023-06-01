@@ -69,14 +69,13 @@ export class Actions {
         name: 'TRIM_QUERY'
     };
 
-    static SliceQueryChain: Action<{
-        operationIdx:number;
-        concId:string;
+    static UpdateOperations:Action<{
+        operations:Array<Kontext.QueryOperation>;
     }> = {
-        name: 'QUERY_REPLAY_SLICE_QUERY_CHAIN'
+        name: 'QUERY_REPLAY_UPDATE_OPERATIONS'
     };
 
-    static QuerySetStopAfterIdx: Action<{
+    static QuerySetStopAfterIdx:Action<{
         value:number;
     }> = {
         name: 'QUERY_SET_STOP_AFTER_IDX'

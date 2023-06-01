@@ -93,7 +93,7 @@ export class PqueryResultsSaveModel extends StatefulModel<PqueryResultsSaveModel
                         state.saveformat = action.payload.saveformat,
                         state.toLine.value = `${state.quickSaveRowLimit}`
                     });
-                    this.suspend({}, (action, syncData) =>
+                    this.waitForAction({}, (action, syncData) =>
                         action.name === Actions.SaveFormPrepareSubmitArgsDone.name ? null : syncData
 
                     ).subscribe(
@@ -147,7 +147,7 @@ export class PqueryResultsSaveModel extends StatefulModel<PqueryResultsSaveModel
 
                 } else {
                     this.changeState(state => {state.formIsActive = false});
-                    this.suspend({}, (action, syncData) => {
+                    this.waitForAction({}, (action, syncData) => {
                         return action.name === Actions.SaveFormPrepareSubmitArgsDone.name ? null : syncData
                     }).subscribe(
                         (action) => {

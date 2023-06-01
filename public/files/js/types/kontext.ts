@@ -453,8 +453,10 @@ export interface QueryOperation {
 
      /**
       * A persistent key of the operation
+      * Note: this is currently attached on the clinet from the pipeline
+      * op list.
       */
-     conc_persistence_op_id:string;
+     conc_persistence_op_id:string|null;
 }
 
 export type VirtualKeys = Array<Array<[string, string]>>;

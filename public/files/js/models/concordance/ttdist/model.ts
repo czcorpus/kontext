@@ -90,7 +90,7 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
                         state.blockedByAsyncConc = !action.payload.finished;
                     }
                 );
-                this.suspendWithTimeout(5000, {}, (action, syncData) => {
+                this.waitForActionWithTimeout(5000, {}, (action, syncData) => {
                     if (ConcActions.isConcordanceRecalculationReady(action)) {
                         return null;
                     }
@@ -113,7 +113,7 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
             ConcActions.LoadTTDictOverview.name,
             action => {
                 if (this.state.blocks.length === 0) {
-                    this.suspendWithTimeout(5000, {}, (action, syncData) => {
+                    this.waitForActionWithTimeout(5000, {}, (action, syncData) => {
                         if (ConcActions.isConcordanceRecalculationReady(action)) {
                             return null;
                         }

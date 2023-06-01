@@ -122,7 +122,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
             },
             (state, action, dispatch) => {
                 if (!state.hasLoadedData) {
-                    this.suspendWithTimeout(20000, {}, (action , syncData) => {
+                    this.waitForActionWithTimeout(20000, {}, (action , syncData) => {
                         return null;
 
                     }).pipe(

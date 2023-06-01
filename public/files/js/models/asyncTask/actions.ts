@@ -22,6 +22,7 @@ import { Action } from 'kombo';
 import * as Kontext from '../../types/kontext';
 
 
+
 export class Actions {
 
     static InboxToggleOverviewVisibility:Action<{
