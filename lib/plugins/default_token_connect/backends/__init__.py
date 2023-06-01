@@ -49,6 +49,12 @@ class DisplayLinkBackend(AbstractBackend):
         return dict(), False
 
 
+class LemurLinkBackend(DisplayLinkBackend):
+
+    def supports_multi_tokens(self):
+        return False
+
+
 class HTTPBackend(AbstractBackend):
     """
     The default_token_connect's JSON config file defines a template of an abstract path identifying a resource.
