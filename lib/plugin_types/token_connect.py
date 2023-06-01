@@ -133,6 +133,15 @@ class AbstractBackend(AbstractProviderBackend):
         else:
             return self._conf.get('attrs', [])
 
+    def supports_multi_tokens(self) -> bool:
+        """
+        Specifies whether a backend supports multi-token searches. This may
+        be beneficial when clicking on a multi-token KWIC. In case the backend
+        cannot support multi-token KWICs, only the first token will be passed to
+        it.
+        """
+        return True
+
 
 class AbstractFrontend(AbstractProviderFrontend):
     """

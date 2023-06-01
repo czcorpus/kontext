@@ -364,7 +364,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                         props.tokenConnectClickHandler(
                             props.corpname,
                             tokenId,
-                            props.kwicLength,
+                            1,
                             props.lineIdx
                         );
                     }

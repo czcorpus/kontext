@@ -55,9 +55,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
 
     // ------------- <DisplayLinkRenderer /> -------------------------------
 
-    const DisplayLinkRenderer:Views['DisplayLinkRenderer'] = (props) => (
+    const DisplayLinkRenderer:Views['DisplayLinkRenderer'] = ({data:{link}}) => (
         <div>
-            <a target="_blank" className="external" href={props.data.link}>{props.data.link}</a>
+            {link ?
+                <a target="_blank" className="external" href={link}>{link}</a> :
+                <span className="not-avail">[N/A]</span>
+            }
         </div>
     );
 
