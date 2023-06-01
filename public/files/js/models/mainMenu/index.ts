@@ -252,12 +252,13 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
         );
 
         this.addActionHandler(
-            Actions.ClearActiveItem,
+            [
+                Actions.ClearActiveItem,
+                ConcActions.AddedNewOperation
+            ],
             (state, action) => {
                 state.activeItem = null;
             }
-        ).reduceAlsoOn(
-            ConcActions.AddedNewOperation.name
         );
 
         this.addActionHandler(
@@ -324,6 +325,13 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
             GlobalActions.ConcArgsUpdated,
             (state, action) => {
                 state.concArgs = action.payload.args
+            }
+        );
+
+        this.addActionHandler(
+            ConcActions.ReloadConc,
+            (state, action) => {
+                state.concArgs = {...state.concArgs, q: [`~${action.payload.concId}`]}
             }
         );
 
