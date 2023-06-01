@@ -43,7 +43,7 @@ export class ConclineSectionOps {
             leftOffsets: pipe(
                 left,
                 List.foldr(
-                    (r, v) => [(v.className ? 0 : v.text.length) + (r.length > 0 ? r[0] : 0)].concat(r), []
+                    (r, v) => [pipe(v.text, List.filter(x => !!x.s), List.size()) + (r.length > 0 ? r[0] : 0)].concat(r), []
                 )
             ),
             kwic,
