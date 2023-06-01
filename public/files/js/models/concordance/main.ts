@@ -326,7 +326,12 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                     this.pushHistoryState({
                         name: Actions.ReloadConc.name,
                         payload: {
-                            concId: action.payload.data.conc_persistence_op_id
+                            concId: action.payload.data.conc_persistence_op_id,
+                            arf: action.payload.data.result_arf,
+                            concSize: action.payload.data.concsize,
+                            corpusIpm: action.payload.data.result_relative_freq,
+                            fullSize: action.payload.data.fullsize,
+                            queryChainSize: List.size(action.payload.data.query_overview)
                         }
                     });
                     Dict.forEach(
@@ -409,7 +414,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 }
                 forkJoin([
                     this.waitForAction({}, (action, syncData) => {
-                        return action.name === Actions.PublishStoredLineSelections.name ?
+                        return Actions.isPublishStoredLineSelections(action) ?
                             null : syncData;
                     }).pipe(
                         map(v => (v as typeof Actions.PublishStoredLineSelections).payload)
@@ -431,6 +436,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                                 },
                                 this.state.highlightWordsStore
                             );
+
+                            this.layoutModel.updateConcArgs({q: [action.payload.concId]});
 
                         } else {
                             Dict.forEach(
@@ -474,11 +481,16 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                     concatMap(v => this.loadConcPage())
 
                 ).subscribe({
-                    next: ([concId,]) => {
+                    next: ([resp, ]) => {
                         this.pushHistoryState({
                             name: Actions.ReloadConc.name,
                             payload: {
-                                concId
+                                concId: resp.conc_persistence_op_id,
+                                arf: resp.result_arf,
+                                concSize: resp.concsize,
+                                fullSize: resp.fullsize,
+                                corpusIpm: resp.result_relative_freq,
+                                queryChainSize: List.size(resp.query_overview)
                             }
                         });
                         this.emitChange();
@@ -596,11 +608,16 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         state.attrViewMode = action.payload.attrVmode;
                     });
                     this.loadConcPage().subscribe({
-                        next: ([concId,]) => {
+                        next: ([resp,]) => {
                             this.pushHistoryState({
                                 name: Actions.ReloadConc.name,
                                 payload: {
-                                    concId
+                                    concId: resp.conc_persistence_op_id,
+                                    arf: resp.result_arf,
+                                    corpusIpm: resp.result_relative_freq,
+                                    concSize: resp.concsize,
+                                    fullSize: resp.fullsize,
+                                    queryChainSize: List.size(resp.query_overview)
                                 }
                             });
                             this.emitChange();
@@ -622,11 +639,16 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         state.currentPage = 1;
                     });
                     this.loadConcPage().subscribe({
-                        next: ([concId,]) => {
+                        next: ([resp,]) => {
                             this.pushHistoryState({
                                 name: Actions.ReloadConc.name,
                                 payload: {
-                                    concId
+                                    concId: resp.conc_persistence_op_id,
+                                    arf: resp.result_arf,
+                                    corpusIpm: resp.result_relative_freq,
+                                    concSize: resp.concsize,
+                                    fullSize: resp.fullsize,
+                                    queryChainSize: List.size(resp.query_overview)
                                 }
                             });
                             this.emitChange();
@@ -959,7 +981,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
      * @param concId if non-empty then a specific concordance is loaded
      * @return a 2-tuple [actual conc. ID, page num]
      */
-    private loadConcPage(concId?:string):Observable<[string, number]> {
+    private loadConcPage(concId?:string):Observable<[AjaxConcResponse, number]> {
         return this.changePage('customPage', 1, concId ? `~${concId}` : undefined);
     }
 
@@ -983,7 +1005,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         action:PaginationActions,
         pageNumber?:number,
         concId?:string
-    ):Observable<[string, number]> {
+    ):Observable<[AjaxConcResponse, number]> {
 
         const pageNum:number = action === 'customPage' ?
             pageNumber : this.state.pagination[action];
@@ -1020,7 +1042,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                     });
                 }
             ),
-            map(resp => tuple(resp.conc_persistence_op_id, pageNum))
+            map(resp => tuple(resp, pageNum))
         );
     }
 
@@ -1226,14 +1248,19 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
 
         ).pipe(
             tap(
-                data => {
+                resp => {
                     this.changeState(state => {
-                        this.importData(state, data);
+                        this.importData(state, resp);
                     });
                     this.pushHistoryState({
                         name: Actions.ReloadConc.name,
                         payload: {
-                            concId: data.conc_persistence_op_id,
+                            concId: resp.conc_persistence_op_id,
+                            arf: resp.result_arf,
+                            corpusIpm: resp.result_relative_freq,
+                            concSize: resp.concsize,
+                            fullSize: resp.fullsize,
+                            queryChainSize: List.size(resp.query_overview),
                             viewMode
                         }
                     });

@@ -490,7 +490,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             Actions.ResultSetMinFreqVal,
             null,
             (state, action, dispatch) => {
-                this.suspendWithTimeout(
+                this.waitForActionWithTimeout(
                     5000,
                     {},
                     (action, syncData) => {

@@ -87,7 +87,9 @@ export class History implements Kontext.IHistory {
     }
 
     setOnPopState(fn:(event:PopStateEvent)=>void):void {
-        window.onpopstate = fn;
+        window.onpopstate = (event:PopStateEvent) => {
+            fn(event);
+        };
     }
 }
 

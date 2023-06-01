@@ -110,6 +110,18 @@ export class ConcSummaryModel extends StatelessModel<ConcSummaryModelState> {
         );
 
         this.addActionHandler(
+            Actions.ReloadConc,
+            (state, action) => {
+                state.arf = action.payload.arf;
+                state.concSize = action.payload.concSize;
+                state.fullSize = action.payload.fullSize;
+                state.ipm = null;
+                state.queryChainSize = action.payload.queryChainSize;
+                state.corpusIpm = action.payload.corpusIpm;
+            }
+        )
+
+        this.addActionHandler(
             Actions.AddedNewOperation,
             (state, action) => {
                 state.arf = action.payload.data.result_arf;

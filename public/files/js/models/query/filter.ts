@@ -20,7 +20,7 @@
 
 import { IFullActionControl } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { concatMap, tap } from 'rxjs/operators';
 import { tuple, pipe, Dict, List, HTTP, id } from 'cnc-tskit';
 
 import * as Kontext from '../../types/kontext';
@@ -505,14 +505,35 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                     }
                     err = this.testQueryTypeMismatch();
                 });
+
                 if (!err) {
                     this.changeState(state => {
                         state.isBusy = true;
                     });
-                    this.submitQuery(
-                        action.payload.filterId,
-                        List.head(this.pageModel.getConcArgs().q).substr(1)
+
+                    this.waitForActionWithTimeout(
+                        5000,
+                        {},
+                        (action, syncData) => {
+                            if (ConcActions.isReadyToAddNewOperation(action)) {
+                                return null;
+                            }
+                            return syncData;
+                        }
                     ).pipe(
+                        concatMap(
+                            wAction => {
+                                if (ConcActions.isReadyToAddNewOperation(wAction)) {
+                                    return this.submitQuery(
+                                        action.payload.filterId,
+                                        wAction.payload.lastConcId
+                                    );
+
+                                } else {
+                                    throw new Error('failed to handle filter submit - unexpected action ' + wAction.name);
+                                }
+                            }
+                        ),
                         tap(
                             (data) => {
                                 this.pageModel.updateConcPersistenceId(data.conc_persistence_op_id);

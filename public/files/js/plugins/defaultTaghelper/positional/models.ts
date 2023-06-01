@@ -44,7 +44,7 @@ export class DataInitSyncModel extends StatelessModel<{}> {
             action => action.payload.value === 'tag',
             null,
             (state, action, dispatch) => {
-                this.suspendWithTimeout(
+                this.waitForActionWithTimeout(
                     5000,
                     {},
                     (wAction, syncData) => {
