@@ -27,11 +27,11 @@ import logging
 import os
 import signal
 import sys
-import hashlib
 from datetime import datetime, timedelta, timezone
 from logging.handlers import QueueListener
 import secrets
 import tempfile
+import hashlib
 
 from concurrent_log_handler import ConcurrentRotatingFileHandler
 
@@ -53,7 +53,8 @@ LOCALE_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), '../local
 JWT_COOKIE_NAME = 'kontext_jwt'
 JWT_ALGORITHM = 'HS256'
 DFLT_HTTP_CLIENT_TIMEOUT = 20
-SOFT_RESET_TOKEN_DIR = 'kontext_srt'  # the token allows for remote soft reset; it is auto generated on each startup
+# a file for storing soft-reset token (the stored value is auto-generated on each (re)start)
+SOFT_RESET_TOKEN_FILE = os.path.join(tempfile.gettempdir(), 'kontext_srt', hashlib.sha1(CONF_PATH.encode()).hexdigest())
 
 from typing import Optional
 
@@ -180,6 +181,16 @@ def load_translations(app: Sanic):
         catalog = support.Translations.load(LOCALE_PATH, [loc])
         app.ctx.translations[loc] = catalog
 
+@application.listener('main_process_start')
+async def main_process_init(*_):
+    # create a token file for soft restart
+    if not os.path.isdir(os.path.dirname(SOFT_RESET_TOKEN_FILE)):
+        os.mkdir(os.path.dirname(SOFT_RESET_TOKEN_FILE))
+    key = secrets.token_hex(32)
+    with open(SOFT_RESET_TOKEN_FILE, 'w') as ttf:
+        ttf.write(key)
+    logging.getLogger(__name__).info(
+        f'setting soft restart token {key[:5]}..., file {os.path.basename(SOFT_RESET_TOKEN_FILE)[:5]}...')
 
 @application.listener('before_server_start')
 async def server_init(app: Sanic, loop: asyncio.BaseEventLoop):
@@ -196,17 +207,11 @@ async def server_init(app: Sanic, loop: asyncio.BaseEventLoop):
     app.ctx.kontext_conf = {'http_client_timeout_secs': http_client_conf}
     # load all translations
     load_translations(app)
-    # create a token file for soft restart
-    srt_dir = os.path.join(tempfile.gettempdir(), SOFT_RESET_TOKEN_DIR)
-    if not os.path.isdir(srt_dir):
-        os.mkdir(srt_dir)
-    key = secrets.token_hex(32)
-    app.ctx.soft_restart_token = key
-    fname = hashlib.sha1(CONF_PATH.encode()).hexdigest()
-    with open(os.path.join(srt_dir, fname), 'w') as ttf:
-        ttf.write(key)
-    logging.getLogger(__name__).warning(f'setting soft restart token {key[:5]}..., file {fname[:5]}...')
-
+    # load restart token
+    with open(SOFT_RESET_TOKEN_FILE, 'r') as ttf:
+        app.ctx.soft_restart_token = ttf.read().strip()
+        logging.getLogger(__name__).info(
+            f'worker is attaching soft-restart token {app.ctx.soft_restart_token[:5]}...')
 
 @application.listener('after_server_stop')
 async def server_init(app: Sanic, loop: asyncio.BaseEventLoop):
