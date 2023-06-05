@@ -13,8 +13,21 @@
 # GNU General Public License for more details.
 
 from typing import Any, Dict, Generic, Optional, TypeVar
+import abc
 
-T = TypeVar('T')
+
+class AbstractRawQueryDecoder:
+
+    @abc.abstractmethod
+    def from_raw_query(self, q: str, corpname: str) -> 'AbstractRawQueryDecoder':
+        """
+        Decode raw Manatee operation (including first character
+        representing an operation identifier).
+        """
+        pass
+
+
+T = TypeVar('T', bound=AbstractRawQueryDecoder)
 
 
 class ConcFormArgs(Generic[T]):
@@ -46,6 +59,10 @@ class ConcFormArgs(Generic[T]):
             if hasattr(self.data, k):
                 setattr(self.data, k, v)
         self._op_key = op_key
+        return self
+
+    def from_raw_query(self, q: str, corpname: str) -> 'ConcFormArgs[T]':
+        self.data = self.data.from_raw_query(q, corpname)
         return self
 
     def to_dict(self) -> Dict[str, Any]:

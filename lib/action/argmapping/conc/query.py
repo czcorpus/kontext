@@ -20,7 +20,7 @@ from action.argmapping.conc.base import ConcFormArgs
 from action.argmapping.error import ArgumentMappingError
 from action.plugin.ctx import AbstractCorpusPluginCtx
 from dataclasses_json import dataclass_json
-
+from .base import AbstractRawQueryDecoder
 
 @dataclass_json
 @dataclass
@@ -33,7 +33,7 @@ class _QueryFormArgs:
     curr_include_empty_values: Dict[str, bool] = field(default_factory=dict)
     curr_lpos_values: Dict[str, str] = field(default_factory=dict)
     curr_qmcase_values: Dict[str, bool] = field(default_factory=dict)
-    curr_default_attr_values: Dict[str, bool] = field(default_factory=dict)
+    curr_default_attr_values: Dict[str, str] = field(default_factory=dict)
     curr_use_regexp_values: Dict[str, bool] = field(default_factory=dict)
     tagsets: Dict[str, List[Dict[str, Any]]] = field(default_factory=dict)
     has_lemma: Dict[str, bool] = field(default_factory=dict)
@@ -60,7 +60,7 @@ def _corp_mapping(corpora: List[str], v: Any = None) -> Dict[str, Any]:
     return {c: v for c in corpora}
 
 
-class QueryFormArgs(ConcFormArgs[_QueryFormArgs]):
+class QueryFormArgs(ConcFormArgs[_QueryFormArgs], AbstractRawQueryDecoder):
     """
     QueryFormArgs provides methods to handle concordance
     query form arguments represented by the _QueryFormArgs data class.
@@ -136,6 +136,19 @@ class QueryFormArgs(ConcFormArgs[_QueryFormArgs]):
         self.data.fc_pos = ctx.get('fc_pos', self.data.fc_pos)
         self.data.selected_text_types = data.get('text_types', {})
         self.data.cutoff = data.get('cutoff', 0)
+
+    def from_raw_query(self, q, corpname) -> 'QueryFormArgs':
+        tmp = q[1:].split(',', 1)
+        if len(tmp) > 1:
+            default_attr = tmp[0]
+            first_q = tmp[1]
+        else:
+            default_attr = ''
+            first_q = tmp[0]
+        self.data.curr_queries[corpname] = first_q
+        self.data.curr_default_attr_values[corpname] = default_attr
+        self.data.curr_query_types[corpname] = 'advanced'
+        return self
 
     async def _add_corpus_metadata(self, corpus_id: str):
         with plugins.runtime.CORPARCH as ca, plugins.runtime.TAGHELPER as th:
