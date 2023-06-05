@@ -272,6 +272,22 @@ class ConcActionModel(CorpusActionModel):
             self._output_last_op_id(
                 next_query_keys[-1] if len(next_query_keys) else None, resp.result)
 
+    async def store_unbound_query_chain(self, chain: List[Tuple[str, ConcFormArgs]]):
+        """
+        Based on provided list of (raw query, form data) pairs, store all the
+        operations like a standard KonText query chain. This is mostly used
+        when dealing with backlinks from other apps (see actions create_view,
+        create_lazy_view).
+        """
+        with plugins.runtime.QUERY_PERSISTENCE as qp:
+            self.args.q = []
+            for i, (raw_q, farg) in enumerate(chain):
+                self.args.q.append(raw_q)
+                self.set_curr_conc_form_args(farg)
+                if i < len(chain) - 1:
+                    new_ids, _ = await self._store_conc_params()
+                    self._active_q_data = await qp.open(new_ids[-1])
+
     async def _store_conc_params(self) -> Tuple[List[str], Optional[int]]:
         """
         Stores concordance operation if the query_persistence plugin is installed
@@ -291,11 +307,11 @@ class ConcActionModel(CorpusActionModel):
             lines_groups = prev_data.get('lines_groups', self._lines_groups.serialize())
             for q_idx, op in self._auto_generated_conc_ops:
                 prev = dict(id=ans[-1], lines_groups=lines_groups, q=getattr(self.args, 'q')[:q_idx],
-                            corpora=self.get_current_aligned_corpora(), usesubcorp=getattr(self.args, 'usesubcorp'),
+                            corpora=self.get_current_aligned_corpora(), usesubcorp=self.args.usesubcorp,
                             user_id=self.session_get('user', 'id'))
                 curr = dict(lines_groups=lines_groups,
                             q=getattr(self.args, 'q')[:q_idx + 1],
-                            corpora=self.get_current_aligned_corpora(), usesubcorp=getattr(self.args, 'usesubcorp'),
+                            corpora=self.get_current_aligned_corpora(), usesubcorp=self.args.usesubcorp,
                             lastop_form=op.to_dict(), user_id=self.session_get('user', 'id'))
                 ans.append(await qp.store(self.session_get('user', 'id'), curr_data=curr, prev_data=prev))
             return ans, history_ts
