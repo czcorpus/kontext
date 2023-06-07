@@ -93,7 +93,13 @@ function nextWithinLineIdx(tc:Array<TextChunk>, currWlIdx:number) {
 /**
  *
  */
-export function importLines(data:Array<ServerLineData>, mainAttrIdx:number, merged_attrs:Array<[string, number]>, merged_ctxattrs:Array<[string, number]>):Array<Line> {
+export function importLines(
+    data:Array<ServerLineData>,
+    mainAttrIdx:number,
+    merged_attrs:Array<[string, number]>,
+    merged_ctxattrs:Array<[string, number]>
+):Array<Line> {
+
     return List.reduce<ServerLineData, Array<Line>>(
         (acc, item:ServerLineData, i:number) => {
             let line:Array<KWICSection> = [];

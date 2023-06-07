@@ -45,7 +45,7 @@ async def fetch_token_detail(amodel: ConcActionModel, req: KRequest, resp: KResp
             req.json['corpusId'],
             req.json['tokenId'],
             req.json['tokenLength'],
-            req.json['tokens'],
+            req.json['tokenRanges'],
             req.ui_lang,
         )
     return dict(data=data)
@@ -76,10 +76,10 @@ class DefaultTokensLinking(AbstractTokensLinking):
     def export_actions():
         return bp
 
-    async def fetch_data(self, plugin_ctx, provider_ids, corpus_id, token_id, token_length, tokens, lang) -> List[Dict]:
+    async def fetch_data(self, plugin_ctx, provider_ids, corpus_id, token_id, token_length, token_ranges, lang) -> List[Dict]:
         ans = {}
         for backend, _ in self.map_providers(provider_ids):
-            data, status = await backend.fetch(corpus_id, token_id, token_length, tokens, lang)
+            data, status = await backend.fetch(plugin_ctx.corpus_factory, corpus_id, token_id, token_length, token_ranges, lang)
             ans[backend.provider_id] = data
         return ans
 

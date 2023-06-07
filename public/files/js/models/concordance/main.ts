@@ -916,21 +916,41 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         );
     }
 
-    private highlightTokenLink(state:ConcordanceModelState, corpusIdx:number, tokenId:number, color:string) {
-        const lineIdx = List.findIndex(line => {
-            const offset = tokenId - line.languages[corpusIdx].tokenNumber;
-            return (offset >= -line.languages[corpusIdx].leftOffsets[0]) && (offset < (line.languages[corpusIdx].rightOffsets[line.languages[corpusIdx].rightOffsets.length-1] + line.languages[corpusIdx].kwic.length));
-        }, state.lines);
+    private highlightTokenLink(
+        state:ConcordanceModelState,
+        corpusIdx:number,
+        tokenId:number,
+        color:string
+    ) {
+        const lineIdx = List.findIndex(
+            line => {
+                const offset = tokenId - line.languages[corpusIdx].tokenNumber;
+                const lftOffst = line.languages[corpusIdx].leftOffsets[0] ?
+                    line.languages[corpusIdx].leftOffsets[0] :
+                    0;
+                const rgtOffst = line.languages[corpusIdx].rightOffsets[line.languages[corpusIdx].rightOffsets.length-1] ?
+                    line.languages[corpusIdx].rightOffsets[line.languages[corpusIdx].rightOffsets.length-1] :
+                    0;
+                const kwicLen = line.languages[corpusIdx].kwic.length ?
+                    line.languages[corpusIdx].kwic.length :
+                    0;
+                return (offset >= -lftOffst) && (offset < (rgtOffst + kwicLen));
+            },
+            state.lines
+        );
         if (lineIdx !== -1) {
-            const offset = tokenId - state.lines[lineIdx].languages[corpusIdx].tokenNumber;
+            const langLine = state.lines[lineIdx].languages[corpusIdx];
+            const offset = tokenId - langLine.tokenNumber;
             if (offset < 0) {
-                const leftIdx = List.findIndex(v => -v === offset, state.lines[lineIdx].languages[corpusIdx].leftOffsets);
-                state.lines[lineIdx].languages[corpusIdx].left[leftIdx].text.hColor = color;
-            } else if (offset >= 0 && offset < state.lines[lineIdx].languages[corpusIdx].kwic.length) {
-                state.lines[lineIdx].languages[corpusIdx].kwic[offset].text.hColor = color;
+                const leftIdx = List.findIndex(v => -v === offset, langLine.leftOffsets);
+                langLine.left[leftIdx].text.hColor = color;
+
+            } else if (offset >= 0 && offset < langLine.kwic.length) {
+                langLine.kwic[offset].text.hColor = color;
+
             } else {
-                const rightIdx = List.findIndex(v => v === offset - (state.lines[lineIdx].languages[corpusIdx].kwic.length - 1), state.lines[lineIdx].languages[corpusIdx].rightOffsets);
-                state.lines[lineIdx].languages[corpusIdx].right[rightIdx].text.hColor = color;
+                const rightIdx = List.findIndex(v => v === offset - (langLine.kwic.length - 1), langLine.rightOffsets);
+                langLine.right[rightIdx].text.hColor = color;
             }
         };
     }

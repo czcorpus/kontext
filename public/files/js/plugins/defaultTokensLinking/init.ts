@@ -54,7 +54,6 @@ export class DefaultTokensLinkingPlugin implements PluginInterfaces.TokensLinkin
     }
 
     init():void {
-        console.log('___________ INIT_____')
     }
 }
 

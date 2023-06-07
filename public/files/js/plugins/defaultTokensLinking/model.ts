@@ -116,7 +116,6 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                         });
                     }
                 });
-                console.log('TokensLinking dispatched', action.payload);
             }
         );
 
@@ -127,7 +126,6 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                     this.pluginApi.showMessage('error', action.error);
 
                 } else {
-                    console.log('we have backend data: ', action.payload.data);
                 }
             }
         )
