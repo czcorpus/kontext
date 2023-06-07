@@ -13,11 +13,13 @@
 # GNU General Public License for more details.
 
 from dataclasses import dataclass
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
+import re
 
 from action.argmapping.conc.base import ConcFormArgs
 from action.argmapping.error import ValidationError
 from dataclasses_json import dataclass_json
+from .base import AbstractRawQueryDecoder
 
 
 @dataclass_json
@@ -53,7 +55,7 @@ class _SortFormArgs:
     ml4ctx: str = '0~0>0'
 
 
-class SortFormArgs(ConcFormArgs[_SortFormArgs]):
+class SortFormArgs(ConcFormArgs[_SortFormArgs], AbstractRawQueryDecoder):
     """
     SortFormArgs provides methods to handle concordance
     query form arguments represented by the _SortFormArgs data class.
@@ -108,3 +110,49 @@ class SortFormArgs(ConcFormArgs[_SortFormArgs]):
                 self.data.ml4pos = data['levels'][3]['spos']
         else:
             raise Exception('Failed to recognize sort form source data')
+
+    @staticmethod
+    def _parse_attr(a: str) -> Tuple[str, str, str]:
+        reverse_flag = ''
+        ci_flag = ''
+        attr, flags = a.split('/')
+        if 'r' in flags:
+            reverse_flag = 'r'
+        if 'i' in flags:
+            ci_flag = 'i'
+        return attr, ci_flag, reverse_flag
+
+    @staticmethod
+    def _validate_position(p: str):
+        """
+        Parse  an encoded position.
+        Please note that this does not support all the
+        variants Manatee supports. This is just enough
+        to cover KonText form data. Other variants throw
+        ValueError.
+        """
+        srch = re.search(r'(-?\d+)(<|>)0', p)
+        if not srch:
+            raise ValueError(f'unsupported position specification {p}')
+
+    def from_raw_query(self, q, corpname) -> 'SortFormArgs':
+        """
+        Parse Manatee sorting operation to KonText forms. Please note
+        that this method supports only a subset of possible options
+        accepted by Manatee.
+        """
+        q = q[1:]
+        items = re.split(r'\s+', q)
+        if len(items) % 2 != 0:
+            raise ValueError(f'failed to parse sorting expression "{q}"')
+        num_level = int(len(items) / 2)
+        for i in range(num_level):
+            attr, ci_flag, reverse_flag = self._parse_attr(items[2 * i])
+            self._validate_position(items[2 * i + 1])
+            setattr(self.data, f'ml{i+1}attr', attr)
+            setattr(self.data, f'ml{i+1}ctx', items[2 * i + 1])
+            setattr(self.data, f'ml{i+1}bward', reverse_flag)
+            setattr(self.data, f'ml{i+1}icase', ci_flag)
+        self.data.sortlevel = num_level
+        self.data.form_action = 'mlsortx'
+        return self
