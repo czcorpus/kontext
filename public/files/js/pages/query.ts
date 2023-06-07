@@ -41,7 +41,7 @@ import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import { QueryHelpModel } from '../models/help/queryHelp';
-import { ConcFormArgs, QueryFormArgs } from '../models/query/formArgs';
+import { ConcFormArgs, isFilterFormArgs, QueryFormArgs } from '../models/query/formArgs';
 import { QuickSubcorpModel } from '../models/subcorp/quickSubcorp';
 import { importInitialTTData, TTInitialData } from '../models/textTypes/common';
 import { ConcServerArgs } from '../models/concordance/common';
@@ -335,7 +335,16 @@ export class QueryPage {
                 queryId = q[0].replace('~', '');
             }
 
-            const queryFormArgs = concFormsArgs[queryId] as QueryFormArgs;
+            let queryFormArgs;
+            const formArgs = concFormsArgs[queryId];
+            if (isFilterFormArgs(formArgs)) {
+                queryFormArgs = concFormsArgs['__new__'] as QueryFormArgs;
+                queryFormArgs.curr_query_types[formArgs.maincorp] = formArgs.query_type;
+                queryFormArgs.curr_queries[formArgs.maincorp] = formArgs.query;
+            } else {
+                queryFormArgs = concFormsArgs[queryId] as QueryFormArgs;
+            }
+
             this.queryContextModel = new QueryContextModel(
                 this.layoutModel.dispatcher,
                 queryFormArgs
