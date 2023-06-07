@@ -877,6 +877,12 @@
                             <ref name="customPluginConfiguration" />
                         </optional>
                     </element>
+                    <element name="tokens_linking">
+                        <optional>
+                            <ref name="plugin_common" />
+                            <ref name="customPluginConfiguration" />
+                        </optional>
+                    </element>
                     <element name="export_freq2d">
                         <interleave>
                             <optional>
