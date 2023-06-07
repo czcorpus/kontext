@@ -19,8 +19,8 @@
  */
 
 import * as React from 'react';
-import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { Dict, List, pipe } from 'cnc-tskit';
+import { IActionDispatcher, BoundWithProps, ExtractPayload } from 'kombo';
+import { Dict, List, pipe, tuple } from 'cnc-tskit';
 
 import * as Kontext from '../../../types/kontext';
 import * as ViewOptions from '../../../types/viewOptions';
@@ -210,7 +210,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                 <td>{/* matches line number column */}</td>
                 <td>{/* matches selection checkbox column */}</td>
                 <td>{/* matches syntax tree column */}</td>
-                {props.cols.map(item => renderCol(item))}
+                {List.map(item => renderCol(item), props.cols)}
             </tr>
         );
     };
@@ -854,60 +854,27 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             lineId:number,
             tokenLength:number
         ) => {
-            const tokens:{[corpusId:string]:Array<{attrs:AttrSet, tokenId:number}>} = {};
-            List.forEach((lang, langId) => {
-                const kwicNumber = lang.tokenNumber;
-                const tokenIdx = tokenId - kwicNumber + lang.left.length;
-                const numLeftTokens = List.size(lang.left);
-                const numKwicTokens = List.size(lang.kwic);
-                const numRightTokens = List.size(lang.right);
-                const calculatedTokenIds = List.range(
-                    tokenId - tokenIdx,
-                    tokenId - tokenIdx + numLeftTokens + numKwicTokens + numRightTokens,
-                );
 
-                const left = List.map(
-                    (token, i) => {
-                        const attrs = {[props.baseViewAttr]: token.text.s};
-                        List.forEach((a, i) => {
-                            attrs[a[0]] = token.posAttrs[i];
-                        }, props.mergedCtxAttrs.slice(1));
-                        return {attrs, tokenId: calculatedTokenIds[i]};
-                    },
-                    lang.left
-                );
-                const kwic = List.map(
-                    (token, i) => {
-                        const attrs = {[props.baseViewAttr]: token.text.s};
-                        List.forEach((a, i) => {
-                            attrs[a[0]] = token.posAttrs[i];
-                        }, props.mergedAttrs.slice(1));
-                        return {attrs, tokenId: calculatedTokenIds[i + numLeftTokens]};
-                    },
-                    lang.kwic
-                );
-                const right = List.map(
-                    (token, i) => {
-                        const attrs = {[props.baseViewAttr]: token.text.s};
-                        List.forEach((a, i) => {
-                            attrs[a[0]] = token.posAttrs[i];
-                        }, props.mergedCtxAttrs.slice(1));
-                        return {attrs, tokenId: calculatedTokenIds[i + numLeftTokens + numKwicTokens]};
-                    },
-                    lang.right
-                );
-                tokens[props.corporaColumns[langId].n] = [...left, ...kwic, ...right]
-            }, props.lines[lineId].languages);
-
+            const payload:ExtractPayload<typeof TokensLinkingActions.FetchInfo> = {
+                corpusId,
+                tokenId,
+                tokenLength,
+                tokenRanges: {}
+            }
+            List.forEach(
+                (lang, langId) => {
+                    const kwicNumber = lang.tokenNumber;
+                    const tokenIdx = tokenId - kwicNumber + lang.left.length;
+                    payload.tokenRanges[props.corporaColumns[langId].n] = tuple(
+                        tokenId - tokenIdx,
+                        tokenId - tokenIdx + List.size(lang.left) + List.size(lang.kwic) + List.size(lang.right)
+                    );
+                },
+                props.lines[lineId].languages
+            );
             dispatcher.dispatch(
                 TokensLinkingActions.FetchInfo,
-                {
-                    corpusId,
-                    tokenId: tokenId,
-                    tokenLength,
-                    tokens,
-                },
-                undefined
+                payload
             );
         };
 

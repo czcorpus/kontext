@@ -16,8 +16,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import Any, Dict, List, Tuple
+from typing import Any, List, Tuple
 
+import conclib
 from .abstract import AbstractBackend
 
 #
@@ -36,26 +37,40 @@ class Test1Backend(AbstractBackend):
 
     async def fetch(
             self,
-            corpus_id: str,
-            token_id: int,
-            token_length: int,
-            tokens: Dict[str, List[Dict[str, Any]]],
-            lang: str,
+            corp_factory,
+            corpus_id,
+            token_id,
+            token_length,
+            token_ranges,
+            lang,
     ) -> Tuple[Any, bool]:
-        selected_token = None
-        for token in tokens[corpus_id]:
-            if token['tokenId'] == token_id:
-                selected_token = token
-                break
-        first_letter = selected_token['attrs'][self._conf['attr']][0].lower()
+        selected_token = {}
+        tokens = {}
+        clicked_word = None
+        for corp_id, tok_range in token_ranges.items():
+            corp = await corp_factory.get_corpus(corp_id)
+            data = conclib.get_detail_context(
+                corp=corp, pos=tok_range[0], attrs=self.required_attrs(), structs='', hitlen=token_length,
+                detail_left_ctx=0, detail_right_ctx=tok_range[1] - tok_range[0])
+            tokens[corp_id] = data.get('content', [])
+            if corp_id == corpus_id:
+                for i, t in enumerate(tokens[corp_id]):
+                    if tok_range[0] + i == token_id:
+                        clicked_word = t['str']
+                        break
+        if clicked_word:
+            first_letter = clicked_word[0].lower()
+        else:
+            first_letter = '-'
+
         selected_token['link'] = []
-        user_attr = self._conf['attr']
         for corpname, corp_tokens in tokens.items():
-            for token in corp_tokens:
-                if token['attrs'].get(user_attr, [''])[0].lower() == first_letter:
+            for tok_idx, token in enumerate(corp_tokens):
+                value = token['str'].lower()
+                if value and value[0].lower() == first_letter:
                     selected_token['link'].append({
                         'corpname': corpname,
-                        'tokenId': token['tokenId'],
+                        'tokenId': token_ranges[corpname][0] + tok_idx,
                         'highlightColor': self._conf['color'],
                         'comment': 'Test1Backend highlights tokens with the same starting letter',
                     })

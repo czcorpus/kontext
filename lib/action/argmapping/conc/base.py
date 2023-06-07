@@ -62,6 +62,14 @@ class ConcFormArgs(Generic[T]):
         return self
 
     def from_raw_query(self, q: str, corpname: str) -> 'ConcFormArgs[T]':
+        """
+        Return an updated self object (the same instance) with data imported
+        from a "raw Manatee query" (e.g. stuff like 'sword/ 0 word/ir -1<0 tag/r -2<0'
+        (sorting) or 'p-1 -1 -1 [word="drug"]' (filter)).
+
+        This is mostly used along with URL actions create_view, create_lazy_view
+        which allows building multistep queries directly using a single request.
+        """
         self.data = self.data.from_raw_query(q, corpname)
         return self
 

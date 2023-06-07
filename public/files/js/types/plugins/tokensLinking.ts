@@ -37,7 +37,7 @@ export class Actions {
         corpusId:string;
         tokenId:number;
         tokenLength:number;
-        tokens:{[corpusId:string]:Array<{attrs:AttrSet, tokenId:number}>};
+        tokenRanges:{[corpusId:string]:[number, number]};
     }> = {
         name: 'TOKENS_LINKING_FETCH_INFO'
     };

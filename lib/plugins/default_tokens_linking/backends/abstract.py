@@ -19,6 +19,7 @@
 import abc
 from typing import Any, Dict, List, Tuple
 
+from corplib import CorpusFactory
 from plugin_types.providers import AbstractProviderBackend
 
 
@@ -31,10 +32,11 @@ class AbstractBackend(AbstractProviderBackend):
     @abc.abstractmethod
     async def fetch(
             self,
+            corp_factory: CorpusFactory,
             corpus_id: str,
             token_id: int,
             token_length: int,
-            tokens: Dict[str, List[Dict[str, Any]]],
+            token_ranges: Dict[str, Tuple[int, int]],
             lang: str,
     ) -> Tuple[Any, bool]:
         pass

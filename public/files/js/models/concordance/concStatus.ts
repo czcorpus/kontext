@@ -113,7 +113,7 @@ export class HitReloader {
                 takeWhile(
                     ([response, interval]) => interval < HitReloader.CHECK_CONC_MAX_WAIT &&
                         !response.finished,
-                    true // true => emit also the last item (which already breaks the predicate)
+                    true // true => emit also the last item (which is the first to breaks the predicate)
                 ),
             ).subscribe({
                 next: ([response,]) => {
