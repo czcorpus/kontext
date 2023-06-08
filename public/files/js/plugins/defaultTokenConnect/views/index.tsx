@@ -26,7 +26,7 @@ import * as S from '../style';
 
 
 export interface Views {
-    DisplayLinkRenderer:React.FC<{data: {link: string};}>;
+    DisplayLinkRenderer:React.FC<{data: {link: string; label?:string};}>;
     RawHtmlRenderer:React.FC<{data: Array<[string, string]>}>;
     SimpleTabularRenderer:React.FC<{data: Array<Array<[string, string]>>}>;
     DescriptionListRenderer:React.FC<{data: Array<[string, string]>}>;
@@ -55,13 +55,15 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
 
     // ------------- <DisplayLinkRenderer /> -------------------------------
 
-    const DisplayLinkRenderer:Views['DisplayLinkRenderer'] = ({data:{link}}) => (
-        <div>
+    const DisplayLinkRenderer:Views['DisplayLinkRenderer'] = ({data:{link, label}}) => (
+        <S.DisplayLinkRenderer>
             {link ?
-                <a target="_blank" className="external" href={link}>{link}</a> :
+                <a target="_blank" className="external" href={link}>
+                    {label ? label : link}
+                </a> :
                 <span className="not-avail">[N/A]</span>
             }
-        </div>
+        </S.DisplayLinkRenderer>
     );
 
     // ------------- <RawHtmlRenderer /> -------------------------------

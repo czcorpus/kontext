@@ -67,3 +67,17 @@ export const TokenConnectContainer = styled.div`
     }
 
 `;
+
+export const DisplayLinkRenderer = styled.div`
+
+    a {
+        text-decoration: underline;
+        text-underline-offset: 0.2em;
+        font-size: 1.1em;
+    }
+
+    a:hover {
+        text-decoration: none;
+    }
+
+`;

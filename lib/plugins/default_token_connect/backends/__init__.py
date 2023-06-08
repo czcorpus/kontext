@@ -30,6 +30,10 @@ class DisplayLinkBackend(AbstractBackend):
     load any content from the target service in this case.
     """
 
+    def __init__(self, conf, provider_id, db, ttl):
+        super().__init__(conf, provider_id, db, ttl)
+        self._label = conf.get('label', {})
+
     def get_required_attrs(self):
         return self._conf.get('posAttrs', [])
 
@@ -41,7 +45,10 @@ class DisplayLinkBackend(AbstractBackend):
             server = self._conf['server']
             path = self._conf['path']
             link = f'{proto_pref}{server}{path}'.format(**query_args)
-            return dict(link=link), True
+            label = self.fetch_localized_prop('_label', lang)
+            if label:
+                label = label.format(**query_args)
+            return dict(link=link, label=label), True
         return dict(), False
 
 

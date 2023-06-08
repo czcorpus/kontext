@@ -211,7 +211,8 @@ class DefaultTokenConnect(AbstractTokenConnect):
 
 @plugins.inject(plugins.runtime.CORPARCH, plugins.runtime.DB)
 def create_instance(settings, corparch: AbstractCorporaArchive, db: KeyValueStorage):
-    providers = setup_providers(settings.get('plugins', 'token_connect'),
-                                db, be_type=AbstractBackend, fe_type=AbstractFrontend)
+    providers = setup_providers(
+        settings.get('plugins', 'token_connect'),
+        db, be_type=AbstractBackend, fe_type=AbstractFrontend)
     tok_det = DefaultTokenConnect(providers, corparch)
     return tok_det

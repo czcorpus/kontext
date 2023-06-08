@@ -154,8 +154,8 @@ class AbstractFrontend(AbstractProviderFrontend):
     def export_data(self, data: Any, status: bool, lang: str, is_kwic_view: bool) -> Response:
         return Response(contents='', renderer='', status=status,
                         is_kwic_view=bool(is_kwic_view),
-                        heading=self._fetch_localized_prop('_headings', lang),
-                        note=self._fetch_localized_prop('_notes', lang))
+                        heading=self.fetch_localized_prop('_headings', lang),
+                        note=self.fetch_localized_prop('_notes', lang))
 
 
 class AbstractTokenConnect(CorpusDependentPlugin):
