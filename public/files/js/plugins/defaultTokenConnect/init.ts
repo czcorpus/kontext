@@ -93,7 +93,7 @@ export class DefaultTokenConnectBackend implements PluginInterfaces.TokenConnect
                                 renderer: this.selectRenderer(x.renderer),
                                 isKwicView: x.is_kwic_view,
                                 contents: x.contents,
-                                found: x.found,
+                                found: x.status,
                                 heading: x.heading
                             }),
                         )
