@@ -26,7 +26,31 @@ import ujson as json
 from plugin_types.general_storage import KeyValueStorage
 
 
-class AbstractProviderBackend(abc.ABC):
+class LocalizedDataProvider:
+    """
+    LocalizedDataProvider allows for fetching a single language
+    variant from attributes with the following value:
+    {'lang1': 'foo', 'lang2': 'bar',...}
+    """
+
+    def fetch_localized_prop(self, prop: str, lang: str) -> str:
+        translations = getattr(self, prop, {})
+        value = ''
+        if lang in translations:
+            value = translations[lang]
+        else:
+            srch_lang = lang.split('_')[0]
+            for k, v in list(translations.items()):
+                v_lang = k.split('_')[0]
+                if v_lang == srch_lang:
+                    value = v
+                    break
+            if not value:
+                value = translations.get('en_US', '')
+        return value
+
+
+class AbstractProviderBackend(abc.ABC, LocalizedDataProvider):
     """
     A general description of a service providing
     external data for (word, lemma, pos, corpora, lang)
@@ -60,7 +84,7 @@ class AbstractProviderBackend(abc.ABC):
         return True
 
 
-class AbstractProviderFrontend(abc.ABC):
+class AbstractProviderFrontend(abc.ABC, LocalizedDataProvider):
     """
     A general server-side frontend. All the implementations
     should call its 'export_data' method which performs
@@ -72,27 +96,14 @@ class AbstractProviderFrontend(abc.ABC):
         self._headings: Dict[str, str] = conf.get('heading', {})
         self._notes: Dict[str, str] = conf.get('note', {})
 
-    def _fetch_localized_prop(self, prop: str, lang: str) -> str:
-        value = ''
-        if lang in getattr(self, prop):
-            value = getattr(self, prop)[lang]
-        else:
-            srch_lang = lang.split('_')[0]
-            for k, v in list(getattr(self, prop).items()):
-                v_lang = k.split('_')[0]
-                if v_lang == srch_lang:
-                    value = v
-                    break
-            if not value:
-                value = getattr(self, prop).get('en_US', '')
-        return value
+
 
     @property
     def headings(self) -> Dict[str, str]:
         return self._headings
 
     def get_heading(self, lang: str) -> str:
-        return self._fetch_localized_prop('_headings', lang)
+        return self.fetch_localized_prop('_headings', lang)
 
 
 def find_implementation(path: str) -> Any:
@@ -134,14 +145,15 @@ def init_provider(conf: Dict[str, Any], ident: str, db: KeyValueStorage, ttl: in
     return backend_class(conf['conf'], ident, db, ttl), frontend_class(conf)
 
 
-T, U = TypeVar('T'), TypeVar('U')
+T = TypeVar('T', bound=AbstractProviderBackend)
+U = TypeVar('U', bound=AbstractProviderFrontend)
 
 
 def setup_providers(
     plg_conf: Dict[str, Any],
     db: KeyValueStorage,
-    be_type: T = AbstractProviderBackend,
-    fe_type: U = AbstractProviderFrontend,
+    be_type: T=AbstractProviderBackend,
+    fe_type: U=AbstractProviderFrontend,
 ) -> Dict[str, Tuple[T, Optional[U]]]:
     with open(plg_conf['providers_conf'], 'rb') as fr:
         providers_conf = json.load(fr)
