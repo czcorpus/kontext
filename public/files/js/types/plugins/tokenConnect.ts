@@ -31,7 +31,7 @@ export interface Response {
         renderer:string;
         is_kwic_view:boolean;
         contents:Array<[string, string]>;
-        found:boolean;
+        status:boolean;
         heading:string;
     }>;
 }
