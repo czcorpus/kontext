@@ -30,7 +30,10 @@ import * as TreqStyle from './treqStyle';
 
 export interface Views {
     DisplayLinkRenderer:React.FC<{
-        data: {link:string};
+        data: {
+            link:string;
+            label?:string;
+        };
     }>;
     RawHtmlRenderer:React.FC<{
         corpora:Array<string>;
@@ -75,7 +78,7 @@ export function init(dispatcher:IFullActionControl, he:Kontext.ComponentHelpers)
     const DisplayLinkRenderer:Views['DisplayLinkRenderer'] = (props) => (
         <div>
             <a target="_blank" className="external" href={props.data.link}>
-                {props.data.link}
+                {props.data.label ? props.data.label : props.data.link}
             </a>
         </div>
     );
