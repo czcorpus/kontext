@@ -89,8 +89,31 @@ class Response:
     def to_dict(self) -> Dict[str, Any]:
         return self.__dict__
 
+class LocalizedDataProvider:
+    """
+    LocalizedDataProvider allows for fetching a single language
+    variant from attributes with the following value:
+    {'lang1': 'foo', 'lang2': 'bar',...}
+    """
 
-class AbstractBackend(abc.ABC):
+    def fetch_localized_prop(self, prop: str, lang: str) -> str:
+        translations = getattr(self, prop, {})
+        value = ''
+        if lang in translations:
+            value = translations[lang]
+        else:
+            srch_lang = lang.split('_')[0]
+            for k, v in list(translations.items()):
+                v_lang = k.split('_')[0]
+                if v_lang == srch_lang:
+                    value = v
+                    break
+            if not value:
+                value = translations.get('en_US', '')
+        return value
+
+
+class AbstractBackend(abc.ABC, LocalizedDataProvider):
     """
     A general description of a service providing
     external data for (word, lemma, pos, corpora, lang)
@@ -169,7 +192,7 @@ class AbstractBackend(abc.ABC):
         return True
 
 
-class AbstractFrontend(abc.ABC):
+class AbstractFrontend(abc.ABC, LocalizedDataProvider):
     """
     A general server-side frontend. All the implementations
     should call its 'export_data' method which performs
@@ -181,27 +204,12 @@ class AbstractFrontend(abc.ABC):
         self._headings: Dict[str, str] = conf.get('heading', {})
         self._notes: Dict[str, str] = conf.get('note', {})
 
-    def _fetch_localized_prop(self, prop: str, lang: str) -> str:
-        value = ''
-        if lang in getattr(self, prop):
-            value = getattr(self, prop)[lang]
-        else:
-            srch_lang = lang.split('_')[0]
-            for k, v in list(getattr(self, prop).items()):
-                v_lang = k.split('_')[0]
-                if v_lang == srch_lang:
-                    value = v
-                    break
-            if not value:
-                value = getattr(self, prop).get('en_US', '')
-        return value
-
     @property
     def headings(self) -> Dict[str, str]:
         return self._headings
 
     def get_heading(self, lang: str) -> str:
-        return self._fetch_localized_prop('_headings', lang)
+        return self.fetch_localized_prop('_headings', lang)
 
     def export_data(self, data: Any, status: bool, lang: str, is_kwic_view: bool) -> Response:
         return Response(contents='', renderer='', status=status,

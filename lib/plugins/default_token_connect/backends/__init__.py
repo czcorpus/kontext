@@ -34,7 +34,8 @@ class DisplayLinkBackend(AbstractBackend):
         self._conf = conf
         self._label = conf.get('label', {})
     def __init__(self, conf, provider_id, db, ttl):
-        super().__init__(conf, provider_id, db, ttl)
+        super().__init__(provider_id, db, ttl)
+        self._conf = conf
         self._label = conf.get('label', {})
 
     def get_required_attrs(self):
