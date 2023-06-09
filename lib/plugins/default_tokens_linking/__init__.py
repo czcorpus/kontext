@@ -79,7 +79,24 @@ class DefaultTokensLinking(AbstractTokensLinking):
     async def fetch_data(self, plugin_ctx, provider_ids, corpus_id, token_id, token_length, token_ranges, lang) -> List[Dict]:
         ans = {}
         for backend, _ in self.map_providers(provider_ids):
-            data, status = await backend.fetch(plugin_ctx.corpus_factory, corpus_id, token_id, token_length, token_ranges, lang)
+            cookies = {}
+            for cname in backend.get_required_cookies():
+                if cname not in plugin_ctx.cookies:
+                    raise Exception(
+                        f'Backend configuration problem: cookie {cname} not available')
+                cookies[cname] = plugin_ctx.cookies[cname]
+
+            data, status = await backend.fetch(
+                plugin_ctx.corpus_factory,
+                corpus_id,
+                token_id,
+                token_length,
+                token_ranges,
+                lang,
+                plugin_ctx.aligned_corpora,
+                plugin_ctx.user_is_anonymous,
+                cookies,
+            )
             ans[backend.provider_id] = data
         return ans
 

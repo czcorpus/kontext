@@ -19,6 +19,7 @@
 from typing import Any, List, Tuple
 
 import conclib
+
 from .abstract import AbstractBackend
 
 #
@@ -43,6 +44,9 @@ class Test1Backend(AbstractBackend):
             token_length,
             token_ranges,
             lang,
+            aligned_corpora,
+            is_anonymous,
+            cookies,
     ) -> Tuple[Any, bool]:
         selected_token = {}
         tokens = {}
