@@ -44,7 +44,6 @@ class Test1Backend(AbstractBackend):
             token_length,
             token_ranges,
             lang,
-            aligned_corpora,
             is_anonymous,
             cookies,
     ) -> Tuple[Any, bool]:

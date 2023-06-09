@@ -83,11 +83,10 @@ class TreqV1Backend(AbstractBackend):
             token_length,
             token_ranges,
             lang,
-            aligned_corpora,
             is_anonymous,
             cookies,
     ) -> Tuple[Any, bool]:
-        selected_token = {}
+        selected_token = {'link': []}
         tokens = {}
         clicked_word = None
         for corp_id, tok_range in token_ranges.items():
@@ -103,51 +102,31 @@ class TreqV1Backend(AbstractBackend):
                         break
 
         primary_lang = self._lang_from_corpname(corpus_id)
-        translat_corp, translat_lang = self._find_second_lang([corpus_id, *aligned_corpora])
-        if clicked_word and translat_corp and translat_lang:
-            common_groups = self.find_lang_common_groups(primary_lang, translat_lang)
-            args = self.mk_api_args(
-                lang1=self._client.enc_val(primary_lang),
-                lang2=self._client.enc_val(translat_lang),
-                groups=[self._client.enc_val(s) for s in common_groups],
-                lemma=clicked_word,
-            )
+        translat_corpora = [x for x in token_ranges.keys() if x != corpus_id]
+        if clicked_word:
+            logging.error(clicked_word)
+            for translat_corp in translat_corpora:
+                translat_lang = self._lang_from_corpname(translat_corp)
+                if translat_corp and translat_lang:
+                    data = await self.get_translations(clicked_word, primary_lang, translat_lang, is_anonymous, cookies)
+                    for tok_idx, token in enumerate(tokens[translat_corp]):
+                        if any(token['str'] == line['righ'] for line in data['lines']):
+                            selected_token['link'].append({
+                                'corpname': translat_corp,
+                                'tokenId': token_ranges[translat_corp][0] + tok_idx,
+                                'highlightColor': self._conf['color'],
+                                'comment': 'Treq translation',
+                            })
 
-            try:
-                logging.getLogger(__name__).debug('Treq request args: {0}'.format(args))
-                path = self.mk_api_path(args)
-                if is_anonymous:
-                    try:
-                        data = await self.make_request(path, self.ANONYMOUS_SESSION_ID)
-                    except HTTPUnauthorized:
-                        self.ANONYMOUS_SESSION_ID = await self._token_api_client.login()
-                        data = await self.make_request(path, self.ANONYMOUS_SESSION_ID)
-                else:
-                    data = await self.make_request(path, cookies[self.sid_cookie])
-
-                max_items = self._conf.get('maxResultItems', self.DEFAULT_MAX_RESULT_LINES)
-                orig = data['lines'][:max_items]
-                data['lines'] = []
-                for item in orig:
-                    data['lines'].append(dict(
-                        freq=item['freq'], perc=item['perc'], left=item['from'], righ=item['to']))
-            except ValueError:
-                logging.getLogger(__name__).error('Failed to parse response: {0}'.format(data))
-                data = dict(sum=0, lines=[])
-
-        else:
-            data = dict(sum=0, lines=[])
-
-        selected_token['link'] = []
-        for corpname, corp_tokens in tokens.items():
-            for tok_idx, token in enumerate(corp_tokens):
-                if any(token['str'] in (line['left'], line['righ']) for line in data['lines']):
+            for tok_idx, token in enumerate(tokens[corpus_id]):
+                if token['str'] == clicked_word:
                     selected_token['link'].append({
-                        'corpname': corpname,
-                        'tokenId': token_ranges[corpname][0] + tok_idx,
+                        'corpname': corpus_id,
+                        'tokenId': token_ranges[corpus_id][0] + tok_idx,
                         'highlightColor': self._conf['color'],
                         'comment': 'Treq translation',
                     })
+
         return [selected_token], True
 
     @property
@@ -195,3 +174,36 @@ class TreqV1Backend(AbstractBackend):
         headers = {'Cookie': f'{self.sid_cookie}={session_id}'}
         data, valid = await self._client.request('GET', path, {}, headers=headers)
         return json.loads(data)
+
+    async def get_translations(self, word: str, primary_lang: str, translat_lang: str, is_anonymous: bool, cookies):
+        data = dict(sum=0, lines=[])
+        common_groups = self.find_lang_common_groups(primary_lang, translat_lang)
+        args = self.mk_api_args(
+            lang1=self._client.enc_val(primary_lang),
+            lang2=self._client.enc_val(translat_lang),
+            groups=[self._client.enc_val(s) for s in common_groups],
+            lemma=word,
+        )
+
+        try:
+            logging.getLogger(__name__).debug('Treq request args: {0}'.format(args))
+            path = self.mk_api_path(args)
+            if is_anonymous:
+                try:
+                    data = await self.make_request(path, self.ANONYMOUS_SESSION_ID)
+                except HTTPUnauthorized:
+                    self.ANONYMOUS_SESSION_ID = await self._token_api_client.login()
+                    data = await self.make_request(path, self.ANONYMOUS_SESSION_ID)
+            else:
+                data = await self.make_request(path, cookies[self.sid_cookie])
+
+            max_items = self._conf.get('maxResultItems', self.DEFAULT_MAX_RESULT_LINES)
+            orig = data['lines'][:max_items]
+            data['lines'] = []
+            for item in orig:
+                data['lines'].append(dict(
+                    freq=item['freq'], perc=item['perc'], left=item['from'], righ=item['to']))
+        except ValueError:
+            logging.getLogger(__name__).error('Failed to parse response: {0}'.format(data))
+
+        return data

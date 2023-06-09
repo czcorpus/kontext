@@ -93,7 +93,6 @@ class DefaultTokensLinking(AbstractTokensLinking):
                 token_length,
                 token_ranges,
                 lang,
-                plugin_ctx.aligned_corpora,
                 plugin_ctx.user_is_anonymous,
                 cookies,
             )
