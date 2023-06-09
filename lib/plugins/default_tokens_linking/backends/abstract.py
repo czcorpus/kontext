@@ -29,6 +29,9 @@ class AbstractBackend(AbstractProviderBackend):
     def required_attrs(self) -> List[str]:
         pass
 
+    def get_required_cookies(self) -> List[str]:
+        return []
+
     @abc.abstractmethod
     async def fetch(
             self,
@@ -38,5 +41,6 @@ class AbstractBackend(AbstractProviderBackend):
             token_length: int,
             token_ranges: Dict[str, Tuple[int, int]],
             lang: str,
+            is_anonymous: bool,
     ) -> Tuple[Any, bool]:
         pass
