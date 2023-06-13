@@ -309,7 +309,7 @@ export function init({
                                 operationIdx={props.operationIdx}
                                 opKey={props.opKey}
                                 formType={Kontext.ConcFormTypes.SUBHITS}
-                                submitFn={()=>undefined} />;
+                                submitFn={props.modeRunFullQuery ? props.closeClickHandler : handleTrimClick} />;
 
                 case Kontext.ConcFormTypes.FIRSTHITS:
                     return <viewDeps.FirstHitsForm {...props.editorProps}
