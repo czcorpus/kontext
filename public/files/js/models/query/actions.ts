@@ -404,6 +404,12 @@ export class Actions {
         name: 'QUERY_INPUT_SET_INCLUDE_EMPTY'
     };
 
+    static SetShuffle:Action<{
+        value:boolean;
+    }> = {
+        name: 'QUERY_INPUT_SET_SHUFFLE'
+    };
+
     static QuerySubmit: Action<{
         noQueryHistory?:boolean;
         useAltCorp?:boolean;

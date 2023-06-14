@@ -73,7 +73,7 @@ export interface ConcQueryArgs {
     usesubcorp:string|undefined;
     viewmode:ConcViewMode;
     pagesize:number;
-    shuffle:0|1;
+    shuffle:boolean;
     attrs:Array<string>;
     ctxattrs:Array<string>;
     attr_vmode:ViewOptions.AttrViewMode;
