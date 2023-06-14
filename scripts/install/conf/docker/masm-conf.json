@@ -3,6 +3,7 @@
     "listenPort": 8088,
     "serverReadTimeoutSecs": 120,
     "logFile": "dev.log",
+    "logLevel": "info",
     "corporaSetup": {
         "registryDirPaths": ["/var/lib/manatee/registry"],
         "textTypesDbDirPath": "/var/lib/manatee/metadata",
