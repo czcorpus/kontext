@@ -394,7 +394,7 @@ export function init(
         return (
             <layoutViews.ModalOverlay onCloseKey={props.closeClickHandler}>
                 <layoutViews.CloseableFrame onCloseClick={props.closeClickHandler}
-                        label={he.translate('subcmixer__widget_header')}>
+                        label={he.translate('subcmixer__widget_header')} scrollable={true}>
                     <S.SubcmixerWidget>
                         {List.empty(props.alignedCorpora) ? null : renderAlignedCorpInfo()}
                         <ValuesTable items={props.selectedValues}
