@@ -1298,9 +1298,10 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
 
     private shouldAskForSuggestion(sourceId:string, srchWord:string):boolean {
         const queryObj = this.state.queries[sourceId];
-        // TODO maybe the 'use_regexp' should be allowed in case plug-in is OK with that
-        const queryOptsOk = queryObj.qtype === 'simple' && !queryObj.use_regexp ||
-            queryObj.qtype === 'advanced';
+        // We allow suggestions in case regexp mode is enabled but we interpret
+        // the special characters as normal ones. I.e. only normal words will
+        // trigger a non-empty response.
+        const queryOptsOk = queryObj.qtype === 'simple';
         return this.state.suggestionsConfigured && !!srchWord.trim() && queryOptsOk;
     }
 
