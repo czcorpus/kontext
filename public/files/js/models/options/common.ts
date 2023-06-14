@@ -26,7 +26,6 @@ export interface ViewOptsResponse extends Kontext.AjaxResponse {
     newctxsize:number;
     ctxunit:string;
     line_numbers:boolean;
-    shuffle:boolean;
     wlpagesize:number;
     fmaxitems:number;
     fdefault_view:FreqResultViews;

@@ -37,7 +37,6 @@ interface GeneralOptionsArgsSubmit {
     newctxsize:number;
     ctxunit:string;
     line_numbers:boolean;
-    shuffle:boolean;
     wlpagesize:number;
     fmaxitems:number;
     fdefault_view:FreqResultViews;
@@ -66,8 +65,6 @@ export interface GeneralViewOptionsModelState {
     ctxUnit:string;
 
     lineNumbers:boolean;
-
-    shuffle:boolean;
 
     useRichQueryEditor:boolean;
 
@@ -112,7 +109,6 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                 newCtxSize: Kontext.newFormValue('0', true),
                 ctxUnit: '',
                 lineNumbers: false,
-                shuffle: false,
                 useRichQueryEditor: false,
                 wlpagesize: Kontext.newFormValue('0', true),
                 fmaxitems: Kontext.newFormValue('0', true),
@@ -186,7 +182,6 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                     };
                     state.ctxUnit = action.payload.data.ctxunit;
                     state.lineNumbers = action.payload.data.line_numbers;
-                    state.shuffle = action.payload.data.shuffle;
                     state.wlpagesize = {
                         value: action.payload.data.wlpagesize + '',
                         isInvalid: false,
@@ -253,13 +248,6 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
             Actions.GeneralSetLineNums,
             (state, action) => {
                 state.lineNumbers = action.payload.value;
-            }
-        );
-
-        this.addActionHandler(
-            Actions.GeneralSetShuffle,
-            (state, action) => {
-                state.shuffle = action.payload.value;
             }
         );
 
@@ -474,7 +462,6 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
             newctxsize: parseInt(state.newCtxSize.value),
             ctxunit: state.ctxUnit,
             line_numbers: state.lineNumbers,
-            shuffle: state.shuffle,
             wlpagesize: parseInt(state.wlpagesize.value),
             fmaxitems: parseInt(state.fmaxitems.value),
             fdefault_view: state.fdefaultView,

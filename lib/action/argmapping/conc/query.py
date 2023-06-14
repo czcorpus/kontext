@@ -39,6 +39,7 @@ class _QueryFormArgs:
     has_lemma: Dict[str, bool] = field(default_factory=dict)
     asnc: bool = False
     no_query_history: bool = False
+    shuffle: bool = False
 
     # context filter
     fc_lemword_type: str = 'all'
@@ -115,6 +116,7 @@ class QueryFormArgs(ConcFormArgs[_QueryFormArgs], AbstractRawQueryDecoder):
         self._test_data_type(data, 'type', 'concQueryArgs')
         self.data.asnc = data.get('async', False)
         self.data.no_query_history = data.get('no_query_history', False)
+        self.data.shuffle = data.get('shuffle', False)
         for query in data['queries']:
             corp = query['corpname']
             self.data.curr_query_types[corp] = query['qtype']

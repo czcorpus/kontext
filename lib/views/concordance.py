@@ -194,11 +194,13 @@ async def query_submit(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     try:
         await amodel.set_first_query(
             [q['corpname'] for q in req.json['queries']], qinfo, corpus_info)
-        if amodel.args.shuffle == 1 and 'f' not in amodel.args.q:
-            amodel.args.shuffle = 0
+        if qinfo.data.shuffle and 'f' not in amodel.args.q:
             amodel.args.q.append('f')
             amodel.acknowledge_auto_generated_conc_op(
                 len(amodel.args.q) - 1, ShuffleFormArgs(persist=True))
+        if int(qinfo.data.shuffle) != amodel.args.shuffle:
+            amodel.args.shuffle = int(qinfo.data.shuffle)
+            await amodel.save_options(['shuffle'])
         logging.getLogger(__name__).debug('query: {}'.format(amodel.args.q))
         conc = await get_conc(
             corp=amodel.corp, user_id=amodel.session_get('user', 'id'), q=amodel.args.q,
