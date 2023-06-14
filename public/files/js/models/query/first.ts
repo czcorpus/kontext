@@ -1070,7 +1070,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             structs: currArgs.structs,
             refs: currArgs.refs,
             fromp: currArgs.fromp || 0,
-            shuffle: this.state.shuffleConcByDefault && !this.state.shuffleForbidden ? 1 : 0,
+            shuffle: this.state.shuffleConcByDefault && !this.state.shuffleForbidden,
             queries: [],
             text_types: this.disableRestrictSearch(this.state) ? {} : ttSelection,
             context: contextFormArgs,

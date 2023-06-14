@@ -469,7 +469,7 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
             structs: currArgs.structs,
             refs: currArgs.refs,
             fromp: currArgs.fromp || 0,
-            shuffle: 0,
+            shuffle: false,
             queries: [
                 {
                     corpname: formSubmitArgs.corpname,
