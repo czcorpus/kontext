@@ -699,7 +699,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         );
 
         this.addActionHandler(
-            GenOptsActions.GeneralSetShuffle,
+            Actions.SetShuffle,
             action => {
                 this.changeState(state => {
                     state.shuffleConcByDefault = action.payload.value;
@@ -1018,7 +1018,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             structs: currArgs.structs,
             refs: currArgs.refs,
             fromp: currArgs.fromp || 0,
-            shuffle: this.state.shuffleConcByDefault && !this.state.shuffleForbidden ? 1 : 0,
+            shuffle: this.state.shuffleConcByDefault && !this.state.shuffleForbidden,
             queries: [],
             text_types: this.disableRestrictSearch(this.state) ? {} : ttSelection,
             context: contextFormArgs,
