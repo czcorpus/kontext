@@ -26,7 +26,7 @@ import subprocess
 KONTEXT_PATH = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..'))
 KONTEXT_INSTALL_CONF = os.environ.get('KONTEXT_INSTALL_CONF', 'config.default.xml')
 SCHEDULER_INSTALL_CONF = os.environ.get('SCHEDULER_INSTALL_CONF', 'rq-schedule-conf.sample.json')
-MANATEE_VER = '2.167.8'
+MANATEE_VER = '2.223.6'
 
 REQUIREMENTS = [
     'python3-pip',

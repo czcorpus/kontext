@@ -1,4 +1,4 @@
-FROM czcorpus/kontext-manatee:2.214.1-jammy
+FROM czcorpus/kontext-manatee:2.223.6-jammy
 
 WORKDIR /opt/kontext
 COPY . .
