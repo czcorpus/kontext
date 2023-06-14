@@ -95,6 +95,16 @@ export const QueryForm = styled.form`
                 margin-right: 0.4em;
             }
         }
+
+        .buttons {
+            display: flex;
+            align-items: center;
+            font-size: 1em;
+
+            button {
+                font-size: 1.1em;
+            }
+        }
     }
 `;
 
@@ -164,5 +174,24 @@ export const CutOffBox = styled.div`
 
     p.submit button:not(:first-child) {
         margin-left: 1em;
+    }
+`;
+
+// ----------------- <ShuffleResultWrapper /> ----------------
+
+export const ShuffleResultWrapper = styled.span`
+
+    display: flex;
+    align-items: center;
+    margin-left: 1.2em;
+
+    label {
+        margin-right: 0.4em;
+    }
+
+    .shuffle-help {
+        vertical-align: super;
+        font-size: 0.8em;
+        line-height: 1;
     }
 `;

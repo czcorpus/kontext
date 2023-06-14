@@ -134,44 +134,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         );
     };
 
-    // ------------- <TRAlwaysShuffleCheckbox /> ---------------------
-
-    const TRAlwaysShuffleCheckbox:React.FC<{
-        value:boolean;
-
-    }> = (props) => {
-
-        const handleInputChange = () => {
-            dispatcher.dispatch<typeof Actions.GeneralSetShuffle>({
-                name: Actions.GeneralSetShuffle.name,
-                payload: {
-                    value: !props.value
-                }
-            });
-        };
-
-        return (
-            <tr>
-                <th>
-                    <label htmlFor="always-shuffle">
-                        {he.translate('options__conc_shuffle_by_default')}:
-                    </label>
-                    <br />
-                    <span className="note">
-                        ({he.translate('options__conc_no_effect_on_current')})
-                    </span>
-                </th>
-                <td align="center">
-                    <input type="hidden" name="shuffle" value="0" />
-                    <layoutViews.ToggleSwitch
-                        id="always-shuffle"
-                        onChange={handleInputChange}
-                        checked={props.value}/>
-                </td>
-            </tr>
-        );
-    };
-
     // ------------- <TRUseRichQueryEditor /> ---------------------
 
     const TRUseRichQueryEditor:React.FC<{
@@ -211,7 +173,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         pageSize:Kontext.FormValue<string>;
         newCtxSize:Kontext.FormValue<string>;
         lineNumbers:boolean;
-        shuffle:boolean;
         useRichQueryEditor:boolean;
 
     }> = (props) => {
@@ -225,7 +186,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         <TRConcPageSizeInput value={props.pageSize} />
                         <TRKwicContextSize value={props.newCtxSize} />
                         <TRShowLineNumbersCheckbox value={props.lineNumbers} />
-                        <TRAlwaysShuffleCheckbox value={props.shuffle} />
                         <TRUseRichQueryEditor value={props.useRichQueryEditor} />
                     </tbody>
                 </S.ResultRangeAndPagingTable>
@@ -565,7 +525,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 <FieldsetConcordance pageSize={this.props.pageSize}
                                     newCtxSize={this.props.newCtxSize}
                                     lineNumbers={this.props.lineNumbers}
-                                    shuffle={this.props.shuffle}
                                     useRichQueryEditor={this.props.useRichQueryEditor} />
                                 <FieldsetWordlist wlPageSize={this.props.wlpagesize}  />
                                 <FieldsetFreqDistrib fmaxItems={this.props.fmaxitems}

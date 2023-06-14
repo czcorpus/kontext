@@ -297,10 +297,23 @@ class Args(UserActionArgs):
                 return 'visible-kwic'
         return value
 
+    @staticmethod
+    def _is_options_only_arg(name: str) -> bool:
+        """
+        Tests whether the provided argument should be treated as one activated only
+        via stored user options - i.e. having the value in URL (or some submitted form)
+        should not change its value.
+        """
+        return name in ('shuffle', )
+
+    @staticmethod
+    def _is_request_map_source(data: Union[RequestArgsProxy, JSONRequestArgsProxy, Dict[str, Any]]):
+        return isinstance(data, RequestArgsProxy) or isinstance(data, JSONRequestArgsProxy)
+
     def map_args_to_attrs(self, args: Union[RequestArgsProxy, JSONRequestArgsProxy, Dict[str, Any]]):
         """
         Set existing attrs of self to the values provided by args. Multi-value keys are supported
-        in a limited way - only list of strings can be set.
+        in a limited way - only a list of strings can be set.
 
         arguments:
         req_args -- a RequestArgsProxy instance or a general dict containing parameters
@@ -309,7 +322,7 @@ class Args(UserActionArgs):
         for key in in_args.keys():
             values = in_args.getlist(key)
             if len(values) > 0:
-                if hasattr(self, key):
+                if hasattr(self, key) and not (self._is_options_only_arg(key) and self._is_request_map_source(args)):
                     try:
                         if isinstance(getattr(self, key), (list, tuple)):
                             setattr(self, key, values)

@@ -231,6 +231,14 @@ export function init({
                 </a>
             );
         }
+
+        const onShuffleToggle = (value:boolean) => {
+            dispatcher.dispatch(
+                Actions.SetShuffle,
+                {value}
+            );
+        };
+
         return (
             <S.QueryForm>
                 {props.suggestAltCorpVisible ?
@@ -310,9 +318,25 @@ export function init({
                         <div className="buttons">
                             {props.isBusy ?
                                 <layoutViews.AjaxLoaderBarImage /> :
-                                <button type="button" className="default-button" onClick={handleSubmit}>
-                                    {he.translate('query__search_btn')}
-                                </button>
+                                <>
+                                    <button type="button" className="default-button" onClick={handleSubmit}>
+                                        {he.translate('query__search_btn')}
+                                    </button>
+                                    <S.ShuffleResultWrapper>
+                                        <label htmlFor="shuffle-result-switch">
+                                            {he.translate('query__shuffle_result')}
+                                            <layoutViews.InlineHelp
+                                                htmlClass="shuffle-help"
+                                                customStyle={{fontSize: '1.2em'}}>
+                                            {he.translate('query__shuffle_result_help')}
+                                            </layoutViews.InlineHelp>
+                                        </label>
+                                        <layoutViews.ToggleSwitch
+                                            id="shuffle-result-switch"
+                                            onChange={onShuffleToggle}
+                                            checked={props.shuffleConcByDefault }/>
+                                    </S.ShuffleResultWrapper>
+                                </>
                             }
                         </div>
                         {posAttrsCompatibleWithAllAlignedCorpora(props.concViewPosAttrs, props.alignCommonPosAttrs) ?
