@@ -8,7 +8,7 @@ tmp_dir = "tmp"
 
 [build]
 # Just plain old shell command. You could use `make` as well.
-cmd = "python3 build3 2.214.1 -o tmp/masm3"
+cmd = "python3 build3 2.223.6 -o tmp/masm3"
 # Binary file yields from `cmd`.
 bin = "tmp/masm3"
 # Customize binary.
