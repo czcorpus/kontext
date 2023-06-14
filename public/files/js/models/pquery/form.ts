@@ -912,7 +912,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             structs: null,
             refs: null,
             fromp: 0,
-            shuffle: 0,
+            shuffle: false,
             queries: [this.exportQuery(query)],
             text_types: {} as TextTypes.ExportedSelection,
             context: {} as QueryContextArgs,
