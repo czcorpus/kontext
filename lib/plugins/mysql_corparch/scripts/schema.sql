@@ -58,8 +58,8 @@ CREATE TABLE kontext_corpus (
   description_cs text,
   description_en text,
   default_virt_keyboard varchar(255),
-  default_view_opts text,
-  syntax_viewer_conf_json text,
+  default_view_opts json DEFAULT NULL,
+  syntax_viewer_conf_json json DEFAULT NULL,
   part_of_ml_corpus int(11) NOT NULL DEFAULT '0',
   ml_position_filter enum('alphanum') DEFAULT NULL,
   UNIQUE KEY corpora_name_uniq (name),
@@ -308,7 +308,7 @@ CREATE TABLE kontext_interval_attr (
 
 CREATE TABLE kontext_conc_persistence (
   id varchar(191) NOT NULL,
-  data text NOT NULL,
+  data json NOT NULL,
   created timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   num_access int(11) NOT NULL DEFAULT '0',
   last_access timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',

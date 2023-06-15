@@ -57,8 +57,8 @@ from action.plugin.ctx import PluginCtx
 from action.response import KResponse
 from plugin_types.auth import AbstractAuth
 from plugin_types.integration_db import IntegrationDatabase
-from plugin_types.syntax_viewer import (AbstractSyntaxViewerPlugin,
-                                        MaximumContextExceeded, SearchBackend)
+from plugin_types.syntax_viewer import (
+    AbstractSyntaxViewerPlugin, MaximumContextExceeded, SearchBackend)
 from sanic.blueprints import Blueprint
 from util import as_async
 
@@ -131,20 +131,12 @@ def load_plugin_conf_from_file(plugin_conf):
 
 def load_plugin_conf_from_db(db: IntegrationDatabase, corp_table='kontext_corpus') -> Dict[str, str]:
 
-    def parse_conf(corp, src):
-        try:
-            return json.loads(src)
-        except Exception as ex:
-            logging.getLogger(__name__).warning(
-                f'Failed to load syntax viewer conf for {corp}: {ex}')
-            return None
-
     with db.cursor_sync() as cursor:
         cursor.execute(
             'SELECT name, syntax_viewer_conf_json '
             f'FROM {corp_table} '
             'WHERE syntax_viewer_conf_json IS NOT NULL')
-        return {row['name']: parse_conf(row['name'], row['syntax_viewer_conf_json']) for row in cursor}
+        return {row['name']: json.loads(row['syntax_viewer_conf_json']) for row in cursor}
 
 
 @plugins.inject(plugins.runtime.AUTH, plugins.runtime.INTEGRATION_DB)

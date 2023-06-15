@@ -35,8 +35,8 @@ from plugin_types.corparch import (
     AbstractSearchableCorporaArchive, CorpusListItem)
 from plugin_types.corparch.backend import DatabaseBackend
 from plugin_types.corparch.corpus import (
-    BrokenCorpusInfo, CorpusInfo, KwicConnect, TokensLinking,
-    MLPositionFilter, QuerySuggest, StructAttrInfo, TokenConnect)
+    BrokenCorpusInfo, CorpusInfo, KwicConnect, MLPositionFilter, QuerySuggest,
+    StructAttrInfo, TokenConnect, TokensLinking)
 from plugin_types.user_items import AbstractUserItems
 from plugins import inject
 from plugins.common.mysql import MySQLConf, MySQLOps
@@ -144,12 +144,8 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
             ans.default_tagset = row['default_tagset']
             ans._description_cs = row['description_cs']
             ans._description_en = row['description_en']
-            try:
-                ans.default_view_opts = json.loads(
-                    row['default_view_opts']) if row['default_view_opts'] else {}
-            except Exception as ex:
-                logging.getLogger(__name__).warning(
-                    f'Failed to load default view opts for {ans.id}: {ex}')
+            ans.default_view_opts = json.loads(
+                row['default_view_opts']) if row['default_view_opts'] else {}
             ans.metadata.id_attr = row['id_attr']
             ans.metadata.label_attr = row['label_attr']
             ans.metadata.featured = bool(row['featured'])

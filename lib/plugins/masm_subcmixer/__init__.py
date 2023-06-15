@@ -24,7 +24,7 @@ from typing import List, Optional
 import aiofiles
 import aiohttp
 import plugins
-import ujson
+import ujson as json
 from action.argmapping.subcorpus import CreateSubcorpusArgs
 from action.control import http_action
 from action.krequest import KRequest
@@ -50,7 +50,7 @@ def subcmixer_run_calc(amodel: CorpusActionModel, req: KRequest, resp: KResponse
                 plugin_ctx=amodel.plugin_ctx, corpus=amodel.corp,
                 corpname=req.form.get('corpname'),
                 aligned_corpora=req.form_getlist('aligned_corpora'),
-                args=ujson.loads(req.form.get('expression')))
+                args=json.loads(req.form.get('expression')))
     except ResultNotFoundException as err:
         resp.add_system_message('error', str(err))
         return {}

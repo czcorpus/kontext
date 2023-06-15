@@ -33,7 +33,7 @@ How to create the required data table:
 
 CREATE TABLE kontext_conc_persistence (
     id VARCHAR(191) PRIMARY KEY,
-    data TEXT NOT NULL,
+    data JSON NOT NULL,
     created TIMESTAMP NOT NULL,
     num_access INT NOT NULL DEFAULT 0,
     last_access TIMESTAMP
@@ -264,7 +264,8 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
                     await self.db.list_append(self._archive_queue_key, dict(key=data_key, revoke=True))
                     ans = 1
                 if ans == 0:
-                    raise NotFoundException('Archive revoke error - concordance {0} not archived'.format(conc_id))
+                    raise NotFoundException(
+                        'Archive revoke error - concordance {0} not archived'.format(conc_id))
             else:
                 data = await self.db.get(mk_key(conc_id))
                 if data is None and archived_rec is None:
