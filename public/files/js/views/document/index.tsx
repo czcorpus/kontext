@@ -767,7 +767,10 @@ export function init(
         return (
             <S.ExpandButton type="button" className={`ExpandButton${props.onClick ? '' : ' readonly'}`}
                     onClick={props.onClick ? () => props.onClick(props.isExpanded) : null}>
-                {props.isExpanded ? <span>-</span> : <span>+</span>}
+                {props.isExpanded ?
+                    <ImgWithMouseover src={he.createStaticUrl('img/minus.svg')} alt="minus" /> :
+                    <ImgWithMouseover src={he.createStaticUrl('img/plus.svg')} alt="plus" />
+                }
             </S.ExpandButton>
         );
     };

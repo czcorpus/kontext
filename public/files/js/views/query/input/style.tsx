@@ -496,6 +496,19 @@ export const TRQueryTypeField = styled.div`
     }
 `;
 
+// ----------- <ToggleSwitchScaler /> --------------------------------
+
+export const ToggleSwitchScaler = styled.span`
+    font-size: 1.3em;
+`;
+
+// ----------- <UseRegexpSelector /> --------------------------------
+
+export const UseRegexpSelector = styled.span`
+    display: flex;
+    align-items: center;
+`;
+
 // ----------- <TRIncludeEmptySelector /> ----------------------------
 
 export const TRIncludeEmptySelector = styled.div`
