@@ -18,7 +18,7 @@ from typing import List
 
 import aiocsv
 import aiofiles
-import ujson
+import ujson as json
 from openpyxl import Workbook
 from plugins.masm_live_attributes.doclist import DocListItem
 from templating import Type2XML
@@ -49,7 +49,7 @@ async def export_jsonl(data: List[DocListItem], target_path: str) -> bool:
         return False
     async with aiofiles.open(target_path, 'w') as fw:
         for item in data:
-            await fw.write(ujson.dumps(item.to_dict()) + "\n")
+            await fw.write(json.dumps(item.to_dict()) + "\n")
         return True
 
 

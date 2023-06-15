@@ -24,7 +24,7 @@ to JSONL.
 import io
 from typing import Any, Dict, List, Tuple
 
-import ujson
+import ujson as json
 from action.argmapping.wordlist import WordlistSaveFormArgs
 from action.model.concordance import ConcActionModel
 from action.model.pquery import ParadigmaticQueryActionModel
@@ -61,7 +61,7 @@ class JSONLExport(AbstractExport):
         return self._document.getvalue()
 
     def _writerow(self, anything):
-        self._document.write(ujson.dumps(anything) + "\n")
+        self._document.write(json.dumps(anything) + "\n")
 
     def _enhance_refs(self, item, refs: List[str]):
         item['ref'] = dict((refs[i], v) for i, v in enumerate(item['ref']))

@@ -12,11 +12,13 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Dict, List
-from dataclasses import dataclass
-from dataclasses_json import dataclass_json, LetterCase
-import ujson
 import hashlib
+from dataclasses import dataclass
+from typing import Dict, List
+
+import ujson as json
+from dataclasses_json import LetterCase, dataclass_json
+
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
@@ -29,6 +31,5 @@ class DocListItem:
     attrs: Dict[str, str]
 
 
-
 def mk_cache_key(attrs: Dict[str, List[str]], aligned: List[str], view_attrs: List[str]) -> str:
-    return hashlib.sha1((ujson.dumps(attrs) + '#'.join(aligned) + '*'.join(view_attrs)).encode()).hexdigest()
+    return hashlib.sha1((json.dumps(attrs) + '#'.join(aligned) + '*'.join(view_attrs)).encode()).hexdigest()

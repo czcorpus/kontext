@@ -31,17 +31,16 @@ function (doc) {
 
 
 from typing import Dict
-import ujson
+
 import couchdb
+import ujson as json
 from plugin_types.query_suggest import AbstractBackend
 from plugins.default_query_suggest.formats.cnc_sublemma import (
-    CncSublemmaSuggestion,
-    SuggestionLemmaData
-)
+    CncSublemmaSuggestion, SuggestionLemmaData)
 
 
 def norm_str(s):
-    return ujson.dumps(str(s).lower())
+    return json.dumps(str(s).lower())
 
 
 class CouchDBBackend(AbstractBackend[Dict[str, CncSublemmaSuggestion]]):
