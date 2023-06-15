@@ -183,7 +183,7 @@ export const ShuffleResultWrapper = styled.span`
 
     display: flex;
     align-items: center;
-    margin-left: 1.2em;
+    margin-left: 0.8em;
 
     label {
         margin-right: 0.4em;
@@ -191,7 +191,11 @@ export const ShuffleResultWrapper = styled.span`
 
     .shuffle-help {
         vertical-align: super;
-        font-size: 0.8em;
+        font-size: 1em;
         line-height: 1;
+    }
+
+    span.ToggleSwitch {
+        font-size: 1.3em;
     }
 `;

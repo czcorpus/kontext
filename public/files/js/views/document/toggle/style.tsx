@@ -51,10 +51,10 @@ const switchingOff = keyframes`
 
 export const ToggleSwitch = styled.span`
 
-    display: inline-block;
-    vertical-align: middle;
-    width: 1.5em;
-    height: 0.85em;
+    display: inline-flex;
+    align-items: center;
+    width: 1.4em;
+    height: 0.80em;
 
     input {
         position: absolute;
