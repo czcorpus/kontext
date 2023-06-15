@@ -351,7 +351,7 @@
         "query__specify_context": "Določi kontekst",
         "query__specify_tt": "Omejitev iskanja",
         "query__shuffle_result": "Shuffle concordance lines UNTRANSLATED",
-        "query__shuffle_result_help": "When the function is activated, the lines that match your search will be displayed in the order they appear in the corpus source data. While the data can generally be sorted based on various criteria, this can sometimes lead to misinterpretations about the properties of the resulting concordance, particularly during manual analysis. To avoid potential bias or misinterpretation, we recommend using the \"Shuffle\" function. This ensures that the data on each page is not arranged according to any specific sorting criteria. You can access the \"Shuffle\" function through the \"Concordance\" menu. UNTRANSLATED",
+        "query__shuffle_result_help": "Keeping the function active is recommended, as it randomizes the order of concordance lines. This is essential for ensuring a balanced and unbiased interpretation of results. However, the function can be temporarily disabled when expecting a large concordance. This can be typically seen when analyzing a prevalent phenomenon in a corpus approximating a billion tokens in size. Please keep in mind that for large-scale results, enabling the result shuffling feature might considerably prolong the display time of your results. UNTRANSLATED",
         "query__search_btn": "Išči",
         "query__search_anyway_btn": "Search anyway UNTRANSLATED",
         "query__search_in_{corpus}_btn": "Search in corpus {corpus} UNTRANSLATED",
