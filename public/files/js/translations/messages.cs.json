@@ -311,7 +311,7 @@
         "query__specify_context": "Specifikovat kontext",
         "query__specify_tt": "Omezit hledání",
         "query__shuffle_result": "Promíchat konkordanční řádky",
-        "query__shuffle_result_help": "Tuto funkci je vhodné mít stále zapnutou, protože zobrazuje konkordance v náhodném pořadí, což je klíčové pro správnou a nezavádějící interpretaci výsledku. Funkci doporučujeme vypínat pouze přechodně v případech, kdy lze očekávat rozsáhlou výslednou konkordanci, typicky při hledání frekventovaného jevu v korpusu o velikosti řádově miliardy tokenů. Zvláště u těchto rozsáhlejších výsledků je třeba počítat s tím, že zapnuté promíchání řádků může významně prodloužit dobu čekání na zobrazení konkordance.",
+        "query__shuffle_result_help": "Tuto funkci je vhodné mít stále zapnutou, protože zobrazuje konkordance v náhodném pořadí, což je klíčové pro správnou a nezavádějící interpretaci výsledku. Funkci je doporučeno vypínat pouze přechodně v případech, kdy lze očekávat rozsáhlou výslednou konkordanci, typicky při hledání frekventovaného jevu v korpusu o velikosti řádově miliardy tokenů. Zvláště u těchto rozsáhlejších výsledků je třeba počítat s tím, že zapnuté promíchání řádků může významně prodloužit dobu čekání na zobrazení konkordance.",
         "query__search_btn": "Hledat",
         "query__search_anyway_btn": "Přesto hledat",
         "query__search_in_{corpus}_btn": "Hledat v korpusu {corpus}",
