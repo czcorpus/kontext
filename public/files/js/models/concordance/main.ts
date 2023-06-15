@@ -909,7 +909,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                             color: action.payload.color,
                             comment: action.payload.comment,
                         };
-                        this.highlightTokenLink(state, corpusIdx, action.payload.tokenId, action.payload.color);
+                        this.highlightTokenLink(state, corpusIdx, action.payload.tokenId, action.payload.color, action.payload.isBusy);
                     });
                 }
             },
@@ -920,7 +920,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         state:ConcordanceModelState,
         corpusIdx:number,
         tokenId:number,
-        color:string
+        color:string,
+        isBusy:boolean,
     ) {
         const lineIdx = List.findIndex(
             line => {
@@ -944,13 +945,16 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             if (offset < 0) {
                 const leftIdx = List.findIndex(v => -v === offset, langLine.leftOffsets);
                 langLine.left[leftIdx].text.hColor = color;
+                langLine.left[leftIdx].text.hIsBusy = isBusy;
 
             } else if (offset >= 0 && offset < langLine.kwic.length) {
                 langLine.kwic[offset].text.hColor = color;
+                langLine.kwic[offset].text.hIsBusy = isBusy;
 
             } else {
                 const rightIdx = List.findIndex(v => v === offset - (langLine.kwic.length - 1), langLine.rightOffsets);
                 langLine.right[rightIdx].text.hColor = color;
+                langLine.right[rightIdx].text.hIsBusy = isBusy;
             }
         };
     }
@@ -958,7 +962,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
     private reapplyTokenLinkHighlights(state:ConcordanceModelState) {
         List.forEach((v, i) => {
             Dict.forEach((v, k) => {
-                this.highlightTokenLink(state, i, parseInt(k), v.color);
+                this.highlightTokenLink(state, i, parseInt(k), v.color, false);
             }, v);
         }, this.state.tokenLinks);
 

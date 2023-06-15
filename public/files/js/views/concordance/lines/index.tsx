@@ -116,6 +116,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         }
 
         return <>{
+            data.hIsBusy ?
+            <em className="busy-highlight">{data.s}</em> :
             data.hColor ?
             <em className="highlight" style={{backgroundColor: data.hColor}}
                     onMouseOver={data.kcConnection ? handleMouseover(data.kcConnection) : null}

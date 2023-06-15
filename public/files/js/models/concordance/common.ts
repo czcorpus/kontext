@@ -91,6 +91,7 @@ export interface Token {
      * Specifies whether the token is highlighed or which color the highlight is
      */
     hColor:string;
+    hIsBusy:boolean;
 
     /**
      * Specifies a possible connetion with a kwic_connect result

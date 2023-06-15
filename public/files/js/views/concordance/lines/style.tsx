@@ -19,9 +19,22 @@
  */
 
 import styled from 'styled-components';
+import { keyframes } from 'styled-components';
 import * as theme from '../../theme/default';
 
 // ----------- <ConcLines /> ----------------------
+
+const borderBlink = keyframes`
+    0% {
+        border-color: rgba(0, 0, 0, 0);
+    }
+    50% {
+        border-color: ${theme.colorLightText};
+    }
+    100% {
+        border-color: rgba(0, 0, 0, 0);
+    }
+`;
 
 export const ConcLines = styled.table`
 
@@ -145,6 +158,17 @@ export const ConcLines = styled.table`
 
     .highlight {
         ${theme.textHighlight}
+    }
+
+    .busy-highlight {
+        border: 1px solid ${theme.colorLightText};
+        border-radius: ${theme.borderRadiusDefault};
+        display: inline-block;
+        padding: 0 0.3em 0 0.3em;
+
+        animation-name: ${borderBlink};
+        animation-duration: 0.5s;
+        animation-iteration-count: infinite;
     }
 
     .concordance-col-heading {
