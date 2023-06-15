@@ -749,6 +749,7 @@ export const ConfIconA = styled.a`
 export const ExpandButton = styled.button`
 
     margin: 0.2em;
+    padding: 0.4em;
     display: inline-block;
     background-color: ${theme.colorButtonDefault};
     color: ${theme.colorLogoBlue};
@@ -758,11 +759,17 @@ export const ExpandButton = styled.button`
     border-radius: ${theme.inputBorderRadius};
     cursor: pointer;
 
+    img {
+        display: block;
+        width: 0.8em;
+    }
+
     span {
         font-size: 1.5em;
         font-weight: bold;
         display: block;
         margin: 0 auto;
+        padding: 0;
         width: 0.7em;
         line-height: 0.7em;
         height: 0.8em;
