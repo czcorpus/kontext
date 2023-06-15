@@ -59,7 +59,7 @@ CREATE TABLE kontext_corpus (
   description_en text,
   default_virt_keyboard varchar(255),
   default_view_opts text,
-  syntax_viewer_conf_json text,
+  syntax_viewer_conf_json json DEFAULT NULL,
   part_of_ml_corpus int(11) NOT NULL DEFAULT '0',
   ml_position_filter enum('alphanum') DEFAULT NULL,
   UNIQUE KEY corpora_name_uniq (name),
