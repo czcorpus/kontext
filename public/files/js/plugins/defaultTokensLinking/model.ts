@@ -76,6 +76,15 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
         this.addActionHandler(
             PluginInterfaces.TokensLinking.Actions.FetchInfo,
             action => {
+                this.dispatchSideEffect({
+                    ...ConcActions.HighlightTokenById,
+                    payload: {
+                        corpusId: action.payload.corpusId,
+                        tokenId: action.payload.tokenId,
+                        color: null,
+                        isBusy: true,
+                    }
+                });
                 this.pluginApi.ajax$<FetchDataResponse>(
                     HTTP.Method.POST,
                     this.pluginApi.createActionUrl('/fetch_tokens_linking'),
@@ -102,6 +111,7 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                                             corpusId: link['corpname'],
                                             tokenId: link['tokenId'],
                                             color: link['highlightColor'],
+                                            isBusy: false,
                                             comment: link['comment'],
                                         }
                                     });
@@ -110,6 +120,15 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                         }, resp.data);
                     },
                     error: error => {
+                        this.dispatchSideEffect({
+                            ...ConcActions.HighlightTokenById,
+                            payload: {
+                                corpusId: action.payload.corpusId,
+                                tokenId: action.payload.tokenId,
+                                color: null,
+                                isBusy: false,
+                            }
+                        });
                         this.dispatchSideEffect({
                             ...PluginInterfaces.TokensLinking.Actions.FetchInfoDone,
                             error
