@@ -154,6 +154,8 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
             data = self.session_get('settings')
             if not data:
                 data = {}
+            if 'shuffle' not in data:
+                data['shuffle'] = 1
             return data
 
     @staticmethod
