@@ -12,7 +12,7 @@ DROP TABLE IF EXISTS kontext_corpus_settings;
 CREATE TABLE kontext_corpus_settings (
     user_id int NOT NULL,
     corpus_name varchar(63) NOT NULL,
-    data TEXT NOT NULL,
+    data JSON NOT NULL,
     PRIMARY KEY (user_id, corpus_name),
     CONSTRAINT kontext_corpus_settings_user_id_fk FOREIGN KEY (user_id) REFERENCES kontext_user(id),
     CONSTRAINT kontext_corpus_settings_corpus_name_fk FOREIGN KEY (corpus_name) REFERENCES kontext_corpus(name)

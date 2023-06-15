@@ -12,8 +12,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import ujson
 import aiofiles
+import ujson as json
 
 
 async def load_cached_partial(path, offset, limit):
@@ -25,7 +25,7 @@ async def load_cached_partial(path, offset, limit):
     sorted in reverse).
     """
     async with aiofiles.open(path, 'r') as fr:
-        total = ujson.loads(await fr.readline())['total']
+        total = json.loads(await fr.readline())['total']
         ans = []
         i = 0
         async for row in fr:
@@ -35,7 +35,7 @@ async def load_cached_partial(path, offset, limit):
             elif i == offset + limit:
                 break
             else:
-                ans.append(ujson.loads(row))
+                ans.append(json.loads(row))
                 i += 1
     return total, ans
 
@@ -46,7 +46,7 @@ async def load_cached_full(path):
     """
     ans = []
     async with aiofiles.open(path, 'r') as fr:
-        total = ujson.loads(await fr.readline())['total']
+        total = json.loads(await fr.readline())['total']
         async for row in fr:
-            ans.append(ujson.loads(row))
+            ans.append(json.loads(row))
     return total, ans

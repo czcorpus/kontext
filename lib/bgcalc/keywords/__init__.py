@@ -22,7 +22,7 @@ import aiofiles
 import aiofiles.os
 import l10n
 import settings
-import ujson
+import ujson as json
 from action.argmapping.keywords import KeywordsFormArgs
 from bgcalc import wordlist
 from bgcalc.jsonl_cache import load_cached_full, load_cached_partial
@@ -85,15 +85,15 @@ def cached(f):
         if await aiofiles.os.path.exists(path):
             async with aiofiles.open(path, 'r') as fr:
                 await fr.readline()
-                return [ujson.loads(item) async for item in fr]
+                return [json.loads(item) async for item in fr]
         else:
             ans = await f(corp, ref_corp, args, sys.maxsize)
             # ans = sorted(ans, key=lambda x: x[1], reverse=True)
             num_lines = len(ans)
             async with aiofiles.open(path, 'w') as fw:
-                await fw.write(ujson.dumps(dict(total=num_lines)) + '\n')
+                await fw.write(json.dumps(dict(total=num_lines)) + '\n')
                 for item in ans:
-                    await fw.write(ujson.dumps(item) + '\n')
+                    await fw.write(json.dumps(item) + '\n')
             return ans[:max_items]
 
     return wrapper

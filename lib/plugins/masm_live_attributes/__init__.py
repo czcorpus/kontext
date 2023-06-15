@@ -24,7 +24,7 @@ from typing import Any, List
 import aiofiles
 import aiohttp
 import plugins
-import ujson
+import ujson as json
 from action.control import http_action
 from action.krequest import KRequest
 from action.model.corpus import CorpusActionModel
@@ -43,8 +43,8 @@ bp = Blueprint('masm_live_attributes')
 @bp.route('/filter_attributes', methods=['POST'])
 @http_action(return_type='json', action_model=CorpusActionModel)
 async def filter_attributes(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
-    attrs = ujson.loads(req.form.get('attrs', '{}'))
-    aligned = ujson.loads(req.form.get('aligned', '[]'))
+    attrs = json.loads(req.form.get('attrs', '{}'))
+    aligned = json.loads(req.form.get('aligned', '[]'))
     with plugins.runtime.LIVE_ATTRIBUTES as lattr:
         return await lattr.get_attr_values(
             amodel.plugin_ctx, corpus=amodel.corp, attr_map=attrs,
@@ -54,14 +54,14 @@ async def filter_attributes(amodel: CorpusActionModel, req: KRequest, resp: KRes
 @bp.route('/attr_val_autocomplete', methods=['POST'])
 @http_action(return_type='json', action_model=CorpusActionModel)
 async def attr_val_autocomplete(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
-    attrs = ujson.loads(req.form.get('attrs', '{}'))
+    attrs = json.loads(req.form.get('attrs', '{}'))
     pattern_attr = req.form.get('patternAttr')
     with plugins.runtime.CORPARCH as ca:
         corpus_info = await ca.get_corpus_info(amodel.plugin_ctx, amodel.corp.corpname)
     attrs[pattern_attr] = '%{}%'.format(req.form.get('pattern'))
     if pattern_attr == corpus_info.metadata.label_attr:
         attrs[corpus_info.metadata.id_attr] = []
-    aligned = ujson.loads(req.form.get('aligned', '[]'))
+    aligned = json.loads(req.form.get('aligned', '[]'))
     with plugins.runtime.LIVE_ATTRIBUTES as lattr:
         return await lattr.get_attr_values(
             amodel.plugin_ctx, corpus=amodel.corp, attr_map=attrs,

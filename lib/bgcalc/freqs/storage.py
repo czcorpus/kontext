@@ -26,7 +26,7 @@ from typing import List, Optional, Tuple
 
 import aiofiles.os
 import settings
-import ujson
+import ujson as json
 from bgcalc.freqs.types import FreqCalcArgs, FreqCalcResult
 from conclib.freq import FreqData, FreqItem
 from dataclasses_json import dataclass_json
@@ -74,17 +74,17 @@ async def find_cached_result(args: FreqCalcArgs) -> Tuple[Optional[FreqCalcResul
     cache_path = _cache_file_path(args)
     if await aiofiles.os.path.exists(cache_path):
         async with aiofiles.open(cache_path, 'r') as fr:
-            common_md = CommonMetadata.from_dict(ujson.loads(await fr.readline()))
+            common_md = CommonMetadata.from_dict(json.loads(await fr.readline()))
             data = FreqCalcResult(freqs=[], conc_size=common_md.conc_size)
             blocks = common_md.num_blocks
 
             for _ in range(blocks):
-                block_md = BlockMetadata.from_dict(ujson.loads(await fr.readline()))
+                block_md = BlockMetadata.from_dict(json.loads(await fr.readline()))
                 freq = FreqData(
                     Head=block_md.head, Items=[], SkippedEmpty=block_md.skipped_empty,
                     NoRelSorting=block_md.no_rel_sorting)
                 for _ in range(block_md.size):
-                    freq.Items.append(FreqItem.from_dict(ujson.loads(await fr.readline())))
+                    freq.Items.append(FreqItem.from_dict(json.loads(await fr.readline())))
                 data.freqs.append(freq)
         return data, cache_path
     return None, cache_path
@@ -103,15 +103,15 @@ def stored_to_fs(func):
             data: FreqCalcResult = await func(args)
             async with aiofiles.open(cache_path, 'w') as fw:
                 common_md = CommonMetadata(num_blocks=len(data.freqs), conc_size=data.conc_size)
-                await fw.write(ujson.dumps(common_md.to_dict()) + '\n')
+                await fw.write(json.dumps(common_md.to_dict()) + '\n')
                 for freq in data.freqs:
                     block_md = BlockMetadata(
                         head=[_Head(**x) for x in freq.Head],
                         skipped_empty=freq.SkippedEmpty,
                         no_rel_sorting=freq.NoRelSorting,
                         size=len(freq.Items))
-                    await fw.write(ujson.dumps(block_md.to_dict()) + '\n')
+                    await fw.write(json.dumps(block_md.to_dict()) + '\n')
                     for item in freq.Items:
-                        await fw.write(ujson.dumps(item.to_dict()) + '\n')
+                        await fw.write(json.dumps(item.to_dict()) + '\n')
         return data
     return wrapper
