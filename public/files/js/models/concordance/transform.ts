@@ -53,7 +53,7 @@ function importTextChunk(item:ServerTextChunk, mainAttrIdx:number, id:string, st
         return {
             id,
             className: item.class,
-            text: {s: item.str, hColor: null, idx: startWlIdx},
+            text: {s: item.str, hColor: null, hIsBusy: false, idx: startWlIdx},
             openLink: item.open_link ? {speechPath: item.open_link.speech_path} : undefined,
             closeLink: item.close_link ? {speechPath: item.close_link.speech_path} : undefined,
             continued: item.continued,
@@ -69,7 +69,7 @@ function importTextChunk(item:ServerTextChunk, mainAttrIdx:number, id:string, st
         return {
             id,
             className: item.class,
-            text: {s: text, hColor: null, idx: startWlIdx},
+            text: {s: text, hColor: null, hIsBusy: false, idx: startWlIdx},
             openLink: item.open_link ? {speechPath: item.open_link.speech_path} : undefined,
             closeLink: item.close_link ? {speechPath: item.close_link.speech_path} : undefined,
             continued: item.continued,
