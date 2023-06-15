@@ -748,8 +748,8 @@ export const ConfIconA = styled.a`
 
 export const ExpandButton = styled.button`
 
-    width: 1.6em;
-    height: 1.6em;
+    width: 1.6rem;
+    height: 1.6rem;
     margin: 0.2em;
     padding: 0.4em;
     display: inline-block;
