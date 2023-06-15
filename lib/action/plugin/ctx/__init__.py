@@ -14,8 +14,8 @@
 
 import abc
 from typing import Any, Dict, Optional
+from sanic.cookies.request import CookieRequestParameters
 
-from action.cookie import KonTextCookie
 from action.krequest import KRequest
 from corplib import CorpusFactory
 from corplib.abstract import AbstractKCorpus
@@ -83,7 +83,7 @@ class AbstractBasePluginCtx(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def cookies(self) -> KonTextCookie:
+    def cookies(self) -> CookieRequestParameters:
         pass
 
     @property
