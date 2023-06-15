@@ -63,7 +63,6 @@ import plugins
 import plugins.export
 import settings
 from action.context import ApplicationContext
-from action.cookie import KonTextCookie
 from action.plugin.initializer import install_plugin_actions, setup_plugins
 from action.templating import TplEngine
 from babel import support
@@ -276,13 +275,11 @@ def get_locale(request: Request) -> str:
     """
     Gets user locale based on request data
     """
-    cookies = KonTextCookie(request.headers.get('cookie', ''))
-
     with plugins.runtime.GETLANG as getlang:
         if getlang is not None:
-            lgs_string = getlang.fetch_current_language(cookies)
+            lgs_string = getlang.fetch_current_language(request.cookies)
         else:
-            lang_cookie = cookies.get('kontext_ui_lang')
+            lang_cookie = request.cookies.get('kontext_ui_lang')
             if not lang_cookie:
                 langs = request.headers.get('accept-language')
                 if langs:

@@ -262,10 +262,20 @@ def http_action(
                     tpl_engine=application.ctx.templating,
                     translate=req.translate,
                     resp=resp)
-            return HTTPResponse(
+            out = HTTPResponse(
                 body=resp_body,
                 status=resp.http_status_code,
                 headers=resp.output_headers(aprops.return_type))
+            for cookie in resp.get_cookies():
+                out.add_cookie(
+                    key=cookie.name,
+                    value=cookie.value,
+                    path=cookie.path,
+                    expires=cookie.expires,
+                    samesite=cookie.same_site,
+                    secure=cookie.secure
+                )
+            return out
 
         return wrapper
     return decorator

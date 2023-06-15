@@ -22,9 +22,9 @@ element getlang {
   }
 }
 """
-import http.cookies
 import os
 from collections import defaultdict
+from sanic.cookies.request import CookieRequestParameters
 
 from plugin_types.getlang import AbstractGetLang
 
@@ -63,17 +63,17 @@ class GetLang(AbstractGetLang):
         Returns currently selected language
 
         arguments:
-        source -- any Cookie.BaseCookie compatible implementation
+        source -- cookie data (CookieRequestParameters)
 
         returns:
         underscore-separated ISO 639 language code and ISO 3166 country code
         of the detected language or an empty string in case no value was found
         """
         code = self.fallback_lang
-        if not isinstance(source, http.cookies.BaseCookie):
-            raise TypeError(f'{__file__} plugin expects Cookie.BaseCookie instance as a source')
+        if not isinstance(source, CookieRequestParameters):
+            raise TypeError(f'{__file__} plugin expects CookieRequestParameters instance as a source')
         if self.cookie_name in source:
-            key = normalize_lang(source[self.cookie_name].value).split('_')[0]
+            key = normalize_lang(source[self.cookie_name]).split('_')[0]
             variants = self._translations[key]
             if len(variants) > 0:
                 code = variants[0]

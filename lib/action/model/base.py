@@ -15,10 +15,11 @@
 
 import hashlib
 from typing import Any, Dict, List, Optional, Tuple
+from sanic import Sanic
+from sanic.cookies.request import CookieRequestParameters
 
 import l10n
 import settings
-from action.cookie import KonTextCookie
 from action.errors import UserReadableException
 from action.krequest import KRequest
 from action.model.abstract import AbstractPageModel
@@ -27,7 +28,6 @@ from action.props import ActionProps
 from action.req_args import create_req_arg_proxy
 from action.response import KResponse
 from main_menu.model import AbstractMenuItem, MainMenuItemId
-from sanic import Sanic
 from action.model import ModelsSharedData
 
 
@@ -208,7 +208,7 @@ class BasePluginCtx(AbstractBasePluginCtx):
         self._response.set_http_status(status)
 
     @property
-    def cookies(self) -> KonTextCookie:
+    def cookies(self) -> CookieRequestParameters:
         return self._request.cookies
 
     @property

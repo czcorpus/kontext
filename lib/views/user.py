@@ -14,7 +14,7 @@
 # GNU General Public License for more details.
 
 import logging
-import time
+import datetime
 
 import plugins
 import settings
@@ -265,7 +265,7 @@ async def switch_language(amodel: UserActionModel, req: KRequest, resp: KRespons
         'kontext_ui_lang',
         req.form.get('language'),
         path=path_prefix if path_prefix else '/',
-        expires=time.strftime('%a, %d %b %Y %T GMT', time.gmtime(time.time() + 180 * 24 * 3600)))
+        expires=datetime.datetime.now() + datetime.timedelta(180))
     resp.redirect(
         req.headers.get('referer', req.create_url('query', []))
     )
