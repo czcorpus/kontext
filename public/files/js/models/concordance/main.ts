@@ -947,7 +947,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 langLine.left[leftIdx].text.hColor = color;
                 langLine.left[leftIdx].text.hIsBusy = isBusy;
 
-            } else if (offset >= 0 && offset < langLine.kwic.length) {
+            } else if (offset < langLine.kwic.length) {
                 langLine.kwic[offset].text.hColor = color;
                 langLine.kwic[offset].text.hIsBusy = isBusy;
 

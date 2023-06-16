@@ -382,10 +382,10 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             }
         };
 
-        const handleKwicClick = (corpusId, tokenNumber, lineIdx) => {
-            props.tokenConnectClickHandler(corpusId, tokenNumber, props.kwicLength, lineIdx);
+        const handleKwicClick = (corpusId, kwicTokenNumber, kwicLength, lineIdx) => (evt) => {
+            props.tokenConnectClickHandler(corpusId, kwicTokenNumber, kwicLength, lineIdx);
             if (props.tokensLinkingClickHandler) {
-                props.tokensLinkingClickHandler(corpusId, tokenNumber, lineIdx, props.kwicLength);
+                props.tokensLinkingClickHandler(corpusId, parseInt(evt.target.getAttribute('data-tokenid')), lineIdx, 1);
             }
         };
 
@@ -405,8 +405,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                 )}
             </td>
             <td className={exportTextElmClass(props.corpname, 'kw')}
-                    onClick={handleKwicClick.bind(null, props.corpname,
-                        props.output.tokenNumber, props.lineIdx)}>
+                    onClick={handleKwicClick(props.corpname, props.output.tokenNumber, props.kwicLength, props.lineIdx)}>
                 {List.flatMap(
                     (item, i) => [
                         <KwicChunk key={`kc-${i}`} i={i} item={item} itemList={props.output.kwic}
@@ -507,7 +506,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                 return (
                     <strong className={getViewModeClass(props.attrViewMode)}
                             title={getViewModeTitle(props.attrViewMode, true, props.supportsTokenConnect, props.item.displayPosAttrs)}>
-                        <Token tokenId={props.kwicTokenNum} isKwic={true} data={props.item} viewMode={props.attrViewMode}
+                        <Token tokenId={props.kwicTokenNum + props.i} isKwic={true} data={props.item} viewMode={props.attrViewMode}
                                 supportsTokenConnect={props.supportsTokenConnect}
                             />
                     </strong>
@@ -656,47 +655,48 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
 
         _renderTextParMode(corpname, corpusOutput:KWICSection) {
             const hasKwic = this.props.corpsWithKwic.indexOf(corpname) > -1;
-            const handleTokenClick = (evt) => this._handleNonKwicTokenClick(
-                corpname, this.props.lineIdx, parseInt(evt.target.getAttribute('data-tokenid'))
-            );
+            const handleNonKwicTokenClick = (evt) => {
+                console.log(corpname, corpusOutput.tokenNumber, this.props.data.kwicLength, this.props.lineIdx, parseInt(evt.target.getAttribute('data-tokenid')));
+                this._handleNonKwicTokenClick(corpname, this.props.lineIdx, parseInt(evt.target.getAttribute('data-tokenid')));
+            }
+            const handleKwicTokenClick = (evt) => {
+                console.log(corpname, corpusOutput.tokenNumber, this.props.data.kwicLength, this.props.lineIdx, parseInt(evt.target.getAttribute('data-tokenid')));
+                this._handleKwicClick(corpname, corpusOutput.tokenNumber, this.props.data.kwicLength, this.props.lineIdx, parseInt(evt.target.getAttribute('data-tokenid')));
+            }
 
             return (
                 <td className={this._exportTextElmClass(corpname, 'par')}>
-                    <span onClick={handleTokenClick}>
+                    <span onClick={handleNonKwicTokenClick}>
                         {List.flatMap((item, i) => [
-                                <LeftChunk key={`lc-${i}`} i={i} itemList={corpusOutput.left} item={item}
-                                        chunkOffsets={corpusOutput.leftOffsets} kwicTokenNum={corpusOutput.tokenNumber}
-                                        lineIdx={this.props.lineIdx} supportsTokenConnect={this.props.supportsTokenConnect}
-                                        attrViewMode={this.props.attrViewMode} audioPlayerStatus={this.props.audioPlayerStatus}
-                                        />,
-                                        ' '
-                                ], corpusOutput.left)}
+                            <LeftChunk key={`lc-${i}`} i={i} itemList={corpusOutput.left} item={item}
+                                    chunkOffsets={corpusOutput.leftOffsets} kwicTokenNum={corpusOutput.tokenNumber}
+                                    lineIdx={this.props.lineIdx} supportsTokenConnect={this.props.supportsTokenConnect}
+                                    attrViewMode={this.props.attrViewMode} audioPlayerStatus={this.props.audioPlayerStatus}
+                            />,
+                            ' '
+                        ], corpusOutput.left)}
                     </span>
-                    <span onClick={this._handleKwicClick.bind(this, corpname,
-                                    corpusOutput.tokenNumber, this.props.lineIdx)}>
-                        {List.flatMap(
-                            (item, i) => [
-                                <KwicChunk key={`kc-${i}`} i={i} itemList={corpusOutput.kwic} item={item}
-                                        prevBlockClosed={List.get(-1, corpusOutput.left)} hasKwic={hasKwic}
-                                        lineIdx={this.props.lineIdx}
-                                        attrViewMode={this.props.attrViewMode}
-                                        supportsTokenConnect={this.props.supportsTokenConnect}
-                                        kwicTokenNum={corpusOutput.tokenNumber}
-                                        audioPlayerStatus={this.props.audioPlayerStatus}
-                                    />,
-                                ' '
-                            ],
-                            corpusOutput.kwic
-                        )}
+                    <span onClick={handleKwicTokenClick}>
+                        {List.flatMap((item, i) => [
+                            <KwicChunk key={`kc-${i}`} i={i} itemList={corpusOutput.kwic} item={item}
+                                    prevBlockClosed={List.get(-1, corpusOutput.left)} hasKwic={hasKwic}
+                                    lineIdx={this.props.lineIdx}
+                                    attrViewMode={this.props.attrViewMode}
+                                    supportsTokenConnect={this.props.supportsTokenConnect}
+                                    kwicTokenNum={corpusOutput.tokenNumber}
+                                    audioPlayerStatus={this.props.audioPlayerStatus}
+                            />,
+                            ' '
+                        ], corpusOutput.kwic)}
                     </span>
-                    <span onClick={handleTokenClick}>
+                    <span onClick={handleNonKwicTokenClick}>
                         {List.flatMap((item, i) => [
                             ' ',
                             <RightChunk key={`rc-${i}`} i={i} item={item} itemList={corpusOutput.right} chunkOffsets={corpusOutput.rightOffsets}
                                     kwicTokenNum={corpusOutput.tokenNumber} prevBlockClosed={List.get(-1, corpusOutput.kwic)}
                                     lineIdx={this.props.lineIdx} supportsTokenConnect={this.props.supportsTokenConnect}
                                     attrViewMode={this.props.attrViewMode} audioPlayerStatus={this.props.audioPlayerStatus}
-                                />
+                            />
                         ], corpusOutput.right)}
                     </span>
                 </td>
@@ -733,10 +733,10 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             );
         }
 
-        _handleKwicClick(corpusId, tokenNumber, lineIdx) {
-            this._detailClickHandler(corpusId, tokenNumber, this.props.data.kwicLength, lineIdx);
+        _handleKwicClick(corpusId, kwicTokenNumber, kwicLength, lineIdx, clickedTokenNumber) {
+            this._detailClickHandler(corpusId, kwicTokenNumber, kwicLength, lineIdx);
             if (this.props.tokensLinkingHandler) {
-                this.props.tokensLinkingHandler(corpusId, tokenNumber, lineIdx, this.props.data.kwicLength);
+                this.props.tokensLinkingHandler(corpusId, clickedTokenNumber, lineIdx, 1);
             }
         }
 
