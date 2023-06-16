@@ -345,7 +345,7 @@ export function init({
                                             {he.translate('query__shuffle_result')}
                                             <layoutViews.InlineHelp
                                                 htmlClass="shuffle-help"
-                                                customStyle={{fontSize: '1.2em', maxWidth: '30em'}}>
+                                                customStyle={{maxWidth: '30em', lineHeight: '1.2em'}}>
                                             {he.translate('query__shuffle_result_help')}
                                             </layoutViews.InlineHelp>
                                         </label>
