@@ -311,7 +311,7 @@
         "query__specify_context": "Ôkryśl kōntekst",
         "query__specify_tt": "Ôgranicz szukanie",
         "query__shuffle_result": "Shuffle concordance lines UNTRANSLATED",
-        "query__shuffle_result_help": "Keeping the function active is recommended, as it randomizes the order of concordance lines. This is essential for ensuring a balanced and unbiased interpretation of results. However, the function can be temporarily disabled when expecting a large concordance. This can be typically seen when analyzing a prevalent phenomenon in a corpus approximating a billion tokens in size. Please keep in mind that for large-scale results, enabling the result shuffling feature might considerably prolong the display time of your results. UNTRANSLATED",
+        "query__shuffle_result_help": "It is recommended to keep the function active as it randomizes the order of concordance lines, which is essential for ensuring a balanced and unbiased interpretation of results. However, you can temporarily disable the function when expecting a large concordance, such as when analyzing a frequent phenomenon in a very large corpus (billions of tokens), because shuffling a large-scale concordance might prolong the display time considerably. UNTRANSLATED",
         "query__search_btn": "Szukej",
         "query__search_anyway_btn": "Search anyway UNTRANSLATED",
         "query__search_in_{corpus}_btn": "Search in corpus {corpus} UNTRANSLATED",
