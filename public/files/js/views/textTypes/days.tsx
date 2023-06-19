@@ -199,11 +199,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                 <div className="calendars">
                     <div>
                         <h3>{he.translate('query__tt_calendar_from_date')}</h3>
-                        <layoutViews.Calendar onClick={handleCalClick('from')} firstDayOfWeek={props.firstDayOfWeek} currDate={state.fromDate} />
+                        <layoutViews.Calendar onClick={handleCalClick('from')} firstDayOfWeek={props.firstDayOfWeek} currDate={state.fromDate} maxDate={state.toDate} rangeDate={state.toDate} />
                     </div>
                     <div>
                         <h3>{he.translate('query__tt_calendar_to_date')}</h3>
-                        <layoutViews.Calendar onClick={handleCalClick('to')} firstDayOfWeek={props.firstDayOfWeek} currDate={state.toDate}/>
+                        <layoutViews.Calendar onClick={handleCalClick('to')} firstDayOfWeek={props.firstDayOfWeek} currDate={state.toDate} minDate={state.fromDate} rangeDate={state.fromDate} />
                     </div>
                 </div>
                 <p className={`info${state.fromDate === null || state.toDate === null ? '' : ' note'}`}>
