@@ -676,6 +676,10 @@ export const Calendar = styled.div`
         padding: 0.1em;
         text-align: center;
     }
+
+    table td.range {
+        background-color: ${theme.colorLogoBlue};
+    }
 `;
 
 // ------------------- <CorpnameInfoTriggerLI /> --------------------
