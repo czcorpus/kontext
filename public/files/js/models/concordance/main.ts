@@ -932,10 +932,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 const rgtOffst = line.languages[corpusIdx].rightOffsets[line.languages[corpusIdx].rightOffsets.length-1] ?
                     line.languages[corpusIdx].rightOffsets[line.languages[corpusIdx].rightOffsets.length-1] :
                     0;
-                const kwicLen = line.languages[corpusIdx].kwic.length ?
-                    line.languages[corpusIdx].kwic.length :
-                    0;
-                return (offset >= -lftOffst) && (offset < (rgtOffst + kwicLen));
+                return (offset >= -lftOffst) && (offset <= (rgtOffst));
             },
             state.lines
         );
@@ -947,12 +944,12 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 langLine.left[leftIdx].text.hColor = color;
                 langLine.left[leftIdx].text.hIsBusy = isBusy;
 
-            } else if (offset >= 0 && offset < langLine.kwic.length) {
+            } else if (offset < langLine.kwic.length) {
                 langLine.kwic[offset].text.hColor = color;
                 langLine.kwic[offset].text.hIsBusy = isBusy;
 
             } else {
-                const rightIdx = List.findIndex(v => v === offset - (langLine.kwic.length - 1), langLine.rightOffsets);
+                const rightIdx = List.findIndex(v => v === offset, langLine.rightOffsets);
                 langLine.right[rightIdx].text.hColor = color;
                 langLine.right[rightIdx].text.hIsBusy = isBusy;
             }
