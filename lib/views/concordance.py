@@ -743,8 +743,7 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
             break
 
     struct_and_attrs_tmp = await amodel.get_structs_and_attrs()
-    struct_and_attrs = [(k, [x.to_dict() for x in item])
-                        for k, item in struct_and_attrs_tmp.items()]
+    struct_and_attrs = {k: [sa.to_dict() for sa in v] for k, v in struct_and_attrs_tmp.items()}
 
     subcorp_tt_structure: Optional[TextTypesType] = None
     corp_ident = amodel.corp.portable_ident
