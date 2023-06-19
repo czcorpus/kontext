@@ -359,9 +359,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
 
         const handleTokenClick = (evt) => {
             if (props.supportsTokenConnect || props.tokensLinkingClickHandler) {
-                let tokenId = evt.target.getAttribute('data-tokenid');
-                if (tokenId !== null) {
-                    tokenId = parseInt(tokenId);
+                const tokenId = parseInt(evt.target.getAttribute('data-tokenid'));
+                if (!isNaN(tokenId)) {
                     if (props.supportsTokenConnect) {
                         props.tokenConnectClickHandler(
                             props.corpname,
@@ -385,7 +384,10 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         const handleKwicClick = (corpusId, kwicTokenNumber, kwicLength, lineIdx) => (evt) => {
             props.tokenConnectClickHandler(corpusId, kwicTokenNumber, kwicLength, lineIdx);
             if (props.tokensLinkingClickHandler) {
-                props.tokensLinkingClickHandler(corpusId, parseInt(evt.target.getAttribute('data-tokenid')), lineIdx, 1);
+                const tokenid = parseInt(evt.target.getAttribute('data-tokenid'));
+                if (!isNaN(tokenid)) {
+                    props.tokensLinkingClickHandler(corpusId, tokenid, lineIdx, 1);
+                }
             }
         };
 
@@ -516,7 +518,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                 return <span>&lt;--not translated--&gt;</span>
 
             } else {
-                return <span className={props.item.className === 'strc' ? 'strc' : null}>
+                return <span data-tokenid={props.item.className === 'strc' ? null : (props.kwicTokenNum + props.i)} className={props.item.className === 'strc' ? 'strc' : null}>
                     {renderTokens(props.item.text)}
                 </span>;
             }
@@ -656,12 +658,16 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         _renderTextParMode(corpname, corpusOutput:KWICSection) {
             const hasKwic = this.props.corpsWithKwic.indexOf(corpname) > -1;
             const handleNonKwicTokenClick = (evt) => {
-                console.log(corpname, corpusOutput.tokenNumber, this.props.data.kwicLength, this.props.lineIdx, parseInt(evt.target.getAttribute('data-tokenid')));
-                this._handleNonKwicTokenClick(corpname, this.props.lineIdx, parseInt(evt.target.getAttribute('data-tokenid')));
+                const tokenid = parseInt(evt.target.getAttribute('data-tokenid'));
+                if (!isNaN(tokenid)) {
+                    this._handleNonKwicTokenClick(corpname, this.props.lineIdx, tokenid);
+                }
             }
             const handleKwicTokenClick = (evt) => {
-                console.log(corpname, corpusOutput.tokenNumber, this.props.data.kwicLength, this.props.lineIdx, parseInt(evt.target.getAttribute('data-tokenid')));
-                this._handleKwicClick(corpname, corpusOutput.tokenNumber, this.props.data.kwicLength, this.props.lineIdx, parseInt(evt.target.getAttribute('data-tokenid')));
+                const tokenid = parseInt(evt.target.getAttribute('data-tokenid'));
+                if (!isNaN(tokenid)) {
+                    this._handleKwicClick(corpname, corpusOutput.tokenNumber, this.props.data.kwicLength, this.props.lineIdx, tokenid);
+                }
             }
 
             return (
