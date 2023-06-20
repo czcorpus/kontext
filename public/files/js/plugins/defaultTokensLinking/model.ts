@@ -48,6 +48,7 @@ export interface FetchDataResponse extends AjaxResponse {
                 corpname:string;
                 tokenId:number;
                 highlightColor:string;
+                altColors:Array<string>;
                 comment?:string;
             }>;
         }>;

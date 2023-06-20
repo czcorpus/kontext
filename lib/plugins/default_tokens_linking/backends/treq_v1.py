@@ -114,7 +114,8 @@ class TreqV1Backend(AbstractBackend):
                             selected_token['link'].append({
                                 'corpname': translat_corp,
                                 'tokenId': token_ranges[translat_corp][0] + tok_idx,
-                                'highlightColor': self._conf['color'],
+                                'highlightColor': self._conf['colors'][0],
+                                'altColors': self._conf['colors'][1:],
                                 'comment': 'Treq translation',
                             })
 
@@ -123,7 +124,8 @@ class TreqV1Backend(AbstractBackend):
                     selected_token['link'].append({
                         'corpname': corpus_id,
                         'tokenId': token_ranges[corpus_id][0] + tok_idx,
-                        'highlightColor': self._conf['color'],
+                        'highlightColor': self._conf['colors'][0],
+                        'altColors': self._conf['colors'][1:],
                         'comment': 'Treq translation',
                     })
 
