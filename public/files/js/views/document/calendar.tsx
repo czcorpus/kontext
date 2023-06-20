@@ -41,6 +41,9 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Pr
         current:Date;
         isActive:boolean;
         onClick:(d:Date)=>void;
+        minDate?:Date;
+        maxDate?:Date;
+        rangeDate?:Date;
 
     }> = (props) => {
 
@@ -55,6 +58,8 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Pr
         const determineClass = (v:Date) => {
             if (isCurrentDay(v)) {
                 return `current${props.isActive ? ' active' : ''}`;
+            } else if (props.isActive && props.rangeDate && ((props.rangeDate < props.current && v >= props.rangeDate && props.current > v) || (props.rangeDate > props.current && v > props.current && props.rangeDate >= v))) {
+                return 'range';
             }
             return null;
         };
@@ -67,9 +72,12 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Pr
                     List.map((v, i) => (
                         <td key={v ? `d:${v.getTime()}` : `d:${i}`}
                                 className={determineClass(v)}>
-                            <a onClick={() => props.onClick(v)}
-                                style={isCurrentMonth(v) ? null : {color: 'gray'}}
-                            >{v ? v.getDate() : '?'}</a>
+                            {v && ((props.maxDate && v > props.maxDate) || (props.minDate && v < props.minDate)) ?
+                                <span style={{color: 'lightgray'}}>{v ? v.getDate() : '?'}</span> :
+                                <a onClick={() => props.onClick(v)}
+                                    style={isCurrentMonth(v) ? null : {color: 'gray'}}
+                                >{v ? v.getDate() : '?'}</a>
+                            }
                         </td>
                     ))
                 )}
@@ -97,6 +105,9 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Pr
         onClick:(date:Date|null)=>void;
         currDate?:Date;
         firstDayOfWeek?:'mo'|'su'|'sa';
+        minDate?:Date;
+        maxDate?:Date;
+        rangeDate?:Date;
 
     }> = (props) => {
 
@@ -211,7 +222,8 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Pr
                         {List.map(
                             v => <Row key={`row:${v[0].getTime()}`} days={v}
                                         current={state.currDate} isActive={state.isSelected}
-                                            onClick={handleClick} />,
+                                            onClick={handleClick} minDate={props.minDate} maxDate={props.maxDate}
+                                            rangeDate={props.rangeDate} />,
                             calData
                         )}
                     </tbody>
