@@ -633,7 +633,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                         }
                     });
 
-                } else {
+                } else if (kwicLength !== -1) { // only when clicking kwic
                     dispatcher.dispatch<typeof Actions.ShowKwicDetail>({
                         name: Actions.ShowKwicDetail.name,
                         payload: {
