@@ -82,19 +82,6 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                                 if (!h.color) {
                                     state.appliedHighlights[h.lineId] = [];
                                 }
-                                /* else {
-                                    if (!Dict.hasKey(h.lineId, state.appliedHighlights)) {
-                                        state.appliedHighlights[h.lineId] = [];
-                                    }
-                                    state.appliedHighlights[h.lineId].push(
-                                        {
-                                            ...h,
-                                            isBusy: false,
-                                            colorNumUsed: 1
-                                        }
-                                    );
-                                }
-                                */
                             },
                             action.payload.highlights
                         )
