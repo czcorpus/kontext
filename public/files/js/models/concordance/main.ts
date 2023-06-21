@@ -946,24 +946,49 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         color:string,
         isBusy:boolean,
     ) {
-        const langLine = state.lines[lineId].languages[corpusIdx];
-        const offset = tokenId - langLine.tokenNumber;
-        if (offset < 0) {
-            const leftIdx = List.findIndex(v => -v === offset, langLine.leftOffsets);
-            langLine.left[leftIdx].text.hColor = color;
-            langLine.left[leftIdx].text.hIsBusy = isBusy;
+        pipe(
+            state.lines,
+            List.reduce( // find lines containing tokens with tokenId
+                (acc, line, i) => {
+                    const offset = tokenId - line.languages[corpusIdx].tokenNumber;
+                    const lftOffst = line.languages[corpusIdx].leftOffsets[0] ?
+                        line.languages[corpusIdx].leftOffsets[0] :
+                        0;
+                    const rgtOffst = line.languages[corpusIdx].rightOffsets[line.languages[corpusIdx].rightOffsets.length-1] ?
+                        line.languages[corpusIdx].rightOffsets[line.languages[corpusIdx].rightOffsets.length-1] :
+                        0;
+                    if ((offset >= -lftOffst) && (offset <= (rgtOffst))) {
+                        return [...acc, i];
+                    }
+                    return acc;
+                },
+                [],
+            ),
+            List.forEach( // highlight tokens on all found lines
+                lineIdx => {
+                    const langLine = state.lines[lineIdx].languages[corpusIdx];
+                    const offset = tokenId - langLine.tokenNumber;
+                    if (offset < 0) {
+                        const leftIdx = List.findIndex(v => -v === offset, langLine.leftOffsets);
+                        if (leftIdx !== -1) {
+                            langLine.left[leftIdx].text.hColor = color;
+                            langLine.left[leftIdx].text.hIsBusy = isBusy;
+                        }
 
-        } else if (offset < langLine.kwic.length) {
-            langLine.kwic[offset].text.hColor = color;
-            langLine.kwic[offset].text.hIsBusy = isBusy;
+                    } else if (offset < langLine.kwic.length) {
+                        langLine.kwic[offset].text.hColor = color;
+                        langLine.kwic[offset].text.hIsBusy = isBusy;
 
-        } else {
-            const rightIdx = List.findIndex(v => v === offset, langLine.rightOffsets);
-            if (rightIdx > -1) {
-                langLine.right[rightIdx].text.hColor = color;
-                langLine.right[rightIdx].text.hIsBusy = isBusy;
-            }
-        }
+                    } else {
+                        const rightIdx = List.findIndex(v => v === offset, langLine.rightOffsets);
+                        if (rightIdx !== -1) {
+                            langLine.right[rightIdx].text.hColor = color;
+                            langLine.right[rightIdx].text.hIsBusy = isBusy;
+                        }
+                    }
+                }
+            )
+        );
     }
 
     private reapplyTokenLinkHighlights(state:ConcordanceModelState) {
