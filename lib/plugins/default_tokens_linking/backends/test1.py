@@ -72,9 +72,9 @@ class Test1Backend(AbstractBackend):
                 value = token['str'].lower()
                 if value and value[0].lower() == first_letter:
                     selected_token['link'].append({
-                        'corpname': corpname,
+                        'corpusId': corpname,
                         'tokenId': token_ranges[corpname][0] + tok_idx,
-                        'highlightColor': self._conf['colors'][0],
+                        'color': self._conf['colors'][0],
                         'altColors': self._conf['colors'][1:],
                         'comment': 'Test1Backend highlights tokens with the same starting letter',
                     })

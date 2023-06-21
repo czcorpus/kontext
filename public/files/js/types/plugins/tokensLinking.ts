@@ -20,6 +20,7 @@
 
 import { Action } from 'kombo';
 import { BasePlugin, IPluginApi } from './common';
+import { HighlightInfo, HighlightRequest } from '../../models/concordance/common';
 
 // ------------------------------------------------------------------------
 // ------------------------- [tokens_linking] plug-in -----------------------
@@ -31,22 +32,26 @@ export type AttrSet = {
     [attr:string]:string|number;
 };
 
+export type AppliedHighlights = {
+    [lineId:number]:Array<HighlightInfo>
+};
+
 export class Actions {
 
-    static FetchInfo:Action<{
-        corpusId:string;
-        tokenId:number;
-        tokenLength:number;
-        tokenRanges:{[corpusId:string]:[number, number]};
-    }> = {
+    static FetchInfo:Action<
+        HighlightRequest
+    > = {
         name: 'TOKENS_LINKING_FETCH_INFO'
     };
 
     static FetchInfoDone:Action<{
-        data:unknown;
+        data:{[provider:string]:Array<{
+            link:Array<HighlightInfo>
+        }>};
+        lineId:number;
     }> = {
         name: 'TOKENS_LINKING_FETCH_INFO_DONE'
-    }
+    };
 }
 
 export type Factory = (

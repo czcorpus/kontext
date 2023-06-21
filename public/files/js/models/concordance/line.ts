@@ -54,8 +54,9 @@ export class ConclineSectionOps {
                     (r, v) => r.concat(
                         (v.text ? 1 : 0) + r[r.length - 1]
                     ),
-                    [kwicLength]
+                    [kwicLength-1]
                 ),
+                List.tail()
             ),
             highlightMLPositions: refMlPositions ?
                 pipe(
