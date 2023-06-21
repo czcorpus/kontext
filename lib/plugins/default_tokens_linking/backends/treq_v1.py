@@ -112,9 +112,9 @@ class TreqV1Backend(AbstractBackend):
                     for tok_idx, token in enumerate(tokens[translat_corp]):
                         if any(token['str'] == line['righ'] for line in data['lines']):
                             selected_token['link'].append({
-                                'corpname': translat_corp,
+                                'corpusId': translat_corp,
                                 'tokenId': token_ranges[translat_corp][0] + tok_idx,
-                                'highlightColor': self._conf['colors'][0],
+                                'color': self._conf['colors'][0],
                                 'altColors': self._conf['colors'][1:],
                                 'comment': 'Treq translation',
                             })
