@@ -425,10 +425,18 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                 <>
                 {List.flatMap((item, i) => [
                     ' ',
-                    <RightChunk key={`rc-${i}`} item={item} i={i} itemList={props.output.right} chunkOffsets={props.output.rightOffsets}
-                            kwicTokenNum={props.output.tokenNumber} prevBlockClosed={List.get(-1, props.output.kwic)}
-                            lineIdx={props.lineIdx} supportsTokenConnect={props.supportsTokenConnect}
-                            attrViewMode={props.attrViewMode} audioPlayerStatus={props.audioPlayerStatus}
+                    <RightChunk
+                            key={`rc-${i}`}
+                            item={item}
+                            i={i}
+                            itemList={props.output.right}
+                            chunkOffsets={props.output.rightOffsets}
+                            kwicTokenNum={props.output.tokenNumber}
+                            prevBlockClosed={List.get(-1, props.output.kwic)}
+                            lineIdx={props.lineIdx}
+                            supportsTokenConnect={props.supportsTokenConnect}
+                            attrViewMode={props.attrViewMode}
+                            audioPlayerStatus={props.audioPlayerStatus}
                         />
                 ],
                 props.output.right)}
@@ -862,12 +870,12 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             lineId:number,
             tokenLength:number
         ) => {
-
             const payload:ExtractPayload<typeof TokensLinkingActions.FetchInfo> = {
                 corpusId,
                 tokenId,
                 tokenLength,
-                tokenRanges: {}
+                tokenRanges: {},
+                lineId
             }
             List.forEach(
                 (lang, langId) => {

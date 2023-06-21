@@ -643,3 +643,21 @@ export interface LineGroupChartItem {
 }
 
 export type LineGroupChartData = Array<LineGroupChartItem>;
+
+export interface HighlightRequest {
+    corpusId:string;
+    lineId:number;
+    tokenId:number;
+    tokenLength:number;
+    tokenRanges:{[corpusId:string]:[number, number]};
+}
+
+export interface HighlightInfo {
+    corpusId:string;
+    lineId:number;
+    tokenId:number;
+    color:string;
+    altColors:Array<string>;
+    isBusy:boolean;
+    comment?:string;
+}

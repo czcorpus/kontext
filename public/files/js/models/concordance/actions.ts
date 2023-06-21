@@ -20,7 +20,8 @@
 
 import { Action } from 'kombo';
 import { AudioPlayerActions, DetailExpandPositions, LineSelectionModes, LineSelValue,
-    AjaxConcResponse, LineGroupId, RefsColumn, PaginationActions, LineGroupChartData, ConcViewMode } from './common';
+    AjaxConcResponse, LineGroupId, RefsColumn, PaginationActions, LineGroupChartData,
+    ConcViewMode, HighlightInfo } from './common';
 import * as TextTypes from '../../types/textTypes';
 import { DataSaveFormat } from '../../app/navigation/save';
 import { HighlightItem } from './main';
@@ -551,13 +552,7 @@ export class Actions {
         name: 'CONCORDANCE_HIGHLIGHTED_TOKEN_MOUSEOUT'
     }
 
-    static HighlightTokenById:Action<{
-        corpusId:string;
-        tokenId:number;
-        color:string;
-        isBusy:boolean;
-        comment?:string;
-    }> = {
+    static HighlightTokens:Action<{highlights:Array<HighlightInfo>}> = {
         name: 'CONCORDANCE_HIGHLIGHT_TOKEN_BY_ID'
     };
 }

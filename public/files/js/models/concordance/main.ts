@@ -184,7 +184,13 @@ export interface ConcordanceModelState {
 
     mergedCtxAttrs:Array<[string, number]>;
 
-    tokenLinks:Array<{[tokenId:string]:{color:string; comment?:string}}>;
+    tokenLinks:Array<{
+        [tokenId:string]:{
+            color:string;
+            lineId:number;
+            comment?:string
+        }
+    }>;
 }
 
 
@@ -900,18 +906,34 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         );
 
         this.addActionHandler(
-            Actions.HighlightTokenById,
+            Actions.HighlightTokens,
             action => {
-                const corpusIdx = List.findIndex(v => v.n === action.payload.corpusId, this.state.corporaColumns);
-                if (corpusIdx !== -1) {
-                    this.changeState(state => {
-                        state.tokenLinks[corpusIdx][`${action.payload.tokenId}`] = {
-                            color: action.payload.color,
-                            comment: action.payload.comment,
-                        };
-                        this.highlightTokenLink(state, corpusIdx, action.payload.tokenId, action.payload.color, action.payload.isBusy);
-                    });
-                }
+                this.changeState(state => {
+                    List.forEach(
+                        h => {
+                            const corpusIdx = List.findIndex(
+                                v => v.n === h.corpusId,
+                                this.state.corporaColumns
+                            );
+                            if (corpusIdx > -1) {
+                                state.tokenLinks[corpusIdx][`${h.tokenId}`] = {
+                                    color: h.color,
+                                    lineId: h.lineId,
+                                    comment: h.comment,
+                                };
+                                this.highlightTokenLink(
+                                    state,
+                                    corpusIdx,
+                                    h.lineId,
+                                    h.tokenId,
+                                    h.color,
+                                    h.isBusy
+                                );
+                            }
+                        },
+                        action.payload.highlights
+                    );
+                });
             },
         );
     }
@@ -919,6 +941,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
     private highlightTokenLink(
         state:ConcordanceModelState,
         corpusIdx:number,
+        lineId:number,
         tokenId:number,
         color:string,
         isBusy:boolean,
@@ -969,11 +992,18 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
     }
 
     private reapplyTokenLinkHighlights(state:ConcordanceModelState) {
-        List.forEach((v, i) => {
-            Dict.forEach((v, k) => {
-                this.highlightTokenLink(state, i, parseInt(k), v.color, false);
-            }, v);
-        }, this.state.tokenLinks);
+        List.forEach(
+            (v, i) => {
+                Dict.forEach(
+                    (v2, k) => {
+                        this.highlightTokenLink(
+                            state, i, v2.lineId, parseInt(k), v2.color, false);
+                    },
+                    v
+                );
+            },
+            this.state.tokenLinks
+        );
 
     }
 
