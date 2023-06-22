@@ -88,7 +88,7 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                     }
                 );
             }
-        )
+        );
 
         this.addActionHandler(
             PluginInterfaces.TokensLinking.Actions.FetchInfo,
@@ -105,7 +105,7 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                     }
                 );
                 Rx.zippedWith(
-                    action.payload.lineId,
+                    tuple(action.payload.lineId, action.payload.tokenId),
                     this.pluginApi.ajax$<FetchDataResponse>(
                         HTTP.Method.POST,
                         this.pluginApi.createActionUrl('/fetch_tokens_linking'),
@@ -119,7 +119,7 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                         }
                     )
                 ).subscribe({
-                    next: ([resp, lineId]) => {
+                    next: ([resp, [lineId, clickedTokenId]]) => {
                         this.dispatchSideEffect({
                             ...PluginInterfaces.TokensLinking.Actions.FetchInfoDone,
                             payload: {
@@ -132,7 +132,9 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                                                 ...item,
                                                 link: List.map(
                                                     lnk => ({
-                                                        ...lnk, lineId
+                                                        ...lnk,
+                                                        lineId,
+                                                        clickedTokenId
                                                     }),
                                                     item.link
                                                 )
