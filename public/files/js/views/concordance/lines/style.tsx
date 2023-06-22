@@ -24,16 +24,13 @@ import * as theme from '../../theme/default';
 
 // ----------- <ConcLines /> ----------------------
 
-const borderBlink = keyframes`
-    0% {
-        border-color: rgba(0, 0, 0, 0);
-    }
-    50% {
-        border-color: ${theme.colorLightText};
-    }
-    100% {
-        border-color: rgba(0, 0, 0, 0);
-    }
+const tokenBusyBlink = keyframes`
+0% {
+    background-position: 200% 0;
+}
+100% {
+    background-position: 0 0;
+}
 `;
 
 export const ConcLines = styled.table`
@@ -161,14 +158,33 @@ export const ConcLines = styled.table`
     }
 
     .busy-highlight {
-        border: 1px solid ${theme.colorLightText};
+        border: 1px solid #fae3f0;
         border-radius: ${theme.borderRadiusDefault};
         display: inline-block;
         padding: 0 0.3em 0 0.3em;
-
-        animation-name: ${borderBlink};
-        animation-duration: 0.5s;
+        background: linear-gradient(
+            90deg,
+            #ffffff 0%,
+            #ffffff 20%,
+            #fae3f0 21%,
+            #e69ec5 25%,
+            #e69ec5 35%,
+            #fae3f0 39%,
+            #ffffff 40%,
+            #ffffff 60%,
+            #fae3f0 61%,
+            #e69ec5 65%,
+            #e69ec5 75%,
+            #fae3f0 79%,
+            #ffffff 80%,
+            #ffffff 100%
+        );
+        background-size: 200% 100%;
+        background-position: 100% 0;
+        animation-name: ${tokenBusyBlink};
+        animation-duration: 1.5s;
         animation-iteration-count: infinite;
+        animation-timing-function: linear;
     }
 
     .concordance-col-heading {

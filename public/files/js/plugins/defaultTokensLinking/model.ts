@@ -93,6 +93,17 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
         this.addActionHandler(
             PluginInterfaces.TokensLinking.Actions.FetchInfo,
             action => {
+                this.dispatchSideEffect(
+                    ConcActions.HighlightTokens,
+                    {
+                        highlights: [{
+                            corpusId: action.payload.corpusId,
+                            tokenId: action.payload.tokenId,
+                            color: null,
+                            isBusy: true,
+                        }]
+                    }
+                );
                 Rx.zippedWith(
                     action.payload.lineId,
                     this.pluginApi.ajax$<FetchDataResponse>(
