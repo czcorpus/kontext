@@ -40,24 +40,8 @@ export class ConclineSectionOps {
             lineNumber,
             ref,
             left,
-            leftOffsets: pipe(
-                left,
-                List.foldr(
-                    (r, v) => [(v.text ? 1 : 0) + (r.length > 0 ? r[0] : 0)].concat(r), []
-                )
-            ),
             kwic,
             right,
-            rightOffsets: pipe(
-                right,
-                List.foldl(
-                    (r, v) => r.concat(
-                        (v.text ? 1 : 0) + r[r.length - 1]
-                    ),
-                    [kwicLength-1]
-                ),
-                List.tail()
-            ),
             highlightMLPositions: refMlPositions ?
                 pipe(
                     mlPositions.kwic,
@@ -73,7 +57,7 @@ export class ConclineSectionOps {
         return sect.left.concat(sect.kwic, sect.right);
     }
 
-    static findChunk(sect:KWICSection, chunkId:string):TextChunk {
-        return List.find(v => v.id === chunkId, ConclineSectionOps.getAllChunks(sect));
+    static findChunk(sect:KWICSection, tokenId:number):TextChunk {
+        return List.find(v => v.token.id === tokenId, ConclineSectionOps.getAllChunks(sect));
     }
 }

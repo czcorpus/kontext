@@ -74,7 +74,7 @@ export class Actions {
     };
 
     static PlayAudioSegment:Action<{
-        chunksIds:Array<string>;
+        chunksIds:Array<number>;
     }> = {
         name: 'CONCORDANCE_PLAY_AUDIO_SEGMENT'
     };

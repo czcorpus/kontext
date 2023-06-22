@@ -31,7 +31,14 @@ import { defaultBgHighlighted } from '../../views/theme/default';
  * @param startWlIdx "start within-line idx"
  * @returns
  */
-function importTextChunk(item:ServerTextChunk, mainAttrIdx:number, id:string, startWlIdx:number, roles:Array<[string, number]>):TextChunk {
+function importTextChunk(
+    item:ServerTextChunk,
+    mainAttrIdx:number,
+    id:number,
+    startWlIdx:number,
+    roles:Array<[string, number]>
+):TextChunk {
+
     // there can be tokens containing `/` like `km/h`
     // manatee also uses `/` as separator of attrs
     // in this case there will be more items in `item.possattrs` after splitting the attr string
@@ -51,9 +58,14 @@ function importTextChunk(item:ServerTextChunk, mainAttrIdx:number, id:string, st
     );
     if (mainAttrIdx === -1) {
         return {
-            id,
             className: item.class,
-            text: {s: item.str, hColor: null, hIsBusy: false, idx: startWlIdx},
+            token: {
+                id,
+                s: item.str,
+                hColor: null,
+                hIsBusy: false,
+                idx: startWlIdx
+            },
             openLink: item.open_link ? {speechPath: item.open_link.speech_path} : undefined,
             closeLink: item.close_link ? {speechPath: item.close_link.speech_path} : undefined,
             continued: item.continued,
@@ -67,9 +79,14 @@ function importTextChunk(item:ServerTextChunk, mainAttrIdx:number, id:string, st
         const text = item.class === 'strc' ?  item.str : displayPosAttrs[mainAttrIdx];
         displayPosAttrs.splice(mainAttrIdx, 1, item.str.trim());
         return {
-            id,
             className: item.class,
-            text: {s: text, hColor: null, hIsBusy: false, idx: startWlIdx},
+            token: {
+                id,
+                s: text,
+                hColor: null,
+                hIsBusy: false,
+                idx: startWlIdx
+            },
             openLink: item.open_link ? {speechPath: item.open_link.speech_path} : undefined,
             closeLink: item.close_link ? {speechPath: item.close_link.speech_path} : undefined,
             continued: item.continued,
@@ -83,10 +100,10 @@ function importTextChunk(item:ServerTextChunk, mainAttrIdx:number, id:string, st
 
 
 function nextWithinLineIdx(tc:Array<TextChunk>, currWlIdx:number) {
-    if (List.empty(tc) || !List.last(tc).text) {
+    if (List.empty(tc) || !List.last(tc).token) {
         return currWlIdx + 1;
     }
-    return List.last(tc).text.idx + 1;
+    return List.last(tc).token.idx + 1;
 }
 
 
@@ -108,7 +125,7 @@ export function importLines(
                 (v, j) => importTextChunk(
                     v,
                     mainAttrIdx,
-                    `C${i}:L${j}`,
+                    item.toknum + j - List.size(item.Left),
                     wlIdx,
                     merged_ctxattrs,
                 ),
@@ -116,12 +133,24 @@ export function importLines(
             );
             wlIdx = nextWithinLineIdx(leftText, wlIdx);
             const kwicText = List.map(
-                (v, j) => importTextChunk(v, mainAttrIdx, `C${i}:K${j}`, wlIdx, merged_attrs),
+                (v, j) => importTextChunk(
+                    v,
+                    mainAttrIdx,
+                    item.toknum + j,
+                    wlIdx,
+                    merged_attrs
+                ),
                 item.Kwic
             );
             wlIdx = nextWithinLineIdx(kwicText, wlIdx);
             const rightText = List.map(
-                (v, j) => importTextChunk(v, mainAttrIdx, `C${i}:R${j}`, wlIdx, merged_ctxattrs),
+                (v, j) => importTextChunk(
+                    v,
+                    mainAttrIdx,
+                    item.toknum + item.kwiclen + j,
+                    wlIdx,
+                    merged_ctxattrs
+                ),
                 item.Right
             );
             const main_line = ConclineSectionOps.newKWICSection(
@@ -143,17 +172,35 @@ export function importLines(
                     (align_item, k) => {
                         let wlIdx = 0;
                         const leftText = List.map(
-                            (v, j) => importTextChunk(v, mainAttrIdx, `C${i}:A${k}:L${j}`, wlIdx, merged_ctxattrs),
+                            (v, j) => importTextChunk(
+                                v,
+                                mainAttrIdx,
+                                item.toknum + j - List.size(item.Left),
+                                wlIdx,
+                                merged_ctxattrs
+                            ),
                             align_item.Left
                         );
                         wlIdx = nextWithinLineIdx(leftText, wlIdx);
                         const kwicText = List.map(
-                            (v, j) => importTextChunk(v, mainAttrIdx, `C${i}:A${k}:K${j}`, wlIdx, merged_attrs),
+                            (v, j) => importTextChunk(
+                                v,
+                                mainAttrIdx,
+                                item.toknum + item.toknum + j,
+                                wlIdx,
+                                merged_attrs
+                            ),
                             align_item.Kwic
                         );
                         wlIdx = nextWithinLineIdx(kwicText, wlIdx);
                         const rightText = List.map(
-                            (v, j) => importTextChunk(v, mainAttrIdx, `C${i}:A${k}:R${j}`, wlIdx, merged_ctxattrs),
+                            (v, j) => importTextChunk(
+                                v,
+                                mainAttrIdx,
+                                item.toknum + item.kwiclen + j,
+                                wlIdx,
+                                merged_ctxattrs
+                            ),
                             align_item.Right
                         );
                         return ConclineSectionOps.newKWICSection(
@@ -229,7 +276,7 @@ export function highlightConcLineTokens(
 ):KWICSection {
     const tokens = pipe(
         [...concLine.left, ...concLine.kwic, ...concLine.right],
-        List.map(x => x.text),
+        List.map(x => x.token),
         List.map(token => {
             token.hColor = null;
             return token;
