@@ -49,6 +49,7 @@ export class Actions {
             link:Array<HighlightInfo>
         }>};
         lineId:number;
+        clickedTokenId:number;
     }> = {
         name: 'TOKENS_LINKING_FETCH_INFO_DONE'
     };

@@ -120,10 +120,11 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                     )
                 ).subscribe({
                     next: ([resp, [lineId, clickedTokenId]]) => {
-                        this.dispatchSideEffect({
-                            ...PluginInterfaces.TokensLinking.Actions.FetchInfoDone,
-                            payload: {
+                        this.dispatchSideEffect(
+                            PluginInterfaces.TokensLinking.Actions.FetchInfoDone,
+                            {
                                 lineId,
+                                clickedTokenId,
                                 data: pipe(
                                     resp.data,
                                     Dict.map(
@@ -144,7 +145,7 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                                     )
                                 )
                             }
-                        });
+                        );
                     },
                     error: error => {
                         this.dispatchSideEffect(
@@ -182,6 +183,10 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                                 (data, provider) => {
                                     List.forEach(
                                         token => {
+                                            if (List.empty(token.link)) {
+                                                action.payload.data
+                                                return;
+                                            }
                                             const updColor = this.findUnusedColor(
                                                 state.appliedHighlights,
                                                 action.payload.lineId,
@@ -210,7 +215,6 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                                                 ConcActions.HighlightTokens,
                                                 {highlights}
                                             );
-
                                         },
                                         data
                                     );
