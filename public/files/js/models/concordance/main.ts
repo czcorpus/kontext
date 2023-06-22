@@ -126,7 +126,7 @@ export interface ConcordanceModelState {
 
     subcName:string;
 
-    playerAttachedChunk:string;
+    playerAttachedChunk:number|null;
 
     pagination:ServerPagination;
 
@@ -249,7 +249,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 useSafeFont: lineViewProps.useSafeFont,
                 busyWaitSecs: 0,
                 supportsSyntaxView: lineViewProps.supportsSyntaxView,
-                playerAttachedChunk: '',
+                playerAttachedChunk: null,
                 showAnonymousUserWarn: lineViewProps.anonymousUser,
                 supportsTokenConnect: lineViewProps.supportsTokenConnect,
                 supportsTokensLinking: lineViewProps.supportsTokensLinking,
@@ -948,43 +948,32 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
     ) {
         pipe(
             state.lines,
-            List.reduce( // find lines containing tokens with tokenId
-                (acc, line, i) => {
-                    const offset = tokenId - line.languages[corpusIdx].tokenNumber;
-                    const lftOffst = line.languages[corpusIdx].leftOffsets[0] ?
-                        line.languages[corpusIdx].leftOffsets[0] :
-                        0;
-                    const rgtOffst = line.languages[corpusIdx].rightOffsets[line.languages[corpusIdx].rightOffsets.length-1] ?
-                        line.languages[corpusIdx].rightOffsets[line.languages[corpusIdx].rightOffsets.length-1] :
-                        0;
-                    if ((offset >= -lftOffst) && (offset <= (rgtOffst))) {
-                        return [...acc, i];
+            // find lines containing tokens with tokenId
+            List.forEach(
+                line => {
+                    const lftSrch = List.find(
+                        x => x.token.id === tokenId,
+                        line.languages[corpusIdx].left
+                    );
+                    if (lftSrch) {
+                        lftSrch.token.hColor = color;
+                        lftSrch.token.hIsBusy = isBusy;
                     }
-                    return acc;
-                },
-                [],
-            ),
-            List.forEach( // highlight tokens on all found lines
-                lineIdx => {
-                    const langLine = state.lines[lineIdx].languages[corpusIdx];
-                    const offset = tokenId - langLine.tokenNumber;
-                    if (offset < 0) {
-                        const leftIdx = List.findIndex(v => -v === offset, langLine.leftOffsets);
-                        if (leftIdx !== -1) {
-                            langLine.left[leftIdx].text.hColor = color;
-                            langLine.left[leftIdx].text.hIsBusy = isBusy;
-                        }
-
-                    } else if (offset < langLine.kwic.length) {
-                        langLine.kwic[offset].text.hColor = color;
-                        langLine.kwic[offset].text.hIsBusy = isBusy;
-
-                    } else {
-                        const rightIdx = List.findIndex(v => v === offset, langLine.rightOffsets);
-                        if (rightIdx !== -1) {
-                            langLine.right[rightIdx].text.hColor = color;
-                            langLine.right[rightIdx].text.hIsBusy = isBusy;
-                        }
+                    const kwicSrch = List.find(
+                        x => x.token.id === tokenId,
+                        line.languages[corpusIdx].kwic
+                    );
+                    if (kwicSrch) {
+                        kwicSrch.token.hColor = color;
+                        kwicSrch.token.hIsBusy = isBusy;
+                    }
+                    const rgtSrch = List.find(
+                        x => x.token.id === tokenId,
+                        line.languages[corpusIdx].right
+                    );
+                    if (rgtSrch) {
+                        rgtSrch.token.hColor = color;
+                        rgtSrch.token.hIsBusy = isBusy;
                     }
                 }
             )
@@ -1443,11 +1432,11 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         return -1;
     }
 
-    private findChunks(state:ConcordanceModelState, ...chunkIds:Array<string>):Array<TextChunk> {
+    private findChunks(state:ConcordanceModelState, ...tokenIds:Array<number>):Array<TextChunk> {
         for (let i = 0; i < state.lines.length; i += 1) {
             for (let j = 0; j < state.lines[i].languages.length; j += 1) {
                 const ans = pipe(
-                    chunkIds,
+                    tokenIds,
                     List.map(c => ConclineSectionOps.findChunk(state.lines[i].languages[j], c)),
                     List.filter(v => v !== undefined)
                 );
@@ -1459,16 +1448,16 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         return [];
     }
 
-    private playAudio(chunksIds:Array<string>):void {
+    private playAudio(tokenIds:Array<number>):void {
         this.setStopStatus(); // stop anything playing right now
-        const activeChunkId = List.last(chunksIds);
+        const activeChunkId = List.last(tokenIds);
         this.changeState(state => {
             state.playerAttachedChunk = activeChunkId;
             // let's get an active line - there can be only one even if we play multiple chunks
             const activeLine = this.findActiveLineIdx(state);
             const fakeChangedLine = state.lines[activeLine];
             state.lines[activeLine] = fakeChangedLine
-            const playChunks = this.findChunks(state, ...chunksIds);
+            const playChunks = this.findChunks(state, ...tokenIds);
             if (!List.empty(playChunks)) {
                 List.last(playChunks).showAudioPlayer = true
 
@@ -1476,7 +1465,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 throw new Error('No chunks to play');
             }
         });
-        const playChunks = this.findChunks(this.state, ...chunksIds);
+        const playChunks = this.findChunks(this.state, ...tokenIds);
         if (!List.empty(playChunks)) {
             this.audioPlayer.start(
                 pipe(

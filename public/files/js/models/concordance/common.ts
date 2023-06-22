@@ -26,7 +26,7 @@ import { DataSaveFormat } from '../../app/navigation/save';
 
 export interface ConcToken {
     className:string;
-    text:Token;
+    token:Token;
     posAttrs:Array<string>;
     displayPosAttrs:Array<string>;
     description?:Array<string>;
@@ -43,21 +43,9 @@ export interface KWICSection {
 
     left:Array<TextChunk>;
 
-    /**
-     * This is used to obtain token number based on KWIC token number
-     * which is the only one we know from the server.
-     */
-    leftOffsets:Array<number>;
-
     kwic:Array<TextChunk>;
 
     right:Array<TextChunk>;
-
-    /**
-     * This is used to obtain token number based on KWIC token number
-     * which is the only one we know from the server.
-     */
-    rightOffsets:Array<number>;
 
     /**
      * Higlighted positions for multi layered corpora
@@ -69,8 +57,8 @@ export interface KWICSection {
 export function getKwicSectionToken(ks:KWICSection, idx:number):Token {
     return pipe(
         [...ks.left, ...ks.kwic, ...ks.right],
-        List.find(x => x.text.idx === idx),
-    ).text;
+        List.find(x => x.token.idx === idx),
+    ).token;
 }
 
 export interface Token {
@@ -79,6 +67,11 @@ export interface Token {
      * Token raw value
      */
     s:string;
+
+    /**
+     * Token ID as defined by Manatee indexes.
+     */
+    id:number;
 
     /**
      * Represents indexing within a single line.
@@ -109,9 +102,8 @@ export enum PosAttrRole {
 }
 
 export class TextChunk {
-    id:string;
     className:string;
-    text:Token;
+    token:Token;
     openLink:{speechPath:string};
     closeLink:{speechPath:string};
     continued:boolean;
