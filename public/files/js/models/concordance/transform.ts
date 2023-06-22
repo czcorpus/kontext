@@ -175,7 +175,7 @@ export function importLines(
                             (v, j) => importTextChunk(
                                 v,
                                 mainAttrIdx,
-                                item.toknum + j - List.size(item.Left),
+                                align_item.toknum + j - List.size(item.Left),
                                 wlIdx,
                                 merged_ctxattrs
                             ),
@@ -186,7 +186,7 @@ export function importLines(
                             (v, j) => importTextChunk(
                                 v,
                                 mainAttrIdx,
-                                item.toknum + item.toknum + j,
+                                align_item.toknum + item.toknum + j,
                                 wlIdx,
                                 merged_attrs
                             ),
@@ -197,7 +197,7 @@ export function importLines(
                             (v, j) => importTextChunk(
                                 v,
                                 mainAttrIdx,
-                                item.toknum + item.kwiclen + j,
+                                align_item.toknum + item.kwiclen + j,
                                 wlIdx,
                                 merged_ctxattrs
                             ),
