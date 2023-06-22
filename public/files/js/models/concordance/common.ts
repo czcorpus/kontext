@@ -648,6 +648,7 @@ export interface HighlightInfo {
     corpusId:string;
     lineId:number;
     tokenId:number;
+    clickedTokenId:number;
     color:string;
     altColors:Array<string>;
     isBusy:boolean;
