@@ -23,7 +23,7 @@ import { IFullActionControl } from 'kombo';
 import { Dict, List, pipe, tuple } from 'cnc-tskit';
 import { Actions as QueryActions } from '../../models/query/actions';
 import { Actions as ConcActions } from '../../models/concordance/actions';
-import { HighlightItem } from '../../models/concordance/main';
+import { HighlightAttrMatch } from '../../models/concordance/main';
 import { FreqDistType } from './model';
 import * as TreqStyle from './treqStyle';
 
@@ -38,35 +38,35 @@ export interface Views {
     RawHtmlRenderer:React.FC<{
         corpora:Array<string>;
         data:{contents:Array<[string, string]>};
-        concHighlightItems:Array<HighlightItem>;
+        concHighlightItems:Array<HighlightAttrMatch>;
         highlightedItems:{[item:string]:boolean}; // items hightlighted in kwic connect list
         freqType:FreqDistType;
     }>;
     DataMuseSimilarWords:React.FC<{
         corpora:Array<string>;
         data:any;
-        concHighlightItems:Array<HighlightItem>;
+        concHighlightItems:Array<HighlightAttrMatch>;
         highlightedItems:{[item:string]:boolean}; // items hightlighted in kwic connect list
         freqType:FreqDistType;
     }>;
     TreqRenderer:React.FC<{
         corpora:Array<string>;
         data:any;
-        concHighlightItems:Array<HighlightItem>;
+        concHighlightItems:Array<HighlightAttrMatch>;
         highlightedItems:{[item:string]:boolean}; // items hightlighted in kwic connect list
         freqType:FreqDistType;
     }>;
     UnsupportedRenderer:React.FC<{
         corpora:Array<string>;
         data:any;
-        concHighlightItems:Array<HighlightItem>;
+        concHighlightItems:Array<HighlightAttrMatch>;
         highlightedItems:{[item:string]:boolean}; // items hightlighted in kwic connect list
         freqType:FreqDistType;
     }>;
     CustomMessageRenderer:React.FC<{
         corpora:Array<string>;
         data:any;
-        concHighlightItems:Array<HighlightItem>;
+        concHighlightItems:Array<HighlightAttrMatch>;
         highlightedItems:{[item:string]:boolean}; // items hightlighted in kwic connect list
         freqType:FreqDistType;
     }>;
@@ -167,7 +167,7 @@ export function init(dispatcher:IFullActionControl, he:Kontext.ComponentHelpers)
             () => {
                 dispatcher.registerActionListener(
                     action => {
-                        if (ConcActions.isSetHighlightItems(action)) {
+                        if (ConcActions.isSetHighlightAttrMatch(action)) {
                             const newState = {...state};
                             List.forEach(
                                 a => {
@@ -211,7 +211,7 @@ export function init(dispatcher:IFullActionControl, he:Kontext.ComponentHelpers)
             const highlights = {...state.highlights, [evt.target.value]: evt.target.checked};
             setState({...state, highlights});
             dispatcher.dispatch(
-                ConcActions.SetHighlightItems,
+                ConcActions.HighlightAttrMatch,
                 {
                     matchPosAttr: props.freqType as string,
                     items: pipe(
@@ -241,7 +241,7 @@ export function init(dispatcher:IFullActionControl, he:Kontext.ComponentHelpers)
                 highlights
             });
             dispatcher.dispatch(
-                ConcActions.SetHighlightItems,
+                ConcActions.HighlightAttrMatch,
                 {
                     matchPosAttr: props.freqType as string,
                     items: pipe(

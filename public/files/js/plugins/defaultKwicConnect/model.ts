@@ -30,7 +30,7 @@ import { FreqServerArgs } from '../../models/freqs/regular/common';
 import { HTTP, List } from 'cnc-tskit';
 import { Actions } from './actions';
 import { IPluginApi } from '../../types/plugins/common';
-import { HighlightItem, mergeHighlightItems } from '../../models/concordance/main';
+import { HighlightAttrMatch, mergeHighlightItems } from '../../models/concordance/main';
 
 
 export enum KnownRenderers {
@@ -92,7 +92,7 @@ export interface KwicConnectState {
     data:Array<ProviderWordMatch>;
     blockedByAsyncConc:boolean;
     hasOmittedItems:boolean;
-    highlightItems:Array<HighlightItem>;
+    highlightItems:Array<HighlightAttrMatch>;
 }
 
 
@@ -261,7 +261,7 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
         );
 
         this.addActionHandler(
-            ConcActions.SetHighlightItems,
+            ConcActions.HighlightAttrMatch,
             action => {
                 this.changeState(state => {
                     state.highlightItems = mergeHighlightItems(
@@ -275,7 +275,7 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
         );
 
         this.addActionHandler(
-            ConcActions.SetHighlightItemsDone,
+            ConcActions.HighlightAttrMatchDone,
             action => {
                 if (action.error) {
                     this.pluginApi.showMessage('error', action.error);

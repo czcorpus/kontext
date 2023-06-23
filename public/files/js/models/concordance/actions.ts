@@ -24,7 +24,7 @@ import { AudioPlayerActions, DetailExpandPositions, LineSelectionModes, LineSelV
     ConcViewMode, HighlightInfo } from './common';
 import * as TextTypes from '../../types/textTypes';
 import { DataSaveFormat } from '../../app/navigation/save';
-import { HighlightItem } from './main';
+import { HighlightAttrMatch } from './main';
 
 
 export interface ConcGroupChangePayload {
@@ -520,22 +520,27 @@ export class Actions {
         name: 'DASHBOARD_TOGGLE_EXTENDED_INFO'
     };
 
-    static SetHighlightItems:Action<{
-        items:Array<HighlightItem>;
+    /**
+     * HighlightAttrMatch is used by kwic_connect
+     * to highlight attributes when selecting some
+     * presented word in a concordance.
+     */
+    static HighlightAttrMatch:Action<{
+        items:Array<HighlightAttrMatch>;
         matchPosAttr:string;
     }> = {
-        name: 'CONCORDANCE_SET_HIGHLIGHT_ITEMS'
+        name: 'CONCORDANCE_HIGHLIGHT_ATTR_MATCH'
     };
 
-    static isSetHighlightItems(a:Action):a is typeof Actions.SetHighlightItems {
-        return a.name === Actions.SetHighlightItems.name;
+    static isSetHighlightAttrMatch(a:Action):a is typeof Actions.HighlightAttrMatch {
+        return a.name === Actions.HighlightAttrMatch.name;
     }
 
-    static SetHighlightItemsDone:Action<{
-        items:Array<HighlightItem>;
+    static HighlightAttrMatchDone:Action<{
+        items:Array<HighlightAttrMatch>;
         matchPosAttr:string;
     }> = {
-        name: 'CONCORDANCE_SET_HIGHLIGHT_ITEMS_DONE'
+        name: 'CONCORDANCE_HIGHLIGHT_ATTR_MATCH_DONE'
     };
 
     static HighlightedTokenMouseover:Action<{
@@ -552,7 +557,13 @@ export class Actions {
         name: 'CONCORDANCE_HIGHLIGHTED_TOKEN_MOUSEOUT'
     }
 
+    /**
+     * HighlightTokens is used with tokens_linking when
+     * clicking on a token and (based on backend response)
+     * highlighting one or more tokens in the same text
+     * chunk (ans possibly its aligned part in another corpus).
+     */
     static HighlightTokens:Action<{highlights:Array<HighlightInfo>}> = {
-        name: 'CONCORDANCE_HIGHLIGHT_TOKEN_BY_ID'
+        name: 'CONCORDANCE_HIGHLIGHT_TOKENS'
     };
 }

@@ -38,7 +38,16 @@ import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { Block } from '../freqs/common';
 import { highlightConcLineTokens, importLines } from './transform';
 
-export interface HighlightItem {
+/**
+ * HighlightAttrMatch specifies a single global (per page)
+ * tokens highlight operation based on a provided value and
+ * attribute name.
+ *
+ * Please do not confuse this with tokens_linking hihglighting
+ * which is based on token clicking and always targeted to
+ * specifiec token IDs.
+ */
+export interface HighlightAttrMatch {
 
     /**
      * level specifies target lang./corp. column for highlighting:
@@ -70,10 +79,10 @@ export interface HighlightItem {
  * @returns
  */
 export function mergeHighlightItems(
-    current:Array<HighlightItem>,
-    incoming:Array<HighlightItem>,
+    current:Array<HighlightAttrMatch>,
+    incoming:Array<HighlightAttrMatch>,
     incomingLoaded:boolean
-):Array<HighlightItem> {
+):Array<HighlightAttrMatch> {
 
     return pipe(
         [...current, ...incoming],
@@ -101,12 +110,12 @@ export interface ConcordanceModelState {
 
     highlightWordsStore:{[posAttr:string]:HighlightWords};
 
-    highlightItems:Array<HighlightItem>;
+    highlightedMatches:Array<HighlightAttrMatch>;
 
     /**
      * a concordance ID the highlight was loaded for (=> if conc is changed, we have to reload highlights too)
      */
-    highlightConcId:string|undefined;
+    highlightedMatchConcId:string|undefined;
 
     viewMode:ConcViewMode;
 
@@ -240,8 +249,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 baseViewAttr: lineViewProps.baseViewAttr,
                 lines: importLines(initialData, viewAttrs.indexOf(lineViewProps.baseViewAttr) - 1, lineViewProps.mergedAttrs, lineViewProps.mergedCtxAttrs),
                 highlightWordsStore: {},
-                highlightItems: [],
-                highlightConcId: null,
+                highlightedMatches: [],
+                highlightedMatchConcId: null,
                 viewAttrs,
                 numItemsInLockedGroups: lineViewProps.NumItemsInLockedGroups,
                 pagination: lineViewProps.pagination, // TODO possible mutable mess
@@ -450,7 +459,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                                 (_, kcAttr) => {
                                     this.reloadAlignedHighlights(
                                         kcAttr,
-                                        this.state.highlightConcId !== action.payload.concId
+                                        this.state.highlightedMatchConcId !== action.payload.concId
                                     );
                                 },
                                 this.state.highlightWordsStore
@@ -888,12 +897,12 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         );
 
         this.addActionHandler(
-            Actions.SetHighlightItems,
+            Actions.HighlightAttrMatch,
             action => {
                 this.changeState(state => {
-                    state.forceScroll = window.pageYOffset;
-                    state.highlightItems = mergeHighlightItems(
-                        state.highlightItems,
+                    state.forceScroll = window.scrollY;
+                    state.highlightedMatches = mergeHighlightItems(
+                        state.highlightedMatches,
                         action.payload.items,
                         false
                     );
@@ -924,7 +933,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                                 this.highlightTokenLink(
                                     state,
                                     corpusIdx,
-                                    h.lineId,
                                     h.tokenId,
                                     h.color,
                                     h.isBusy
@@ -941,7 +949,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
     private highlightTokenLink(
         state:ConcordanceModelState,
         corpusIdx:number,
-        lineId:number,
         tokenId:number,
         color:string,
         isBusy:boolean,
@@ -986,7 +993,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 Dict.forEach(
                     (v2, k) => {
                         this.highlightTokenLink(
-                            state, i, v2.lineId, parseInt(k), v2.color, false);
+                            state, i, parseInt(k), v2.color, false);
                     },
                     v
                 );
@@ -1005,7 +1012,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
 
     private applyLineSelections(data:PublishLineSelectionPayload):void {
         this.changeState(state => {
-            state.forceScroll = window.pageYOffset;
+            state.forceScroll = window.scrollY;
             state.lines = List.map(
                 line => {
                     const srch = List.find(
@@ -1039,7 +1046,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
 
     private applyTokenHighlighting(
             languages:Array<KWICSection>,
-            highlightItems:Array<HighlightItem>,
+            highlightItems:Array<HighlightAttrMatch>,
             words:HighlightWords,
             kcAttr:string
     ):Array<KWICSection> {
@@ -1163,9 +1170,9 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
      * @returns
      */
     private reloadAlignedHighlights(kcAttr:string, forceReload:boolean) {
-        if (List.size(this.state.corporaColumns) === 1 || List.size(this.state.highlightItems) === 0) {
+        if (List.size(this.state.corporaColumns) === 1 || List.size(this.state.highlightedMatches) === 0) {
             this.dispatchSideEffect(
-                Actions.SetHighlightItemsDone,
+                Actions.HighlightAttrMatchDone,
                 {
                     matchPosAttr: kcAttr,
                     items: []
@@ -1174,7 +1181,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             return;
         }
         const toLoad = pipe(
-            this.state.highlightItems,
+            this.state.highlightedMatches,
             List.filter(x => !x.loaded),
             List.map(x => ({...x, loaded: true}))  // we already prepere here for later merge
         );
@@ -1187,7 +1194,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                             ...line,
                             languages: this.applyTokenHighlighting(
                                 line.languages,
-                                List.filter(x => x.attr === kcAttr, state.highlightItems),
+                                List.filter(x => x.attr === kcAttr, state.highlightedMatches),
                                 state.highlightWordsStore[kcAttr],
                                 kcAttr
                             )
@@ -1197,10 +1204,10 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 }
             );
             this.dispatchSideEffect(
-                Actions.SetHighlightItemsDone,
+                Actions.HighlightAttrMatchDone,
                 {
                     matchPosAttr: kcAttr,
-                    items: this.state.highlightItems
+                    items: this.state.highlightedMatches
                 }
             );
             return;
@@ -1274,38 +1281,38 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                             data,
                             state.highlightWordsStore[kcAttr]
                         );
-                        state.highlightConcId = state.concId;
+                        state.highlightedMatchConcId = state.concId;
                         state.lines = List.map(
                             line => ({
                                 ...line,
                                 languages: this.applyTokenHighlighting(
                                     line.languages,
-                                    List.filter(x => x.attr === kcAttr, state.highlightItems),
+                                    List.filter(x => x.attr === kcAttr, state.highlightedMatches),
                                     state.highlightWordsStore[kcAttr],
                                     kcAttr
                                 )
                             }),
                             state.lines
                         );
-                        state.highlightItems = mergeHighlightItems(
-                            state.highlightItems,
+                        state.highlightedMatches = mergeHighlightItems(
+                            state.highlightedMatches,
                             toLoad,
                             true
                         );
                     }
                 );
                 this.dispatchSideEffect(
-                    Actions.SetHighlightItemsDone,
+                    Actions.HighlightAttrMatchDone,
                     {
                         matchPosAttr: kcAttr,
-                        items: this.state.highlightItems
+                        items: this.state.highlightedMatches
                     }
                 );
             },
             error: error => {
                 this.layoutModel.showMessage('error', error);
                 this.dispatchSideEffect(
-                    Actions.SetHighlightItemsDone,
+                    Actions.HighlightAttrMatchDone,
                     error
                 );
             }
