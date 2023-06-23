@@ -961,7 +961,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                                 this.highlightTokenLink(
                                     state,
                                     corpusIdx,
-                                    h.lineId,
                                     h.tokenId,
                                     null,
                                     false
