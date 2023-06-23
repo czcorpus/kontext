@@ -944,6 +944,36 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 });
             },
         );
+
+        this.addActionHandler(
+            Actions.DehighlightTokens,
+            action => {
+                console.log(action.payload.dehighlights);
+
+                this.changeState(state => {
+                    List.forEach(
+                        h => {
+                            const corpusIdx = List.findIndex(
+                                v => v.n === h.corpusId,
+                                this.state.corporaColumns
+                            );
+                            if (corpusIdx > -1) {
+                                this.highlightTokenLink(
+                                    state,
+                                    corpusIdx,
+                                    h.lineId,
+                                    h.tokenId,
+                                    null,
+                                    false
+                                );
+                                delete state.tokenLinks[corpusIdx][`${h.tokenId}`];
+                            }
+                        },
+                        action.payload.dehighlights
+                    );
+                });
+            },
+        );
     }
 
     private highlightTokenLink(
