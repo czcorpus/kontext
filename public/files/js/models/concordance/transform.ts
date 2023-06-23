@@ -253,6 +253,7 @@ function highlightWordInTokens(tokens:Array<Token>, mword:string, attr:string) {
             currSrch = [];
         }
     }
+    console.log('>>> List.size(word) = ', List.size(word), 'List.size(currSrch): ', List.size(currSrch))
     if (List.size(word) === List.size(currSrch)) {
         List.forEach(
             item => {
@@ -282,7 +283,6 @@ export function highlightConcLineTokens(
             hColor: token.kcConnection ? null : token.hColor
         }))
     );
-    console.log('>>> highlightConcLineTokens >>> ', tokens)
     Dict.forEach(
         (_, word) => {
             highlightWordInTokens(tokens, word, kcAttr);
