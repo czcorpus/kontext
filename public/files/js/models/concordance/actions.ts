@@ -555,4 +555,8 @@ export class Actions {
     static HighlightTokens:Action<{highlights:Array<HighlightInfo>}> = {
         name: 'CONCORDANCE_HIGHLIGHT_TOKEN_BY_ID'
     };
+
+    static DehighlightTokens:Action<{dehighlights:Array<HighlightInfo>}> = {
+        name: 'CONCORDANCE_DEHIGHLIGHT_TOKEN_BY_ID'
+    };
 }

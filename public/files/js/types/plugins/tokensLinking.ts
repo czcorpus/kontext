@@ -52,6 +52,14 @@ export class Actions {
     }> = {
         name: 'TOKENS_LINKING_FETCH_INFO_DONE'
     };
+
+    static DehighlightLinksById:Action<{
+        corpusId:string;
+        lineId:number;
+        tokenId:number;
+    }> = {
+        name: 'TOKENS_LINKING_DEHIGHLIGHT_LINKS_BY_ID'
+    };
 }
 
 export type Factory = (

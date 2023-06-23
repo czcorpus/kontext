@@ -230,6 +230,37 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                             );
                         }
                     );
+                    console.log(this.state.appliedHighlights);
+
+                }
+            }
+        );
+
+        this.addActionHandler(
+            PluginInterfaces.TokensLinking.Actions.DehighlightLinksById,
+            action => {
+                console.log(action);
+
+                const hIndex = List.findIndex(
+                    v => v.tokenId === action.payload.tokenId && v.corpusId === action.payload.corpusId,
+                    this.state.appliedHighlights[action.payload.lineId]
+                );
+                if (hIndex !== -1) {
+                    const clickedTokenId = this.state.appliedHighlights[action.payload.lineId][hIndex].clickedTokenId;
+                    const dehighlights:Array<HighlightInfo> = pipe(
+                        this.state.appliedHighlights[action.payload.lineId],
+                        List.filter(v => v.clickedTokenId === clickedTokenId),
+                    );
+                    this.dispatchSideEffect(
+                        ConcActions.DehighlightTokens,
+                        {dehighlights},
+                    );
+                    this.changeState(state => {
+                        state.appliedHighlights[action.payload.lineId] = List.filter(
+                            v => v.clickedTokenId !== clickedTokenId,
+                            state.appliedHighlights[action.payload.lineId],
+                        );
+                    });
                 }
             }
         );
