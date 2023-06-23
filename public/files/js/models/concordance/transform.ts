@@ -282,6 +282,7 @@ export function highlightConcLineTokens(
             hColor: token.kcConnection ? null : token.hColor
         }))
     );
+    console.log('>>> highlightConcLineTokens >>> ', tokens)
     Dict.forEach(
         (_, word) => {
             highlightWordInTokens(tokens, word, kcAttr);
