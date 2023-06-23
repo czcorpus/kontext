@@ -276,12 +276,11 @@ export function highlightConcLineTokens(
 ):KWICSection {
     const tokens = pipe(
         [...concLine.left, ...concLine.kwic, ...concLine.right],
-        List.filter(x => !!x.token.kcConnection), // we must ignore tokens_linking highlights
         List.map(x => x.token),
-        List.map(token => {
-            token.hColor = null;
-            return token;
-        })
+        List.map(token => ({
+            ...token,
+            hColor: token.kcConnection ? null : token.hColor
+        }))
     );
     Dict.forEach(
         (_, word) => {
