@@ -277,10 +277,10 @@ export function highlightConcLineTokens(
     const tokens = pipe(
         [...concLine.left, ...concLine.kwic, ...concLine.right],
         List.map(x => x.token),
-        List.map(token => ({
-            ...token,
-            hColor: token.kcConnection ? null : token.hColor
-        }))
+        List.map(token => {
+            token.hColor = token.kcConnection ? null : token.hColor;
+            return token;
+        })
     );
     Dict.forEach(
         (_, word) => {
