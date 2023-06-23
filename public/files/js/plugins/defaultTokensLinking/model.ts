@@ -105,7 +105,7 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                     }
                 );
                 Rx.zippedWith(
-                    tuple(action.payload.lineId, action.payload.tokenId),
+                    tuple(action.payload.corpusId, action.payload.lineId, action.payload.tokenId),
                     this.pluginApi.ajax$<FetchDataResponse>(
                         HTTP.Method.POST,
                         this.pluginApi.createActionUrl('/fetch_tokens_linking'),
@@ -119,28 +119,19 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                         }
                     )
                 ).subscribe({
-                    next: ([resp, [lineId, clickedTokenId]]) => {
+                    next: ([resp, [corpusId, lineId, clickedTokenId]]) => {
                         this.dispatchSideEffect(
                             PluginInterfaces.TokensLinking.Actions.FetchInfoDone,
                             {
+                                corpusId,
                                 lineId,
                                 clickedTokenId,
                                 data: pipe(
                                     resp.data,
                                     Dict.map(
-                                        (v, k) => List.map(
-                                            item => ({
-                                                ...item,
-                                                link: List.map(
-                                                    lnk => ({
-                                                        ...lnk,
-                                                        lineId,
-                                                        clickedTokenId
-                                                    }),
-                                                    item.link
-                                                )
-                                            }),
-                                            v
+                                        (data, provider) => List.flatMap(
+                                            items => items.link,
+                                            data
                                         )
                                     )
                                 )
@@ -161,10 +152,10 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                                 }]
                             }
                         );
-                        this.dispatchSideEffect({
-                            ...PluginInterfaces.TokensLinking.Actions.FetchInfoDone,
+                        this.dispatchSideEffect(
+                            PluginInterfaces.TokensLinking.Actions.FetchInfoDone,
                             error
-                        });
+                        );
                     }
                 });
             }
@@ -180,44 +171,60 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                     this.changeState(
                         state => {
                             Dict.forEach(
-                                (data, provider) => {
-                                    List.forEach(
-                                        token => {
-                                            if (List.empty(token.link)) {
-                                                action.payload.data
-                                                return;
+                                (newHighlights, provider) => {
+                                    const normHighlights = pipe(
+                                        newHighlights,
+                                        List.map(
+                                            token => {
+                                                const updColor = this.findUnusedColor(
+                                                    state.appliedHighlights,
+                                                    action.payload.lineId,
+                                                    token.color,
+                                                    token.altColors
+                                                );
+                                                return {...token, color: updColor};
                                             }
-                                            const updColor = this.findUnusedColor(
-                                                state.appliedHighlights,
-                                                action.payload.lineId,
-                                                List.head(token.link).color,
-                                                List.head(token.link).altColors,
-                                                    // TODO vvv here we break original functionality specs.
-                                            );
-                                            const highlights:Array<HighlightInfo> = pipe(
-                                                token.link,
-                                                List.map(
-                                                    link => ({
-                                                        ...link,
-                                                        color: updColor
-                                                    })
-                                                )
-                                            );
-                                            if (!Dict.hasKey(action.payload.lineId, state.appliedHighlights)) {
-                                                state.appliedHighlights[action.payload.lineId] = [];
+                                        ),
+                                        List.forEach(
+                                            token => {
+                                                if (!Dict.hasKey(
+                                                    action.payload.lineId,
+                                                    state.appliedHighlights)
+                                                ) {
+                                                    state.appliedHighlights[action.payload.lineId] = [];
+                                                }
+                                                state.appliedHighlights[action.payload.lineId] = List.push(
+                                                    token,
+                                                    state.appliedHighlights[action.payload.lineId]
+                                                );
                                             }
-                                            state.appliedHighlights[action.payload.lineId] = List.push(
-                                                List.head(highlights),
-                                                state.appliedHighlights[action.payload.lineId]
-                                            );
-                                            // TODO again - here we assume that each link color is the same
-                                            this.dispatchSideEffect(
-                                                ConcActions.HighlightTokens,
-                                                {highlights}
-                                            );
-                                        },
-                                        data
+                                        )
                                     );
+                                    if (!List.empty(normHighlights)) {
+                                        this.dispatchSideEffect(
+                                            ConcActions.HighlightTokens,
+                                            {highlights: normHighlights}
+                                        );
+
+                                    } else {
+                                        // clean the ajax loader in the clicked token
+                                        this.dispatchSideEffect(
+                                            ConcActions.HighlightTokens,
+                                            {
+                                                highlights: [{
+                                                    corpusId: action.payload.corpusId,
+                                                    lineId: action.payload.lineId,
+                                                    tokenId: action.payload.clickedTokenId,
+                                                    color: null,
+                                                    altColors: [],
+                                                    isBusy: false
+                                                }]
+                                            }
+                                        );
+                                        this.pluginApi.showMessage(
+                                            'error', this.pluginApi.translate('defaultTL__matches_search_error')
+                                        )
+                                    }
                                 },
                                 action.payload.data
                             );

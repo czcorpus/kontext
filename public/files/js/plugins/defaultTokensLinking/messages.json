@@ -1,10 +1,14 @@
 {
     "en-US": {
+        "defaultTL__matches_search_error": "Obtained invalid token highlighting data"
     },
     "cs-CZ": {
+        "defaultTL__matches_search_error": "Chybná data pro zvýraznění tokenů"
     },
     "szl": {
+        "defaultTL__matches_search_error": "Obtained invalid token highlighting data UNTRANSLATED"
     },
     "sl-SI": {
+        "defaultTL__matches_search_error": "Obtained invalid token highlighting data UNTRANSLATED"
     }
 }

@@ -45,11 +45,10 @@ export class Actions {
     };
 
     static FetchInfoDone:Action<{
-        data:{[provider:string]:Array<{
-            link:Array<HighlightInfo>
-        }>};
+        corpusId:string;
         lineId:number;
         clickedTokenId:number;
+        data:{[provider:string]:Array<HighlightInfo>};
     }> = {
         name: 'TOKENS_LINKING_FETCH_INFO_DONE'
     };
