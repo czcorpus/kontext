@@ -237,9 +237,11 @@ export function importLines(
 
 function highlightWordInTokens(tokens:Array<Token>, mword:string, attr:string) {
     const word = mword.split(' ');
+    console.log('word len = ', List.size(word))
     let currSrch:Array<Token> = [];
     for (let i = 0; i < tokens.length; i++) {
         if (tokens[i].s === word[List.size(currSrch)]) {
+            console.log('>>>> currSrch.push(tokens[i]): ', tokens[i])
             currSrch.push(tokens[i]);
         }
         if (List.size(word) === List.size(currSrch)) {
