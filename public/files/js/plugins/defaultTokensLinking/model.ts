@@ -230,8 +230,6 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                             );
                         }
                     );
-                    console.log(this.state.appliedHighlights);
-
                 }
             }
         );
