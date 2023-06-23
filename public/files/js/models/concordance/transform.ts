@@ -265,6 +265,7 @@ function highlightWordInTokens(tokens:Array<Token>, mword:string, attr:string) {
             currSrch
         );
     }
+    console.log('### highlightWordInTokens: ', tokens)
 }
 
 /**
