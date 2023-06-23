@@ -42,5 +42,21 @@ class AbstractBackend(AbstractProviderBackend):
             token_ranges: Dict[str, Tuple[int, int]],
             lang: str,
             is_anonymous: bool,
+            cookies: Dict[str, str]
     ) -> Tuple[Any, bool]:
+        """
+
+        Args:
+            corp_factory:
+            corpus_id: a corpus clicked token belongs to
+            token_id: clicked token ID
+            token_length: number of words (mostly 1, for some very specific situations (kwic?) it can be higher)
+            token_ranges: for each corpus, we specify starting and ending token of a text chunk (sentence, KWIC context)
+            lang:
+            is_anonymous:
+            cookies: this is mostly for sending authentication info to a backend API
+
+        Returns:
+
+        """
         pass

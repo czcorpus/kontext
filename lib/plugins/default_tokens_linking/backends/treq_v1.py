@@ -104,11 +104,11 @@ class TreqV1Backend(AbstractBackend):
         primary_lang = self._lang_from_corpname(corpus_id)
         translat_corpora = [x for x in token_ranges.keys() if x != corpus_id]
         if clicked_word:
-            logging.error(clicked_word)
             for translat_corp in translat_corpora:
                 translat_lang = self._lang_from_corpname(translat_corp)
                 if translat_corp and translat_lang:
-                    data = await self.get_translations(clicked_word, primary_lang, translat_lang, is_anonymous, cookies)
+                    data = await self.get_translations(
+                        clicked_word, primary_lang, translat_lang, is_anonymous, cookies)
                     for tok_idx, token in enumerate(tokens[translat_corp]):
                         if any(token['str'] == line['righ'] for line in data['lines']):
                             selected_token['link'].append({
@@ -126,9 +126,17 @@ class TreqV1Backend(AbstractBackend):
                         'tokenId': token_ranges[corpus_id][0] + tok_idx,
                         'color': self._conf['colors'][0],
                         'altColors': self._conf['colors'][1:],
-                        'comment': 'Treq translation',
+                        'comment': 'Clicked token (or equal to the clicked token)',
                     })
-
+        if len(selected_token['link']) == 0:
+            logging.getLogger(__name__).warning('no highlighted tokens - even the original token missing - correcting...')
+            selected_token['link'].append({
+                'corpusId': corpus_id,
+                'tokenId': token_id,
+                'color': self._conf['colors'][0],
+                'altColors': self._conf['colors'][1:],
+                'comment': 'Clicked token',
+            })
         return [selected_token], True
 
     @property
