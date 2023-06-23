@@ -291,6 +291,7 @@ export function highlightConcLineTokens(
             highlightWordInTokens(tokens, word, kcAttr);
         },
         words
-    )
+    );
+    console.log('@@@@ ', concLine)
     return concLine;
 }
