@@ -644,6 +644,14 @@ export interface HighlightRequest {
     tokenRanges:{[corpusId:string]:[number, number]};
 }
 
+export interface TokenLink {
+    corpusId:string;
+    tokenId:number;
+    color:string;
+    altColors:Array<string>;
+    comment?:string;
+}
+
 export interface HighlightInfo {
     corpusId:string;
     lineId:number;

@@ -20,7 +20,7 @@
 
 import { Action } from 'kombo';
 import { BasePlugin, IPluginApi } from './common';
-import { HighlightInfo, HighlightRequest } from '../../models/concordance/common';
+import { HighlightInfo, HighlightRequest, TokenLink } from '../../models/concordance/common';
 
 // ------------------------------------------------------------------------
 // ------------------------- [tokens_linking] plug-in -----------------------
@@ -48,7 +48,7 @@ export class Actions {
         corpusId:string;
         lineId:number;
         clickedTokenId:number;
-        data:{[provider:string]:Array<HighlightInfo>};
+        data:{[provider:string]:Array<TokenLink>};
     }> = {
         name: 'TOKENS_LINKING_FETCH_INFO_DONE'
     };

@@ -25,7 +25,7 @@ import { Dict, HTTP, List, Rx, pipe, tuple } from 'cnc-tskit';
 import { AjaxResponse } from '../../types/kontext';
 import { AttrSet } from '../../types/plugins/tokensLinking';
 import { Actions as ConcActions } from '../../models/concordance/actions';
-import { HighlightInfo } from '../../models/concordance/common';
+import { HighlightInfo, TokenLink } from '../../models/concordance/common';
 
 
 
@@ -47,7 +47,7 @@ export interface FetchDataResponse extends AjaxResponse {
         [provider:string]:Array<{
             attrs:AttrSet;
             tokenId:number;
-            link:Array<HighlightInfo>;
+            link:Array<TokenLink>;
         }>;
     };
 }
@@ -99,6 +99,8 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                         highlights: [{
                             corpusId: action.payload.corpusId,
                             tokenId: action.payload.tokenId,
+                            lineId: action.payload.lineId,
+                            clickedTokenId: action.payload.tokenId,
                             color: null,
                             altColors: [],
                             isBusy: true
@@ -184,7 +186,13 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                                                     token.color,
                                                     token.altColors
                                                 );
-                                                return {...token, color: updColor, clickedTokenId: action.payload.clickedTokenId};
+                                                return {
+                                                    ...token,
+                                                    color: updColor,
+                                                    lineId: action.payload.lineId,
+                                                    clickedTokenId: action.payload.clickedTokenId,
+                                                    isBusy: false,
+                                                };
                                             }
                                         ),
                                         List.forEach(
@@ -217,6 +225,7 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                                                     corpusId: action.payload.corpusId,
                                                     lineId: action.payload.lineId,
                                                     tokenId: action.payload.clickedTokenId,
+                                                    clickedTokenId: action.payload.clickedTokenId,
                                                     color: null,
                                                     altColors: [],
                                                     isBusy: false
