@@ -98,9 +98,12 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                     {
                         highlights: [{
                             corpusId: action.payload.corpusId,
+                            lineId: action.payload.lineId,
                             tokenId: action.payload.tokenId,
+                            clickedTokenId: action.payload.tokenId,
                             color: null,
-                            isBusy: true,
+                            altColors: [],
+                            isBusy: true
                         }]
                     }
                 );
@@ -146,6 +149,7 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                                     corpusId: action.payload.corpusId,
                                     lineId: action.payload.lineId,
                                     tokenId: action.payload.tokenId,
+                                    clickedTokenId: action.payload.tokenId,
                                     color: null,
                                     altColors: [],
                                     isBusy: false
@@ -182,7 +186,7 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                                                     token.color,
                                                     token.altColors
                                                 );
-                                                return {...token, color: updColor};
+                                                return {...token, color: updColor, clickedTokenId: action.payload.clickedTokenId};
                                             }
                                         ),
                                         List.forEach(
@@ -237,8 +241,6 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
         this.addActionHandler(
             PluginInterfaces.TokensLinking.Actions.DehighlightLinksById,
             action => {
-                console.log(action);
-
                 const hIndex = List.findIndex(
                     v => v.tokenId === action.payload.tokenId && v.corpusId === action.payload.corpusId,
                     this.state.appliedHighlights[action.payload.lineId]

@@ -948,8 +948,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         this.addActionHandler(
             Actions.DehighlightTokens,
             action => {
-                console.log(action.payload.dehighlights);
-
                 this.changeState(state => {
                     List.forEach(
                         h => {
