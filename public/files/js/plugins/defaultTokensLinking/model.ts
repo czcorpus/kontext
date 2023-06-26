@@ -98,9 +98,7 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                     {
                         highlights: [{
                             corpusId: action.payload.corpusId,
-                            lineId: action.payload.lineId,
                             tokenId: action.payload.tokenId,
-                            clickedTokenId: action.payload.tokenId,
                             color: null,
                             altColors: [],
                             isBusy: true
