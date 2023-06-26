@@ -55,6 +55,9 @@ async def col_lemma(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     pf = req.args.get('p')
     if pf:
         amodel.args.q.append(f'p0 0 1 [lemma="{pf}"]')
+    pw = req.args.get('pw')
+    if pw:
+        amodel.args.q.append(f'p0 0 1 [word="{pw}"]')
     amodel.args.q.extend(['D', 'f'])
     amodel.args.refs = '=doc.title,=doc.pubyear'
     amodel.args.pagesize = 50
