@@ -72,23 +72,7 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
         );
         this.pluginApi = pluginApi;
 
-        this.addActionHandler(
-            ConcActions.HighlightTokens,
-            action => {
-                this.changeState(
-                    state => {
-                        List.forEach(
-                            h => {
-                                if (!h.color) {
-                                    state.appliedHighlights[h.lineId] = [];
-                                }
-                            },
-                            action.payload.highlights
-                        )
-                    }
-                );
-            }
-        );
+
 
         this.addActionHandler(
             PluginInterfaces.TokensLinking.Actions.FetchInfo,
@@ -197,10 +181,7 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                                         ),
                                         List.forEach(
                                             token => {
-                                                if (!Dict.hasKey(
-                                                    action.payload.lineId,
-                                                    state.appliedHighlights)
-                                                ) {
+                                                if (!Dict.hasKey(action.payload.lineId, state.appliedHighlights)) {
                                                     state.appliedHighlights[action.payload.lineId] = [];
                                                 }
                                                 state.appliedHighlights[action.payload.lineId] = List.push(
@@ -210,6 +191,7 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                                             }
                                         )
                                     );
+
                                     if (!List.empty(normHighlights)) {
                                         this.dispatchSideEffect(
                                             ConcActions.HighlightTokens,
