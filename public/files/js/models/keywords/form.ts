@@ -129,6 +129,20 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
         });
 
         this.addActionHandler(
+            GlobalActions.SwitchCorpus,
+            (state, action) => {},
+            (state, action, dispatch) => {
+                dispatch<typeof GlobalActions.SwitchCorpusReady>({
+                    name: GlobalActions.SwitchCorpusReady.name,
+                    payload: {
+                        modelId: this.getRegistrationId(),
+                        data: this.serialize(state)
+                    }
+                });
+            }
+        );
+
+        this.addActionHandler(
             GlobalActions.CorpusSwitchModelRestore,
             (state, action)  => {
                 if (!action.error) {
@@ -138,19 +152,6 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
                         action.payload.corpora,
                     );
                 }
-            }
-        );
-
-        this.addActionHandler(
-            GlobalActions.SwitchCorpus,
-            (state, action) => {
-                dispatcher.dispatch<typeof GlobalActions.SwitchCorpusReady>({
-                    name: GlobalActions.SwitchCorpusReady.name,
-                    payload: {
-                        modelId: this.getRegistrationId(),
-                        data: this.serialize(state)
-                    }
-                });
             }
         );
 
