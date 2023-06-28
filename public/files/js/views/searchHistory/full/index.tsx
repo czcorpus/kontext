@@ -623,7 +623,16 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     </strong>
                     {'\u00a0'}
                     <h3>
-                        <span className="supertype">{supertypeToHuman(data.q_supertype)}</span>,{'\u00a0'}
+                        <span className="supertype">
+                            {supertypeToHuman(data.q_supertype)}
+                            {
+                                data.q_supertype === 'conc' && data.form_type === 'filter' ?
+                                    <span style={{textTransform: 'lowercase'}}>
+                                        {'\u00a0(' + he.translate('query__filter_th')})
+                                    </span> :
+                                    null
+                            }
+                        </span>,{'\u00a0'}
                         {data.human_corpname}
                         {data.subcorpus_name ?
                             <span className="subcorpname" title={he.translate('global__subcorpus')}>{'\u00a0/\u00a0'}
