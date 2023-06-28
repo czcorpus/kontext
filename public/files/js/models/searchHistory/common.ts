@@ -105,6 +105,8 @@ export interface ConcQueryHistoryItem extends AbstractQueryHistoryItem {
         pcq_pos_neg:string;
         default_attr:string;
     }>;
+
+    form_type:'filter'|undefined; // TODO on server, the types are exactly like that (i.e. no 'conc' for concordance q.)
 }
 
 export interface WlistQueryHistoryItem extends AbstractQueryHistoryItem {
