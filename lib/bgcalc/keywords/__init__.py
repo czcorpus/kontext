@@ -130,7 +130,7 @@ async def keywords(corp: KCorpus, ref_corp: KCorpus, args: KeywordsFormArgs, max
     keyword = Keyword(
         corp.unwrap(), ref_corp.unwrap(), c_wl, rc_wl,
         simple_n, 100, args.wlminfreq, args.wlmaxfreq, [], words,
-        f'frq;{args.score_type}' if args.score_type else 'frq', [], [], [], None)
+        f'frq;{args.sort}' if args.sort else 'frq', [], [], [], None)
     results = []
     kw = keyword.next()
     while kw:
@@ -140,10 +140,16 @@ async def keywords(corp: KCorpus, ref_corp: KCorpus, args: KeywordsFormArgs, max
         s = s.replace("_", " ")  # XXX remove in data
         if s.endswith("-x"):  # XXX remove in data
             s = s[:-2]
-        freqs = kw.get_freqs(2 * len([]) + 4 + 1)  # 1 additional slot for size effect
+        freqs = kw.get_freqs(2 * len([]) + 4 + 4)  # 1 additional slot for size effect
+        if args.score_type == 'logL':
+            score = freqs[5]
+        elif args.score_type == 'chi2':
+            score = freqs[6]
+        else:
+            score = freqs[4]
         item.update({'item': s,
-                     'score': round(kw.score, 3),
-                     'size_effect': round(float(freqs[4]), 5),
+                     'score': round(score, 3),
+                     'size_effect': round(float(freqs[7]), 5),
                      'frq1': int(freqs[0]),
                      'frq2': int(freqs[1]),
                      'rel_frq1': round(float(freqs[2]), 5),
