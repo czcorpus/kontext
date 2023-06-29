@@ -120,6 +120,23 @@ export class KeywordsResultModel extends StatelessModel<KeywordsResultState> {
         );
 
         this.addActionHandler(
+            Actions.ResultSetSort,
+            (state, action) => {
+                state.isLoading = true;
+            },
+            (state, action, dispatch) => {
+                window.location.href = this.layoutModel.createActionUrl(
+                    'keywords/result',
+                    {
+                        q: `~${state.queryId}`,
+                        kwpage: state.kwpage,
+                        kwsort: action.payload.sort,
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
             Actions.KeywordsHistoryPopState,
             (state, action) => {
                 state.kwpage = action.payload.kwpage;

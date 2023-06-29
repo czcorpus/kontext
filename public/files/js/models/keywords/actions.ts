@@ -78,6 +78,12 @@ export class Actions {
         name: 'KEYWORDS_RESULT_SET_PAGE'
     };
 
+    static ResultSetSort:Action<{
+        sort:string;
+    }> = {
+        name: 'KEYWORDS_RESULT_SET_SORT'
+    };
+
     static ResultPageLoadDone:Action<{
         data:Array<Keyword>;
         page:number;

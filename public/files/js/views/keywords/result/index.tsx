@@ -44,6 +44,29 @@ export function init({
 
     const layoutViews = he.getLayoutViews();
 
+    const SortableCol:React.FC<{text:string, value:string, kwsort:string}> = (props) => {
+        const handleClick = () => {
+            dispatcher.dispatch<typeof Actions.ResultSetSort>({
+                name: Actions.ResultSetSort.name,
+                payload: {sort: props.value}
+            });
+        };
+
+        if (props.value === props.kwsort) {
+            return <th>
+                <span title={he.translate('global__sorted')}>
+                    {props.text}
+                    <img className="sort-flag" src={he.createStaticUrl('img/sort_desc.svg')} />
+                </span>
+            </th>
+        } else {
+            return <th>
+                <a onClick={handleClick} title={he.translate('global__click_to_sort')}>
+                    {props.text}
+                </a>
+            </th>
+        }
+    }
 
     const KeywordsResult:React.FC<KeywordsResultState> = (props) => {
 
@@ -77,10 +100,10 @@ export function init({
                         <tr>
                             <th />
                             <th>{he.translate('kwords__result_word_hd')}</th>
-                            <th>{he.translate('kwords__score_col_hd')}</th>
-                            <th>{he.translate('kwords__score_col_logL')}</th>
-                            <th>{he.translate('kwords__score_col_chi2')}</th>
-                            <th>{he.translate('kwords__effect_size')}</th>
+                            <SortableCol text={he.translate('kwords__score_col_hd')} value='default' kwsort={props.kwsort}/>
+                            <SortableCol text={he.translate('kwords__score_col_logL')} value='logL' kwsort={props.kwsort}/>
+                            <SortableCol text={he.translate('kwords__score_col_chi2')} value='chi2' kwsort={props.kwsort}/>
+                            <SortableCol text={he.translate('kwords__effect_size')} value='effS' kwsort={props.kwsort}/>
                             <th>{he.translate('kwords__freq_in_corp1_hd')}</th>
                             <th>{he.translate('kwords__freq_in_corp2_hd')}</th>
                             <th>{he.translate('kwords__rel_freq_in_corp1_hd')}</th>
