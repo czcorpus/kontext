@@ -41,7 +41,6 @@ export interface KeywordsResultState {
     kwpage:number;
     kwpagesize:number;
     kwsort:string;
-    reverse:boolean;
     totalPages:number;
     queryId:string;
     isLoading:boolean;
@@ -63,7 +62,6 @@ export interface DataAjaxResponse extends Kontext.AjaxResponse {
     kwpagesize:number;
     kwpage:number;
     kwsort:string;
-    reverse:boolean;
 }
 
 /**
@@ -93,7 +91,6 @@ export class KeywordsResultModel extends StatelessModel<KeywordsResultState> {
                 kwpage: layoutModel.getConf<number>('Page'),
                 kwpagesize: layoutModel.getConf<number>('PageSize'),
                 kwsort: layoutModel.getConf<string>('Sort'),
-                reverse: layoutModel.getConf<boolean>('Reverse'),
                 total: layoutModel.getConf<number>('Total'),
                 totalPages: Math.ceil(layoutModel.getConf<number>('Total')/layoutModel.getConf<number>('PageSize')),
                 queryId: layoutModel.getConf<string>('QueryId'),
@@ -128,7 +125,6 @@ export class KeywordsResultModel extends StatelessModel<KeywordsResultState> {
                 state.kwpage = action.payload.kwpage;
                 state.kwsort = action.payload.kwsort;
                 state.queryId = action.payload.q;
-                state.reverse = action.payload.reverse;
             },
             (state, action, dispatch) => {
                 this.processPageLoad(state, dispatch, true);
@@ -143,7 +139,6 @@ export class KeywordsResultModel extends StatelessModel<KeywordsResultState> {
                     state.data = action.payload.data;
                     state.kwpage = action.payload.page;
                     state.kwsort = action.payload.sort;
-                    state.reverse = action.payload.reverse;
                 }
             }
         );
@@ -161,7 +156,6 @@ export class KeywordsResultModel extends StatelessModel<KeywordsResultState> {
                     payload: {
                         page: resp.kwpage,
                         sort: resp.kwsort,
-                        reverse: resp.reverse,
                         data: resp.data,
                     }
                 });
@@ -187,13 +181,11 @@ export class KeywordsResultModel extends StatelessModel<KeywordsResultState> {
                                 q: `~${state.queryId}`,
                                 kwpage: state.kwpage,
                                 kwsort: state.kwsort,
-                                reverse: state.reverse,
                             },
                             {
                                 q: `~${state.queryId}`,
                                 kwpage: state.kwpage,
                                 kwsort: state.kwsort,
-                                reverse: state.reverse,
                             }
                         );
                     }
@@ -211,7 +203,6 @@ export class KeywordsResultModel extends StatelessModel<KeywordsResultState> {
                     q: `~${state.queryId}`,
                     kwpage: state.kwpage,
                     kwsort: state.kwsort,
-                    reverse: state.reverse,
                     format: 'json',
                 }
             ),

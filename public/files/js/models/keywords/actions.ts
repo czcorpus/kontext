@@ -82,7 +82,6 @@ export class Actions {
         data:Array<Keyword>;
         page:number;
         sort:string;
-        reverse:boolean;
     }> = {
         name: 'KEYWORDS_RESULT_PAGE_LOAD_DONE'
     };
@@ -91,7 +90,6 @@ export class Actions {
         q:string;
         kwpage:number;
         kwsort:string;
-        reverse:boolean;
     }> = {
         name: 'KEYWORDS_HISTORY_POP_STATE'
     };

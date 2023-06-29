@@ -35,8 +35,7 @@ import { TEXT_INPUT_WRITE_THROTTLE_INTERVAL_MS } from '../../types/kontext';
 import { validateNumber } from '../base';
 
 
-export type ScoreType = null|'logL'|'chi2';
-export type SortType = null|'logL'|'chi2'|'effS';
+export type ScoreType = 'default'|'logL'|'chi2'|'effS';
 
 export interface KeywordsFormState {
     isBusy:boolean;
@@ -368,7 +367,6 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
             wlpat: state.pattern,
             wltype: 'simple',
             score_type: state.scoreType,
-            sort: state.scoreType,
         }
     }
 

@@ -21,7 +21,7 @@
 
 import { WlnumsTypes } from '../wordlist/common';
 import { AsyncTaskInfo } from '../../types/kontext';
-import { ScoreType, SortType } from './form';
+import { ScoreType } from './form';
 
 export interface KeywordsSubmitArgs {
     corpname:string;
@@ -36,7 +36,6 @@ export interface KeywordsSubmitArgs {
     wltype:string;
     include_nonwords:boolean;
     score_type:ScoreType;
-    sort:SortType;
 }
 
 export interface KeywordsSubmitResponse {
@@ -50,6 +49,8 @@ export interface KeywordsSubmitResponse {
 export interface Keyword {
     item:string;
     score:number;
+    score_logL:number;
+    score_chi2:number;
     size_effect:number;
     frq1:number;
     frq2:number;

@@ -125,17 +125,17 @@ async def view_result(amodel: KeywordsActionModel, req: KRequest):
 
     page = int(req.args.get('kwpage', '1'))
     offset = (page - 1) * amodel.args.kwpagesize
-    kwsort = req.args.get('kwsort', 'score')
-    rev = bool(int(req.args.get('reverse', '1')))
+    kwsort = req.args.get('kwsort', None)
+    if kwsort is not None:
+        amodel.curr_kwform_args.score_type = kwsort
+    else:
+        kwsort = amodel.curr_kwform_args.score_type
 
     try:
-        total, data = await require_existing_keywords(
-            form=amodel.curr_kwform_args, reverse=rev, offset=offset,
-            limit=amodel.args.kwpagesize, kwsort=kwsort,
-            collator_locale=(await amodel.get_corpus_info(amodel.corp.corpname)).collator_locale)
+        total, data = await require_existing_keywords(amodel.curr_kwform_args, offset, amodel.args.kwpagesize)
     except KeywordsResultNotFound:
         raise ImmediateRedirectException(req.create_url(
-            'keywords/restore', dict(q=req.args_getlist('q')[0])))
+            'keywords/restore', dict(q=req.args_getlist('q')[0], kwsort=kwsort)))
 
     result = dict(data=data, total=total, keywords_form=amodel.curr_kwform_args.to_dict())
     try:
@@ -152,7 +152,6 @@ async def view_result(amodel: KeywordsActionModel, req: KRequest):
     result['kwpage'] = page
     result['kwpagesize'] = amodel.args.kwpagesize
     result['kwsort'] = kwsort
-    result['reverse'] = rev
 
     await amodel.export_subcorpora_list(result)
     return result
@@ -175,6 +174,7 @@ async def restore(amodel: KeywordsActionModel, req: KRequest, _: KResponse):
     ref_corp_ident = SubcorpusIdent(
         amodel.curr_kwform_args.ref_usesubcorp,
         amodel.curr_kwform_args.ref_corpname) if amodel.curr_kwform_args.ref_usesubcorp else amodel.curr_kwform_args.ref_corpname
+    amodel.curr_kwform_args.score_type = req.args.get('kwsort', amodel.curr_kwform_args.score_type)
     async_res = await worker.send_task(
         'get_keywords', object.__class__,
         args=(amodel.corp.portable_ident, ref_corp_ident, amodel.curr_kwform_args.to_dict(), amodel.corp.size))
