@@ -48,6 +48,7 @@ export interface KeywordsFormState {
     wlMinFreqInput:FormValue<string>;
     wlMaxFreqInput:FormValue<string>;
     precalcTasks:Array<AsyncTaskInfo<{}>>;
+    manateeIsCustomCNC:boolean;
 }
 
 export interface KeywordsFormCorpSwitchPreserve {
@@ -110,7 +111,8 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
                 wlMinFreqInput: newFormValue('5', true),
                 wlMaxFreqInput: newFormValue('', true),
                 precalcTasks: [],
-                availAttrs
+                availAttrs,
+                manateeIsCustomCNC: layoutModel.getConf<boolean>('manateeIsCustomCNC'),
             }
         );
         this.layoutModel = layoutModel;

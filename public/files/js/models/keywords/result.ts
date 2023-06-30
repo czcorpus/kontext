@@ -44,6 +44,7 @@ export interface KeywordsResultState {
     totalPages:number;
     queryId:string;
     isLoading:boolean;
+    manateeIsCustomCNC:boolean;
 }
 
 export interface KeywordsResultModelArgs {
@@ -95,6 +96,7 @@ export class KeywordsResultModel extends StatelessModel<KeywordsResultState> {
                 totalPages: Math.ceil(layoutModel.getConf<number>('Total')/layoutModel.getConf<number>('PageSize')),
                 queryId: layoutModel.getConf<string>('QueryId'),
                 isLoading: false,
+                manateeIsCustomCNC: layoutModel.getConf<boolean>('manateeIsCustomCNC'),
             }
         );
         this.layoutModel = layoutModel;
