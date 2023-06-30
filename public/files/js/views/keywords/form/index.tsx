@@ -115,13 +115,16 @@ export function init({
                     <label htmlFor="kw-pattern">{he.translate('kwords__pattern')}:</label>
                     <input id="kw-pattern" className="pattern" onChange={handlePatternChange} type='text' value={props.pattern}/>
 
-                    <label htmlFor="kw-score">{he.translate('kwords__score_type')}:</label>
-                    <select id="kw-score" value={props.scoreType} onChange={handleScoreTypeChange}>
-                        <option value='default'>default</option>
-                        <option value='logL'>Log-likelihood</option>
-                        <option value='chi2'>Chi-square</option>
-                        <option value='effS'>{he.translate('kwords__effect_size')}</option>
-                    </select>
+                    {props.manateeIsCustomCNC ?
+                        <label htmlFor="kw-score">{he.translate('kwords__score_type')}:</label>:
+                        null}
+                    {props.manateeIsCustomCNC ?
+                        <select id="kw-score" value={props.scoreType} onChange={handleScoreTypeChange}>
+                            <option value='logL'>Log-likelihood</option>
+                            <option value='chi2'>Chi-square</option>
+                            <option value='effS'>{he.translate('kwords__effect_size')}</option>
+                        </select> :
+                        null}
 
                     <label htmlFor="kw-minfreq">{he.translate('kwords__min_freq')}:</label>
                     <layoutViews.ValidatedItem invalid={props.wlMinFreqInput.isInvalid}

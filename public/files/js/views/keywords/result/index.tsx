@@ -100,10 +100,14 @@ export function init({
                         <tr>
                             <th />
                             <th>{he.translate('kwords__result_word_hd')}</th>
-                            <SortableCol text={he.translate('kwords__score_col_hd')} value='default' kwsort={props.kwsort}/>
-                            <SortableCol text={he.translate('kwords__score_col_logL')} value='logL' kwsort={props.kwsort}/>
-                            <SortableCol text={he.translate('kwords__score_col_chi2')} value='chi2' kwsort={props.kwsort}/>
-                            <SortableCol text={he.translate('kwords__effect_size')} value='effS' kwsort={props.kwsort}/>
+                            {props.manateeIsCustomCNC ?
+                                [
+                                    <SortableCol text={he.translate('kwords__score_col_logL')} value='logL' kwsort={props.kwsort}/>,
+                                    <SortableCol text={he.translate('kwords__score_col_chi2')} value='chi2' kwsort={props.kwsort}/>,
+                                    <SortableCol text={he.translate('kwords__effect_size')} value='effS' kwsort={props.kwsort}/>,
+                                ] :
+                                <th>{he.translate('kwords__score_col_hd')}</th>
+                            }
                             <th>{he.translate('kwords__freq_in_corp1_hd')}</th>
                             <th>{he.translate('kwords__freq_in_corp2_hd')}</th>
                             <th>{he.translate('kwords__rel_freq_in_corp1_hd')}</th>
@@ -117,10 +121,14 @@ export function init({
                                     <tr key={`item:${kw.item}`}>
                                         <td>{(props.kwpage-1)*props.kwpagesize + i + 1}.</td>
                                         <td className="kword">{kw.item}</td>
-                                        <td className="num">{he.formatNumber(kw.score, 2)}</td>
-                                        <td className="num">{he.formatNumber(kw.score_logL, 2)}</td>
-                                        <td className="num">{he.formatNumber(kw.score_chi2, 2)}</td>
-                                        <td className="num">{he.formatNumber(kw.size_effect, 2)}</td>
+                                        {props.manateeIsCustomCNC ?
+                                            [
+                                                <td className="num">{he.formatNumber(kw.logL, 2)}</td>,
+                                                <td className="num">{he.formatNumber(kw.chi2, 2)}</td>,
+                                                <td className="num">{he.formatNumber(kw.size_effect, 2)}</td>,
+                                            ] :
+                                            <td className="num">{he.formatNumber(kw.score, 2)}</td>
+                                        }
                                         <td className="num">{he.formatNumber(kw.frq1, 0)}</td>
                                         <td className="num">{he.formatNumber(kw.frq2, 0)}</td>
                                         <td className="num">{he.formatNumber(kw.rel_frq1, 2)}</td>

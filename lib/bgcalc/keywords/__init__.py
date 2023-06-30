@@ -16,7 +16,7 @@ import hashlib
 import os
 import sys
 from functools import wraps
-from typing import List, Tuple
+from typing import Any, Dict, List, Tuple
 
 import aiofiles
 import aiofiles.os
@@ -25,6 +25,7 @@ import ujson as json
 from action.argmapping.keywords import KeywordsFormArgs
 from bgcalc import wordlist
 from bgcalc.jsonl_cache import load_cached_partial
+from corplib import manatee_is_custom_cnc
 from corplib.corpus import KCorpus
 from manatee import Keyword  # TODO wrap this out
 
@@ -36,13 +37,18 @@ class KeywordsResultNotFound(Exception):
 
 
 def _create_cache_path(form: KeywordsFormArgs) -> str:
-    key = (f'{form.corpname}:{form.usesubcorp}:{form.ref_corpname}:{form.ref_usesubcorp}:{form.wlattr}:{form.wlpat}:'
-           f'{form.include_nonwords}:{form.wltype}:{form.wlnums}:{form.wlminfreq}:{form.wlmaxfreq}:{form.score_type}')
+    if manatee_is_custom_cnc():
+        key = (f'{form.corpname}:{form.usesubcorp}:{form.ref_corpname}:{form.ref_usesubcorp}:{form.wlattr}:{form.wlpat}:'
+               f'{form.include_nonwords}:{form.wltype}:{form.wlnums}:{form.wlminfreq}:{form.wlmaxfreq}:{form.score_type}')
+    else:
+        key = (f'{form.corpname}:{form.usesubcorp}:{form.ref_corpname}:{form.ref_usesubcorp}:{form.wlattr}:{form.wlpat}:'
+               f'{form.include_nonwords}:{form.wltype}:{form.wlnums}:{form.wlminfreq}:{form.wlmaxfreq}')
+
     result_id = hashlib.sha1(key.encode('utf-8')).hexdigest()
     return os.path.join(settings.get('corpora', 'freqs_cache_dir'), f'kwords_{result_id}.jsonl')
 
 
-async def require_existing_keywords(form: KeywordsFormArgs, offset: int, limit: int) -> Tuple[int, List[Tuple[str, int]]]:
+async def require_existing_keywords(form: KeywordsFormArgs, offset: int, limit: int) -> Tuple[int, List[Dict[str, Any]]]:
     path = _create_cache_path(form)
     if not await aiofiles.os.path.exists(path):
         raise KeywordsResultNotFound('The result does not exist')
@@ -76,7 +82,7 @@ def cached(f):
 
 
 @cached
-async def keywords(corp: KCorpus, ref_corp: KCorpus, args: KeywordsFormArgs, max_items: int) -> List[Tuple[str, int]]:
+async def keywords(corp: KCorpus, ref_corp: KCorpus, args: KeywordsFormArgs, max_items: int) -> List[Dict[str, Any]]:
     c_wl = corp.get_attr(args.wlattr)
     rc_wl = ref_corp.get_attr(args.wlattr)
     if not args.include_nonwords:
@@ -106,7 +112,7 @@ async def keywords(corp: KCorpus, ref_corp: KCorpus, args: KeywordsFormArgs, max
     keyword = Keyword(
         corp.unwrap(), ref_corp.unwrap(), c_wl, rc_wl,
         simple_n, 100, args.wlminfreq, args.wlmaxfreq, [], words,
-        f'frq;{args.score_type}' if args.score_type in CNC_SCORE_TYPES else 'frq', [], [], [], None)
+        f'frq;{args.score_type}' if manatee_is_custom_cnc() and args.score_type in CNC_SCORE_TYPES else 'frq', [], [], [], None)
     results = []
     kw = keyword.next()
     while kw:
@@ -116,17 +122,29 @@ async def keywords(corp: KCorpus, ref_corp: KCorpus, args: KeywordsFormArgs, max
         s = s.replace("_", " ")  # XXX remove in data
         if s.endswith("-x"):  # XXX remove in data
             s = s[:-2]
-        freqs = kw.get_freqs(2 * len([]) + 4 + 4)  # 1 additional slot for size effect
-        item.update({'item': s,
-                     'score': round(freqs[4], 3),
-                     'score_logL': round(freqs[5], 3),
-                     'score_chi2': round(freqs[6], 3),
-                     'size_effect': round(float(freqs[7]), 5),
-                     'frq1': int(freqs[0]),
-                     'frq2': int(freqs[1]),
-                     'rel_frq1': round(float(freqs[2]), 5),
-                     'rel_frq2': round(float(freqs[3]), 5),
-                     'query': cql})
+
+        if manatee_is_custom_cnc():
+            freqs = kw.get_freqs(2 * len([]) + 4 + 4)  # 1 additional slot for size effect
+            item.update({'item': s,
+                         'score': round(freqs[4], 3),
+                         'logL': round(freqs[5], 3),
+                         'chi2': round(freqs[6], 3),
+                         'size_effect': round(float(freqs[7]), 5),
+                         'frq1': int(freqs[0]),
+                         'frq2': int(freqs[1]),
+                         'rel_frq1': round(float(freqs[2]), 5),
+                         'rel_frq2': round(float(freqs[3]), 5),
+                         'query': cql})
+        else:
+            freqs = kw.get_freqs(2 * len([]) + 4)
+            item.update({'item': s,
+                         'score': round(kw.score, 3),
+                         'frq1': int(freqs[0]),
+                         'frq2': int(freqs[1]),
+                         'rel_frq1': round(float(freqs[2]), 5),
+                         'rel_frq2': round(float(freqs[3]), 5),
+                         'query': cql})
+
         results.append(item)
         kw = keyword.next()
 
