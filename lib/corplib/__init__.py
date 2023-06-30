@@ -55,14 +55,21 @@ def manatee_version() -> str:
     return manatee.version()
 
 
+def manatee_is_custom_cnc() -> bool:
+    return manatee.version().endswith('-cnc')
+
+
 def manatee_min_version(ver: str) -> bool:
     """
     Tests whether the provided version string represents a newer or
-    equal version than the one currently configured.
+    equal version than the one currently configured. It can parse
+    also custom '-cnc' version signatures.
 
     arguments:
     ver -- a version signature string 'X.Y.Z' (e.g. '2.130.7')
     """
+    if ver.endswith('-cnc'):
+        ver = ver[-4]
     ver_parsed = int(''.join('%03d' % int(x) for x in ver.split('.')))
     actual = int(''.join('%03d' % int(x) for x in manatee.version().split('-')[-1].split('.')))
     return ver_parsed <= actual

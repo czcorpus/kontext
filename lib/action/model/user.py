@@ -403,6 +403,7 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
         result = await super().add_globals(app, action_props, result)
         await self.export_optional_plugins_conf(result)
         self.configure_auth_urls(result)
+        result['manatee_is_custom_cnc'] = corplib.manatee_is_custom_cnc()
         result['conc_url_ttl_days'] = None
         result['corpus_ident'] = {}
         result['Globals'] = {}
