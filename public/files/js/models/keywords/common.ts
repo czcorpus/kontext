@@ -49,6 +49,8 @@ export interface KeywordsSubmitResponse {
 export interface Keyword {
     item:string;
     score:number;
+    score_logL:number;
+    score_chi2:number;
     size_effect:number;
     frq1:number;
     frq2:number;

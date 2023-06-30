@@ -117,8 +117,10 @@ export function init({
 
                     <label htmlFor="kw-score">{he.translate('kwords__score_type')}:</label>
                     <select id="kw-score" value={props.scoreType} onChange={handleScoreTypeChange}>
+                        <option value='default'>default</option>
                         <option value='logL'>Log-likelihood</option>
                         <option value='chi2'>Chi-square</option>
+                        <option value='effS'>{he.translate('kwords__effect_size')}</option>
                     </select>
 
                     <label htmlFor="kw-minfreq">{he.translate('kwords__min_freq')}:</label>

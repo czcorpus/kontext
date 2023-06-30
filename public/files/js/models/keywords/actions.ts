@@ -78,11 +78,16 @@ export class Actions {
         name: 'KEYWORDS_RESULT_SET_PAGE'
     };
 
+    static ResultSetSort:Action<{
+        sort:string;
+    }> = {
+        name: 'KEYWORDS_RESULT_SET_SORT'
+    };
+
     static ResultPageLoadDone:Action<{
         data:Array<Keyword>;
         page:number;
         sort:string;
-        reverse:boolean;
     }> = {
         name: 'KEYWORDS_RESULT_PAGE_LOAD_DONE'
     };
@@ -91,7 +96,6 @@ export class Actions {
         q:string;
         kwpage:number;
         kwsort:string;
-        reverse:boolean;
     }> = {
         name: 'KEYWORDS_HISTORY_POP_STATE'
     };

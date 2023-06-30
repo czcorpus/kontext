@@ -35,7 +35,7 @@ import { TEXT_INPUT_WRITE_THROTTLE_INTERVAL_MS } from '../../types/kontext';
 import { validateNumber } from '../base';
 
 
-export type ScoreType = null|'logL'|'chi2';
+export type ScoreType = 'default'|'logL'|'chi2'|'effS';
 
 export interface KeywordsFormState {
     isBusy:boolean;
