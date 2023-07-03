@@ -368,7 +368,7 @@ class ConcActionModel(CorpusActionModel):
             sample=SampleFormArgs(persist=False).to_dict(),
             shuffle=ShuffleFormArgs(persist=False).to_dict(),
             firsthits=FirstHitsFilterFormArgs(
-                persist=False, doc_struct=self.corp.get_conf('DOCSTRUCTURE')).to_dict())
+                persist=False, struct=self.corp.get_conf('DOCSTRUCTURE')).to_dict())
         tpl_out['query_overview'] = [x.to_dict() for x in query_overview]
         if len(query_overview) > 0:
             tpl_out['page_title'] = '{0} / {1}'.format(

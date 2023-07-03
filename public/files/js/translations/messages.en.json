@@ -359,7 +359,7 @@
         "query__operation_name_shuffle": "shuffle",
         "query__operation_name_switchmc": "change of main corpus",
         "query__operation_name_subhits": "remove nested matches",
-        "query__operation_name_firsthits": "first hits in documents",
+        "query__operation_name_firsthits": "first hits in ...",
         "query__overview_hits_{num_hits}": "{num_hits, plural, one{# hit} other{# hits}}",
         "query__overview_using_implicit_sample_{size}": "limited to {size, plural, one{# item} other{# items}}",
         "query__sort_type_simple_hd": "Simple sort",

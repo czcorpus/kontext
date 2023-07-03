@@ -408,6 +408,12 @@ msgstr "Skasuj zagniyżdżōne wyniki"
 msgid "First hits in documents"
 msgstr "Piyrsze trefiynia we dokumyntach"
 
+msgid "First hits in sentences"
+msgstr "First hits in sentences UNTRANSLATED"
+
+msgid "First hits in ..."
+msgstr "Piyrsze trefiynia we ..."
+
 # "Sign in"
 # msgid "Open login form"
 # msgstr "Ôtwōrz formular logowaniŏ"
