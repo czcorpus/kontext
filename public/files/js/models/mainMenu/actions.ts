@@ -91,9 +91,14 @@ export class Actions {
         name: 'MAIN_MENU_FILTER_APPLY_SUBHITS_REMOVE'
     }
 
-    static FilterApplyFirstOccurrences:Action<{
+    static FilterApplyFirstOccurrencesInDocs:Action<{
     }> = {
-        name: 'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES'
+        name: 'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES_IN_DOCS'
+    }
+
+    static FilterApplyFirstOccurrencesInSentences:Action<{
+    }> = {
+        name: 'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES_IN_SENTENCES'
     }
 
     static ShowFreqForm:Action<{

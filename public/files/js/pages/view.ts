@@ -660,7 +660,9 @@ export class ViewPage {
         this.queryModels.firstHitsModel = new FirstHitsModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            this.concFormsInitialArgs.firsthits
+            this.concFormsInitialArgs.firsthits,
+            this.layoutModel.getConf<string>('docStruct'),
+            this.layoutModel.getConf<string>('sentenceStruct')
         );
     }
 
@@ -760,6 +762,12 @@ export class ViewPage {
                 filterFirstDocHitsFormProps: {
                     formType: Kontext.ConcFormTypes.FIRSTHITS,
                     opKey: undefined,
+                    structure: this.layoutModel.getConf<string|null>('docStruct')
+                },
+                filterFirstSentHitsFormProps: {
+                    formType: Kontext.ConcFormTypes.FIRSTHITS,
+                    opKey: undefined,
+                    structure: this.layoutModel.getConf<string|null>('sentenceStruct')
                 },
                 sortFormProps: {
                     formType: Kontext.ConcFormTypes.SORT,

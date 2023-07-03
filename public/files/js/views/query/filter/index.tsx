@@ -72,6 +72,7 @@ export interface SubHitsFormState {
 
 export interface FirstHitsFormProps {
     formType:Kontext.ConcFormTypes.FIRSTHITS;
+    structure:string;
     operationIdx?:number;
     opKey:string;
 }

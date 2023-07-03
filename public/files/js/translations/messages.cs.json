@@ -359,7 +359,7 @@
         "query__operation_name_shuffle": "promíchání",
         "query__operation_name_switchmc": "změna hlavního korpusu",
         "query__operation_name_subhits": "odstranit vnořené shody",
-        "query__operation_name_firsthits": "první nálezy v dokumentech",
+        "query__operation_name_firsthits": "první nálezy v ...",
         "query__overview_hits_{num_hits}": "{num_hits, plural, one{# výskyt} few{# výskyty} other{# výskytů}}",
         "query__overview_using_implicit_sample_{size}": "omezeno na {size, plural, one{# výskyt} few{# výskyty} other{# výskytů}}",
         "query__sort_type_simple_hd": "Jednoduché třídění",

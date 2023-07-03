@@ -33,6 +33,9 @@ import { FirstHitsFormArgs } from './formArgs';
 
 export interface FirstHitsModelState {
     docStructValues:{[key:string]:string};
+    docStruct:string|null;
+    sentStruct:string|null;
+
 }
 
 
@@ -46,21 +49,52 @@ export class FirstHitsModel extends StatefulModel<FirstHitsModelState> {
     constructor(
         dispatcher:IFullActionControl,
         layoutModel:PageModel,
-        syncInitialArgs:FirstHitsFormArgs
+        syncInitialArgs:FirstHitsFormArgs,
+        docStruct:string|null,
+        sentStruct:string|null
     ) {
         super(
             dispatcher,
             {
-                docStructValues: {}
+                docStructValues: {},
+                docStruct,
+                sentStruct
             }
         );
         this.layoutModel = layoutModel;
         this.syncInitialArgs = syncInitialArgs;
 
-        this.addActionHandler<typeof MainMenuActions.FilterApplyFirstOccurrences>(
-            MainMenuActions.FilterApplyFirstOccurrences.name,
+        this.addActionHandler(
+            MainMenuActions.FilterApplyFirstOccurrencesInDocs,
             action => {
-                this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload})).subscribe({
+                this.syncFrom(
+                    rxOf({
+                        ...this.syncInitialArgs,
+                        ...action.payload,
+                        struct: this.state.docStruct
+                    })
+
+                ).subscribe({
+                    error: err => {
+                        this.layoutModel.showMessage('error',
+                            `Failed to synchronize FirstHitsModel: ${err}`);
+                    }
+                })
+                this.emitChange();
+            }
+        );
+
+        this.addActionHandler(
+            MainMenuActions.FilterApplyFirstOccurrencesInSentences,
+            action => {
+                this.syncFrom(
+                    rxOf({
+                        ...this.syncInitialArgs,
+                        ...action.payload,
+                        struct: this.state.sentStruct
+                    })
+
+                ).subscribe({
                     error: err => {
                         this.layoutModel.showMessage('error',
                             `Failed to synchronize FirstHitsModel: ${err}`);
@@ -145,7 +179,7 @@ export class FirstHitsModel extends StatefulModel<FirstHitsModelState> {
                 (data) => {
                     if (data.form_type === 'firsthits') {
                         this.changeState(state => {
-                            state.docStructValues[data.op_key] = data.doc_struct;
+                            state.docStructValues[data.op_key] = data.struct;
                         });
                     }
                 }

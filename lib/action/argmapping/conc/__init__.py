@@ -52,7 +52,7 @@ async def build_conc_form_args(plugin_ctx: PluginCtx, corpora: List[str], data: 
     elif tp == 'subhits':
         return SubHitsFilterFormArgs(persist=False).updated(data, op_key)
     elif tp == 'firsthits':
-        return FirstHitsFilterFormArgs(persist=False, doc_struct=data['doc_struct']).updated(data, op_key)
+        return FirstHitsFilterFormArgs(persist=False, struct=data['struct']).updated(data, op_key)
     else:
         raise ValueError(f'cannot determine stored conc args class from type {tp}')
 
@@ -85,7 +85,7 @@ async def decode_raw_query(
             ans.append((raw_op, SubHitsFilterFormArgs(persist=True).from_raw_query(raw_op, corpora[0])))
         elif op == 'F':
             ans.append(
-                (raw_op, FirstHitsFilterFormArgs(persist=True, doc_struct='').from_raw_query(raw_op, corpora[0])))
+                (raw_op, FirstHitsFilterFormArgs(persist=True, struct='').from_raw_query(raw_op, corpora[0])))
         elif op in ('n', 'N', 'p', 'P'):
             ans.append((
                 raw_op,
