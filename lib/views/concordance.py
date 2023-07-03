@@ -283,7 +283,21 @@ async def get_conc_cache_status(amodel: ConcActionModel, req: KRequest, resp: KR
     return await _get_conc_cache_status(amodel)
 
 
-async def view_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse, asnc: int, user_id: int):
+async def view_conc(
+        amodel: ConcActionModel, req: KRequest, resp: KResponse, asnc: int, user_id: int, disable_auclp=False):
+    """
+    Args:
+        amodel:
+        req:
+        resp:
+        asnc:
+        user_id:
+        disable_auclp: specifies whether the "please sign in to see more features" pop-up should
+                       be disabled - no matter what says user auth. status or application config.
+                       I.e. setting this to true turns the pop-up off.
+    Returns:
+
+    """
     corpus_info = await amodel.get_corpus_info(amodel.args.corpname)
     ml_position_filters = {}
     if corpus_info.part_of_ml_corpus:
@@ -413,6 +427,7 @@ async def view_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse, asn
         out['conc_cache_key'] = os.path.splitext(os.path.basename(conc.get_conc_file()))[0]
     else:
         out['conc_cache_key'] = None
+    out['disable_auclp'] = disable_auclp
     return out
 
 

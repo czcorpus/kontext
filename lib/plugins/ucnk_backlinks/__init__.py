@@ -49,13 +49,18 @@ async def col_lemma(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     cl = req.args.get('cl')
     if not cl:
         raise UserReadableException('Missing parameter "cl"')
-    if amodel.args.corpname not in ('syn_v11', ):
+    if amodel.args.corpname not in ('syn_v11',):
         raise UserReadableException('Function not supported in {}'.format(amodel.args.corpname))
-    amodel.args.q = ['q[col_lemma="{cl}"][]*[col_lemma="{cl}"] within <s />'.format(cl=cl)]
     pf = req.args.get('p')
-    if pf:
-        amodel.args.q.append(f'p0 0 1 [lemma="{pf}"]')
+    if not pf:
+        pf = '.*'
+    pw = req.args.get('pw')
+    if not pw:
+        pw = '.*'
+    cl_attr = 'col_lemma'
+    amodel.args.q = [f'q(meet [{cl_attr}="{cl}"][{cl_attr}="{cl}" & lemma="{pf}"] 0 15)']
     amodel.args.q.extend(['D', 'f'])
+    amodel.args.q.append(f'p0 0 1 (meet[{cl_attr}="{cl}"][{cl_attr}="{cl}" & lc="{pw}"] -15 0)')
     amodel.args.refs = '=doc.title,=doc.pubyear'
     amodel.args.pagesize = 50
     amodel.args.attrs = 'word'
@@ -63,7 +68,7 @@ async def col_lemma(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     amodel.args.base_viewattr = 'word'
     amodel.args.structs = ''
     amodel.args.viewmode = 'sen'
-    return await view_conc(amodel, req, resp, 0, req.session_get('user', 'id'))
+    return await view_conc(amodel, req, resp, 0, req.session_get('user', 'id'), disable_auclp=True)
 
 
 @bp.route('/ic_tags')
