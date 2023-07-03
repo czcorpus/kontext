@@ -81,18 +81,26 @@ export const ConcLines = styled.table`
     td.ref a {
         text-decoration: none;
         font-size: 0.85em;
-        white-space: nowrap;
         cursor: pointer;
         color: #009EE0;
         font-weight: bold;
         max-width: 12em;
         overflow: hidden;
         text-overflow: ellipsis;
-        padding-right: 2em;
 
         .item:not(:last-child)::after {
             content: " \u2726  ";
             white-space: pre;
+        }
+
+        ${theme.mediaPhone} {
+            white-space: wrap;
+            padding-right: 1em;
+        }
+
+        ${theme.mediaNoPhone} {
+            white-space: nowrap;
+            padding-right: 2em;
         }
     }
 
