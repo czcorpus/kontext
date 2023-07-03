@@ -957,7 +957,7 @@ async def filter_firsthits(amodel: ConcActionModel, req: KRequest, resp: KRespon
     elif len(amodel.args.align) > 0:
         raise UserReadableException('The function is not supported for aligned corpora')
     amodel.set_curr_conc_form_args(FirstHitsFilterFormArgs(
-        persist=True, doc_struct=amodel.corp.get_conf('DOCSTRUCTURE')))
+        persist=True, struct=req.args.get('fh_struct')))
     amodel.args.q.append('F{0}'.format(req.args.get('fh_struct')))
     return await view_conc(amodel, req, resp, 0, req.session_get('user', 'id'))
 

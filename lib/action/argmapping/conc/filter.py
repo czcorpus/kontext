@@ -165,7 +165,7 @@ class SubHitsFilterFormArgs(ConcFormArgs[_SubHitsFilterFormArgs], AbstractRawQue
 @dataclass_json
 @dataclass
 class _FirstHitsFilterFormArgs:
-    doc_struct: str
+    struct: str
     form_type: str = 'firsthits'
 
 
@@ -175,12 +175,12 @@ class FirstHitsFilterFormArgs(ConcFormArgs[_FirstHitsFilterFormArgs], AbstractRa
     filter form arguments represented by the _SubHitsFilterFormArgs data class.
     """
 
-    def __init__(self, persist: bool, doc_struct: str) -> None:
+    def __init__(self, persist: bool, struct: str) -> None:
         super().__init__(persist)
-        self.data = _FirstHitsFilterFormArgs(doc_struct=doc_struct)
+        self.data = _FirstHitsFilterFormArgs(struct=struct)
 
     def from_raw_query(self, q, corpname) -> 'FirstHitsFilterFormArgs':
-        self.data.doc_struct = q[1:]
+        self.data.struct = q[1:]
         return self
 
 class ContextFilterArgsConv:
