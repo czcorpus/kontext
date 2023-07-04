@@ -605,21 +605,23 @@ class ConcActionModel(CorpusActionModel):
         out_list: List[ConcDescJsonItem] = []
         conc_desc = await conclib.get_conc_desc(corpus=self.corp, q=self.args.q, cutoff=self.args.cutoff)
 
-        def nicearg(arg):
+        def nicearg(arg, oid):
+            if oid == 'F':
+                return arg
             args = arg.split('"')
             niceargs = []
             prev_val = ''
             prev_other = ''
-            for i in range(len(args)):
+            for i, arg_i in enumerate(args):
                 if i % 2:
-                    tmparg = args[i].strip('\\').replace('(?i)', '')
+                    tmparg = arg_i.strip('\\').replace('(?i)', '')
                     if tmparg != prev_val or '|' not in prev_other:
                         niceargs.append(tmparg)
                     prev_val = tmparg
                 else:
-                    if args[i].startswith('within'):
+                    if arg_i.startswith('within'):
                         niceargs.append('within')
-                    prev_other = args[i]
+                    prev_other = arg_i
             return ', '.join(niceargs)
         # o,  a,    u1,   u2,   s,           opid
         # op, args, url1, url2, size, fsize, opid
@@ -631,7 +633,7 @@ class ConcActionModel(CorpusActionModel):
                 op=self._req.translate(op_item.op),
                 opid=op_item.opid,
                 args=op_item.args,
-                nicearg=nicearg(op_item.args),
+                nicearg=nicearg(op_item.args, op_item.opid),
                 tourl=urllib.parse.urlencode(op_item.url2),
                 size=op_item.size,
                 fullsize=op_item.fullsize))

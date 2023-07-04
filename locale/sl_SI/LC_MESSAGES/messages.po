@@ -263,8 +263,8 @@ msgstr "Prvi zadetki v dokumentih"
 msgid "First hits in sentences"
 msgstr "First hits in sentences UNTRANSLATED"
 
-msgid "First hits in ..."
-msgstr "Prvi zadetki v ..."
+msgid "First hits in"
+msgstr "Prvi zadetki v"
 
 msgid ""
 "Please note that KonText is not compatible with Microsoft Internet Explorer "
