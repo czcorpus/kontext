@@ -109,7 +109,7 @@ async def get_conc_desc(
                 's': _t('Sort'),
                 'f': _t('Shuffle'),
                 'D': translator('Remove nested matches'),
-                'F': translator('First hits in ...'),
+                'F': translator('First hits in'),
                 'n': _t('Negative filter'),
                 'N': _t('Negative filter (excluding KWIC)'),
                 'p': _t('Positive filter'),
