@@ -52,7 +52,8 @@ async def build_conc_form_args(plugin_ctx: PluginCtx, corpora: List[str], data: 
     elif tp == 'subhits':
         return SubHitsFilterFormArgs(persist=False).updated(data, op_key)
     elif tp == 'firsthits':
-        return FirstHitsFilterFormArgs(persist=False, struct=data['struct']).updated(data, op_key)
+        struct = data['doc_struct'] if 'doc_struct' in data else data['struct'] # doc_struct is a legacy key
+        return FirstHitsFilterFormArgs(persist=False, struct=struct).updated(data, op_key)
     else:
         raise ValueError(f'cannot determine stored conc args class from type {tp}')
 
