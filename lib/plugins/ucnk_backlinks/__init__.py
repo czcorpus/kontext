@@ -59,7 +59,7 @@ async def col_lemma(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         pw = '.*'
     cl_attr = 'col_lemma'
     amodel.args.q = [f'q(meet [{cl_attr}="{cl}"][{cl_attr}="{cl}" & lemma="{pf}"] 0 15)']
-    amodel.args.q.extend(['D', 'f'])
+    amodel.args.q.extend(['Fs', 'f'])
     amodel.args.q.append(f'p0 0 1 (meet[{cl_attr}="{cl}"][{cl_attr}="{cl}" & lc="{pw}"] -15 0)')
     amodel.args.refs = '=doc.title,=doc.pubyear'
     amodel.args.pagesize = 50
