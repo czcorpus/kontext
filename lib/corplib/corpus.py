@@ -95,7 +95,15 @@ class KCorpus(AbstractKCorpus):
         """
         Get corpus configuration entry from its configuration registry file
         """
-        return self._corp.get_conf(key)
+        v = self._corp.get_conf(key)
+        if key == 'DOCSTRUCTURE' and v == 'doc' and v not in self.get_structs():
+            # Manatee returns 'doc' in case DOCSTRING is not defined.
+            # But such a value is useless in case the structure 'doc'
+            # does not exist.
+            return ''
+        return v
+
+
 
     def get_confpath(self):
         return self._corp.get_confpath()

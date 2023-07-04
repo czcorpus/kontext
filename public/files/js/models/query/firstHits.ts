@@ -27,12 +27,28 @@ import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { Actions } from './actions';
 import { Actions as ConcActions } from '../../models/concordance/actions';
 import { AjaxConcResponse } from '../concordance/common';
-import { HTTP, List } from 'cnc-tskit';
+import { HTTP } from 'cnc-tskit';
 import { FirstHitsFormArgs } from './formArgs';
 
 
 export interface FirstHitsModelState {
-    docStructValues:{[key:string]:string};
+    /**
+     * opStructMapping maps between operation key (aka concordance ID)
+     * and applied structure for the operation.
+     * Please note that for a new operation, operation key is '__new__'
+     */
+    opStructMapping:{[key:string]:string};
+
+    /**
+     * A fixed value specifying a structure representing a document.
+     */
+    docStruct:string|null;
+
+    /**
+     * A fixed value specifying a structure representing a sentence.
+     */
+    sentStruct:string|null;
+
 }
 
 
@@ -46,21 +62,52 @@ export class FirstHitsModel extends StatefulModel<FirstHitsModelState> {
     constructor(
         dispatcher:IFullActionControl,
         layoutModel:PageModel,
-        syncInitialArgs:FirstHitsFormArgs
+        syncInitialArgs:FirstHitsFormArgs,
+        docStruct:string|null,
+        sentStruct:string|null
     ) {
         super(
             dispatcher,
             {
-                docStructValues: {}
+                opStructMapping: {},
+                docStruct,
+                sentStruct
             }
         );
         this.layoutModel = layoutModel;
         this.syncInitialArgs = syncInitialArgs;
 
-        this.addActionHandler<typeof MainMenuActions.FilterApplyFirstOccurrences>(
-            MainMenuActions.FilterApplyFirstOccurrences.name,
+        this.addActionHandler(
+            MainMenuActions.FilterApplyFirstOccurrencesInDocs,
             action => {
-                this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload})).subscribe({
+                this.syncFrom(
+                    rxOf({
+                        ...this.syncInitialArgs,
+                        ...action.payload,
+                        struct: this.state.docStruct
+                    })
+
+                ).subscribe({
+                    error: err => {
+                        this.layoutModel.showMessage('error',
+                            `Failed to synchronize FirstHitsModel: ${err}`);
+                    }
+                })
+                this.emitChange();
+            }
+        );
+
+        this.addActionHandler(
+            MainMenuActions.FilterApplyFirstOccurrencesInSentences,
+            action => {
+                this.syncFrom(
+                    rxOf({
+                        ...this.syncInitialArgs,
+                        ...action.payload,
+                        struct: this.state.sentStruct
+                    })
+
+                ).subscribe({
                     error: err => {
                         this.layoutModel.showMessage('error',
                             `Failed to synchronize FirstHitsModel: ${err}`);
@@ -126,7 +173,7 @@ export class FirstHitsModel extends StatefulModel<FirstHitsModelState> {
                 ...this.layoutModel.getConcArgs(),
                 q: ['~' + concId],
                 format: 'json',
-                fh_struct: this.state.docStructValues[opKey]
+                fh_struct: this.state.opStructMapping[opKey]
             }
         );
     }
@@ -145,7 +192,7 @@ export class FirstHitsModel extends StatefulModel<FirstHitsModelState> {
                 (data) => {
                     if (data.form_type === 'firsthits') {
                         this.changeState(state => {
-                            state.docStructValues[data.op_key] = data.doc_struct;
+                            state.opStructMapping[data.op_key] = data.struct;
                         });
                     }
                 }

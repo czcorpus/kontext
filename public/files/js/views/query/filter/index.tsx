@@ -72,6 +72,7 @@ export interface SubHitsFormState {
 
 export interface FirstHitsFormProps {
     formType:Kontext.ConcFormTypes.FIRSTHITS;
+    structure:string;
     operationIdx?:number;
     opKey:string;
 }
@@ -537,7 +538,7 @@ export function init({
                     <label>
                         {he.translate('query__used_first_hits_struct')}:{'\u00a0'}
                         <select disabled>
-                            <option>{this.props.docStructValues[this.props.opKey]}</option>
+                            <option>{this.props.opStructMapping[this.props.opKey]}</option>
                         </select>
                     </label>
                     <p>{he.translate('query__the_form_no_params_to_change')}.</p>

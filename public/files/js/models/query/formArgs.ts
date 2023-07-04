@@ -145,7 +145,7 @@ export interface SwitchMainCorpArgs extends ConcFormArgs {
 
 export interface FirstHitsFormArgs extends ConcFormArgs {
     form_type:Kontext.ConcFormTypes.FIRSTHITS|Kontext.ConcFormTypes.LOCKED;
-    doc_struct:string;
+    struct:string;
 }
 
 export interface ShuffleFormArgs extends ConcFormArgs {

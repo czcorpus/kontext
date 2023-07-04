@@ -508,6 +508,8 @@ class CorpusActionModel(UserActionModel):
         result['righttoleft'] = True if self.corp.get_conf('RIGHTTOLEFT') else False
         corp_info = await self.get_corpus_info(getattr(self.args, 'corpname'))
         result['bib_conf'] = corp_info.metadata
+        result['sentence_struct'] = corp_info.sentence_struct
+        result['doc_struct'] = self.corp.get_conf('DOCSTRUCTURE')
         result['simple_query_default_attrs'] = corp_info.simple_query_default_attrs
         if corp_info.preflight_subcorpus:
             result['conc_preflight'] = dict(

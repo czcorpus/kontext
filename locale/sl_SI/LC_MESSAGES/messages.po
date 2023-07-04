@@ -260,6 +260,12 @@ msgstr ""
 msgid "First hits in documents"
 msgstr "Prvi zadetki v dokumentih"
 
+msgid "First hits in sentences"
+msgstr "First hits in sentences UNTRANSLATED"
+
+msgid "First hits in ..."
+msgstr "Prvi zadetki v ..."
+
 msgid ""
 "Please note that KonText is not compatible with Microsoft Internet Explorer "
 "browser which has been discontinued by Microsoft in favour of the Edge "

@@ -162,11 +162,20 @@ class Filter:
             MainMenu.FILTER('subhits'), 'Remove nested matches', 'MAIN_MENU_FILTER_APPLY_SUBHITS_REMOVE')
     )
 
-    filter_each_first: EventTriggeringItem = field(
+    filter_each_first_doc: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
-            MainMenu.FILTER(
-                'each-first'), 'First hits in documents', 'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES'
-        ).enable_if(lambda d: len(d.get('aligned_corpora', [])) == 0)
+            MainMenu.FILTER('each-first-doc'),
+            'First hits in documents',
+            'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES_IN_DOCS'
+        ).enable_if(lambda d: len(d.get('aligned_corpora', [])) == 0 and d.get('doc_struct', None))
+    )
+
+    filter_each_first_sent: EventTriggeringItem = field(
+        default_factory=lambda: EventTriggeringItem(
+            MainMenu.FILTER('each-first-sent'),
+            'First hits in sentences',
+            'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES_IN_SENTENCES'
+        ).enable_if(lambda d: bool(d.get('sentence_struct', None)))
     )
 
 
