@@ -104,9 +104,12 @@ class FilterFormArgs(ConcFormArgs[_FilterFormArgs], AbstractRawQueryDecoder):
             self.data.inclkwic = False
         self.data.filfpos = srch.group(2)
         self.data.filtpos = srch.group(3)
-        if srch.group(4) != '1':
-            raise ValueError(f'unsupported token selection {srch.group(4)}; only \'1\' is supported')
-        self.data.filfl = 'f'
+        if srch.group(4) == '1':
+            self.data.filfl = 'f'
+        elif srch.group(4) == '-1':
+            self.data.filfl = 'l'
+        else:
+            raise ValueError(f'unsupported token selection value {srch.group(4)}; only 1 and -1 are supported')
         self.data.query = srch.group(5)
         self.data.query_type = 'advanced'
         return self
