@@ -98,7 +98,7 @@ class FilterFormArgs(ConcFormArgs[_FilterFormArgs], AbstractRawQueryDecoder):
         if not srch:
             raise ValueError('unsupported filter expression: {}'.format(q))
         self.data.pnfilter = srch.group(1)
-        if srch[0] in ('n', 'p'):
+        if srch.group(1) in ('n', 'p'):
             self.data.inclkwic = True
         else:
             self.data.inclkwic = False
