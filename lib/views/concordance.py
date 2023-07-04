@@ -643,6 +643,8 @@ async def concdesc_json(amodel: ConcActionModel, req: KRequest, resp: KResponse)
                     f'{k}: {v}' for k, v in form.data.curr_queries.items())
         elif isinstance(form, FilterFormArgs):
             cd_item.nicearg = form.data.query
+        elif isinstance(form, FirstHitsFilterFormArgs):
+            cd_item.nicearg = form.data.struct
         cd_item.conc_persistence_op_id = pipeline[i].op_key
     return {'Desc': [x.to_dict() for x in conc_desc]}
 

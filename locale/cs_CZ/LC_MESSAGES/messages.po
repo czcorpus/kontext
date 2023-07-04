@@ -420,8 +420,8 @@ msgstr "První nálezy v dokumentech"
 msgid "First hits in sentences"
 msgstr "První nálezy ve větách"
 
-msgid "First hits in ..."
-msgstr "První nálezy v ..."
+msgid "First hits in"
+msgstr "První nálezy v"
 
 msgid "Sign in"
 msgstr "Přihlášení"
