@@ -18,10 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { IFullActionControl, StatefulModel } from 'kombo';
+import { ExtractPayload, IFullActionControl, StatefulModel } from 'kombo';
 import { throwError, Observable, interval, Subscription, forkJoin } from 'rxjs';
 import { tap, map, concatMap } from 'rxjs/operators';
-import { List, pipe, HTTP, tuple, Dict } from 'cnc-tskit';
+import { List, pipe, HTTP, tuple, Dict, Rx } from 'cnc-tskit';
 
 import * as ViewOptions from '../../types/viewOptions';
 import { PageModel } from '../../app/page';
@@ -601,7 +601,20 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         this.addActionHandler(
             Actions.SwitchKwicSentMode,
             action => {
-                this.changeViewMode().subscribe({
+                this.waitForAction({}, (action, syncData) => {
+                    return Actions.isPublishStoredLineSelections(action) ?
+                        null : syncData;
+                }).pipe(
+                    map(v => (v as typeof Actions.PublishStoredLineSelections).payload),
+                    concatMap(
+                        v => Rx.zippedWith(v, this.changeViewMode(v))
+                    ),
+                    tap(
+                        ([_, selections]) => {
+                            this.applyLineSelections(selections);
+                        }
+                    )
+                ).subscribe({
                     next: () => {
                         this.emitChange();
                     },
@@ -609,14 +622,16 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         console.error(err);
                         this.layoutModel.showMessage('error', err);
                         this.emitChange();
+                    },
+                    complete: () => {
+                        Dict.forEach(
+                            (_, kcAttr) => {
+                                this.reloadAlignedHighlights(kcAttr, true);
+                            },
+                            this.state.highlightWordsStore
+                        );
                     }
                 });
-                Dict.forEach(
-                    (_, kcAttr) => {
-                        this.reloadAlignedHighlights(kcAttr, true);
-                    },
-                    this.state.highlightWordsStore
-                );
             }
         );
 
@@ -1381,7 +1396,9 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             {'sen': 'kwic', 'kwic': 'sen'}[this.state.viewMode];
     }
 
-    private changeViewMode():Observable<ConcViewMode> {
+    private changeViewMode(
+        lineSelPayload:ExtractPayload<typeof Actions.PublishStoredLineSelections>
+    ):Observable<ConcViewMode> {
         const viewMode = this.getFlippedViewModeValue()
         this.changeState(state => {state.viewMode = viewMode});
         this.layoutModel.updateConcArgs({viewmode: this.state.viewMode});

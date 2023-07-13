@@ -33,6 +33,7 @@ import { LineSelections, LineSelectionModes, LineSelValue, ConcLineSelection, Aj
 import { Actions } from '../actions';
 import { Actions as UserActions } from '../../user/actions';
 import { Actions as GlobalActions } from '../../common/actions';
+import { Actions as ConcActions } from '../../concordance/actions';
 import { IPageLeaveVoter } from '../../common/pageLeave';
 import * as copy from 'copy-to-clipboard';
 
@@ -423,7 +424,7 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
 
 
         this.addActionHandler(
-            [Actions.ChangePage, Actions.ReloadConc],
+            [Actions.ChangePage, Actions.ReloadConc, ConcActions.SwitchKwicSentMode],
             action => {
                 this.dispatchSideEffect(
                     Actions.PublishStoredLineSelections,
