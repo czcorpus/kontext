@@ -844,6 +844,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
+
         this.addActionHandler(
             Actions.RenameSelectionGroupDone,
             action => {
@@ -918,8 +919,10 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         ([tokenNum,,]) => line.languages[0].tokenNumber === tokenNum,
                         data.selections
                     );
-                    const lineGroup = srch ? srch[2] : line.lineGroup;
-                    return {...line, lineGroup};
+                    return {
+                        ...line,
+                        lineGroup: srch ? srch[2] : line.lineGroup
+                    };
                 },
                 state.lines
             );
@@ -1268,6 +1271,11 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 resp => {
                     this.changeState(state => {
                         this.importData(state, resp);
+                        state.lineGroupIds = attachColorsToIds(
+                            resp.lines_groups_numbers,
+                            v => v,
+                            mapIdToIdWithColors
+                        );
                     });
                     this.pushHistoryState({
                         name: Actions.ReloadConc.name,
