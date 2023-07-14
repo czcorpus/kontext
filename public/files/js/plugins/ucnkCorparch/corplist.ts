@@ -17,11 +17,11 @@
  */
 
 import * as PluginInterfaces from '../../types/plugins';
-import * as corplistDefault from '../defaultCorparch/corplist';
+import * as corplistDefault from '../corparch/corplist';
 import * as Kontext from '../../types/kontext';
 import { IFullActionControl, StatelessModel } from 'kombo';
 import { Observable } from 'rxjs';
-import { CorplistItem } from '../defaultCorparch/common';
+import { CorplistItem } from '../corparch/common';
 import { Actions} from './actions';
 import { HTTP } from 'cnc-tskit';
 import { IPluginApi } from '../../types/plugins/common';

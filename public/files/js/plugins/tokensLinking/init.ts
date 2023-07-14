@@ -29,7 +29,7 @@ interface PluginData {
 }
 
 
-export class DefaultTokensLinkingPlugin implements PluginInterfaces.TokensLinking.IPlugin {
+export class TokensLinkingPlugin implements PluginInterfaces.TokensLinking.IPlugin {
 
     private pluginApi:IPluginApi;
 
@@ -62,7 +62,7 @@ export const create:PluginInterfaces.TokensLinking.Factory = (
             pluginApi:IPluginApi,
     ) => {
     const conf = pluginApi.getConf<PluginData>('pluginData');
-    const plg = new DefaultTokensLinkingPlugin(
+    const plg = new TokensLinkingPlugin(
         pluginApi,
     );
     plg.init();

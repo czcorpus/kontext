@@ -9,7 +9,7 @@
                 <value>default_query_suggest</value>
             </element>
             <element name="js_module">
-                <value>defaultQuerySuggest</value>
+                <value>querySuggest</value>
             </element>
             <element name="conf_path">
                 <a:documentation>

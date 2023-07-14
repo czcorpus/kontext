@@ -8,7 +8,7 @@
                 <value>default_kwic_connect</value>
             </element>
             <element name="js_module">
-                <value>defaultKwicConnect</value>
+                <value>kwicConnect</value>
             </element>
             <element name="ttl">
                 <data type="nonNegativeInteger" />

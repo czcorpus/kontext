@@ -8,7 +8,7 @@
                 <value>default_tokens_linking</value>
             </element>
             <element name="js_module">
-                <value>defaultTokensLinking</value>
+                <value>tokensLinking</value>
             </element>
             <element name="ttl">
                 <data type="nonNegativeInteger" />

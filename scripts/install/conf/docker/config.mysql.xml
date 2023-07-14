@@ -82,7 +82,7 @@
         <application_bar/>
         <auth>
             <module>mysql_auth</module>
-            <js_module>defaultAuth</js_module>
+            <js_module>auth</js_module>
             <anonymous_user_id>1</anonymous_user_id>
             <auth_cookie_name>kontext_session</auth_cookie_name>
             <login_url>/user/login</login_url>
@@ -105,7 +105,7 @@
         </query_persistence>
         <corparch>
             <module>mysql_corparch</module>
-            <js_module>defaultCorparch</js_module>
+            <js_module>corparch</js_module>
             <default_page_list_size>30</default_page_list_size>
             <tag_prefix>+</tag_prefix>
             <max_num_hints>10</max_num_hints>
@@ -137,7 +137,7 @@
         </export_freq2d>
         <footer_bar>
             <module>default_footer_bar</module>
-            <js_module>defaultFooterBar</js_module>
+            <js_module>footerBar</js_module>
         </footer_bar>
         <getlang>
             <module>default_getlang</module>

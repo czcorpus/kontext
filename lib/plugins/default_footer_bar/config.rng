@@ -7,7 +7,7 @@
                 <value>default_footer_bar</value>
             </element>
             <element name="js_module">
-                <value>defaultFooterBar</value>
+                <value>footerBar</value>
             </element>
             <optional>
                 <element name="content_dir">

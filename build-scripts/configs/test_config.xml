@@ -131,7 +131,7 @@
         </getlang>
         <query_history>
             <module>default_query_history</module>
-            <js_module>defaultQueryHistory</js_module>
+            <js_module>queryHistory</js_module>
             <history_max_query_size>250</history_max_query_size>
             <page_num_records>10</page_num_records>
             <page_append_records>5</page_append_records>
@@ -162,7 +162,7 @@
         <subcmixer/>
         <syntax_viewer>
             <module>default_syntax_viewer</module>
-            <js_module>defaultSyntaxViewer</js_module>
+            <js_module>syntaxViewer</js_module>
             <config_path>/opt/kontext/installation/conf/syntax-viewer.json</config_path>
         </syntax_viewer>
         <corparch>
@@ -183,7 +183,7 @@
         </subc_storage>
         <taghelper>
             <module>default_taghelper</module>
-            <js_module>defaultTaghelper</js_module>
+            <js_module>taghelper</js_module>
             <clear_interval>86400</clear_interval>
             <tags_cache_dir>/path/to/tags/cache</tags_cache_dir>
             <taglist_path>/path/to/tag/xml/def</taglist_path>

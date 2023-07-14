@@ -7,7 +7,7 @@
                 <value>default_corparch</value>
             </element>
             <element name="js_module">
-                <value>defaultCorparch</value>
+                <value>corparch</value>
             </element>
             <element name="file">
                 <text />

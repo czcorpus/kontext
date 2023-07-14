@@ -9,7 +9,7 @@
         "jsx": "react",
         "moduleResolution": "node",
         "paths": {
-            "plugins/corparch/*": ["./public/files/js/plugins/defaultCorparch/*"],
+            "plugins/corparch/*": ["./public/files/js/plugins/corparch/*"],
             "plugins/syntaxViewer/*": ["./public/files/js/plugins/syntaxViewer2/*"]
         }
     },
