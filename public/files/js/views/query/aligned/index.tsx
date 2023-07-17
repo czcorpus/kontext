@@ -367,31 +367,38 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
 
         if (props.alignedCorpora.length > 0) {
             return (
-                <section className="AlignedCorporaLite">
-                    <h2>
+                <S.AlignedCorporaLite>
+                    <SC.ExpandableSectionLabel>
                         <layoutViews.ExpandButton isExpanded={props.alignedCorpora.length > 0} />
                         <span>{he.translate('query__aligned_corpora_hd')}</span>
-                    </h2>
+                    </SC.ExpandableSectionLabel>
                     <div className="contents">
-                        <table>
+                        <table className="parallel-queries">
+                            <tbody>
                             {List.map(
-                                item => <tr>
-                                    <td>{findCorpusLabel(item)}:</td>
-                                    <td>{
-                                        props.queries[item].queryHtml ?
-                                        <span dangerouslySetInnerHTML={{__html: props.queries[item].queryHtml}}/> :
-                                        "-- " + he.translate('qhistory__blank_query') +" --"
-                                    }</td>
-                                </tr>,
+                                (item, i) => (
+                                    <tr key={`${i}:{item}`}>
+                                        <th>{findCorpusLabel(item)}:</th>
+                                        <td>{
+                                            props.queries[item].queryHtml ?
+                                            <SC.SyntaxHighlight dangerouslySetInnerHTML={{__html: props.queries[item].queryHtml}}/> :
+                                            <pre>-- {he.translate('qhistory__blank_query')} --</pre>
+                                        }</td>
+                                    </tr>
+                                ),
                                 props.alignedCorpora
                             )}
+                            </tbody>
                         </table>
+                        <p className="hint note" style={{marginLeft: '1.5em'}}>
+                            ({he.translate('query__aligned_queries_cannot_be_changed')})
+                        </p>
                     </div>
-                </section>
+                </S.AlignedCorporaLite>
             );
 
         } else {
-            return <section className="AlignedCorporaLite" />;
+            return <S.AlignedCorporaLite />;
         }
     };
 
