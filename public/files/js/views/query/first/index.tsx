@@ -42,6 +42,8 @@ import { Actions } from '../../../models/query/actions';
 import { TTSelOps } from '../../../models/textTypes/selectionOps';
 import { Actions as HelpActions } from '../../../models/help/actions';
 import * as S from './style';
+import * as SC from '../input/style';
+import * as SQ from '../style';
 import { QueryHelpModel, QueryHelpModelState } from '../../../models/help/queryHelp';
 import { SearchHistoryModel } from '../../../models/searchHistory';
 import { QuickSubcorpModel } from '../../../models/subcorp/quickSubcorp';
@@ -434,11 +436,11 @@ export function init({
 
         if (props.hasSelectedItems) {
             return (
-                <section className="SelectedTextTypesLite specify-text-types">
-                    <h2>
+                <SC.SelectedTextTypesLite className="specify-text-types">
+                    <SQ.ExpandableSectionLabel>
                         <layoutViews.ExpandButton isExpanded={props.hasSelectedItems} />
                         <span>{he.translate('query__chosen_texts')}</span>
-                    </h2>
+                    </SQ.ExpandableSectionLabel>
                     <div className="contents">
                         <ul>
                             {pipe(
@@ -457,11 +459,11 @@ export function init({
                             ({he.translate('query__chosen_texts_cannot_be_changed')})
                         </p>
                     </div>
-                </section>
+                </SC.SelectedTextTypesLite>
             );
 
         } else {
-            return <section className="SelectedTextTypesLite" />;
+            return <SC.SelectedTextTypesLite />;
         }
     }
 

@@ -439,6 +439,7 @@
         "query__lemma_not_avail_using_fallback": "Atribut 'lema' ni na voljo, namesto tega je uporabljen atribut 'besedna zveza'",
         "query__chosen_texts": "Izbrana besedila",
         "query__chosen_texts_cannot_be_changed": "Izbora ne morete spremeniti.",
+        "query__aligned_queries_cannot_be_changed": "Queries in the aligned corpora cannot be changed UNTRANSLATED",
         "query__save_as_query_name_label": "Ime",
         "query__save_as_save": "Shrani",
         "query__save_as_item_saved": "Informacije o poizvedbi so bile shranjene",

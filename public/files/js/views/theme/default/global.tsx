@@ -129,7 +129,8 @@ export const GlobalStyle = createGlobalStyle`
 
     pre {
         background-color: #fff;
-        border: 1px #000 dotted;
+        border: ${theme.inputBorderStyle};
+        border-radius: ${theme.inputBorderRadius};
         margin: 0;
         padding: .5em;
     }

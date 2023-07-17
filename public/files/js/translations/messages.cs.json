@@ -399,6 +399,7 @@
         "query__lemma_not_avail_using_fallback": "Atribut 'lemma' není k dispozici, nastavuji 'fráze'",
         "query__chosen_texts": "Vybrané texty",
         "query__chosen_texts_cannot_be_changed": "Výběr nelze změnit",
+        "query__aligned_queries_cannot_be_changed": "Dotazy v zarovnaných korpusech nelze měnit",
         "query__save_as_query_name_label": "Název",
         "query__save_as_save": "Uložit",
         "query__save_as_item_saved": "Informace k dotazu byly uloženy",
