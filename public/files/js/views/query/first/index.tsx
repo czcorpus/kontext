@@ -120,7 +120,7 @@ export function init({
         querySuggest,
         searchHistoryModel
     });
-    const {AlignedCorpora} = alignedInit({
+    const {AlignedCorpora, AlignedCorporaLite} = alignedInit({
             dispatcher: dispatcher,
             he: he,
             inputViews: inputViews
@@ -539,6 +539,13 @@ export function init({
                                 qsuggPlugin={querySuggest}
                                 tagsets={this.props.tagsets[this.props.corpname]} />
                         </div>
+                        {this.props.corpora.length > 1 || this.props.availableAlignedCorpora.length > 0 ?
+                            <AlignedCorporaLite
+                                availableCorpora={this.props.availableAlignedCorpora}
+                                alignedCorpora={List.tail(this.props.corpora)}
+                                queries={this.props.queries} />
+                            : null
+                        }
                         <inputViews.AdvancedFormFieldset
                                 uniqId="section-specify-context"
                                 formVisible={this.props.contextFormVisible}

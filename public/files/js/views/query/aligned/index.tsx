@@ -59,8 +59,15 @@ export interface AlignedCorporaProps {
     onEnterKey:()=>void;
 }
 
+export interface AlignedCorporaLiteProps {
+    availableCorpora:Array<{n:string; label:string}>;
+    alignedCorpora:Array<string>;
+    queries:{[key:string]:AnyQuery};
+}
+
 export interface AlignedViews {
     AlignedCorpora:React.FC<AlignedCorporaProps>;
+    AlignedCorporaLite:React.FC<AlignedCorporaLiteProps>;
 }
 
 export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedViews {
@@ -349,9 +356,48 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
         );
     };
 
+    // ------------------ <AlignedCorporaLite /> -----------------------------
+
+    const AlignedCorporaLite:React.FC<AlignedCorporaLiteProps> = (props) => {
+
+        const findCorpusLabel = (corpname) => {
+            const ans = props.availableCorpora.find(x => x.n === corpname);
+            return ans ? ans.label : corpname;
+        };
+
+        if (props.alignedCorpora.length > 0) {
+            return (
+                <section className="AlignedCorporaLite">
+                    <h2>
+                        <layoutViews.ExpandButton isExpanded={props.alignedCorpora.length > 0} />
+                        <span>{he.translate('query__aligned_corpora_hd')}</span>
+                    </h2>
+                    <div className="contents">
+                        <table>
+                            {List.map(
+                                item => <tr>
+                                    <td>{findCorpusLabel(item)}:</td>
+                                    <td>{
+                                        props.queries[item].queryHtml ?
+                                        <span dangerouslySetInnerHTML={{__html: props.queries[item].queryHtml}}/> :
+                                        "-- " + he.translate('qhistory__blank_query') +" --"
+                                    }</td>
+                                </tr>,
+                                props.alignedCorpora
+                            )}
+                        </table>
+                    </div>
+                </section>
+            );
+
+        } else {
+            return <section className="AlignedCorporaLite" />;
+        }
+    };
 
     return {
-        AlignedCorpora
+        AlignedCorpora,
+        AlignedCorporaLite,
     };
 
 }
