@@ -249,7 +249,8 @@ class RegistryConf:
         for pos in self.posattrs:
             fromattr_id = None
             mapto_id = None
-            await self._backend.update_corpus_posattr_references(self._corpus_id, pos.name, fromattr_id, mapto_id)
+            await self._backend.update_corpus_posattr_references(
+                cursor, self._corpus_id, pos.name, fromattr_id, mapto_id)
             for pitem in pos.attrs:
                 if pitem.name == 'FROMATTR':
                     fromattr_id = pitem.value
@@ -257,7 +258,7 @@ class RegistryConf:
                     mapto_id = pitem.value
             if fromattr_id is not None or mapto_id is not None:
                 await self._backend.update_corpus_posattr_references(
-                    self._corpus_id, pos.name, fromattr_id, mapto_id)
+                    cursor, self._corpus_id, pos.name, fromattr_id, mapto_id)
 
         if created_rt:
             # positional attributes
