@@ -33,8 +33,8 @@ def watchable(f):
     @wraps(f)
     def fn(slf, token, obj):
         if DEBUG:
-            print(('fn: {0}, tok: {1}, curr: {2}'.format(f.__name__, token if len(token) > 0 else '',
-                                                         obj.__class__.__name__ if obj else None)))
+            print(('fn: {0}, tok: {1}, curr: {2}'.format(
+                f.__name__, token if len(token) > 0 else '', obj.__class__.__name__ if obj else None)))
         return f(slf, token, obj)
     return fn
 
