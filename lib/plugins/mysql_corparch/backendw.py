@@ -277,7 +277,7 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
             'updated = %s, '
             'active = IF(active IS NULL, %s, active), '
             'web = IF(web IS NULL, %s, web), '
-            'collator_locale = IF(collator_locale IS NULL, %s, collator_locale), '
+            'locale = IF(locale IS NULL, %s, locale), '
             'use_safe_font = IF(use_safe_font IS NULL, %s, use_safe_font), '
             'description_cs = IF(description_cs is NULL, %s, description_cs), '
             'size = %s '
@@ -558,9 +558,9 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
             else:
                 sql = None
         else:
-            cols = ['corpus_name', 'structure_name', 'name'] + [SATTR_COLS_MAP[k]
+            cols = ['corpus_name', 'structure_name', 'name', 'position'] + [SATTR_COLS_MAP[k]
                                                                 for k, v in values if k in SATTR_COLS_MAP]
-            vals = [corpus_id, struct_id, name] + [v for k, v in values if k in SATTR_COLS_MAP]
+            vals = [corpus_id, struct_id, name, position] + [v for k, v in values if k in SATTR_COLS_MAP]
             sql = 'INSERT INTO corpus_structattr ({0}) VALUES ({1})'.format(
                 ', '.join(cols), ', '.join(['%s'] * len(vals)))
         try:
