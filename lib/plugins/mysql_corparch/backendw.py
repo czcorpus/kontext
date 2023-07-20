@@ -183,28 +183,28 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
         if install_json.reference.default:
             def_art_id = await self._find_article(cursor, install_json.reference.default)
             if def_art_id is None:
-                def_art_id = await self.save_corpus_article(install_json.reference.default)
+                def_art_id = await self.save_corpus_article(cursor, install_json.reference.default)
         articles.append((def_art_id, 'default'))
 
         other_art_id = None
         if install_json.reference.other_bibliography:
             other_art_id = await self._find_article(cursor, install_json.reference.other_bibliography)
             if other_art_id is None:
-                other_art_id = await self.save_corpus_article(install_json.reference.other_bibliography)
+                other_art_id = await self.save_corpus_article(cursor, install_json.reference.other_bibliography)
         articles.append((other_art_id, 'other'))
 
         for art in install_json.reference.articles:
             std_art_id = await self._find_article(cursor, art)
             if std_art_id is None:
-                std_art_id = await self.save_corpus_article(art)
+                std_art_id = await self.save_corpus_article(cursor, art)
             articles.append((std_art_id, 'standard'))
 
         for article_id, art_type in articles:
             if article_id:
-                await self.attach_corpus_article(install_json.ident, article_id, art_type)
+                await self.attach_corpus_article(cursor, install_json.ident, article_id, art_type)
 
         # keywords
-        avail_keywords = set(x['id'] for x in await self._ro_backend.load_all_keywords())
+        avail_keywords = set(x['id'] for x in await self._ro_backend.load_all_keywords(cursor))
         for k in install_json.metadata.keywords:
             if k in avail_keywords:
                 vals4 = (install_json.ident, k)
@@ -352,12 +352,12 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
             new_structs[struct.name] = struct
         for i, struct in enumerate(new_structs.keys()):
             await self.save_corpus_structure(
-                install_json.ident, struct, i,
+                cursor, install_json.ident, struct, i,
                 [(a.name, a.value) for a in new_structs[struct].simple_items])
         removed_structures = curr_structs - set(new_structs.keys())
 
         # clear references to structures to be removed
-        for prop, struct in (await self._find_structures_use(install_json.ident)).items():
+        for prop, struct in (await self._find_structures_use(cursor, install_json.ident)).items():
             if struct in removed_structures:
                 await cursor.execute(
                     f'UPDATE {self._corp_table} SET {prop} = NULL WHERE name = %s', (install_json.ident,))
@@ -366,7 +366,7 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
         for i, item in enumerate(added_structattrs):
             s, a = item.split('.')
             props = [(x.name, x.value) for x in new_structattrs[item].attrs]
-            await self.save_corpus_structattr(install_json.ident, s, a, i, props)
+            await self.save_corpus_structattr(cursor, install_json.ident, s, a, i, props)
 
         for structattr in removed_structattrs:
             struct, attr = structattr.split('.')
@@ -544,6 +544,7 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
     async def save_corpus_structattr(self, cursor: Cursor, corpus_id, struct_id, name, position, values):
         """
         """
+        vals = []
         if await self._structattr_exists(cursor, corpus_id, struct_id, name):
             cols = [SATTR_COLS_MAP[k] for k, v in values if k in SATTR_COLS_MAP] + ['position']
             if len(cols) > 0:
