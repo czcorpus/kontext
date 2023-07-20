@@ -31,12 +31,12 @@ class Token(object):
         self._value = value
 
 
-class Tokenizer(object):
+class Tokenizer:
 
     def __init__(self, infile: AsyncTextIOWrapper):
         self._fr = infile
 
-    async def __await__(self):
+    async def __call__(self):
         ans = []
         async for line in self._fr:
             items = re.split(r'\s+', line)
