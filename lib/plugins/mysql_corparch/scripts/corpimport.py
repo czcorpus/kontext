@@ -80,17 +80,20 @@ async def compare_registry_and_db(infile: AsyncTextIOWrapper, variant: str, rbac
             print('Configuration inconsistency detected:')
             print(f'\t database has extra structure(s): {(db_struct - reg_struct)}')
         # structattrs
+
         reg_sattr = set(
             f'{struct.name}.{x.name}' for struct in registry_conf.structs for x in struct.attributes)
-        db_sattr = set(f'{struct}.{x["name"]}' for struct in db_struct for x in await rbackend.load_corpus_structattrs(
-            cursor, corpus_id, struct))
+        db_sattr = set()
+        for struct in db_struct:
+            for x in (await rbackend.load_corpus_structattrs(cursor, corpus_id, struct)):
+                db_sattr.add(f'{struct}.{x["name"]}')
         if len(reg_sattr - db_sattr) > 0:
             print('Configuration inconsistency detected:')
             print(f'\t registry has extra structural attribute(s): {(reg_sattr - db_sattr)}')
         elif len(db_sattr - reg_sattr) > 0:
             print('Configuration inconsistency detected:')
             print(f'\t database has extra structural attribute(s):: {(db_sattr - reg_sattr)}')
-
+        print('comparison done')
 
 async def compare_registry_dir_and_db(dir_path: str, variant: str, rbackend: Backend, wbackend: WriteBackend):
     for item in os.listdir(dir_path):
@@ -277,4 +280,4 @@ async def main():
 
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    asyncio.get_event_loop().run_until_complete(main())
