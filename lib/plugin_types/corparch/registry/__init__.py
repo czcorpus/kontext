@@ -241,10 +241,10 @@ class RegistryConf:
                 return split_clean(',', item.value)
         return []
 
-    async def save(self):
+    async def save(self, cursor):
         # top level keys and values
         created_rt = await self._backend.save_registry_table(
-            self._corpus_id, self._variant, [(x.name, x.value) for x in self.simple_items])
+            cursor, self._corpus_id, self._variant, [(x.name, x.value) for x in self.simple_items])
         # now we fill in self references MAPTO, FROMATTR
         for pos in self.posattrs:
             fromattr_id = None
