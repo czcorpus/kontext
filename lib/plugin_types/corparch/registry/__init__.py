@@ -264,7 +264,7 @@ class RegistryConf:
             # positional attributes
             for pos in self.posattrs:
                 await self._backend.save_corpus_posattr(
-                    self._corpus_id, pos.name, pos.position, [(x.name, x.value) for x in pos.attrs])
+                    cursor, self._corpus_id, pos.name, pos.position, [(x.name, x.value) for x in pos.attrs])
 
             # structures >>>
             for i, struct in enumerate(self.structs):
@@ -284,7 +284,7 @@ class RegistryConf:
             for i, fc in enumerate(self.freqttattrs):
                 struct, attr = sc.split('.')
                 await self._backend.save_freqttattr(self._corpus_id, struct, attr, i)
-        await self._backend.commit()
+        await cursor.connection.commit()
         return dict(corpus_id=self._corpus_id, aligned=self.aligned, created_rt=created_rt)
 
     async def load(self):
