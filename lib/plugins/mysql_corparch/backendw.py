@@ -258,6 +258,9 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
     async def update_corpus_config(self, cursor: Cursor, install_json, registry_conf, corp_size):
         t1 = datetime.datetime.now(
             tz=pytz.timezone('Europe/Prague')).strftime("%Y-%m-%dT%H:%M:%S%z")
+        # fetch and del. taghelper info to prevent foreign key problems
+        taghelper_rows = await self.get_and_delete_taghelper_rows(cursor, install_json.ident)
+
         # simple type properties
         vals1 = (
             install_json.get_group_name(),
@@ -277,7 +280,7 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
             'updated = %s, '
             'active = IF(active IS NULL, %s, active), '
             'web = IF(web IS NULL, %s, web), '
-            'collator_locale = IF(collator_locale IS NULL, %s, collator_locale), '
+            'locale = IF(locale IS NULL, %s, locale), '
             'use_safe_font = IF(use_safe_font IS NULL, %s, use_safe_font), '
             'description_cs = IF(description_cs is NULL, %s, description_cs), '
             'size = %s '
@@ -305,6 +308,10 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
                 if v > max_v:
                     max_k = k
                     max_v = v
+            if max_k.endswith('@punct'):
+                incorr = max_k
+                max_k = max_k[:-len('@punct')] + '.UTF-8'
+                print('WARNING: fixing non-standard locale value {} to {}'.format(incorr, max_k))
             glob_locale = registry_conf.find_simple_attr('LOCALE')
             if not glob_locale:
                 print('INFO: main LOCALE not set')
@@ -378,6 +385,9 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
                 f'DELETE FROM corpus_structure WHERE name = %s AND corpus_name = %s',
                 (struct, install_json.ident))
 
+        # restore taghelper rows
+        await self.restore_taghelper_rows(cursor, install_json.ident, taghelper_rows)
+
     async def save_corpus_article(self, cursor: Cursor, text):
         await cursor.execute('INSERT INTO kontext_article (entry) VALUES (%s)', (text,))
         await cursor.execute('SELECT last_insert_id() AS last_id')
@@ -411,6 +421,24 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
     @staticmethod
     def normalize_raw_attrlist(s):
         return re.sub(r'\s+', '', s.replace('|', ','))
+
+    async def get_and_delete_taghelper_rows(self, cursor: Cursor, corpus_id):
+        cols = ['corpus_name', 'pos_attr', 'feat_attr', 'tagset_type', 'tagset_name', 'widget_enabled', 'doc_url_local', 'doc_url_en']
+        await cursor.execute(
+            'SELECT {} FROM kontext_corpus_taghelper WHERE corpus_name = %s'.format(', '.join(cols)),
+            (corpus_id, ))
+        rows = await cursor.fetchall()
+        await cursor.execute('DELETE FROM kontext_corpus_taghelper WHERE corpus_name = %s', (corpus_id,))
+        print(rows)
+        return rows
+
+    async def restore_taghelper_rows(self, cursor: Cursor, corpus_id, rows):
+        cols = ['corpus_name', 'pos_attr', 'feat_attr', 'tagset_type', 'tagset_name', 'widget_enabled', 'doc_url_local',
+                'doc_url_en']
+        for row in rows:
+            await cursor.execute(
+                'INSERT INTO kontext_corpus_taghelper ({}) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)'.format(', '.join(cols)),
+                tuple(row))
 
     async def save_registry_table(self, cursor: Cursor, corpus_id, variant, values):
         values = dict(values)
@@ -558,9 +586,9 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
             else:
                 sql = None
         else:
-            cols = ['corpus_name', 'structure_name', 'name'] + [SATTR_COLS_MAP[k]
+            cols = ['corpus_name', 'structure_name', 'name', 'position'] + [SATTR_COLS_MAP[k]
                                                                 for k, v in values if k in SATTR_COLS_MAP]
-            vals = [corpus_id, struct_id, name] + [v for k, v in values if k in SATTR_COLS_MAP]
+            vals = [corpus_id, struct_id, name, position] + [v for k, v in values if k in SATTR_COLS_MAP]
             sql = 'INSERT INTO corpus_structattr ({0}) VALUES ({1})'.format(
                 ', '.join(cols), ', '.join(['%s'] * len(vals)))
         try:
