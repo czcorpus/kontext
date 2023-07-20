@@ -103,8 +103,13 @@ async def compare_registry_dir_and_db(dir_path: str, variant: str, rbackend: Bac
 
 
 async def parse_registry_and_import(
-        infile: AsyncTextIOWrapper, collator_locale: str, variant: str, rbackend: Backend,
-        wbackend: WriteBackend, corp_factory: Callable, update_if_exists: bool):
+        infile: AsyncTextIOWrapper,
+        collator_locale: str,
+        variant: str,
+        rbackend: Backend,
+        wbackend: WriteBackend,
+        corp_factory: Callable,
+        update_if_exists: bool):
     corpus_id, registry_conf = await parse_registry(infile, variant, wbackend)
     iconf = InstallJson(ident=corpus_id, collator_locale=collator_locale)
     try:
@@ -125,7 +130,7 @@ async def parse_registry_and_import(
         else:
             raise Exception(
                 f'Corpus {corpus_id} already in database - use the "-u" option to update registry-based data')
-        return await registry_conf.save()
+        return await registry_conf.save(cursor)
 
 
 def remove_comments(infile):
