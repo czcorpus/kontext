@@ -93,8 +93,14 @@ class FilterFormArgs(ConcFormArgs[_FilterFormArgs], AbstractRawQueryDecoder):
     def from_raw_query(self, q, corpname) -> 'FilterFormArgs':
         """
         Parses queries like: p-5 -1 1 [lc="author" & tag="N.*"]
+
+        TODO: please note that while we allow filters like p-1:s 2:s 1 [word="foo"]
+        (i.e. filter using non-token units - here "s" = sentence), the filter form
+        model does not support it so we strip the translated query into p-1 2 1 [word="foo"].
+        This does not concern the query going to Manatee, so the result is correct. But
+        our related form - if reused/reedited will produce a different result.
         """
-        srch = re.search(r'^([nNpP])(-?\d+)\s+(-?\d+)\s+(-?\d+)\s+(.+)$', q)
+        srch = re.search(r'^([nNpP])(-?\d+)(:\w+)?\s+(-?\d+)(:\w+)?\s+(-?\d+)\s+(.+)$', q)
         if not srch:
             raise ValueError('unsupported filter expression: {}'.format(q))
         self.data.pnfilter = srch.group(1)
@@ -103,14 +109,14 @@ class FilterFormArgs(ConcFormArgs[_FilterFormArgs], AbstractRawQueryDecoder):
         else:
             self.data.inclkwic = False
         self.data.filfpos = srch.group(2)
-        self.data.filtpos = srch.group(3)
-        if srch.group(4) == '1':
+        self.data.filtpos = srch.group(4)
+        if srch.group(6) == '1':
             self.data.filfl = 'f'
-        elif srch.group(4) == '-1':
+        elif srch.group(6) == '-1':
             self.data.filfl = 'l'
         else:
-            raise ValueError(f'unsupported token selection value {srch.group(4)}; only 1 and -1 are supported')
-        self.data.query = srch.group(5)
+            raise ValueError(f'unsupported token selection value {srch.group(6)}; only 1 and -1 are supported')
+        self.data.query = srch.group(7)
         self.data.query_type = 'advanced'
         return self
 
