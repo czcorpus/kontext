@@ -618,56 +618,59 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
         laligned:Array<string>;
         lattrs:{[k:string]:Array<string>};
     } {
-        return pipe(
-            state.selectionSteps,
-            List.foldl<
-                TTSelectionStep|AlignedLangSelectionStep,
-                {
-                    corpname:string,
-                    laligned:Array<string>,
-                    lattrs: {[k:string]:Array<string>}
-                }
-            >(
-                (acc, v) => {
-                    if (isAlignedSelectionStep(v)) {
-                        acc.laligned = v.attributes;
-                        return acc;
-
-                    } else {
-                        acc.lattrs = Dict.mergeDict(
-                            (o, n) => n,
-                            Dict.map(
-                                (v, k) => {
-                                    if (v.type === 'encoded') {
-                                        return [v.decodedValue];
-                                    }
-                                    return v.selections;
-                                },
-                                v.values
-                            ),
-                            acc.lattrs,
-                        );
-                        return acc;
+        let initData = {
+            corpname: state.firstCorpus,
+            laligned: pipe(
+                state.initialAlignedCorpora,
+                List.filter(v => v.selected),
+                List.map(v => v.value),
+            ),
+            lattrs: pipe(
+                state.subcorpDefinition,
+                Dict.map((selections, k) => {
+                    if (Array.isArray(selections))
+                        return selections
+                    return [TextTypes.isExportedRegexpSelection(selections) ? selections.regexp : selections]
+                })
+            ),
+        };
+        return state.selectionSteps.length == 0 ?
+            initData :
+            pipe(
+                state.selectionSteps,
+                List.foldl<
+                    TTSelectionStep|AlignedLangSelectionStep,
+                    {
+                        corpname:string,
+                        laligned:Array<string>,
+                        lattrs: {[k:string]:Array<string>}
                     }
-                },
-                {
-                    corpname: state.firstCorpus,
-                    laligned: pipe(
-                        state.initialAlignedCorpora,
-                        List.filter(v => v.selected),
-                        List.map(v => v.value),
-                    ),
-                    lattrs: pipe(
-                        state.subcorpDefinition,
-                        Dict.map((selections, k) => {
-                            if (Array.isArray(selections))
-                                return selections
-                            return [TextTypes.isExportedRegexpSelection(selections) ? selections.regexp : selections]
-                        })
-                    ),
-                }
-            )
-        );
+                >(
+                    (acc, v) => {
+                        if (isAlignedSelectionStep(v)) {
+                            acc.laligned = acc.laligned.concat(v.attributes);
+                            return acc;
+
+                        } else {
+                            acc.lattrs = Dict.mergeDict(
+                                (o, n) => n,
+                                Dict.map(
+                                    (v, k) => {
+                                        if (v.type === 'encoded') {
+                                            return [v.decodedValue];
+                                        }
+                                        return v.selections;
+                                    },
+                                    v.values
+                                ),
+                                acc.lattrs,
+                            );
+                            return acc;
+                        }
+                    },
+                    initData
+                )
+            );
     }
 
     private reloadSizes(state:LiveAttrsModelState, dispatch:SEDispatcher):void {
