@@ -22,7 +22,7 @@ import time
 from dataclasses import dataclass
 
 import plugins
-from action.errors import ServiceUnavailableException
+from action.errors import ServiceUnavailableException, ImmediateRedirectException
 from action.plugin.ctx import PluginCtx
 from action.props import ActionProps
 from dataclasses_json import LetterCase, dataclass_json
@@ -73,7 +73,22 @@ class UcnkDispatchHook(AbstractDispatchHook):
                     await self._db.hash_del(self.bot_clients_key, client_ip)
 
     async def pre_dispatch(self, plugin_ctx, action_props: ActionProps, request):
+        arg = request.args.get('corpname', [''])[0]
+        if arg.startswith('aranea/'):
+            raise ImmediateRedirectException(plugin_ctx.updated_current_url(dict(corpname=arg[len('aranea/'):])))
         await self._check_client(plugin_ctx)
+
+    async def transform_stored_query_data(self, data):
+        if 'corpora' in data:
+            normalized_corpora = []
+            for corp in data['corpora']:
+                if corp.startswith('aranea/'):
+                    normalized_corpora.append(corp[len('aranea/'):])
+                else:
+                    normalized_corpora.append(corp)
+            data['corpora'] = normalized_corpora
+        return data
+
 
 
 @inject(plugins.runtime.DB)
