@@ -190,10 +190,11 @@ class CorpusActionModel(UserActionModel):
             True if query params have been loaded else False (which is still not an error)
         """
         url_q = req_args.getlist('q')[:]
-        with plugins.runtime.QUERY_PERSISTENCE as query_persistence:
+        with plugins.runtime.QUERY_PERSISTENCE as query_persistence, plugins.runtime.DISPATCH_HOOK as dh:
             if len(url_q) > 0 and query_persistence.is_valid_id(url_q[0]):
                 self._q_code = url_q[0][1:]
-                self._active_q_data = await query_persistence.open(self._q_code)
+                aqdata = await query_persistence.open(self._q_code)
+                self._active_q_data = await dh.transform_stored_query_data(aqdata)
                 # !!! must create a copy here otherwise _q_data (as prev query)
                 # will be rewritten by self.args.q !!!
                 if self._active_q_data is not None:

@@ -54,3 +54,14 @@ class AbstractDispatchHook(abc.ABC):
             methodname -- processed action method
             action_metadata -- action metadata (added by @inject)
         """
+
+    async def transform_stored_query_data(self, data):
+        """
+        When KonText processes a URL with a query ID, it always restores required
+        internal arguments representing the URL using the loaded values. This
+        function transforms values immediately after they are loaded,
+        i.e. before they are applied elsewhere.
+
+        It can be used e.g. to solve legacy values stored in query persistence database.
+        """
+        return data
