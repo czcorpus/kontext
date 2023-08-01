@@ -269,8 +269,8 @@ class RegistryConf:
             # structures >>>
             for i, struct in enumerate(self.structs):
                 await self._backend.save_corpus_structure(
-                    corpus_id=self._corpus_id, name=struct.name, position=i, values=[
-                        (x.name, x.value) for x in struct.simple_items])
+                    cursor=cursor, corpus_id=self._corpus_id, name=struct.name, position=i,
+                    values=[(x.name, x.value) for x in struct.simple_items])
 
                 for i, structattr in enumerate(struct.attributes):
                     await self._backend.save_corpus_structattr(
