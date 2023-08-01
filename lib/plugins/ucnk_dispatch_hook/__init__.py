@@ -73,7 +73,8 @@ class UcnkDispatchHook(AbstractDispatchHook):
                     await self._db.hash_del(self.bot_clients_key, client_ip)
 
     async def pre_dispatch(self, plugin_ctx, action_props: ActionProps, request):
-        arg = request.args.get('corpname', [''])[0]
+        arg = request.args.getlist('corpname', [''])[0]
+
         if arg.startswith('aranea/'):
             raise ImmediateRedirectException(plugin_ctx.updated_current_url(dict(corpname=arg[len('aranea/'):])))
         await self._check_client(plugin_ctx)
