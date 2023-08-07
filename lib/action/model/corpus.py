@@ -194,7 +194,7 @@ class CorpusActionModel(UserActionModel):
             if len(url_q) > 0 and query_persistence.is_valid_id(url_q[0]):
                 self._q_code = url_q[0][1:]
                 aqdata = await query_persistence.open(self._q_code)
-                self._active_q_data = await dh.transform_stored_query_data(aqdata)
+                self._active_q_data = await dh.transform_stored_query_data(aqdata) if dh is not None else aqdata
                 # !!! must create a copy here otherwise _q_data (as prev query)
                 # will be rewritten by self.args.q !!!
                 if self._active_q_data is not None:
