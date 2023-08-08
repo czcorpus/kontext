@@ -56,5 +56,9 @@ def apply_theme(data, app: Sanic, translate: Callable[[str], str]):
         logo_inline_css=settings.get('theme', 'logo_inline_css', ''),
         online_fonts=settings.get_list('theme', 'fonts'),
         favicon=theme_favicon,
-        favicon_type=theme_favicon_type
+        favicon_type=theme_favicon_type,
+        main_background=os.path.join(public_files_path, 'img/groovepaper2.jpg'),
+        color_default_text='#010101',
+        color_light_text='#8d8c8c',
+        color_default_green='#D1ECBF',
     )
