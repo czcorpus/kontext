@@ -45,11 +45,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
     header#topbar a#logo-wrapper img {display: inline-block;vertical-align: middle;}
     #menu-bar {margin: 0;display: inline-block;white-space: nowrap;background-color: transparent;font-size: 1.2em;width: auto;height: 3em;}
     #main-menu-mount {box-sizing: border-box;margin: 0 0 0 1em;padding: 0 0.7em;display: inline-block;height: 100%;vertical-align: middle;background-color: transparent;border: 2px solid transparent;border-radius: 5px;}
-    #main-menu-mount ul {margin: 0;padding: 0;display: inline-block;list-style-type: none;}
-    #main-menu-mount ul li {display: inline-block;margin-top: 0;padding: 0.6em 0.3em 0 0.3em;line-height: 1.4em;font-weight: normal;border: 1px solid transparent;}
-    #main-menu-mount ul li.disabled .menu-link {color: {{ theme.color_light_text }};}
-    #main-menu-mount ul li .menu-link {display: block;text-decoration: none;color: {{ theme.color_default_text }};}
-    #main-menu-mount ul li.active {position: relative;background-color: {{ theme.color_default_green }};border: 1px solid {{ theme.color_default_green }};}
+    #main-menu-mount > ul {margin: 0;padding: 0;display: inline-block;list-style-type: none;}
+    #main-menu-mount > ul > li {display: inline-block;margin-top: 0;padding: 0.6em 0.3em 0 0.3em;line-height: 1.4em;font-weight: normal;border: 1px solid transparent;}
+    #main-menu-mount > ul > li.disabled .menu-link {color: {{ theme.color_light_text }};}
+    #main-menu-mount > ul > li .menu-link {display: block;text-decoration: none;color: {{ theme.color_default_text }};}
+    #main-menu-mount > ul > li.active {position: relative;background-color: {{ theme.color_default_green }};border: 1px solid {{ theme.color_default_green }};}
 </style>
 
 <link rel="stylesheet" type="text/css" href="{{ files_path }}/dist/{{ page_model }}.css{{ deployment_suff }}" />
