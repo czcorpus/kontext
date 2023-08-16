@@ -525,7 +525,7 @@ class CorpusActionModel(UserActionModel):
             if tagset.ident == corp_info.default_tagset:
                 poslist = tagset.pos_category
                 break
-        result['Wposlist'] = [{'n': x.pos, 'v': x.pattern} for x in poslist]
+        result['Wposlist'] = [{'n': self._req.translate(x.pos), 'v': x.pattern} for x in poslist]
 
     def get_mapped_attrs(self, attr_names: Iterable[str], force_values: Optional[Dict] = None) -> Dict[str, Any]:
         """
@@ -713,7 +713,7 @@ class CorpusActionModel(UserActionModel):
                     if tagset.ident == corp_info.default_tagset:
                         poslist = tagset.pos_category
                         break
-                tpl_out['Wposlist_' + al] = [{'n': x.pos, 'v': x.pattern} for x in poslist]
+                tpl_out['Wposlist_' + al] = [{'n': self._req.translate(x.pos), 'v': x.pattern} for x in poslist]
                 tpl_out['input_languages'][al] = corp_info.metadata.default_virt_keyboard if corp_info.metadata.default_virt_keyboard else corp_info.collator_locale
 
     async def create_preflight_subcorpus(self) -> str:

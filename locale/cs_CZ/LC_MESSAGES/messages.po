@@ -566,3 +566,39 @@ msgstr "Uživatel KonTextu {} vám zaslal odkaz na tabulku frekvenční distribu
 
 msgid "Keywords analysis"
 msgstr "Analýza klíčových slov"
+
+msgid "noun"
+msgstr "podstatné jméno"
+
+msgid "adjective"
+msgstr "přídavné jméno"
+
+msgid "pronoun"
+msgstr "zájmeno"
+
+msgid "numeral"
+msgstr "číslovka"
+
+msgid "verb"
+msgstr "sloveso"
+
+msgid "adverb"
+msgstr "příslovce"
+
+msgid "preposition"
+msgstr "předložka"
+
+msgid "conjunction"
+msgstr "spojka"
+
+msgid "particle"
+msgstr "částice"
+
+msgid "interjection"
+msgstr "citoslovce"
+
+msgid "punctuation"
+msgstr "interpunkce"
+
+msgid "unknown"
+msgstr "neznámý"
