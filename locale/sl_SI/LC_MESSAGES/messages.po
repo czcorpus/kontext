@@ -673,3 +673,39 @@ msgstr "Uživatel KonTextu {} vám zaslal odkaz na tabulku frekvenční distribu
 
 msgid "Keywords analysis"
 msgstr "Keywords analysis UNTRANSLATED"
+
+msgid "noun"
+msgstr "noun UNTRANSLATED"
+
+msgid "adjective"
+msgstr "adjective UNTRANSLATED"
+
+msgid "pronoun"
+msgstr "pronoun UNTRANSLATED"
+
+msgid "numeral"
+msgstr "numeral UNTRANSLATED"
+
+msgid "verb"
+msgstr "verb UNTRANSLATED"
+
+msgid "adverb"
+msgstr "adverb UNTRANSLATED"
+
+msgid "preposition"
+msgstr "preposition UNTRANSLATED"
+
+msgid "conjunction"
+msgstr "conjunction UNTRANSLATED"
+
+msgid "particle"
+msgstr "particle UNTRANSLATED"
+
+msgid "interjection"
+msgstr "interjection UNTRANSLATED"
+
+msgid "punctuation"
+msgstr "punctuation UNTRANSLATED"
+
+msgid "unknown"
+msgstr "unknown UNTRANSLATED"
