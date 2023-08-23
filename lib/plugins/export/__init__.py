@@ -61,8 +61,8 @@ class AbstractConcExportMixin(object):
             else:
                 ans.append([str(item['str']).strip()])
             if add_tail:
-                for tp in item.get('posattrs', []):
-                    ans[-1].append(tp['value'])  # TODO take into account attr role
+                for posattr in item.get('posattrs', []):
+                    ans[-1].append(posattr)  # TODO take into account attr role
         return ' '.join('/'.join(x) for x in ans).strip()
 
     def _process_lang(
