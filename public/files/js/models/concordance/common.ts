@@ -382,6 +382,7 @@ export interface AjaxConcResponse extends ConcQueryResponse {
     result_shuffled:boolean;
     result_arf:number;
     sampled_size:number;
+    page_title:string;
 }
 
 /**

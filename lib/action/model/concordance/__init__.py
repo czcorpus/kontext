@@ -17,16 +17,17 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import hashlib
 import os
 import re
 import urllib.parse
-from typing import Any, Dict, List, Optional, Tuple, Union
-import hashlib
 from collections import OrderedDict
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import conclib
 import plugins
 import settings
+import strings
 from action.argmapping import ConcArgsMapping
 from action.argmapping.conc import build_conc_form_args
 from action.argmapping.conc.filter import (
@@ -104,7 +105,8 @@ class ConcActionModel(CorpusActionModel):
                 curr_subcorp = self.args.usesubcorp
 
                 if prev_corpora and len(curr_corpora) == 1 and prev_corpora[0] == curr_corpora[0]:
-                    args = [('corpname', prev_corpora[0])] + [('align', a) for a in prev_corpora[1:]]
+                    args = [('corpname', prev_corpora[0])] + [('align', a)
+                                                              for a in prev_corpora[1:]]
 
                     subcorpora = await subc_arch.list(
                         self._req.ctx.session.get('user')['id'], SubcListFilterArgs(), corpname=prev_corpora[0])
@@ -347,7 +349,8 @@ class ConcActionModel(CorpusActionModel):
                     if i < len(query_overview):
                         query_overview[i].conc_persistence_op_id = item.op_key
                     elif item.form_type != 'lgroup':
-                        raise RuntimeError('Found a mismatch between Manatee query encoding and stored metadata')
+                        raise RuntimeError(
+                            'Found a mismatch between Manatee query encoding and stored metadata')
 
         # Attach new form args added by the current action.
         if len(self._auto_generated_conc_ops) > 0:
@@ -371,8 +374,14 @@ class ConcActionModel(CorpusActionModel):
                 persist=False, struct=self.corp.get_conf('DOCSTRUCTURE')).to_dict())
         tpl_out['query_overview'] = [x.to_dict() for x in query_overview]
         if len(query_overview) > 0:
-            tpl_out['page_title'] = '{0} / {1}'.format(
-                self.corp.human_readable_corpname, tpl_out['query_overview'][0]['nicearg'])
+            tpl_out['page_title'] = '{0} ({1})'.format(
+                strings.shorten(
+                    f'{self.corp.human_readable_corpname} / {tpl_out["query_overview"][0]["nicearg"]}',
+                    length=80,
+                    nice=True,
+                ),
+                self._req.translate('Concordance'),
+            )
         return [x for x in conc_forms_args.values()]
 
     async def add_globals(self, app, action_props, result):
