@@ -27,6 +27,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import conclib
 import plugins
 import settings
+import strings
 from action.argmapping import ConcArgsMapping
 from action.argmapping.conc import build_conc_form_args
 from action.argmapping.conc.filter import (
@@ -373,8 +374,14 @@ class ConcActionModel(CorpusActionModel):
                 persist=False, struct=self.corp.get_conf('DOCSTRUCTURE')).to_dict())
         tpl_out['query_overview'] = [x.to_dict() for x in query_overview]
         if len(query_overview) > 0:
-            tpl_out['page_title'] = '{0} / {1}'.format(
-                self.corp.human_readable_corpname, tpl_out['query_overview'][0]['nicearg'])
+            tpl_out['page_title'] = '{0} ({1})'.format(
+                strings.shorten(
+                    f'{self.corp.human_readable_corpname} / {tpl_out["query_overview"][0]["nicearg"]}',
+                    length=80,
+                    nice=True,
+                ),
+                self._req.translate('Concordance'),
+            )
         return [x for x in conc_forms_args.values()]
 
     async def add_globals(self, app, action_props, result):

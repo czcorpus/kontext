@@ -341,6 +341,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                     });
 
                 } else {
+                    document.title = action.payload.data.page_title;
                     this.layoutModel.updateConcPersistenceId(action.payload.data.conc_persistence_op_id);
                     this.changeState(state => {
                         this.importData(state, action.payload.data);
