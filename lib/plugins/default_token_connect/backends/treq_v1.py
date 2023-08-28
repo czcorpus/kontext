@@ -149,6 +149,7 @@ class TreqBackend(HTTPBackend):
             treq_link = (self.mk_backlink_addr() + '/index.php', t_args)
             ta_args = self.mk_api_args(
                 lang1=args['lang1'], lang2=args['lang2'], groups=args['groups'], lemma=args['lemma'])
+            data = None
 
             try:
                 logging.getLogger(__name__).debug('Treq request args: {0}'.format(ta_args))
