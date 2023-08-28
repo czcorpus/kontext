@@ -382,6 +382,7 @@ export interface AjaxConcResponse extends ConcQueryResponse {
     sampled_size:number;
     merged_attrs:Array<[string, number]>;
     merged_ctxattrs:Array<[string, number]>;
+    page_title:string;
 }
 
 /**
