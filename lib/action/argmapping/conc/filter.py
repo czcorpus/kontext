@@ -45,7 +45,9 @@ class _FilterFormArgs:
     pnfilter: str = 'p'
     filfl: str = 'f'
     filfpos: str = '-5'
+    filfpos_unit: str = ''
     filtpos: str = '5'
+    filtpos_unit: str = ''
     inclkwic: bool = True
     qmcase: bool = False
     default_attr: str = 'word'
@@ -81,8 +83,9 @@ class FilterFormArgs(ConcFormArgs[_FilterFormArgs], AbstractRawQueryDecoder):
         self.data.pnfilter = data['pnfilter']
         self.data.filfl = data['filfl']
         self.data.filfpos = data['filfpos']
-        self.data.filfpos = data['filfpos']
+        self.data.filfpos_unit = data['filfpos_unit']
         self.data.filtpos = data['filtpos']
+        self.data.filtpos_unit = data['filtpos_unit']
         self.data.inclkwic = data['inclkwic']
         self.data.qmcase = data['qmcase']
         self.data.within = data.get('within')
@@ -109,7 +112,9 @@ class FilterFormArgs(ConcFormArgs[_FilterFormArgs], AbstractRawQueryDecoder):
         else:
             self.data.inclkwic = False
         self.data.filfpos = srch.group(2)
+        self.data.filfpos_unit = srch.group(3)
         self.data.filtpos = srch.group(4)
+        self.data.filtpos_unit = srch.group(5)
         if srch.group(6) == '1':
             self.data.filfl = 'f'
         elif srch.group(6) == '-1':
