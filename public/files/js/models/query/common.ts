@@ -112,7 +112,9 @@ export interface FilterServerArgs extends ConcServerArgs {
     pnfilter:FilterTypes;
     filfl:string;
     filfpos:string;
+    filfpos_unit:string;
     filtpos:string;
+    filtpos_unit:string;
     inclkwic:boolean;
     qtype:QueryType;
     query:string;

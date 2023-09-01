@@ -82,7 +82,9 @@ export interface FilterFormArgs extends ConcFormArgs {
     pnfilter:'p'|'n';
     filfl:'f'|'l';
     filfpos:string;
+    filfpos_unit:string;
     filtpos:string;
+    filtpos_unit:string;
     inclkwic:boolean;
     qmcase:boolean;
     default_attr:string;

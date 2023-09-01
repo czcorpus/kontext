@@ -901,7 +901,7 @@ async def filter(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     else:
         within_query = ''
         amodel.args.q.append(
-            f'{ff_args.data.pnfilter}{ff_args.data.filfpos} {ff_args.data.filtpos} {rank} {cql_query}')
+            f'{ff_args.data.pnfilter}{ff_args.data.filfpos}{ff_args.data.filfpos_unit} {ff_args.data.filtpos}:{ff_args.data.filtpos_unit} {rank} {cql_query}')
 
     amodel.on_query_store(store_last_op)
     resp.set_http_status(201)

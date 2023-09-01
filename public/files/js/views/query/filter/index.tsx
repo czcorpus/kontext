@@ -182,10 +182,12 @@ export function init({
     const RangeSelector:React.FC<{
         filterId:string;
         filfposValue:Kontext.FormValue<string>;
+        filfposUnitValue:string;
         filtposValue:Kontext.FormValue<string>;
+        filtposUnitValue:string;
+
 
     }> = (props) => {
-
         const handleToFromRangeValChange = (pos) => (evt) => {
             dispatcher.dispatch<typeof Actions.FilterInputSetRange>({
                 name: Actions.FilterInputSetRange.name,
@@ -198,7 +200,7 @@ export function init({
         };
 
         return (
-            <div>
+            <S.RangeSelector>
                 <label>{he.translate('query__qfilter_range_srch_th')} </label>
                 <label>
                     {he.translate('query__qfilter_range_from')}:{'\u00a0'}
@@ -207,6 +209,7 @@ export function init({
                             value={props.filfposValue.value}
                             onChange={handleToFromRangeValChange('from')} />
                     </layoutViews.ValidatedItem>
+                    {props.filfposUnitValue ? <strong className="unit">{props.filfposUnitValue}</strong> : null}
                 </label>
                 {'\u00a0'}
                 <label>
@@ -216,8 +219,9 @@ export function init({
                             value={props.filtposValue.value}
                             onChange={handleToFromRangeValChange('to')} />
                     </layoutViews.ValidatedItem>
+                    {props.filtposUnitValue ? <strong className="unit">{props.filtposUnitValue}</strong> : null}
                 </label>
-            </div>
+            </S.RangeSelector>
         );
     };
 
@@ -350,7 +354,9 @@ export function init({
                 <RangeSelector
                     filterId={this.props.filterId}
                     filfposValue={this.props.filfposValues[this.props.filterId]}
-                    filtposValue={this.props.filtposValues[this.props.filterId]} />,
+                    filfposUnitValue={this.props.filfposUnitValues[this.props.filterId]}
+                    filtposValue={this.props.filtposValues[this.props.filterId]}
+                    filtposUnitValue={this.props.filfposUnitValues[this.props.filterId]} />,
                 <InclKWicCheckbox
                     value={this.props.inclkwicValues[this.props.filterId]}
                     filterId={this.props.filterId} />

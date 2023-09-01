@@ -60,7 +60,9 @@ export interface FilterFormProperties extends GeneralQueryFormProperties {
     currPnFilterValues:{[sourceId:string]:'p'|'n'};
     currFilflVlaues:{[sourceId:string]:'f'|'l'};
     currFilfposValues:{[sourceId:string]:string};
+    currFilfposUnitValues:{[sourceId:string]:string};
     currFiltposValues:{[sourceId:string]:string};
+    currFiltposUnitValues:{[sourceId:string]:string};
     withinArgValues:{[sourceId:string]:boolean};
     opLocks:{[sourceId:string]:boolean};
     hasLemma:{[sourceId:string]:boolean};
@@ -116,9 +118,22 @@ export interface FilterFormModelState extends QueryFormModelState {
     filfposValues:{[key:string]:Kontext.FormValue<string>};
 
     /**
+     * units for the left range
+     * note: currently readonly
+     */
+    filfposUnitValues:{[key:string]:string};
+
+    /**
      * Right range
      */
     filtposValues:{[key:string]:Kontext.FormValue<string>};
+
+    /**
+         * units for the right range
+         * note: currently readonly
+         */
+    filtposUnitValues:{[key:string]:string};
+
 
     /**
      * Include kwic checkbox
@@ -362,10 +377,12 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                     props.currFilfposValues,
                     Dict.map((v, fid) => Kontext.newFormValue(v, true))
                 ),
+                filfposUnitValues: {...props.currFilfposUnitValues},
                 filtposValues: pipe(
                     props.currFiltposValues,
                     Dict.map((v, fid) => Kontext.newFormValue(v, true)),
                 ),
+                filtposUnitValues: {...props.currFiltposUnitValues},
                 inclkwicValues: {...props.currInclkwicValues},
                 opLocks: {...props.opLocks},
                 activeWidgets: pipe(
@@ -547,7 +564,9 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                                         ...state.syncInitialArgs,
                                         filfl: filterData.filfl,
                                         filfpos: filterData.filfpos,
+                                        filfpos_unit: filterData.filfpos_unit,
                                         filtpos: filterData.filtpos,
+                                        filtpos_unit: filterData.filtpos_unit,
                                         use_regexp: filterData.use_regexp,
                                         inclkwic: filterData.inclkwic,
                                         qmcase: filterData.qmcase,
@@ -679,11 +698,13 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                                 isInvalid: false,
                                 isRequired: true
                             };
+                            state.filfposUnitValues[filterId] = data.filfpos_unit;
                             state.filtposValues[filterId] = {
                                 value: data.filtpos,
                                 isInvalid: false,
                                 isRequired: true
                             };
+                            state.filtposUnitValues[filterId] = data.filtpos_unit;
                             state.inclkwicValues[filterId] = data.inclkwic;
                             state.tagsets = data.tagsets;
                             state.withinArgs[filterId] = data.within;
@@ -739,7 +760,9 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             pnfilter: this.state.pnFilterValues[filterId],
             filfl: this.state.filflValues[filterId],
             filfpos: this.state.filfposValues[filterId].value,
+            filfpos_unit: this.state.filfposUnitValues[filterId],
             filtpos: this.state.filtposValues[filterId].value,
+            filtpos_unit: this.state.filtposUnitValues[filterId],
             inclkwic: this.state.inclkwicValues[filterId],
             within: this.state.withinArgs[filterId],
             ...this.pageModel.getConcArgs(),
