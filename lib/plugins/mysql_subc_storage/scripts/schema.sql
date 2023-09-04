@@ -7,7 +7,7 @@ CREATE TABLE kontext_subcorpus (
     corpus_name varchar(63) NOT NULL,
     aligned TEXT,
     is_draft TINYINT NOT NULL DEFAULT 0,
-    size INTEGER NOT NULL,
+    size BIGINT NOT NULL,
     cql TEXT,
     within_cond TEXT,
     text_types TEXT,
