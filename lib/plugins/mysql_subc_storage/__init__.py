@@ -164,8 +164,18 @@ class MySQLSubcArchive(AbstractSubcArchive):
             await fw.write(struct.pack('<q', 0))
             await fw.write(struct.pack('<q', self.preflight_subcorpus_size))
         subcname = f'{corpname}-preflight'
-        # TODO transaction here
         async with self._db.cursor() as cursor:
+            await cursor.execute('START TRANSACTION')
+            # Due to caching etc. we always have to perform test whether a preflight subc. exists
+            # (even if a consumer of this method tests it via corp_info.preflight_subcorpus, it may
+            # not be the most recent information).
+            await cursor.execute(
+                f'SELECT id FROM kontext_preflight_subc WHERE corpus_name = %s LIMIT 1', corpname)
+            row = await cursor.fetchone()
+            if row:
+                await cursor.connection.rollback()
+                return row['id']
+
             await cursor.execute(
                 f'INSERT INTO {self._bconf.subccorp_table} '
                 f'(id, user_id, author_id, corpus_name, name, created, size, is_draft, aligned) '
@@ -177,6 +187,7 @@ class MySQLSubcArchive(AbstractSubcArchive):
                 'VALUES (%s, %s)',
                 (subc_id.id, corpname)
             )
+            await cursor.connection.commit()
         await Sanic.get_app('kontext').dispatch('kontext.internal.reset')
         return subc_id.id
 
