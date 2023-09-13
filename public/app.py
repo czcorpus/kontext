@@ -22,15 +22,15 @@ It can be run in two modes:
  2) within a WSGI-enabled web server (Gunicorn, uwsgi, Apache + mod_wsgi)
 """
 import asyncio
+import hashlib
 import locale
 import logging
 import os
+import secrets
 import sys
+import tempfile
 from datetime import datetime, timedelta, timezone
 from logging.handlers import QueueListener
-import secrets
-import tempfile
-import hashlib
 
 from concurrent_log_handler import ConcurrentRotatingFileHandler
 
@@ -53,7 +53,8 @@ JWT_COOKIE_NAME = 'kontext_jwt'
 JWT_ALGORITHM = 'HS256'
 DFLT_HTTP_CLIENT_TIMEOUT = 20
 # a file for storing soft-reset token (the stored value is auto-generated on each (re)start)
-SOFT_RESET_TOKEN_FILE = os.path.join(tempfile.gettempdir(), 'kontext_srt', hashlib.sha1(CONF_PATH.encode()).hexdigest())
+SOFT_RESET_TOKEN_FILE = os.path.join(
+    tempfile.gettempdir(), 'kontext_srt', hashlib.sha1(CONF_PATH.encode()).hexdigest())
 
 from typing import Optional
 
@@ -136,6 +137,7 @@ application = Sanic('kontext')
 
 application.config['action_path_prefix'] = settings.get_str('global', 'action_path_prefix', '/')
 application.config['redirect_safe_domains'] = settings.get('global', 'redirect_safe_domains', ())
+application.config['csp_domains'] = settings.get('global', 'csp_domains', ())
 application.config['cookies_same_site'] = settings.get('global', 'cookies_same_site', None)
 application.config['static_files_prefix'] = settings.get(
     'global', 'static_files_prefix', '../files')
@@ -175,6 +177,7 @@ def load_translations(app: Sanic):
         catalog = support.Translations.load(LOCALE_PATH, [loc])
         app.ctx.translations[loc] = catalog
 
+
 @application.listener('main_process_start')
 async def main_process_init(*_):
     # create a token file for soft restart
@@ -185,6 +188,7 @@ async def main_process_init(*_):
         ttf.write(key)
     logging.getLogger(__name__).info(
         f'setting soft restart token {key[:5]}..., file {os.path.basename(SOFT_RESET_TOKEN_FILE)[:5]}...')
+
 
 @application.listener('before_server_start')
 async def server_init(app: Sanic, loop: asyncio.BaseEventLoop):
@@ -205,6 +209,7 @@ async def server_init(app: Sanic, loop: asyncio.BaseEventLoop):
         app.ctx.soft_restart_token = ttf.read().strip()
         logging.getLogger(__name__).info(
             f'worker is attaching soft-restart token {app.ctx.soft_restart_token[:5]}...')
+
 
 @application.listener('after_server_stop')
 async def server_init(app: Sanic, loop: asyncio.BaseEventLoop):

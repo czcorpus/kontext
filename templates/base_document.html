@@ -69,7 +69,7 @@ if(window.Intl===undefined){window.Intl={NumberFormat:function(){this.format=fun
 </script>
 <!-- plug-ins dependencies -->
 {% for abjs in app_bar_js %}
-<script nonce="{{ nonce }}" type="text/javascript" src="{{ abjs }}"></script>
+<script type="text/javascript" src="{{ abjs }}"></script>
 {% endfor %}
 <!-- --------------------- -->
 {% if current_action != 'compatibility' %}
@@ -82,8 +82,8 @@ if (((/*@cc_on!@*/false) || !!document['documentMode']) &&
 {% endif %}
 
 {%- block js_load -%}
-<script nonce="{{ nonce }}" type="text/javascript" src="{{ files_path }}/dist/common.js{{ deployment_suff }}"></script>
-<script nonce="{{ nonce }}" type="text/javascript" src="{{ files_path }}/dist/{{ page_model }}.js{{ deployment_suff }}"></script>
+<script type="text/javascript" src="{{ files_path }}/dist/common.js{{ deployment_suff }}"></script>
+<script type="text/javascript" src="{{ files_path }}/dist/{{ page_model }}.js{{ deployment_suff }}"></script>
 {%- endblock -%}
 {%- block headers %}{% endblock -%}
 

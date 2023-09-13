@@ -80,7 +80,8 @@ async def _output_result(
     elif action_props.return_type == 'template' and (result is None or isinstance(result, dict)):
         result = await action_model.add_globals(app, action_props, result)
         result['nonce'] = nonce = secrets.token_urlsafe()
-        resp.set_header('Content-Security-Policy', f"script-src 'nonce-{nonce}'")
+        csp_header = ['script-src', '\'self\'', f'\'nonce-{nonce}\'', *app.config['csp_domains']]
+        resp.set_header('Content-Security-Policy', ' '.join(csp_header))
         if isinstance(result, dict):
             result['messages'] = resp.system_messages
         apply_theme(result, app, translate)
