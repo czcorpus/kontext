@@ -403,6 +403,18 @@
                             <ref name="boolValues" />
                         </element>
                     </optional>
+                    <optional>
+                        <element name="csp_domains">
+                            <a:documentation>
+                                Whitelisted resources domains
+                            </a:documentation>
+                            <oneOrMore>
+                                <element name="domain">
+                                    <data type="anyURI" />
+                                </element>
+                            </oneOrMore>
+                        </element>
+                    </optional>
                 </interleave>
             </element>
             <element name="calc_backend">

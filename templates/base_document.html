@@ -64,7 +64,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 </noscript>
 {% block tpl_style %}
 {% endblock %}
-<script type="text/javascript">
+<script nonce="{{ nonce }}" type="text/javascript">
 if(window.Intl===undefined){window.Intl={NumberFormat:function(){this.format=function(s){return''+s}},DateTimeFormat:function(){this.format=function(s){return s.toString()}},PluralRules:function(){this.select=function(s){return'one'}},Collator:function(){this.compare=function(a,b){return a.localeCompare(b)}}}}
 </script>
 <!-- plug-ins dependencies -->
@@ -73,7 +73,7 @@ if(window.Intl===undefined){window.Intl={NumberFormat:function(){this.format=fun
 {% endfor %}
 <!-- --------------------- -->
 {% if current_action != 'compatibility' %}
-<script type="text/javascript">
+<script nonce="{{ nonce }}" type="text/javascript">
 if (((/*@cc_on!@*/false) || !!document['documentMode']) &&
         (window.navigator.userAgent.indexOf('MSIE') > -1 || window.navigator.userAgent.indexOf('Trident/') > -1)) {
     window.location.href = "{{ root_url }}compatibility";
@@ -88,7 +88,7 @@ if (((/*@cc_on!@*/false) || !!document['documentMode']) &&
 {%- block headers %}{% endblock -%}
 
 {%- block js_init -%}
-<script type="text/javascript">
+<script nonce="{{ nonce }}" type="text/javascript">
 var __conf = {};
 __conf.page = {};
 __conf.activePlugins = {{ active_plugins|to_json }};
@@ -220,7 +220,7 @@ __conf.UsesAppBar = {%if app_bar %}true{% else %}false{% endif %};
 {% endblock %}
 </div>
 
-<script type="text/javascript">
+<script nonce="{{ nonce }}" type="text/javascript">
 {%block bodyonload %}{% endblock %}
 </script>
 

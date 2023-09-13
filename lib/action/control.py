@@ -15,6 +15,7 @@
 
 import json
 import logging
+import secrets
 from functools import wraps
 from typing import Any, Callable, Coroutine, Optional, Type, Union
 
@@ -34,7 +35,7 @@ from action.result.base import BaseResult
 from action.templating import CustomJSONEncoder, ResultType, TplEngine
 from action.theme import apply_theme
 from dataclasses_json import DataClassJsonMixin
-from sanic import HTTPResponse, Sanic, Websocket, response
+from sanic import HTTPResponse, Sanic, response
 from sanic.request import Request
 from templating import Type2XML
 
@@ -78,6 +79,9 @@ async def _output_result(
         return result
     elif action_props.return_type == 'template' and (result is None or isinstance(result, dict)):
         result = await action_model.add_globals(app, action_props, result)
+        result['nonce'] = nonce = secrets.token_urlsafe()
+        csp_header = ['script-src', '\'self\'', f'\'nonce-{nonce}\'', *app.config['csp_domains']]
+        resp.set_header('Content-Security-Policy', ' '.join(csp_header))
         if isinstance(result, dict):
             result['messages'] = resp.system_messages
         apply_theme(result, app, translate)
