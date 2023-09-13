@@ -135,6 +135,7 @@ log_listener = setup_logger(settings)
 
 application = Sanic('kontext')
 
+application.config['debug_level'] = settings.debug_level()
 application.config['action_path_prefix'] = settings.get_str('global', 'action_path_prefix', '/')
 application.config['redirect_safe_domains'] = settings.get('global', 'redirect_safe_domains', ())
 application.config['csp_domains'] = settings.get('global', 'csp_domains', ())
