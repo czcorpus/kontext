@@ -120,9 +120,9 @@ export function init({
                         null}
                     {props.manateeIsCustomCNC ?
                         <select id="kw-score" value={props.scoreType} onChange={handleScoreTypeChange}>
-                            <option value='logL'>Log-likelihood</option>
-                            <option value='chi2'>Chi-square</option>
-                            <option value='effS'>{he.translate('kwords__effect_size')}</option>
+                            <option value="logL">Log-likelihood</option>
+                            <option value="chi2">Chi-square</option>
+                            <option value="din">{he.translate('kwords__effect_size')}</option>
                         </select> :
                         null}
 

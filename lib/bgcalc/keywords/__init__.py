@@ -29,7 +29,7 @@ from corplib import manatee_is_custom_cnc
 from corplib.corpus import KCorpus
 from manatee import Keyword  # TODO wrap this out
 
-CNC_SCORE_TYPES = ('logL', 'chi2', 'effS')
+CNC_SCORE_TYPES = ('logL', 'chi2', 'din')
 
 
 class KeywordsResultNotFound(Exception):
