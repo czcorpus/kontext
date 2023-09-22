@@ -951,7 +951,7 @@
         "kwords__score_col_hd": "Skóre",
         "kwords__score_col_logL": "logL",
         "kwords__score_col_chi2": "chi2",
-        "kwords__effect_size": "Velikost účinku (Effect Size)",
+        "kwords__effect_size": "DIN (Difference index)",
         "kwords__freq_in_corp1_hd": "Frekv. (zkoumaný korpus)",
         "kwords__freq_in_corp2_hd": "Frekv. (referenční korpus)",
         "kwords__rel_freq_in_corp1_hd": "Rel. frekv. (zkoumaný korpus)",

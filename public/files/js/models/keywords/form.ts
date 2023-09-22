@@ -35,7 +35,7 @@ import { TEXT_INPUT_WRITE_THROTTLE_INTERVAL_MS } from '../../types/kontext';
 import { validateNumber } from '../base';
 
 
-export type ScoreType = 'default'|'logL'|'chi2'|'effS';
+export type ScoreType = 'default'|'logL'|'chi2'|'din';
 
 export interface KeywordsFormState {
     isBusy:boolean;
@@ -107,7 +107,7 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
                 refSubcorp: initialArgs ? initialArgs.ref_usesubcorp : layoutModel.getNestedConf('refCorpusIdent', 'usesubcorp'),
                 attr: initialArgs ? initialArgs.wlattr : List.head(availAttrs).n,
                 pattern: initialArgs ? initialArgs.wlpat : '.*',
-                scoreType: initialArgs ? initialArgs.score_type : 'logL',
+                scoreType: initialArgs ? initialArgs.score_type : 'din',
                 wlMinFreqInput: newFormValue('5', true),
                 wlMaxFreqInput: newFormValue('', true),
                 precalcTasks: [],
