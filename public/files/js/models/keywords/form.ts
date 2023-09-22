@@ -392,7 +392,7 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
                     window.location.href = this.layoutModel.createActionUrl(
                         'keywords/result',
                         {
-                            corpname: corp.name,
+                            corpname: corp.id,
                             usesubcorp: corp.usesubcorp,
                             q: `~${resp.kw_query_id}`,
                         }
