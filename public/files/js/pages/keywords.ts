@@ -50,9 +50,11 @@ export class KeywordsResultPage {
                 dispatcher: this.layoutModel.dispatcher,
                 layoutModel: this.layoutModel,
                 refCorpname: this.layoutModel.getConf<KeywordsSubmitArgs>('KeywordsForm').ref_corpname,
-                refSubcorpname: this.layoutModel.getConf<KeywordsSubmitArgs>('KeywordsForm').ref_usesubcorp,
+                refSubcorpId: this.layoutModel.getConf<KeywordsSubmitArgs>('KeywordsForm').ref_usesubcorp,
                 focusCorpname: this.layoutModel.getCorpusIdent().id,
                 focusSubcorpname: this.layoutModel.getCorpusIdent().subcName,
+                focusSubcorpId: this.layoutModel.getCorpusIdent().usesubcorp,
+                attr: this.layoutModel.getConf<KeywordsSubmitArgs>('KeywordsForm').wlattr,
             });
             const view = viewInit({
                 dispatcher: this.layoutModel.dispatcher,
