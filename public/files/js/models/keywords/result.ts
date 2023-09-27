@@ -34,9 +34,10 @@ export interface KeywordsResultState {
     data:Array<Keyword>;
     isBusy:boolean;
     refCorpname:string;
-    refSubcorpname:string|undefined;
+    refSubcorpId:string|undefined;
     focusCorpname:string;
     focusSubcorpname:string|undefined;
+    focusSubcorpId:string|undefined;
     total:number;
     kwpage:number;
     kwpagesize:number;
@@ -45,15 +46,18 @@ export interface KeywordsResultState {
     queryId:string;
     isLoading:boolean;
     manateeIsCustomCNC:boolean;
+    attr:string;
 }
 
 export interface KeywordsResultModelArgs {
     dispatcher:IActionDispatcher;
     layoutModel:PageModel;
     refCorpname:string;
-    refSubcorpname:string|undefined;
+    refSubcorpId:string|undefined;
     focusCorpname:string;
     focusSubcorpname:string|undefined;
+    focusSubcorpId:string|undefined;
+    attr:string;
 }
 
 export interface DataAjaxResponse extends Kontext.AjaxResponse {
@@ -76,9 +80,11 @@ export class KeywordsResultModel extends StatelessModel<KeywordsResultState> {
         dispatcher,
         layoutModel,
         refCorpname,
-        refSubcorpname,
+        refSubcorpId,
         focusCorpname,
-        focusSubcorpname
+        focusSubcorpname,
+        focusSubcorpId,
+        attr,
     }:KeywordsResultModelArgs) {
         super(
             dispatcher,
@@ -86,9 +92,10 @@ export class KeywordsResultModel extends StatelessModel<KeywordsResultState> {
                 data: layoutModel.getConf<Array<Keyword>>('Keywords'),
                 isBusy: false,
                 refCorpname,
-                refSubcorpname,
+                refSubcorpId,
                 focusCorpname,
                 focusSubcorpname,
+                focusSubcorpId,
                 kwpage: layoutModel.getConf<number>('Page'),
                 kwpagesize: layoutModel.getConf<number>('PageSize'),
                 kwsort: layoutModel.getConf<string>('Sort'),
@@ -97,6 +104,7 @@ export class KeywordsResultModel extends StatelessModel<KeywordsResultState> {
                 queryId: layoutModel.getConf<string>('QueryId'),
                 isLoading: false,
                 manateeIsCustomCNC: layoutModel.getConf<boolean>('manateeIsCustomCNC'),
+                attr,
             }
         );
         this.layoutModel = layoutModel;

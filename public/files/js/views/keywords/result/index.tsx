@@ -77,6 +77,8 @@ export function init({
             );
         };
 
+        const buildQ = (value:string) => `aword,[${props.attr}="${value}"]`;
+
         return (
             <S.KeywordsResult>
 
@@ -84,7 +86,7 @@ export function init({
                     <dt>{he.translate('kwords__focus_corpus')}:</dt>
                     <dd>{props.focusCorpname} {props.focusSubcorpname ? ` / ${props.focusSubcorpname}` : ''}</dd>
                     <dt>{he.translate('kwords__reference_corpus')}:</dt>
-                    <dd>{props.refCorpname} {props.refSubcorpname ? ` / ${props.refSubcorpname}` : ''}</dd>
+                    <dd>{props.refCorpname} {props.refSubcorpId ? ` / ${props.refSubcorpId}` : ''}</dd>
                 </dl>
 
                 <div className="ktx-pagination">
@@ -109,7 +111,9 @@ export function init({
                                 <th>{he.translate('kwords__score_col_hd')}</th>
                             }
                             <th>{he.translate('kwords__freq_in_corp1_hd')}</th>
+                            <th>{he.translate('kwords__filter_th')}</th>
                             <th>{he.translate('kwords__freq_in_corp2_hd')}</th>
+                            <th>{he.translate('kwords__filter_th')}</th>
                             <th>{he.translate('kwords__rel_freq_in_corp1_hd')}</th>
                             <th>{he.translate('kwords__rel_freq_in_corp2_hd')}</th>
                         </tr>
@@ -130,7 +134,21 @@ export function init({
                                             <td className="num">{he.formatNumber(kw.score, 2)}</td>
                                         }
                                         <td className="num">{he.formatNumber(kw.frq1, 0)}</td>
+                                        <td>
+                                            <a href={he.createActionLink('create_view',
+                                                props.focusSubcorpId ?
+                                                    {corpname: props.focusCorpname, usesubcorp: props.focusSubcorpId, q: buildQ(kw.item)} :
+                                                    {corpname: props.focusCorpname, q: buildQ(kw.item)}
+                                            )}> p </a>
+                                        </td>
                                         <td className="num">{he.formatNumber(kw.frq2, 0)}</td>
+                                        <td>
+                                            <a href={he.createActionLink('create_view',
+                                            props.refSubcorpId ?
+                                                {corpname: props.refCorpname, usesubcorp: props.refSubcorpId, q: buildQ(kw.item)} :
+                                                {corpname: props.refCorpname, q: buildQ(kw.item)}
+                                            )}> p </a>
+                                        </td>
                                         <td className="num">{he.formatNumber(kw.rel_frq1, 2)}</td>
                                         <td className="num">{he.formatNumber(kw.rel_frq2, 2)}</td>
                                     </tr>
