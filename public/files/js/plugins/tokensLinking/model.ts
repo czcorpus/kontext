@@ -88,7 +88,8 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                             color: null,
                             altColors: [],
                             isBusy: true
-                        }]
+                        }],
+                        scrollY: action.payload.scrollY
                     }
                 );
                 Rx.zippedWith(
@@ -121,7 +122,8 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                                             data
                                         )
                                     )
-                                )
+                                ),
+                                scrollY: action.payload.scrollY
                             }
                         );
                     },
@@ -137,7 +139,8 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                                     color: null,
                                     altColors: [],
                                     isBusy: false
-                                }]
+                                }],
+                                scrollY: action.payload.scrollY
                             }
                         );
                         this.dispatchSideEffect(
@@ -195,7 +198,10 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                                     if (!List.empty(normHighlights)) {
                                         this.dispatchSideEffect(
                                             ConcActions.HighlightTokens,
-                                            {highlights: normHighlights}
+                                            {
+                                                highlights: normHighlights,
+                                                scrollY: action.payload.scrollY
+                                            }
                                         );
 
                                     } else {
@@ -211,7 +217,8 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                                                     color: null,
                                                     altColors: [],
                                                     isBusy: false
-                                                }]
+                                                }],
+                                                scrollY: action.payload.scrollY
                                             }
                                         );
                                         this.pluginApi.showMessage(
