@@ -958,7 +958,6 @@
         "kwords__rel_freq_in_corp2_hd": "Rel. freq. (ref. corpus)",
         "kwords__result_word_hd": "Word",
         "kwords__min_freq": "Min. frequency",
-        "kwords__max_freq": "Max. frequency",
-        "kwords__filter_th": "Filter"
+        "kwords__max_freq": "Max. frequency"
     }
 }
