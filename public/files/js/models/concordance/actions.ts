@@ -563,7 +563,10 @@ export class Actions {
      * highlighting one or more tokens in the same text
      * chunk (ans possibly its aligned part in another corpus).
      */
-    static HighlightTokens:Action<{highlights:Array<HighlightInfo>}> = {
+    static HighlightTokens:Action<{
+        highlights:Array<HighlightInfo>;
+        scrollY:number;
+    }> = {
         name: 'CONCORDANCE_HIGHLIGHT_TOKENS'
     };
 

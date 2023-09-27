@@ -900,7 +900,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                 tokenId,
                 tokenLength,
                 tokenRanges: {},
-                lineId
+                lineId,
+                scrollY: window.scrollY
             }
             List.forEach(
                 (lang, langId) => {
