@@ -957,7 +957,6 @@
         "kwords__rel_freq_in_corp2_hd": "Rel. freq. (ref. corpus) UNTRANSLATED",
         "kwords__result_word_hd": "Word UNTRANSLATED",
         "kwords__min_freq": "Min. frequency UNTRANSLATED",
-        "kwords__max_freq": "Max. frequency UNTRANSLATED",
-        "kwords__filter_th": "Filter"
+        "kwords__max_freq": "Max. frequency UNTRANSLATED"
     }
 }

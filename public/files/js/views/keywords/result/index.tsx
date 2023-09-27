@@ -110,10 +110,8 @@ export function init({
                                 ] :
                                 <th>{he.translate('kwords__score_col_hd')}</th>
                             }
-                            <th>{he.translate('kwords__freq_in_corp1_hd')}</th>
-                            <th>{he.translate('kwords__filter_th')}</th>
-                            <th>{he.translate('kwords__freq_in_corp2_hd')}</th>
-                            <th>{he.translate('kwords__filter_th')}</th>
+                            <th colSpan={2}>{he.translate('kwords__freq_in_corp1_hd')}</th>
+                            <th colSpan={2}>{he.translate('kwords__freq_in_corp2_hd')}</th>
                             <th>{he.translate('kwords__rel_freq_in_corp1_hd')}</th>
                             <th>{he.translate('kwords__rel_freq_in_corp2_hd')}</th>
                         </tr>
@@ -135,7 +133,7 @@ export function init({
                                         }
                                         <td className="num">{he.formatNumber(kw.frq1, 0)}</td>
                                         <td>
-                                            <a href={he.createActionLink('create_view',
+                                            <a title={he.translate('global__pnfilter_label_p')} href={he.createActionLink('create_view',
                                                 props.focusSubcorpId ?
                                                     {corpname: props.focusCorpname, usesubcorp: props.focusSubcorpId, q: buildQ(kw.item)} :
                                                     {corpname: props.focusCorpname, q: buildQ(kw.item)}
@@ -143,7 +141,7 @@ export function init({
                                         </td>
                                         <td className="num">{he.formatNumber(kw.frq2, 0)}</td>
                                         <td>
-                                            <a href={he.createActionLink('create_view',
+                                            <a title={he.translate('global__pnfilter_label_p')} href={he.createActionLink('create_view',
                                             props.refSubcorpId ?
                                                 {corpname: props.refCorpname, usesubcorp: props.refSubcorpId, q: buildQ(kw.item)} :
                                                 {corpname: props.refCorpname, q: buildQ(kw.item)}
