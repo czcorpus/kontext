@@ -51,7 +51,7 @@ export interface Keyword {
     score:number;
     logL?:number;
     chi2?:number;
-    size_effect?:number;
+    din?:number;
     frq1:number;
     frq2:number;
     rel_frq1:number;
