@@ -129,7 +129,7 @@ async def keywords(corp: KCorpus, ref_corp: KCorpus, args: KeywordsFormArgs, max
                          'score': round(freqs[4], 3),
                          'logL': round(freqs[5], 3),
                          'chi2': round(freqs[6], 3),
-                         'size_effect': round(float(freqs[7]), 5),
+                         'din': round(float(freqs[7]), 5),
                          'frq1': int(freqs[0]),
                          'frq2': int(freqs[1]),
                          'rel_frq1': round(float(freqs[2]), 5),

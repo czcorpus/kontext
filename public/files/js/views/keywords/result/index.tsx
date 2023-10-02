@@ -127,7 +127,7 @@ export function init({
                                             [
                                                 <td className="num">{he.formatNumber(kw.logL, 2)}</td>,
                                                 <td className="num">{he.formatNumber(kw.chi2, 2)}</td>,
-                                                <td className="num">{he.formatNumber(kw.size_effect, 2)}</td>,
+                                                <td className="num">{he.formatNumber(kw.din, 2)}</td>,
                                             ] :
                                             <td className="num">{he.formatNumber(kw.score, 2)}</td>
                                         }
