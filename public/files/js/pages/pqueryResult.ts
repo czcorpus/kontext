@@ -65,6 +65,17 @@ class ParadigmaticQueryPage {
         );
     }
 
+    setDownloadLink(name:string, format:string, url:string, args?:any) {
+        this.layoutModel.bgDownload({
+            name,
+            format,
+            datasetType: DownloadType.PQUERY,
+            url,
+            contentType: 'multipart/form-data',
+            args,
+        }).subscribe();
+    }
+
     init():void {
         this.layoutModel.init(true, [], () => {
 
@@ -121,16 +132,7 @@ class ParadigmaticQueryPage {
             const saveModel = new PqueryResultsSaveModel({
                 dispatcher: this.layoutModel.dispatcher,
                 layoutModel: this.layoutModel,
-                saveLinkFn: (name:string, format:string, url:string, args?:any) => {
-                    this.layoutModel.bgDownload({
-                        name,
-                        format,
-                        datasetType: DownloadType.PQUERY,
-                        url,
-                        contentType: 'multipart/form-data',
-                        args,
-                    }).subscribe();
-                },
+                saveLinkFn: this.setDownloadLink.bind(this),
                 quickSaveRowLimit: 10000 // TODO
             });
 

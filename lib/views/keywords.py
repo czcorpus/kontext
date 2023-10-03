@@ -15,13 +15,16 @@
 
 
 import logging
+import sys
 import time
+from dataclasses import dataclass
 
+import plugins
 import settings
-from action.argmapping import log_mapping
+from action.argmapping import IntOpt, log_mapping
 from action.argmapping.keywords import KeywordsFormArgs
 from action.control import http_action
-from action.errors import ImmediateRedirectException
+from action.errors import ImmediateRedirectException, NotFoundException
 from action.krequest import KRequest
 from action.model.keywords import KeywordsActionModel, KeywordsError
 from action.response import KResponse
@@ -116,6 +119,7 @@ async def create_result(amodel: KeywordsActionModel, form_args: KeywordsFormArgs
 
 
 async def view_result(amodel: KeywordsActionModel, req: KRequest):
+    amodel.add_save_menu()
     amodel.disabled_menu_items = (
         MainMenu.VIEW('kwic-sent-switch', 'structs-attrs'),
         MainMenu.FILTER,
@@ -132,29 +136,30 @@ async def view_result(amodel: KeywordsActionModel, req: KRequest):
         kwsort = amodel.curr_kwform_args.score_type
 
     try:
-        total, data = await require_existing_keywords(amodel.curr_kwform_args, offset, amodel.args.kwpagesize)
+        result = await require_existing_keywords(amodel.curr_kwform_args, offset, amodel.args.kwpagesize)
     except KeywordsResultNotFound:
         raise ImmediateRedirectException(req.create_url(
             'keywords/restore', dict(q=req.args_getlist('q')[0], kwsort=kwsort)))
 
-    result = dict(data=data, total=total, keywords_form=amodel.curr_kwform_args.to_dict())
+    ans = result.to_dict()
+    ans['keywords_form'] = amodel.curr_kwform_args.to_dict()
     try:
-        result['wlattr_label'] = (
+        ans['wlattr_label'] = (
             amodel.corp.get_conf(amodel.curr_kwform_args.wlattr + '.LABEL') or amodel.curr_kwform_args.wlattr)
     except Exception as e:
-        result['wlattr_label'] = amodel.curr_kwform_args.wlattr
+        ans['wlattr_label'] = amodel.curr_kwform_args.wlattr
         logging.getLogger(__name__).warning(f'wlattr_label set failed: {e}')
 
-    result['tasks'] = []
-    result['SubcorpList'] = []
-    result['query_id'] = amodel.q_code
+    ans['tasks'] = []
+    ans['SubcorpList'] = []
+    ans['query_id'] = amodel.q_code
 
-    result['kwpage'] = page
-    result['kwpagesize'] = amodel.args.kwpagesize
-    result['kwsort'] = kwsort
+    ans['kwpage'] = page
+    ans['kwpagesize'] = amodel.args.kwpagesize
+    ans['kwsort'] = kwsort
 
-    await amodel.export_subcorpora_list(result)
-    return result
+    await amodel.export_subcorpora_list(ans)
+    return ans
 
 
 @bp.route('/result')
@@ -196,3 +201,41 @@ async def restore(amodel: KeywordsActionModel, req: KRequest, _: KResponse):
         'finished': False,
         'next_action': '',
         'next_action_args': {}}
+
+
+@dataclass
+class SaveKeywordsArgs:
+    from_line: int = 1
+    to_line: IntOpt = -1
+    saveformat: str = ''
+    heading: bool = False
+    colheaders: bool = False
+
+
+@bp.route('/download')
+@http_action(access_level=2, return_type='plain', action_model=KeywordsActionModel, mapped_args=SaveKeywordsArgs)
+async def download(amodel: KeywordsActionModel, req: KRequest[SaveKeywordsArgs], resp: KResponse):
+    """
+    download a keywords results
+    """
+    from_line = req.mapped_args.from_line - 1
+    to_line = sys.maxsize if req.mapped_args.to_line < 0 else req.mapped_args.to_line
+
+    try:
+        result = await require_existing_keywords(amodel.curr_kwform_args, from_line, to_line - from_line)
+    except KeywordsResultNotFound:
+        raise NotFoundException('global__result_no_more_avail_for_download_pls_update')
+
+    def mkfilename(suffix): return f'{amodel.args.corpname}-keywords.{suffix}'
+    with plugins.runtime.EXPORT as export:
+        writer = export.load_plugin(req.mapped_args.saveformat, req.locale)
+
+        resp.set_header('Content-Type', writer.content_type())
+        resp.set_header('Content-Disposition',
+                        f'attachment; filename="{mkfilename(req.mapped_args.saveformat)}"')
+
+        if len(result.data) > 0:
+            await writer.write_keywords(amodel, result, req.mapped_args)
+        output = writer.raw_content()
+
+    return output

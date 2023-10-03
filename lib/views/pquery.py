@@ -20,10 +20,10 @@ from dataclasses import dataclass
 import bgcalc
 import plugins
 import settings
+from action.argmapping import log_mapping
+from action.argmapping.action import IntOpt
 from action.argmapping.pquery import PqueryFormArgs
 from action.control import http_action
-from action.argmapping.action import IntOpt
-from action.argmapping import log_mapping
 from action.errors import NotFoundException
 from action.krequest import KRequest
 from action.model.pquery import ParadigmaticQueryActionModel
@@ -169,7 +169,7 @@ async def get_results(amodel: ParadigmaticQueryActionModel, req: KRequest, resp:
         pquery_data = await require_existing_pquery(
             amodel._curr_pquery_args, offset, amodel.args.pqueryitemsperpage, corp_info.collator_locale, sort, reverse)
     except PqueryResultNotFound:
-        raise NotFoundException('pquery__result_no_more_avail_for_download_pls_update')
+        raise NotFoundException('global__result_no_more_avail_for_download_pls_update')
     return dict(rows=[(row.value, *row.freqs) for row in pquery_data.rows])
 
 
@@ -188,7 +188,7 @@ class SavePQueryArgs:
 @http_action(access_level=2, return_type='plain', action_model=ParadigmaticQueryActionModel, mapped_args=SavePQueryArgs)
 async def download(amodel: ParadigmaticQueryActionModel, req: KRequest[SavePQueryArgs], resp: KResponse):
     """
-    dawnload a paradigmatic query results
+    download a paradigmatic query results
     """
     from_line = req.mapped_args.from_line - 1
     to_line = sys.maxsize if req.mapped_args.to_line < 0 else req.mapped_args.to_line
@@ -198,7 +198,7 @@ async def download(amodel: ParadigmaticQueryActionModel, req: KRequest[SavePQuer
             amodel._curr_pquery_args, from_line, to_line - from_line,
             corp_info.collator_locale, req.mapped_args.sort, req.mapped_args.reverse)
     except PqueryResultNotFound:
-        raise NotFoundException('pquery__result_no_more_avail_for_download_pls_update')
+        raise NotFoundException('global__result_no_more_avail_for_download_pls_update')
 
     def mkfilename(suffix): return f'{amodel.args.corpname}-pquery.{suffix}'
     with plugins.runtime.EXPORT as export:
@@ -208,7 +208,8 @@ async def download(amodel: ParadigmaticQueryActionModel, req: KRequest[SavePQuer
         resp.set_header('Content-Disposition',
                         f'attachment; filename="{mkfilename(req.mapped_args.saveformat)}"')
 
-        await writer.write_pquery(amodel, pquery_data.rows, req.mapped_args)
+        if len(pquery_data.rows) > 0:
+            await writer.write_pquery(amodel, pquery_data.rows, req.mapped_args)
         output = writer.raw_content()
 
     return output

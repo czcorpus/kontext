@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2021 Charles University in Prague, Faculty of Arts,
+ * Copyright (c) 2023 Charles University in Prague, Faculty of Arts,
  *                    Institute of the Czech National Corpus
- * Copyright (c) 2021 Martin Zimandl <martin.zimandl@gmail.com>
+ * Copyright (c) 2023 Martin Zimandl <martin.zimandl@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -20,17 +20,17 @@
 
 import * as React from 'react';
 import * as Kontext from '../../../types/kontext';
-import { PqueryResultsSaveModel, PqueryResultsSaveModelState } from '../../../models/pquery/save';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { Actions } from '../../../models/pquery/actions';
+import { Actions } from '../../../models/keywords/actions';
+import { KeywordsResultsSaveModel, KeywordsResultsSaveModelState } from 'public/files/js/models/keywords/save';
 
 
-interface SavePqueryFormProps {
+interface SaveKeywordsFormProps {
     onClose:()=>void;
 }
 
 interface ExportedViews {
-    SavePqueryForm:React.ComponentClass<SavePqueryFormProps>;
+    SavePqueryForm:React.ComponentClass<SaveKeywordsFormProps>;
 }
 
 
@@ -39,7 +39,7 @@ interface ExportedViews {
 export function init(
         dispatcher:IActionDispatcher,
         utils:Kontext.ComponentHelpers,
-        pquerySaveModel:PqueryResultsSaveModel):ExportedViews {
+        saveModel:KeywordsResultsSaveModel):ExportedViews {
 
 
     const layoutViews = utils.getLayoutViews();
@@ -212,7 +212,7 @@ export function init(
     /**
      *
      */
-    class SavePqueryForm extends React.Component<SavePqueryFormProps & PqueryResultsSaveModelState> {
+    class SaveKeywordsForm extends React.Component<SaveKeywordsFormProps & KeywordsResultsSaveModelState> {
 
         constructor(props) {
             super(props);
@@ -241,7 +241,7 @@ export function init(
         render() {
             return (
                 <layoutViews.ModalOverlay onCloseKey={this.props.onClose}>
-                    <layoutViews.CloseableFrame onCloseClick={this.props.onClose} label={utils.translate('pquery__save_form_label')}>
+                    <layoutViews.CloseableFrame onCloseClick={this.props.onClose} label={utils.translate('kwords__save_form_label')}>
                         <form className="SavePqueryForm">
                             <table className="form">
                                 <tbody>
@@ -264,7 +264,7 @@ export function init(
     }
 
     return {
-        SavePqueryForm: BoundWithProps<SavePqueryFormProps, PqueryResultsSaveModelState>(SavePqueryForm, pquerySaveModel)
+        SavePqueryForm: BoundWithProps<SaveKeywordsFormProps, KeywordsResultsSaveModelState>(SaveKeywordsForm, saveModel)
     };
 
 }
