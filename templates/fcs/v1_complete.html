@@ -100,7 +100,7 @@
                 <sru:displayTerm>{{ displayTerm }}</sru:displayTerm>
                 {% if resourceInfoRequest %}
                 <sru:extraTermData>
-                    <ResourceInfo xmlns="http://clarin.eu/fcs/1.0/resource-info" hasSubResources="false">
+                    <ResourceInfo xmlns="http://clarin.eu/fcs/1.0/resource-info" pid="{{ resourceInfo.title }}" hasSubResources="false">
                         <Title xml:lang="en">{{ resourceInfo.title }}</Title>
                         {% if resourceInfo.description %}
                         <Description xml:lang="en">{{ resourceInfo.description }}</Description>
@@ -133,7 +133,7 @@
             <sru:recordSchema>http://clarin.eu/fcs/resource</sru:recordSchema>
             <sru:recordPacking>{{ recordPacking }}</sru:recordPacking>
             <sru:recordData>
-                <fcs:Resource xmlns:fcs="http://clarin.eu/fcs/resource" pid="{{ conc_view_url_tpl }}{{ corppid }}" ref="{{ conc_view_url_tpl }}{{ corppid }}">
+                <fcs:Resource xmlns:fcs="http://clarin.eu/fcs/resource" pid="{{ corppid }}" ref="{{ conc_view_url_tpl }}{{ corppid }}">
                     <fcs:DataView type="application/x-clarin-fcs-hits+xml">
                         <hits:Result xmlns:hits="http://clarin.eu/fcs/dataview/hits">
                             {{ left|xmle }}<hits:Hit>{{ word|xmle }}</hits:Hit> {{ right|xmle }}

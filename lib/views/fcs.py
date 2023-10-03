@@ -141,10 +141,10 @@ async def op_scan(amodel: FCSActionModel, req: KRequest, resp_common: FCSRespons
 
 
 async def op_search_retrieve(amodel: FCSActionModel, req: KRequest, resp_common: FCSResponseV1, resp: Dict[str, Any]):
-    # TODO we should review the args here (especially x-cmd-context, resultSetTTL)
+    # TODO review resultSetTTL arg
     amodel.check_args([
         'query', 'startRecord', 'maximumRecords', 'recordPacking',
-        'recordSchema', 'resultSetTTL', 'x-cmd-context', 'x-fcs-context'
+        'recordSchema', 'resultSetTTL', 'x-fcs-context'
     ])
     resp_common.corpname = amodel.args.corpname
     # check integer parameters
@@ -182,7 +182,7 @@ async def op_search_retrieve(amodel: FCSActionModel, req: KRequest, resp_common:
 
 
 async def determine_curr_corpus(req_args: AnyRequestArgProxy, user: Dict[str, Any]) -> Tuple[str, bool]:
-    corpname = req_args.getvalue('x-cmd-context')
+    corpname = req_args.getvalue('x-fcs-context')
     if not corpname:
         default_corp_list = settings.get('corpora', 'default_corpora', [])
         if len(default_corp_list) < 1:

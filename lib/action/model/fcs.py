@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import math
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from typing import List, NamedTuple, Optional, Tuple
 
 import kwiclib
@@ -31,10 +31,12 @@ from action.response import KResponse
 from conclib.search import get_conc
 from corplib.corpus import AbstractKCorpus
 from action.model import ModelsSharedData
+from action.argmapping.wordlist import WordlistFormArgs
+from bgcalc.wordlist import wordlist
 
 
 @dataclass
-class FCSResourceInfo:
+class FCSResourceInfo:  # TODO we have two concurrent implementations of this
     title: Optional[str] = None
     landingPageURI: Optional[str] = None
     language: Optional[str] = None
@@ -107,6 +109,48 @@ class FCSActionModel(ConcActionModel):
             )
             resources.append(FCSCorpusInfo(corpus_id, corpus_title, resource_info))
         return resources
+
+    async def fcs_scan(self, corpname: str, scan_query: str, max_ter: int, start: int):
+        """
+        aux function for federated content search: operation=scan
+        """
+        if not scan_query:
+            raise Exception(7, 'scan_query', 'Mandatory parameter not supplied')
+        query = scan_query.replace('+', ' ')  # convert URL spaces
+        exact_match = False
+        if 'exact' in query.lower() and '=' not in query:  # lemma ExacT "dog"
+            pos = query.lower().index('exact')  # first occurence of EXACT
+            query = query[:pos] + '=' + query[pos + 5:]  # 1st exact > =
+            exact_match = True
+        corp = await self.cf.get_corpus(corpname)
+        attrs = corp.get_posattrs()
+        try:
+            if '=' in query:
+                attr, value = query.split('=')
+                attr = attr.strip()
+                value = value.strip()
+            else:  # must be in format attr = value
+                raise Exception
+            if '"' in attr:
+                raise Exception
+            if '"' in value:
+                if value[0] == '"' and value[-1] == '"':
+                    value = value[1:-1].strip()
+                else:
+                    raise Exception
+        except Exception:
+            raise FCSError(10, scan_query, 'Query syntax error')
+        if attr not in attrs:
+            raise FCSError(16, attr, 'Unsupported index')
+
+        if exact_match:
+            wlpattern = '^' + value + '$'
+        else:
+            wlpattern = '.*' + value + '.*'
+
+        args = WordlistFormArgs(wlattr=attr, wlpat=wlpattern, wlsort='f')
+        wl = await wordlist(corp, args, max_ter)
+        return [(d['str'], d['freq']) for d in wl][start:][:max_ter]
 
     async def fcs_search(self, corp: AbstractKCorpus, corpname: str, fcs_query: str, max_rec: int, start: int) -> Tuple[FCSSearchResult, str]:
         """
