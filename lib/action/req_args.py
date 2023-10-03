@@ -11,11 +11,14 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-import logging
+
 from collections import defaultdict
 from typing import Any, Dict, List, Union
 
 from sanic.request import RequestParameters
+
+
+
 
 
 def import_request_parameters(data: Dict[str, Any]):
@@ -26,14 +29,13 @@ def import_request_parameters(data: Dict[str, Any]):
 
 class RequestArgsProxy:
     """
-    A wrapper class allowing an access to both
-    Werkzeug's request.form and request.args (MultiDict objects).
+    A wrapper class allowing access to both URL and form args.
     It is also possible to force arguments manually in which
     case anything with the same key from 'form' or 'args' is
     suppressed. This is used when unpacking arguments from
     a query hash code.
 
-    The class is used in 'pre dispatch' phase and it is not
+    The class is used in 'pre dispatch' phase, and it is not
     expected to be used within individual action methods
     where 'request' object is available and also 'self.args'
     mapping.
@@ -239,6 +241,9 @@ class JSONRequestArgsProxy:
             else:
                 ans[k] = vals
         return ans
+
+
+AnyRequestArgProxy = Union[RequestArgsProxy, JSONRequestArgsProxy]
 
 
 def create_req_arg_proxy(form: Union[RequestParameters, Dict[str, Any]],

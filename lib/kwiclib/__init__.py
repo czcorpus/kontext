@@ -529,6 +529,8 @@ class Kwic:
         if isinstance(self.conc, InitialConc):
             kl = EmptyKWiclines()
         else:
+            import logging
+            logging.getLogger(__name__).warning('+++++++++++++++++ USING ARGS: {}'.format(args.leftctx))
             kl = manatee.KWICLines(
                 self.conc.corp(), self.conc.RS(True, args.fromline, args.toline), args.leftctx, args.rightctx,
                 args.attrs, args.ctxattrs, all_structs, args.refs)

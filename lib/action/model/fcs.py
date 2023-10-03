@@ -19,18 +19,17 @@
 
 import math
 from dataclasses import asdict, dataclass
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple
+from typing import List, NamedTuple, Optional, Tuple
 
 import kwiclib
 import plugins
 import settings
 from action.krequest import KRequest
-from action.model.corpus import CorpusPluginCtx
-from action.model.user import UserActionModel
+from action.model.concordance import ConcPluginCtx, ConcActionModel
 from action.props import ActionProps
 from action.response import KResponse
 from conclib.search import get_conc
-from corplib.corpus import KCorpus
+from corplib.corpus import AbstractKCorpus
 from action.model import ModelsSharedData
 
 
@@ -61,21 +60,23 @@ class FCSSearchResult:
     size: int
 
 
-class FCSActionModel(UserActionModel):
+class FCSActionModel(ConcActionModel):
     """
     An action controller providing services related to the Federated Content Search support
     """
+
+    BASE_ARGS = ['operation', 'stylesheet', 'version', 'extraRequestData']
 
     def __init__(
             self, req: KRequest, resp: KResponse, action_props: ActionProps, shared_data: ModelsSharedData):
         super().__init__(req, resp, action_props, shared_data)
         self.search_attrs = settings.get('fcs', 'search_attributes', ['word'])
 
-    def check_args(self, supported_default: List[str], supported: List[str]):
-        supported_default.extend(supported)
-        unsupported_args = set(self._req.args.keys()) - set(supported_default)
-        if 0 < len(unsupported_args):
-            raise Exception(8, list(unsupported_args)[0], 'Unsupported parameter')
+    def check_args(self, specific_args: List[str]):
+        allowed = self.BASE_ARGS + specific_args
+        for arg in self._req.args.keys():
+            if arg not in allowed:
+                raise Exception(8, arg, 'Unsupported parameter')
 
     async def corpora_info(self, value: str, max_items: int) -> List[FCSCorpusInfo]:
         resources: List[FCSCorpusInfo] = []
@@ -100,7 +101,7 @@ class FCSActionModel(UserActionModel):
             resources.append(FCSCorpusInfo(corpus_id, corpus_title, resource_info))
         return resources
 
-    async def fcs_search(self, corp: KCorpus, corpname: str, fcs_query: str, max_rec: int, start: int) -> FCSSearchResult:
+    async def fcs_search(self, corp: AbstractKCorpus, corpname: str, fcs_query: str, max_rec: int, start: int) -> Tuple[FCSSearchResult, str]:
         """
         aux function for federated content search: operation=searchRetrieve
         """
@@ -173,27 +174,31 @@ class FCSActionModel(UserActionModel):
         kwic_context = settings.get_int('fcs', 'kwic_context', 5)
         kwic_args.leftctx = f'-{kwic_context}'
         kwic_args.rightctx = f'{kwic_context}'
-        page = asdict(kwic.kwicpage(kwic_args))  # convert concordance
+        page = kwic.kwicpage(kwic_args)
 
         local_offset = (start - 1) % max_rec
         if start - 1 > conc.size():
             raise Exception(61, 'startRecord', 'First record position out of range')
-        rows = [
-            FCSSearchRow(
-                kwicline['Left'][0]['str'],
-                kwicline['Kwic'][0]['str'],
-                kwicline['Right'][0]['str'],
-                kwicline['ref']
-            )
-            for kwicline in page['Lines']
-        ][local_offset:local_offset + max_rec]
-        return FCSSearchResult(rows, conc.size())
+        rows = []
+        for kwicline in page.Lines[local_offset:local_offset + max_rec]:
+            rows.append(FCSSearchRow(
+                ' '.join([x['str'] for x in kwicline['Left']]),
+                ' '.join([x['str'] for x in kwicline['Kwic']]),
+                ' '.join([x['str'] for x in kwicline['Right']]),
+                kwicline['ref']))
+        return FCSSearchResult(rows, conc.size()), rq
 
     @property
     def plugin_ctx(self):
         if self._plugin_ctx is None:
-            self._plugin_ctx = CorpusPluginCtx(self, self._req, self._resp, self._plg_shared)
+            self._plugin_ctx = ConcPluginCtx(self, self._req, self._resp, self._plg_shared)
         return self._plugin_ctx
+
+    def _output_last_op_id(self, op_id, tpl_data):
+        super()._output_last_op_id(op_id, tpl_data)
+        if plugins.runtime.QUERY_PERSISTENCE.exists:
+            if op_id:
+                tpl_data['corppid'] = f'~{op_id}'
 
 
 class Languages:
