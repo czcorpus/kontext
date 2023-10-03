@@ -238,7 +238,10 @@ class CorpusActionModel(UserActionModel):
         with plugins.runtime.AUTH as auth:
             is_api = action_props.return_type == 'json' or req_args.getvalue(
                 'format') == 'json'
-            corpname, redirect = await self._determine_curr_corpus(req_args, is_api)
+            if not self._corpus_name_determiner:
+                corpname, redirect = await self._determine_curr_corpus(req_args, is_api)
+            else:
+                corpname, redirect = await self._corpus_name_determiner(req_args, self.session_get('user'))
             has_access, variant = await auth.validate_access(corpname, self.session_get('user'))
             if has_access and redirect:
                 url_pref = action_props.action_prefix + '/' if action_props.action_prefix else ''
