@@ -14,7 +14,7 @@
 # GNU General Public License for more details.
 
 import hashlib
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Callable, Awaitable
 from sanic import Sanic
 from sanic.cookies.request import CookieRequestParameters
 
@@ -25,7 +25,7 @@ from action.krequest import KRequest
 from action.model.abstract import AbstractPageModel
 from action.plugin.ctx import AbstractBasePluginCtx
 from action.props import ActionProps
-from action.req_args import create_req_arg_proxy
+from action.req_args import create_req_arg_proxy, AnyRequestArgProxy
 from action.response import KResponse
 from main_menu.model import AbstractMenuItem, MainMenuItemId
 from action.model import ModelsSharedData
@@ -60,6 +60,7 @@ class BaseActionModel(AbstractPageModel):
         self._dynamic_menu_items: List[AbstractMenuItem] = []
         self._plg_shared = shared_data.plg_shared
         self._plugin_ctx: Optional[BasePluginCtx] = None
+        self._corpus_name_determiner: Callable[[AnyRequestArgProxy, Dict[str, Any]], Awaitable[Tuple[str, bool]]] = action_props.corpus_name_determiner
 
     @property
     def dynamic_menu_items(self):

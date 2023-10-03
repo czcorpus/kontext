@@ -48,7 +48,7 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
     and authenticated user). Any more complicated action model
     will likely inherit from this one.
 
-    The model also provides a CorpusFactory instance but it
+    The model also provides a CorpusFactory instance, yet it
     does not perform any implicit actions on it. It is provided
     purely for the 'view' functions.
     """

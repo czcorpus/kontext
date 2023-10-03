@@ -17,7 +17,7 @@ import json
 import logging
 import secrets
 from functools import wraps
-from typing import Any, Callable, Coroutine, Optional, Type, Union
+from typing import Any, Callable, Coroutine, Optional, Type, Union, Tuple, Dict, Awaitable
 
 import settings
 from action.argmapping.action import create_mapped_args
@@ -25,6 +25,7 @@ from action.errors import (
     AlignedCorpusForbiddenException, CorpusForbiddenException,
     ForbiddenException, ImmediateRedirectException, UserReadableException)
 from action.krequest import KRequest
+from action.req_args import AnyRequestArgProxy
 from action.model import ModelsSharedData
 from action.model.abstract import AbstractPageModel, AbstractUserModel
 from action.model.base import BaseActionModel
@@ -152,7 +153,9 @@ def http_action(
         mapped_args: Optional[Type] = None,
         mutates_result: bool = False,
         return_type: Optional[str] = None,
-        action_log_mapper: Optional[Callable[[KRequest], Any]] = None):
+        action_log_mapper: Optional[Callable[[KRequest], Any]] = None,
+        corpus_name_determiner: Optional[Callable[[AnyRequestArgProxy, Dict[str, Any]], Awaitable[Tuple[str, bool]]]] = None
+        ):
     """
     http_action decorator wraps Sanic view functions to provide more
     convenient arguments (including important action models). KonText
@@ -179,6 +182,8 @@ def http_action(
                    (e.g. when returning some binary data, only 'plain' return_type makes sense).
                    In case a custom Content-Type is needed, return_type must be set to 'plain', otherwise KonText
                    will force predefined type (e.g. for template it is text/html etc.).
+    corpus_name_determiner -- a custom function to determine which corpus is required via URL; this is mostly
+                              intended for special modules (e.g. FCS) which require non-standard ways for this
     """
     def decorator(func: Callable[[AbstractPageModel, KRequest, KResponse], Coroutine[Any, Any, Optional[ResultType]]]):
         @wraps(func)
@@ -213,7 +218,8 @@ def http_action(
                 action_name=action_name, action_prefix=action_prefix,
                 access_level=runtime_access_level,
                 return_type=return_type, page_model=page_model, template=template,
-                mutates_result=mutates_result, action_log_mapper=action_log_mapper)
+                mutates_result=mutates_result, action_log_mapper=action_log_mapper,
+                corpus_name_determiner=corpus_name_determiner)
             expl_return_type = get_explicit_return_type(req)
             if expl_return_type:
                 aprops.return_type = expl_return_type
