@@ -24,7 +24,6 @@ import settings
 from action.control import http_action
 from action.krequest import KRequest
 from action.req_args import AnyRequestArgProxy
-from action.model.base import BaseActionModel
 from action.argmapping.conc import QueryFormArgs
 from action.model.fcs import FCSActionModel, FCSError, FCSResourceInfo
 from action.response import KResponse
@@ -33,28 +32,6 @@ from sanic import Blueprint
 
 bp_common = Blueprint('fcs-common', url_prefix='fcs')
 bp_v1 = bp_common.copy('fcs-v1')
-
-
-@bp_common.route('/fcs2html')
-@http_action(template='fcs/fcs2html.html', action_model=BaseActionModel)
-async def fcs2html(amodel: BaseActionModel, req: KRequest, resp: KResponse):
-    """
-    Returns XSL template for rendering FCS XML.
-    """
-    resp.set_header('Content-Type', 'text/xsl; charset=utf-8')
-    custom_hd_inject_path = settings.get('fcs', 'template_header_inject_file', None)
-    if custom_hd_inject_path:
-        async with aiofiles.open(custom_hd_inject_path) as fr:
-            custom_hdr_inject = await fr.read()
-    else:
-        custom_hdr_inject = None
-
-    return dict(
-        fcs_provider_heading=settings.get('fcs', 'provider_heading', 'KonText FCS Data Provider'),
-        fcs_provider_website=settings.get('fcs', 'provider_website', None),
-        fcs_template_css_url=settings.get_list('fcs', 'template_css_url'),
-        fcs_custom_hdr_inject=custom_hdr_inject,
-    )
 
 
 @dataclass
@@ -125,6 +102,8 @@ async def op_scan(amodel: FCSActionModel, req: KRequest, resp_common: FCSRespons
             raise FCSError(6, 'responsePosition', 'Unsupported parameter value')
 
     scan_clause: str = req.args.get('scanClause', '')
+    if not scan_clause:
+        raise FCSError(7, 'scanClause', 'Mandatory parameter not supplied')
     if scan_clause.startswith('fcs.resource='):
         value = scan_clause.split('=')[1]
         resp_common.result = await amodel.corpora_info(value, resp_common.maximumTerms)
@@ -198,7 +177,8 @@ async def determine_curr_corpus(req_args: AnyRequestArgProxy, user: Dict[str, An
 @http_action(
     template='fcs/v1_complete.html',
     action_model=FCSActionModel,
-    corpus_name_determiner=determine_curr_corpus)
+    corpus_name_determiner=determine_curr_corpus,
+    return_type='template_xml')
 async def v1(amodel: FCSActionModel, req: KRequest, resp: KResponse):
     resp.set_header('Content-Type', 'application/xml')
     current_version = 1.2
@@ -222,9 +202,9 @@ async def v1(amodel: FCSActionModel, req: KRequest, resp: KResponse):
             try:
                 vnum = float(version)
             except ValueError:
-                raise FCSError(5, current_version, f'Unsupported version {version}')
+                raise FCSError(5, str(current_version), f'Unsupported version {version}')
             if current_version < vnum:
-                raise FCSError(5, current_version, f'Unsupported version {version}')
+                raise FCSError(5, str(current_version), f'Unsupported version {version}')
         # set content-type in HTTP header
         if 'recordPacking' in req.args:
             common_data.recordPacking = req.args.get('recordPacking')

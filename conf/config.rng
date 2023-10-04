@@ -660,33 +660,6 @@
                         <text />
                     </element>
                     <optional>
-                        <element name="provider_heading">
-                            <text />
-                        </element>
-                    </optional>
-                    <optional>
-                        <element name="provider_website">
-                            <text />
-                        </element>
-                    </optional>
-                    <optional>
-                        <element name="template_css_url">
-                            <choice>
-                                <text />
-                                <oneOrMore>
-                                    <element name="item">
-                                        <text />
-                                    </element>
-                                </oneOrMore>
-                            </choice>
-                        </element>
-                    </optional>
-                    <optional>
-                        <element name="template_header_inject_file">
-                            <text />
-                        </element>
-                    </optional>
-                    <optional>
                         <element name="search_attributes">
                             <oneOrMore>
                                 <element name="item">

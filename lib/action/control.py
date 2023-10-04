@@ -53,6 +53,7 @@ async def _output_result(
     depends on the combination of the 'return_type' argument and a type of the 'result'.
     Typical combinations are (ret. type, data type):
     'template' + dict
+    'template_xml' + dict
     'json' + dict (which may contain dataclass_json instances)
     'json' + dataclass_json
     'plain' + str
@@ -78,6 +79,8 @@ async def _output_result(
         return Type2XML.to_xml(result)
     elif action_props.return_type == 'plain' and not isinstance(result, (dict, DataClassJsonMixin)):
         return result
+    elif action_props.return_type == 'template_xml':
+        return tpl_engine.render(action_props.template, result, translate)
     elif action_props.return_type == 'template' and (result is None or isinstance(result, dict)):
         result = await action_model.add_globals(app, action_props, result)
         result['nonce'] = nonce = secrets.token_urlsafe()
@@ -176,7 +179,12 @@ def http_action(
                       it should store actual result data. This is particularly important for concordance
                       actions like filters, sorting etc. where the concordance changes based on the previous
                       state.
-    return_type -- specifies how the result data should be interpreted for the client {plain, json, template, xml}.
+    return_type -- specifies how the result data should be interpreted for the client:
+                    * plain - raw data send to a response body
+                    * json - result data marshaled to JSON
+                    * template - data written to HTML using a Jinja2 template
+                    * xml - result data marshaled to XML with some predefined elements
+                    * template_xml - result data written to XML using a Jinja2 template
                    In some cases, a single result type (typically a Dict) can be transformed into multiple formats
                    (html page, xml file, json file, plain text file) but in other cases the choice is limited
                    (e.g. when returning some binary data, only 'plain' return_type makes sense).

@@ -8,7 +8,6 @@
     </sru:diagnostics>
 {%- endmacro -%}
 <?xml version='1.0' encoding='utf-8'?>
-<?xml-stylesheet href="{{ root_url }}fcs/fcs2html" type="text/xsl"?>
 {% if operation == 'explain' %}
 <sru:explainResponse xmlns:sru="http://www.loc.gov/zing/srw/">
     <sru:version>{{ version }}</sru:version>
@@ -73,9 +72,9 @@
                     {% if resource.landing_page_uri %}
                     <ed:LandingPageURI>{{ resource.landing_page_uri }}</ed:LandingPageURI>
                     {% endif %}
-                    {% if resource.language %}
+                    {% if resource.language[2] %}
                     <ed:Languages>
-                        <ed:Language>{{ resource.language }}</ed:Language>
+                        <ed:Language>{{ resource.language[2] }}</ed:Language>
                     </ed:Languages>
                     {% endif %}
                     <ed:AvailableDataViews ref="hits"/>
@@ -94,10 +93,10 @@
     <sru:version>{{ version }}</sru:version>
     {% if code is not defined and result %}
     <sru:terms>
-        {% for value, displayTerm, resourceInfo in result %}
+        {% for resource in result %}
             <sru:term>
-                <sru:value>{{ value }}</sru:value>
-                <sru:displayTerm>{{ displayTerm }}</sru:displayTerm>
+                <sru:value>{{ resource.title }}</sru:value>
+                <sru:displayTerm>{{ resource.title }}</sru:displayTerm>
                 {% if resourceInfoRequest %}
                 <sru:extraTermData>
                     <ResourceInfo xmlns="http://clarin.eu/fcs/1.0/resource-info" pid="{{ resourceInfo.title }}" hasSubResources="false">
@@ -108,9 +107,11 @@
                         {% if resourceInfo.landing_page_uri %}
                         <LandingPageURI>{{ resourceInfo.landing_page_uri }}</LandingPageURI>
                         {% endif %}
+                        {% if resource.language[2] %}
                         <Languages>
-                            <Language>{{ resourceInfo.language }}</Language>
+                            <Language>{{ resourceInfo.language[2] }}</Language>
                         </Languages>
+                        {% endif %}
                     </ResourceInfo>
                 </sru:extraTermData>
                 {% endif %}
