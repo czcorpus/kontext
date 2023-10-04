@@ -15,8 +15,9 @@
 import hashlib
 import os
 import sys
+from dataclasses import dataclass
 from functools import wraps
-from typing import Any, Dict, List, Tuple
+from typing import List, Tuple, Union
 
 import aiofiles
 import aiofiles.os
@@ -27,6 +28,7 @@ from bgcalc import wordlist
 from bgcalc.jsonl_cache import load_cached_partial
 from corplib import manatee_is_custom_cnc
 from corplib.corpus import KCorpus
+from dataclasses_json import dataclass_json
 from manatee import Keyword  # TODO wrap this out
 
 CNC_SCORE_TYPES = ('logL', 'chi2', 'din')
@@ -48,12 +50,44 @@ def _create_cache_path(form: KeywordsFormArgs) -> str:
     return os.path.join(settings.get('corpora', 'freqs_cache_dir'), f'kwords_{result_id}.jsonl')
 
 
-async def require_existing_keywords(form: KeywordsFormArgs, offset: int, limit: int) -> Tuple[int, List[Dict[str, Any]]]:
+@dataclass_json
+@dataclass
+class KeywordLine:
+    item: str
+    score: float
+    frq1: int
+    frq2: int
+    rel_frq1: float
+    rel_frq2: float
+    query: str
+
+
+@dataclass_json
+@dataclass
+class CNCKeywordLine(KeywordLine):
+    logL: float
+    chi2: float
+    din: float
+
+
+KeywordsResultType = Union[List[KeywordLine], List[CNCKeywordLine]]
+
+
+@dataclass_json
+@dataclass
+class KeywordsResult:
+    total: int
+    data: KeywordsResultType
+
+
+async def require_existing_keywords(form: KeywordsFormArgs, offset: int, limit: int) -> KeywordsResult:
     path = _create_cache_path(form)
     if not await aiofiles.os.path.exists(path):
         raise KeywordsResultNotFound('The result does not exist')
     else:
-        return await load_cached_partial(path, offset, limit)
+        data = await load_cached_partial(path, offset, limit)
+        LineDataClass = CNCKeywordLine if manatee_is_custom_cnc else KeywordLine
+        return KeywordsResult(data[0], [LineDataClass.from_dict(item) for item in data[1]])
 
 
 def cached(f):
@@ -63,11 +97,12 @@ def cached(f):
     @wraps(f)
     async def wrapper(corp: KCorpus, ref_corp: KCorpus, args: KeywordsFormArgs, max_items: int):
         path = _create_cache_path(args)
+        LineDataClass = CNCKeywordLine if manatee_is_custom_cnc else KeywordLine
 
         if await aiofiles.os.path.exists(path):
             async with aiofiles.open(path, 'r') as fr:
                 await fr.readline()
-                return [json.loads(item) async for item in fr]
+                return [LineDataClass.from_dict(json.loads(item)) async for item in fr]
         else:
             ans = await f(corp, ref_corp, args, sys.maxsize)
             # ans = sorted(ans, key=lambda x: x[1], reverse=True)
@@ -75,14 +110,14 @@ def cached(f):
             async with aiofiles.open(path, 'w') as fw:
                 await fw.write(json.dumps(dict(total=num_lines)) + '\n')
                 for item in ans:
-                    await fw.write(json.dumps(item) + '\n')
+                    await fw.write(item.to_json() + '\n')
             return ans[:max_items]
 
     return wrapper
 
 
 @cached
-async def keywords(corp: KCorpus, ref_corp: KCorpus, args: KeywordsFormArgs, max_items: int) -> List[Dict[str, Any]]:
+async def keywords(corp: KCorpus, ref_corp: KCorpus, args: KeywordsFormArgs, max_items: int) -> KeywordsResultType:
     c_wl = corp.get_attr(args.wlattr)
     rc_wl = ref_corp.get_attr(args.wlattr)
     if not args.include_nonwords:
@@ -125,27 +160,29 @@ async def keywords(corp: KCorpus, ref_corp: KCorpus, args: KeywordsFormArgs, max
 
         if manatee_is_custom_cnc():
             freqs = kw.get_freqs(2 * len([]) + 4 + 4)  # 1 additional slot for size effect
-            item.update({'item': s,
-                         'score': round(freqs[4], 3),
-                         'logL': round(freqs[5], 3),
-                         'chi2': round(freqs[6], 3),
-                         'din': round(float(freqs[7]), 5),
-                         'frq1': int(freqs[0]),
-                         'frq2': int(freqs[1]),
-                         'rel_frq1': round(float(freqs[2]), 5),
-                         'rel_frq2': round(float(freqs[3]), 5),
-                         'query': cql})
+            results.append(CNCKeywordLine(
+                item=s,
+                score=round(freqs[4], 3),
+                logL=round(freqs[5], 3),
+                chi2=round(freqs[6], 3),
+                din=round(float(freqs[7]), 5),
+                frq1=int(freqs[0]),
+                frq2=int(freqs[1]),
+                rel_frq1=round(float(freqs[2]), 5),
+                rel_frq2=round(float(freqs[3]), 5),
+                query=cql
+            ))
         else:
             freqs = kw.get_freqs(2 * len([]) + 4)
-            item.update({'item': s,
-                         'score': round(kw.score, 3),
-                         'frq1': int(freqs[0]),
-                         'frq2': int(freqs[1]),
-                         'rel_frq1': round(float(freqs[2]), 5),
-                         'rel_frq2': round(float(freqs[3]), 5),
-                         'query': cql})
-
-        results.append(item)
+            results.append(KeywordLine(
+                item=s,
+                score=round(kw.score, 3),
+                frq1=int(freqs[0]),
+                frq2=int(freqs[1]),
+                rel_frq1=round(float(freqs[2]), 5),
+                rel_frq2=round(float(freqs[3]), 5),
+                query=cql
+            ))
         kw = keyword.next()
 
     return results[:max_items]

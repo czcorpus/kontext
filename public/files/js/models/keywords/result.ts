@@ -20,12 +20,13 @@
  */
 
 import * as Kontext from '../../types/kontext';
-import { IActionDispatcher, SEDispatcher, StatelessModel } from 'kombo';
+import { IActionDispatcher, IFullActionControl, SEDispatcher, StatelessModel } from 'kombo';
 import { PageModel } from '../../app/page';
 import { Keyword } from './common';
 import { Actions } from './actions';
+import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { validateGzNumber } from '../base';
-import { Observable, tap, throwError } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { HTTP } from 'cnc-tskit';
 
 
@@ -47,6 +48,7 @@ export interface KeywordsResultState {
     isLoading:boolean;
     manateeIsCustomCNC:boolean;
     attr:string;
+    saveFormActive:boolean;
 }
 
 export interface KeywordsResultModelArgs {
@@ -105,6 +107,7 @@ export class KeywordsResultModel extends StatelessModel<KeywordsResultState> {
                 isLoading: false,
                 manateeIsCustomCNC: layoutModel.getConf<boolean>('manateeIsCustomCNC'),
                 attr,
+                saveFormActive: false,
             }
         );
         this.layoutModel = layoutModel;
@@ -167,6 +170,32 @@ export class KeywordsResultModel extends StatelessModel<KeywordsResultState> {
                     state.kwpage = action.payload.page;
                     state.kwsort = action.payload.sort;
                 }
+            }
+        );
+
+        this.addActionHandler<typeof Actions.ResultCloseSaveForm>(
+            Actions.ResultCloseSaveForm.name,
+            (state, action) => {state.saveFormActive = false;}
+        );
+
+        this.addActionHandler<typeof MainMenuActions.ShowSaveForm>(
+            MainMenuActions.ShowSaveForm.name,
+            (state, action) => {state.saveFormActive = true;}
+        );
+
+        this.addActionHandler<typeof Actions.SaveFormSubmit>(
+            Actions.SaveFormSubmit.name,
+            (state, action) => {},
+            (state, action, dispatch) => {
+                this.sendSaveArgs(state, dispatch);
+            }
+        );
+
+        this.addActionHandler<typeof MainMenuActions.DirectSave>(
+            MainMenuActions.DirectSave.name,
+            (state, action) => {},
+            (state, action, dispatch) => {
+                this.sendSaveArgs(state, dispatch);
             }
         );
     }
@@ -237,4 +266,12 @@ export class KeywordsResultModel extends StatelessModel<KeywordsResultState> {
         );
     }
 
+    sendSaveArgs(state:KeywordsResultState, dispatch:SEDispatcher):void {
+        dispatch<typeof Actions.SaveFormPrepareSubmitArgsDone>({
+            name: Actions.SaveFormPrepareSubmitArgsDone.name,
+            payload: {
+                queryId: state.queryId,
+            }
+        });
+    }
 }

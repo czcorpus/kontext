@@ -25,17 +25,20 @@ from typing import Any, Dict, List, Tuple
 
 from action.argmapping.wordlist import WordlistSaveFormArgs
 from action.model.concordance import ConcActionModel
+from action.model.keywords import KeywordsActionModel
 from action.model.pquery import ParadigmaticQueryActionModel
 from action.model.wordlist import WordlistActionModel
 from babel import Locale
 from babel.numbers import format_decimal
 from bgcalc.coll_calc import CalculateCollsResult
+from bgcalc.keywords import KeywordsResult
 from bgcalc.pquery.storage import PqueryDataLine
 from jinja2 import Environment, FileSystemLoader
 from kwiclib.common import KwicPageData
 from views.colls import SavecollArgs
 from views.concordance import SaveConcArgs, _get_ipm_base_set_desc
 from views.freqs import SavefreqArgs
+from views.keywords import SaveKeywordsArgs
 from views.pquery import SavePQueryArgs
 
 from . import AbstractExport
@@ -120,6 +123,10 @@ class TXTExport(AbstractExport):
         self._data = await template.render_async(output)
 
     async def write_pquery(self, amodel: ParadigmaticQueryActionModel, data: List[PqueryDataLine], args: SavePQueryArgs):
+        # TODO perhaps
+        raise NotImplementedError
+
+    async def write_keywords(self, amodel: KeywordsActionModel, data: KeywordsResult, args: SaveKeywordsArgs):
         # TODO perhaps
         raise NotImplementedError
 

@@ -25,6 +25,7 @@ from action.model import ModelsSharedData
 from action.model.corpus import CorpusActionModel, CorpusPluginCtx
 from action.props import ActionProps
 from action.response import KResponse
+from main_menu.model import EventTriggeringItem, MainMenu
 from sanic import Sanic
 
 
@@ -33,6 +34,8 @@ class KeywordsError(UserReadableException):
 
 
 class KeywordsActionModel(CorpusActionModel):
+
+    KEYWORDS_QUICK_SAVE_MAX_LINES = 10000
 
     def __init__(self, req: KRequest, resp: KResponse, action_props: ActionProps, shared_data: ModelsSharedData):
         super().__init__(req, resp, action_props, shared_data)
@@ -92,6 +95,34 @@ class KeywordsActionModel(CorpusActionModel):
         result['Globals'] = conc_args
         result['conc_dashboard_modules'] = settings.get_list('global', 'conc_dashboard_modules')
         return result
+
+    def _add_save_menu_item(self, label: str, save_format: Optional[str] = None, hint: Optional[str] = None):
+        if save_format is None:
+            event_name = 'MAIN_MENU_SHOW_SAVE_FORM'
+            self._dynamic_menu_items.append(
+                EventTriggeringItem(MainMenu.SAVE, label, event_name, key_code=83, key_mod='shift',
+                                    hint=hint).mark_indirect())  # key = 's'
+
+        else:
+            event_name = 'MAIN_MENU_DIRECT_SAVE'
+            self._dynamic_menu_items.append(
+                EventTriggeringItem(
+                    MainMenu.SAVE, label, event_name, hint=hint).add_args(('saveformat', save_format)))
+
+    def add_save_menu(self):
+        self._add_save_menu_item(
+            'CSV', save_format='csv',
+            hint=self._req.translate(
+                f'Saves at most {self.KEYWORDS_QUICK_SAVE_MAX_LINES} items. Use "Custom" for more options.'))
+        self._add_save_menu_item(
+            'XLSX', save_format='xlsx',
+            hint=self._req.translate(
+                f'Saves at most {self.KEYWORDS_QUICK_SAVE_MAX_LINES} items. Use "Custom" for more options.'))
+        self._add_save_menu_item(
+            'XML', save_format='xml',
+            hint=self._req.translate(
+                f'Saves at most {self.KEYWORDS_QUICK_SAVE_MAX_LINES} items. Use "Custom" for more options.'))
+        self._add_save_menu_item(self._req.translate('Custom'))
 
 
 class KeywordsPluginCtx(CorpusPluginCtx):

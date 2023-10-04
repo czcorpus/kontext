@@ -300,7 +300,7 @@ export class CollPage {
             name,
             format,
             datasetType: DownloadType.COLL,
-            contentType: 'multipart/form-data',
+            contentType: 'text/plain',
             url,
             args,
         }).subscribe();

@@ -28,21 +28,27 @@ import { KeywordsResultModel, KeywordsResultState } from '../../../models/keywor
 import { List } from 'cnc-tskit';
 import * as S from './style';
 import { Actions } from '../../../models/keywords/actions';
+import { KeywordsResultsSaveModel } from 'public/files/js/models/keywords/save';
+import { init as initSaveViews } from './save';
 
 
 export interface KeywordsResultViewArgs {
     dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
     keywordsResultModel:KeywordsResultModel;
+    saveModel:KeywordsResultsSaveModel;
 }
 
 export function init({
     dispatcher,
     he,
-    keywordsResultModel
+    keywordsResultModel,
+    saveModel,
 }:KeywordsResultViewArgs):React.ComponentClass<{}> {
 
     const layoutViews = he.getLayoutViews();
+
+    const saveViews = initSaveViews(dispatcher, he, saveModel);
 
     const SortableCol:React.FC<{text:string, value:string, kwsort:string}> = (props) => {
         const handleClick = () => {
@@ -69,6 +75,12 @@ export function init({
     }
 
     const KeywordsResult:React.FC<KeywordsResultState> = (props) => {
+
+        const _handleSaveFormClose = () => {
+            dispatcher.dispatch<typeof Actions.ResultCloseSaveForm>({
+                name: Actions.ResultCloseSaveForm.name
+            })
+        };
 
         const handlePageChange = (value:string) => {
             dispatcher.dispatch(
@@ -156,6 +168,10 @@ export function init({
                         }
                     </tbody>
                 </table>
+
+                {props.saveFormActive ?
+                    <saveViews.SavePqueryForm onClose={_handleSaveFormClose} /> :
+                    null}
             </S.KeywordsResult>
         );
     }

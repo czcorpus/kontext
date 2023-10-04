@@ -23,11 +23,13 @@ from typing import Any, Dict, List, Tuple
 
 from action.argmapping.wordlist import WordlistSaveFormArgs
 from action.model.concordance import ConcActionModel
+from action.model.keywords import KeywordsActionModel
 from action.model.pquery import ParadigmaticQueryActionModel
 from action.model.wordlist import WordlistActionModel
 from babel import Locale
 from babel.numbers import format_decimal
 from bgcalc.coll_calc import CalculateCollsResult
+from bgcalc.keywords import CNCKeywordLine, KeywordsResult, KeywordsResultType
 from bgcalc.pquery.storage import PqueryDataLine
 from conclib.errors import ConcordanceQueryParamsError
 from kwiclib.common import KwicPageData
@@ -35,6 +37,7 @@ from lxml import etree
 from views.colls import SavecollArgs
 from views.concordance import SaveConcArgs
 from views.freqs import SavefreqArgs
+from views.keywords import SaveKeywordsArgs
 from views.pquery import SavePQueryArgs
 
 from . import AbstractExport
@@ -243,6 +246,34 @@ class PqueryDocument(GeneralDocument):
         self._auto_add_heading(data)
 
 
+class KeywordsDocument(GeneralDocument):
+
+    COLLS = ['score', 'frq', 'frq_ref', 'ipm', 'ipm_ref']
+
+    CNC_COLLS = ['logL', 'chi2', 'din', 'frq', 'frq_ref', 'ipm', 'ipm_ref']
+
+    def __init__(self, is_cnc_manatee: bool):
+        super(KeywordsDocument, self).__init__('kwords_results')
+        self._items = etree.SubElement(self._root, 'items')
+        self._is_cnc_manatee = is_cnc_manatee
+
+    def add_line(self, data, line_num=None):
+        item_elm = etree.SubElement(self._items, 'item')
+        if line_num is not None:
+            line_num_elm = etree.SubElement(item_elm, 'num')
+            line_num_elm.text = str(line_num)
+        str_elm = etree.SubElement(item_elm, 'str')
+        str_elm.text = data[0]
+        for i, d in enumerate(data[1:], 0):
+            freq_elm = etree.SubElement(
+                item_elm, self.CNC_COLLS[i] if self._is_cnc_manatee else self.COLLS[i])
+            freq_elm.text = str(d)
+
+    def add_heading(self, data):
+        self._auto_add_heading(
+            ['', data, *(self.CNC_COLLS if self._is_cnc_manatee else self.COLLS)])
+
+
 class XMLExport(AbstractExport):
     """
     The plug-in itself
@@ -344,6 +375,19 @@ class XMLExport(AbstractExport):
         for i, row in enumerate(data, 1):
             self._writerow(i, (row.value, *(self._formatnumber(f)
                                             for f in row.freqs), self._formatnumber(sum(row.freqs))))
+
+    async def write_keywords(self, amodel: KeywordsActionModel, result: KeywordsResult, args: SaveKeywordsArgs):
+        self._document = KeywordsDocument(isinstance(result.data[0], CNCKeywordLine))
+        if args.colheaders or args.heading:
+            self._writeheading(amodel.curr_kwform_args.wlattr)
+
+        for i, row in enumerate(result.data, 1):
+            if isinstance(row, CNCKeywordLine):
+                self._writerow(i, (row.item, row.logL, row.chi2, row.din,
+                                   row.frq1, row.frq2, row.rel_frq1, row.rel_frq2))
+            else:
+                self._writerow(i, (row.item, row.score, row.frq1,
+                                   row.frq2, row.rel_frq1, row.rel_frq2))
 
     async def write_wordlist(self, amodel: WordlistActionModel, data: List[Tuple[str, int]], args: WordlistSaveFormArgs):
         self._document = WordlistDocument()

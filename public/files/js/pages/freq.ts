@@ -307,7 +307,7 @@ class FreqPage {
             format,
             datasetType: DownloadType.FREQ,
             url,
-            contentType: 'multipart/form-data',
+            contentType: 'text/plain',
             args,
         }).subscribe();
     }

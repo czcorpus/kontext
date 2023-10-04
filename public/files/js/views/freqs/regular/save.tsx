@@ -67,7 +67,7 @@ export function init(
 
         return (
             <tr>
-                <th>{utils.translate('coll__save_form_select_label')}:</th>
+                <th>{utils.translate('global__save_form_select_label')}:</th>
                 <td>
                     <select value={props.value} onChange={handleSelect}>
                         <option value="csv">CSV</option>
@@ -112,7 +112,7 @@ export function init(
             <tr className="separator">
                 <th>
                     <label htmlFor="tr-include-heading-checkbox">
-                        {utils.translate('coll__save_form_incl_heading')}
+                        {utils.translate('global__save_form_incl_heading')}
                     </label>:
                 </th>
                 <td>
@@ -145,7 +145,7 @@ export function init(
 
         return (
             <tr className="separator">
-                <th><label htmlFor="tr-col-headers-checkbox">{utils.translate('coll__save_form_incl_col_hd')}</label>:</th>
+                <th><label htmlFor="tr-col-headers-checkbox">{utils.translate('global__save_form_incl_col_hd')}</label>:</th>
                 <td>
                     <input id="tr-col-headers-checkbox" type="checkbox" checked={props.value} onChange={handleChange} />
                 </td>
@@ -176,7 +176,7 @@ export function init(
 
         return (
             <tr className="separator">
-                <th><label htmlFor="tr-multi-sheet-file-checkbox">{utils.translate('coll__save_form_multi_sheet_file')}</label>:</th>
+                <th><label htmlFor="tr-multi-sheet-file-checkbox">{utils.translate('global__save_form_multi_sheet_file')}</label>:</th>
                 <td>
                     <input id="tr-multi-sheet-file-checkbox" type="checkbox" checked={props.value} onChange={handleChange} />
                 </td>
@@ -213,16 +213,16 @@ export function init(
         return (
             <tr>
                 <th style={{verticalAlign: 'top'}}>
-                    {utils.translate('coll__save_form_lines_to_store')}:
+                    {utils.translate('global__save_form_lines_to_store')}:
                 </th>
                 <td>
-                    {utils.translate('coll__save_form_line_from')}:{'\u00a0'}
+                    {utils.translate('global__save_form_line_from')}:{'\u00a0'}
                     <layoutViews.ValidatedItem invalid={fromValue.isInvalid}>
                         <input type="text" name="from_line" value={fromValue.value}
                                 onChange={handleFromInput}  style={{width: '4em'}} />
                     </layoutViews.ValidatedItem>
                     {'\u00a0'}
-                    {utils.translate('coll__save_form_line_to')}:{'\u00a0'}
+                    {utils.translate('global__save_form_line_to')}:{'\u00a0'}
                     <layoutViews.ValidatedItem invalid={toValue.isInvalid}>
                         <input type="text" name="to_line" value={toValue.value}
                                 onChange={handleToInput} style={{width: '4em'}}
@@ -230,7 +230,7 @@ export function init(
                     </layoutViews.ValidatedItem>
 
                     <p className="hint">
-                        ({utils.translate('coll__save_form_leave_to_load_to_end')})
+                        ({utils.translate('global__save_form_leave_to_load_to_end')})
                     </p>
                 </td>
             </tr>
@@ -287,7 +287,7 @@ export function init(
                             </table>
                             <button type="button" className="default-button"
                                     onClick={this._handleSubmitClick}>
-                                {utils.translate('coll__save_form_submit_btn')}
+                                {utils.translate('global__save_form_submit_btn')}
                             </button>
                         </form>
                     </layoutViews.CloseableFrame>

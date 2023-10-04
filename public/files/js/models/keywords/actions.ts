@@ -23,6 +23,7 @@ import { Action } from 'kombo';
 import { ScoreType } from './form';
 import { AsyncTaskInfo } from '../../types/kontext';
 import { Keyword } from './common';
+import { DataSaveFormat } from '../../app/navigation/save';
 
 
 export class Actions {
@@ -98,5 +99,51 @@ export class Actions {
         kwsort:string;
     }> = {
         name: 'KEYWORDS_HISTORY_POP_STATE'
+    };
+
+    static SaveFormSetFormat:Action<{
+        value:DataSaveFormat;
+    }> = {
+        name: 'KEYWORDS_SAVE_FORM_SET_FORMAT'
+    };
+
+    static SaveFormSetFromLine:Action<{
+        value:string;
+    }> = {
+        name: 'KEYWORDS_SAVE_FORM_SET_FROM_LINE'
+    };
+
+    static SaveFormSetToLine:Action<{
+        value:string;
+    }> = {
+        name: 'KEYWORDS_SAVE_FORM_SET_TO_LINE'
+    };
+
+    static SaveFormSetIncludeHeading:Action<{
+        value:boolean;
+    }> = {
+        name: 'KEYWORDS_SAVE_FORM_SET_INCLUDE_HEADING'
+    };
+
+    static SaveFormSetIncludeColHeading:Action<{
+        value:boolean;
+    }> = {
+        name: 'KEYWORDS_SAVE_FORM_SET_INCLUDE_COL_HEADERS'
+    };
+
+    static SaveFormSubmit:Action<{
+    }> = {
+        name: 'KEYWORDS_SAVE_FORM_SUBMIT'
+    };
+
+    static SaveFormPrepareSubmitArgsDone:Action<{
+        queryId:string;
+    }> = {
+        name: 'KEYWORDS_SAVE_FORM_PREPARE_SUBMIT_ARGS_DONE'
+    };
+
+    static ResultCloseSaveForm:Action<{
+    }> = {
+        name: 'KEYWORDS_RESULT_CLOSE_SAVE_FORM'
     };
 }

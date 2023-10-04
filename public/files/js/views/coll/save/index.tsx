@@ -66,7 +66,7 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
 
         return (
             <tr>
-                <th>{utils.translate('coll__save_form_select_label')}:</th>
+                <th>{utils.translate('global__save_form_select_label')}:</th>
                 <td>
                     <select value={props.value} onChange={handleSelect}>
                         <option value="csv">CSV</option>
@@ -104,7 +104,7 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
 
         return (
             <tr className="separator">
-                <th>{utils.translate('coll__save_form_incl_heading')}:</th>
+                <th>{utils.translate('global__save_form_incl_heading')}:</th>
                 <td>
                     <input type="checkbox" checked={props.value} onChange={handleChange} />
                 </td>
@@ -130,7 +130,7 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
 
         return (
             <tr className="separator">
-                <th>{utils.translate('coll__save_form_incl_col_hd')}:</th>
+                <th>{utils.translate('global__save_form_incl_col_hd')}:</th>
                 <td>
                     <input type="checkbox" checked={props.value} onChange={handleChange} />
                 </td>
@@ -168,22 +168,22 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
         return (
             <S.TRSelLineRangeInputs>
                 <th style={{verticalAlign: 'top'}}>
-                    {utils.translate('coll__save_form_lines_to_store')}:
+                    {utils.translate('global__save_form_lines_to_store')}:
                 </th>
                 <td>
-                    {utils.translate('coll__save_form_line_from')}:{'\u00a0'}
+                    {utils.translate('global__save_form_line_from')}:{'\u00a0'}
                     <layoutViews.ValidatedItem invalid={props.fromValue.isInvalid}>
                         <input type="text" name="from_line" value={props.fromValue.value}
                                 onChange={handleFromInput}  style={{width: '4em'}} />
                     </layoutViews.ValidatedItem>
                     {'\u00a0'}
-                    {utils.translate('coll__save_form_line_to')}:{'\u00a0'}
+                    {utils.translate('global__save_form_line_to')}:{'\u00a0'}
                     <layoutViews.ValidatedItem invalid={props.toValue.isInvalid}>
                         <input type="text" name="to_line" value={props.toValue.value}
                                 onChange={handleToInput} style={{width: '4em'}} placeholder="MAX" />
                     </layoutViews.ValidatedItem>
                     <p className="hint">
-                        {utils.translate('coll__save_form_leave_to_load_to_end')}
+                        {utils.translate('global__save_form_leave_to_load_to_end')}
                     </p>
                 </td>
             </S.TRSelLineRangeInputs>
@@ -237,7 +237,7 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
                         </table>
                         <button type="button" className="default-button"
                                 onClick={handleSubmitClick}>
-                            {utils.translate('coll__save_form_submit_btn')}
+                            {utils.translate('global__save_form_submit_btn')}
                         </button>
                     </S.SaveCollForm>
                 </layoutViews.CloseableFrame>

@@ -129,7 +129,7 @@ export function init(
                     <div className="block">
                         <button type="button" className="default-button"
                                 onClick={handleSubmitClick}>
-                            {he.translate('coll__save_form_submit_btn')}
+                            {he.translate('global__save_form_submit_btn')}
                         </button>
                     </div>
                 </S.FreqChartsSaveViewForm>

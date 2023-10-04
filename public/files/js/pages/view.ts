@@ -1113,7 +1113,7 @@ export class ViewPage {
             name,
             format,
             datasetType: DownloadType.CONCORDANCE,
-            contentType: 'multipart/form-data',
+            contentType: 'text/plain',
             url,
             args,
         }).subscribe();

@@ -20,13 +20,14 @@
  */
 
 import * as Kontext from '../types/kontext';
-import { PageModel } from '../app/page';
+import { DownloadType, PageModel } from '../app/page';
 import { KontextPage } from '../app/main';
 import { init as viewInit } from '../views/keywords/result';
 import { Root } from 'react-dom/client';
 import { KeywordsResultModel } from '../models/keywords/result';
 import { KeywordsSubmitArgs } from '../models/keywords/common';
 import { Actions } from '../models/keywords/actions';
+import { KeywordsResultsSaveModel } from '../models/keywords/save';
 
 
 /**
@@ -44,6 +45,17 @@ export class KeywordsResultPage {
         this.layoutModel = layoutModel;
     }
 
+    setDownloadLink(name:string, format:string, url:string, args?:any) {
+        this.layoutModel.bgDownload({
+            name,
+            format,
+            datasetType: DownloadType.KEYWORDS,
+            url,
+            contentType: 'text/plain',
+            args,
+        }).subscribe();
+    }
+
     init():void {
         this.layoutModel.init(true, [], () => {
             this.resultModel = new KeywordsResultModel({
@@ -56,10 +68,19 @@ export class KeywordsResultPage {
                 focusSubcorpId: this.layoutModel.getCorpusIdent().usesubcorp,
                 attr: this.layoutModel.getConf<KeywordsSubmitArgs>('KeywordsForm').wlattr,
             });
+
+            const saveModel = new KeywordsResultsSaveModel({
+                dispatcher: this.layoutModel.dispatcher,
+                layoutModel: this.layoutModel,
+                saveLinkFn: this.setDownloadLink.bind(this),
+                quickSaveRowLimit: 10000 // TODO
+            });
+
             const view = viewInit({
                 dispatcher: this.layoutModel.dispatcher,
                 he: this.layoutModel.getComponentHelpers(),
                 keywordsResultModel: this.resultModel,
+                saveModel,
             });
             this.reactRoot = this.layoutModel.renderReactComponent(
                 view,

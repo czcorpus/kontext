@@ -14,10 +14,11 @@
 # GNU General Public License for more details.
 
 
-from typing import List, NewType, Type, TypeVar, Optional
+from dataclasses import fields
+from typing import List, NewType, Optional, Type, TypeVar
+
 from action.errors import UserReadableException
 from sanic.request import Request
-from dataclasses import fields
 
 T = TypeVar('T')
 
@@ -76,4 +77,6 @@ def create_mapped_args(tp: Type, req: Request):
         elif mtype == ListIntOpt:
             if len(v) > 0:
                 data[mk] = [int(x) for x in v]
+        elif mtype == bool:
+            data[mk] = bool(int(v[0]))
     return tp(**data)

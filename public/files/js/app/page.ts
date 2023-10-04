@@ -74,14 +74,15 @@ export enum DownloadType {
     LINE_SELECTION = 'line_selection_download',
     PQUERY = 'pquery_download',
     CHART = 'chart_download',
-    DOCUMENT_LIST = 'document_list_download'
+    DOCUMENT_LIST = 'document_list_download',
+    KEYWORDS = 'kwords_download',
 }
 
 export function isDownloadType(s:string):s is DownloadType {
     return s === DownloadType.CONCORDANCE || s === DownloadType.COLL  ||
         s === DownloadType.FREQ || s === DownloadType.FREQ2D || s === DownloadType.WORDLIST ||
         s === DownloadType.LINE_SELECTION || s === DownloadType.PQUERY ||
-        s === DownloadType.CHART || s === DownloadType.DOCUMENT_LIST;
+        s === DownloadType.CHART || s === DownloadType.DOCUMENT_LIST || s === DownloadType.KEYWORDS;
 }
 
 export interface SaveLinkHandler<T = any> {

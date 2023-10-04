@@ -25,10 +25,13 @@ from typing import Any, Dict, List, Tuple
 
 from action.argmapping.wordlist import WordlistSaveFormArgs
 from action.model.concordance import ConcActionModel
+from action.model.keywords import KeywordsActionModel
 from action.model.pquery import ParadigmaticQueryActionModel
 from action.model.wordlist import WordlistActionModel
 from babel import Locale
+from babel.numbers import format_decimal
 from bgcalc.coll_calc import CalculateCollsResult
+from bgcalc.keywords import CNCKeywordLine, KeywordsResult
 from bgcalc.pquery.storage import PqueryDataLine
 from conclib.errors import ConcordanceQueryParamsError
 from kwiclib.common import KwicPageData
@@ -37,6 +40,7 @@ from openpyxl.cell import WriteOnlyCell
 from views.colls import SavecollArgs
 from views.concordance import SaveConcArgs
 from views.freqs import SavefreqArgs
+from views.keywords import SaveKeywordsArgs
 from views.pquery import SavePQueryArgs
 
 from . import AbstractExport, ExportPluginException, lang_row_to_list
@@ -184,7 +188,7 @@ class XLSXExport(AbstractExport):
                                [item['freq'], item.get('rel', '')])
 
     async def write_pquery(self, amodel: ParadigmaticQueryActionModel, data: List[PqueryDataLine], args: SavePQueryArgs):
-        self._sheet.title = amodel.plugin_ctx.translate('paradigmatic query')
+        self._sheet.title = amodel.plugin_ctx.translate('Paradigmatic query')
         freq_cols = len(data[0].freqs)
         self._set_col_types(int, str, *(float for _ in range(freq_cols)))
         if args.colheaders or args.heading:
@@ -192,6 +196,25 @@ class XLSXExport(AbstractExport):
 
         for i, row in enumerate(data, 1):
             self._writerow(i, (row.value, *row.freqs, sum(row.freqs)))
+
+    async def write_keywords(self, amodel: KeywordsActionModel, result: KeywordsResult, args: SaveKeywordsArgs):
+        self._sheet.title = amodel.plugin_ctx.translate('Keywords analysis')
+        if args.colheaders or args.heading:
+            if isinstance(result.data[0], CNCKeywordLine):
+                self._set_col_types(int, str, float, float, float, int, int, float, float)
+                self._writeheading(['', 'item', 'logL', 'chi2', 'din',
+                                    'frq', 'frq_ref', 'ipm', 'ipm_ref',])
+            else:
+                self._set_col_types(int, str, float, int, int, float, float)
+                self._writeheading(['', 'item', 'score', 'freq', 'frq_ref', 'ipm', 'ipm_ref'])
+
+        for i, row in enumerate(result.data, 1):
+            if isinstance(row, CNCKeywordLine):
+                self._writerow(i, (row.item, row.logL, row.chi2, row.din,
+                                   row.frq1, row.frq2, row.rel_frq1, row.rel_frq2))
+            else:
+                self._writerow(i, (row.item, row.score, row.frq1,
+                                   row.frq2, row.rel_frq1, row.rel_frq2))
 
     async def write_wordlist(self, amodel: WordlistActionModel, data: List[Tuple[str, int]], args: WordlistSaveFormArgs):
         self._sheet.title = amodel.plugin_ctx.translate('word list')
