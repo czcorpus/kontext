@@ -653,6 +653,12 @@
             </element>
             <element name="fcs">
                 <interleave>
+                    <element name="database_title">
+                        <text />
+                    </element>
+                    <element name="database_description">
+                        <text />
+                    </element>
                     <optional>
                         <element name="provider_heading">
                             <text />
@@ -696,10 +702,17 @@
                     <optional>
                         <element name="kwic_context">
                             <a:documentation>KWIC context for left and right size. Please note that registry file
-                            defined MAXCONTEXT has priority over this.</a:documentation>
+                            defined MAXCONTEXT limits max value of kwic_context.</a:documentation>
                             <data type="positiveInteger" />
                         </element>
                     </optional>
+                    <element name="corpora">
+                        <oneOrMore>
+                            <element name="item">
+                                <text />
+                            </element>
+                        </oneOrMore>
+                    </element>
                 </interleave>
             </element>
             <element name="plugins">

@@ -15,10 +15,10 @@
 
 from dataclasses import asdict, dataclass, field
 from typing import Any, List, Optional, Dict, Tuple
+from collections import defaultdict
 
 import aiofiles
-import conclib
-import l10n
+from l10n import get_lang_code
 import plugins
 import settings
 from action.control import http_action
@@ -26,7 +26,7 @@ from action.krequest import KRequest
 from action.req_args import AnyRequestArgProxy
 from action.model.base import BaseActionModel
 from action.argmapping.conc import QueryFormArgs
-from action.model.fcs import FCSActionModel, Languages
+from action.model.fcs import FCSActionModel, FCSError, FCSResourceInfo
 from action.response import KResponse
 from action.errors import ForbiddenException
 from sanic import Blueprint
@@ -78,14 +78,37 @@ class FCSResponseV1:
 
 async def op_explain(amodel: FCSActionModel, req: KRequest, resp_common: FCSResponseV1, resp: Dict[str, Any]):
     amodel.check_args(['recordPacking', 'x-fcs-endpoint-description'])
-    resp_common.result = amodel.corp.get_posattrs()
     resp_common.numberOfRecords = len(resp_common.result)
 
-    resp['corpus_desc'] = 'Corpus {0} ({1} tokens)'.format(
-        amodel.corp.get_conf('NAME'), l10n.simplify_num(amodel.corp.size))
-    resp['corpus_lang'] = Languages.get_iso_code(amodel.corp.get_conf('LANGUAGE'))
-    resp['show_endpoint_desc'] = (
-        True if req.args.get('x-fcs-endpoint-description', 'false') == 'true' else False)
+    resp['database_title'] = settings.get('fcs', 'database_title')
+    resp['database_description'] = settings.get('fcs', 'database_description')
+    extended_desc = True if req.args.get('x-fcs-endpoint-description', 'false') == 'true' else False
+    resp['show_endpoint_desc'] = extended_desc
+    if extended_desc:
+        resp['resources'] = []
+        attrs_cnt = defaultdict(lambda: 0)  # we must determine which attributes are in all fcs set corpora
+        with plugins.runtime.CORPARCH as ca:
+            for corp in settings.get_list('fcs', 'corpora'):
+                cinfo = await ca.get_corpus_info(amodel.plugin_ctx, corp)
+                for attr in cinfo.manatee.attrs:
+                    attrs_cnt[attr] += 1
+                if cinfo.manatee.lang:
+                    lang_code = get_lang_code(name=cinfo.manatee.lang)
+                else:
+                    lang_code = get_lang_code(a2=cinfo.collator_locale.split('_')[0])
+                resp['resources'].append(
+                    FCSResourceInfo(
+                        title=corp,
+                        description=cinfo.localized_desc('en'),
+                        landing_page_uri=cinfo.web,
+                        language=lang_code
+                    )
+                )
+        resp_common.result = []
+        for attr, cnt in attrs_cnt.items():
+            if cnt == len(settings.get_list('fcs', 'corpora')):
+                resp_common.result.append(attr)
+
 
 async def op_scan(amodel: FCSActionModel, req: KRequest, resp_common: FCSResponseV1, resp: Dict[str, Any]):
     amodel.check_args(['scanClause', 'responsePosition', 'maximumTerms', 'x-cmd-resource-info'])
@@ -93,29 +116,30 @@ async def op_scan(amodel: FCSActionModel, req: KRequest, resp_common: FCSRespons
     if 'maximumTerms' in req.args:
         try:
             resp_common.maximumTerms = int(req.args.get('maximumTerms'))
-        except TypeError:
-            raise Exception(6, 'maximumTerms', 'Unsupported parameter value')
+        except Exception:
+            raise FCSError(6, 'maximumTerms', 'Unsupported parameter value')
     if 'responsePosition' in req.args:
         try:
             resp_common.responsePosition = int(req.args.get('responsePosition'))
-        except TypeError:
-            raise Exception(6, 'responsePosition', 'Unsupported parameter value')
+        except Exception:
+            raise FCSError(6, 'responsePosition', 'Unsupported parameter value')
 
     scan_clause: str = req.args.get('scanClause', '')
     if scan_clause.startswith('fcs.resource='):
         value = scan_clause.split('=')[1]
         resp_common.result = await amodel.corpora_info(value, resp_common.maximumTerms)
     else:
-        resp_common.result = await conclib.fcs_scan(
+        resp_common.result = await amodel.fcs_scan(
             amodel.args.corpname, scan_clause, resp_common.maximumTerms, resp_common.responsePosition)
     resp['resourceInfoRequest'] = req.args.get(
         'x-cmd-resource-info', '') == 'true'
 
+
 async def op_search_retrieve(amodel: FCSActionModel, req: KRequest, resp_common: FCSResponseV1, resp: Dict[str, Any]):
-    # TODO we should review the args here (especially x-cmd-context, resultSetTTL)
+    # TODO review resultSetTTL arg
     amodel.check_args([
         'query', 'startRecord', 'maximumRecords', 'recordPacking',
-        'recordSchema', 'resultSetTTL', 'x-cmd-context', 'x-fcs-context'
+        'recordSchema', 'resultSetTTL', 'x-fcs-context'
     ])
     resp_common.corpname = amodel.args.corpname
     # check integer parameters
@@ -123,26 +147,28 @@ async def op_search_retrieve(amodel: FCSActionModel, req: KRequest, resp_common:
         try:
             resp_common.maximumRecords = int(req.args.get('maximumRecords'))
             if resp_common.maximumRecords <= 0:
-                raise Exception(6, 'maximumRecords', 'Unsupported parameter value')
-        except TypeError:
-            raise Exception(6, 'maximumRecords', 'Unsupported parameter value')
+                raise FCSError(6, 'maximumRecords', 'Unsupported parameter value')
+        except Exception:
+            raise FCSError(6, 'maximumRecords', 'Unsupported parameter value')
     if 'startRecord' in req.args:
         try:
             resp_common.startRecord = int(req.args.get('startRecord'))
             if resp_common.startRecord <= 0:
-                raise Exception(6, 'startRecord', 'Unsupported parameter value')
-        except TypeError:
-            raise Exception(6, 'startRecord', 'Unsupported parameter value')
+                raise FCSError(6, 'startRecord', 'Unsupported parameter value')
+        except Exception:
+            raise FCSError(6, 'startRecord', 'Unsupported parameter value')
 
     corp_conf_info = await plugins.runtime.CORPARCH.instance.get_corpus_info(
         amodel.plugin_ctx, amodel.args.corpname)
     resp_common.corppid = '' if corp_conf_info.web is None else corp_conf_info.web
     query = req.args.get('query', '')
     if 0 == len(query):
-        raise Exception(7, 'fcs_query', 'Mandatory parameter not supplied')
+        raise FCSError(7, 'fcs_query', 'Mandatory parameter not supplied')
 
+    # TODO implement a multi-corpora search here
+    corp = await amodel.cf.get_corpus(settings.get('fcs', 'corpora')[0])
     result, cql_query = await amodel.fcs_search(
-        amodel.corp, amodel.args.corpname, query, resp_common.maximumRecords, resp_common.startRecord)
+        corp, amodel.args.corpname, query, resp_common.maximumRecords, resp_common.startRecord)
     resp_common.result = result.rows
     resp_common.numberOfRecords = result.size
 
@@ -151,12 +177,13 @@ async def op_search_retrieve(amodel: FCSActionModel, req: KRequest, resp_common:
     form.data.curr_query_types[resp_common.corpname] = 'advanced'
     resp['conc_view_url_tpl'] = req.create_url('view', {'q': ''})
 
+
 async def determine_curr_corpus(req_args: AnyRequestArgProxy, user: Dict[str, Any]) -> Tuple[str, bool]:
-    corpname = req_args.getvalue('x-cmd-context')
+    corpname = req_args.getvalue('x-fcs-context')
     if not corpname:
         default_corp_list = settings.get('corpora', 'default_corpora', [])
         if len(default_corp_list) < 1:
-            raise Exception('Cannot determine current corpus')
+            raise FCSError('Cannot determine current corpus')
         corpname = default_corp_list[0]
 
     with plugins.runtime.AUTH as auth:
@@ -166,11 +193,11 @@ async def determine_curr_corpus(req_args: AnyRequestArgProxy, user: Dict[str, An
 
     return corpname, False
 
+
 @bp_v1.route('/v1', ['GET', 'HEAD'])
 @http_action(
     template='fcs/v1_complete.html',
     action_model=FCSActionModel,
-    mutates_result=True,
     corpus_name_determiner=determine_curr_corpus)
 async def v1(amodel: FCSActionModel, req: KRequest, resp: KResponse):
     resp.set_header('Content-Type', 'application/xml')
@@ -190,19 +217,24 @@ async def v1(amodel: FCSActionModel, req: KRequest, resp: KResponse):
         if 'operation' in req.args:
             common_data.operation = req.args.get('operation')
         # check version
-        version = req.args.get('version')
-        if version is not None and current_version < float(version):
-            raise Exception(5, version, 'Unsupported version')
+        if 'version' in req.args:
+            version = req.args.get('version')
+            try:
+                vnum = float(version)
+            except ValueError:
+                raise FCSError(5, current_version, f'Unsupported version {version}')
+            if current_version < vnum:
+                raise FCSError(5, current_version, f'Unsupported version {version}')
         # set content-type in HTTP header
         if 'recordPacking' in req.args:
             common_data.recordPacking = req.args.get('recordPacking')
         if common_data.recordPacking == 'xml':
             pass
         elif common_data.recordPacking == 'string':
-            # TODO(jm)!!!
+            # TODO what is the format here?
             resp.set_header('Content-Type', 'text/plain; charset=utf-8')
         else:
-            raise Exception(71, 'recordPacking', 'Unsupported record packing')
+            raise FCSError(71, 'recordPacking', 'Unsupported record packing')
 
         try:
             handler = dict(
@@ -214,16 +246,16 @@ async def v1(amodel: FCSActionModel, req: KRequest, resp: KResponse):
         except KeyError:
             # show within explain template
             common_data.operation = 'explain'
-            raise Exception(4, '', 'Unsupported operation')
+            raise FCSError(4, '', 'Unsupported operation')
 
     # catch exception and amend diagnostics in template
+    except FCSError as ex:
+        custom_resp['code'] = ex.code
+        custom_resp['ident'] = ex.ident
+        custom_resp['msg'] = ex.msg
     except Exception as e:
-        custom_resp['message'] = ('error', repr(e))
-        try:
-            custom_resp['code'], custom_resp['details'], custom_resp['msg'] = e
-        except (ValueError, TypeError):
-            custom_resp['code'] = 1
-            custom_resp['details'] = repr(e)
-            custom_resp['msg'] = 'General system error'
+        custom_resp['code'] = 1
+        custom_resp['ident'] = repr(e)
+        custom_resp['msg'] = 'General system error'
 
     return {**asdict(common_data), **custom_resp}

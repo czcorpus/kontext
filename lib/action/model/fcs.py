@@ -18,25 +18,27 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import math
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from typing import List, NamedTuple, Optional, Tuple
 
 import kwiclib
 import plugins
 import settings
 from action.krequest import KRequest
-from action.model.concordance import ConcPluginCtx, ConcActionModel
+from action.model.user import UserPluginCtx, UserActionModel
 from action.props import ActionProps
 from action.response import KResponse
 from conclib.search import get_conc
 from corplib.corpus import AbstractKCorpus
 from action.model import ModelsSharedData
+from action.argmapping.wordlist import WordlistFormArgs
+from bgcalc.wordlist import wordlist
 
 
 @dataclass
 class FCSResourceInfo:
-    title: Optional[str] = None
-    landingPageURI: Optional[str] = None
+    title: str
+    landing_page_uri: Optional[str] = None
     language: Optional[str] = None
     description: Optional[str] = None
 
@@ -60,7 +62,14 @@ class FCSSearchResult:
     size: int
 
 
-class FCSActionModel(ConcActionModel):
+class FCSError(Exception):
+    def __init__(self, code: int, ident: str, msg: str):
+        self.code = code
+        self.ident = ident
+        self.msg = msg
+
+
+class FCSActionModel(UserActionModel):
     """
     An action controller providing services related to the Federated Content Search support
     """
@@ -76,7 +85,7 @@ class FCSActionModel(ConcActionModel):
         allowed = self.BASE_ARGS + specific_args
         for arg in self._req.args.keys():
             if arg not in allowed:
-                raise Exception(8, arg, 'Unsupported parameter')
+                raise FCSError(8, arg, 'Unsupported parameter')
 
     async def corpora_info(self, value: str, max_items: int) -> List[FCSCorpusInfo]:
         resources: List[FCSCorpusInfo] = []
@@ -100,6 +109,48 @@ class FCSActionModel(ConcActionModel):
             )
             resources.append(FCSCorpusInfo(corpus_id, corpus_title, resource_info))
         return resources
+
+    async def fcs_scan(self, corpname: str, scan_query: str, max_ter: int, start: int):
+        """
+        aux function for federated content search: operation=scan
+        """
+        if not scan_query:
+            raise FCSError(7, 'scan_query', 'Mandatory parameter not supplied')
+        query = scan_query.replace('+', ' ')  # convert URL spaces
+        exact_match = False
+        if 'exact' in query.lower() and '=' not in query:  # lemma ExacT "dog"
+            pos = query.lower().index('exact')  # first occurence of EXACT
+            query = query[:pos] + '=' + query[pos + 5:]  # 1st exact > =
+            exact_match = True
+        corp = await self.cf.get_corpus(corpname)
+        attrs = corp.get_posattrs()
+        try:
+            if '=' in query:
+                attr, value = query.split('=')
+                attr = attr.strip()
+                value = value.strip()
+            else:  # must be in format attr = value
+                raise Exception
+            if '"' in attr:
+                raise Exception
+            if '"' in value:
+                if value[0] == '"' and value[-1] == '"':
+                    value = value[1:-1].strip()
+                else:
+                    raise Exception
+        except Exception:
+            raise FCSError(10, scan_query, 'Query syntax error')
+        if attr not in attrs:
+            raise FCSError(16, attr, 'Unsupported index')
+
+        if exact_match:
+            wlpattern = '^' + value + '$'
+        else:
+            wlpattern = '.*' + value + '.*'
+
+        args = WordlistFormArgs(wlattr=attr, wlpat=wlpattern)
+        wl = await wordlist(corp, args, max_ter)
+        return [(d['str'], d['freq']) for d in wl][start:][:max_ter]
 
     async def fcs_search(self, corp: AbstractKCorpus, corpname: str, fcs_query: str, max_rec: int, start: int) -> Tuple[FCSSearchResult, str]:
         """
@@ -152,10 +203,10 @@ class FCSActionModel(ConcActionModel):
                     rq = f'[{attr}="{term}"]'
                 else:
                     rq = f'[{attr}=".*{term}.*"]'
-        except:  # there was a problem when parsing
-            raise Exception(10, query, 'Query syntax error')
+        except Exception:  # there was a problem when parsing
+            raise FCSError(10, query, 'Query syntax error')
         if attr not in attrs:
-            raise Exception(16, attr, 'Unsupported index')
+            raise FCSError(16, attr, 'Unsupported index')
 
         fromp = int(math.floor((start - 1) / max_rec)) + 1
         # try to get concordance
@@ -165,7 +216,7 @@ class FCSActionModel(ConcActionModel):
             q = ['q' + rq]
             conc = await get_conc(corp, anon_id, q=q, fromp=fromp, pagesize=max_rec, asnc=0)
         except Exception as e:
-            raise Exception(10, repr(e), 'Query syntax error')
+            raise FCSError(10, repr(e), 'Query syntax error')
 
         kwic = kwiclib.Kwic(corp, corpname, conc)
         kwic_args = kwiclib.KwicPageArgs({'structs': ''}, base_attr=self.BASE_ATTR)
@@ -178,7 +229,7 @@ class FCSActionModel(ConcActionModel):
 
         local_offset = (start - 1) % max_rec
         if start - 1 > conc.size():
-            raise Exception(61, 'startRecord', 'First record position out of range')
+            raise FCSError(61, 'startRecord', 'First record position out of range')
         rows = []
         for kwicline in page.Lines[local_offset:local_offset + max_rec]:
             rows.append(FCSSearchRow(
@@ -191,287 +242,5 @@ class FCSActionModel(ConcActionModel):
     @property
     def plugin_ctx(self):
         if self._plugin_ctx is None:
-            self._plugin_ctx = ConcPluginCtx(self, self._req, self._resp, self._plg_shared)
+            self._plugin_ctx = UserPluginCtx(self, self._req, self._resp, self._plg_shared)
         return self._plugin_ctx
-
-    def _output_last_op_id(self, op_id, tpl_data):
-        super()._output_last_op_id(op_id, tpl_data)
-        if plugins.runtime.QUERY_PERSISTENCE.exists:
-            if op_id:
-                tpl_data['corppid'] = f'~{op_id}'
-
-
-class Languages:
-    """
-    Class wrapping conversion maps between language name and ISO 639-3 three letter language codes
-    """
-    language2iso = {
-        'Abkhazian': 'abk',
-        'Adyghe': 'ady',
-        'Afar': 'aar',
-        'Afrikaans': 'afr',
-        'Aghem': 'agq',
-        'Akan': 'aka',
-        'Albanian': 'sqi',
-        'Amharic': 'amh',
-        'Ancient Greek': 'grc',
-        'Arabic': 'ara',
-        'Armenian': 'hye',
-        'Assamese': 'asm',
-        'Asturian': 'ast',
-        'Asu': 'asa',
-        'Atsam': 'cch',
-        'Avaric': 'ava',
-        'Aymara': 'aym',
-        'Azerbaijani': 'aze',
-        'Bafia': 'ksf',
-        'Bambara': 'bam',
-        'Bashkir': 'bak',
-        'Basque': 'eus',
-        'Belarusian': 'bel',
-        'Bemba': 'bem',
-        'Bena': 'yun',
-        'Bengali': 'ben',
-        'Bislama': 'bis',
-        'Blin': 'byn',
-        'Bodo': 'boy',
-        'Bosnian': 'bos',
-        'Breton': 'bre',
-        'Bulgarian': 'bul',
-        'Burmese': 'mya',
-        'Catalan': 'cat',
-        'Cebuano': 'ceb',
-        'Chamorro': 'cha',
-        'Chechen': 'che',
-        'Cherokee': 'chr',
-        'Chiga': 'cgg',
-        'Chinese': 'zho',
-        'Chuukese': 'chk',
-        'Congo Swahili': 'swc',
-        'Cornish': 'cor',
-        'Croatian': 'hrv',
-        'Czech': 'ces',
-        'Danish': 'dan',
-        'Divehi': 'div',
-        'Duala': 'dua',
-        'Dutch': 'nld',
-        'Dzongkha': 'dzo',
-        'Efik': 'efi',
-        'Embu': 'ebu',
-        'English': 'eng',
-        'Erzya': 'myv',
-        'Estonian': 'est',
-        'Ewe': 'ewe',
-        'Ewondo': 'ewo',
-        'Faroese': 'fao',
-        'Fijian': 'fij',
-        'Filipino': 'fil',
-        'Finnish': 'fin',
-        'French': 'fra',
-        'Friulian': 'fur',
-        'Fulah': 'ful',
-        'Gagauz': 'gag',
-        'Galician': 'glg',
-        'Ganda': 'lug',
-        'Georgian': 'kat',
-        'German': 'deu',
-        'Gilbertese': 'gil',
-        'Guarani': 'grn',
-        'Gujarati': 'guj',
-        'Gusii': 'guz',
-        'Haitian': 'hat',
-        'Hausa': 'hau',
-        'Hawaiian': 'haw',
-        'Hebrew': 'heb',
-        'Hiligaynon': 'hil',
-        'Hindi': 'hin',
-        'Hiri Motu': 'hmo',
-        'Hungarian': 'hun',
-        'Icelandic': 'isl',
-        'Igbo': 'ibo',
-        'Iloko': 'ilo',
-        'Indonesian': 'ind',
-        'Ingush': 'inh',
-        'Irish': 'gle',
-        'Italian': 'ita',
-        'Japanese': 'jpn',
-        'Javanese': 'jav',
-        'Jju': 'kaj',
-        'Jola-Fonyi': 'dyo',
-        'Kabardian': 'kbd',
-        'Kabuverdianu': 'kea',
-        'Kabyle': 'kab',
-        'Kalaallisut': 'kal',
-        'Kalenjin': 'kln',
-        'Kamba': 'kam',
-        'Kannada': 'kan',
-        'Karachay-Balkar': 'krc',
-        'Kashmiri': 'kas',
-        'Kazakh': 'kaz',
-        'Khasi': 'kha',
-        'Khmer': 'khm',
-        'Kikuyu': 'kik',
-        'Kinyarwanda': 'kin',
-        'Kirghiz': 'kir',
-        'Komi-Permyak': 'koi',
-        'Komi-Zyrian': 'kpv',
-        'Kongo': 'kon',
-        'Konkani': 'knn',
-        'Korean': 'kor',
-        'Kosraean': 'kos',
-        'Koyraboro Senni': 'ses',
-        'Koyra Chiini': 'khq',
-        'Kpelle': 'kpe',
-        'Kuanyama': 'kua',
-        'Kumyk': 'kum',
-        'Kurdish': 'kur',
-        'Kwasio': 'nmg',
-        'Lahnda': 'lah',
-        'Lak': 'lbe',
-        'Langi': 'lag',
-        'Lao': 'lao',
-        'Latin': 'lat',
-        'Latvian': 'lav',
-        'Lezghian': 'lez',
-        'Lingala': 'lin',
-        'Lithuanian': 'lit',
-        'Low German': 'nds',
-        'Luba-Katanga': 'lub',
-        'Luba-Lulua': 'lua',
-        'Luo': 'luo',
-        'Luxembourgish': 'ltz',
-        'Luyia': 'luy',
-        'Macedonian': 'mkd',
-        'Machame': 'jmc',
-        'Maguindanaon': 'mdh',
-        'Maithili': 'mai',
-        'Makhuwa-Meetto': 'mgh',
-        'Makonde': 'kde',
-        'Malagasy': 'mlg',
-        'Malay': 'msa',
-        'Malayalam': 'mal',
-        'Maltese': 'mlt',
-        'Manx': 'glv',
-        'Maori': 'mri',
-        'Marathi': 'mar',
-        'Marshallese': 'mah',
-        'Masai': 'mas',
-        'Meru': 'mer',
-        'Modern Greek': 'ell',
-        'Moksha': 'mdf',
-        'Mongolian': 'mon',
-        'Morisyen': 'mfe',
-        'Nama': 'nmx',
-        'Nauru': 'nau',
-        'Nepali': 'npi',
-        'Niuean': 'niu',
-        'Northern Sami': 'sme',
-        'Northern Sotho': 'nso',
-        'North Ndebele': 'nde',
-        'Norwegian Bokmål': 'nob',
-        'Norwegian Nynorsk': 'nno',
-        'Nuer': 'nus',
-        'Nyanja': 'nya',
-        'Nyankole': 'nyn',
-        'Occitan': 'oci',
-        'Oriya': 'ori',
-        'Oromo': 'orm',
-        'Ossetic': 'oss',
-        'Palauan': 'pau',
-        'Pangasinan': 'pag',
-        'Papiamento': 'pap',
-        'Pashto': 'pus',
-        'Persian': 'fas',
-        'Pohnpeian': 'pon',
-        'Polish': 'pol',
-        'Portuguese': 'por',
-        'Punjabi': 'pan',
-        'Quechua': 'que',
-        'Romanian': 'ron',
-        'Romansh': 'roh',
-        'Rombo': 'rof',
-        'Russian': 'rus',
-        'Rwa': 'rwk',
-        'Saho': 'ssy',
-        'Samburu': 'saq',
-        'Samoan': 'smo',
-        'Sango': 'sag',
-        'Sangu': 'sbp',
-        'Sanskrit': 'san',
-        'Santali': 'sat',
-        'Scottish Gaelic': 'gla',
-        'Sena': 'seh',
-        'Serbian': 'srp',
-        'Shambala': 'ksb',
-        'Shona': 'sna',
-        'Sichuan Yi': 'iii',
-        'Sidamo': 'sid',
-        'Sindhi': 'snd',
-        'Sinhala': 'sin',
-        'Slovak': 'slk',
-        'Slovenian': 'slv',
-        'Soga': 'xog',
-        'Somali': 'som',
-        'Southern Sotho': 'sot',
-        'South Ndebele': 'nbl',
-        'Spanish': 'spa',
-        'Swahili': 'swa',
-        'Swati': 'ssw',
-        'Swedish': 'swe',
-        'Swiss German': 'gsw',
-        'Tachelhit': 'shi',
-        'Tahitian': 'tah',
-        'Taita': 'dav',
-        'Tajik': 'tgk',
-        'Tamil': 'tam',
-        'Taroko': 'trv',
-        'Tasawaq': 'twq',
-        'Tatar': 'tat',
-        'Tausug': 'tsg',
-        'Telugu': 'tel',
-        'Teso': 'teo',
-        'Tetum': 'tet',
-        'Thai': 'tha',
-        'Tibetan': 'bod',
-        'Tigre': 'tig',
-        'Tigrinya': 'tir',
-        'Tokelau': 'tkl',
-        'Tok Pisin': 'tpi',
-        'Tonga': 'ton',
-        'Tsonga': 'tso',
-        'Tswana': 'tsn',
-        'Turkish': 'tur',
-        'Turkmen': 'tuk',
-        'Tuvalu': 'tvl',
-        'Tuvinian': 'tyv',
-        'Tyap': 'kcg',
-        'Udmurt': 'udm',
-        'Uighur': 'uig',
-        'Ukrainian': 'ukr',
-        'Ulithian': 'uli',
-        'Urdu': 'urd',
-        'Uzbek': 'uzb',
-        'Vai': 'vai',
-        'Venda': 'ven',
-        'Vietnamese': 'vie',
-        'Vunjo': 'vun',
-        'Walser': 'wae',
-        'Waray': 'wrz',
-        'Welsh': 'cym',
-        'Western Frisian': 'fry',
-        'Wolof': 'wol',
-        'Xhosa': 'xho',
-        'Yangben': 'yav',
-        'Yapese': 'yap',
-        'Yoruba': 'yor',
-        'Zarma': 'dje',
-        'Zhuang': 'zha',
-        'Zulu': 'zul'
-    }
-
-    @staticmethod
-    def get_iso_code(language: str) -> str:
-        try:
-            return Languages.language2iso[language]
-        except KeyError:
-            return ''

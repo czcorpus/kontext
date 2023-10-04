@@ -180,7 +180,7 @@ class MLPositionFilter(enum.Enum):
 
 @dataclass_json
 @dataclass
-class CorpusInfo:
+class   CorpusInfo:
     """
     Genereal corpus information and metadata.
     All the possible implementations are expected to
