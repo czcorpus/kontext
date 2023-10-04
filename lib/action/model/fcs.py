@@ -212,6 +212,9 @@ class FCSActionModel(UserActionModel):
         except Exception as e:
             raise FCSError(10, repr(e), 'Query syntax error')
 
+        if start - 1 > conc.size():
+            raise FCSError(61, 'startRecord', 'First record position out of range')
+
         kwic = kwiclib.Kwic(corp, corpname, conc)
         kwic_args = kwiclib.KwicPageArgs({'structs': ''}, base_attr=self.BASE_ATTR)
         kwic_args.fromp = fromp
@@ -222,8 +225,6 @@ class FCSActionModel(UserActionModel):
         page = kwic.kwicpage(kwic_args)
 
         local_offset = (start - 1) % max_rec
-        if start - 1 > conc.size():
-            raise FCSError(61, 'startRecord', 'First record position out of range')
         rows = []
         for kwicline in page.Lines[local_offset:local_offset + max_rec]:
             rows.append(FCSSearchRow(
