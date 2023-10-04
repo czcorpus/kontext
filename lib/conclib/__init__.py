@@ -241,49 +241,6 @@ def get_detail_context(
     return data
 
 
-async def fcs_scan(corpname: str, scan_query: str, max_ter: int, start: int):
-    """
-    aux function for federated content search: operation=scan
-    """
-    if not scan_query:
-        raise Exception(7, 'scan_query', 'Mandatory parameter not supplied')
-    query = scan_query.replace('+', ' ')  # convert URL spaces
-    exact_match = False
-    if 'exact' in query.lower() and not '=' in query:  # lemma ExacT "dog"
-        pos = query.lower().index('exact')  # first occurence of EXACT
-        query = query[:pos] + '=' + query[pos + 5:]  # 1st exact > =
-        exact_match = True
-    corp = manatee.Corpus(corpname)
-    attrs = corp.get_conf('ATTRLIST').split(',')  # list of available attrs
-    try:
-        if '=' in query:
-            attr, value = query.split('=')
-            attr = attr.strip()
-            value = value.strip()
-        else:  # must be in format attr = value
-            raise Exception
-        if '"' in attr:
-            raise Exception
-        if '"' in value:
-            if value[0] == '"' and value[-1] == '"':
-                value = value[1:-1].strip()
-            else:
-                raise Exception
-    except Exception:
-        raise Exception(10, scan_query, 'Query syntax error')
-    if attr not in attrs:
-        raise Exception(16, attr, 'Unsupported index')
-
-    if exact_match:
-        wlpattern = '^' + value + '$'
-    else:
-        wlpattern = '.*' + value + '.*'
-
-    args = WordlistFormArgs(wlattr=attr, wlpat=wlpattern, wlsort='f')
-    wl = await wordlist.wordlist(corp, args, max_ter)
-    return [(d['str'], d['freq']) for d in wl][start:][:max_ter]
-
-
 def sort_line_groups(conc: KConc, group_ids: List[int]):
     ids = manatee.IntVector()
     strs = manatee.StrVector()

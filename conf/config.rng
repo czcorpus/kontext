@@ -653,33 +653,12 @@
             </element>
             <element name="fcs">
                 <interleave>
-                    <optional>
-                        <element name="provider_heading">
-                            <text />
-                        </element>
-                    </optional>
-                    <optional>
-                        <element name="provider_website">
-                            <text />
-                        </element>
-                    </optional>
-                    <optional>
-                        <element name="template_css_url">
-                            <choice>
-                                <text />
-                                <oneOrMore>
-                                    <element name="item">
-                                        <text />
-                                    </element>
-                                </oneOrMore>
-                            </choice>
-                        </element>
-                    </optional>
-                    <optional>
-                        <element name="template_header_inject_file">
-                            <text />
-                        </element>
-                    </optional>
+                    <element name="database_title">
+                        <text />
+                    </element>
+                    <element name="database_description">
+                        <text />
+                    </element>
                     <optional>
                         <element name="search_attributes">
                             <oneOrMore>

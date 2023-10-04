@@ -18,44 +18,20 @@ from typing import Any, List, Optional, Dict, Tuple
 from collections import defaultdict
 
 import aiofiles
-import conclib
-import l10n
+from l10n import get_lang_code
 import plugins
 import settings
 from action.control import http_action
 from action.krequest import KRequest
 from action.req_args import AnyRequestArgProxy
-from action.model.base import BaseActionModel
 from action.argmapping.conc import QueryFormArgs
-from action.model.fcs import FCSActionModel, Languages, FCSError
+from action.model.fcs import FCSActionModel, FCSError, FCSResourceInfo
 from action.response import KResponse
 from action.errors import ForbiddenException
 from sanic import Blueprint
 
 bp_common = Blueprint('fcs-common', url_prefix='fcs')
 bp_v1 = bp_common.copy('fcs-v1')
-
-
-@bp_common.route('/fcs2html')
-@http_action(template='fcs/fcs2html.html', action_model=BaseActionModel)
-async def fcs2html(amodel: BaseActionModel, req: KRequest, resp: KResponse):
-    """
-    Returns XSL template for rendering FCS XML.
-    """
-    resp.set_header('Content-Type', 'text/xsl; charset=utf-8')
-    custom_hd_inject_path = settings.get('fcs', 'template_header_inject_file', None)
-    if custom_hd_inject_path:
-        async with aiofiles.open(custom_hd_inject_path) as fr:
-            custom_hdr_inject = await fr.read()
-    else:
-        custom_hdr_inject = None
-
-    return dict(
-        fcs_provider_heading=settings.get('fcs', 'provider_heading', 'KonText FCS Data Provider'),
-        fcs_provider_website=settings.get('fcs', 'provider_website', None),
-        fcs_template_css_url=settings.get_list('fcs', 'template_css_url'),
-        fcs_custom_hdr_inject=custom_hdr_inject,
-    )
 
 
 @dataclass
@@ -77,38 +53,34 @@ class FCSResponseV1:
     responsePosition: int = 0
 
 
-@dataclass
-class ResourceDesc:
-    title: str
-    description: Optional[str] = None
-    landing_page_uri: Optional[str] = None
-    language: Optional[str] = None
-
-
 async def op_explain(amodel: FCSActionModel, req: KRequest, resp_common: FCSResponseV1, resp: Dict[str, Any]):
     amodel.check_args(['recordPacking', 'x-fcs-endpoint-description'])
     resp_common.numberOfRecords = len(resp_common.result)
 
-    resp['corpus_desc'] = 'Corpus {0} ({1} tokens)'.format(
-        amodel.corp.get_conf('NAME'), l10n.simplify_num(amodel.corp.size))
-    resp['corpus_lang'] = Languages.get_iso_code(amodel.corp.get_conf('LANGUAGE'))
+    resp['database_title'] = settings.get('fcs', 'database_title')
+    resp['database_description'] = settings.get('fcs', 'database_description')
     extended_desc = True if req.args.get('x-fcs-endpoint-description', 'false') == 'true' else False
     resp['show_endpoint_desc'] = extended_desc
     if extended_desc:
         resp['resources'] = []
         attrs_cnt = defaultdict(lambda: 0)  # we must determine which attributes are in all fcs set corpora
-        for corp in settings.get_list('fcs', 'corpora'):
-            cinfo = await amodel.get_corpus_info(corp)
-            for attr in cinfo.manatee.attrs:
-                attrs_cnt[attr] += 1
-            resp['resources'].append(
-                ResourceDesc(
-                    title=corp,
-                    description=cinfo.localized_desc('en'),
-                    landing_page_uri=cinfo.web,
-                    language=cinfo.collator_locale.split('_')[0]
+        with plugins.runtime.CORPARCH as ca:
+            for corp in settings.get_list('fcs', 'corpora'):
+                cinfo = await ca.get_corpus_info(amodel.plugin_ctx, corp)
+                for attr in cinfo.manatee.attrs:
+                    attrs_cnt[attr] += 1
+                if cinfo.manatee.lang:
+                    lang_code = get_lang_code(name=cinfo.manatee.lang)
+                else:
+                    lang_code = get_lang_code(a2=cinfo.collator_locale.split('_')[0])
+                resp['resources'].append(
+                    FCSResourceInfo(
+                        title=corp,
+                        description=cinfo.localized_desc('en'),
+                        landing_page_uri=cinfo.web,
+                        language=lang_code
+                    )
                 )
-            )
         resp_common.result = []
         for attr, cnt in attrs_cnt.items():
             if cnt == len(settings.get_list('fcs', 'corpora')):
@@ -130,21 +102,23 @@ async def op_scan(amodel: FCSActionModel, req: KRequest, resp_common: FCSRespons
             raise FCSError(6, 'responsePosition', 'Unsupported parameter value')
 
     scan_clause: str = req.args.get('scanClause', '')
+    if not scan_clause:
+        raise FCSError(7, 'scanClause', 'Mandatory parameter not supplied')
     if scan_clause.startswith('fcs.resource='):
         value = scan_clause.split('=')[1]
         resp_common.result = await amodel.corpora_info(value, resp_common.maximumTerms)
     else:
-        resp_common.result = await conclib.fcs_scan(
+        resp_common.result = await amodel.fcs_scan(
             amodel.args.corpname, scan_clause, resp_common.maximumTerms, resp_common.responsePosition)
     resp['resourceInfoRequest'] = req.args.get(
         'x-cmd-resource-info', '') == 'true'
 
 
 async def op_search_retrieve(amodel: FCSActionModel, req: KRequest, resp_common: FCSResponseV1, resp: Dict[str, Any]):
-    # TODO we should review the args here (especially x-cmd-context, resultSetTTL)
+    # TODO review resultSetTTL arg
     amodel.check_args([
         'query', 'startRecord', 'maximumRecords', 'recordPacking',
-        'recordSchema', 'resultSetTTL', 'x-cmd-context', 'x-fcs-context'
+        'recordSchema', 'resultSetTTL', 'x-fcs-context'
     ])
     resp_common.corpname = amodel.args.corpname
     # check integer parameters
@@ -170,8 +144,10 @@ async def op_search_retrieve(amodel: FCSActionModel, req: KRequest, resp_common:
     if 0 == len(query):
         raise FCSError(7, 'fcs_query', 'Mandatory parameter not supplied')
 
+    # TODO implement a multi-corpora search here
+    corp = await amodel.cf.get_corpus(settings.get('fcs', 'corpora')[0])
     result, cql_query = await amodel.fcs_search(
-        amodel.corp, amodel.args.corpname, query, resp_common.maximumRecords, resp_common.startRecord)
+        corp, amodel.args.corpname, query, resp_common.maximumRecords, resp_common.startRecord)
     resp_common.result = result.rows
     resp_common.numberOfRecords = result.size
 
@@ -182,7 +158,7 @@ async def op_search_retrieve(amodel: FCSActionModel, req: KRequest, resp_common:
 
 
 async def determine_curr_corpus(req_args: AnyRequestArgProxy, user: Dict[str, Any]) -> Tuple[str, bool]:
-    corpname = req_args.getvalue('x-cmd-context')
+    corpname = req_args.getvalue('x-fcs-context')
     if not corpname:
         default_corp_list = settings.get('corpora', 'default_corpora', [])
         if len(default_corp_list) < 1:
@@ -201,8 +177,8 @@ async def determine_curr_corpus(req_args: AnyRequestArgProxy, user: Dict[str, An
 @http_action(
     template='fcs/v1_complete.html',
     action_model=FCSActionModel,
-    mutates_result=True,
-    corpus_name_determiner=determine_curr_corpus)
+    corpus_name_determiner=determine_curr_corpus,
+    return_type='template_xml')
 async def v1(amodel: FCSActionModel, req: KRequest, resp: KResponse):
     resp.set_header('Content-Type', 'application/xml')
     current_version = 1.2
@@ -226,9 +202,9 @@ async def v1(amodel: FCSActionModel, req: KRequest, resp: KResponse):
             try:
                 vnum = float(version)
             except ValueError:
-                raise FCSError(5, current_version, f'Unsupported version {version}')
+                raise FCSError(5, str(current_version), f'Unsupported version {version}')
             if current_version < vnum:
-                raise FCSError(5, current_version, f'Unsupported version {version}')
+                raise FCSError(5, str(current_version), f'Unsupported version {version}')
         # set content-type in HTTP header
         if 'recordPacking' in req.args:
             common_data.recordPacking = req.args.get('recordPacking')

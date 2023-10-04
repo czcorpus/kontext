@@ -195,13 +195,15 @@ class KResponse(Generic[T]):
         """
         if return_type == 'json':
             self._headers['Content-Type'] = 'application/json'
-        elif return_type == 'xml':
+        elif return_type == 'xml' or return_type == 'template_xml':
             self._headers['Content-Type'] = 'application/xml'
         elif return_type == 'plain':
             if 'Content-Type' not in self._headers:
                 self._headers['Content-Type'] = 'text/plain'
         elif return_type == 'template':
             self._headers['Content-Type'] = 'text/html'
+        elif return_type == 'template_xml':
+            self._headers['Content-Type'] = 'application/xml'
         else:
             logging.getLogger(__name__).error('unknown action return type "{}"'.format(return_type))
         # Note: 'template' return type should never overwrite content type here as it is action-dependent

@@ -27,7 +27,7 @@ from action.argmapping.wordlist import WordlistFormArgs
 from bgcalc.jsonl_cache import load_cached_full, load_cached_partial
 from bgcalc.wordlist.errors import WordlistResultNotFound
 from corplib import frq_db
-from corplib.corpus import KCorpus
+from corplib.corpus import AbstractKCorpus
 from manatee import Structure  # TODO wrap this out
 
 
@@ -65,7 +65,7 @@ def cached(f):
     A decorator for caching wordlist to a CSV file
     """
     @wraps(f)
-    async def wrapper(corp: KCorpus, args: WordlistFormArgs, max_items: int):
+    async def wrapper(corp: AbstractKCorpus, args: WordlistFormArgs, max_items: int):
         path = _create_cache_path(args)
 
         if await aiofiles.os.path.exists(path):
@@ -122,7 +122,7 @@ def _wordlist_by_pattern(attr, attrfreq, enc_pattern, excl_pattern, wlminfreq, p
     return items
 
 
-def doc_sizes(corp: KCorpus, struct: Structure, attrname: str, i: int, normvals: Dict[int, int]) -> int:
+def doc_sizes(corp: AbstractKCorpus, struct: Structure, attrname: str, i: int, normvals: Dict[int, int]) -> int:
     r = corp.filter_query(struct.attr_val(attrname.split('.')[1], i))
     cnt = 0
     while not r.end():
@@ -131,7 +131,7 @@ def doc_sizes(corp: KCorpus, struct: Structure, attrname: str, i: int, normvals:
     return cnt
 
 
-async def _get_attrfreq(corp: KCorpus, attr, wlattr, wlnums):
+async def _get_attrfreq(corp: AbstractKCorpus, attr, wlattr, wlnums):
     if '.' in wlattr:  # attribute of a structure
         struct = corp.get_struct(wlattr.split('.')[0])
         if wlnums == 'doc sizes':
@@ -147,7 +147,7 @@ async def _get_attrfreq(corp: KCorpus, attr, wlattr, wlnums):
 
 
 @cached
-async def wordlist(corp: KCorpus, args: WordlistFormArgs, max_items: int) -> List[Tuple[str, int]]:
+async def wordlist(corp: AbstractKCorpus, args: WordlistFormArgs, max_items: int) -> List[Tuple[str, int]]:
     """
     Note: 'pfilter_words' and 'nfilter_words' are expected to contain utf-8-encoded strings.
     """
