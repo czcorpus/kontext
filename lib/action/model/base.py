@@ -74,7 +74,7 @@ class BaseActionModel(AbstractPageModel):
 
     @staticmethod
     def _is_valid_return_type(f: str) -> bool:
-        return f in ('template', 'json', 'xml', 'plain')
+        return f in ('template', 'template_xml', 'json', 'xml', 'plain')
 
     async def init_session(self) -> None:
         pass

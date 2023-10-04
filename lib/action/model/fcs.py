@@ -24,6 +24,7 @@ from typing import List, NamedTuple, Optional, Tuple
 import kwiclib
 import plugins
 import settings
+from l10n import get_lang_code
 from action.krequest import KRequest
 from action.model.user import UserPluginCtx, UserActionModel
 from action.props import ActionProps
@@ -41,12 +42,6 @@ class FCSResourceInfo:
     landing_page_uri: Optional[str] = None
     language: Optional[str] = None
     description: Optional[str] = None
-
-
-class FCSCorpusInfo(NamedTuple):
-    corpus_id: str
-    corpus_title: str
-    resource_info: FCSResourceInfo
 
 
 class FCSSearchRow(NamedTuple):
@@ -87,35 +82,34 @@ class FCSActionModel(UserActionModel):
             if arg not in allowed:
                 raise FCSError(8, arg, 'Unsupported parameter')
 
-    async def corpora_info(self, value: str, max_items: int) -> List[FCSCorpusInfo]:
-        resources: List[FCSCorpusInfo] = []
-        corpora_d = [value]
+    async def corpora_info(self, value: str, max_items: int) -> List[FCSResourceInfo]:
+        resources: List[FCSResourceInfo] = []
         if value == 'root':
-            with plugins.runtime.AUTH as auth:
-                corpora_d = await auth.permitted_corpora(self.session_get('user'))
+            corpora_d = settings.get('fcs', 'corpora')
+        else:
+            corpora_d = [value]
 
-        for i, corpus_id in enumerate(corpora_d):
-            if i >= max_items:
-                break
-            resource_info: FCSResourceInfo()
-            c = await self.cf.get_corpus(corpus_id)
-            corpus_title: str = c.get_conf('NAME')
-            resource_info = FCSResourceInfo(
-                corpus_title,
-                c.get_conf('INFOHREF'),
-                # TODO(jm) - Languages copied (and slightly fixed) from 0.5 - should be checked
-                Languages.get_iso_code(c.get_conf('LANGUAGE')),
-                c.get_conf('INFO'),
-            )
-            resources.append(FCSCorpusInfo(corpus_id, corpus_title, resource_info))
+        with plugins.runtime.CORPARCH as ca:
+            for i, corpus_id in list(enumerate(corpora_d))[:max_items]:
+                cinfo = await ca.get_corpus_info(self.plugin_ctx, corpus_id)
+                if cinfo.manatee.lang:
+                    lang_code = get_lang_code(name=cinfo.manatee.lang)
+                else:
+                    lang_code = get_lang_code(a2=cinfo.collator_locale.split('_')[0])
+                resources.append(
+                    FCSResourceInfo(
+                        title=corpus_id,
+                        description=cinfo.localized_desc('en'),
+                        landing_page_uri=cinfo.web,
+                        language=lang_code
+                    )
+                )
         return resources
 
     async def fcs_scan(self, corpname: str, scan_query: str, max_ter: int, start: int):
         """
         aux function for federated content search: operation=scan
         """
-        if not scan_query:
-            raise FCSError(7, 'scan_query', 'Mandatory parameter not supplied')
         query = scan_query.replace('+', ' ')  # convert URL spaces
         exact_match = False
         if 'exact' in query.lower() and '=' not in query:  # lemma ExacT "dog"
