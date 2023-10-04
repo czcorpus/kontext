@@ -71,7 +71,7 @@ class ParadigmaticQueryPage {
             format,
             datasetType: DownloadType.PQUERY,
             url,
-            contentType: 'multipart/form-data',
+            contentType: 'text/plain',
             args,
         }).subscribe();
     }

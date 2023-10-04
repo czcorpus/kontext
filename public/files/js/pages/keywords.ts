@@ -51,7 +51,7 @@ export class KeywordsResultPage {
             format,
             datasetType: DownloadType.KEYWORDS,
             url,
-            contentType: 'multipart/form-data',
+            contentType: 'text/plain',
             args,
         }).subscribe();
     }

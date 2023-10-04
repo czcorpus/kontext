@@ -60,7 +60,7 @@ export class WordlistPage {
             format,
             datasetType: DownloadType.WORDLIST,
             url,
-            contentType: 'multipart/form-data',
+            contentType: 'text/plain',
             args,
         }).subscribe();
     }
