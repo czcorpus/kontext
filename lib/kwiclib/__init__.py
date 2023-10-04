@@ -245,7 +245,6 @@ class Kwic:
         pagination.first_page = 1
         out.Lines = self.kwiclines(args.create_kwicline_args(), self.corpus.corpname)
         self.add_aligns(out, args.create_kwicline_args(speech_segment=None))
-
         if len(out.CorporaColumns) == 0:
             out.CorporaColumns = [dict(n=self.corpus.corpname, label=self.corpus.get_conf('NAME'))]
             out.KWICCorps = [self.corpus.corpname]
@@ -504,7 +503,6 @@ class Kwic:
         returns:
         a dictionary containing all the required line data (left context, kwic, right context,...)
         """
-
         # add structures needed to render speech playback information
         all_structs = args.structs
         if self.speech_segment_has_audio(args.speech_segment):
@@ -515,7 +513,6 @@ class Kwic:
         else:
             speech_struct_attr_name = ''
             speech_struct_attr = None
-
         lines = []
         if args.righttoleft:
             rightlabel, leftlabel = 'Left', 'Right'
@@ -523,14 +520,11 @@ class Kwic:
             # from unicodedata import bidirectional
         else:
             leftlabel, rightlabel = 'Left', 'Right'
-
         # self.conc.corp() must be used here instead of self.corpus
         # because in case of parallel corpora these two are different and only the latter one is correct
         if isinstance(self.conc, InitialConc):
             kl = EmptyKWiclines()
         else:
-            import logging
-            logging.getLogger(__name__).warning('+++++++++++++++++ USING ARGS: {}'.format(args.leftctx))
             kl = manatee.KWICLines(
                 self.conc.corp(), self.conc.RS(True, args.fromline, args.toline), args.leftctx, args.rightctx,
                 args.attrs, args.ctxattrs, all_structs, args.refs)
