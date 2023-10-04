@@ -29,6 +29,7 @@ from action.model.keywords import KeywordsActionModel
 from action.model.pquery import ParadigmaticQueryActionModel
 from action.model.wordlist import WordlistActionModel
 from babel import Locale
+from babel.numbers import format_decimal
 from bgcalc.coll_calc import CalculateCollsResult
 from bgcalc.keywords import CNCKeywordLine, KeywordsResult
 from bgcalc.pquery.storage import PqueryDataLine

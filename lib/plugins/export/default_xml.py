@@ -248,9 +248,14 @@ class PqueryDocument(GeneralDocument):
 
 class KeywordsDocument(GeneralDocument):
 
-    def __init__(self):
+    COLLS = ['score', 'frq', 'frq_ref', 'ipm', 'ipm_ref']
+
+    CNC_COLLS = ['logL', 'chi2', 'din', 'frq', 'frq_ref', 'ipm', 'ipm_ref']
+
+    def __init__(self, is_cnc_manatee: bool):
         super(KeywordsDocument, self).__init__('kwords_results')
         self._items = etree.SubElement(self._root, 'items')
+        self._is_cnc_manatee = is_cnc_manatee
 
     def add_line(self, data, line_num=None):
         item_elm = etree.SubElement(self._items, 'item')
@@ -259,12 +264,14 @@ class KeywordsDocument(GeneralDocument):
             line_num_elm.text = str(line_num)
         str_elm = etree.SubElement(item_elm, 'str')
         str_elm.text = data[0]
-        for i, d in enumerate(data[1:], 1):
-            freq_elm = etree.SubElement(item_elm, f'freq{i}')
+        for i, d in enumerate(data[1:], 0):
+            freq_elm = etree.SubElement(
+                item_elm, self.CNC_COLLS[i] if self._is_cnc_manatee else self.COLLS[i])
             freq_elm.text = str(d)
 
     def add_heading(self, data):
-        self._auto_add_heading(data)
+        self._auto_add_heading(
+            ['', data, *(self.CNC_COLLS if self._is_cnc_manatee else self.COLLS)])
 
 
 class XMLExport(AbstractExport):
@@ -370,13 +377,9 @@ class XMLExport(AbstractExport):
                                             for f in row.freqs), self._formatnumber(sum(row.freqs))))
 
     async def write_keywords(self, amodel: KeywordsActionModel, result: KeywordsResult, args: SaveKeywordsArgs):
-        self._document = KeywordsDocument()
+        self._document = KeywordsDocument(isinstance(result.data[0], CNCKeywordLine))
         if args.colheaders or args.heading:
-            if isinstance(result.data[0], CNCKeywordLine):
-                self._writeheading(['', 'item', 'logL', 'chi2', 'din',
-                                    'frq', 'frq_ref', 'ipm', 'ipm_ref',])
-            else:
-                self._writeheading(['', 'item', 'score', 'freq', 'frq_ref', 'ipm', 'ipm_ref'])
+            self._writeheading(amodel.curr_kwform_args.wlattr)
 
         for i, row in enumerate(result.data, 1):
             if isinstance(row, CNCKeywordLine):
