@@ -25,7 +25,7 @@ import { PageModel } from '../../app/page';
 import { Keyword } from './common';
 import { Actions } from './actions';
 import { validateGzNumber } from '../base';
-import { Observable, tap, throwError } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { HTTP } from 'cnc-tskit';
 
 
