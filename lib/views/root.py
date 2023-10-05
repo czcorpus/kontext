@@ -39,7 +39,13 @@ async def root_action(amodel: BaseActionModel, req: KRequest, resp: KResponse):
 
 
 async def _check_task_status(amodel: UserActionModel, task_id: str) -> Optional[AsyncTaskStatus]:
-    task = AsyncTaskStatus(ident=task_id, label='', status='PENDING', category='')
+    task = None
+    for t in (await amodel.get_async_tasks()):
+        if t.ident == task_id:
+            task = t
+            break
+    if task is None: # not found but it can still be present on worker; TODO problem is, not all attrs will be preserved
+        task = AsyncTaskStatus(ident=task_id, label='', status='PENDING', category='')
     found = await amodel.update_async_task_status(task)
     return task if found else None
 
