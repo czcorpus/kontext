@@ -12,6 +12,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+import asyncio
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import asdict
@@ -62,7 +63,8 @@ async def calc_merged_freqs_worker(
 
     # merge frequencies of individual realizations
     merged = defaultdict(lambda: [])
-    for freq_table in [await f.get(timeout=SUBTASK_TIMEOUT_SECS) for f in specif_futures]:
+    results = await asyncio.gather(f.get(timeout=SUBTASK_TIMEOUT_SECS) for f in specif_futures)
+    for freq_table in results:
         freq_info = extract_freqs(freq_table)
         for word, freq in freq_info:
             merged[word].append(freq)
@@ -73,7 +75,8 @@ async def calc_merged_freqs_worker(
         # ask for the results of the "(almost) never"
         # and filter out values with too high ratio of "opposite examples"
         complements = defaultdict(lambda: 0)
-        for cond1_item in [await f.get(timeout=SUBTASK_TIMEOUT_SECS) for f in cond1_futures]:
+        results = await asyncio.gather(f.get(timeout=SUBTASK_TIMEOUT_SECS) for f in cond1_futures)
+        for cond1_item in results:
             for v, freq in extract_freqs(cond1_item.result()):
                 complements[v] += freq
         for k in [k2 for k2 in merged.keys() if k2 in complements]:
