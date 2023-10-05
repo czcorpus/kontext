@@ -226,7 +226,7 @@ class FCSActionModel(UserActionModel):
         if start - 1 > conc.size():
             raise FCSError(61, 'startRecord', 'First record position out of range')
 
-        kwic = kwiclib.Kwic(corp, corpname, conc)
+        kwic = kwiclib.Kwic(corp, conc)
         kwic_args = kwiclib.KwicPageArgs({'structs': ''}, base_attr=self.BASE_ATTR)
         kwic_args.fromp = fromp
         kwic_args.pagesize = max_rec

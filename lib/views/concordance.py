@@ -346,7 +346,7 @@ async def view_conc(
             with plugins.runtime.TOKENS_LINKING as tl:
                 kwic_args.internal_attrs = await tl.get_required_attrs(corpus_info.tokens_linking.providers)
 
-            kwic = Kwic(amodel.corp, amodel.args.corpname, conc)
+            kwic = Kwic(amodel.corp, conc)
 
             out['Sort_idx'] = kwic.get_sort_idx(q=amodel.args.q, pagesize=amodel.args.pagesize)
             out.update(asdict(kwic.kwicpage(kwic_args)))
@@ -515,7 +515,7 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
             with plugins.runtime.TOKENS_LINKING as tl:
                 kwic_args.internal_attrs = await tl.get_required_attrs(corpus_info.tokens_linking.providers)
 
-            kwic = Kwic(amodel.corp, amodel.args.corpname, conc)
+            kwic = Kwic(amodel.corp, conc)
 
             out['Sort_idx'] = kwic.get_sort_idx(q=amodel.args.q, pagesize=amodel.args.pagesize)
             out.update(asdict(kwic.kwicpage(kwic_args)))
@@ -1132,13 +1132,12 @@ async def ajax_reedit_line_selection(amodel: ConcActionModel, req: KRequest, res
 @bp.route('/ajax_get_first_line_select_page')
 @http_action(return_type='json', action_model=ConcActionModel)
 async def ajax_get_first_line_select_page(amodel: ConcActionModel, req: KRequest, resp: KResponse):
-    corpus_info = await amodel.get_corpus_info(amodel.args.corpname)
     conc = await get_conc(
         corp=amodel.corp, user_id=amodel.session_get('user', 'id'),
         q=amodel.args.q, fromp=amodel.args.fromp, pagesize=amodel.args.pagesize,
         asnc=False, cutoff=amodel.args.cutoff)
     amodel.apply_linegroups(conc)
-    kwic = Kwic(amodel.corp, amodel.args.corpname, conc)
+    kwic = Kwic(amodel.corp, conc)
     return {'first_page': int((kwic.get_groups_first_line() - 1) / amodel.args.pagesize) + 1}
 
 
@@ -1293,7 +1292,7 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
             corp=amodel.corp, user_id=req.session_get('user', 'id'), q=amodel.args.q, fromp=amodel.args.fromp,
             pagesize=amodel.args.pagesize, asnc=False, cutoff=amodel.args.cutoff)
         amodel.apply_linegroups(conc)
-        kwic = Kwic(amodel.corp, amodel.args.corpname, conc)
+        kwic = Kwic(amodel.corp, conc)
         conc.switch_aligned(os.path.basename(amodel.args.corpname))
         from_line = int(req.mapped_args.from_line)
         to_line = conc.size() if req.mapped_args.to_line < 0 else min(req.mapped_args.to_line, conc.size())
