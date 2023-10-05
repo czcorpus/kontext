@@ -210,16 +210,10 @@ class KwicPageArgs:
 class Kwic:
     """
     KWIC related data preparation utilities
-
-    arguments:
-    corpus --
-    corpus_fullname -- full (internal) name of the corpus (e.g. with path prefix if used)
-    conc -- a manatee.Concordance instance
     """
 
-    def __init__(self, corpus: AbstractKCorpus, corpus_fullname: str, conc: KConc):
+    def __init__(self, corpus: AbstractKCorpus, conc: KConc):
         self.corpus = corpus
-        self.corpus_fullname = corpus_fullname
         self.conc = conc
 
     def kwicpage(self, args: KwicPageArgs) -> KwicPageData:
