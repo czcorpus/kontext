@@ -329,24 +329,20 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
         returns:
             True if job was found (and updated) else False
         """
-        backend = settings.get('calc_backend', 'type')
-        if backend in ['rq']:
-            worker = bgcalc.calc_backend_client(settings)
-            aresult = worker.AsyncResult(curr_at.ident)
-            if aresult:
-                curr_at.status = aresult.status
-                if curr_at.status == 'FAILURE':
-                    result = aresult.get(timeout=2)
-                    curr_at.error = str(result)
-                    if not curr_at.error:
-                        curr_at.error = result.__class__.__name__
-                self._check_task_timeout(curr_at)
-                return True
-            else:
-                logging.getLogger(__name__).warning(f'Background job not found: {curr_at.ident}')
-                return False
+        worker = bgcalc.calc_backend_client(settings)
+        aresult = worker.AsyncResult(curr_at.ident)
+        if aresult:
+            curr_at.status = aresult.status
+            if curr_at.status == 'FAILURE':
+                result = aresult.get(timeout=2)
+                curr_at.error = str(result)
+                if not curr_at.error:
+                    curr_at.error = result.__class__.__name__
+            self._check_task_timeout(curr_at)
+            return True
         else:
-            raise FunctionNotSupported(f'Backend {backend} does not support status checking')
+            logging.getLogger(__name__).warning(f'Background job not found: {curr_at.ident}')
+            return False
 
     async def get_async_tasks(
             self,

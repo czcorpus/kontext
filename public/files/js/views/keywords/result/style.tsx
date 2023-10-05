@@ -40,11 +40,12 @@ export const KeywordsResult = styled.form`
         display: grid;
         grid-template-columns: auto 1fr;
         grid-column-gap: 0.7em;
+        align-items: center;
 
         dd {
             margin-inline-start: 0;
             font-weight: bold;
-            font-size: 1.2em;
+            font-size: 1.1em;
         }
     }
 
