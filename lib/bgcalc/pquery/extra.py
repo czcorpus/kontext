@@ -20,8 +20,8 @@ from typing import Dict, List
 from action.argmapping.pquery import PqueryFormArgs
 from bgcalc.adapter.abstract import AbstractBgClient
 from bgcalc.freqs import calculate_freqs_bg_sync
-from bgcalc.pquery import (SUBTASK_TIMEOUT_SECS, create_freq_calc_args,
-                           extract_freqs)
+from bgcalc.pquery import (
+    SUBTASK_TIMEOUT_SECS, create_freq_calc_args, extract_freqs)
 from bgcalc.pquery.storage import stored_to_fs
 from conclib.calc import require_existing_conc
 from corplib import CorpusFactory
@@ -62,7 +62,7 @@ async def calc_merged_freqs_worker(
 
     # merge frequencies of individual realizations
     merged = defaultdict(lambda: [])
-    for freq_table in [f.get(timeout=SUBTASK_TIMEOUT_SECS) for f in specif_futures]:
+    for freq_table in [await f.get(timeout=SUBTASK_TIMEOUT_SECS) for f in specif_futures]:
         freq_info = extract_freqs(freq_table)
         for word, freq in freq_info:
             merged[word].append(freq)
@@ -73,7 +73,7 @@ async def calc_merged_freqs_worker(
         # ask for the results of the "(almost) never"
         # and filter out values with too high ratio of "opposite examples"
         complements = defaultdict(lambda: 0)
-        for cond1_item in [f.get(timeout=SUBTASK_TIMEOUT_SECS) for f in cond1_futures]:
+        for cond1_item in [await f.get(timeout=SUBTASK_TIMEOUT_SECS) for f in cond1_futures]:
             for v, freq in extract_freqs(cond1_item.result()):
                 complements[v] += freq
         for k in [k2 for k2 in merged.keys() if k2 in complements]:
@@ -84,7 +84,7 @@ async def calc_merged_freqs_worker(
         # ask for the results of the "(almost) always"
         # and filter out values found as extra instances too many times in the superset
         cond2_freqs = defaultdict(
-            lambda: 0, **dict((v, f) for v, f in extract_freqs(cond2_future.get(timeout=SUBTASK_TIMEOUT_SECS))))
+            lambda: 0, **dict((v, f) for v, f in extract_freqs(await cond2_future.get(timeout=SUBTASK_TIMEOUT_SECS))))
         for k in list(merged.keys()):
             if cond2_freqs[k] == 0:  # => not in superset
                 del merged[k]
@@ -135,7 +135,8 @@ async def calc_merged_freqs_threaded(
                     pquery=pquery, conc_id=conc_id, raw_queries=raw_queries, subcpath=subcpath, user_id=user_id,
                     collator_locale=collator_locale, flimit_override=1)
                 conc = await require_existing_conc(corp, freq_args.q, freq_args.cutoff)
-                cond1_futures.append(executor.submit(calculate_freqs_bg_sync, freq_args, corp, conc))
+                cond1_futures.append(executor.submit(
+                    calculate_freqs_bg_sync, freq_args, corp, conc))
         # calculate auxiliary data (the superset here) for the "(almost) always" condition
         cond2_future = None
         if pquery.conc_superset:

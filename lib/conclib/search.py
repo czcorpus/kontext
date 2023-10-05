@@ -56,7 +56,7 @@ async def _get_async_conc(corp, user_id, q, corp_cache_key, cutoff, minsize) -> 
             'conc_register', object.__class__,
             (user_id, corp.portable_ident, corp_cache_key, q, cutoff, TASK_TIME_LIMIT),
             time_limit=CONC_REGISTER_TASK_LIMIT)
-        ans.get(timeout=CONC_REGISTER_WAIT_LIMIT)
+        await ans.get(timeout=CONC_REGISTER_WAIT_LIMIT)
     conc_avail = await wait_for_conc(
         cache_map=cache_map, corp_cache_key=corp_cache_key, q=q, cutoff=cutoff, minsize=minsize)
     if conc_avail:
@@ -99,7 +99,7 @@ async def get_bg_conc(
             (user_id, corp.corpname, corp.subcorpus_id, corp_cache_key, q, cutoff),
             time_limit=TASK_TIME_LIMIT)
         if force_wait:
-            result.get(timeout=TASK_TIME_LIMIT)
+            await result.get(timeout=TASK_TIME_LIMIT)
     # for smaller concordances/corpora there is a chance the data
     # is ready in a few seconds - let's try this:
 

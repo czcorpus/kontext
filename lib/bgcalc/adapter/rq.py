@@ -17,7 +17,6 @@ import importlib
 import logging
 import re
 import sys
-import time
 from typing import Type, TypeVar, Union
 
 import ujson as json
@@ -68,11 +67,11 @@ class ResultWrapper(AbstractResultWrapper[T]):
             return err
         return Exception(f'Task failed: {job_id}')
 
-    def get(self, timeout=None):
+    async def get(self, timeout=None):
         try:
             total_time = 0
             while True:
-                time.sleep(0.5)
+                await asyncio.sleep(0.5)
                 if self._job.is_finished:
                     self.result = self._job.result
                     break
