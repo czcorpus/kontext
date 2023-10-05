@@ -17,23 +17,25 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import asyncio
 import math
 from dataclasses import dataclass
 from typing import List, NamedTuple, Optional, Tuple
+from action.argmapping.wordlist import WordlistFormArgs
 
 import kwiclib
 import plugins
 import settings
 from l10n import get_lang_code
 from action.krequest import KRequest
-from action.model.user import UserPluginCtx, UserActionModel
+from action.model import ModelsSharedData
+from action.model.user import UserActionModel, UserPluginCtx
 from action.props import ActionProps
 from action.response import KResponse
-from conclib.search import get_conc
-from corplib.corpus import AbstractKCorpus
-from action.model import ModelsSharedData
-from action.argmapping.wordlist import WordlistFormArgs
 from bgcalc.wordlist import wordlist
+from conclib.calc import find_cached_conc_base
+from conclib.search import get_bg_conc
+from corplib.corpus import AbstractKCorpus
 
 
 @dataclass
@@ -208,7 +210,16 @@ class FCSActionModel(UserActionModel):
             with plugins.runtime.AUTH as auth:
                 anon_id = auth.anonymous_user(self.plugin_ctx)['id']
             q = ['q' + rq]
-            conc = await get_conc(corp, anon_id, q=q, fromp=fromp, pagesize=max_rec, asnc=0)
+
+            # try to locate concordance in cache
+            lock = asyncio.Lock()
+            async with lock:
+                # 1st coroutine goes through (there is no conc cache yet)
+                # 2nd goes through, but it already finds an open cache entry so it 'wait_for_conc()' inside the lock
+                # >= 3 cannot enter but once it can the concordance is already avail. so there is no unnecessary lag here
+                # (it doesn't matter whether a coroutine waits here or in 'wait_for_conc()')
+                calc_from, conc = await find_cached_conc_base(corp, q, max_rec, 0)
+            conc = await get_bg_conc(corp, anon_id, q=q, corp_cache_key=None, calc_from=calc_from, cutoff=max_rec, minsize=0, force_wait=True)
         except Exception as e:
             raise FCSError(10, repr(e), 'Query syntax error')
 

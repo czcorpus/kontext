@@ -92,7 +92,7 @@ async def create_result(amodel: KeywordsActionModel, form_args: KeywordsFormArgs
     async_res = await worker.send_task(
         'get_keywords', object.__class__,
         args=(amodel.corp.portable_ident, ref_corp_ident, form_args.to_dict(), amodel.corp.size))
-    bg_result = async_res.get()
+    bg_result = await async_res.get()
     if isinstance(bg_result, MissingSubCorpFreqFile):
         data_calc = await build_arf_db(
             amodel.session_get('user', 'id'), amodel.corp, form_args.wlattr)

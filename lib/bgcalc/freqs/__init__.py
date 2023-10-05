@@ -19,8 +19,8 @@ import re
 import time
 from dataclasses import asdict
 from datetime import datetime
-from typing import Dict, Iterable, List, Optional, Union, Tuple
-from subprocess import Popen, PIPE
+from subprocess import PIPE, Popen
+from typing import Dict, Iterable, List, Optional, Tuple, Union
 
 import aiofiles
 import aiofiles.os
@@ -186,7 +186,8 @@ def calculate_freqs_bg_sync(args: FreqCalcArgs, corp: AbstractKCorpus, conc: PyC
         if not '.' in attr:
             continue
         if not is_compiled(corp, attr, 'token:l') and isinstance(corp, KSubcorpus):
-            logging.getLogger(__name__).warning(f'Missing token:l data for subcorpus {corp.subcorpus_id}')
+            logging.getLogger(__name__).warning(
+                f'Missing token:l data for subcorpus {corp.subcorpus_id}')
             compute_norms(
                 corp,
                 attr.split('.')[0],
@@ -231,7 +232,7 @@ async def calculate_freqs(args: FreqCalcArgs):
         res = await worker.send_task(
             'calculate_freqs', object.__class__, args=(args,), time_limit=TASK_TIME_LIMIT)
         # worker task caches the value AFTER the result is returned (see worker.py)
-        tmp_result: Union[None, Exception, FreqCalcResult] = res.get()
+        tmp_result: Union[None, Exception, FreqCalcResult] = await res.get()
 
         if tmp_result is None:
             raise BgCalcError('Failed to get result')
@@ -343,7 +344,7 @@ class Freq2DCalculation:
             raise Freq2DCalculationError(
                 'Exactly two attributes (either positional or structural) can be used')
 
-        swords: List[Tuple[str,...]] = [tuple(w.split('\t')) for w in words]
+        swords: List[Tuple[str, ...]] = [tuple(w.split('\t')) for w in words]
 
         num_structattrs = self._get_num_structattrs(attrs)
         if num_structattrs == 2:
@@ -396,7 +397,7 @@ async def calculate_freq2d(args):
     """
     worker = bgcalc.calc_backend_client(settings)
     res = await worker.send_task('calculate_freq2d', dict.__class__, args=(args,), time_limit=TASK_TIME_LIMIT)
-    calc_result = res.get()
+    calc_result = await res.get()
     if isinstance(calc_result, Exception):
         raise calc_result
     return calc_result

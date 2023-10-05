@@ -21,8 +21,7 @@ import aiofiles.os
 import bgcalc
 import settings
 from action.control import http_action
-from action.errors import (
-    ImmediateRedirectException, NotFoundException)
+from action.errors import ImmediateRedirectException, NotFoundException
 from action.krequest import KRequest
 from action.model.base import BaseActionModel
 from action.model.user import UserActionModel
@@ -67,7 +66,7 @@ async def check_tasks_status(amodel: UserActionModel, req: KRequest, resp: KResp
 async def get_task_result(amodel: BaseActionModel, req: KRequest, resp: KResponse):
     worker = bgcalc.calc_backend_client(settings)
     result = worker.AsyncResult(req.args.get('task_id'))
-    return dict(result=result.get())
+    return dict(result=await result.get())
 
 
 @bp.route('/remove_task_info', methods=['DELETE'])
