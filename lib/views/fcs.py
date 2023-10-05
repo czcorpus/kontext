@@ -13,21 +13,23 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from dataclasses import asdict, dataclass, field
-from typing import Any, List, Optional, Dict, Tuple
+import asyncio
 from collections import defaultdict
+from dataclasses import asdict, dataclass, field
+from typing import Any, Dict, List, Optional, Tuple
 
 import aiofiles
-from l10n import get_lang_code
 import plugins
 import settings
-from action.control import http_action
-from action.krequest import KRequest
-from action.req_args import AnyRequestArgProxy
 from action.argmapping.conc import QueryFormArgs
-from action.model.fcs import FCSActionModel, FCSError, FCSResourceInfo
-from action.response import KResponse
+from action.control import http_action
 from action.errors import ForbiddenException
+from action.krequest import KRequest
+from action.model.fcs import (
+    FCSActionModel, FCSError, FCSResourceInfo, FCSSearchResult)
+from action.req_args import AnyRequestArgProxy
+from action.response import KResponse
+from l10n import get_lang_code
 from sanic import Blueprint
 
 bp_common = Blueprint('fcs-common', url_prefix='fcs')
@@ -63,7 +65,8 @@ async def op_explain(amodel: FCSActionModel, req: KRequest, resp_common: FCSResp
     resp['show_endpoint_desc'] = extended_desc
     if extended_desc:
         resp['resources'] = []
-        attrs_cnt = defaultdict(lambda: 0)  # we must determine which attributes are in all fcs set corpora
+        # we must determine which attributes are in all fcs set corpora
+        attrs_cnt = defaultdict(lambda: 0)
         with plugins.runtime.CORPARCH as ca:
             for corp in settings.get_list('fcs', 'corpora'):
                 cinfo = await ca.get_corpus_info(amodel.plugin_ctx, corp)
@@ -144,12 +147,27 @@ async def op_search_retrieve(amodel: FCSActionModel, req: KRequest, resp_common:
     if 0 == len(query):
         raise FCSError(7, 'fcs_query', 'Mandatory parameter not supplied')
 
-    # TODO implement a multi-corpora search here
-    corp = await amodel.cf.get_corpus(settings.get('fcs', 'corpora')[0])
-    result, cql_query = await amodel.fcs_search(
-        corp, amodel.args.corpname, query, resp_common.maximumRecords, resp_common.startRecord)
-    resp_common.result = result.rows
-    resp_common.numberOfRecords = result.size
+    # multi-corpora search
+    tasks = [
+        amodel.fcs_search(
+            await amodel.cf.get_corpus(corp),
+            amodel.args.corpname,
+            query,
+            resp_common.maximumRecords,
+            resp_common.startRecord,
+        )
+        for corp in settings.get('fcs', 'corpora')
+    ]
+    results: List[List[FCSSearchResult], str] = await asyncio.gather(*tasks)
+    # merging results
+    merged_results = FCSSearchResult(
+        rows=[row for result, _ in results for row in result.rows],
+        size=sum(r.size for r, _ in results),
+    )
+    cql_query = results[0][1]
+
+    resp_common.result = merged_results.rows
+    resp_common.numberOfRecords = merged_results.size
 
     form = QueryFormArgs(amodel.plugin_ctx, [resp_common.corpname], True)
     form.data.curr_queries[resp_common.corpname] = cql_query
