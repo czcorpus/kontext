@@ -148,7 +148,13 @@ class FCSActionModel(UserActionModel):
         wl = await wordlist(corp, args, max_ter)
         return [(d['str'], d['freq']) for d in wl][start:][:max_ter]
 
-    async def fcs_search(self, corp: AbstractKCorpus, corpname: str, fcs_query: str, max_rec: int, start: int) -> Tuple[FCSSearchResult, str]:
+    async def fcs_search(
+            self,
+            corp: AbstractKCorpus,
+            fcs_query: str,
+            max_rec: int,
+            start: int
+    ) -> Tuple[FCSSearchResult, str]:
         """
         aux function for federated content search: operation=searchRetrieve
         """

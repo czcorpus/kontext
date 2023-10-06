@@ -151,7 +151,6 @@ async def op_search_retrieve(amodel: FCSActionModel, req: KRequest, resp_common:
     tasks = [
         amodel.fcs_search(
             await amodel.cf.get_corpus(corp),
-            amodel.args.corpname,
             query,
             resp_common.maximumRecords,
             resp_common.startRecord,
