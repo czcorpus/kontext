@@ -197,6 +197,7 @@ class   CorpusInfo:
     """
 
     id: Optional[str] = None
+    pid: Optional[str] = None # TODO see https://github.com/czcorpus/kontext/issues/6039
     name: Optional[str] = None
     description: Optional[str] = None  # filled in during localization
     _description_cs: Optional[str] = None
