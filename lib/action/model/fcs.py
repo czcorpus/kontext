@@ -40,6 +40,10 @@ from corplib.corpus import AbstractKCorpus
 
 @dataclass
 class FCSResourceInfo:
+    pid: str
+    """
+    pid should be a universaly accepted persistent identifier (Handle.Net, DOI etc.)
+    """
     title: str
     landing_page_uri: Optional[str] = None
     language: Optional[str] = None
@@ -100,6 +104,7 @@ class FCSActionModel(UserActionModel):
                     lang_code = get_lang_code(a2=cinfo.collator_locale.split('_')[0])
                 resources.append(
                     FCSResourceInfo(
+                        pid=corpus_id, # TODO we need something like an ID from Handle.Net or DOI
                         title=corpus_id,
                         description=cinfo.localized_desc('en'),
                         landing_page_uri=cinfo.web,
@@ -148,7 +153,13 @@ class FCSActionModel(UserActionModel):
         wl = await wordlist(corp, args, max_ter)
         return [(d['str'], d['freq']) for d in wl][start:][:max_ter]
 
-    async def fcs_search(self, corp: AbstractKCorpus, corpname: str, fcs_query: str, max_rec: int, start: int) -> Tuple[FCSSearchResult, str]:
+    async def fcs_search(
+            self,
+            corp: AbstractKCorpus,
+            fcs_query: str,
+            max_rec: int,
+            start: int
+    ) -> Tuple[FCSSearchResult, str]:
         """
         aux function for federated content search: operation=searchRetrieve
         """
@@ -209,7 +220,7 @@ class FCSActionModel(UserActionModel):
         try:
             with plugins.runtime.AUTH as auth:
                 anon_id = auth.anonymous_user(self.plugin_ctx)['id']
-            q = ['q' + rq]
+            q = ('q' + rq,)
 
             # try to locate concordance in cache
             lock = asyncio.Lock()

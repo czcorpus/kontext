@@ -17,8 +17,8 @@ import asyncio
 from collections import defaultdict
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
+import random
 
-import aiofiles
 import plugins
 import settings
 from action.argmapping.conc import QueryFormArgs
@@ -78,6 +78,7 @@ async def op_explain(amodel: FCSActionModel, req: KRequest, resp_common: FCSResp
                     lang_code = get_lang_code(a2=cinfo.collator_locale.split('_')[0])
                 resp['resources'].append(
                     FCSResourceInfo(
+                        pid=corp, # TODO we need something like an ID from Handle.Net or DOI
                         title=corp,
                         description=cinfo.localized_desc('en'),
                         landing_page_uri=cinfo.web,
@@ -151,7 +152,6 @@ async def op_search_retrieve(amodel: FCSActionModel, req: KRequest, resp_common:
     tasks = [
         amodel.fcs_search(
             await amodel.cf.get_corpus(corp),
-            amodel.args.corpname,
             query,
             resp_common.maximumRecords,
             resp_common.startRecord,
@@ -160,9 +160,12 @@ async def op_search_retrieve(amodel: FCSActionModel, req: KRequest, resp_common:
     ]
     results: List[List[FCSSearchResult], str] = await asyncio.gather(*tasks)
     # merging results
+    merged_rows = [row for result, _ in results for row in result.rows]
+    if len(merged_rows) > resp_common.maximumRecords:
+        merged_rows = random.sample(merged_rows, k=resp_common.maximumRecords)
     merged_results = FCSSearchResult(
-        rows=[row for result, _ in results for row in result.rows],
-        size=sum(r.size for r, _ in results),
+        rows=merged_rows,
+        size=len(merged_rows),
     )
     cql_query = results[0][1]
 

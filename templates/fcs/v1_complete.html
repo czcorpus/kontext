@@ -64,7 +64,7 @@
             </ed:SupportedDataViews>
             <ed:Resources>
                 {% for resource in resources %}
-                <ed:Resource>
+                <ed:Resource pid="{{ resource.pid }}">
                     <ed:Title xml:lang="en">{{ resource.title }}</ed:Title>
                     {% if resource.description %}
                     <ed:Description xml:lang="en">{{ resource.description }}</ed:Description>
@@ -134,7 +134,8 @@
             <sru:recordSchema>http://clarin.eu/fcs/resource</sru:recordSchema>
             <sru:recordPacking>{{ recordPacking }}</sru:recordPacking>
             <sru:recordData>
-                <fcs:Resource xmlns:fcs="http://clarin.eu/fcs/resource" pid="{{ corppid }}" ref="{{ conc_view_url_tpl }}{{ corppid }}">
+                <fcs:Resource xmlns:fcs="http://clarin.eu/fcs/resource"
+                              {% if corppid %} pid="{{ corppid }}" ref="{{ conc_view_url_tpl }}{{ corppid }}" {% endif %}>
                     <fcs:DataView type="application/x-clarin-fcs-hits+xml">
                         <hits:Result xmlns:hits="http://clarin.eu/fcs/dataview/hits">
                             {{ left|xmle }}<hits:Hit>{{ word|xmle }}</hits:Hit> {{ right|xmle }}
