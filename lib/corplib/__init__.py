@@ -31,7 +31,6 @@ import plugins
 from corplib.subcorpus import SubcorpusIdent, SubcorpusRecord
 from plugin_types.corparch.corpus import (
     DefaultManateeCorpusInfo, ManateeCorpusInfo)
-from plugin_types.subc_storage import AbstractSubcArchive
 
 from .corpus import AbstractKCorpus, KCorpus
 from .errors import (
