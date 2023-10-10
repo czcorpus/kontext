@@ -93,10 +93,15 @@ async def create_result(amodel: KeywordsActionModel, form_args: KeywordsFormArgs
         'get_keywords', object.__class__,
         args=(amodel.corp.portable_ident, ref_corp_ident, form_args.to_dict(), amodel.corp.size))
     bg_result = await async_res.get()
-    # TODO generate auxiliary file only for corpus that is missing it
+
     if isinstance(bg_result, MissingSubCorpFreqFile):
+        corp = await amodel.cf.get_corpus(
+            bg_result.corpname
+            if bg_result.usesubcorp is None else
+            SubcorpusIdent(bg_result.usesubcorp, bg_result.corpname)
+        )
         data_calc = await build_arf_db(
-            amodel.session_get('user', 'id'), amodel.corp, form_args.wlattr)
+            amodel.session_get('user', 'id'), corp, form_args.wlattr)
         if type(data_calc) is list:
             for subtask in data_calc:
                 # TODO get rid of private method
@@ -107,20 +112,9 @@ async def create_result(amodel: KeywordsActionModel, form_args: KeywordsFormArgs
             # TODO we should join the current calculation here instead of throwing an error
             raise KeywordsError('The data calculation is already running')
 
-        ref_corp = await amodel.cf.get_corpus(ref_corp_ident)
-        data_calc = await build_arf_db(
-            amodel.session_get('user', 'id'), ref_corp, form_args.wlattr)
-        if type(data_calc) is list:
-            for subtask in data_calc:
-                # TODO get rid of private method
-                await amodel.store_async_task(subtask)
-                ans['subtasks'].append(subtask.to_dict())
-            ans['freq_files_avail'] = False
-        else:
-            # TODO we should join the current calculation here instead of throwing an error
-            raise KeywordsError('The data calculation is already running')
     elif isinstance(bg_result, Exception):
         raise bg_result
+
     amodel.set_curr_kwform_args(form_args)
 
     async def on_query_store(query_ids, history_ts, result):

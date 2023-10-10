@@ -20,7 +20,10 @@ from action.errors import UserReadableException
 
 
 class MissingSubCorpFreqFile(UserReadableException):
-    pass
+    def __init__(self, message: str | Exception, corpname: str, usesubcorp: str):
+        super().__init__(message, corpname, usesubcorp)
+        self.corpname = corpname
+        self.usesubcorp = usesubcorp
 
 
 class VirtualSubcFreqFileError(UserReadableException):

@@ -17,12 +17,14 @@ import importlib
 import logging
 import re
 import sys
-from typing import Type, TypeVar, Union
+from dataclasses import dataclass
+from typing import Any, List, Type, TypeVar, Union
 
 import ujson as json
 from action.errors import UserReadableException
 from bgcalc.adapter.abstract import AbstractBgClient, AbstractResultWrapper
 from bgcalc.errors import BgCalcError, CalcTaskNotFoundError
+from dataclasses_json import dataclass_json
 from redis import Redis
 from rq import Queue
 from rq.exceptions import NoSuchJobError
@@ -30,6 +32,34 @@ from rq.job import Job
 from rq_scheduler import Scheduler
 
 T = TypeVar('T')
+
+
+@dataclass_json
+@dataclass
+class ExcParams:
+    path: str  # name with path to exception class
+    args: List[Any]  # list of json serializable args
+
+
+class JSONSerializedError(Exception):
+    def __init__(self, exc_params: ExcParams):
+        super().__init__(exc_params.to_json())
+
+
+def handle_custom_exception(func):
+    async def wrapper(*args, **kwargs):
+        try:
+            return await func(*args, **kwargs)
+        except Exception as e:
+            # compose exception name with path
+            module = e.__class__.__module__
+            if module is None or module == str.__class__.__module__:
+                path = e.__class__.__name__  # Avoid reporting __builtin__
+            else:
+                path = module + '.' + e.__class__.__name__
+
+            raise JSONSerializedError(ExcParams(path, e.args)) from e
+    return wrapper
 
 
 class ResultWrapper(AbstractResultWrapper[T]):
@@ -50,20 +80,23 @@ class ResultWrapper(AbstractResultWrapper[T]):
         last = [x for x in re.split(r'\n', exc_info) if x.strip() != ''][-1]
         srch = re.match(r'^([\w_\.]+):\s+(.+)$', last)
         if srch is not None:
-            path = srch.group(1)
-            if '.' in path:
-                module, cls_name = srch.group(1).rsplit('.', 1)
+            exc_params = ExcParams(srch.group(1), [srch.group(2)])
+            if exc_params.path.endswith(JSONSerializedError.__name__):
+                exc_params = ExcParams.from_json(srch.group(2))
+
+            if '.' in exc_params.path:
+                module, cls_name = exc_params.path.rsplit('.', 1)
                 try:
                     m = importlib.import_module(module)
                     cls = getattr(m, cls_name, None)
-                    err = cls(srch.group(2)) if cls else Exception(srch.group(2))
+                    err = cls(*exc_params.args) if cls else Exception(*exc_params.args)
                 except ModuleNotFoundError:
                     logging.getLogger(__name__).warning(
-                        'Failed to infer calc backend job error {}'.format(path))
+                        'Failed to infer calc backend job error {}'.format(exc_params.path))
                     err = Exception(f'Task failed: {job_id}')
             else:
-                cls = getattr(sys.modules['builtins'], path, None)
-                err = cls(srch.group(2)) if cls else Exception(srch.group(2))
+                cls = getattr(sys.modules['builtins'], exc_params.path, None)
+                err = cls(*exc_params.args) if cls else Exception(*exc_params.args)
             return err
         return Exception(f'Task failed: {job_id}')
 
