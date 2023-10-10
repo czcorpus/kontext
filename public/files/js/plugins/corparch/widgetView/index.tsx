@@ -796,7 +796,7 @@ export function init({
                             corpusIdent={this.props.corpusIdent}
                             onClick={this._handleWidgetButtonClick}
                             isWidgetVisible={this.props.isVisible}
-                            isBusy={this.props.isBusySwitching} />
+                            isBusy={this.props.isBusyButton} />
                         {this.props.isVisible ? this._renderWidget() : null}
                         {this.props.availableSubcorpora.length > 0 ?
                             (<span>
@@ -812,7 +812,7 @@ export function init({
                         }
                         {!this.props.anonymousUser ?
                             <StarComponent widgetId={this.props.widgetId}
-                                currFavitemId={this.props.currFavitemId} isBusy={this.props.isBusyFav} /> :
+                                currFavitemId={this.props.currFavitemId} isBusy={this.props.isBusyWidget} /> :
                             null
                         }
                     </div>

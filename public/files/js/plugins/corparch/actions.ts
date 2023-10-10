@@ -123,23 +123,11 @@ export class Actions {
         name: 'DEFAULT_CORPARCH_WIDGET_FAV_ITEM_CLICK'
     };
 
-    static WidgetFavItemClickDone:Action<{
-        widgetId:string;
-    }> = {
-        name: 'DEFAULT_CORPARCH_WIDGET_FAV_ITEM_CLICK_DONE'
-    };
-
     static WidgetFeatItemClick:Action<{
         widgetId:string;
         itemId:string;
     }> = {
         name: 'DEFAULT_CORPARCH_WIDGET_FEAT_ITEM_CLICK'
-    };
-
-    static WidgetFeatItemClickDone:Action<{
-        widgetId:string;
-    }> = {
-        name: 'DEFAULT_CORPARCH_WIDGET_FEAT_ITEM_CLICK_DONE'
     };
 
     static WidgetStarIconClick:Action<{
@@ -195,12 +183,6 @@ export class Actions {
         itemId:string;
     }> = {
         name: 'DEFAULT_CORPARCH_WIDGET_SEARCH_RESULT_ITEM_CLICKED'
-    };
-
-    static WidgetSearchResultItemClickedDone:Action<{
-        widgetId:string;
-    }> = {
-        name: 'DEFAULT_CORPARCH_WIDGET_SEARCH_RESULT_ITEM_CLICKED_DONE'
     };
 
     static WidgetFavItemRemove:Action<{
