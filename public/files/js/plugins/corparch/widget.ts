@@ -151,6 +151,7 @@ export interface CorplistWidgetModelArgs {
 export interface CorplistWidgetModelCorpusSwitchPreserve {
     corpusIdent:Kontext.FullCorpusIdent;
     currFavitemId:string;
+    availableSubcorpora:Array<Kontext.SubcorpListItem>;
     alignedCorpora:Array<string>;
     dataFav:Array<FavListItem>;
 }
@@ -690,6 +691,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             corpusIdent: state.corpusIdent,
             currFavitemId: state.currFavitemId,
             alignedCorpora: state.alignedCorpora,
+            availableSubcorpora: state.availableSubcorpora,
             dataFav: [...state.dataFav],
         };
     }
@@ -706,6 +708,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 state.corpusIdent = data.corpusIdent;
                 state.currFavitemId = data.currFavitemId;
                 state.alignedCorpora = data.alignedCorpora;
+                state.availableSubcorpora = data.availableSubcorpora;
 
             } else {
                 state.currFavitemId = findCurrFavitemId(
