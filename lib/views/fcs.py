@@ -14,10 +14,10 @@
 # GNU General Public License for more details.
 
 import asyncio
+import random
 from collections import defaultdict
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
-import random
 
 import plugins
 import settings
@@ -78,7 +78,7 @@ async def op_explain(amodel: FCSActionModel, req: KRequest, resp_common: FCSResp
                     lang_code = get_lang_code(a2=cinfo.collator_locale.split('_')[0])
                 resp['resources'].append(
                     FCSResourceInfo(
-                        pid=corp, # TODO we need something like an ID from Handle.Net or DOI
+                        pid=cinfo.pid,
                         title=corp,
                         description=cinfo.localized_desc('en'),
                         landing_page_uri=cinfo.web,

@@ -27,6 +27,7 @@ DROP TABLE IF EXISTS parallel_corpus;
 CREATE TABLE kontext_corpus (
   id int(11) PRIMARY KEY NOT NULL AUTO_INCREMENT,
   parallel_corpus_id int(11) DEFAULT NULL,
+  pid varchar(63) DEFAULT NULL,
   name varchar(63),
   size bigint(20) NOT NULL DEFAULT '0',
   group_name varchar(255) NOT NULL,

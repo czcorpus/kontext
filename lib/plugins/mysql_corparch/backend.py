@@ -195,7 +195,7 @@ class Backend(DatabaseBackend):
 
     async def load_corpus(self, cursor: Cursor, corp_id: str) -> Dict[str, Any]:
         await cursor.execute(
-            'SELECT c.name as id, c.web, c.sentence_struct, c.locale AS collator_locale, '
+            'SELECT c.name as id, c.pid as pid, c.web, c.sentence_struct, c.locale AS collator_locale, '
             'IF (c.speaker_id_struct IS NOT NULL, CONCAT(c.speaker_id_struct, \'.\', c.speaker_id_attr), NULL) '
             '  AS speaker_id_attr, '
             'IF (c.speech_overlap_struct IS NOT NULL AND c.speech_overlap_attr IS NOT NULL, '
