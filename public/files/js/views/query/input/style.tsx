@@ -417,6 +417,7 @@ export const QueryArea = styled.div`
     > span.simple-input {
         font-size: 1.4em;
         padding: 0.5em 0.3em 0.5em 0.3em;
+        overflow-x: auto;
 
         a.sh-sugg {
             text-decoration: none;

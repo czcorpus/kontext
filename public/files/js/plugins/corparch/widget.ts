@@ -549,11 +549,11 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             Actions.WidgetFocusedItemSelect,
             action => action.payload.widgetId === this.widgetId,
             (state, action) => {
-                state.isBusyWidget = true;
+                state.isBusyButton = true;
+                state.isVisible = false;
             },
             (state, action, dispatch) => {
                 if (state.focusedRowIdx > -1) {
-                    dispatch(Actions.WidgetSearchResultItemClickedDone, {widgetId: this.widgetId});
                     this.handleSearchItemClick(
                         dispatch,
                         state,
@@ -615,18 +615,17 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             Actions.WidgetEnterOnActiveListItem,
             action => action.payload.widgetId === this.widgetId,
             (state, action) => {
-                state.isBusyWidget = false;
+                state.isBusyButton = true;
+                state.isVisible = false;
             },
             (state, action, dispatch) => {
                 if (state.activeListItem[0] === 0) {
-                    dispatch(Actions.WidgetFavItemClickDone, {widgetId: this.widgetId});
                     this.handleFavItemClick(
                         dispatch, state, state.dataFav[state.activeListItem[1]].id
                     );
 
 
                 } else {
-                    dispatch(Actions.WidgetFeatItemClickDone, {widgetId: this.widgetId});
                     this.handleFeatItemClick(
                         dispatch, state, state.dataFeat[state.activeListItem[1]].id
                     );
