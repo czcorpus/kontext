@@ -129,13 +129,13 @@
     <sru:numberOfRecords>{{ numberOfRecords }}</sru:numberOfRecords>
     {% if code is not defined and numberOfRecords > 0 %}
     <sru:records>
-        {% for left, word, right, ref in result %}
+        {% for left, word, right, ref, pid, web in result %}
         <sru:record>
             <sru:recordSchema>http://clarin.eu/fcs/resource</sru:recordSchema>
             <sru:recordPacking>{{ recordPacking }}</sru:recordPacking>
             <sru:recordData>
                 <fcs:Resource xmlns:fcs="http://clarin.eu/fcs/resource"
-                              {% if corppid %} pid="{{ corppid }}" ref="{{ conc_view_url_tpl }}{{ corppid }}" {% endif %}>
+                              pid="{{ pid }}" {% if web %}ref="{{ conc_view_url_tpl }}{{ web }}"{% endif %}>
                     <fcs:DataView type="application/x-clarin-fcs-hits+xml">
                         <hits:Result xmlns:hits="http://clarin.eu/fcs/dataview/hits">
                             {{ left|xmle }}<hits:Hit>{{ word|xmle }}</hits:Hit> {{ right|xmle }}

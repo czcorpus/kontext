@@ -17,7 +17,7 @@ import asyncio
 import random
 from collections import defaultdict
 from dataclasses import asdict, dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 import plugins
 import settings
@@ -38,13 +38,11 @@ bp_v1 = bp_common.copy('fcs-v1')
 
 @dataclass
 class FCSResponseV1:
-    corpname: str
     version: float
     server_name: str
     server_port: int
     database: str
 
-    corppid: Optional[str] = None
     recordPacking: str = 'xml'
     result: List[Any] = field(default_factory=list)
     operation: str = 'explain'
@@ -124,7 +122,6 @@ async def op_search_retrieve(amodel: FCSActionModel, req: KRequest, resp_common:
         'query', 'startRecord', 'maximumRecords', 'recordPacking',
         'recordSchema', 'resultSetTTL', 'x-fcs-context'
     ])
-    resp_common.corpname = amodel.args.corpname
     # check integer parameters
     if 'maximumRecords' in req.args:
         try:
@@ -141,23 +138,25 @@ async def op_search_retrieve(amodel: FCSActionModel, req: KRequest, resp_common:
         except Exception:
             raise FCSError(6, 'startRecord', 'Unsupported parameter value')
 
-    corp_conf_info = await plugins.runtime.CORPARCH.instance.get_corpus_info(
-        amodel.plugin_ctx, amodel.args.corpname)
-    resp_common.corppid = '' if corp_conf_info.web is None else corp_conf_info.web
     query = req.args.get('query', '')
     if 0 == len(query):
         raise FCSError(7, 'fcs_query', 'Mandatory parameter not supplied')
 
-    # multi-corpora search
     tasks = [
         amodel.fcs_search(
             await amodel.cf.get_corpus(corp),
+            await plugins.runtime.CORPARCH.instance.get_corpus_info(amodel.plugin_ctx, corp),
             query,
             resp_common.maximumRecords,
             resp_common.startRecord,
         )
-        for corp in settings.get('fcs', 'corpora')
+        for corp in (
+            [amodel.args.corpname]
+            if amodel.args.corpname else
+            settings.get('fcs', 'corpora')
+        )
     ]
+
     results: List[List[FCSSearchResult], str] = await asyncio.gather(*tasks)
     # merging results
     merged_rows = [row for result, _ in results for row in result.rows]
@@ -172,9 +171,10 @@ async def op_search_retrieve(amodel: FCSActionModel, req: KRequest, resp_common:
     resp_common.result = merged_results.rows
     resp_common.numberOfRecords = merged_results.size
 
-    form = QueryFormArgs(amodel.plugin_ctx, [resp_common.corpname], True)
-    form.data.curr_queries[resp_common.corpname] = cql_query
-    form.data.curr_query_types[resp_common.corpname] = 'advanced'
+    # TODO why is form here?
+    form = QueryFormArgs(amodel.plugin_ctx, [amodel.args.corpname], True)
+    form.data.curr_queries[amodel.args.corpname] = cql_query
+    form.data.curr_query_types[amodel.args.corpname] = 'advanced'
     resp['conc_view_url_tpl'] = req.create_url('view', {'q': ''})
 
 
@@ -204,7 +204,6 @@ async def v1(amodel: FCSActionModel, req: KRequest, resp: KResponse):
     resp.set_header('Content-Type', 'application/xml')
     current_version = 1.2
     common_data = FCSResponseV1(
-        corpname=amodel.args.corpname,
         version=current_version,
         server_name=req.unwrapped.server_name,
         server_port=req.unwrapped.server_port,
