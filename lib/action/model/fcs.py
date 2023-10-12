@@ -107,7 +107,7 @@ class FCSActionModel(UserActionModel):
                     lang_code = get_lang_code(a2=cinfo.collator_locale.split('_')[0])
                 resources.append(
                     FCSResourceInfo(
-                        pid=corpus_id,  # TODO we need something like an ID from Handle.Net or DOI
+                        pid=cinfo.pid,
                         title=corpus_id,
                         description=cinfo.localized_desc('en'),
                         landing_page_uri=cinfo.web,
