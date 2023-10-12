@@ -21,13 +21,11 @@ from typing import Any, Dict, List
 
 import plugins
 import settings
-from action.argmapping.conc import QueryFormArgs
 from action.control import http_action
-from action.errors import CorpusNotFoundException, ForbiddenException
+from action.errors import CorpusForbiddenException, CorpusNotFoundException
 from action.krequest import KRequest
 from action.model.fcs import (
     FCSActionModel, FCSError, FCSResourceInfo, FCSSearchResult)
-from action.req_args import AnyRequestArgProxy
 from action.response import KResponse
 from l10n import get_lang_code
 from sanic import Blueprint
@@ -162,16 +160,9 @@ async def op_search_retrieve(amodel: FCSActionModel, req: KRequest, resp_common:
         rows=merged_rows,
         size=len(merged_rows),
     )
-    cql_query = results[0][1]
 
     resp_common.result = merged_results.rows
     resp_common.numberOfRecords = merged_results.size
-
-    # TODO why is form here?
-    form = QueryFormArgs(amodel.plugin_ctx, [amodel.args.corpname], True)
-    form.data.curr_queries[amodel.args.corpname] = cql_query
-    form.data.curr_query_types[amodel.args.corpname] = 'advanced'
-    resp['conc_view_url_tpl'] = req.create_url('view', {'q': ''})
 
 
 async def check_corpora(amodel: FCSActionModel, corpora: List[str]):
@@ -183,7 +174,7 @@ async def check_corpora(amodel: FCSActionModel, corpora: List[str]):
         for corpname in corpora:
             has_access, variant = await auth.validate_access(corpname, user_info)
             if not has_access:
-                raise ForbiddenException(f'cannot access corpus {corpname}')
+                raise CorpusForbiddenException(corpname, variant)
 
 
 async def get_corpora(amodel: FCSActionModel, req: KRequest) -> List[str]:

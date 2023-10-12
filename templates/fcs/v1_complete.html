@@ -135,7 +135,7 @@
             <sru:recordPacking>{{ recordPacking }}</sru:recordPacking>
             <sru:recordData>
                 <fcs:Resource xmlns:fcs="http://clarin.eu/fcs/resource"
-                              pid="{{ pid }}" {% if web %}ref="{{ conc_view_url_tpl }}{{ web }}"{% endif %}>
+                              pid="{{ pid }}" {% if web %}ref="{{ web }}"{% endif %}>
                     <fcs:DataView type="application/x-clarin-fcs-hits+xml">
                         <hits:Result xmlns:hits="http://clarin.eu/fcs/dataview/hits">
                             {{ left|xmle }}<hits:Hit>{{ word|xmle }}</hits:Hit> {{ right|xmle }}
