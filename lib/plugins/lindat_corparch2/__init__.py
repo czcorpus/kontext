@@ -578,6 +578,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
 
         ans = self.create_corpus_info()
         ans.id = corpus_id
+        ans.pid = node.attrib.get('pid', corpus_id)
         ans.name = (await plugin_ctx.corpus_factory.get_info(ans.id)).name
         ans.path = path
         ans.web = web_url

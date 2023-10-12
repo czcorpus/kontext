@@ -49,11 +49,10 @@ from action.plugin.ctx import AbstractCorpusPluginCtx, PluginCtx
 from action.response import KResponse
 from lxml import etree
 from plugin_types.auth import AbstractAuth
-from plugin_types.corparch import (AbstractCorporaArchive,
-                                   AbstractSearchableCorporaArchive,
-                                   CorplistProvider)
-from plugin_types.corparch.corpus import (BrokenCorpusInfo, CorpusInfo,
-                                          PosCategoryItem, TagsetInfo)
+from plugin_types.corparch import (
+    AbstractCorporaArchive, AbstractSearchableCorporaArchive, CorplistProvider)
+from plugin_types.corparch.corpus import (
+    BrokenCorpusInfo, CorpusInfo, PosCategoryItem, TagsetInfo)
 from plugins import inject
 from sanic import Blueprint
 from settings import import_bool
@@ -446,11 +445,13 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
 
         ans = self.create_corpus_info()
         ans.id = corpus_id
+        ans.pid = node.attrib.get('pid', corpus_id)
         try:
             ans.name = (await plugin_ctx.corpus_factory.get_info(ans.id)).name
         except Exception as ex:
             ans.name = ans.id
-            logging.getLogger(__name__).error(f'Manatee failed to fetch a full name of {corpus_id}: {ex}')
+            logging.getLogger(__name__).error(
+                f'Manatee failed to fetch a full name of {corpus_id}: {ex}')
         ans.path = path
         ans.web = web_url
         ans.sentence_struct = sentence_struct

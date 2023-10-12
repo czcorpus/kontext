@@ -21,12 +21,11 @@ import asyncio
 import math
 from dataclasses import dataclass
 from typing import List, NamedTuple, Optional, Tuple
-from action.argmapping.wordlist import WordlistFormArgs
 
 import kwiclib
 import plugins
 import settings
-from l10n import get_lang_code
+from action.argmapping.wordlist import WordlistFormArgs
 from action.krequest import KRequest
 from action.model import ModelsSharedData
 from action.model.user import UserActionModel, UserPluginCtx
@@ -36,6 +35,8 @@ from bgcalc.wordlist import wordlist
 from conclib.calc import find_cached_conc_base
 from conclib.search import get_bg_conc
 from corplib.corpus import AbstractKCorpus
+from l10n import get_lang_code
+from plugin_types.corparch.corpus import CorpusInfo
 
 
 @dataclass
@@ -55,6 +56,8 @@ class FCSSearchRow(NamedTuple):
     kwic: str
     right: str
     ref: str
+    pid: str
+    web: str
 
 
 @dataclass
@@ -104,7 +107,7 @@ class FCSActionModel(UserActionModel):
                     lang_code = get_lang_code(a2=cinfo.collator_locale.split('_')[0])
                 resources.append(
                     FCSResourceInfo(
-                        pid=corpus_id, # TODO we need something like an ID from Handle.Net or DOI
+                        pid=cinfo.pid,
                         title=corpus_id,
                         description=cinfo.localized_desc('en'),
                         landing_page_uri=cinfo.web,
@@ -156,6 +159,7 @@ class FCSActionModel(UserActionModel):
     async def fcs_search(
             self,
             corp: AbstractKCorpus,
+            corp_info: CorpusInfo,
             fcs_query: str,
             max_rec: int,
             start: int
@@ -169,7 +173,6 @@ class FCSActionModel(UserActionModel):
             pos = query.lower().index('exact')  # first occurrence of EXACT
             query = query[:pos] + '=' + query[pos + 5:]  # 1st exact > =
             exact_match = True
-
         attrs = corp.get_posattrs()  # list of available attrs
         try:  # parse query
             if '=' in query:  # lemma=word | lemma="word" | lemma="w1 w2" | word=""
@@ -253,7 +256,10 @@ class FCSActionModel(UserActionModel):
                 ' '.join([x['str'] for x in kwicline['Left']]),
                 ' '.join([x['str'] for x in kwicline['Kwic']]),
                 ' '.join([x['str'] for x in kwicline['Right']]),
-                kwicline['ref']))
+                kwicline['ref'],
+                corp_info.pid,
+                '' if corp_info.web is None else corp_info.web,
+            ))
         return FCSSearchResult(rows, conc.size()), rq
 
     @property

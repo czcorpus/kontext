@@ -133,6 +133,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
         if row:
             ans = self.create_corpus_info()
             ans.id = row['id']
+            ans.pid = row['id'] if row['pid'] is None else row['pid']
             ans.web = row['web']
             ans.sentence_struct = row['sentence_struct']
             ans.collator_locale = row['collator_locale'] if row['collator_locale'] else 'en_US'
