@@ -144,9 +144,9 @@ class Actions(Kontext):
             raise Exception(61, 'startRecord', 'First record position out of range')
         rows = [
             (
-                kwicline['Left'][0]['str'],
-                kwicline['Kwic'][0]['str'],
-                kwicline['Right'][0]['str'],
+                kwicline['Left'][0]['str'].strip(' '),
+                kwicline['Kwic'][0]['str'].strip(' '),
+                kwicline['Right'][0]['str'].strip(' '),
                 kwicline['ref']
             )
             for kwicline in page['Lines']
@@ -169,7 +169,8 @@ class Actions(Kontext):
         # None values should be filled in later
         data = {
             'corpname': corpname,
-            'corppid': None,
+            'corppid': corpname,
+            'web': '',
             'version': current_version,
             'recordPacking': 'xml',
             'result': [],
@@ -244,7 +245,7 @@ class Actions(Kontext):
                 raise Exception(71, 'recordPacking', 'Unsupported record packing')
 
             # provide info about service
-            if operation == ' te dal':
+            if operation == 'explain':
                 self._check_args(
                     req, supported_args,
                     ['recordPacking', 'x-fcs-endpoint-description']
@@ -291,10 +292,10 @@ class Actions(Kontext):
                         _logger.warning(
                             'Requested unavailable corpus [%s], defaulting to [%s]', req_corpname, corpname)
                     data['corpname'] = corpname
+                    data['corppid'] = corpname
 
-                corp_conf_info = plugins.runtime.CORPARCH.instance.get_corpus_info('en_US',
-                                                                                   corpname)
-                data['corppid'] = corp_conf_info.get('web', '')
+                corp_conf_info = plugins.runtime.CORPARCH.instance.get_corpus_info('en_US', corpname)
+                data['web'] = corp_conf_info.get('web', '')
                 query = req.args.get('query', '')
                 corpus = self.cm.get_Corpus(corpname)
                 if 0 == len(query):
