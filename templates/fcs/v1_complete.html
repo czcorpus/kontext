@@ -123,10 +123,10 @@
             <sru:recordSchema>http://clarin.eu/fcs/resource</sru:recordSchema>
             <sru:recordPacking>{{ recordPacking }}</sru:recordPacking>
             <sru:recordData>
-                <fcs:Resource xmlns:fcs="http://clarin.eu/fcs/resource" pid="{{ corppid }}" ref="{{ corpname }}">
+                <fcs:Resource xmlns:fcs="http://clarin.eu/fcs/resource" pid="{{ corppid }}" {% if web %}ref="{{ web }}"{% endif %}>
                     <fcs:DataView type="application/x-clarin-fcs-hits+xml">
                         <hits:Result xmlns:hits="http://clarin.eu/fcs/dataview/hits">
-                            {{ left|xmle }}<hits:Hit>{{ word|xmle }}</hits:Hit> {{ right|xmle }}
+                            {{ left|xmle }} <hits:Hit>{{ word|xmle }}</hits:Hit> {{ right|xmle }}
                         </hits:Result>
                     </fcs:DataView>
                 </fcs:Resource>
