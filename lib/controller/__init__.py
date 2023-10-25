@@ -58,6 +58,7 @@ from .errors import (UserActionException, NotFoundException, get_traceback, fetc
 
 import werkzeug.wrappers
 import http.cookies
+import markupsafe
 
 T = TypeVar('T')
 

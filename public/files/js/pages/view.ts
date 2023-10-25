@@ -86,7 +86,6 @@ import tokenConnectInit from 'plugins/tokenConnect/init';
 import kwicConnectInit from 'plugins/kwicConnect/init';
 import { TTInitialData } from '../models/textTypes/common';
 import { QueryType } from '../models/query/query';
-import { HtmlHelpModel } from '../models/help/help';
 import { HitReloader } from '../models/concordance/concStatus';
 import { QueryHelpModel } from '../models/help/queryHelp';
 
