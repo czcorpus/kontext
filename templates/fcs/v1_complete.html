@@ -2,13 +2,12 @@
     <sru:diagnostics xmlns:diag="http://www.loc.gov/zing/srw/diagnostic/">
         <diag:diagnostic>
             <diag:uri>info:srw/diagnostic/1/{{ code }}</diag:uri>
-            <diag:details>{{ details }}</diag:details>
+            <diag:details>{{ ident }}</diag:details>
             <diag:message>{{ msg }}</diag:message>
         </diag:diagnostic>
     </sru:diagnostics>
 {%- endmacro -%}
 <?xml version='1.0' encoding='utf-8'?>
-<?xml-stylesheet href="{{ root_url }}fcs/fcs2html" type="text/xsl"?>
 {% if operation == 'explain' %}
 <sru:explainResponse xmlns:sru="http://www.loc.gov/zing/srw/">
     <sru:version>{{ version }}</sru:version>
@@ -24,8 +23,8 @@
                     <zr:database>{{ database }}</zr:database>
                     </zr:serverInfo>
                 <zr:databaseInfo>
-                    <zr:title lang="en" primary="true">{{ corpname }}</zr:title>
-                    <zr:description lang="en" primary="true">{{ corpus_desc }}</zr:description>
+                    <zr:title lang="en" primary="true">{{ database_title }}</zr:title>
+                    <zr:description lang="en" primary="true">{{ database_description }}</zr:description>
                 </zr:databaseInfo>
                 <zr:schemaInfo>
                     <zr:schema identifier="http://clarin.eu/fcs/resource" name="fcs">
@@ -38,7 +37,7 @@
                         <zr:title lang="en" primary="true">CLARIN Content Search</zr:title>
                     </zr:set>
                     {% for title in result %}
-                     <zr:index search="true" scan="true" sort="true">
+                     <zr:index search="true" scan="false" sort="true">
                         <zr:title lang="en" primary="true">{{ title }}</zr:title>
                         <zr:map primary="true">
                             <zr:name>{{ title }}</zr:name>
@@ -64,13 +63,23 @@
                 <ed:SupportedDataView id="hits" delivery-policy="send-by-default">application/x-clarin-fcs-hits+xml</ed:SupportedDataView>
             </ed:SupportedDataViews>
             <ed:Resources>
-                <ed:Resource pid="http://hdl.handle.net/4711/0815">
-                    <ed:Title xml:lang="en">{{ corpus_desc }}</ed:Title>
+                {% for resource in resources %}
+                <ed:Resource pid="{{ resource.pid }}">
+                    <ed:Title xml:lang="en">{{ resource.title }}</ed:Title>
+                    {% if resource.description %}
+                    <ed:Description xml:lang="en">{{ resource.description }}</ed:Description>
+                    {% endif %}
+                    {% if resource.landing_page_uri %}
+                    <ed:LandingPageURI>{{ resource.landing_page_uri }}</ed:LandingPageURI>
+                    {% endif %}
+                    {% if resource.language[2] %}
                     <ed:Languages>
-                        <ed:Language>{{ corpus_lang|default('', true) }}</ed:Language>
+                        <ed:Language>{{ resource.language[2] }}</ed:Language>
                     </ed:Languages>
+                    {% endif %}
                     <ed:AvailableDataViews ref="hits"/>
                 </ed:Resource>
+                {% endfor %}
             </ed:Resources>
         </ed:EndpointDescription>
     </sru:extraResponseData>
@@ -84,23 +93,25 @@
     <sru:version>{{ version }}</sru:version>
     {% if code is not defined and result %}
     <sru:terms>
-        {% for value, displayTerm, resourceInfo in result %}
+        {% for resource in result %}
             <sru:term>
-                <sru:value>{{ value }}</sru:value>
-                <sru:displayTerm>{{ displayTerm }}</sru:displayTerm>
+                <sru:value>{{ resource.title }}</sru:value>
+                <sru:displayTerm>{{ resource.title }}</sru:displayTerm>
                 {% if resourceInfoRequest %}
                 <sru:extraTermData>
-                    <ResourceInfo xmlns="http://clarin.eu/fcs/1.0/resource-info" hasSubResources="false">
+                    <ResourceInfo xmlns="http://clarin.eu/fcs/1.0/resource-info" pid="{{ resourceInfo.title }}" hasSubResources="false">
                         <Title xml:lang="en">{{ resourceInfo.title }}</Title>
                         {% if resourceInfo.description %}
                         <Description xml:lang="en">{{ resourceInfo.description }}</Description>
                         {% endif %}
-                        {% if resourceInfo.landingPageURI %}
-                        <LandingPageURI>{{ resourceInfo.landingPageURI }}</LandingPageURI>
+                        {% if resourceInfo.landing_page_uri %}
+                        <LandingPageURI>{{ resourceInfo.landing_page_uri }}</LandingPageURI>
                         {% endif %}
+                        {% if resource.language[2] %}
                         <Languages>
-                            <Language>{{ resourceInfo.language }}</Language>
+                            <Language>{{ resourceInfo.language[2] }}</Language>
                         </Languages>
+                        {% endif %}
                     </ResourceInfo>
                 </sru:extraTermData>
                 {% endif %}
@@ -118,12 +129,13 @@
     <sru:numberOfRecords>{{ numberOfRecords }}</sru:numberOfRecords>
     {% if code is not defined and numberOfRecords > 0 %}
     <sru:records>
-        {% for left, word, right, ref in result %}
+        {% for left, word, right, ref, pid, web in result %}
         <sru:record>
             <sru:recordSchema>http://clarin.eu/fcs/resource</sru:recordSchema>
             <sru:recordPacking>{{ recordPacking }}</sru:recordPacking>
             <sru:recordData>
-                <fcs:Resource xmlns:fcs="http://clarin.eu/fcs/resource" pid="{{ corppid }}" ref="{{ corpname }}">
+                <fcs:Resource xmlns:fcs="http://clarin.eu/fcs/resource"
+                              pid="{{ pid }}" {% if web %}ref="{{ web }}"{% endif %}>
                     <fcs:DataView type="application/x-clarin-fcs-hits+xml">
                         <hits:Result xmlns:hits="http://clarin.eu/fcs/dataview/hits">
                             {{ left|xmle }}<hits:Hit>{{ word|xmle }}</hits:Hit> {{ right|xmle }}

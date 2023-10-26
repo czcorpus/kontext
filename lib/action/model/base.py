@@ -21,6 +21,7 @@ import settings
 from action.cookie import KonTextCookie
 from action.errors import UserReadableException
 from action.krequest import KRequest
+from action.model import ModelsSharedData
 from action.model.abstract import AbstractPageModel
 from action.plugin.ctx import AbstractBasePluginCtx
 from action.props import ActionProps
@@ -28,7 +29,6 @@ from action.req_args import create_req_arg_proxy
 from action.response import KResponse
 from main_menu.model import AbstractMenuItem, MainMenuItemId
 from sanic import Sanic
-from action.model import ModelsSharedData
 
 
 class BaseActionModel(AbstractPageModel):
@@ -42,7 +42,6 @@ class BaseActionModel(AbstractPageModel):
     BASE_ATTR: str = 'word'  # TODO this value is actually hardcoded throughout the code
 
     ANON_FORBIDDEN_MENU_ITEMS = []
-
 
     def __init__(
             self,
@@ -73,7 +72,7 @@ class BaseActionModel(AbstractPageModel):
 
     @staticmethod
     def _is_valid_return_type(f: str) -> bool:
-        return f in ('template', 'json', 'xml', 'plain')
+        return f in ('template', 'template_xml', 'json', 'xml', 'plain')
 
     async def init_session(self) -> None:
         pass
@@ -133,7 +132,8 @@ class BaseActionModel(AbstractPageModel):
             if self._is_valid_return_type(self._req.args.get('format')):
                 self._action_props.return_type = self._req.args.get('format')
             else:
-                raise UserReadableException(f'Unknown output format: {self._req.args.get("format")}')
+                raise UserReadableException(
+                    f'Unknown output format: {self._req.args.get("format")}')
         return create_req_arg_proxy(self._req.form, self._req.args, self._req.json)
 
     async def post_dispatch(self, action_props, resp, err_desc):

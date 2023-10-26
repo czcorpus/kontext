@@ -54,6 +54,7 @@ async def _output_result(
     depends on the combination of the 'return_type' argument and a type of the 'result'.
     Typical combinations are (ret. type, data type):
     'template' + dict
+    'template_xml' + dict
     'json' + dict (which may contain dataclass_json instances)
     'json' + dataclass_json
     'plain' + str
@@ -79,6 +80,8 @@ async def _output_result(
         return Type2XML.to_xml(result)
     elif action_props.return_type == 'plain' and not isinstance(result, (dict, DataClassJsonMixin)):
         return result
+    elif action_props.return_type == 'template_xml':
+        return tpl_engine.render(action_props.template, result, translate)
     elif action_props.return_type == 'template' and (result is None or isinstance(result, dict)):
         result = await action_model.add_globals(app, action_props, result)
         if isinstance(result, dict):
