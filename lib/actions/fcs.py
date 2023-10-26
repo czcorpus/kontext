@@ -425,23 +425,6 @@ class Actions(Kontext):
 
         return {**common_data, **custom_resp}
 
-    @exposed(return_type='template', template='fcs/fcs2html.html', skip_corpus_init=True)
-    def fcs2html(self, req):
-        """
-            Returns XSL template for rendering FCS XML.
-        """
-        self._headers['Content-Type'] = 'text/xsl; charset=utf-8'
-        custom_hd_inject_path = settings.get('fcs', 'template_header_inject_file', None)
-        if custom_hd_inject_path:
-            with open(custom_hd_inject_path) as fr:
-                custom_hdr_inject = fr.read()
-        else:
-            custom_hdr_inject = None
-        return dict(fcs_provider_heading=settings.get('fcs', 'provider_heading', 'KonText FCS Data Provider'),
-                    fcs_provider_website=settings.get('fcs', 'provider_website', None),
-                    fcs_template_css_url=settings.get_list('fcs', 'template_css_url'),
-                    fcs_custom_hdr_inject=custom_hdr_inject)
-
 
 class Languages(object):
     """
