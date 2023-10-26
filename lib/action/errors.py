@@ -24,10 +24,12 @@ class UserReadableException(Exception):
     This exception covers general errors occurring in Controller's action methods
     as a result of user action (e.g. user sends incorrect arguments, user does
     not have access rights etc.).
+
+    args - additional positional arguments that will be also stored in self.args
     """
 
-    def __init__(self, message: Union[str, Exception], code=400, error_code=None, error_args=None, internal_message=None):
-        super().__init__(message if type(message) is str else str(message))
+    def __init__(self, message: Union[str, Exception], *args, code=400, error_code=None, error_args=None, internal_message=None):
+        super().__init__(message if type(message) is str else str(message), *args)
         self.code = code
         self.error_code = error_code
         self.error_args = error_args
@@ -47,7 +49,7 @@ class UserReadableException(Exception):
 class BackgroundCalculationException(UserReadableException):
 
     def __init__(self, message, internal_message=None):
-        super().__init__(message, 500, internal_message=internal_message)
+        super().__init__(message, code=500, internal_message=internal_message)
 
 
 class NotFoundException(UserReadableException):
@@ -56,7 +58,7 @@ class NotFoundException(UserReadableException):
     """
 
     def __init__(self, message, internal_message=None):
-        super().__init__(message, 404, internal_message=internal_message)
+        super().__init__(message, code=404, internal_message=internal_message)
 
 
 class ForbiddenException(UserReadableException):
@@ -65,35 +67,40 @@ class ForbiddenException(UserReadableException):
     """
 
     def __init__(self, message, internal_message=None):
-        super().__init__(message, 403, internal_message=internal_message)
+        super().__init__(message, code=403, internal_message=internal_message)
 
 
 class CorpusNotFoundException(UserReadableException):
 
     def __init__(self, message, internal_message=None):
-        super().__init__(message, 404, internal_message=internal_message)
+        super().__init__(message, code=404, internal_message=internal_message)
 
 
 class CorpusForbiddenException(ForbiddenException):
     def __init__(self, corpname, variant):
-        super().__init__('No access to corpus {0}'.format(corpname))
+        super().__init__('No access to corpus {0}'.format(corpname), corpname, variant)
         self.corpname = corpname
         self.variant = variant
+        # args need to reflect positional arguments of constructor
+        # so it is Rq serializable
+        self.args = (corpname, variant)
 
 
 class AlignedCorpusForbiddenException(ForbiddenException):
 
     def __init__(self, corpname, variant):
-        super().__init__(
-            'No access to corpus {0}'.format(corpname))
+        super().__init__('No access to corpus {0}'.format(corpname), corpname, variant)
         self.corpname = corpname
         self.variant = variant
+        # args need to reflect positional arguments of constructor
+        # so it is Rq serializable
+        self.args = (corpname, variant)
 
 
 class ServiceUnavailableException(UserReadableException):
 
     def __init__(self, message, internal_message=None):
-        super().__init__(message, 503, internal_message=internal_message)
+        super().__init__(message, code=503, internal_message=internal_message)
 
 
 class ImmediateRedirectException(Exception):

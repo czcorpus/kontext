@@ -43,6 +43,7 @@ import general
 from action.argmapping.subcorpus import (
     CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs)
 from bgcalc.adapter.factory import init_backend
+from bgcalc.adapter.rq import handle_custom_exception
 from corplib.abstract import SubcorpusIdent
 from log_formatter import KontextLogFormatter
 
@@ -60,17 +61,20 @@ class TaskWrapper:
 # ----------------------------- CONCORDANCE -----------------------------------
 
 @as_sync
+@handle_custom_exception
 async def conc_register(user_id, corpus_ident, corp_cache_key, query, cutoff, time_limit):
     return await general.conc_register(
         TaskWrapper(get_current_job()), user_id, corpus_ident, corp_cache_key, query, cutoff, time_limit, worker)
 
 
 @as_sync
+@handle_custom_exception
 async def conc_calculate(initial_args, user_id, corpus_ident, corp_cache_key, query, cutoff):
     return await general.conc_calculate(TaskWrapper(get_current_job()), initial_args, user_id, corpus_ident, corp_cache_key, query, cutoff)
 
 
 @as_sync
+@handle_custom_exception
 async def conc_sync_calculate(user_id, corpus_name, subc_name, corp_cache_key, query, cutoff):
     return await general.conc_sync_calculate(TaskWrapper(get_current_job()), user_id, corpus_name, subc_name, corp_cache_key, query, cutoff)
 
@@ -79,11 +83,13 @@ async def conc_sync_calculate(user_id, corpus_name, subc_name, corp_cache_key, q
 
 
 @as_sync
+@handle_custom_exception
 async def calculate_colls(coll_args):
     return await general.calculate_colls(coll_args)
 
 
 @as_sync
+@handle_custom_exception
 async def clean_colls_cache():
     return await general.clean_colls_cache()
 
@@ -92,21 +98,25 @@ async def clean_colls_cache():
 
 
 @as_sync
+@handle_custom_exception
 async def calculate_freqs(args):
     return await general.calculate_freqs(args)
 
 
 @as_sync
+@handle_custom_exception
 async def calculate_freq2d(args):
     return await general.calculate_freq2d(args)
 
 
 @as_sync
+@handle_custom_exception
 async def clean_freqs_cache():
     return await general.clean_freqs_cache()
 
 
 @as_sync
+@handle_custom_exception
 async def calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_locale):
     return await general.calc_merged_freqs(worker, request_json, raw_queries, subcpath, user_id, collator_locale)
 
@@ -114,16 +124,19 @@ async def calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collat
 
 
 @as_sync
+@handle_custom_exception
 async def compile_frq(corpus_ident, attr, logfile):
     return await general.compile_frq(corpus_ident, attr, logfile)
 
 
 @as_sync
+@handle_custom_exception
 async def compile_arf(corpus_ident, attr, logfile):
     return await general.compile_arf(corpus_ident, attr, logfile)
 
 
 @as_sync
+@handle_custom_exception
 async def compile_docf(corpus_ident, attr, logfile):
     return await general.compile_docf(corpus_ident, attr, logfile)
 
@@ -131,6 +144,7 @@ async def compile_docf(corpus_ident, attr, logfile):
 
 
 @as_sync
+@handle_custom_exception
 async def get_wordlist(corpus_ident: Union[str, SubcorpusIdent], args, max_items):
     return await general.get_wordlist(corpus_ident, args, max_items)
 
@@ -138,6 +152,7 @@ async def get_wordlist(corpus_ident: Union[str, SubcorpusIdent], args, max_items
 
 
 @as_sync
+@handle_custom_exception
 async def get_keywords(corpus_ident: Union[str, SubcorpusIdent], ref_corpus_ident: Union[str, SubcorpusIdent], args, max_items):
     return await general.get_keywords(corpus_ident, ref_corpus_ident, args, max_items)
 
@@ -145,6 +160,7 @@ async def get_keywords(corpus_ident: Union[str, SubcorpusIdent], ref_corpus_iden
 
 
 @as_sync
+@handle_custom_exception
 async def create_subcorpus(
         user_id,
         specification: Union[CreateSubcorpusArgs, CreateSubcorpusWithinArgs, CreateSubcorpusRawCQLArgs],

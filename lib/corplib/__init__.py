@@ -335,10 +335,10 @@ async def frq_db(corp: AbstractKCorpus, attrname: str, nums: str = 'frq', id_ran
         try:
             _frq_from_file(frq, filename, id_range)  # type: ignore
         except IOError as ex:
-            raise MissingSubCorpFreqFile(ex)
+            raise MissingSubCorpFreqFile(ex, corp.corpname, corp.subcorpus_id)
         except EOFError as ex:
             await aiofiles.os.remove(corp.freq_precalc_file(attrname, 'docf'))
-            raise MissingSubCorpFreqFile(ex)
+            raise MissingSubCorpFreqFile(ex, corp.corpname, corp.subcorpus_id)
     else:
         try:
             if corp.get_conf('VIRTUAL') and not corp.subcorpus_id and nums == 'frq':
@@ -350,7 +350,7 @@ async def frq_db(corp: AbstractKCorpus, attrname: str, nums: str = 'frq', id_ran
                 await aiofiles.os.remove(filename)
             except:
                 pass
-            raise MissingSubCorpFreqFile(ex)
+            raise MissingSubCorpFreqFile(ex, corp.corpname, corp.subcorpus_id)
         except (VirtualSubcFreqFileError, IOError):
             frq = array.array('l')
             try:
@@ -360,7 +360,7 @@ async def frq_db(corp: AbstractKCorpus, attrname: str, nums: str = 'frq', id_ran
                     a = corp.get_attr(attrname)
                     frq.fromlist([a.freq(i) for i in range(a.id_range())])
                 else:
-                    raise MissingSubCorpFreqFile(ex)
+                    raise MissingSubCorpFreqFile(ex, corp.corpname, corp.subcorpus_id)
     return frq
 
 
