@@ -41,7 +41,8 @@ from action.argmapping.conc.other import (
     KwicSwitchArgs, LgroupOpArgs, LockedOpFormsArgs, SampleFormArgs)
 from action.argmapping.conc.sort import SortFormArgs
 from action.control import http_action
-from action.errors import NotFoundException, UserReadableException, ImmediateRedirectException
+from action.errors import (
+    ImmediateRedirectException, NotFoundException, UserReadableException)
 from action.krequest import KRequest
 from action.model.base import BaseActionModel
 from action.model.concordance import ConcActionModel
@@ -342,7 +343,7 @@ async def view_conc(
             kwic_args.alignlist = [(await amodel.cf.get_corpus(c)) for c in amodel.args.align if c]
             kwic_args.structs = amodel.get_struct_opts()
             kwic_args.ml_position_filters = ml_position_filters
-            kwic = Kwic(amodel.corp, amodel.args.corpname, conc)
+            kwic = Kwic(amodel.corp, conc)
 
             out['Sort_idx'] = kwic.get_sort_idx(q=amodel.args.q, pagesize=amodel.args.pagesize)
             out.update(asdict(kwic.kwicpage(kwic_args)))
@@ -442,6 +443,7 @@ async def view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     return await view_conc(
         amodel, req, resp, asnc, req.session_get('user', 'id'))
 
+
 @bp.route('/create_view')
 @http_action(mutates_result=True, template='view.html', page_model='view', action_log_mapper=log_mapping.view, action_model=ConcActionModel)
 async def create_view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
@@ -460,7 +462,8 @@ async def create_view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
              action_model=ConcActionModel)
 async def create_lazy_view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     form_args = await QueryFormArgs.create(amodel.plugin_ctx, [amodel.args.corpname], True)
-    form_args.data.curr_queries = {amodel.args.corpname: amodel.args.q[len(amodel.args.q)-1][1:]} # 1: = we strip 'q' prefix
+    form_args.data.curr_queries = {amodel.args.corpname: amodel.args.q[len(
+        amodel.args.q) - 1][1:]}  # 1: = we strip 'q' prefix
     form_args.data.curr_query_types = {amodel.args.corpname: 'advanced'}
     amodel.set_curr_conc_form_args(form_args)
     return await view_conc(amodel, req, resp, 2, req.session_get('user', 'id'))
@@ -507,7 +510,7 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
             kwic_args.alignlist = [(await amodel.cf.get_corpus(c)) for c in amodel.args.align if c]
             kwic_args.structs = amodel.get_struct_opts()
 
-            kwic = Kwic(amodel.corp, amodel.args.corpname, conc)
+            kwic = Kwic(amodel.corp, conc)
 
             out['Sort_idx'] = kwic.get_sort_idx(q=amodel.args.q, pagesize=amodel.args.pagesize)
             out.update(asdict(kwic.kwicpage(kwic_args)))
@@ -1131,7 +1134,7 @@ async def ajax_get_first_line_select_page(amodel: ConcActionModel, req: KRequest
         q=amodel.args.q, fromp=amodel.args.fromp, pagesize=amodel.args.pagesize,
         asnc=False, cutoff=amodel.args.cutoff)
     amodel.apply_linegroups(conc)
-    kwic = Kwic(amodel.corp, amodel.args.corpname, conc)
+    kwic = Kwic(amodel.corp, conc)
     return {'first_page': int((kwic.get_groups_first_line() - 1) / amodel.args.pagesize) + 1}
 
 
@@ -1286,7 +1289,7 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
             corp=amodel.corp, user_id=req.session_get('user', 'id'), q=amodel.args.q, fromp=amodel.args.fromp,
             pagesize=amodel.args.pagesize, asnc=False, cutoff=amodel.args.cutoff)
         amodel.apply_linegroups(conc)
-        kwic = Kwic(amodel.corp, amodel.args.corpname, conc)
+        kwic = Kwic(amodel.corp, conc)
         conc.switch_aligned(os.path.basename(amodel.args.corpname))
         from_line = int(req.mapped_args.from_line)
         to_line = conc.size() if req.mapped_args.to_line < 0 else min(req.mapped_args.to_line, conc.size())

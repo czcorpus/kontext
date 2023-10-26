@@ -14,15 +14,16 @@
 # GNU General Public License for more details.
 
 import logging
-from typing import Dict, Iterable, List, Tuple, TypeVar, Generic
+from typing import Dict, Generic, Iterable, List, Tuple, TypeVar
 from urllib.parse import urlparse
 
 from action.cookie import KonTextCookie
 from action.errors import ForbiddenException
-from sanic.helpers import STATUS_CODES
 from action.templating import ResultType
+from sanic.helpers import STATUS_CODES
 
 T = TypeVar('T', bound=ResultType)
+
 
 class KResponse(Generic[T]):
     """
@@ -72,6 +73,7 @@ class KResponse(Generic[T]):
     @property
     def result(self):
         return self._result
+
     @property
     def tpl_data(self):
         return self._tpl_data
@@ -185,6 +187,8 @@ class KResponse(Generic[T]):
                 self._headers['Content-Type'] = 'text/plain'
         elif return_type == 'template':
             self._headers['Content-Type'] = 'text/html'
+        elif return_type == 'template_xml':
+            self._headers['Content-Type'] = 'application/xml'
         else:
             logging.getLogger(__name__).error('unknown action return type "{}"'.format(return_type))
         # Note: 'template' return type should never overwrite content type here as it is action-dependent
