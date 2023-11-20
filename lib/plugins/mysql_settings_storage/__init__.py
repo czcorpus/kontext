@@ -18,10 +18,11 @@ A simple settings storage which relies on default_db plug-in.
 
 import logging
 from collections import defaultdict
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 import plugins
 import ujson as json
+from pymysql.err import IntegrityError
 from plugin_types.common import Serializable
 from plugin_types.settings_storage import AbstractSettingsStorage
 from plugins import inject
@@ -71,7 +72,11 @@ class SettingsStorage(AbstractSettingsStorage):
             else:
                 gen[k] = v
         for corp, data in corp_set.items():
-            await self.save(user_id, corp, data)
+            try:
+                await self.save(user_id, corp, data)
+            except IntegrityError:
+                logging.getLogger(__name__).warning(
+                    f'Failed to transfer legacy format settings for corpus {corp}. Throwing the setting away.')
 
         if len(gen) < len(data):
             logging.getLogger(__name__).warning(
