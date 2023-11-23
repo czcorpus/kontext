@@ -177,6 +177,9 @@ export interface ConcordanceModelState {
     forceScroll:number|null;
 
     audioPlayerStatus:PlayerStatus;
+
+    textDirectionRTL:boolean;
+
 }
 
 
@@ -250,7 +253,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 lineSelOptionsVisible: false,
                 syntaxViewVisible: false,
                 forceScroll: null,
-                audioPlayerStatus: null
+                audioPlayerStatus: null,
+                textDirectionRTL: layoutModel.getConf<boolean>('TextDirectionRTL'),
             }
         );
         this.layoutModel = layoutModel;

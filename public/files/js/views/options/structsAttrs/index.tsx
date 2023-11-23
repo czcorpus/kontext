@@ -265,7 +265,7 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
     const StructsAndAttrsCheckboxes:React.FC<{
         availStructs:Array<ViewOptions.StructDesc>;
         structAttrs:ViewOptions.AvailStructAttrs;
-        corpusUsesRTLText:boolean;
+        textDirectionRTL:boolean;
         hasSelectAll:boolean;
     }> = (props) => {
 
@@ -306,7 +306,7 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
 
         return (
             <section className="StructsAndAttrsCheckboxes">
-                {props.corpusUsesRTLText ?
+                {props.textDirectionRTL ?
                     <p className="warning">
                         <img className="icon"
                                 src={helpers.createStaticUrl('img/warning-icon.svg')}
@@ -522,7 +522,7 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
         hasSelectAllRefs:boolean;
         isWaiting:boolean;
         userIsAnonymous:boolean;
-        corpusUsesRTLText:boolean;
+        textDirectionRTL:boolean;
         queryHintEnabled:boolean;
         queryHintAvailable:boolean;
         availQSProviders:Array<string>;
@@ -569,7 +569,7 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
                                 availStructs={props.availStructs}
                                 structAttrs={props.structAttrs}
                                 hasSelectAll={props.hasSelectAllStruct}
-                                corpusUsesRTLText={props.corpusUsesRTLText} />
+                                textDirectionRTL={props.textDirectionRTL} />
 
                             <ConcLineRefCheckboxes
                                 availRefs={props.availRefs}
@@ -625,7 +625,7 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
                     showConcToolbar={props.showConcToolbar}
                     isWaiting={props.isBusy}
                     userIsAnonymous={props.userIsAnonymous}
-                    corpusUsesRTLText={props.corpusUsesRTLText}
+                    textDirectionRTL={props.textDirectionRTL}
                     queryHintEnabled={props.qsEnabled}
                     queryHintAvailable={props.qsPluginAvaiable}
                     availQSProviders={props.qsProviders} />
