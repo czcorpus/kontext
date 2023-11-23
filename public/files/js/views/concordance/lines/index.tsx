@@ -354,6 +354,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         tokensLinkingClickHandler?:(corpusId:string, tokenNumber:number, lineIdx:number, tokenLength:number)=>void;
         audioPlayerStatus:PlayerStatus;
         dehighlightHandler:(tokenId:number)=>void;
+        textDirectionRTL:boolean;
 
     }> = (props) => {
 
@@ -401,8 +402,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             }
         };
 
-        return <>
-            <td className={exportTextElmClass(props.corpname, 'lc')}
+        const content = [
+            <td key="1" className={exportTextElmClass(props.corpname, 'lc')}
                     onClick={handleTokenClick}>
                 {List.flatMap(
                     (item, i) => [
@@ -416,8 +417,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                     ],
                     props.output.left
                 )}
-            </td>
-            <td className={exportTextElmClass(props.corpname, 'kw')}
+            </td>,
+            <td key="2" className={exportTextElmClass(props.corpname, 'kw')}
                     onClick={handleKwicClick(props.corpname, props.output.tokenNumber, props.kwicLength, props.lineIdx)}>
                 {List.flatMap(
                     (item, i) => [
@@ -432,8 +433,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                     ],
                     props.output.kwic
                 )}
-            </td>
-            <td className={exportTextElmClass(props.corpname, 'rc')} onClick={handleTokenClick}>
+            </td>,
+            <td key="3" className={exportTextElmClass(props.corpname, 'rc')} onClick={handleTokenClick}>
                 <>
                 {List.flatMap((item, i) => [
                     ' ',
@@ -453,8 +454,12 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                 ],
                 props.output.right)}
                 </>
-            </td>
-        </>
+            </td>,
+        ]
+        if (props.textDirectionRTL) {
+            return <>{content.reverse()}</>;
+        }
+        return <>{content}</>;
     }
 
     // ----------------------- <LeftChunk /> -----------------------------------
@@ -623,6 +628,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             lineIdx:number,
             tokenLength:number
         ) => void;
+        textDirectionRTL:boolean;
     }> {
 
         constructor(props) {
@@ -757,6 +763,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                             attrViewMode={this.props.attrViewMode}
                             audioPlayerStatus={this.props.audioPlayerStatus}
                             dehighlightHandler={this._handleDehighlightClick(corpname, this.props.lineIdx)}
+                            textDirectionRTL={this.props.textDirectionRTL}
                         />;
 
             } else {
@@ -951,6 +958,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                         supportsTokenConnect={props.supportsTokenConnect}
                         audioPlayerStatus={props.audioPlayerStatus}
                         tokensLinkingHandler={props.supportsTokensLinking ? tokensLinkingHandler : null}
+                        textDirectionRTL={props.textDirectionRTL}
                     />
                 },
                 props.lines
