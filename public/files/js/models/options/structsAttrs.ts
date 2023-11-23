@@ -62,7 +62,7 @@ export interface CorpusViewOptionsModelState {
     isBusy:boolean;
     userIsAnonymous:boolean;
     corpusIdent:Kontext.FullCorpusIdent;
-    corpusUsesRTLText:boolean;
+    textDirectionRTL:boolean;
     baseViewAttr:string;
     basePosAttr:string;
     qsEnabled:boolean;
@@ -103,7 +103,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                 isBusy: false,
                 userIsAnonymous,
                 corpusIdent,
-                corpusUsesRTLText: layoutModel.getConf<boolean>('TextDirectionRTL'),
+                textDirectionRTL: layoutModel.getConf<boolean>('TextDirectionRTL'),
                 basePosAttr: layoutModel.getConf<string>('baseAttr'),
                 baseViewAttr: layoutModel.getConf<string>('baseViewAttr') ||
                     layoutModel.getConf<string>('baseAttr'),

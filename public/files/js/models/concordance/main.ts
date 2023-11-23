@@ -200,6 +200,8 @@ export interface ConcordanceModelState {
             comment?:string
         }
     }>;
+
+    textDirectionRTL:boolean;
 }
 
 
@@ -278,6 +280,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 mergedAttrs: lineViewProps.mergedAttrs,
                 mergedCtxAttrs: lineViewProps.mergedAttrs,
                 tokenLinks: List.map(_ => ({}), lineViewProps.CorporaColumns),
+                textDirectionRTL: layoutModel.getConf<boolean>('TextDirectionRTL'),
             }
         );
         this.layoutModel = layoutModel;
