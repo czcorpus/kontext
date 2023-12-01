@@ -27,6 +27,7 @@ import locale
 import logging
 import os
 import secrets
+import signal
 import sys
 import tempfile
 from datetime import datetime, timedelta, timezone
@@ -194,6 +195,7 @@ async def main_process_init(*_):
 @application.listener('before_server_start')
 async def server_init(app: Sanic, loop: asyncio.BaseEventLoop):
     setproctitle(f'sanic-kontext [{CONF_PATH}][worker]')
+    loop.add_signal_handler(signal.SIGUSR1, lambda: asyncio.create_task(sigusr1_handler()))
     # init extensions fabrics
     app.ctx.client_session = aiohttp.ClientSession()
     # runtime conf (this should have its own module in the future)
@@ -263,6 +265,7 @@ async def handle_soft_reset_signal():
         fn = getattr(p.instance, 'on_soft_reset', None)
         if callable(fn):
             await fn()
+    await tt_cache.clear_all()
     logging.getLogger(__name__).warning('performed internal soft reset (Sanic signal)')
 
 
@@ -275,6 +278,11 @@ async def soft_reset(req):
         return json(dict(ok=True))
     else:
         raise NotFound()
+
+
+async def sigusr1_handler():
+    logging.getLogger(__name__).warning('Caught signal SIGUSR1')
+    await application.dispatch('kontext.internal.reset')
 
 
 def get_locale(request: Request) -> str:
