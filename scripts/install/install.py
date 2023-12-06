@@ -84,9 +84,9 @@ if __name__ == "__main__":
                                'pip', '--upgrade'], stdout=stdout)
         subprocess.check_call(['pip3 install simplejson signalfd -r requirements.txt'],
                               cwd=KONTEXT_PATH, stdout=stdout, shell=True)
-        subprocess.check_call(
-            'curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -', shell=True)
-        subprocess.check_call('sudo apt-get install -y nodejs', shell=True)
+        subprocess.check_call('curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg', shell=True)
+        subprocess.check_call('echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_18.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list', shell=True)
+        subprocess.check_call('sudo apt-get update && sudo apt-get install nodejs -y', shell=True)
     except Exception as ex:
         print(f'failed to install dependencies: {ex}')
 
