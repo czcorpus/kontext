@@ -26,7 +26,7 @@ import subprocess
 KONTEXT_PATH = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..'))
 KONTEXT_INSTALL_CONF = os.environ.get('KONTEXT_INSTALL_CONF', 'config.default.xml')
 SCHEDULER_INSTALL_CONF = os.environ.get('SCHEDULER_INSTALL_CONF', 'rq-schedule-conf.sample.json')
-MANATEE_VER = '2.214.1'
+MANATEE_VER = '2.167.8'
 
 REQUIREMENTS = [
     'python3-pip',
@@ -87,7 +87,7 @@ if __name__ == "__main__":
         subprocess.check_call(['pip3 install simplejson \'celery==4.4.*\' signalfd -r requirements.txt'],
                               cwd=KONTEXT_PATH, stdout=stdout, shell=True)
         subprocess.check_call('curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg', shell=True)
-        subprocess.check_call('echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_16.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list', shell=True)
+        subprocess.check_call('echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_18.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list', shell=True)
         subprocess.check_call('sudo apt-get update && sudo apt-get install nodejs -y', shell=True)
     except Exception as ex:
         print(f'failed to install dependencies: {ex}')
