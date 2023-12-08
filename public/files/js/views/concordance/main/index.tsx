@@ -577,7 +577,9 @@ export function init({
                     {this.props.syntaxViewVisible ?
                         <SyntaxViewPane onCloseClick={this._handleSyntaxBoxClose} /> : null}
                     {this.props.kwicDetailVisible ?
-                        <concDetailViews.ConcordanceDetail closeClickHandler={this._handleDetailCloseClick} />
+                        <concDetailViews.ConcordanceDetail
+                                closeClickHandler={this._handleDetailCloseClick}
+                                textDirectionRTL={this.props.textDirectionRTL}/>
                         : null}
                     {this.props.refDetailVisible ?
                         <concDetailViews.RefDetail closeClickHandler={this._handleRefsDetailCloseClick} />
