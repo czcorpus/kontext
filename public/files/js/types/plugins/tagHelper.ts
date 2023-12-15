@@ -48,6 +48,8 @@ export interface TagsetInfo {
      */
     type:'positional'|'keyval'|'other';
 
+    corpusName:string;
+
     /**
      * A positional attribute reserved for part of speech info.
      * If null then we assume all the info is stored within featAttr
