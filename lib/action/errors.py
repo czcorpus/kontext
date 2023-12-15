@@ -78,7 +78,7 @@ class CorpusNotFoundException(UserReadableException):
 
 class CorpusForbiddenException(ForbiddenException):
     def __init__(self, corpname, variant):
-        super().__init__('No access to corpus {0}'.format(corpname), corpname, variant)
+        super().__init__('No access to corpus {0}'.format(corpname), corpname)
         self.corpname = corpname
         self.variant = variant
         # args need to reflect positional arguments of constructor
@@ -89,7 +89,7 @@ class CorpusForbiddenException(ForbiddenException):
 class AlignedCorpusForbiddenException(ForbiddenException):
 
     def __init__(self, corpname, variant):
-        super().__init__('No access to corpus {0}'.format(corpname), corpname, variant)
+        super().__init__('No access to corpus {0}'.format(corpname), corpname)
         self.corpname = corpname
         self.variant = variant
         # args need to reflect positional arguments of constructor
