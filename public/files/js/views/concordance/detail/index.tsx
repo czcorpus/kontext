@@ -38,6 +38,7 @@ export interface RefDetailProps {
 
 
 export interface ConcordanceDetailProps {
+    textDirectionRTL:boolean;
     closeClickHandler:()=>void;
 }
 
@@ -400,10 +401,11 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailMo
         canDisplayWholeDocument:boolean;
         expandingSide:string;
         modelIsBusy:boolean;
+        textDirectionRTL:boolean;
 
     }> = (props) => {
         return (
-            <div className="concordance_DefaultView">
+            <div className="concordance_DefaultView" style={{direction: props.textDirectionRTL ? 'rtl' : 'ltr'}}>
                 {props.data.length > 0 ?
                     <KwicDetailView modelIsBusy={props.modelIsBusy}
                                     expandingSide={props.expandingSide}
@@ -504,7 +506,8 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailMo
                                 hasExpandRight={ConcDetailModel.hasExpandRight(this.props)}
                                 canDisplayWholeDocument={ConcDetailModel.canDisplayWholeDocument(this.props)}
                                 expandingSide={this.props.expandingSide}
-                                modelIsBusy={this.props.isBusy} />;
+                                modelIsBusy={this.props.isBusy}
+                                textDirectionRTL={this.props.textDirectionRTL} />;
                 case 'speech':
                     return <SpeechView />;
                 default:
