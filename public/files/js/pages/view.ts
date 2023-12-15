@@ -728,9 +728,12 @@ export class ViewPage {
                             taghelperPlugin.getWidgetView(
                                 this.layoutModel.getCorpusIdent().id,
                                 this.layoutModel.getCorpusIdent().id,
-                                this.layoutModel.getNestedConf<
-                                    Array<PluginInterfaces.TagHelper.TagsetInfo>>(
-                                        'pluginData', 'taghelper', 'corp_tagsets')
+                                List.filter(
+                                    x => x.corpusName == this.layoutModel.getCorpusIdent().id,
+                                    this.layoutModel.getNestedConf<
+                                        Array<PluginInterfaces.TagHelper.TagsetInfo>>(
+                                            'pluginData', 'taghelper', 'corp_tagsets')
+                                )
                             ) :
                             null,
                     corpname: this.layoutModel.getCorpusIdent().id
@@ -741,9 +744,12 @@ export class ViewPage {
                             taghelperPlugin.getWidgetView(
                                 this.layoutModel.getCorpusIdent().id,
                                 '__new__',
-                                this.layoutModel.getNestedConf<
-                                Array<PluginInterfaces.TagHelper.TagsetInfo>>(
-                                    'pluginData', 'taghelper', 'corp_tagsets')
+                                List.filter(
+                                    x => x.corpusName == this.layoutModel.getCorpusIdent().id,
+                                    this.layoutModel.getNestedConf<
+                                    Array<PluginInterfaces.TagHelper.TagsetInfo>>(
+                                        'pluginData', 'taghelper', 'corp_tagsets')
+                                )
                             ) :
                             null,
                     filterId: '__new__',
