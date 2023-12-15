@@ -382,7 +382,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         };
 
         const content = [
-            <td key="1" className={exportTextElmClass(props.corpname, 'lc')}
+            <td key="1" className={exportTextElmClass(props.corpname, props.textDirectionRTL ? 'rc' : 'lc')}
                     onClick={handleTokenClick}>
                 {List.flatMap(
                     (item, i) => [
@@ -412,7 +412,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                     props.output.kwic
                 )}
             </td>,
-            <td key="3" className={exportTextElmClass(props.corpname, 'rc')} onClick={handleTokenClick}>
+            <td key="3" className={exportTextElmClass(props.corpname, props.textDirectionRTL ? 'lc' : 'rc')} onClick={handleTokenClick}>
                 <>
                 {List.flatMap((item, i) => [
                     ' ',
