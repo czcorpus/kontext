@@ -181,7 +181,9 @@ def load_translations(app: Sanic):
 
 
 @application.listener('main_process_start')
-async def main_process_init(*_):
+async def main_process_init(app: Sanic, loop: asyncio.BaseEventLoop):
+    loop.add_signal_handler(signal.SIGUSR1, lambda: asyncio.create_task(sigusr1_handler()))
+    logging.getLogger(__name__).info('main SIGUSR1 signal handler registered')
     # create a token file for soft restart
     if not os.path.isdir(os.path.dirname(SOFT_RESET_TOKEN_FILE)):
         os.mkdir(os.path.dirname(SOFT_RESET_TOKEN_FILE))
@@ -195,7 +197,9 @@ async def main_process_init(*_):
 @application.listener('before_server_start')
 async def server_init(app: Sanic, loop: asyncio.BaseEventLoop):
     setproctitle(f'sanic-kontext [{CONF_PATH}][worker]')
-    loop.add_signal_handler(signal.SIGUSR1, lambda: asyncio.create_task(sigusr1_handler()))
+    loop.add_signal_handler(signal.SIGUSR1, lambda: asyncio.create_task(
+        app.dispatch('kontext.internal.reset')))
+    logging.getLogger(__name__).info('worker SIGUSR1 signal handler registered')
     # init extensions fabrics
     app.ctx.client_session = aiohttp.ClientSession()
     # runtime conf (this should have its own module in the future)
@@ -282,7 +286,16 @@ async def soft_reset(req):
 
 async def sigusr1_handler():
     logging.getLogger(__name__).warning('Caught signal SIGUSR1')
-    await application.dispatch('kontext.internal.reset')
+    pids = [
+        int(p)
+        for p, c in [
+            x.rstrip('\n').split(' ', 1)
+            for x in os.popen('ps h -eo pid:1,command')
+        ]
+        if c.startswith("sanic-kontext") and c.endswith("[worker]")
+    ]
+    for pid in pids:
+        os.kill(pid, signal.SIGUSR1)
 
 
 def get_locale(request: Request) -> str:
