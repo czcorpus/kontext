@@ -222,21 +222,19 @@ export function init(
         );
     };
 
-    // -------------------------------------------
-
-    const tagsetTabs = pipe(
-        deps,
-        List.map(
-            ([tagset,,]) => ({
-                id: tagset,
-                label: tagset
-            })
-        )
-    );
-
     // ---------------- <ActiveTagBuilder /> -----------------------------------
 
     const ActiveTagBuilder:React.FC<PluginInterfaces.TagHelper.ViewProps & TabFrameModelState> = (props) => {
+
+        const tagsetTabs = pipe(
+            deps,
+            List.map(
+                ([tagset,,]) => ({
+                    id: tagset,
+                    label: tagset
+                })
+            )
+        );
 
         const handleTabSelection = (tagsetId:string) => {
             dispatcher.dispatch<typeof Actions.SetActiveTag>({
