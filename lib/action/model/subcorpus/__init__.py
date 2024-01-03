@@ -32,6 +32,7 @@ from bgcalc.task import AsyncTaskStatus
 from corplib.abstract import create_new_subc_ident
 from corplib.subcorpus import KSubcorpus, create_subcorpus
 from texttypes.model import TextTypeCollector
+import logging
 
 
 class SubcorpusError(Exception):
@@ -53,6 +54,9 @@ class SubcorpusActionModel(CorpusActionModel):
         if form_type == 'tt-sel':
             specification = CreateSubcorpusArgs(**specification_args)
             corpus_info = await self.get_corpus_info(specification.corpname)
+            # For aligned corpora, we cannot rely on original user selection as it in general
+            # does not provide any information about alignment. So in this case, we convert
+            # the selection to a list of works/documents which are always either aligned or not.
             if (plugins.runtime.LIVE_ATTRIBUTES.exists
                     and await plugins.runtime.LIVE_ATTRIBUTES.instance.is_enabled_for(
                         self.plugin_ctx, [specification.corpname])  # TODO here we skip aligned corpora which is debatable
@@ -65,11 +69,15 @@ class SubcorpusActionModel(CorpusActionModel):
                         limit_lists=False)
                     sel_attrs = {}
                     for k, vals in sel_match.attr_values.items():
+                        # for aligned subc., we are interested only in document IDs
                         if k == corpus_info.metadata.label_attr:
                             k = corpus_info.metadata.id_attr
-                        # now we take only attribute entries with full data listing
-                        if '.' in k and type(vals) is list:
-                            sel_attrs[k] = [v[1] for v in vals]
+                            if '.' in k and type(vals) is list: # just to make sure we use listed item
+                                sel_attrs[k] = [v[1] for v in vals]
+                            else:
+                                sel_attrs[k] = []
+                                logging.getLogger(__name__).error(
+                                    f'Encountered a non-list bib_id attribute selection (corpus: {corpus_info.id})')
                     tt_query = TextTypeCollector(self.corp, sel_attrs).get_query()
                     tmp = ['<%s %s />' % item for item in tt_query]
                     full_cql = ' within '.join(tmp)
