@@ -401,19 +401,20 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                 {props.LiveAttrsCustomTT
                     ? <props.LiveAttrsCustomTT />
                     : null}
-                {List.map((attrObj) => (
-                    <div key={attrObj.name + ':list:' + TTSelOps.containsFullList(attrObj)}>
-                        <TableTextTypeAttribute
-                                attrObj={attrObj}
-                                widget={props.attributeWidgets[attrObj.name]}
-                                isMinimized={props.minimizedBoxes[attrObj.name]}
-                                hasExtendedInfo={props.bibLabelAttr === attrObj.name}
-                                metaInfo={attrObj.metaInfo}
-                                isBusy={props.busyAttributes[attrObj.name]}
-                                textInputPlaceholder={props.textInputPlaceholder}
-                                firstDayOfWeek={props.firstDayOfWeek}
-                                isAutocompleteActive={props.isLiveAttrsActive} />
-                    </div>
+                {List.map(
+                    (attrObj) => (
+                        <div key={attrObj.name + ':list:' + TTSelOps.containsFullList(attrObj)}>
+                            <TableTextTypeAttribute
+                                    attrObj={attrObj}
+                                    widget={props.attributeWidgets[attrObj.name]}
+                                    isMinimized={props.minimizedBoxes[attrObj.name]}
+                                    hasExtendedInfo={props.bibLabelAttr === attrObj.name}
+                                    metaInfo={attrObj.metaInfo}
+                                    isBusy={props.busyAttributes[attrObj.name]}
+                                    textInputPlaceholder={props.textInputPlaceholder}
+                                    firstDayOfWeek={props.firstDayOfWeek}
+                                    isAutocompleteActive={props.isLiveAttrsActive} />
+                        </div>
                     ),
                     props.attributes
                 )}

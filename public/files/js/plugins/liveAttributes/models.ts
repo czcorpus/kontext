@@ -170,7 +170,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                                 TTActions.FilterWholeSelection,
                                 {
                                     poscount: data.poscount,
-                                    filterData: filterData,
+                                    filterData,
                                     selectedTypes: selections,
                                     bibAttrValsAreListed: Array.isArray(data.attr_values[state.bibIdAttr]),
                                     isSubcorpDefinitionFilter: false,
@@ -932,12 +932,19 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
         ).pipe(
             map(
                 resp => {
-                    const fixedAttrVals = {};
-                    Object.keys(resp.attr_values).forEach(k => {
-                        if (Array.isArray(resp.attr_values[k])) {
-                            fixedAttrVals[k] = resp.attr_values[k];
-                        }
-                    });
+                    const fixedAttrVals = pipe(
+                        resp.attr_values,
+                        Dict.toEntries(),
+                        List.foldl(
+                            (acc, [key, value]) => {
+                                if (Array.isArray(value)) {
+                                    return {...acc, [key]: value};
+                                }
+                                return acc;
+                            },
+                            {}
+                        )
+                    );
                     this.updateSummary(state, resp.attr_values, dispatch);
                     return tuple(
                         selections,
