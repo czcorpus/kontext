@@ -334,7 +334,7 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
         if aresult:
             curr_at.status = aresult.status
             if curr_at.status == 'FAILURE':
-                result = aresult.get(timeout=2)
+                result = await aresult.get(timeout=2)
                 curr_at.error = str(result)
                 if not curr_at.error:
                     curr_at.error = result.__class__.__name__
