@@ -38,6 +38,7 @@ from .doclist import DocListItem, mk_cache_key
 from .doclist.writer import export_csv, export_jsonl, export_xlsx, export_xml
 
 bp = Blueprint('masm_live_attributes')
+UNLIMITED_LIST_PLACEHOLDER = 1_000_000
 
 
 @bp.route('/filter_attributes', methods=['POST'])
@@ -152,8 +153,7 @@ class MasmLiveAttributes(AbstractLiveAttributes):
             json_body['aligned'] = aligned_corpora
         if autocomplete_attr:
             json_body['autocompleteAttr'] = autocomplete_attr
-        json_body['maxAttrListSize'] = self._max_attr_list_size
-
+        json_body['maxAttrListSize'] = self._max_attr_list_size if limit_lists else UNLIMITED_LIST_PLACEHOLDER
         session = await self._get_session()
         async with session.post(f'/liveAttributes/{corpus.corpname}/query', json=json_body) as resp:
             data = await proc_masm_response(resp)
