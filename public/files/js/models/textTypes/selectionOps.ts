@@ -109,7 +109,7 @@ export class TTSelOps {
         );
     }
 
-    static keepIfPresentIn(sel:TextTypes.AnyTTSelection, items:Array<string>):TextTypes.AnyTTSelection {
+    static attachItemList(sel:TextTypes.AnyTTSelection, items:Array<string>):TextTypes.AnyTTSelection {
         if (sel.type === 'regexp') {
             return sel;
 

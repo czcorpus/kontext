@@ -1023,7 +1023,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
     private filterWholeSelection(state:TextTypesModelState, filterData:SelectionFilterMap) {
         Dict.forEach(
             (block, k) => {
-                this.removeOtherAttrValues(state, k, block.map(v => v.ident));
+                this.attachItemList(state, k, block.map(v => v.ident));
                 this.mapItems(
                     state,
                     k,
@@ -1051,12 +1051,12 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
     }
 
     /**
-     * Remove values of attribute 'attrName' if the're not present in 'items'.
+     * Remove values of attribute 'attrName' if they're not present in 'items'.
      */
-    private removeOtherAttrValues(state:TextTypesModelState, attrName:string, items:Array<string>):void {
+    private attachItemList(state:TextTypesModelState, attrName:string, items:Array<string>):void {
         const attrIdx = this.getAttributeIdx(state, attrName);
         if (attrIdx > -1) {
-            state.attributes[attrIdx] = TTSelOps.keepIfPresentIn(state.attributes[attrIdx], items);
+            state.attributes[attrIdx] = TTSelOps.attachItemList(state.attributes[attrIdx], items);
         }
     }
 
