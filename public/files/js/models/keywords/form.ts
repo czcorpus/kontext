@@ -228,6 +228,11 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
             Actions.SubmitQueryDone,
             (state, action) => {
                 state.isBusy = false;
+            },
+            (state, action, dispatch) => {
+                if (action.error) {
+                    this.layoutModel.showMessage('error', action.error);
+                }
             }
         );
 
