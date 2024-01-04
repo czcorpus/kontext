@@ -74,6 +74,21 @@ export function init({
         }
     }
 
+    const PossiblyNaNValue:React.FC<{v:number}> = ({v}) => {
+        if (isNaN(v)) {
+            return (
+                <span>
+                    <layoutViews.Abbreviation
+                        value={he.translate('kwords__undefined_value')}
+                        desc={he.translate('kwords__undefined_value_explained')} />
+                </span>
+            );
+
+        } else {
+            return <span>{he.formatNumber(v, 2)}</span>
+        }
+    }
+
     const KeywordsResult:React.FC<KeywordsResultState> = (props) => {
 
         const _handleSaveFormClose = () => {
@@ -137,7 +152,7 @@ export function init({
                                         <td className="kword">{kw.item}</td>
                                         {props.manateeIsCustomCNC ?
                                             [
-                                                <td className="num">{he.formatNumber(kw.logL, 2)}</td>,
+                                                <td className="num"><PossiblyNaNValue v={kw.logL} /></td>,
                                                 <td className="num">{he.formatNumber(kw.chi2, 2)}</td>,
                                                 <td className="num">{he.formatNumber(kw.din, 2)}</td>,
                                             ] :
