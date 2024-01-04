@@ -959,6 +959,8 @@
         "kwords__result_word_hd": "Word",
         "kwords__min_freq": "Min. frequency",
         "kwords__max_freq": "Max. frequency",
-        "kwords__save_form_label": "Save keywords"
+        "kwords__save_form_label": "Save keywords",
+        "kwords__undefined_value": "undefined",
+        "kwords__undefined_value_explained": "Due to the zero frequency in the reference corpus, the corresponding calculation cannot be applied"
     }
 }

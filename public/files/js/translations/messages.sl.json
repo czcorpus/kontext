@@ -958,6 +958,8 @@
         "kwords__result_word_hd": "Word UNTRANSLATED",
         "kwords__min_freq": "Min. frequency UNTRANSLATED",
         "kwords__max_freq": "Max. frequency UNTRANSLATED",
-        "kwords__save_form_label": "Save keywords UNTRANSLATED"
+        "kwords__save_form_label": "Save keywords UNTRANSLATED",
+        "kwords__undefined_value": "undefined UNTRANSLATED",
+        "kwords__undefined_value_explained": "Due to the zero frequency in the reference corpus, the corresponding calculation cannot be applied UNTRANSLATED"
     }
 }
