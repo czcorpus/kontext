@@ -101,8 +101,8 @@ def _wordlist_from_list(attr, attrfreq, pfilter_words: List[str], nfilter_words:
     return items
 
 
-def _wordlist_by_pattern(attr, attrfreq, enc_pattern, excl_pattern, wlminfreq, pfilter_words, nfilter_words,
-                         wlnums):
+def wordlist_by_pattern(
+        attr, attrfreq, enc_pattern, excl_pattern, wlminfreq, pfilter_words, nfilter_words, wlnums):
     try:
         gen = attr.regexp2ids(enc_pattern, 0, excl_pattern)
     except TypeError:
@@ -131,7 +131,7 @@ def doc_sizes(corp: AbstractKCorpus, struct: Structure, attrname: str, i: int, n
     return cnt
 
 
-async def _get_attrfreq(corp: AbstractKCorpus, attr, wlattr, wlnums):
+async def get_attrfreq(corp: AbstractKCorpus, attr, wlattr, wlnums):
     if '.' in wlattr:  # attribute of a structure
         struct = corp.get_struct(wlattr.split('.')[0])
         if wlnums == 'doc sizes':
@@ -152,20 +152,20 @@ async def wordlist(corp: AbstractKCorpus, args: WordlistFormArgs, max_items: int
     Note: 'pfilter_words' and 'nfilter_words' are expected to contain utf-8-encoded strings.
     """
     attr = corp.get_attr(args.wlattr)
-    attrfreq = await _get_attrfreq(corp=corp, attr=attr, wlattr=args.wlattr, wlnums=args.wlnums)
+    attrfreq = await get_attrfreq(corp=corp, attr=attr, wlattr=args.wlattr, wlnums=args.wlnums)
     if args.pfilter_words and args.wlpat in ('.*', '.+', ''):  # word list just for given words
-        items = _wordlist_from_list(attr=attr, attrfreq=attrfreq, pfilter_words=args.pfilter_words,
-                                    nfilter_words=args.nfilter_words, wlminfreq=args.wlminfreq,
-                                    wlnums=args.wlnums)
+        items = _wordlist_from_list(
+            attr=attr, attrfreq=attrfreq, pfilter_words=args.pfilter_words,
+            nfilter_words=args.nfilter_words, wlminfreq=args.wlminfreq, wlnums=args.wlnums)
     else:  # word list according to pattern
         if not args.include_nonwords:
             nwre = corp.get_conf('NONWORDRE')
         else:
             nwre = ''
-        items = _wordlist_by_pattern(attr=attr, enc_pattern=args.wlpat.strip(), excl_pattern=nwre,
-                                     wlminfreq=args.wlminfreq, pfilter_words=args.pfilter_words,
-                                     nfilter_words=args.nfilter_words, wlnums=args.wlnums,
-                                     attrfreq=attrfreq)
+        items = wordlist_by_pattern(
+            attr=attr, enc_pattern=args.wlpat.strip(), excl_pattern=nwre,
+            wlminfreq=args.wlminfreq, pfilter_words=args.pfilter_words,
+            nfilter_words=args.nfilter_words, wlnums=args.wlnums, attrfreq=attrfreq)
     return items[:max_items]
 
 
