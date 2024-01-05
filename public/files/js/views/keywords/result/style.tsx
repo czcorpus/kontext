@@ -52,10 +52,24 @@ export const KeywordsResult = styled.form`
     .ktx-pagination {
         text-align: right;
         padding: 0.7em;
+        display: flex;
+        align-items: center;
     }
 
     .data {
         margin: 1em;
     }
-
 `;
+
+// ------------------- <PaginatorWrapper /> -------------
+
+export const PaginatorWrapper = styled.span`
+    flex-grow: 1;
+`;
+
+// ------------------- <PNote /> ------------------------
+
+export const PNote = styled.p`
+    margin: 0;
+    color: ${theme.colorLightText};
+`

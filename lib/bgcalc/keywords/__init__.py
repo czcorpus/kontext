@@ -33,7 +33,7 @@ from dataclasses_json import dataclass_json
 from manatee import Keyword  # TODO wrap this out
 
 CNC_SCORE_TYPES = ('logL', 'chi2', 'din')
-KW_MAX_LIST_SIZE = 500
+
 
 class KeywordsResultNotFound(Exception):
     pass
@@ -103,9 +103,9 @@ def cached(f):
         if await aiofiles.os.path.exists(path):
             async with aiofiles.open(path, 'r') as fr:
                 await fr.readline()
-                return [LineDataClass.from_dict(json.loads(item)) async for item in fr]
+                return [LineDataClass.from_dict(json.loads(item)) async for item in fr][:max_items]
         else:
-            ans = await f(corp, ref_corp, args, sys.maxsize)
+            ans = await f(corp, ref_corp, args, max_items)
             # ans = sorted(ans, key=lambda x: x[1], reverse=True)
             num_lines = len(ans)
             async with aiofiles.open(path, 'w') as fw:
@@ -139,7 +139,7 @@ async def keywords(corp: KCorpus, ref_corp: KCorpus, args: KeywordsFormArgs, max
     simple_n = 1.0  # this does not apply for CNC-custom manatee-open keywords
     keyword = Keyword(
         corp.unwrap(), ref_corp.unwrap(), c_wl, rc_wl,
-        simple_n, KW_MAX_LIST_SIZE, args.wlminfreq, args.wlmaxfreq, [], words,
+        simple_n, max_items, args.wlminfreq, args.wlmaxfreq, [], words,
         f'frq;{args.score_type}' if manatee_is_custom_cnc() and args.score_type in CNC_SCORE_TYPES else 'frq', [], [], [], None)
     results = []
     kw = keyword.next()

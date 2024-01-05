@@ -115,13 +115,17 @@ export function init({
                     <dt>{he.translate('kwords__reference_corpus')}:</dt>
                     <dd>{props.refCorpname} {props.refSubcorpId ? ` / ${props.refSubcorpId}` : ''}</dd>
                 </dl>
-
                 <div className="ktx-pagination">
-                    <layoutViews.SimplePaginator
-                        isLoading={props.isLoading}
-                        currentPage={`${props.kwpage}`}
-                        totalPages={props.totalPages}
-                        handlePageChange={handlePageChange} />
+                    <S.PNote>
+                        {he.translate('kwords__max_list_size_explained_{limit}', {limit: props.maxItems})}
+                    </S.PNote>
+                    <S.PaginatorWrapper>
+                        <layoutViews.SimplePaginator
+                            isLoading={props.isLoading}
+                            currentPage={`${props.kwpage}`}
+                            totalPages={props.totalPages}
+                            handlePageChange={handlePageChange} />
+                    </S.PaginatorWrapper>
                 </div>
 
                 <table className="data">

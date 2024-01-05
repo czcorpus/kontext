@@ -959,6 +959,7 @@
         "kwords__max_freq": "Max. frequency UNTRANSLATED",
         "kwords__save_form_label": "Save keywords UNTRANSLATED",
         "kwords__undefined_value": "N/A",
-        "kwords__undefined_value_explained": "Due to the zero frequency in the reference corpus, the corresponding calculation cannot be applied UNTRANSLATED"
+        "kwords__undefined_value_explained": "Due to the zero frequency in the reference corpus, the corresponding calculation cannot be applied UNTRANSLATED",
+        "kwords__max_list_size_explained_{limit}": "The result list is limited to at most {limit, plural, one{# item} few{# items} other{# items}} UNTRANSLATED"
     }
 }

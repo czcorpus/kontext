@@ -30,6 +30,7 @@ __conf.Total = {{ total|to_json }};
 __conf.Page = {{ kwpage|default(1, true)|to_json }};
 __conf.PageSize = {{ kwpagesize|default(none, true)|to_json }};
 __conf.Sort = {{ kwsort|to_json }};
+__conf.KwMaxItems = {{ kw_max_items|to_json }};
 __conf.QueryId = {{ query_id|to_json }};
 keywordsPage.init(__conf);
 {% endblock %}

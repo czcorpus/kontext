@@ -38,6 +38,7 @@ from main_menu.model import MainMenu
 from sanic import Blueprint
 
 bp = Blueprint('keywords', url_prefix='keywords')
+KW_MAX_LIST_SIZE = 1000
 
 
 @bp.route('/form')
@@ -91,7 +92,7 @@ async def create_result(amodel: KeywordsActionModel, form_args: KeywordsFormArgs
         form_args.ref_usesubcorp, form_args.ref_corpname) if form_args.ref_usesubcorp else form_args.ref_corpname
     async_res = await worker.send_task(
         'get_keywords', object.__class__,
-        args=(amodel.corp.portable_ident, ref_corp_ident, form_args.to_dict(), amodel.corp.size))
+        args=(amodel.corp.portable_ident, ref_corp_ident, form_args.to_dict(), KW_MAX_LIST_SIZE))
     bg_result = await async_res.get()
 
     if isinstance(bg_result, MissingSubCorpFreqFile):
@@ -165,6 +166,7 @@ async def view_result(amodel: KeywordsActionModel, req: KRequest):
     ans['kwpage'] = page
     ans['kwpagesize'] = amodel.args.kwpagesize
     ans['kwsort'] = kwsort
+    ans['kw_max_items'] = KW_MAX_LIST_SIZE
 
     await amodel.export_subcorpora_list(ans)
     return ans
@@ -190,7 +192,7 @@ async def restore(amodel: KeywordsActionModel, req: KRequest, _: KResponse):
     amodel.curr_kwform_args.score_type = req.args.get('kwsort', amodel.curr_kwform_args.score_type)
     async_res = await worker.send_task(
         'get_keywords', object.__class__,
-        args=(amodel.corp.portable_ident, ref_corp_ident, amodel.curr_kwform_args.to_dict(), amodel.corp.size))
+        args=(amodel.corp.portable_ident, ref_corp_ident, amodel.curr_kwform_args.to_dict(), KW_MAX_LIST_SIZE))
 
     async def on_query_store(query_ids, history_ts, result):
         async_task = AsyncTaskStatus(
