@@ -69,9 +69,9 @@ def cached(f):
         path = _create_cache_path(args)
 
         if await aiofiles.os.path.exists(path):
-            async with aiofiles.open(path, 'r') as fr:
-                await fr.readline()
-                return [json.loads(item) async for item in fr]
+            with open(path, 'r') as fr:
+                fr.readline()
+                return [json.loads(item) for item in fr]
         else:
             ans = await f(corp, args, sys.maxsize)
             ans = sorted(ans, key=lambda x: x[1], reverse=True)
