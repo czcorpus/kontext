@@ -44,8 +44,9 @@ KW_MAX_LIST_SIZE = 1000
 @bp.route('/form')
 @http_action(access_level=2, template='keywords/form.html', page_model='keywordsForm', action_model=KeywordsActionModel)
 async def form(amodel: KeywordsActionModel, _: KRequest, __: KResponse):
-    amodel.disabled_menu_items = (MainMenu.VIEW, MainMenu.FILTER, MainMenu.FREQUENCY,
-                                  MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
+    amodel.disabled_menu_items = (
+        MainMenu.VIEW, MainMenu.FILTER, MainMenu.FREQUENCY,
+        MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
     out = {}
     await amodel.export_subcorpora_list(out)
     amodel.export_form_args(out)

@@ -12,20 +12,18 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import aiocsv
-import aiofiles
-from util import anext
+import csv
 
 
-async def load_cached_partial(path, offset, limit):
-    async with aiofiles.open(path, 'r') as fr:
-        csv_reader = aiocsv.AsyncReader(fr)
-        _, total_str = await anext(csv_reader)
+def load_cached_partial(path, offset, limit):
+    with open(path, 'r') as fr:
+        csv_reader = csv.reader(fr)
+        _, total_str = next(csv_reader)
         for i in range(0, offset):
-            await anext(csv_reader)
+            next(csv_reader)
         ans = []
         i = offset
-        async for row in csv_reader:
+        for row in csv_reader:
             if i == offset + limit:
                 break
             ans.append((row[0], ) + tuple(int(x) for x in row[1:]))
@@ -33,11 +31,11 @@ async def load_cached_partial(path, offset, limit):
     return int(total_str), ans
 
 
-async def load_cached_full(path):
+def load_cached_full(path):
     ans = []
-    async with aiofiles.open(path, 'r') as fr:
-        csv_reader = aiocsv.AsyncReader(fr)
-        _, total_str = await anext(csv_reader)
-        async for row in csv_reader:
+    with open(path, 'r') as fr:
+        csv_reader = csv.reader(fr)
+        _, total_str = next(csv_reader)
+        for row in csv_reader:
             ans.append((row[0], ) + tuple(int(x) for x in row[1:]))
     return int(total_str), ans

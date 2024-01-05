@@ -47,15 +47,15 @@ async def require_existing_wordlist(
     else:
         if wlsort == 'f':
             if reverse:
-                return await load_cached_partial(path, offset, limit)
+                return load_cached_partial(path, offset, limit)
             else:
-                total, rows = await load_cached_full(path)
+                total, rows = load_cached_full(path)
                 return (
                     total,
                     sorted(rows, key=lambda x: x[1], reverse=reverse)[offset:offset + limit]
                 )
         else:
-            total, rows = await load_cached_full(path)
+            total, rows = load_cached_full(path)
             rows = l10n.sort(rows, key=lambda x: x[0], loc=collator_locale, reverse=reverse)
             return total, rows[offset:offset + limit]
 
