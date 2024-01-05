@@ -961,6 +961,7 @@
         "kwords__max_freq": "Max. frekvence",
         "kwords__save_form_label": "Uložit klíčová slova",
         "kwords__undefined_value": "N/A",
-        "kwords__undefined_value_explained": "Z důvodu nulové frekvence v referenčním korpusu nelze aplikovat příslušný výpočet"
+        "kwords__undefined_value_explained": "Z důvodu nulové frekvence v referenčním korpusu nelze aplikovat příslušný výpočet",
+        "kwords__max_list_size_explained_{limit}": "Seznam je omezen na maximálně {limit, plural, one{# položku} few{# položky} other{# položek}}"
     }
 }

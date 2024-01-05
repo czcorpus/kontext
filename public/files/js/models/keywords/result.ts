@@ -42,6 +42,7 @@ export interface KeywordsResultState {
     total:number;
     kwpage:number;
     kwpagesize:number;
+    maxItems:number;
     kwsort:string;
     totalPages:number;
     queryId:string;
@@ -106,6 +107,7 @@ export class KeywordsResultModel extends StatelessModel<KeywordsResultState> {
                 queryId: layoutModel.getConf<string>('QueryId'),
                 isLoading: false,
                 manateeIsCustomCNC: layoutModel.getConf<boolean>('manateeIsCustomCNC'),
+                maxItems: layoutModel.getConf<number>('KwMaxItems'),
                 attr,
                 saveFormActive: false,
             }
