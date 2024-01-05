@@ -13,6 +13,7 @@
 # GNU General Public License for more details.
 
 import hashlib
+import math
 import os
 import sys
 from dataclasses import dataclass
@@ -32,7 +33,7 @@ from dataclasses_json import dataclass_json
 from manatee import Keyword  # TODO wrap this out
 
 CNC_SCORE_TYPES = ('logL', 'chi2', 'din')
-
+KW_MAX_LIST_SIZE = 500
 
 class KeywordsResultNotFound(Exception):
     pass
@@ -115,6 +116,8 @@ def cached(f):
 
     return wrapper
 
+def filter_nan(v: float, round_num):
+    return None if math.isnan(v) else round(v, round_num)
 
 @cached
 async def keywords(corp: KCorpus, ref_corp: KCorpus, args: KeywordsFormArgs, max_items: int) -> KeywordsResultType:
@@ -125,34 +128,23 @@ async def keywords(corp: KCorpus, ref_corp: KCorpus, args: KeywordsFormArgs, max
     else:
         nwre = ''
 
-    attrfreq = await wordlist._get_attrfreq(corp=corp, attr=c_wl, wlattr=args.wlattr, wlnums=args.wlnums)
-    wl_items = wordlist._wordlist_by_pattern(
+    attrfreq = await wordlist.get_attrfreq(corp=corp, attr=c_wl, wlattr=args.wlattr, wlnums=args.wlnums)
+    wl_items = wordlist.wordlist_by_pattern(
         attr=c_wl, enc_pattern=args.wlpat.strip(), excl_pattern=nwre,
         wlminfreq=args.wlminfreq, pfilter_words=[],
         nfilter_words=[], wlnums=args.wlnums,
         attrfreq=attrfreq)
-    words = set(x[0] for x in wl_items)
-
-    ref_attrfreq = await wordlist._get_attrfreq(corp=ref_corp, attr=rc_wl, wlattr=args.wlattr, wlnums=args.wlnums)
-    ref_wl_items = wordlist._wordlist_by_pattern(
-        attr=rc_wl, enc_pattern=args.wlpat.strip(), excl_pattern=nwre,
-        wlminfreq=args.wlminfreq, pfilter_words=[],
-        nfilter_words=[], wlnums=args.wlnums,
-        attrfreq=ref_attrfreq)
-
-    # analyze only words contained in both focus and reference corpora
-    words = list(words.intersection(x[0] for x in ref_wl_items))
+    words =[x[0] for x in wl_items]
 
     simple_n = 1.0  # this does not apply for CNC-custom manatee-open keywords
     keyword = Keyword(
         corp.unwrap(), ref_corp.unwrap(), c_wl, rc_wl,
-        simple_n, 100, args.wlminfreq, args.wlmaxfreq, [], words,
+        simple_n, KW_MAX_LIST_SIZE, args.wlminfreq, args.wlmaxfreq, [], words,
         f'frq;{args.score_type}' if manatee_is_custom_cnc() and args.score_type in CNC_SCORE_TYPES else 'frq', [], [], [], None)
     results = []
     kw = keyword.next()
     while kw:
         s = kw.str
-        item = {}
         cql = f'[term("{s}")]'
         s = s.replace("_", " ")  # XXX remove in data
         if s.endswith("-x"):  # XXX remove in data
@@ -162,25 +154,25 @@ async def keywords(corp: KCorpus, ref_corp: KCorpus, args: KeywordsFormArgs, max
             freqs = kw.get_freqs(2 * len([]) + 4 + 4)  # 1 additional slot for size effect
             results.append(CNCKeywordLine(
                 item=s,
-                score=round(freqs[4], 3),
-                logL=round(freqs[5], 3),
-                chi2=round(freqs[6], 3),
-                din=round(float(freqs[7]), 5),
+                score=filter_nan(freqs[4], 3),
+                logL=filter_nan(freqs[5], 3),
+                chi2=filter_nan(freqs[6], 3),
+                din=filter_nan(float(freqs[7]), 5),
                 frq1=int(freqs[0]),
                 frq2=int(freqs[1]),
-                rel_frq1=round(float(freqs[2]), 5),
-                rel_frq2=round(float(freqs[3]), 5),
+                rel_frq1=filter_nan(float(freqs[2]), 5),
+                rel_frq2=filter_nan(float(freqs[3]), 5),
                 query=cql
             ))
         else:
             freqs = kw.get_freqs(2 * len([]) + 4)
             results.append(KeywordLine(
                 item=s,
-                score=round(kw.score, 3),
+                score=filter_nan(kw.score, 3),
                 frq1=int(freqs[0]),
                 frq2=int(freqs[1]),
-                rel_frq1=round(float(freqs[2]), 5),
-                rel_frq2=round(float(freqs[3]), 5),
+                rel_frq1=filter_nan(float(freqs[2]), 5),
+                rel_frq2=filter_nan(float(freqs[3]), 5),
                 query=cql
             ))
         kw = keyword.next()

@@ -75,7 +75,7 @@ export function init({
     }
 
     const PossiblyNaNValue:React.FC<{v:number}> = ({v}) => {
-        if (isNaN(v)) {
+        if (isNaN(v) || v === null) {
             return (
                 <span>
                     <layoutViews.Abbreviation
@@ -130,11 +130,11 @@ export function init({
                             <th />
                             <th>{he.translate('kwords__result_word_hd')}</th>
                             {props.manateeIsCustomCNC ?
-                                [
-                                    <SortableCol text={he.translate('kwords__score_col_logL')} value="logL" kwsort={props.kwsort}/>,
-                                    <SortableCol text={he.translate('kwords__score_col_chi2')} value="chi2" kwsort={props.kwsort}/>,
-                                    <SortableCol text={he.translate('kwords__effect_size')} value="din" kwsort={props.kwsort}/>,
-                                ] :
+                                <>
+                                    <SortableCol text={he.translate('kwords__score_col_logL')} value="logL" kwsort={props.kwsort}/>
+                                    <SortableCol text={he.translate('kwords__score_col_chi2')} value="chi2" kwsort={props.kwsort}/>
+                                    <SortableCol text={he.translate('kwords__effect_size')} value="din" kwsort={props.kwsort}/>
+                                </> :
                                 <th>{he.translate('kwords__score_col_hd')}</th>
                             }
                             <th colSpan={2}>{he.translate('kwords__freq_in_corp1_hd')}</th>
@@ -151,11 +151,11 @@ export function init({
                                         <td>{(props.kwpage-1)*props.kwpagesize + i + 1}.</td>
                                         <td className="kword">{kw.item}</td>
                                         {props.manateeIsCustomCNC ?
-                                            [
-                                                <td className="num"><PossiblyNaNValue v={kw.logL} /></td>,
-                                                <td className="num">{he.formatNumber(kw.chi2, 2)}</td>,
-                                                <td className="num">{he.formatNumber(kw.din, 2)}</td>,
-                                            ] :
+                                            <>
+                                                <td className="num"><PossiblyNaNValue v={kw.logL} /></td>
+                                                <td className="num">{he.formatNumber(kw.chi2, 2)}</td>
+                                                <td className="num">{he.formatNumber(kw.din, 2)}</td>
+                                            </> :
                                             <td className="num">{he.formatNumber(kw.score, 2)}</td>
                                         }
                                         <td className="num">{he.formatNumber(kw.frq1, 0)}</td>
