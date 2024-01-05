@@ -16,6 +16,7 @@ import hashlib
 import math
 import os
 import sys
+import time
 from dataclasses import dataclass
 from functools import wraps
 from typing import List, Tuple, Union
@@ -86,7 +87,7 @@ async def require_existing_keywords(form: KeywordsFormArgs, offset: int, limit: 
     if not await aiofiles.os.path.exists(path):
         raise KeywordsResultNotFound('The result does not exist')
     else:
-        data = await load_cached_partial(path, offset, limit)
+        data = load_cached_partial(path, offset, limit)
         LineDataClass = CNCKeywordLine if manatee_is_custom_cnc else KeywordLine
         return KeywordsResult(data[0], [LineDataClass.from_dict(item) for item in data[1]])
 

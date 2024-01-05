@@ -96,13 +96,13 @@ async def require_existing_pquery(pquery: PqueryFormArgs, offset: int, limit: in
     else:
         if sort == 'freq':
             if reverse is True:
-                total, rows = await load_cached_partial(path, offset, limit)
+                total, rows = load_cached_partial(path, offset, limit)
                 return PqueryData(
                     total,
                     [PqueryDataLine(row[0], row[1:]) for row in rows]
                 )
             else:
-                total, rows = await load_cached_full(path)
+                total, rows = load_cached_full(path)
                 return PqueryData(
                     total,
                     [
@@ -111,7 +111,7 @@ async def require_existing_pquery(pquery: PqueryFormArgs, offset: int, limit: in
                     ]
                 )
         elif sort == 'value':
-            total, rows = await load_cached_full(path)
+            total, rows = load_cached_full(path)
             return PqueryData(
                 total,
                 [
@@ -122,7 +122,7 @@ async def require_existing_pquery(pquery: PqueryFormArgs, offset: int, limit: in
 
         elif sort.startswith('freq-'):
             conc_idx = pquery.conc_ids.index(sort[len('freq-'):])
-            total, rows = await load_cached_full(path)
+            total, rows = load_cached_full(path)
             return PqueryData(
                 total,
                 [

@@ -16,19 +16,19 @@ import aiofiles
 import ujson as json
 
 
-async def load_cached_partial(path, offset, limit):
+def load_cached_partial(path, offset, limit):
     """
     Load part of the file starting from 'offset' and ending
-    at 'limit'. Typically this can be used in case the request
+    at 'limit'. Typically, this can be used in case the request
     for data matches sorting column and sorting order.
     (most of the time, we start with data sorted by abs. freq.
     sorted in reverse).
     """
-    async with aiofiles.open(path, 'r') as fr:
-        total = json.loads(await fr.readline())['total']
+    with open(path, 'r') as fr:
+        total = json.loads(fr.readline())['total']
         ans = []
         i = 0
-        async for row in fr:
+        for row in fr:
             if i < offset:
                 i += 1
                 continue
@@ -40,13 +40,13 @@ async def load_cached_partial(path, offset, limit):
     return total, ans
 
 
-async def load_cached_full(path):
+def load_cached_full(path):
     """
     Load whole JSONL file into a list of rows
     """
     ans = []
-    async with aiofiles.open(path, 'r') as fr:
-        total = json.loads(await fr.readline())['total']
-        async for row in fr:
+    with open(path, 'r') as fr:
+        total = json.loads(fr.readline())['total']
+        for row in fr:
             ans.append(json.loads(row))
     return total, ans
