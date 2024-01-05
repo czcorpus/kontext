@@ -131,17 +131,7 @@ async def keywords(corp: KCorpus, ref_corp: KCorpus, args: KeywordsFormArgs, max
         wlminfreq=args.wlminfreq, pfilter_words=[],
         nfilter_words=[], wlnums=args.wlnums,
         attrfreq=attrfreq)
-    words = set(x[0] for x in wl_items)
-
-    ref_attrfreq = await wordlist._get_attrfreq(corp=ref_corp, attr=rc_wl, wlattr=args.wlattr, wlnums=args.wlnums)
-    ref_wl_items = wordlist._wordlist_by_pattern(
-        attr=rc_wl, enc_pattern=args.wlpat.strip(), excl_pattern=nwre,
-        wlminfreq=args.wlminfreq, pfilter_words=[],
-        nfilter_words=[], wlnums=args.wlnums,
-        attrfreq=ref_attrfreq)
-
-    # analyze only words contained in both focus and reference corpora
-    words = list(words.intersection(x[0] for x in ref_wl_items))
+    words =[x[0] for x in wl_items]
 
     simple_n = 1.0  # this does not apply for CNC-custom manatee-open keywords
     keyword = Keyword(

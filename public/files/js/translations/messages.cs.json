@@ -960,7 +960,7 @@
         "kwords__min_freq": "Min. frekvence",
         "kwords__max_freq": "Max. frekvence",
         "kwords__save_form_label": "Uložit klíčová slova",
-        "kwords__undefined_value": "nedefinováno",
+        "kwords__undefined_value": "N/A",
         "kwords__undefined_value_explained": "Z důvodu nulové frekvence v referenčním korpusu nelze aplikovat příslušný výpočet"
     }
 }
