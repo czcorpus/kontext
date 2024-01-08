@@ -29,6 +29,7 @@ from bgcalc.wordlist.errors import WordlistResultNotFound
 from corplib import frq_db
 from corplib.corpus import AbstractKCorpus
 from manatee import Structure  # TODO wrap this out
+from util import AsyncBatchWriter
 
 
 def _create_cache_path(form: WordlistFormArgs) -> str:
@@ -76,10 +77,10 @@ def cached(f):
             ans = await f(corp, args, sys.maxsize)
             ans = sorted(ans, key=lambda x: x[1], reverse=True)
             num_lines = len(ans)
-            async with aiofiles.open(path, 'w') as fw:
-                await fw.write(json.dumps(dict(total=num_lines)) + '\n')
+            async with aiofiles.open(path, 'w') as fw, AsyncBatchWriter(fw, 100) as bw:
+                await bw.write(json.dumps(dict(total=num_lines)) + '\n')
                 for item in ans:
-                    await fw.write(json.dumps(item) + '\n')
+                    await bw.write(json.dumps(item) + '\n')
             return ans[:max_items]
 
     return wrapper

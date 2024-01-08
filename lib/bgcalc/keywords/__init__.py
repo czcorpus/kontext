@@ -30,6 +30,7 @@ from corplib import manatee_is_custom_cnc
 from corplib.corpus import KCorpus
 from dataclasses_json import dataclass_json
 from manatee import Keyword  # TODO wrap this out
+from util import AsyncBatchWriter
 
 CNC_SCORE_TYPES = ('logL', 'chi2', 'din')
 
@@ -107,10 +108,10 @@ def cached(f):
             ans = await f(corp, ref_corp, args, max_items)
             # ans = sorted(ans, key=lambda x: x[1], reverse=True)
             num_lines = len(ans)
-            async with aiofiles.open(path, 'w') as fw:
-                await fw.write(json.dumps(dict(total=num_lines)) + '\n')
+            async with aiofiles.open(path, 'w') as fw, AsyncBatchWriter(fw, 100) as bw:
+                await bw.write(json.dumps(dict(total=num_lines)) + '\n')
                 for item in ans:
-                    await fw.write(item.to_json() + '\n')
+                    await bw.write(item.to_json() + '\n')
             return ans[:max_items]
 
     return wrapper

@@ -36,6 +36,7 @@ from plugins.errors import PluginCompatibilityException
 from plugins.mysql_integration_db import MySqlIntegrationDb
 from pymysql.err import IntegrityError
 from sanic import Sanic
+from util import AsyncBatchWriter
 
 try:
     from markdown import markdown
@@ -160,9 +161,9 @@ class MySQLSubcArchive(AbstractSubcArchive):
             new ID of the subcorpus
         """
         subc_id = await create_new_subc_ident(subc_root_dir, corpname)
-        async with aiofiles.open(os.path.join(subc_root_dir, subc_id.data_path), 'wb') as fw:
-            await fw.write(struct.pack('<q', 0))
-            await fw.write(struct.pack('<q', self.preflight_subcorpus_size))
+        async with aiofiles.open(os.path.join(subc_root_dir, subc_id.data_path), 'wb') as fw, AsyncBatchWriter(fw, 100) as bw:
+            await bw.write(struct.pack('<q', 0))
+            await bw.write(struct.pack('<q', self.preflight_subcorpus_size))
         subcname = f'{corpname}-preflight'
         async with self._db.cursor() as cursor:
             await cursor.execute('START TRANSACTION')

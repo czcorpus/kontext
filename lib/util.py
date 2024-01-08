@@ -1,4 +1,5 @@
 import asyncio
+from contextlib import AsyncContextDecorator
 from functools import partial, wraps
 from typing import AsyncIterator, TypeVar
 
@@ -30,9 +31,9 @@ async def anext(ait: AsyncIterator):
 
 
 _KEY_ALPHABET = (
-        [chr(x) for x in range(ord('a'), ord('z') + 1)] +
-        [chr(x) for x in range(ord('A'), ord('Z') + 1)] +
-        ['%d' % i for i in range(10)])
+    [chr(x) for x in range(ord('a'), ord('z') + 1)] +
+    [chr(x) for x in range(ord('A'), ord('Z') + 1)] +
+    ['%d' % i for i in range(10)])
 
 
 def int2chash(hex_num: int, length: int) -> str:
@@ -46,3 +47,26 @@ def int2chash(hex_num: int, length: int) -> str:
         ans.append(_KEY_ALPHABET[p])
         hex_num = int(hex_num / len(_KEY_ALPHABET))
     return ''.join([str(x) for x in ans])
+
+
+class AsyncBatchWriter(AsyncContextDecorator):
+    def __init__(self, f, batch_size: int):
+        self.f = f
+        self.batch_size = batch_size
+        self.lines = []
+
+    async def write(self, data: str):
+        self.lines.append(data)
+        if len(self.lines) > self.batch_size:
+            await self.flush()
+
+    async def flush(self):
+        await self.f.writelines(self.lines)
+        self.lines = []
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *exc):
+        await self.flush()
+        return False

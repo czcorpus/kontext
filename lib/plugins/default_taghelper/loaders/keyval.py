@@ -38,9 +38,9 @@ class KeyvalTagVariantLoader(AbstractTagsetInfoLoader):
         if await self.is_available(lambda x: x):
             async with aiofiles.open(self.variants_file_path, 'r') as f:
                 self.initial_values = json.loads(await f.read())
-                for item in self.initial_values:
-                    for i, v in enumerate(item):
-                        item[i] = tuple(v)
+            for item in self.initial_values:
+                for i, v in enumerate(item):
+                    item[i] = tuple(v)
         else:
             self.initial_values = []
 

@@ -30,6 +30,7 @@ import ujson as json
 from bgcalc.freqs.types import FreqCalcArgs, FreqCalcResult
 from conclib.freq import FreqData, FreqItem
 from dataclasses_json import dataclass_json
+from util import AsyncBatchWriter
 
 
 def _cache_file_path(args: FreqCalcArgs):
@@ -101,17 +102,17 @@ def stored_to_fs(func):
         data, cache_path = await find_cached_result(args)
         if data is None:
             data: FreqCalcResult = await func(args)
-            async with aiofiles.open(cache_path, 'w') as fw:
+            async with aiofiles.open(cache_path, 'w') as fw, AsyncBatchWriter(fw, 100) as bw:
                 common_md = CommonMetadata(num_blocks=len(data.freqs), conc_size=data.conc_size)
-                await fw.write(json.dumps(common_md.to_dict()) + '\n')
+                await bw.write(json.dumps(common_md.to_dict()) + '\n')
                 for freq in data.freqs:
                     block_md = BlockMetadata(
                         head=[_Head(**x) for x in freq.Head],
                         skipped_empty=freq.SkippedEmpty,
                         no_rel_sorting=freq.NoRelSorting,
                         size=len(freq.Items))
-                    await fw.write(json.dumps(block_md.to_dict()) + '\n')
+                    await bw.write(json.dumps(block_md.to_dict()) + '\n')
                     for item in freq.Items:
-                        await fw.write(json.dumps(item.to_dict()) + '\n')
+                        await bw.write(json.dumps(item.to_dict()) + '\n')
         return data
     return wrapper
