@@ -138,6 +138,11 @@ async def keywords(corp: KCorpus, ref_corp: KCorpus, args: KeywordsFormArgs, max
         attrfreq=attrfreq)
     words = [x[0] for x in wl_items]
 
+    # in case no words are found return empty result
+    # (empty whitelist in keywords would return all words from focus corpus)
+    if len(words) == 0:
+        return []
+
     simple_n = 1.0  # this does not apply for CNC-custom manatee-open keywords
     keyword = Keyword(
         corp.unwrap(), ref_corp.unwrap(), c_wl, rc_wl,
@@ -153,13 +158,13 @@ async def keywords(corp: KCorpus, ref_corp: KCorpus, args: KeywordsFormArgs, max
             s = s[:-2]
 
         if manatee_is_custom_cnc():
-            freqs = kw.get_freqs(2 * len([]) + 4 + 4)  # 1 additional slot for size effect
+            freqs = kw.get_freqs(2 * len([]) + 4 + 4)  # 4 additional score slots
             results.append(CNCKeywordLine(
                 item=s,
-                score=filter_nan(freqs[4], 3),
-                logL=filter_nan(freqs[5], 3),
-                chi2=filter_nan(freqs[6], 3),
-                din=filter_nan(float(freqs[7]), 5),
+                score=filter_nan(freqs[4], 3),  # manatee score
+                logL=filter_nan(freqs[5], 3),  # additional logL score
+                chi2=filter_nan(freqs[6], 3),  # additional chi2 score
+                din=filter_nan(float(freqs[7]), 5),  # additional din score
                 frq1=int(freqs[0]),
                 frq2=int(freqs[1]),
                 rel_frq1=filter_nan(float(freqs[2]), 5),
@@ -170,7 +175,7 @@ async def keywords(corp: KCorpus, ref_corp: KCorpus, args: KeywordsFormArgs, max
             freqs = kw.get_freqs(2 * len([]) + 4)
             results.append(KeywordLine(
                 item=s,
-                score=filter_nan(kw.score, 3),
+                score=filter_nan(kw.score, 3),  # manatee score
                 frq1=int(freqs[0]),
                 frq2=int(freqs[1]),
                 rel_frq1=filter_nan(float(freqs[2]), 5),
