@@ -106,6 +106,11 @@ export function init({
 
         const buildQ = (value:string) => `aword,[${props.attr}="${value}"]`;
 
+        if (props.data.length === 0) {
+            return <S.KeywordsResult>
+                <p className="no-result">{he.translate('kwords__no_result')}</p>
+            </S.KeywordsResult>
+        }
         return (
             <S.KeywordsResult>
 

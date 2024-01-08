@@ -59,6 +59,13 @@ export const KeywordsResult = styled.form`
     .data {
         margin: 1em;
     }
+
+    .no-result {
+        margin: 1em;
+        padding-top: 2em;
+        padding-bottom: 2em;
+        font-size: 120%;
+    }
 `;
 
 // ------------------- <PaginatorWrapper /> -------------

@@ -901,9 +901,9 @@
         "wordlist__minfreq_err": "Musi być użyty numer srogszy ôd zera",
         "wordlist__ml_not_avail": "Niydostympne",
         "wordlist__add_attr": "Przidej atrybut",
-        "wordlist__no_result_for_{wlpat}": "No matching result for \"{wlpat}\"",
-        "wordlist__create_filter_list": "Create",
-        "wordlist__use_ctrl_enter_for_newline": "To enter a new line, use Ctrl+ENTER",
+        "wordlist__no_result_for_{wlpat}": "No matching result for \"{wlpat}\" UNTRANSLATED",
+        "wordlist__create_filter_list": "Create UNTRANSLATED",
+        "wordlist__use_ctrl_enter_for_newline": "To enter a new line, use Ctrl+ENTER UNTRANSLATED",
         "wordlist__pattern_empty_err": "Search pattern and/or filter words must be entered UNTRANSLATED",
         "wordlist__ask_empty_pattern": "An empty query will return all the words from the corpus. Continue? UNTRANSLATED",
         "wordlist__failed_to_precalculate": "Failed to create auxiliary data required for the frequency distribution calculation. Please try again later or contact system administrator. UNTRANSLATED",
@@ -960,6 +960,7 @@
         "kwords__save_form_label": "Save keywords UNTRANSLATED",
         "kwords__undefined_value": "N/A",
         "kwords__undefined_value_explained": "Due to the zero frequency in the reference corpus, the corresponding calculation cannot be applied UNTRANSLATED",
-        "kwords__max_list_size_explained_{limit}": "The result list is limited to at most {limit, plural, one{# item} few{# items} other{# items}} UNTRANSLATED"
+        "kwords__max_list_size_explained_{limit}": "The result list is limited to at most {limit, plural, one{# item} few{# items} other{# items}} UNTRANSLATED",
+        "kwords__no_result": "No matching result"
     }
 }
