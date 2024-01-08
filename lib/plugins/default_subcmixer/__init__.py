@@ -20,7 +20,6 @@ import struct
 from collections import defaultdict
 from typing import Any, Dict, List
 
-import aiofiles
 import plugins
 import ujson as json
 from action.control import http_action
@@ -75,7 +74,7 @@ async def subcmixer_create_subcorpus(amodel: CorpusActionModel, req: KRequest, r
         struct_indices = sorted([int(x) for x in req.form.get('ids').split(',')])
         id_attr = req.form.get('idAttr').split('.')
         attr = amodel.corp.get_struct(id_attr[0])
-        async with aiofiles.open(os.path.join(amodel.subcpath, subc_id.data_path), 'wb') as fw, AsyncBatchWriter(fw, 100) as bw:
+        async with AsyncBatchWriter(os.path.join(amodel.subcpath, subc_id.data_path), 'wb', 100) as bw:
             for idx in struct_indices:
                 await bw.write(struct.pack('<q', attr.beg(idx)))
                 await bw.write(struct.pack('<q', attr.end(idx)))

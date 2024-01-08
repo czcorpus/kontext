@@ -108,7 +108,7 @@ def cached(f):
             ans = await f(corp, ref_corp, args, max_items)
             # ans = sorted(ans, key=lambda x: x[1], reverse=True)
             num_lines = len(ans)
-            async with aiofiles.open(path, 'w') as fw, AsyncBatchWriter(fw, 100) as bw:
+            async with AsyncBatchWriter(path, 'w', 100) as bw:
                 await bw.write(json.dumps(dict(total=num_lines)) + '\n')
                 for item in ans:
                     await bw.write(item.to_json() + '\n')

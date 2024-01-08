@@ -21,7 +21,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
-import aiofiles
 import plugins
 import ujson as json
 from action.argmapping.subcorpus import (
@@ -161,7 +160,7 @@ class MySQLSubcArchive(AbstractSubcArchive):
             new ID of the subcorpus
         """
         subc_id = await create_new_subc_ident(subc_root_dir, corpname)
-        async with aiofiles.open(os.path.join(subc_root_dir, subc_id.data_path), 'wb') as fw, AsyncBatchWriter(fw, 100) as bw:
+        async with AsyncBatchWriter(os.path.join(subc_root_dir, subc_id.data_path), 'wb', 100) as bw:
             await bw.write(struct.pack('<q', 0))
             await bw.write(struct.pack('<q', self.preflight_subcorpus_size))
         subcname = f'{corpname}-preflight'

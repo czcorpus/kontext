@@ -3,6 +3,8 @@ from contextlib import AsyncContextDecorator
 from functools import partial, wraps
 from typing import AsyncIterator, TypeVar
 
+import aiofiles
+
 T = TypeVar('T')
 
 
@@ -50,8 +52,10 @@ def int2chash(hex_num: int, length: int) -> str:
 
 
 class AsyncBatchWriter(AsyncContextDecorator):
-    def __init__(self, f, batch_size: int):
-        self.f = f
+    def __init__(self, filename: str, mode: str, batch_size: int):
+        self.filename = filename
+        self.mode = mode
+        self.f = None
         self.batch_size = batch_size
         self.lines = []
 
@@ -65,8 +69,10 @@ class AsyncBatchWriter(AsyncContextDecorator):
         self.lines = []
 
     async def __aenter__(self):
+        self.f = await aiofiles.open(self.filename, self.mode).__aenter__()
         return self
 
     async def __aexit__(self, *exc):
         await self.flush()
+        self.f.close()
         return False

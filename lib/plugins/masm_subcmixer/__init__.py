@@ -21,7 +21,6 @@ import struct
 from dataclasses import dataclass
 from typing import List, Optional
 
-import aiofiles
 import aiohttp
 import plugins
 import ujson as json
@@ -79,7 +78,7 @@ async def subcmixer_create_subcorpus(amodel: CorpusActionModel, req: KRequest, r
         struct_idxs = sorted(attr.str2id(sid) for sid in struct_ids)
 
         subc_id = await create_new_subc_ident(amodel.subcpath, amodel.corp.corpname)
-        async with aiofiles.open(os.path.join(amodel.subcpath, subc_id.data_path), 'wb') as fw, AsyncBatchWriter(fw, 100) as bw:
+        async with AsyncBatchWriter(os.path.join(amodel.subcpath, subc_id.data_path), 'wb', 100) as bw:
             for idx in struct_idxs:
                 await bw.write(struct.pack('<q', mstruct.beg(idx)))
                 await bw.write(struct.pack('<q', mstruct.end(idx)))

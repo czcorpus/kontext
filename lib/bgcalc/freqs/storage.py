@@ -102,7 +102,7 @@ def stored_to_fs(func):
         data, cache_path = await find_cached_result(args)
         if data is None:
             data: FreqCalcResult = await func(args)
-            async with aiofiles.open(cache_path, 'w') as fw, AsyncBatchWriter(fw, 100) as bw:
+            async with AsyncBatchWriter(cache_path, 'w', 100) as bw:
                 common_md = CommonMetadata(num_blocks=len(data.freqs), conc_size=data.conc_size)
                 await bw.write(json.dumps(common_md.to_dict()) + '\n')
                 for freq in data.freqs:
