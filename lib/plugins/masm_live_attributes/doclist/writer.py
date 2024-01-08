@@ -22,6 +22,7 @@ import ujson as json
 from openpyxl import Workbook
 from plugins.masm_live_attributes.doclist import DocListItem
 from templating import Type2XML
+from util import AsyncBatchWriter
 
 
 async def export_csv(data: List[DocListItem], target_path: str) -> bool:
@@ -47,9 +48,9 @@ async def export_xml(data: List[DocListItem], target_path: str) -> bool:
 async def export_jsonl(data: List[DocListItem], target_path: str) -> bool:
     if len(data) == 0:
         return False
-    async with aiofiles.open(target_path, 'w') as fw:
+    async with AsyncBatchWriter(target_path, 'w', 100) as bw:
         for item in data:
-            await fw.write(json.dumps(item.to_dict()) + "\n")
+            await bw.write(json.dumps(item.to_dict()) + "\n")
         return True
 
 

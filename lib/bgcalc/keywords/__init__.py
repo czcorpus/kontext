@@ -15,11 +15,9 @@
 import hashlib
 import math
 import os
-import sys
-import time
 from dataclasses import dataclass
 from functools import wraps
-from typing import List, Tuple, Union
+from typing import List, Union
 
 import aiofiles
 import aiofiles.os
@@ -32,6 +30,7 @@ from corplib import manatee_is_custom_cnc
 from corplib.corpus import KCorpus
 from dataclasses_json import dataclass_json
 from manatee import Keyword  # TODO wrap this out
+from util import AsyncBatchWriter
 
 CNC_SCORE_TYPES = ('logL', 'chi2', 'din')
 
@@ -102,23 +101,25 @@ def cached(f):
         LineDataClass = CNCKeywordLine if manatee_is_custom_cnc else KeywordLine
 
         if await aiofiles.os.path.exists(path):
-            async with aiofiles.open(path, 'r') as fr:
-                await fr.readline()
-                return [LineDataClass.from_dict(json.loads(item)) async for item in fr][:max_items]
+            with open(path, 'r') as fr:
+                fr.readline()
+                return [LineDataClass.from_dict(json.loads(item)) for item in fr][:max_items]
         else:
             ans = await f(corp, ref_corp, args, max_items)
             # ans = sorted(ans, key=lambda x: x[1], reverse=True)
             num_lines = len(ans)
-            async with aiofiles.open(path, 'w') as fw:
-                await fw.write(json.dumps(dict(total=num_lines)) + '\n')
+            async with AsyncBatchWriter(path, 'w', 100) as bw:
+                await bw.write(json.dumps(dict(total=num_lines)) + '\n')
                 for item in ans:
-                    await fw.write(item.to_json() + '\n')
+                    await bw.write(item.to_json() + '\n')
             return ans[:max_items]
 
     return wrapper
 
+
 def filter_nan(v: float, round_num):
     return None if math.isnan(v) else round(v, round_num)
+
 
 @cached
 async def keywords(corp: KCorpus, ref_corp: KCorpus, args: KeywordsFormArgs, max_items: int) -> KeywordsResultType:
@@ -135,7 +136,7 @@ async def keywords(corp: KCorpus, ref_corp: KCorpus, args: KeywordsFormArgs, max
         wlminfreq=args.wlminfreq, pfilter_words=[],
         nfilter_words=[], wlnums=args.wlnums,
         attrfreq=attrfreq)
-    words =[x[0] for x in wl_items]
+    words = [x[0] for x in wl_items]
 
     simple_n = 1.0  # this does not apply for CNC-custom manatee-open keywords
     keyword = Keyword(

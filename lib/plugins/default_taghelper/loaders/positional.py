@@ -115,8 +115,8 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
                 if not await aiofiles.os.path.exists(tst_path):
                     await aiofiles.os.mkdir(tst_path, 0o775)
             ans = [set() for _ in range(tagset['num_pos'])]
-            async with aiofiles.open(self.variants_file_path) as fr:
-                async for line in fr:
+            with open(self.variants_file_path) as fr:
+                for line in fr:
                     line = line.strip() + (tagset['num_pos'] - len(line.strip())) * '-'
                     for i in range(tagset['num_pos']):
                         value = ''.join([char_replac_tab.get(x, x) for x in line[i]])
@@ -161,8 +161,8 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
         char_replac_tab = dict(self.__class__.SPEC_CHAR_REPLACEMENTS)
         patt = re.compile(required_pattern)
         matching_tags = []
-        async with aiofiles.open(self.variants_file_path) as fr:
-            async for line in fr:
+        with open(self.variants_file_path) as fr:
+            for line in fr:
                 line = line.strip() + (tagset['num_pos'] - len(line.strip())) * '-'
                 if patt.match(line):
                     matching_tags.append(line)

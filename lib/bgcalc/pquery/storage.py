@@ -12,10 +12,10 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+import csv
 import hashlib
 import os.path
 from dataclasses import dataclass
-from dataclasses_json import dataclass_json
 from functools import wraps
 from typing import List
 
@@ -27,6 +27,7 @@ import settings
 from action.argmapping.pquery import PqueryFormArgs
 from bgcalc.adapter.abstract import AbstractBgClient
 from bgcalc.csv_cache import load_cached_full, load_cached_partial
+from dataclasses_json import dataclass_json
 
 from .errors import PqueryArgumentError, PqueryResultNotFound
 
@@ -60,9 +61,9 @@ def stored_to_fs(f):
         path = _create_cache_path(pquery)
 
         if await aiofiles.os.path.exists(path):
-            async with aiofiles.open(path, 'r') as fr:
-                csv_reader = aiocsv.AsyncReader(fr)
-                return [item async for item in csv_reader]
+            with open(path, 'r') as fr:
+                csv_reader = csv.reader(fr)
+                return [item for item in csv_reader]
         else:
             ans = await f(worker, pquery, raw_queries, subcpath, user_id, collator_locale)
             num_lines = ans[0][1]

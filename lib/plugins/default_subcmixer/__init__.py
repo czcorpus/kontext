@@ -15,28 +15,28 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import os
 import struct
 from collections import defaultdict
 from typing import Any, Dict, List
-import os
 
-import aiofiles
 import plugins
 import ujson as json
 from action.control import http_action
 from action.krequest import KRequest
 from action.model.corpus import CorpusActionModel
 from action.response import KResponse
+from corplib.abstract import create_new_subc_ident
 from plugin_types.subcmixer import AbstractSubcMixer
 from plugin_types.subcmixer.error import (
     ResultNotFoundException, SubcMixerException)
 from plugins import inject
 from sanic.blueprints import Blueprint
+from util import AsyncBatchWriter
 
 from .category_tree import CategoryExpression, CategoryTree
 from .database import Database
 from .metadata_model import MetadataModel
-from corplib.abstract import create_new_subc_ident
 
 bp = Blueprint('default_subcmixer')
 
@@ -74,10 +74,10 @@ async def subcmixer_create_subcorpus(amodel: CorpusActionModel, req: KRequest, r
         struct_indices = sorted([int(x) for x in req.form.get('ids').split(',')])
         id_attr = req.form.get('idAttr').split('.')
         attr = amodel.corp.get_struct(id_attr[0])
-        async with aiofiles.open(os.path.join(amodel.subcpath, subc_id.data_path), 'wb') as fw:
+        async with AsyncBatchWriter(os.path.join(amodel.subcpath, subc_id.data_path), 'wb', 100) as bw:
             for idx in struct_indices:
-                await fw.write(struct.pack('<q', attr.beg(idx)))
-                await fw.write(struct.pack('<q', attr.end(idx)))
+                await bw.write(struct.pack('<q', attr.beg(idx)))
+                await bw.write(struct.pack('<q', attr.end(idx)))
         return dict(status=True)
 
 
