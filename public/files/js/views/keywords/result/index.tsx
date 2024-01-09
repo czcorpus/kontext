@@ -108,7 +108,10 @@ export function init({
 
         if (props.data.length === 0) {
             return <S.KeywordsResult>
-                <p className="no-result">{he.translate('kwords__no_result')}</p>
+                <p className="no-result">
+                    {he.translate('kwords__no_result')}<br/>
+                    <a href={he.createActionLink('keywords/form', {q: `~${props.queryId}`})}>Zadat znovu</a>
+                </p>
             </S.KeywordsResult>
         }
         return (
