@@ -184,6 +184,7 @@
         </chart_export>
         <issue_reporting/>
         <token_connect />
+        <tokens_linking />
         <kwic_connect />
         <dispatch_hook />
     </plugins>
