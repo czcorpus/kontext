@@ -214,8 +214,27 @@ async def server_init(app: Sanic, loop: asyncio.BaseEventLoop):
             f'worker is attaching soft-restart token {app.ctx.soft_restart_token[:5]}...')
 
 
+@application.listener('after_server_start')
+async def run_checker(app: Sanic, loop: asyncio.BaseEventLoop):
+    async def event_checker():
+        while True:
+            logging.getLogger(__name__).debug("Checking events...")
+            await asyncio.sleep(5)
+
+    logging.getLogger(__name__).debug("Starting event checker of %s", app.m.name)
+    app.ctx.checker = loop.create_task(event_checker(), name=app.m.name)
+
+
+@application.listener('before_server_stop')
+async def stop_checker(app: Sanic, loop: asyncio.BaseEventLoop):
+    if app.ctx.checker:
+        logging.getLogger(__name__).debug(
+            "Stopping event checker of %s", app.ctx.checker.get_name())
+        app.ctx.checker.cancel()
+
+
 @application.listener('after_server_stop')
-async def server_init(app: Sanic, loop: asyncio.BaseEventLoop):
+async def server_cleanup(app: Sanic, loop: asyncio.BaseEventLoop):
     await app.ctx.client_session.close()
 
 
