@@ -32,7 +32,7 @@ as a standalone server application.
 
 ```
 sudo apt-get install lxc
-sudo lxc-create -t download -n kontext-container -- -d ubuntu -r focal -a amd64
+sudo lxc-create -t download -n kontext-container -- -d ubuntu -r jammy -a amd64
 sudo lxc-start -n kontext-container
 ```
 
@@ -268,12 +268,12 @@ Note: The script also allows removing access rights.
 
 ### Apply changes
 
-To prompt KonText to acknowledge your new corpus without requiring a restart, invoke the 
-`/soft-reset` action along with the appropriate key. This key is stored in a file located 
+To prompt KonText to acknowledge your new corpus without requiring a restart, invoke the
+`/soft-reset` action along with the appropriate key. This key is stored in a file located
 at `/tmp/kontext_srt/...`, with the exact filename partially disclosed in the application log.
 
-However, if only a single instance of KonText is operational, there will be just one file in 
-the `kontext_srt` directory. The filename is a constant, as it is derived from the hash of the 
+However, if only a single instance of KonText is operational, there will be just one file in
+the `kontext_srt` directory. The filename is a constant, as it is derived from the hash of the
 absolute path of the corresponding KonText configuration XML file.
 
 
