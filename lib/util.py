@@ -1,5 +1,5 @@
 import asyncio
-from contextlib import AsyncContextDecorator
+from contextlib import AbstractAsyncContextManager
 from functools import partial, wraps
 from typing import AsyncIterator, TypeVar
 
@@ -51,7 +51,7 @@ def int2chash(hex_num: int, length: int) -> str:
     return ''.join([str(x) for x in ans])
 
 
-class AsyncBatchWriter(AsyncContextDecorator):
+class AsyncBatchWriter(AbstractAsyncContextManager):
     def __init__(self, filename: str, mode: str, batch_size: int):
         self.filename = filename
         self.mode = mode
