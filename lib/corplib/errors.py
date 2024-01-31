@@ -16,11 +16,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from typing import Union
+
 from action.errors import UserReadableException
 
 
 class MissingSubCorpFreqFile(UserReadableException):
-    def __init__(self, message: str | Exception, corpname: str, usesubcorp: str):
+    def __init__(self, message: Union[str, Exception], corpname: str, usesubcorp: str):
         super().__init__(message, corpname, usesubcorp)
         self.corpname = corpname
         self.usesubcorp = usesubcorp
