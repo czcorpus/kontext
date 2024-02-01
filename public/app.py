@@ -230,12 +230,21 @@ async def run_receiver(app: Sanic, loop: asyncio.BaseEventLoop):
                 "Worker `%s` subscribed to `%s`", app.m.pid, SIGNAL_CHANNEL_ID)
 
     logging.getLogger(__name__).debug("Starting receiver %s", app.m.pid)
-    app.ctx.receiver = loop.create_task(receiver(), name=app.m.pid)
+    receiver = loop.create_task(receiver(), name=app.m.pid)
+    # wait so receiver gains controll and can raise exception
+    await asyncio.sleep(0)
+    try:
+        receiver.result()
+    except NotImplementedError:
+        logging.info("DB subscribe_task not implemented, crossworker signal handler disabled")
+    except Exception as e:
+        logging.error("Error while running receiver", exc_info=e)
+    app.ctx.receiver = receiver
 
 
 @application.listener('before_server_stop')
 async def stop_receiver(app: Sanic, loop: asyncio.BaseEventLoop):
-    if app.ctx.receiver:
+    if app.ctx.receiver and not app.ctx.receiver.done():
         logging.getLogger(__name__).debug(
             "Stopping receiver %s", app.ctx.receiver.get_name())
         app.ctx.receiver.cancel()
@@ -365,7 +374,7 @@ if __name__ == '__main__':
         '--debugpy', action='store_true', default=False, help='Use debugpy for debugging')
     parser.add_argument('--debugmode', action='store_true', default=False, help='Force debug mode')
     parser.add_argument('--soft-reset', action='store_true', default=False,
-                        help='Perform only soft reset on running server')
+                        help='Only publish soft reset signal')
     args = parser.parse_args()
 
     if args.soft_reset:
