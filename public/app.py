@@ -196,6 +196,7 @@ async def main_process_init(*_):
 @application.listener('before_server_start')
 async def server_init(app: Sanic, loop: asyncio.BaseEventLoop):
     setproctitle(f'sanic-kontext [{CONF_PATH}][worker]')
+    # workers will handle SIGUSR1
     loop.add_signal_handler(signal.SIGUSR1, lambda: asyncio.create_task(sigusr1_handler()))
     # init extensions fabrics
     app.ctx.client_session = aiohttp.ClientSession()
@@ -363,7 +364,15 @@ if __name__ == '__main__':
     parser.add_argument(
         '--debugpy', action='store_true', default=False, help='Use debugpy for debugging')
     parser.add_argument('--debugmode', action='store_true', default=False, help='Force debug mode')
+    parser.add_argument('--soft-reset', action='store_true', default=False,
+                        help='Perform only soft reset on running server')
     args = parser.parse_args()
+
+    if args.soft_reset:
+        with plugins.runtime.DB as db:
+            asyncio.run(db.publish(SIGNAL_CHANNEL_ID, 'kontext.internal.reset'))
+            print('Soft reset signal published')
+        sys.exit(0)
 
     if args.debugpy:
         if '_DEBUGPY_RUNNING' not in os.environ:
