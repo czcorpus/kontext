@@ -56,6 +56,7 @@ DFLT_HTTP_CLIENT_TIMEOUT = 20
 # a file for storing soft-reset token (the stored value is auto-generated on each (re)start)
 SOFT_RESET_TOKEN_FILE = os.path.join(
     tempfile.gettempdir(), 'kontext_srt', hashlib.sha1(CONF_PATH.encode()).hexdigest())
+SIGNAL_CHANNEL_ID = "channel:signals"
 
 from typing import Optional
 
@@ -195,6 +196,7 @@ async def main_process_init(*_):
 @application.listener('before_server_start')
 async def server_init(app: Sanic, loop: asyncio.BaseEventLoop):
     setproctitle(f'sanic-kontext [{CONF_PATH}][worker]')
+    # workers will handle SIGUSR1
     loop.add_signal_handler(signal.SIGUSR1, lambda: asyncio.create_task(sigusr1_handler()))
     # init extensions fabrics
     app.ctx.client_session = aiohttp.ClientSession()
@@ -214,8 +216,42 @@ async def server_init(app: Sanic, loop: asyncio.BaseEventLoop):
             f'worker is attaching soft-restart token {app.ctx.soft_restart_token[:5]}...')
 
 
+@application.listener('after_server_start')
+async def run_receiver(app: Sanic, loop: asyncio.BaseEventLoop):
+    async def receiver():
+        # signal handler propagates received signals between all Sanic workers
+        async def signal_handler(msg: str):
+            await app.dispatch(msg)
+            return False  # returns if receiver should stop
+
+        with plugins.runtime.DB as db:
+            await db.subscribe_task(SIGNAL_CHANNEL_ID, signal_handler)
+            logging.getLogger(__name__).debug(
+                "Worker `%s` subscribed to `%s`", app.m.pid, SIGNAL_CHANNEL_ID)
+
+    logging.getLogger(__name__).debug("Starting receiver %s", app.m.pid)
+    receiver = loop.create_task(receiver(), name=app.m.pid)
+    # wait so receiver gains controll and can raise exception
+    await asyncio.sleep(0)
+    try:
+        receiver.result()
+    except NotImplementedError:
+        logging.info("DB subscribe_task not implemented, crossworker signal handler disabled")
+    except Exception as e:
+        logging.error("Error while running receiver", exc_info=e)
+    app.ctx.receiver = receiver
+
+
+@application.listener('before_server_stop')
+async def stop_receiver(app: Sanic, loop: asyncio.BaseEventLoop):
+    if app.ctx.receiver and not app.ctx.receiver.done():
+        logging.getLogger(__name__).debug(
+            "Stopping receiver %s", app.ctx.receiver.get_name())
+        app.ctx.receiver.cancel()
+
+
 @application.listener('after_server_stop')
-async def server_init(app: Sanic, loop: asyncio.BaseEventLoop):
+async def server_cleanup(app: Sanic, loop: asyncio.BaseEventLoop):
     await app.ctx.client_session.close()
 
 
@@ -274,7 +310,8 @@ async def soft_reset(req):
     logging.getLogger(__name__).warning("key = {}".format(req.args.get('key')))
     logging.getLogger(__name__).warning("expected = {}".format(application.ctx.soft_restart_token))
     if req.args.get('key') == application.ctx.soft_restart_token:
-        await application.dispatch('kontext.internal.reset')
+        with plugins.runtime.DB as db:
+            await db.publish(SIGNAL_CHANNEL_ID, 'kontext.internal.reset')
         return json(dict(ok=True))
     else:
         raise NotFound()
@@ -282,7 +319,8 @@ async def soft_reset(req):
 
 async def sigusr1_handler():
     logging.getLogger(__name__).warning('Caught signal SIGUSR1')
-    await application.dispatch('kontext.internal.reset')
+    with plugins.runtime.DB as db:
+        await db.publish(SIGNAL_CHANNEL_ID, 'kontext.internal.reset')
 
 
 def get_locale(request: Request) -> str:
@@ -335,7 +373,15 @@ if __name__ == '__main__':
     parser.add_argument(
         '--debugpy', action='store_true', default=False, help='Use debugpy for debugging')
     parser.add_argument('--debugmode', action='store_true', default=False, help='Force debug mode')
+    parser.add_argument('--soft-reset', action='store_true', default=False,
+                        help='Only publish soft reset signal')
     args = parser.parse_args()
+
+    if args.soft_reset:
+        with plugins.runtime.DB as db:
+            asyncio.run(db.publish(SIGNAL_CHANNEL_ID, 'kontext.internal.reset'))
+            print('Soft reset signal published')
+        sys.exit(0)
 
     if args.debugpy:
         if '_DEBUGPY_RUNNING' not in os.environ:
