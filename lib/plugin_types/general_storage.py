@@ -17,7 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import abc
-from typing import Dict, List
+from typing import Awaitable, Callable, Dict, List
 
 from plugin_types.common import Serializable
 
@@ -267,3 +267,9 @@ class KeyValueStorage(abc.ABC):
         Return the current instance of the plug-in
         """
         return self
+
+    async def subscribe_task(self, channel_id: str, handler: Callable[[str], Awaitable[bool]]):
+        raise NotImplementedError
+
+    async def publish(self, channel_id: str, msg: str):
+        raise NotImplementedError

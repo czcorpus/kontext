@@ -26,7 +26,12 @@ This plug-in should be able to handle high-load installations without any proble
 required XML: please see config.rng
 """
 
+import asyncio
+import logging
+from typing import Awaitable, Callable
+
 import aioredis
+import async_timeout
 import ujson as json
 from plugin_types.general_storage import KeyValueStorage
 
@@ -263,6 +268,32 @@ class RedisDb(KeyValueStorage):
 
     async def keys(self, pattern: str = '*'):
         return [key.decode() for key in await self._redis.keys(pattern)]
+
+    async def subscribe_task(self, channel_id: str, handler: Callable[[str], Awaitable[bool]]):
+        psub = self._redis.pubsub()
+        async with psub as channel:
+            await channel.subscribe(channel_id)
+            while True:
+                try:
+                    async with async_timeout.timeout(1):
+                        message = await channel.get_message(ignore_subscribe_messages=True)
+                        if message is not None:
+                            msg = message['data'].decode()
+                            try:
+                                logging.debug(
+                                    "Pubsub message received: channel=`%s` message=`%s`", channel_id, message['data'])
+                                if await handler(msg):
+                                    break
+                            except KeyError:
+                                logging.debug("Undefined pubsub handler `%s`", msg)
+                        await asyncio.sleep(0.01)
+                except asyncio.TimeoutError:
+                    pass
+            await channel.unsubscribe(channel_id)
+        await psub.close()
+
+    async def publish(self, channel_id: str, msg: str):
+        await self._redis.publish(channel_id, msg)
 
 
 def create_instance(conf):

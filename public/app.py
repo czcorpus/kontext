@@ -56,6 +56,7 @@ DFLT_HTTP_CLIENT_TIMEOUT = 20
 # a file for storing soft-reset token (the stored value is auto-generated on each (re)start)
 SOFT_RESET_TOKEN_FILE = os.path.join(
     tempfile.gettempdir(), 'kontext_srt', hashlib.sha1(CONF_PATH.encode()).hexdigest())
+SIGNAL_CHANNEL_ID = "channel:signals"
 
 from typing import Optional
 
@@ -215,22 +216,28 @@ async def server_init(app: Sanic, loop: asyncio.BaseEventLoop):
 
 
 @application.listener('after_server_start')
-async def run_checker(app: Sanic, loop: asyncio.BaseEventLoop):
-    async def event_checker():
-        while True:
-            logging.getLogger(__name__).debug("Checking events...")
-            await asyncio.sleep(5)
+async def run_receiver(app: Sanic, loop: asyncio.BaseEventLoop):
+    async def receiver():
+        # signal handler propagates received signals between all Sanic workers
+        async def signal_handler(msg: str):
+            await app.dispatch(msg)
+            return False  # returns if receiver should stop
 
-    logging.getLogger(__name__).debug("Starting event checker of %s", app.m.name)
-    app.ctx.checker = loop.create_task(event_checker(), name=app.m.name)
+        with plugins.runtime.DB as db:
+            await db.subscribe_task(SIGNAL_CHANNEL_ID, signal_handler)
+            logging.getLogger(__name__).debug(
+                "Worker `%s` subscribed to `%s`", app.m.pid, SIGNAL_CHANNEL_ID)
+
+    logging.getLogger(__name__).debug("Starting receiver %s", app.m.pid)
+    app.ctx.receiver = loop.create_task(receiver(), name=app.m.pid)
 
 
 @application.listener('before_server_stop')
-async def stop_checker(app: Sanic, loop: asyncio.BaseEventLoop):
-    if app.ctx.checker:
+async def stop_receiver(app: Sanic, loop: asyncio.BaseEventLoop):
+    if app.ctx.receiver:
         logging.getLogger(__name__).debug(
-            "Stopping event checker of %s", app.ctx.checker.get_name())
-        app.ctx.checker.cancel()
+            "Stopping receiver %s", app.ctx.receiver.get_name())
+        app.ctx.receiver.cancel()
 
 
 @application.listener('after_server_stop')
@@ -293,7 +300,8 @@ async def soft_reset(req):
     logging.getLogger(__name__).warning("key = {}".format(req.args.get('key')))
     logging.getLogger(__name__).warning("expected = {}".format(application.ctx.soft_restart_token))
     if req.args.get('key') == application.ctx.soft_restart_token:
-        await application.dispatch('kontext.internal.reset')
+        with plugins.runtime.DB as db:
+            await db.publish(SIGNAL_CHANNEL_ID, 'kontext.internal.reset')
         return json(dict(ok=True))
     else:
         raise NotFound()
@@ -301,7 +309,8 @@ async def soft_reset(req):
 
 async def sigusr1_handler():
     logging.getLogger(__name__).warning('Caught signal SIGUSR1')
-    await application.dispatch('kontext.internal.reset')
+    with plugins.runtime.DB as db:
+        await db.publish(SIGNAL_CHANNEL_ID, 'kontext.internal.reset')
 
 
 def get_locale(request: Request) -> str:
