@@ -962,6 +962,6 @@
         "kwords__undefined_value_explained": "Due to the zero frequency in the reference corpus, the corresponding calculation cannot be applied UNTRANSLATED",
         "kwords__max_list_size_explained_{limit}": "The result list is limited to at most {limit, plural, one{# item} few{# items} other{# items}} UNTRANSLATED",
         "kwords__no_result": "No matching result",
-        "kwords__query_again": "Query again UNTRANSLATED"
+        "kwords__query_again": "modify the query UNTRANSLATED"
     }
 }
