@@ -107,12 +107,18 @@ export function init({
         const buildQ = (value:string) => `aword,[${props.attr}="${value}"]`;
 
         if (props.data.length === 0) {
-            return <S.KeywordsResult>
-                <p className="no-result">
-                    {he.translate('kwords__no_result')}<br/>
-                    <a href={he.createActionLink('keywords/form', {q: `~${props.queryId}`})}>Zadat znovu</a>
-                </p>
-            </S.KeywordsResult>
+            return (
+                <S.KeywordsResult>
+                    <p className="no-result">
+                        <strong>{he.translate('kwords__no_result')}</strong>
+                    </p>
+                    <p className="modify">
+                        (<a href={he.createActionLink('keywords/form', {q: `~${props.queryId}`})}>
+                            {he.translate('kwords__query_again')}
+                        </a>)
+                    </p>
+                </S.KeywordsResult>
+            );
         }
         return (
             <S.KeywordsResult>

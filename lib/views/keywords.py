@@ -48,13 +48,14 @@ async def form(amodel: KeywordsActionModel, req: KRequest, _: KResponse):
         MainMenu.VIEW, MainMenu.FILTER, MainMenu.FREQUENCY,
         MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
     out = {}
-    amodel.set_curr_kwform_args(
-        KeywordsFormArgs(
-            ref_corpname=req.args.get('ref_corpname'),
-            ref_usesubcorp=req.args.get('ref_usesubcorp'),
-            wlattr='',
-            wlpat='',
-            score_type='din'))
+    if amodel.curr_kwform_args is None:
+        amodel.set_curr_kwform_args(
+            KeywordsFormArgs(
+                ref_corpname=req.args.get('ref_corpname'),
+                ref_usesubcorp=req.args.get('ref_usesubcorp'),
+                wlattr='',
+                wlpat='',
+                score_type='din'))
     await amodel.export_subcorpora_list(out)
     amodel.export_form_args(out)
 

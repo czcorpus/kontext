@@ -60,11 +60,18 @@ export const KeywordsResult = styled.form`
         margin: 1em;
     }
 
-    .no-result {
+    p.no-result {
+        text-align: center;
         margin: 1em;
         padding-top: 2em;
-        padding-bottom: 2em;
+        padding-bottom: 0;
         font-size: 120%;
+    }
+
+    p.modify {
+        text-align: center;
+        margin-top: 0.4em;
+        margin-bottom: 3.5em;
     }
 `;
 

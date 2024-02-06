@@ -249,7 +249,8 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
                 state.availAttrs = List.filter(
                     v => List.findIndex(x => x.n === v.n, state.focusCorpusAttrs) > -1,
                     action.payload.attrList
-                )
+                );
+                state.attr = List.head(state.availAttrs).n;
             },
             (state, action, dispatch) => {
                 this.layoutModel.getHistory().pushState(
