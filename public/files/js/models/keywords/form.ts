@@ -42,6 +42,7 @@ export interface KeywordsFormState {
     refCorp:string;
     refSubcorp:string;
     attr:string;
+    focusCorpusAttrs:Array<AttrItem>;
     availAttrs:Array<AttrItem>;
     pattern:string;
     scoreType:ScoreType;
@@ -66,6 +67,7 @@ export interface KeywordsFormModelArgs {
     layoutModel:PageModel;
     refWidgetId:string;
     availAttrs:Array<AttrItem>;
+    focusCorpusAttrs:Array<AttrItem>;
     initialArgs:{
         ref_corpname:string;
         ref_usesubcorp:string;
@@ -97,7 +99,8 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
         layoutModel,
         initialArgs,
         refWidgetId,
-        availAttrs
+        availAttrs,
+        focusCorpusAttrs
     }:KeywordsFormModelArgs) {
         super(
             dispatcher,
@@ -112,6 +115,7 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
                 wlMaxFreqInput: newFormValue('', true),
                 precalcTasks: [],
                 availAttrs,
+                focusCorpusAttrs,
                 manateeIsCustomCNC: layoutModel.getConf<boolean>('manateeIsCustomCNC'),
             }
         );
@@ -237,11 +241,34 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
         );
 
         this.addActionSubtypeHandler(
-            CorparchActions.WidgetCorpusChange,
+            CorparchActions.SecondaryCorpusChange,
             action => action.payload.widgetId === this.refWidgetId,
             (state, action) => {
                 state.refCorp = action.payload.corpusIdent.id;
                 state.refSubcorp = action.payload.corpusIdent.usesubcorp;
+                state.availAttrs = List.filter(
+                    v => List.findIndex(x => x.n === v.n, state.focusCorpusAttrs) > -1,
+                    action.payload.attrList
+                )
+            },
+            (state, action, dispatch) => {
+                this.layoutModel.getHistory().pushState(
+                    this.layoutModel.getConf<string>('currentAction'),
+                    {
+                        corpname: this.layoutModel.getCorpusIdent().id,
+                        usesubcorp: this.layoutModel.getCorpusIdent().subcName || undefined,
+                        ref_corpname: state.refCorp,
+                        ref_usesubcorp: state.refSubcorp || undefined
+                    },
+                    {
+                        onPopStateAction: {
+                            name: CorparchActions.SecondaryCorpusChange,
+                            payload: {
+                                ...action.payload, isPopState: true
+                            }
+                        }
+                    }
+                )
             }
         );
 

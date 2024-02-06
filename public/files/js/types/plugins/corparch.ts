@@ -140,7 +140,7 @@ export interface IPlugin extends IUnregistrable, BasePlugin {
     createWidget(
         widgetId:string,
         serverAction:string,
-        onCorpusSelection?:CorpusSelectionHandler,
+        onCorpusSelection:CorpusSelectionHandler,
         initialData?:InitialWidgetData,
     ):React.ComponentClass<{widgetId:string}>;
 
@@ -148,10 +148,11 @@ export interface IPlugin extends IUnregistrable, BasePlugin {
 }
 
 export class Actions {
-    static WidgetCorpusChange:Action<{
+    static SecondaryCorpusChange:Action<{
         widgetId:string;
         corpusIdent:FullCorpusIdent;
         availableSubcorpora:Array<SubcorpListItem>;
+        attrList:Array<Kontext.AttrItem>;
     }> = {
         name: 'DEFAULT_CORPARCH_WIDGET_CORPUS_CHANGE'
     };

@@ -626,7 +626,7 @@ class CorpusActionModel(UserActionModel):
     def get_struct_opts(self) -> str:
         """
         Returns structures and structural attributes the current concordance should display.
-        Note: current solution is little bit confusing - there are two overlapping parameters
+        Note: current solution is a bit confusing - there are two overlapping parameters
         here: structs & structattrs where the former is the one used in URL and the latter
         stores user's persistent settings (but can be also passed via URL with some limitations).
         """

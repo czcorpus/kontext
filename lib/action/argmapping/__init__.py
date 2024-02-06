@@ -204,7 +204,6 @@ class Args(UserActionArgs):
     usearf: int = field(default=0, metadata=mk_metdata())
     collpage: int = field(default=1, metadata=mk_metdata())
     fpage: int = field(default=1, metadata=mk_metdata())
-    ref_usesubcorp: str = field(default='', metadata=mk_metdata())
     wlsort: str = field(default='', metadata=mk_metdata())
     keywords: str = field(default='', metadata=mk_metdata())
     Keywords: List[str] = field(default_factory=list, metadata=mk_metdata())

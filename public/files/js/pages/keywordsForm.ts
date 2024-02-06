@@ -27,8 +27,10 @@ import createCorparch from 'plugins/corparch/init';
 import { KeywordsFormModel } from '../models/keywords/form';
 import { init as viewInit } from '../views/keywords/form';
 import { Actions as GlobalActions } from '../models/common/actions';
+import { Actions as CorparchActions } from '../types/plugins/corparch';
 import { Root } from 'react-dom/client';
 import { KeywordsSubmitArgs } from '../models/keywords/common';
+import { HTTP, List } from 'cnc-tskit';
 
 
 /**
@@ -82,7 +84,8 @@ export class KeywordsFormPage {
                 layoutModel: this.layoutModel,
                 initialArgs: kwForm,
                 refWidgetId: refCorpWidgetId,
-                availAttrs: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList')
+                availAttrs: this.layoutModel.getConf<Array<Kontext.AttrItem>>('CommonAttrList'),
+                focusCorpusAttrs: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList')
             });
             const view = viewInit({
                 dispatcher: this.layoutModel.dispatcher,
@@ -93,7 +96,46 @@ export class KeywordsFormPage {
                 RefCorpWidget: this.refCorparchPlugin.createWidget(
                     refCorpWidgetId,
                     'keywords/form',
-                    undefined,
+                    (corpora:Array<string>, subcorpId:string) => {
+                        const args = {corpname: List.head(corpora)};
+                        if (subcorpId) {
+                            args['usesubcorp'] = subcorpId;
+                        }
+                        this.layoutModel.ajax$<{
+                            corpusIdent:Kontext.FullCorpusIdent;
+                            availableSubcorpora:Array<Kontext.SubcorpListItem>;
+                            attrList:Array<Kontext.AttrItem>;
+                        }>(
+                            HTTP.Method.GET,
+                            this.layoutModel.createActionUrl('corpora/ajax_get_corparch_item'),
+                            args,
+                        ).subscribe({
+                            next: data => {
+                                this.layoutModel.dispatcher.dispatch(
+                                    CorparchActions.SecondaryCorpusChange,
+                                    {
+                                        widgetId: refCorpWidgetId,
+                                        corpusIdent: data.corpusIdent,
+                                        availableSubcorpora: data.availableSubcorpora,
+                                        attrList: data.attrList
+                                    }
+                                );
+                            },
+                            error: err => {
+                                this.layoutModel.showMessage('error', err);
+                                this.layoutModel.dispatcher.dispatch(
+                                    CorparchActions.SecondaryCorpusChange,
+                                    {
+                                        widgetId: refCorpWidgetId,
+                                        corpusIdent: undefined,
+                                        availableSubcorpora: undefined,
+                                        attrList: []
+                                    },
+                                    err,
+                                );
+                            }
+                        });
+                    },
                     {
                         corpusIdent: this.layoutModel.getConf<Kontext.FullCorpusIdent>('refCorpusIdent'),
                         availableSubcorpora: this.layoutModel.getConf<Array<Kontext.SubcorpListItem>>('availableRefSubcorpora'),
