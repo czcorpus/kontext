@@ -181,4 +181,9 @@ async def ajax_get_corparch_item(amodel: CorpusActionModel, req: KRequest, resp:
         searchSize=amodel.corp.search_size,
     )
     out['availableSubcorpora'] = await amodel.get_subcorpora_list(amodel.corp)
+    out['attrList'] = [{
+        'label': amodel.corp.get_conf(f'{n}.LABEL') or n,
+        'n': n,
+        'multisep': amodel.corp.get_conf(f'{n}.MULTISEP'),
+    } for n in amodel.corp.get_posattrs()]
     return out

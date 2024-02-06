@@ -261,14 +261,11 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusyButton = true;
-                if (this.onItemClickDefined()) {
-                    this.onItemClick([state.corpusIdent.id], action.payload.subcorpus);
-                }
+
             },
             (state, action, dispatch) => {
-                if (!this.onItemClickDefined()) {
-                    this.defaultOnItemClick(dispatch, [state.corpusIdent.id], action.payload.subcorpus);
-                }
+                this.onItemClick([state.corpusIdent.id], action.payload.subcorpus);
+
             }
         )
 
@@ -634,7 +631,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         );
 
         this.addActionSubtypeHandler(
-            CorparchActions.WidgetCorpusChange,
+            CorparchActions.SecondaryCorpusChange,
             action => action.payload.widgetId === this.widgetId,
             (state, action) => {
                 state.isBusyButton = false;
@@ -814,11 +811,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         const item = state.dataFav.find(item => item.id === itemId);
         if (item !== undefined) {
             const corpora = List.map(x => x.id, item.corpora);
-            if (this.onItemClickDefined()) {
-                this.onItemClick(corpora, item.subcorpus_id);
-            } else {
-                this.defaultOnItemClick(dispatch, corpora, item.subcorpus_id);
-            }
+            this.onItemClick(corpora, item.subcorpus_id);
 
         } else {
             throw new Error(`Favorite item ${itemId} not found`);
@@ -828,11 +821,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
     private handleFeatItemClick(dispatch:SEDispatcher, state:CorplistWidgetModelState, itemId:string):void {
         const item = state.dataFeat.find(item => item.id === itemId);
         if (item !== undefined) {
-            if (this.onItemClickDefined()) {
-                this.onItemClick([item.corpus_id], item.subcorpus_id);
-            } else {
-                this.defaultOnItemClick(dispatch, [item.corpus_id], item.subcorpus_id);
-            }
+            this.onItemClick([item.corpus_id], item.subcorpus_id);
 
         } else {
             throw new Error(`Featured item ${itemId} not found`);
@@ -842,11 +831,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
     private handleSearchItemClick(dispatch:SEDispatcher, state:CorplistWidgetModelState, itemId:string):void {
         const item = state.currSearchResult.find(item => item.id === itemId);
         if (item !== undefined) {
-            if (this.onItemClickDefined()) {
-                this.onItemClick([item.id], '');
-            } else {
-                this.defaultOnItemClick(dispatch, [item.id], null);
-            }
+            this.onItemClick([item.id], '');
 
         } else {
             throw new Error(`Clicked item ${itemId} not found in search results`);
@@ -919,42 +904,4 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         }
     }
 
-    private defaultOnItemClick(dispatch:SEDispatcher, corpora:Array<string>, usesubcorp:string) {
-        const args = {corpname: List.head(corpora)};
-        if (usesubcorp) {
-            args['usesubcorp'] = usesubcorp;
-        }
-        this.pluginApi.ajax$<{corpusIdent:Kontext.FullCorpusIdent, availableSubcorpora:Array<Kontext.SubcorpListItem>}>(
-            HTTP.Method.GET,
-            this.pluginApi.createActionUrl('corpora/ajax_get_corparch_item'),
-            args,
-        ).subscribe({
-            next: data => {
-                dispatch(
-                    CorparchActions.WidgetCorpusChange,
-                    {
-                        widgetId: this.widgetId,
-                        corpusIdent: data.corpusIdent,
-                        availableSubcorpora: data.availableSubcorpora,
-                    }
-                );
-            },
-            error: err => {
-                this.pluginApi.showMessage('error', err);
-                dispatch(
-                    CorparchActions.WidgetCorpusChange,
-                    {
-                        widgetId: this.widgetId,
-                        corpusIdent: undefined,
-                        availableSubcorpora: undefined,
-                    },
-                    err,
-                );
-            }
-        });
-    }
-
-    private onItemClickDefined():boolean {
-        return this.onItemClick !== undefined;
-    }
 }

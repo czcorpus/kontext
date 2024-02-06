@@ -43,21 +43,28 @@ KW_MAX_LIST_SIZE = 1000
 
 @bp.route('/form')
 @http_action(access_level=2, template='keywords/form.html', page_model='keywordsForm', action_model=KeywordsActionModel)
-async def form(amodel: KeywordsActionModel, _: KRequest, __: KResponse):
+async def form(amodel: KeywordsActionModel, req: KRequest, _: KResponse):
     amodel.disabled_menu_items = (
         MainMenu.VIEW, MainMenu.FILTER, MainMenu.FREQUENCY,
         MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
     out = {}
+    amodel.set_curr_kwform_args(
+        KeywordsFormArgs(
+            ref_corpname=req.args.get('ref_corpname'),
+            ref_usesubcorp=req.args.get('ref_usesubcorp'),
+            wlattr='',
+            wlpat='',
+            score_type='din'))
     await amodel.export_subcorpora_list(out)
     amodel.export_form_args(out)
 
     # initial reference corpus data
-    if out['keywords_form'] is not None and out['keywords_form']['ref_corpname']:
-        if out['keywords_form']['ref_usesubcorp']:
+    if amodel.curr_kwform_args.ref_corpname:
+        if amodel.curr_kwform_args.ref_usesubcorp:
             ref_corp_id = SubcorpusIdent(
-                out['keywords_form']['ref_usesubcorp'], out['keywords_form']['ref_corpname'])
+                amodel.curr_kwform_args.ref_usesubcorp, amodel.curr_kwform_args.ref_corpname)
         else:
-            ref_corp_id = out['keywords_form']['ref_corpname']
+            ref_corp_id = amodel.curr_kwform_args.ref_corpname
     else:
         ref_corp_id = amodel.corp.corpname
     ref_corp = await amodel.plugin_ctx.corpus_factory.get_corpus(ref_corp_id)
@@ -72,6 +79,13 @@ async def form(amodel: KeywordsActionModel, _: KRequest, __: KResponse):
         searchSize=ref_corp.search_size,
     )
     out['available_ref_subcorpora'] = await amodel.get_subcorpora_list(ref_corp)
+    cattrs = set(amodel.corp.get_posattrs())
+    cattrs = cattrs.intersection(set(ref_corp.get_posattrs()))
+    out['CommonAttrList'] = [{
+        'label': amodel.corp.get_conf(f'{n}.LABEL') or n,
+        'n': n,
+        'multisep': amodel.corp.get_conf(f'{n}.MULTISEP'),
+    } for n in cattrs]
     return out
 
 

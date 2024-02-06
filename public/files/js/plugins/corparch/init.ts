@@ -54,7 +54,7 @@ export class Plugin implements PluginInterfaces.Corparch.IPlugin {
     createWidget(
         widgetId:string,
         _:string,
-        onCorpusSelection?:PluginInterfaces.Corparch.CorpusSelectionHandler,
+        onCorpusSelection:PluginInterfaces.Corparch.CorpusSelectionHandler,
         initialData?:InitialWidgetData,
     ):React.ComponentClass<{widgetId:string}> {
 
