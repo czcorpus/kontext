@@ -218,6 +218,11 @@ class SetupManatee(InstallationStep):
             ['make', 'install'], cwd=src_working_dir, stdout=self.stdout)
         subprocess.check_call(['ldconfig'], stdout=self.stdout)
 
+        # for some reason newer versions of python manatee libs are installed in wrong path
+        if os.path.exists("/usr/local/local/lib"):
+            subprocess.check_call(['cp', '/usr/local/local/lib/*',
+                                   '/usr/local/lib'], stdout=self.stdout)
+
         if make_symlinks:
             lib_path = [path for path in sys.path if path.startswith(
                 '/usr/local/lib/python3') and path.endswith('dist-packages')][0]
