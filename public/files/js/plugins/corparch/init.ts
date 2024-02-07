@@ -57,7 +57,6 @@ export class Plugin implements PluginInterfaces.Corparch.IPlugin {
         onCorpusSelection:PluginInterfaces.Corparch.CorpusSelectionHandler,
         initialData?:InitialWidgetData,
     ):React.ComponentClass<{widgetId:string}> {
-
         const pluginData = this.pluginApi.getConf<any>('pluginData')['corparch'] || {}; // TODO type
         const favData:Array<ServerFavlistItem> = pluginData['favorite'] || [];
         const featData = pluginData['featured'] || [];

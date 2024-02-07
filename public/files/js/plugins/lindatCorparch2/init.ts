@@ -28,6 +28,7 @@ import { CorplistTableModel } from './corplist';
 import * as common from './common';
 import { SearchEngine } from './search';
 import { IPluginApi } from '../../types/plugins/common';
+import { InitialWidgetData } from '../../types/plugins/corparch';
 
 declare var require:any;
 require('./style.css'); // webpack
@@ -58,7 +59,8 @@ export class Plugin implements PluginInterfaces.Corparch.IPlugin {
     createWidget(
         widgetId:string,
         targetAction:string,
-        onCorpusSelection:PluginInterfaces.Corparch.CorpusSelectionHandler
+        onCorpusSelection:PluginInterfaces.Corparch.CorpusSelectionHandler,
+        initialData?:InitialWidgetData
     ):React.ComponentClass<{widgetId:string}> {
 
         const pluginData = this.pluginApi.getConf<any>('pluginData')['corparch'] || {}; // TODO type
