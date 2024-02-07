@@ -93,10 +93,15 @@ async def query(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 
     corp_info = await amodel.get_corpus_info(amodel.args.corpname)
     if not corp_info.preflight_subcorpus and amodel.corp.size >= PREFLIGHT_MIN_LARGE_CORPUS:
-        psubc_id = await amodel.create_preflight_subcorpus()
-        logging.getLogger(__name__).warning(
-            f'created missing preflight corpus {amodel.corp.corpname}/{psubc_id}')
-        corp_info = await amodel.get_corpus_info(amodel.args.corpname)
+        try:
+            psubc_id = await amodel.create_preflight_subcorpus()
+        except NotImplementedError:
+            logging.getLogger(__name__).warning(
+                f'Subc corp archive plugin does not implement `create_preflight` method. Functionality disabled.')
+        else:
+            logging.getLogger(__name__).warning(
+                f'created missing preflight corpus {amodel.corp.corpname}/{psubc_id}')
+            corp_info = await amodel.get_corpus_info(amodel.args.corpname)
     out['alt_corp'] = corp_info.alt_corp
 
     out['text_types_notes'] = corp_info.metadata.desc
@@ -445,6 +450,7 @@ async def view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     asnc = int(req.args.get('asnc')) if 'asnc' in req.args else 0
     return await view_conc(
         amodel, req, resp, asnc, req.session_get('user', 'id'))
+
 
 @bp.route('/create_view')
 @http_action(mutates_result=True, template='view.html', page_model='view', action_log_mapper=log_mapping.view, action_model=ConcActionModel)

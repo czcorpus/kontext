@@ -90,7 +90,6 @@ class AbstractSubcArchive(abc.ABC):
         the proper path is passed here. Also creates real subcorpus from draft.
         """
 
-    @abc.abstractmethod
     async def create_preflight(self, subc_root_dir, corpname) -> str:
         """
         Create a preflight subcorpus with defined size (ignoring corpus structures etc.).
@@ -99,6 +98,7 @@ class AbstractSubcArchive(abc.ABC):
             subc_root_dir -- a global root directory for all subcorpora
             corpname -- a source corpus ID
         """
+        raise NotImplementedError
 
     @abc.abstractmethod
     async def update_draft(self, ident: str, author: UserInfo, size: int, public_description: str, data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs], aligned: List[str]):
