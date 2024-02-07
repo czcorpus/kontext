@@ -52,7 +52,8 @@ REQUIREMENTS = [
     'parallel',
     'locales-all',
     'sox',
-    'bison'
+    'bison',
+    'libcairo2',
 ]
 
 
