@@ -60,11 +60,12 @@ def _subc_from_row(row: Dict) -> SubcorpusRecord:
         created=datetime.fromtimestamp(row['created']),
         public_description=k_markdown(row['public_description']),
         public_description_raw=row['public_description'],
+        version=row['version'],
         archived=None if row['archived'] is None else datetime.fromtimestamp(row['archived']),
         cql=row['cql'],
         within_cond=json.loads(row['within_cond']) if row['within_cond'] else None,
         text_types=json.loads(row['text_types']) if row['text_types'] else None,
-        aligned=json.loads(row['aligned']) if row['aligned'] else None,
+        aligned=json.loads(row['aligned']) if row['aligned'] else [],
     )
 
 
@@ -103,7 +104,8 @@ class SQLiteSubcArchive(AbstractSubcArchive):
                     text_types TEXT,
                     created REAL NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     archived REAL NULL,
-                    public_description TEXT
+                    public_description TEXT,
+                    version INTEGER NOT NULL DEFAULT 3
                 )
             ''')
             self._db.commit()

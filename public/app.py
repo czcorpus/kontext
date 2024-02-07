@@ -232,7 +232,7 @@ async def run_receiver(app: Sanic, loop: asyncio.BaseEventLoop):
     logging.getLogger(__name__).debug("Starting receiver %s", app.m.pid)
     receiver = loop.create_task(receiver(), name=app.m.pid)
     # wait so receiver gains controll and can raise exception
-    await asyncio.sleep(0)
+    await asyncio.sleep(0.1)
     try:
         receiver.result()
     except NotImplementedError:
