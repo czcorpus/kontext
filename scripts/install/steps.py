@@ -220,8 +220,7 @@ class SetupManatee(InstallationStep):
 
         # for some reason newer versions of python manatee libs are installed in wrong path
         if os.path.exists("/usr/local/local/lib"):
-            subprocess.check_call(['cp', '/usr/local/local/lib/*',
-                                   '/usr/local/lib'], stdout=self.stdout)
+            subprocess.check_call(['cp', '-r', '/usr/local/local/lib', '/usr/local'])
 
         if make_symlinks:
             lib_path = [path for path in sys.path if path.startswith(
