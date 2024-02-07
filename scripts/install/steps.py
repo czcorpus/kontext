@@ -244,7 +244,6 @@ class SetupManatee(InstallationStep):
         create_directory('/var/lib/manatee/registry')
         create_directory('/var/lib/manatee/vert')
         create_directory('/var/lib/manatee/data/susanne')
-        create_directory('/var/local/corpora/user_filter_files')
 
         replace_string_in_file('/usr/local/src/susanne-example-source/config',
                                'PATH susanne', 'PATH /var/lib/manatee/data/susanne')
