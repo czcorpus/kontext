@@ -279,13 +279,10 @@ class RedisDb(KeyValueStorage):
                         message = await channel.get_message(ignore_subscribe_messages=True)
                         if message is not None:
                             msg = message['data'].decode()
-                            try:
-                                logging.debug(
-                                    "Pubsub message received: channel=`%s` message=`%s`", channel_id, message['data'])
-                                if await handler(msg):
-                                    break
-                            except KeyError:
-                                logging.debug("Undefined pubsub handler `%s`", msg)
+                            logging.debug(
+                                "Pubsub message received: channel=`%s` message=`%s`", channel_id, message['data'])
+                            if await handler(msg):
+                                break
                         await asyncio.sleep(0.01)
                 except asyncio.TimeoutError:
                     pass
