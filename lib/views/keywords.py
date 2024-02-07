@@ -54,7 +54,7 @@ async def form(amodel: KeywordsActionModel, req: KRequest, _: KResponse):
                 ref_corpname=req.args.get('ref_corpname'),
                 ref_usesubcorp=req.args.get('ref_usesubcorp'),
                 wlattr='',
-                wlpat='',
+                wlpat='.*',
                 score_type='din'))
     await amodel.export_subcorpora_list(out)
     amodel.export_form_args(out)
