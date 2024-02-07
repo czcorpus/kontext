@@ -220,8 +220,8 @@ class SetupManatee(InstallationStep):
 
         # for some reason newer versions of python manatee libs are installed in wrong path
         if os.path.exists("/usr/local/local/lib"):
-            subprocess.check_call(['cp', '/usr/local/local/lib/*',
-                                   '/usr/local/lib'], stdout=self.stdout)
+            subprocess.check_call(['cp', '-r', '/usr/local/local/lib',
+                                   '/usr/local'], stdout=self.stdout)
 
         if make_symlinks:
             lib_path = [path for path in sys.path if path.startswith(
@@ -244,7 +244,6 @@ class SetupManatee(InstallationStep):
         create_directory('/var/lib/manatee/registry')
         create_directory('/var/lib/manatee/vert')
         create_directory('/var/lib/manatee/data/susanne')
-        create_directory('/var/local/corpora/user_filter_files')
 
         replace_string_in_file('/usr/local/src/susanne-example-source/config',
                                'PATH susanne', 'PATH /var/lib/manatee/data/susanne')
@@ -284,6 +283,7 @@ class SetupKontext(InstallationStep):
                                '/opt/kontext', self.kontext_path)
 
         # create directories, set permissions
+        create_directory('/var/local/corpora', WEBSERVER_USER, WEBSERVER_USER)
         create_directory('/var/local/corpora/registry', WEBSERVER_USER, WEBSERVER_USER)
         create_directory('/var/local/corpora/cache', WEBSERVER_USER, WEBSERVER_USER, 0o2775)
         create_directory('/var/local/corpora/subcorp', WEBSERVER_USER, WEBSERVER_USER, 0o2775)
