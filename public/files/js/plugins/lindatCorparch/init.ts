@@ -26,6 +26,7 @@ import { IPluginApi } from '../../types/plugins/common';
 import { TreeWidgetModel } from './model';
 import { Views as CorplistViews, init as corplistViewInit } from './view';
 import { init as widgetViewInit } from './widget';
+import { InitialWidgetData } from '../../types/plugins/corparch';
 
 
 export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage  {
@@ -88,7 +89,8 @@ export class Plugin implements PluginInterfaces.Corparch.IPlugin {
     createWidget(
         widgetId:string,
         targetAction:string,
-        onCorpusSelection:PluginInterfaces.Corparch.CorpusSelectionHandler
+        onCorpusSelection:PluginInterfaces.Corparch.CorpusSelectionHandler,
+        initialData?:InitialWidgetData
     ):React.ComponentClass<{widgetId:string}> {
 
         this.treeModel = new TreeWidgetModel(

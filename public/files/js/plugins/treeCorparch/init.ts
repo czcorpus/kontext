@@ -25,6 +25,7 @@ import { List, HTTP, pipe, tuple, Dict } from 'cnc-tskit';
 import { IUnregistrable } from '../../models/common/common';
 import { Actions as GlobalActions } from '../../models/common/actions';
 import { IPluginApi } from '../../types/plugins/common';
+import { InitialWidgetData } from '../../types/plugins/corparch';
 
 
 export interface TreeResponseData extends Kontext.AjaxResponse {
@@ -220,7 +221,8 @@ class Plugin {
     createWidget(
         widgetId:string,
         _:string,
-        onCorpusSelection:PluginInterfaces.Corparch.CorpusSelectionHandler
+        onCorpusSelection:PluginInterfaces.Corparch.CorpusSelectionHandler,
+        initialData?:InitialWidgetData
     ):React.ComponentClass<{widgetId:string}> {
         this.treeModel = new TreeWidgetModel(
             this.pluginApi,

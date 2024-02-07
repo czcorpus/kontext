@@ -27,6 +27,7 @@ import { CorplistTableModel } from './corplist';
 import { Plugin as DCPlugin } from '../corparch/init';
 import { CorplistServerData } from '../corparch/corplist';
 import { IPluginApi } from '../../types/plugins/common';
+import { InitialWidgetData } from '../../types/plugins/corparch';
 
 class Plugin extends DCPlugin {
 
@@ -69,9 +70,10 @@ class Plugin extends DCPlugin {
     createWidget(
         widgetId:string,
         targetAction:string,
-        onCorpusSelection:PluginInterfaces.Corparch.CorpusSelectionHandler
+        onCorpusSelection:PluginInterfaces.Corparch.CorpusSelectionHandler,
+        initialData?:InitialWidgetData
     ):React.ComponentClass<{widgetId:string}> {
-        return super.createWidget(widgetId, targetAction, onCorpusSelection);
+        return super.createWidget(widgetId, targetAction, onCorpusSelection, initialData);
     }
 }
 
