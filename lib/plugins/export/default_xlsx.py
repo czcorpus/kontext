@@ -198,7 +198,7 @@ class XLSXExport(AbstractExport):
             self._writerow(i, (row.value, *row.freqs, sum(row.freqs)))
 
     async def write_keywords(self, amodel: KeywordsActionModel, result: KeywordsResult, args: SaveKeywordsArgs):
-        self._sheet.title = amodel.plugin_ctx.translate('Keywords analysis')
+        self._sheet.title = amodel.plugin_ctx.translate('Keyword analysis')
         if args.colheaders or args.heading:
             if isinstance(result.data[0], CNCKeywordLine):
                 self._set_col_types(int, str, float, float, float, int, int, float, float)

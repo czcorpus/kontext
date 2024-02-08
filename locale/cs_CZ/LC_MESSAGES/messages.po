@@ -564,7 +564,7 @@ msgstr "Odkaz na frekvenční tabulku v KonTextu"
 msgid "KonText user {} has sent to you a link to a frequency distribution table"
 msgstr "Uživatel KonTextu {} vám zaslal odkaz na tabulku frekvenční distribuce"
 
-msgid "Keywords analysis"
+msgid "Keyword analysis"
 msgstr "Analýza klíčových slov"
 
 msgid "noun"
