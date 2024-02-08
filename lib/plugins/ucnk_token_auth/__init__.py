@@ -138,33 +138,31 @@ class UCNKTokenAuth(AbstractRemoteTokenAuth):
     async def _fetch_toolbar_api_response(self, http_client, cookies: Dict[str, str]) -> str:
         if cookies is None:
             cookies = {}
-        async with http_client as session:
-            async with session.post(
-                    self._auth_conf.toolbar_url,
-                    cookies=cookies,
-                    timeout=self._auth_conf.toolbar_server_timeout,
-                    ssl=self._ssl_context) as response:
-                if response.status == 200:
-                    return (await response.read()).decode('utf-8')
-                else:
-                    raise Exception(
-                        f'Failed to load data from authentication server (UCNK toolbar): status {response.status}'
-                    )
+        async with http_client.post(
+                self._auth_conf.toolbar_url,
+                cookies=cookies,
+                timeout=self._auth_conf.toolbar_server_timeout,
+                ssl=self._ssl_context) as response:
+            if response.status == 200:
+                return (await response.read()).decode('utf-8')
+            else:
+                raise Exception(
+                    f'Failed to load data from authentication server (UCNK toolbar): status {response.status}'
+                )
 
     async def authenticate(self, plugin_ctx: 'PluginCtx', token_id):
-        async with plugin_ctx.request.ctx.http_client as session:
-            async with session.post(
-                    self._auth_conf.login_url,
-                    data={'personal_access_token': token_id},
-                    headers={'Content-Type': 'application/x-www-form-urlencoded'},
-                    timeout=self._auth_conf.toolbar_server_timeout,
-                    ssl=self._ssl_context) as response:
-                if response.status == 200:
-                    return dict(x_api_key=response.cookies[self._auth_conf.cookie_sid].value)
-                else:
-                    raise Exception(
-                        f'Failed to load data from authentication server (UCNK toolbar): status {response.status}'
-                    )
+        async with plugin_ctx.request.ctx.http_client.post(
+                self._auth_conf.login_url,
+                data={'personal_access_token': token_id},
+                headers={'Content-Type': 'application/x-www-form-urlencoded'},
+                timeout=self._auth_conf.toolbar_server_timeout,
+                ssl=self._ssl_context) as response:
+            if response.status == 200:
+                return dict(x_api_key=response.cookies[self._auth_conf.cookie_sid].value)
+            else:
+                raise Exception(
+                    f'Failed to load data from authentication server (UCNK toolbar): status {response.status}'
+                )
 
     async def revalidate(self, plugin_ctx: PluginCtx):
         curr_user_id = plugin_ctx.session.get('user', {'id': None})['id']

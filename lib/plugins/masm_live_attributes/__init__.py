@@ -149,20 +149,17 @@ class MasmLiveAttributes(AbstractLiveAttributes):
         if autocomplete_attr:
             json_body['autocompleteAttr'] = autocomplete_attr
         json_body['maxAttrListSize'] = self._max_attr_list_size if limit_lists else UNLIMITED_LIST_PLACEHOLDER
-        async with plugin_ctx.request.ctx.http_client as session:
-            async with session.post(urljoin(self._service_url, f'/liveAttributes/{corpus.corpname}/query'), json=json_body) as resp:
-                data = await proc_masm_response(resp)
+        async with plugin_ctx.request.ctx.http_client.post(urljoin(self._service_url, f'/liveAttributes/{corpus.corpname}/query'), json=json_body) as resp:
+            data = await proc_masm_response(resp)
         return AttrValuesResponse(**data)
 
     async def get_subc_size(self, plugin_ctx, corpora, attr_map):
         json_body = {'attrs': attr_map}
         if len(corpora) > 1:
             json_body['aligned'] = corpora[1:]
-
-        async with plugin_ctx.request.ctx.http_client as session:
-            async with session.post(urljoin(self._service_url,f'/liveAttributes/{corpora[0]}/selectionSubcSize'), json=json_body) as resp:
-                data = await proc_masm_response(resp)
-                return data['total']
+        async with plugin_ctx.request.ctx.http_client.post(urljoin(self._service_url,f'/liveAttributes/{corpora[0]}/selectionSubcSize'), json=json_body) as resp:
+            data = await proc_masm_response(resp)
+            return data['total']
 
     async def get_supported_structures(self, plugin_ctx, corpname):
         corpus_info = await self.corparch.get_corpus_info(plugin_ctx, corpname)
@@ -170,59 +167,54 @@ class MasmLiveAttributes(AbstractLiveAttributes):
         return [id_attr.split('.')[0]] if id_attr else []
 
     async def get_bibliography(self, plugin_ctx, corpus, item_id):
-        async with plugin_ctx.request.ctx.http_client as session:
-            async with session.post(urljoin(self._service_url,f'/liveAttributes/{corpus.corpname}/getBibliography'), json={'itemId': item_id}) as resp:
-                data = await proc_masm_response(resp)
-                return list(data.items())
+        async with plugin_ctx.request.ctx.http_client.post(urljoin(self._service_url,f'/liveAttributes/{corpus.corpname}/getBibliography'), json={'itemId': item_id}) as resp:
+            data = await proc_masm_response(resp)
+            return list(data.items())
 
     async def find_bib_titles(self, plugin_ctx, corpus_id, id_list) -> List[BibTitle]:
-        async with plugin_ctx.request.ctx.http_client as session:
-            async with session.post(urljoin(self._service_url,f'/liveAttributes/{corpus_id}/findBibTitles'), json={'itemIds': id_list}) as resp:
-                data = await proc_masm_response(resp)
-                return [BibTitle(item_id, data[item_id]) for item_id in id_list]
+        async with plugin_ctx.request.ctx.http_client.post(urljoin(self._service_url,f'/liveAttributes/{corpus_id}/findBibTitles'), json={'itemIds': id_list}) as resp:
+            data = await proc_masm_response(resp)
+            return [BibTitle(item_id, data[item_id]) for item_id in id_list]
 
     async def fill_attrs(self, plugin_ctx, corpus_id, search, values, fill):
         json_body = {'search': search, 'values': values, 'fill': fill}
-        async with plugin_ctx.request.ctx.http_client as session:
-            async with session.post(urljoin(self._service_url,f'/liveAttributes/{corpus_id}/fillAttrs'), json=json_body) as resp:
-                return await proc_masm_response(resp)
+        async with plugin_ctx.request.ctx.http_client.post(urljoin(self._service_url,f'/liveAttributes/{corpus_id}/fillAttrs'), json=json_body) as resp:
+            return await proc_masm_response(resp)
 
     def _mk_doclist_cache_file_path(self, attr_map, aligned_corpora, view_attrs, save_format: str) -> str:
         file_path = '{}.{}'.format(mk_cache_key(attr_map, aligned_corpora, view_attrs), save_format)
         return os.path.join(self._doclist_cache_dir, file_path)
 
     async def document_list(self, plugin_ctx, corpus_id, view_attrs, attr_map, aligned_corpora, save_format):
-        async with plugin_ctx.request.ctx.http_client as session:
-            args = dict(attrs=attr_map, aligned=aligned_corpora)
-            attrs = urllib.parse.urlencode([('attr',  x) for x in view_attrs])
-            async with session.post(urljoin(self._service_url,f'/liveAttributes/{corpus_id}/documentList?{attrs}'), json=args) as resp:
-                data = await proc_masm_response(resp)
-                file = self._mk_doclist_cache_file_path(
-                    attr_map, aligned_corpora, view_attrs, save_format)
-                if save_format == 'csv':
-                    for i, item in enumerate(data):
-                        data[i] = DocListItem.from_dict(item)
-                    await export_csv(data, file)
-                    return file, 'text/csv'
-                if save_format == 'jsonl':
-                    for i, item in enumerate(data):
-                        data[i] = DocListItem.from_dict(item)
-                    await export_jsonl(data, file)
-                    return file, 'application/jsonl'
-                if save_format == 'xml':
-                    await export_xml(data, file)
-                    return file, 'application/xml'
-                if save_format == 'xlsx':
-                    for i, item in enumerate(data):
-                        data[i] = DocListItem.from_dict(item)
-                    await export_xlsx(data, file)
-                    return file, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        args = dict(attrs=attr_map, aligned=aligned_corpora)
+        attrs = urllib.parse.urlencode([('attr',  x) for x in view_attrs])
+        async with plugin_ctx.request.ctx.http_client.post(urljoin(self._service_url,f'/liveAttributes/{corpus_id}/documentList?{attrs}'), json=args) as resp:
+            data = await proc_masm_response(resp)
+            file = self._mk_doclist_cache_file_path(
+                attr_map, aligned_corpora, view_attrs, save_format)
+            if save_format == 'csv':
+                for i, item in enumerate(data):
+                    data[i] = DocListItem.from_dict(item)
+                await export_csv(data, file)
+                return file, 'text/csv'
+            if save_format == 'jsonl':
+                for i, item in enumerate(data):
+                    data[i] = DocListItem.from_dict(item)
+                await export_jsonl(data, file)
+                return file, 'application/jsonl'
+            if save_format == 'xml':
+                await export_xml(data, file)
+                return file, 'application/xml'
+            if save_format == 'xlsx':
+                for i, item in enumerate(data):
+                    data[i] = DocListItem.from_dict(item)
+                await export_xlsx(data, file)
+                return file, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
     async def num_matching_documents(self, plugin_ctx, corpus_id, attr_map, aligned_corpora):
-        async with plugin_ctx.request.ctx.http_client as session:
-            args = dict(attrs=attr_map, aligned=aligned_corpora)
-            async with session.post(urljoin(self._service_url,f'/liveAttributes/{corpus_id}/numMatchingDocuments'), json=args) as resp:
-                return await proc_masm_response(resp)
+        args = dict(attrs=attr_map, aligned=aligned_corpora)
+        async with plugin_ctx.request.ctx.http_client.post(urljoin(self._service_url,f'/liveAttributes/{corpus_id}/numMatchingDocuments'), json=args) as resp:
+            return await proc_masm_response(resp)
 
 
 @plugins.inject(plugins.runtime.CORPARCH)
