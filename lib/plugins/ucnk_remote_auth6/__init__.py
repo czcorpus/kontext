@@ -116,17 +116,19 @@ class CentralAuth(AbstractRemoteAuth):
     def _mk_user_key(user_id: int) -> str:
         return f'user:{user_id}'
 
-    @property
-    def _app_client_session(self) -> aiohttp.ClientSession:
-        return Sanic.get_app('kontext').ctx.client_session
-
     async def _fetch_toolbar_api_response(
             self,
             args: List[Tuple[str, str]],
             cookies: Optional[Dict[str, str]] = None) -> str:
         if cookies is None:
             cookies = {}
-        async with self._app_client_session.post(self._auth_conf.toolbar_url, headers={'Content-Type': 'application/x-www-form-urlencoded'}, params=args, cookies=cookies, timeout=self._auth_conf.toolbar_server_timeout, ssl=self._ssl_context) as response:
+        async with aiohttp.ClientSession().post(
+                self._auth_conf.toolbar_url,
+                headers={'Content-Type': 'application/x-www-form-urlencoded'},
+                params=args,
+                cookies=cookies,
+                timeout=self._auth_conf.toolbar_server_timeout,
+                ssl=self._ssl_context) as response:
             if response.status == 200:
                 return (await response.read()).decode('utf-8')
             else:
@@ -176,6 +178,7 @@ class CentralAuth(AbstractRemoteAuth):
             response_obj['user']['id'] = int(response_obj['user']['id'])
 
         if curr_user_id != response_obj['user']['id']:
+            logging.getLogger(__name__).warning(f'>>>> changed user ID from {curr_user_id} to {response_obj["user"]["id"]}')
             plugin_ctx.clear_session()
             if response_obj['user']['id'] != self._anonymous_id:
                 # user logged in => keep session data (except for credentials)
