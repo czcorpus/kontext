@@ -123,8 +123,7 @@ class CentralAuth(AbstractRemoteAuth):
             cookies: Optional[Dict[str, str]] = None) -> str:
         if cookies is None:
             cookies = {}
-        async with http_client as session:
-            async with session.post(
+            async with http_client.post(
                 self._auth_conf.toolbar_url,
                 headers={'Content-Type': 'application/x-www-form-urlencoded'},
                 params=args,
