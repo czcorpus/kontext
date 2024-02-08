@@ -16,12 +16,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 import os
 import struct
 from dataclasses import dataclass
 from typing import List, Optional
+from urllib.parse import urljoin
 
-import aiohttp
 import plugins
 import ujson as json
 from action.argmapping.subcorpus import CreateSubcorpusArgs
@@ -133,11 +134,6 @@ class MasmSubcmixer(AbstractSubcMixer):
         self._corparch = corparch
         self._session = None
 
-    async def _get_session(self):
-        if self._session is None:
-            self._session = aiohttp.ClientSession(base_url=self._service_url)
-        return self._session
-
     async def is_enabled_for(self, plugin_ctx, corpora):
         if len(corpora) == 0:
             return False
@@ -149,26 +145,26 @@ class MasmSubcmixer(AbstractSubcMixer):
         if len(used_structs) > 1:
             raise SubcMixerException(
                 'Subcorpora based on more than a single structure are not supported at the moment.')
-        session = await self._get_session()
-        async with session.post(
-                f'/liveAttributes/{corpname}/mixSubcorpus',
-                json={
-                    'corpora': [corpname] + aligned_corpora,
-                    'textTypes': args
-                }) as resp:
-            data = await proc_masm_response(resp)
-        if data.error:
-            raise SubcMixerException(data.error)
-        if data.size_assembled > 0:
-            return {
-                'attrs':  [(cs.expression, cs.ratio) for cs in data.category_sizes],
-                'ids': data.doc_ids,
-                'structs': list(used_structs),
-                'total': data.size_assembled
-            }
+        async with plugin_ctx.request.ctx.http_client as session:
+            async with session.post(
+                    urljoin(self._service_url, f'/liveAttributes/{corpname}/mixSubcorpus'),
+                    json={
+                        'corpora': [corpname] + aligned_corpora,
+                        'textTypes': args
+                    }) as resp:
+                data = await proc_masm_response(resp)
+            if data.error:
+                raise SubcMixerException(data.error)
+            if data.size_assembled > 0:
+                return {
+                    'attrs':  [(cs.expression, cs.ratio) for cs in data.category_sizes],
+                    'ids': data.doc_ids,
+                    'structs': list(used_structs),
+                    'total': data.size_assembled
+                }
 
-        else:
-            raise ResultNotFoundException('subcmixer__failed_to_find_suiteable_mix')
+            else:
+                raise ResultNotFoundException('subcmixer__failed_to_find_suiteable_mix')
 
     @staticmethod
     def export_actions():

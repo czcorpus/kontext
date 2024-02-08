@@ -390,7 +390,7 @@ class MysqlLiveAttributes(CachedLiveAttributes):
 
         return ans
 
-    async def fill_attrs(self, corpus_id, search, values, fill):
+    async def fill_attrs(self, plugin_ctx, corpus_id, search, values, fill):
         search_structattr = self.import_key(search)
         fill_structattrs = [self.import_key(f) for f in fill]
         ans = {}

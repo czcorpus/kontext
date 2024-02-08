@@ -199,7 +199,6 @@ async def server_init(app: Sanic, loop: asyncio.BaseEventLoop):
     # workers will handle SIGUSR1
     loop.add_signal_handler(signal.SIGUSR1, lambda: asyncio.create_task(sigusr1_handler()))
     # init extensions fabrics
-    app.ctx.client_session = aiohttp.ClientSession()
     # runtime conf (this should have its own module in the future)
     http_client_conf = settings.get_int('global', 'http_client_timeout_secs', 0)
     if not http_client_conf:
@@ -249,12 +248,6 @@ async def stop_receiver(app: Sanic, loop: asyncio.BaseEventLoop):
             "Stopping receiver %s", app.ctx.receiver.get_name())
         app.ctx.receiver.cancel()
 
-
-@application.listener('after_server_stop')
-async def server_cleanup(app: Sanic, loop: asyncio.BaseEventLoop):
-    await app.ctx.client_session.close()
-
-
 @application.middleware('request')
 async def extract_jwt(request: Request):
     if JWT_COOKIE_NAME in request.cookies:
@@ -271,6 +264,11 @@ async def extract_jwt(request: Request):
             # this in case KonText uses "remote auth" type of auth plug-in).
             pass
     request.ctx.session = {}
+
+
+@application.middleware('request')
+async def set_http_client(request: Request):
+    request.ctx.http_client = aiohttp.ClientSession()
 
 
 @application.middleware('request')
