@@ -44,6 +44,9 @@ KW_MAX_LIST_SIZE = 1000
 @bp.route('/form')
 @http_action(access_level=2, template='keywords/form.html', page_model='keywordsForm', action_model=KeywordsActionModel)
 async def form(amodel: KeywordsActionModel, req: KRequest, _: KResponse):
+    if req.args.get('ref_corpname') is None:
+        raise ImmediateRedirectException(
+            req.updated_current_url({'ref_corpname': amodel.args.corpname}), code=302)
     amodel.disabled_menu_items = (
         MainMenu.VIEW, MainMenu.FILTER, MainMenu.FREQUENCY,
         MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
