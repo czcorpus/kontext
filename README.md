@@ -23,7 +23,7 @@ KonText is an **advanced corpus query interface** and corpus data **integration 
     * concordance,
     * paradigmatic query,
     * word list
-    * keywords analysis
+    * keyword analysis
 * simple and advanced query types
     * **advanced CQL editor** with **syntax highlighting** and **attribute recognition**
     * **interactive PoS tag composing tool** for positional and key-value tagsets
