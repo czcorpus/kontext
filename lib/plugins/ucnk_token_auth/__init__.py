@@ -135,14 +135,14 @@ class UCNKTokenAuth(AbstractRemoteTokenAuth):
     def _toolbar_uses_ssl(self):
         return self._auth_conf.toolbar_url.startswith('https://')
 
-    @property
-    def _app_client_session(self) -> aiohttp.ClientSession:
-        return Sanic.get_app('kontext').ctx.client_session
-
     async def _fetch_toolbar_api_response(self, cookies: Dict[str, str]) -> str:
         if cookies is None:
             cookies = {}
-        async with self._app_client_session.post(self._auth_conf.toolbar_url, cookies=cookies, timeout=self._auth_conf.toolbar_server_timeout, ssl=self._ssl_context) as response:
+        async with aiohttp.ClientSession().post(
+                self._auth_conf.toolbar_url,
+                cookies=cookies,
+                timeout=self._auth_conf.toolbar_server_timeout,
+                ssl=self._ssl_context) as response:
             if response.status == 200:
                 return (await response.read()).decode('utf-8')
             else:
@@ -151,7 +151,12 @@ class UCNKTokenAuth(AbstractRemoteTokenAuth):
                 )
 
     async def authenticate(self, plugin_ctx: 'PluginCtx', token_id):
-        async with self._app_client_session.post(self._auth_conf.login_url, data={'personal_access_token': token_id}, headers={'Content-Type': 'application/x-www-form-urlencoded'}, timeout=self._auth_conf.toolbar_server_timeout, ssl=self._ssl_context) as response:
+        async with aiohttp.ClientSession().post(
+                self._auth_conf.login_url,
+                data={'personal_access_token': token_id},
+                headers={'Content-Type': 'application/x-www-form-urlencoded'},
+                timeout=self._auth_conf.toolbar_server_timeout,
+                ssl=self._ssl_context) as response:
             if response.status == 200:
                 return dict(x_api_key=response.cookies[self._auth_conf.cookie_sid].value)
             else:
