@@ -72,7 +72,7 @@ class CorpusActionModel(UserActionModel):
     # main menu items disabled for public users (this is applied automatically during
     # post_dispatch())
     ANON_FORBIDDEN_MENU_ITEMS = (
-        MainMenu.NEW_QUERY('history', 'wordlist'),
+        MainMenu.NEW_QUERY('history', 'wordlist', 'keywords'),
         MainMenu.CORPORA('my-subcorpora', 'create-subcorpus'),
         MainMenu.SAVE, MainMenu.CONCORDANCE, MainMenu.FILTER,
         MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
