@@ -164,7 +164,7 @@ class CentralAuth(AbstractRemoteAuth):
             ('current', 'kontext'),
             ('continue', plugin_ctx.current_url)
         ]
-        api_response = await self._fetch_toolbar_api_response(plugin_ctx.request.ctx.http_session, api_args)
+        api_response = await self._fetch_toolbar_api_response(plugin_ctx.request.ctx.http_client, api_args)
         response_obj = json.loads(api_response)
         plugin_ctx.set_shared('toolbar', response_obj)  # toolbar plug-in will access this
 

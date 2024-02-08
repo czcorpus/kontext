@@ -145,26 +145,25 @@ class MasmSubcmixer(AbstractSubcMixer):
         if len(used_structs) > 1:
             raise SubcMixerException(
                 'Subcorpora based on more than a single structure are not supported at the moment.')
-        async with plugin_ctx.request.ctx.http_client as session:
-            async with session.post(
-                    urljoin(self._service_url, f'/liveAttributes/{corpname}/mixSubcorpus'),
-                    json={
-                        'corpora': [corpname] + aligned_corpora,
-                        'textTypes': args
-                    }) as resp:
-                data = await proc_masm_response(resp)
-            if data.error:
-                raise SubcMixerException(data.error)
-            if data.size_assembled > 0:
-                return {
-                    'attrs':  [(cs.expression, cs.ratio) for cs in data.category_sizes],
-                    'ids': data.doc_ids,
-                    'structs': list(used_structs),
-                    'total': data.size_assembled
-                }
+        async with plugin_ctx.request.ctx.http_client.post(
+                urljoin(self._service_url, f'/liveAttributes/{corpname}/mixSubcorpus'),
+                json={
+                    'corpora': [corpname] + aligned_corpora,
+                    'textTypes': args
+                }) as resp:
+            data = await proc_masm_response(resp)
+        if data.error:
+            raise SubcMixerException(data.error)
+        if data.size_assembled > 0:
+            return {
+                'attrs':  [(cs.expression, cs.ratio) for cs in data.category_sizes],
+                'ids': data.doc_ids,
+                'structs': list(used_structs),
+                'total': data.size_assembled
+            }
 
-            else:
-                raise ResultNotFoundException('subcmixer__failed_to_find_suiteable_mix')
+        else:
+            raise ResultNotFoundException('subcmixer__failed_to_find_suiteable_mix')
 
     @staticmethod
     def export_actions():
