@@ -267,6 +267,11 @@ async def extract_jwt(request: Request):
 
 
 @application.middleware('request')
+async def set_http_client(request: Request):
+    request.ctx.http_client = aiohttp.ClientSession()
+
+
+@application.middleware('request')
 async def set_locale(request: Request):
     request.ctx.locale = get_locale(request)
     if request.ctx.locale in application.ctx.translations:
