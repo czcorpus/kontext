@@ -44,6 +44,9 @@ KW_MAX_LIST_SIZE = 1000
 @bp.route('/form')
 @http_action(access_level=2, template='keywords/form.html', page_model='keywordsForm', action_model=KeywordsActionModel)
 async def form(amodel: KeywordsActionModel, req: KRequest, _: KResponse):
+    if req.args.get('ref_corpname') is None:
+        raise ImmediateRedirectException(
+            req.updated_current_url({'ref_corpname': amodel.args.corpname}), code=302)
     amodel.disabled_menu_items = (
         MainMenu.VIEW, MainMenu.FILTER, MainMenu.FREQUENCY,
         MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
@@ -80,8 +83,7 @@ async def form(amodel: KeywordsActionModel, req: KRequest, _: KResponse):
         searchSize=ref_corp.search_size,
     )
     out['available_ref_subcorpora'] = await amodel.get_subcorpora_list(ref_corp)
-    cattrs = set(amodel.corp.get_posattrs())
-    cattrs = cattrs.intersection(set(ref_corp.get_posattrs()))
+    cattrs = [attr for attr in amodel.corp.get_posattrs() if attr in ref_corp.get_posattrs()]
     out['CommonAttrList'] = [{
         'label': amodel.corp.get_conf(f'{n}.LABEL') or n,
         'n': n,
