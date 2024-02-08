@@ -21,7 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 {% extends "document.html" %}
 
-{% block title%}KonText - {{ "Keywords analysis results"|_ }}{% endblock %}
+{% block title%}KonText - {{ "Keyword analysis results"|_ }}{% endblock %}
 
 {% block bodyonload %}
 __conf.Keywords = {{ data|to_json }};
@@ -37,7 +37,7 @@ keywordsPage.init(__conf);
 
 {% block main %}
 <section>
-    <div class="bar"><h2>{{ "Keywords analysis"|_ }}</h2></div>
+    <div class="bar"><h2>{{ "Keyword analysis"|_ }}</h2></div>
     <div id="keywords-result-mount"></div>
     <a id="download-link" style="display:none"></a>
 </section>
