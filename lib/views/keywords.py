@@ -80,8 +80,7 @@ async def form(amodel: KeywordsActionModel, req: KRequest, _: KResponse):
         searchSize=ref_corp.search_size,
     )
     out['available_ref_subcorpora'] = await amodel.get_subcorpora_list(ref_corp)
-    cattrs = set(amodel.corp.get_posattrs())
-    cattrs = cattrs.intersection(set(ref_corp.get_posattrs()))
+    cattrs = [attr for attr in amodel.corp.get_posattrs() if attr in ref_corp.get_posattrs()]
     out['CommonAttrList'] = [{
         'label': amodel.corp.get_conf(f'{n}.LABEL') or n,
         'n': n,
