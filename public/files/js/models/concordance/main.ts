@@ -1561,6 +1561,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                     } else {
                         throw new Error(`Failed to find playing chunk "${this.state.playerAttachedChunk}"`);
                     }
+                    state.playerAttachedChunk = null;
                 }
             );
         }
