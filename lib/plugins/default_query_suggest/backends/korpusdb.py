@@ -31,7 +31,7 @@ class KorpusDBBackend(AbstractBackend):
             self._client = HTTPClient('http://{}{}'.format(self._conf['server'], port_str))
 
     async def find_suggestion(
-            self, ui_lang, user_id, maincorp, corpora, subcorpus, value, value_type, value_subformat,
+            self, plugin_ctx, ui_lang, user_id, maincorp, corpora, subcorpus, value, value_type, value_subformat,
             query_type, p_attr, struct, s_attr):
         body = {
             'feats': [":form:attr:cnc:w"],

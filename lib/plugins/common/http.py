@@ -87,10 +87,15 @@ class HTTPClient:
         return '&'.join(ans)
 
     async def request(
-            self, method: str, path: str, args: Union[Dict[str, Any], List[Tuple[str, Any]]], data: Any = None,
+            self,
+            client_session: aiohttp.ClientSession,
+            method: str,
+            path: str,
+            args: Union[Dict[str, Any], List[Tuple[str, Any]]],
+            data: Any = None,
             headers=None):
-        url = self._server + (path + '?' + self._process_args(args) if args else path)
-        async with aiohttp.ClientSession().request(
+        url = urllib.parse.urljoin(self._server, path + '?' + self._process_args(args) if args else path)
+        async with client_session.request(
                 method,
                 url,
                 data=data,
@@ -100,10 +105,15 @@ class HTTPClient:
             return await self.process_response(response)
 
     async def json_request(
-            self, method: str, path: str, args: Union[Dict[str, Any], List[Tuple[str, Any]]], data: Any = None,
+            self,
+            client_session: aiohttp.ClientSession,
+            method: str,
+            path: str,
+            args: Union[Dict[str, Any], List[Tuple[str, Any]]],
+            data: Any = None,
             headers=None):
         url = self._server + (path + '?' + self._process_args(args) if args else path)
-        async with aiohttp.ClientSession().request(
+        async with client_session.request(
                 method,
                 url,
                 json=data,
@@ -130,8 +140,8 @@ class HTTPApiLogin:
                 'kontext').ctx.kontext_conf.get('http_client_timeout_secs')
         return self._client_timeout
 
-    async def login(self):
-        async with aiohttp.ClientSession().request(
+    async def login(self, client_session: aiohttp.ClientSession):
+        async with client_session.request(
                 'POST',
                 self._server,
                 data=f'personal_access_token={self._api_token}',

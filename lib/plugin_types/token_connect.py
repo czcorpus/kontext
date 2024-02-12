@@ -47,7 +47,7 @@ import abc
 import logging
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Tuple
 
-from corplib.corpus import KCorpus
+from corplib.corpus import AbstractKCorpus
 from plugin_types.providers import (
     AbstractProviderBackend, AbstractProviderFrontend)
 
@@ -56,6 +56,7 @@ if TYPE_CHECKING:
     from action.plugin.ctx import PluginCtx
 
 from plugin_types import CorpusDependentPlugin
+from action.plugin.ctx import AbstractCorpusPluginCtx
 
 
 class BackendException(Exception):
@@ -106,8 +107,9 @@ class AbstractBackend(AbstractProviderBackend):
     @abc.abstractmethod
     async def fetch(
             self,
+            plugin_ctx: AbstractCorpusPluginCtx,
             corpora: List[str],
-            maincorp: KCorpus,
+            maincorp: AbstractKCorpus,
             token_id: int,
             num_tokens: int,
             query_args: Dict[str, str],
@@ -159,6 +161,12 @@ class AbstractFrontend(AbstractProviderFrontend):
 
 
 class AbstractTokenConnect(CorpusDependentPlugin):
+    """
+    The "token connect" plugin connects a concrete clicked token (or tokens in case user clicks on a KWIC) with
+    a data resource. Once user clicks the token, the data resource is requested to provide an information about
+    the token and the information is then showed in the "KWIC detail" box. It is possible to configure multiple
+    data resources per single token.
+    """
 
     def map_providers(self, providers: Sequence[Tuple[str, bool]]) -> Tuple[AbstractBackend, Optional[AbstractFrontend], bool]:
         """
@@ -172,7 +180,7 @@ class AbstractTokenConnect(CorpusDependentPlugin):
             self,
             plugin_ctx: 'PluginCtx',
             providers: Sequence[Tuple[str, bool]],
-            corpus: KCorpus,
+            corpus: AbstractKCorpus,
             corpora: List[str],
             token_id: int,
             num_tokens: int,
@@ -183,7 +191,7 @@ class AbstractTokenConnect(CorpusDependentPlugin):
         identified by a list of provider ids.
 
         arguments:
-        plugin_ctx -- PluginCtx object providing access to the current user request and scope
+        plugin_ctx -- PluginCtx object providing access to important runtime, "per request" resources and info
         providers -- list of defined providers we want to search in
         corpus -- corpus object used to fetch actual positional attributes used
                   to query the providers

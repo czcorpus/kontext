@@ -179,7 +179,8 @@ class DefaultTokenConnect(AbstractTokenConnect):
                             f'Backend configuration problem: cookie {cname} not available')
                     cookies[cname] = plugin_ctx.cookies[cname]
                 data, status = await backend.fetch(
-                    corpora, corpus, token_id, num_tokens, args, lang, plugin_ctx.user_is_anonymous, context, cookies)
+                    plugin_ctx, corpora, corpus, token_id, num_tokens, args, lang, plugin_ctx.user_is_anonymous,
+                    context, cookies)
                 if frontend is not None:
                     ans.append(frontend.export_data(data, status, lang, is_kwic_view).to_dict())
                 else:

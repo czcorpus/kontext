@@ -27,7 +27,8 @@ class ManateeWideCtxBackend(AbstractBackend):
                          'sentence', 'typeface', 'newLine', 'removeSpace']
 
     @cached
-    async def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, is_anonymous, context=None, cookies=None):
+    async def fetch(
+            self, plugin_ctx, corpora, maincorp, token_id, num_tokens, query_args, lang, is_anonymous, context=None, cookies=None):
         """
         display a hit in a wider context
         """
@@ -47,8 +48,9 @@ class ManateeWideCtxBackend(AbstractBackend):
         # prefer 'word' but allow other attr if word is off
         attrs = ['word'] if 'word' in p_attrs else p_attrs[0:1]
         left_ctx, right_ctx = context if context is not None else (40, 40)
-        data = conclib.get_detail_context(corp=maincorp, pos=token_id, attrs=attrs, structs=','.join(structs),
-                                          hitlen=num_tokens, detail_left_ctx=left_ctx, detail_right_ctx=right_ctx)
+        data = conclib.get_detail_context(
+            corp=maincorp, pos=token_id, attrs=attrs, structs=','.join(structs),
+            hitlen=num_tokens, detail_left_ctx=left_ctx, detail_right_ctx=right_ctx)
         if left_ctx >= int(data['maxdetail']):
             data['expand_left_args'] = None
         if right_ctx >= int(data['maxdetail']):

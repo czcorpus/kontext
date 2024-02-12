@@ -58,7 +58,7 @@ class CouchDBBackend(AbstractBackend[Dict[str, CncSublemmaSuggestion]]):
         return self._db
 
     async def find_suggestion(
-            self, ui_lang, user_id, maincorp, corpora, subcorpus, value, value_type, value_subformat,
+            self, plugin_ctx, ui_lang, user_id, maincorp, corpora, subcorpus, value, value_type, value_subformat,
             query_type, p_attr, struct, s_attr) -> CncSublemmaSuggestion:
         tmp = self.db.view(self._conf['view'], start_key=norm_str(
             value), end_key=norm_str(value), include_docs=True)

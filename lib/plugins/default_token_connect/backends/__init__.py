@@ -37,7 +37,7 @@ class DisplayLinkBackend(AbstractBackend):
     def get_required_attrs(self):
         return self._conf.get('posAttrs', [])
 
-    async def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, is_anonymous, context=None, cookies=None):
+    async def fetch(self, plugin_ctx, corpora, maincorp, token_id, num_tokens, query_args, lang, is_anonymous, context=None, cookies=None):
         attr = self._conf['posAttrs'][0]
         value = query_args[attr]
         if value:
@@ -82,7 +82,8 @@ class HTTPBackend(AbstractBackend):
             self._client = HTTPClient('http://{}{}'.format(self._conf['server'], port_str))
 
     @cached
-    async def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, is_anonymous, context=None, cookies=None):
+    async def fetch(
+            self, plugin_ctx, corpora, maincorp, token_id, num_tokens, query_args, lang, is_anonymous, context=None, cookies=None):
         args = dict(
             ui_lang=self._client.enc_val(lang), corpus=self._client.enc_val(corpora[0]),
             corpus2=self._client.enc_val(corpora[1] if len(corpora) > 1 else ''),
@@ -98,4 +99,4 @@ class HTTPBackend(AbstractBackend):
         except KeyError as ex:
             raise BackendException('Failed to build query - value {0} not found'.format(ex))
 
-        return await self._client.request('GET', query_string, {})
+        return await self._client.request(plugin_ctx.http_client,'GET', query_string, {})

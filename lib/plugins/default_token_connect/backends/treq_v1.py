@@ -53,7 +53,7 @@ class TreqBackend(HTTPBackend):
     ANONYMOUS_SESSION_ID = None
 
     def __init__(self, conf, ident, db, ttl):
-        super(TreqBackend, self).__init__(conf, ident, db, ttl)
+        super().__init__(conf, ident, db, ttl)
         self._conf = conf
         self.BACKLINK_SERVER = conf.get('backlinkServer', conf['server'])
         self.AVAIL_GROUPS = conf.get('availGroups', {})
@@ -133,7 +133,8 @@ class TreqBackend(HTTPBackend):
         return json.loads(data)
 
     @cached
-    async def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, is_anonymous, context=None, cookies=None):
+    async def fetch(
+            self, plugin_ctx, corpora, maincorp, token_id, num_tokens, query_args, lang, is_anonymous, context=None, cookies=None):
         """
         """
         primary_lang = self._lang_from_corpname(corpora[0])
@@ -158,7 +159,7 @@ class TreqBackend(HTTPBackend):
                     try:
                         data = await self.make_request(path, self.ANONYMOUS_SESSION_ID)
                     except HTTPUnauthorized:
-                        self.ANONYMOUS_SESSION_ID = await self._token_api_client.login()
+                        self.ANONYMOUS_SESSION_ID = await self._token_api_client.login(plugin_ctx.http_client)
                         data = await self.make_request(path, self.ANONYMOUS_SESSION_ID)
                 else:
                     data = await self.make_request(path, cookies[self.sid_cookie])

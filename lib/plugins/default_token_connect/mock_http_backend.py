@@ -28,7 +28,7 @@ from plugins.default_token_connect.backends import cached
 class MockHTTPBackend(AbstractBackend):
 
     @cached
-    def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None, cookies=None):
+    def fetch(self, plugin_ctx, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None, cookies=None):
         lemma = query_args.get('lemma', None)
         word = query_args.get('word', None)
         if lemma == 'unicode':
