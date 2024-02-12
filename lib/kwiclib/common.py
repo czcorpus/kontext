@@ -46,6 +46,8 @@ def split_chunk(pseudo_token: Tuple[str, str]):
     ('This', '{class3}'), ('is', '{class3}'), ... etc.
     """
     pt, cls = pseudo_token
+    if cls == "strc":
+        return [(pt, cls)]
     return [(t, cls) for t in re.split(r'\s+', pt)]
 
 
