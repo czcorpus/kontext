@@ -48,7 +48,7 @@ class TreqBackend(HTTPBackend):
     AVAIL_LANG_MAPPINGS = None
 
     def __init__(self, conf, ident, db, ttl):
-        super(TreqBackend, self).__init__(conf, ident, db, ttl)
+        super().__init__(conf, ident, db, ttl)
         self._conf = conf
         self.AVAIL_GROUPS = conf.get('availGroups', {})
         self.AVAIL_LANG_MAPPINGS = conf.get('availTranslations', {})
@@ -110,7 +110,8 @@ class TreqBackend(HTTPBackend):
         return f'http://{self._conf["server"]}'
 
     @cached
-    async def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, is_anonymous, context=None, cookies=None):
+    async def fetch(
+            self, plugin_ctx, corpora, maincorp, token_id, num_tokens, query_args, lang, is_anonymous, context=None, cookies=None):
         """
         """
         primary_lang = self._lang_from_corpname(corpora[0])
@@ -138,8 +139,10 @@ class TreqBackend(HTTPBackend):
 
         else:
             data = dict(sum=0, lines=[])
-        return json.dumps(dict(treq_link=treq_link,
-                               sum=data.get('sum', 0),
-                               translations=data.get('lines', []),
-                               primary_corp=corpora[0],
-                               translat_corp=translat_corp)), True
+        return json.dumps(
+            dict(
+                treq_link=treq_link,
+                sum=data.get('sum', 0),
+                translations=data.get('lines', []),
+                primary_corp=corpora[0],
+                translat_corp=translat_corp)), True

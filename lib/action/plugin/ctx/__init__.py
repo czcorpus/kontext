@@ -15,6 +15,7 @@
 import abc
 from typing import Any, Dict, Optional
 from sanic.cookies.request import CookieRequestParameters
+from aiohttp import ClientSession
 
 from action.krequest import KRequest
 from corplib import CorpusFactory
@@ -49,6 +50,11 @@ class AbstractBasePluginCtx(abc.ABC):
     @property
     @abc.abstractmethod
     def request(self) -> KRequest:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def http_client(self) -> ClientSession:
         pass
 
     @property

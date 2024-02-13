@@ -85,7 +85,7 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
         return ' | '.join(q)
 
     async def find_suggestion(
-            self, user_id, ui_lang, maincorp, corpora, subcorpus, value, value_type, value_subformat,
+            self, plugin_ctx, user_id, ui_lang, maincorp, corpora, subcorpus, value, value_type, value_subformat,
             query_type, p_attr, struct, s_attr):
         pres_corp = await self.get_preset_corp()
         used_corp = pres_corp if pres_corp is not None else maincorp

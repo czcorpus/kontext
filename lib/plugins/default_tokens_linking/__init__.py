@@ -30,6 +30,7 @@ from sanic.blueprints import Blueprint
 from util import as_async
 
 from .backends.abstract import AbstractBackend
+from .frontends.null import NullFrontend
 
 bp = Blueprint('default_tokens_linking')
 
@@ -87,7 +88,7 @@ class DefaultTokensLinking(AbstractTokensLinking):
                 cookies[cname] = plugin_ctx.cookies[cname]
 
             data, status = await backend.fetch(
-                plugin_ctx.corpus_factory,
+                plugin_ctx,
                 corpus_id,
                 token_id,
                 token_length,
@@ -99,13 +100,12 @@ class DefaultTokensLinking(AbstractTokensLinking):
             ans[backend.provider_id] = data
         return ans
 
-    async def get_required_attrs(self, providers):
+    async def get_required_attrs(self, plugin_ctx, providers, corpora):
         return list(set(attr for backend, _ in self.map_providers(providers) for attr in backend.required_attrs()))
 
 
 @plugins.inject(plugins.runtime.DB, plugins.runtime.CORPARCH)
 def create_instance(settings, db, corparch):
     providers = setup_providers(settings.get(
-        'plugins', 'tokens_linking'), db, be_type=AbstractBackend)
-    plg_conf = settings.get('plugins', 'tokens_linking')
+        'plugins', 'tokens_linking'), db, be_type=AbstractBackend, fe_type=NullFrontend)
     return DefaultTokensLinking(providers, corparch)

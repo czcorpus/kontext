@@ -33,8 +33,20 @@ class HTTPBackend(AbstractBackend):
             self._client = HTTPClient('http://{}{}'.format(self._conf['server'], port_str))
 
     async def find_suggestion(
-            self, user_id, ui_lang, maincorp, corpora, subcorpus, value, value_type, value_subformat,
-            query_type, p_attr, struct, s_attr):
+            self,
+            plugin_ctx,
+            user_id,
+            ui_lang,
+            maincorp,
+            corpora,
+            subcorpus,
+            value,
+            value_type,
+            value_subformat,
+            query_type,
+            p_attr,
+            struct,
+            s_attr):
         args = dict(
             ui_lang=self._client.enc_val(ui_lang), corpora=[self._client.enc_val(c) for c in corpora])
         logging.getLogger(__name__).debug('HTTP Backend args: {0}'.format(args))

@@ -63,8 +63,19 @@ class AbstractBackend(abc.ABC, Generic[S]):
 
     @abc.abstractmethod
     async def find_suggestion(
-            self, user_id: int, ui_lang: str, maincorp: KCorpus, corpora: List[str], subcorpus: str,
-            value: str, value_type: str, value_subformat: str, query_type: str, p_attr: str, struct: str,
+            self,
+            plugin_ctx: PluginCtx,
+            user_id: int,
+            ui_lang: str,
+            maincorp: KCorpus,
+            corpora: List[str],
+            subcorpus: str,
+            value: str,
+            value_type: str,
+            value_subformat: str,
+            query_type: str,
+            p_attr: str,
+            struct: str,
             s_attr: str) -> S:
         """
         note: for value_subformat see PluginInterfaces.QuerySuggest.QueryValueSubformat on the client side

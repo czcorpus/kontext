@@ -152,9 +152,21 @@ U = TypeVar('U', bound=AbstractProviderFrontend)
 def setup_providers(
     plg_conf: Dict[str, Any],
     db: KeyValueStorage,
-    be_type: T=AbstractProviderBackend,
-    fe_type: U=AbstractProviderFrontend,
+    be_type: type[AbstractProviderBackend],
+    fe_type: type[AbstractProviderFrontend],
 ) -> Dict[str, Tuple[T, Optional[U]]]:
+    """
+    Create instances of configured data providers and their
+    respective front-ends
+    Args:
+        plg_conf:
+        db:
+        be_type: backend type
+        fe_type: frontend type
+
+    Returns:
+
+    """
     with open(plg_conf['providers_conf'], 'rb') as fr:
         providers_conf = json.load(fr)
     providers: Dict[str, Tuple[T, Optional[U]]] = {}

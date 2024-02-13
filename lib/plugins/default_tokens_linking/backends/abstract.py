@@ -19,7 +19,7 @@
 import abc
 from typing import Any, Dict, List, Tuple
 
-from corplib import CorpusFactory
+from action.plugin.ctx import AbstractCorpusPluginCtx
 from plugin_types.providers import AbstractProviderBackend
 
 
@@ -35,7 +35,7 @@ class AbstractBackend(AbstractProviderBackend):
     @abc.abstractmethod
     async def fetch(
             self,
-            corp_factory: CorpusFactory,
+            plugin_ctx: AbstractCorpusPluginCtx,
             corpus_id: str,
             token_id: int,
             token_length: int,
@@ -47,6 +47,7 @@ class AbstractBackend(AbstractProviderBackend):
         """
 
         Args:
+            plugin_ctx:
             corp_factory:
             corpus_id: a corpus clicked token belongs to
             token_id: clicked token ID
