@@ -130,7 +130,7 @@ class TreqBackend(HTTPBackend):
 
     async def _make_request(self, client_session: ClientSession, path: str, session_id: str):
         headers = {'Cookie': f'{self.sid_cookie}={session_id}'}
-        data, valid = await self._client.request('GET', path, {}, headers=headers)
+        data, valid = await self._requester.request('GET', path, {}, headers=headers)
         return json.loads(data)
 
     @cached
@@ -144,8 +144,8 @@ class TreqBackend(HTTPBackend):
         if translat_corp and translat_lang:
             common_groups = self.find_lang_common_groups(primary_lang, translat_lang)
             args = dict(
-                lang1=self._client.enc_val(primary_lang), lang2=self._client.enc_val(translat_lang),
-                groups=[self._client.enc_val(s) for s in common_groups],
+                lang1=self._requester.enc_val(primary_lang), lang2=self._requester.enc_val(translat_lang),
+                groups=[self._requester.enc_val(s) for s in common_groups],
                 **query_args)
             t_args = self.mk_backlink_args(**args)
             treq_link = (self.mk_backlink_addr() + '/index.php', t_args)

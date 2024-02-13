@@ -22,7 +22,7 @@ from typing import Any, List, Tuple
 
 import aiohttp
 import ujson as json
-from plugins.common.http import HTTPApiLogin, HTTPClient, HTTPUnauthorized
+from plugins.common.http import HTTPApiLogin, HTTPRequester, HTTPUnauthorized
 
 import conclib
 from action.plugin.ctx import AbstractCorpusPluginCtx
@@ -65,9 +65,9 @@ class TreqV1Backend(AbstractBackend):
 
         port_str = '' if self._conf.get('port', 80) else ':{}'.format(self._conf.get('port'))
         if self._conf['ssl']:
-            self._client = HTTPClient('https://{}{}'.format(self._conf['server'], port_str))
+            self._requester = HTTPRequester('https://{}{}'.format(self._conf['server'], port_str))
         else:
-            self._client = HTTPClient('http://{}{}'.format(self._conf['server'], port_str))
+            self._requester = HTTPRequester('http://{}{}'.format(self._conf['server'], port_str))
         self._token_api_client = HTTPApiLogin(
             conf.get('apiLoginUrl'),
             conf.get('apiToken'),
@@ -182,9 +182,9 @@ class TreqV1Backend(AbstractBackend):
         g2 = set(self.AVAIL_GROUPS.get(lang2, []))
         return g1.intersection(g2)
 
-    async def make_request(self, client_session: aiohttp.ClientSession ,path: str, session_id: str):
+    async def _make_request(self, client_session: aiohttp.ClientSession, path: str, session_id: str):
         headers = {'Cookie': f'{self.sid_cookie}={session_id}'}
-        data, valid = await self._client.request(client_session, 'GET', path, {}, headers=headers)
+        data, valid = await self._requester.request(client_session, 'GET', path, {}, headers=headers)
         return json.loads(data)
 
     async def _get_translations(
@@ -193,9 +193,9 @@ class TreqV1Backend(AbstractBackend):
         data = dict(sum=0, lines=[])
         common_groups = self.find_lang_common_groups(primary_lang, translat_lang)
         args = self.mk_api_args(
-            lang1=self._client.enc_val(primary_lang),
-            lang2=self._client.enc_val(translat_lang),
-            groups=[self._client.enc_val(s) for s in common_groups],
+            lang1=self._requester.enc_val(primary_lang),
+            lang2=self._requester.enc_val(translat_lang),
+            groups=[self._requester.enc_val(s) for s in common_groups],
             lemma=word,
         )
 
@@ -204,12 +204,12 @@ class TreqV1Backend(AbstractBackend):
             path = self.mk_api_path(args)
             if is_anonymous:
                 try:
-                    data = await self.make_request(plugin_ctx.http_client, path, self.ANONYMOUS_SESSION_ID)
+                    data = await self._make_request(plugin_ctx.http_client, path, self.ANONYMOUS_SESSION_ID)
                 except HTTPUnauthorized:
                     self.ANONYMOUS_SESSION_ID = await self._token_api_client.login(plugin_ctx.http_client)
-                    data = await self.make_request(plugin_ctx.http_client, path, self.ANONYMOUS_SESSION_ID)
+                    data = await self._make_request(plugin_ctx.http_client, path, self.ANONYMOUS_SESSION_ID)
             else:
-                data = await self.make_request(plugin_ctx.http_client, path, cookies[self.sid_cookie])
+                data = await self._make_request(plugin_ctx.http_client, path, cookies[self.sid_cookie])
 
             max_items = self._conf.get('maxResultItems', self.DEFAULT_MAX_RESULT_LINES)
             orig = data['lines'][:max_items]
