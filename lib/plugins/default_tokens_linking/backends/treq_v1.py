@@ -110,7 +110,7 @@ class TreqV1Backend(AbstractBackend):
                 translat_lang = self._lang_from_corpname(translat_corp)
                 if translat_corp and translat_lang:
                     data = await self._get_translations(
-                        clicked_word, primary_lang, translat_lang, is_anonymous, cookies)
+                        plugin_ctx, clicked_word, primary_lang, translat_lang, is_anonymous, cookies)
                     for tok_idx, token in enumerate(tokens[translat_corp]):
                         if any(token['str'] == line['righ'] for line in data['lines']):
                             selected_token['link'].append({
