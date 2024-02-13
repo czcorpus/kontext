@@ -96,11 +96,15 @@ async def get_corpus_kc_providers(amodel: ConcActionModel, req: KRequest, resp: 
 
 class DefaultKwicConnect(AbstractKwicConnect):
 
-    def __init__(self, providers: Dict[str, Tuple[AbstractBackend, Optional[AbstractFrontend]]], corparch: AbstractCorporaArchive, max_kwic_words: int, load_chunk_size: int):
+    def __init__(
+            self,
+            providers: Dict[str, Tuple[AbstractBackend, Optional[AbstractFrontend]]],
+            corparch: AbstractCorporaArchive,
+            max_kwic_words: int,
+            load_chunk_size: int):
         self._corparch = corparch
         self._max_kwic_words = max_kwic_words
         self._load_chunk_size = load_chunk_size
-
         self._providers = providers
 
     def map_providers(self, provider_ids):
@@ -140,7 +144,8 @@ class DefaultKwicConnect(AbstractKwicConnect):
                                 f'Backend configuration problem: cookie {cname} not available')
                         cookies[cname] = plugin_ctx.cookies[cname]
                     data, status = await backend.fetch(
-                        corpora, None, None, 1, dict(lemma=lemma), lang, plugin_ctx.user_is_anonymous, (-1, 1), cookies)
+                        plugin_ctx, corpora, None, None, 1, dict(lemma=lemma), lang,
+                        plugin_ctx.user_is_anonymous, (-1, 1), cookies)
                     if frontend is not None:
                         ans.append(frontend.export_data(
                             data, status, lang, is_kwic_view=False).to_dict())
