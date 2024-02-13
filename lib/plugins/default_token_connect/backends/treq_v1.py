@@ -20,6 +20,7 @@
 import logging
 import urllib.parse
 
+from aiohttp import ClientSession
 import ujson as json
 from plugins.common.http import HTTPApiLogin, HTTPUnauthorized
 from plugins.default_token_connect.backends import HTTPBackend
@@ -127,7 +128,7 @@ class TreqBackend(HTTPBackend):
             return f'https://{self.BACKLINK_SERVER}'
         return f'http://{self.BACKLINK_SERVER}'
 
-    async def make_request(self, path: str, session_id: str):
+    async def _make_request(self, client_session: ClientSession, path: str, session_id: str):
         headers = {'Cookie': f'{self.sid_cookie}={session_id}'}
         data, valid = await self._client.request('GET', path, {}, headers=headers)
         return json.loads(data)
@@ -157,12 +158,12 @@ class TreqBackend(HTTPBackend):
                 path = self.mk_api_path(ta_args)
                 if is_anonymous:
                     try:
-                        data = await self.make_request(path, self.ANONYMOUS_SESSION_ID)
+                        data = await self._make_request(plugin_ctx.http_client, path, self.ANONYMOUS_SESSION_ID)
                     except HTTPUnauthorized:
                         self.ANONYMOUS_SESSION_ID = await self._token_api_client.login(plugin_ctx.http_client)
-                        data = await self.make_request(path, self.ANONYMOUS_SESSION_ID)
+                        data = await self._make_request(plugin_ctx.http_client, path, self.ANONYMOUS_SESSION_ID)
                 else:
-                    data = await self.make_request(path, cookies[self.sid_cookie])
+                    data = await self._make_request(plugin_ctx.http_client, path, cookies[self.sid_cookie])
 
                 max_items = self._conf.get('maxResultItems', self.DEFAULT_MAX_RESULT_LINES)
                 orig = data['lines'][:max_items]
