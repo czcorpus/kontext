@@ -15,7 +15,7 @@
 import logging
 
 from plugin_types.query_suggest import AbstractBackend
-from plugins.common.http import HTTPClient
+from plugins.common.http import HTTPRequester
 
 
 class HTTPBackend(AbstractBackend):
@@ -28,9 +28,9 @@ class HTTPBackend(AbstractBackend):
         self._conf = conf
         port_str = '' if self._conf.get('port', 80) else ':{}'.format(self._conf.get('port'))
         if self._conf['ssl']:
-            self._client = HTTPClient('https://{}{}'.format(self._conf['server'], port_str))
+            self._requester = HTTPRequester('https://{}{}'.format(self._conf['server'], port_str))
         else:
-            self._client = HTTPClient('http://{}{}'.format(self._conf['server'], port_str))
+            self._requester = HTTPRequester('http://{}{}'.format(self._conf['server'], port_str))
 
     async def find_suggestion(
             self,
@@ -48,6 +48,6 @@ class HTTPBackend(AbstractBackend):
             struct,
             s_attr):
         args = dict(
-            ui_lang=self._client.enc_val(ui_lang), corpora=[self._client.enc_val(c) for c in corpora])
+            ui_lang=self._requester.enc_val(ui_lang), corpora=[self._requester.enc_val(c) for c in corpora])
         logging.getLogger(__name__).debug('HTTP Backend args: {0}'.format(args))
-        return await self._client.request('GET', self._conf['path'], args)
+        return await self._requester.request(plugin_ctx.http_client,'GET', self._conf['path'], args)

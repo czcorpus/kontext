@@ -25,11 +25,11 @@ import aiohttp
 from sanic import Sanic
 
 
-class HTTPClientException(Exception):
+class HTTPRequesterException(Exception):
     pass
 
 
-class HTTPUnauthorized(HTTPClientException):
+class HTTPUnauthorized(HTTPRequesterException):
     pass
 
 
@@ -47,7 +47,7 @@ class HTTPStatus(int):
         return self in (401, 403)
 
 
-class HTTPClient:
+class HTTPRequester:
 
     def __init__(self, server: str, enable_ssl: bool = False):
         self._server = server
@@ -69,7 +69,7 @@ class HTTPClient:
                 raise HTTPUnauthorized()
             return (await response.read()).decode('utf-8'), status.is_found
         else:
-            raise HTTPClientException(f'HTTP client response error {status}')
+            raise HTTPRequesterException(f'HTTP client response error {status}')
 
     @staticmethod
     def enc_val(s):
