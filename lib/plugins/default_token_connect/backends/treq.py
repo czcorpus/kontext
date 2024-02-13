@@ -129,7 +129,7 @@ class TreqBackend(HTTPBackend):
 
             try:
                 logging.getLogger(__name__).debug('Treq request args: {0}'.format(ta_args))
-                data, status = await self._client.request('GET', self.mk_api_path(ta_args), {})
+                data, status = await self._client.request(plugin_ctx.http_client, 'GET', self.mk_api_path(ta_args), {})
                 data = json.loads(data)
                 max_items = self._conf.get('maxResultItems', self.DEFAULT_MAX_RESULT_LINES)
                 data['lines'] = data['lines'][:max_items]
