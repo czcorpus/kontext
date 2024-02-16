@@ -28,8 +28,8 @@ from typing import List, Optional
 
 import plugins
 from action.plugin.ctx import PluginCtx
-from plugin_types.auth import (AbstractRemoteAuth, CorpusAccess, GetUserInfo,
-                               UserInfo)
+from plugin_types.auth import (
+    AbstractRemoteAuth, CorpusAccess, GetUserInfo, UserInfo)
 from plugins.mysql_integration_db import MySqlIntegrationDb
 
 
@@ -81,8 +81,7 @@ class TokenAuth(AbstractRemoteAuth):
 
     def _get_api_key(self, plugin_ctx: PluginCtx) -> Optional[str]:
         if self._api_key_cookie_name:
-            api_key_cookie = plugin_ctx.cookies.get(self._api_key_cookie_name)
-            return api_key_cookie.value if api_key_cookie else None
+            return plugin_ctx.cookies.get(self._api_key_cookie_name)
         elif self._api_key_http_header:
             return plugin_ctx.request.headers.get(self._api_key_http_header)
         return None

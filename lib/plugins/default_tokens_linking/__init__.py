@@ -82,10 +82,10 @@ class DefaultTokensLinking(AbstractTokensLinking):
         for backend, _ in self.map_providers(provider_ids):
             cookies = {}
             for cname in backend.get_required_cookies():
-                if cname not in plugin_ctx.cookies:
+                cookies[cname] = cookie = plugin_ctx.cookies.get(cname)
+                if cookie is None:
                     raise Exception(
                         f'Backend configuration problem: cookie {cname} not available')
-                cookies[cname] = plugin_ctx.cookies[cname]
 
             data, status = await backend.fetch(
                 plugin_ctx,
