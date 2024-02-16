@@ -14,12 +14,12 @@
 
 import os
 from collections import defaultdict
-from sanic.cookies.request import CookieRequestParameters
 
 from plugin_types.getlang import AbstractGetLang
+from sanic.cookies.request import CookieRequestParameters
 
 
-def normalize_lang(s): return s.replace('-', '_')
+def normalize_lang(s: str): return s.replace('-', '_')
 
 
 class GetLang(AbstractGetLang):
@@ -62,9 +62,11 @@ class GetLang(AbstractGetLang):
         """
         code = self.fallback_lang
         if not isinstance(source, CookieRequestParameters):
-            raise TypeError(f'{__file__} plugin expects CookieRequestParameters instance as a source')
-        if self.cookie_name in source:
-            key = normalize_lang(source[self.cookie_name]).split('_')[0]
+            raise TypeError(
+                f'{__file__} plugin expects CookieRequestParameters instance as a source')
+        cookie = source.get(self.cookie_name)
+        if cookie is not None:
+            key = normalize_lang(cookie).split('_')[0]
             variants = self._translations[key]
             if len(variants) > 0:
                 code = variants[0]

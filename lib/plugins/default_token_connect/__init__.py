@@ -164,7 +164,8 @@ class DefaultTokenConnect(AbstractTokenConnect):
             try:
                 args = {}
                 for attr in backend.get_required_attrs():
-                    v = fetch_any_attr(corpus, attr, token_id, num_tokens if backend.supports_multi_tokens() else 1)
+                    v = fetch_any_attr(corpus, attr, token_id,
+                                       num_tokens if backend.supports_multi_tokens() else 1)
                     if '.' in attr:
                         s, sa = attr.split('.')
                         if s not in args:
@@ -174,10 +175,10 @@ class DefaultTokenConnect(AbstractTokenConnect):
                         args[attr] = v
                 cookies = {}
                 for cname in backend.get_required_cookies():
-                    if cname not in plugin_ctx.cookies:
+                    cookies[cname] = cookie = plugin_ctx.cookies.get(cname)
+                    if cookie is None:
                         raise Exception(
                             f'Backend configuration problem: cookie {cname} not available')
-                    cookies[cname] = plugin_ctx.cookies[cname]
                 data, status = await backend.fetch(
                     plugin_ctx, corpora, corpus, token_id, num_tokens, args, lang, plugin_ctx.user_is_anonymous,
                     context, cookies)

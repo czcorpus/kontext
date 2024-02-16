@@ -248,12 +248,14 @@ async def stop_receiver(app: Sanic, loop: asyncio.BaseEventLoop):
             "Stopping receiver %s", app.ctx.receiver.get_name())
         app.ctx.receiver.cancel()
 
+
 @application.middleware('request')
 async def extract_jwt(request: Request):
-    if JWT_COOKIE_NAME in request.cookies:
+    jwt_cookie = request.cookies.get(JWT_COOKIE_NAME)
+    if jwt_cookie is not None:
         try:
-            request.ctx.session = jwt.decode(
-                request.cookies.get(JWT_COOKIE_NAME), settings.get('global', 'jwt_secret'), algorithms=[JWT_ALGORITHM])
+            request.ctx.session = jwt.decode(jwt_cookie, settings.get(
+                'global', 'jwt_secret'), algorithms=[JWT_ALGORITHM])
             return
         except InvalidSignatureError as ex:
             logging.getLogger(__name__).warning(f'failed to extract JWT token: {ex}')
@@ -285,17 +287,23 @@ async def set_locale(request: Request):
 async def store_jwt(request: Request, response: HTTPResponse):
     ttl = settings.get_int('global', 'jwt_ttl_secs', 3600)
     request.ctx.session['exp'] = datetime.now(timezone.utc) + timedelta(seconds=ttl)
-    response.cookies[JWT_COOKIE_NAME] = jwt.encode(
-        request.ctx.session,  settings.get('global', 'jwt_secret'), algorithm=JWT_ALGORITHM)
-    response.cookies[JWT_COOKIE_NAME]['httponly'] = True
-    response.cookies[JWT_COOKIE_NAME]['secure'] = bool(
-        request.conn_info.ssl or request.headers.get('x-forwarded-protocol', '') == 'https'
-        or request.headers.get('x-forwarded-proto') == 'https')
+    response.cookies.add_cookie(
+        JWT_COOKIE_NAME,
+        jwt.encode(request.ctx.session,  settings.get(
+            'global', 'jwt_secret'), algorithm=JWT_ALGORITHM),
+        httponly=True,
+        secure=bool(
+            request.conn_info.ssl or request.headers.get('x-forwarded-protocol', '') == 'https'
+            or request.headers.get('x-forwarded-proto') == 'https'
+        )
+    )
+
 
 @application.middleware('response')
-async def close_http_client(request:Request, response: HTTPResponse):
+async def close_http_client(request: Request, response: HTTPResponse):
     await request.ctx.http_client.__aexit__(None, None, None)
     await asyncio.sleep(0)
+
 
 @application.signal('kontext.internal.reset')
 async def handle_soft_reset_signal():

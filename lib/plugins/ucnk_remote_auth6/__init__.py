@@ -123,19 +123,19 @@ class CentralAuth(AbstractRemoteAuth):
             cookies: Optional[Dict[str, str]] = None) -> str:
         if cookies is None:
             cookies = {}
-            async with http_client.post(
+        async with http_client.post(
                 self._auth_conf.toolbar_url,
                 headers={'Content-Type': 'application/x-www-form-urlencoded'},
                 params=args,
                 cookies=cookies,
                 timeout=self._auth_conf.toolbar_server_timeout,
                 ssl=self._ssl_context) as response:
-                if response.status == 200:
-                    return (await response.read()).decode('utf-8')
-                else:
-                    raise Exception(
-                        f'Failed to load data from authentication server (UCNK toolbar): status {response.status}'
-                    )
+            if response.status == 200:
+                return (await response.read()).decode('utf-8')
+            else:
+                raise Exception(
+                    f'Failed to load data from authentication server (UCNK toolbar): status {response.status}'
+                )
 
     async def revalidate(self, plugin_ctx: PluginCtx):
         """
@@ -147,14 +147,10 @@ class CentralAuth(AbstractRemoteAuth):
         Method also stores the response for CNC toolbar to prevent an extra API call.
         """
         curr_user_id = plugin_ctx.session.get('user', {'id': None})['id']
-        cookie_sid = plugin_ctx.cookies[
-            self._auth_conf.cookie_sid] if self._auth_conf.cookie_sid in plugin_ctx.cookies else ''
-        cookie_at = plugin_ctx.cookies[
-            self._auth_conf.cookie_at] if self._auth_conf.cookie_at in plugin_ctx.cookies else ''
-        cookie_rmme = plugin_ctx.cookies[
-            self._auth_conf.cookie_rmme] if self._auth_conf.cookie_rmme in plugin_ctx.cookies else '0'
-        cookie_lang = plugin_ctx.cookies[
-            self._auth_conf.cookie_lang] if self._auth_conf.cookie_lang in plugin_ctx.cookies else 'en'
+        cookie_sid = plugin_ctx.cookies.get(self._auth_conf.cookie_sid, '')
+        cookie_at = plugin_ctx.cookies.get(self._auth_conf.cookie_at, '')
+        cookie_rmme = plugin_ctx.cookies.get(self._auth_conf.cookie_rmme, '0')
+        cookie_lang = plugin_ctx.cookies.get(self._auth_conf.cookie_lang, 'en')
         api_args = [
             ('sid', cookie_sid),
             ('at', cookie_at),
@@ -179,7 +175,8 @@ class CentralAuth(AbstractRemoteAuth):
             response_obj['user']['id'] = int(response_obj['user']['id'])
 
         if curr_user_id != response_obj['user']['id']:
-            logging.getLogger(__name__).warning(f'>>>> changed user ID from {curr_user_id} to {response_obj["user"]["id"]}')
+            logging.getLogger(__name__).warning(
+                f'>>>> changed user ID from {curr_user_id} to {response_obj["user"]["id"]}')
             plugin_ctx.clear_session()
             if response_obj['user']['id'] != self._anonymous_id:
                 # user logged in => keep session data (except for credentials)
