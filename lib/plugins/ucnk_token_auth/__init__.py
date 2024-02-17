@@ -135,10 +135,13 @@ class UCNKTokenAuth(AbstractRemoteTokenAuth):
     def _toolbar_uses_ssl(self):
         return self._auth_conf.toolbar_url.startswith('https://')
 
-    async def _fetch_toolbar_api_response(self, cookies: Dict[str, str]) -> str:
+    async def _fetch_toolbar_api_response(
+            self,
+            http_client: aiohttp.ClientSession,
+            cookies: Optional[Dict[str, str]] = None) -> str:
         if cookies is None:
             cookies = {}
-        async with aiohttp.ClientSession().post(
+        async with http_client.post(
                 self._auth_conf.toolbar_url,
                 cookies=cookies,
                 timeout=self._auth_conf.toolbar_server_timeout,
@@ -151,7 +154,7 @@ class UCNKTokenAuth(AbstractRemoteTokenAuth):
                 )
 
     async def authenticate(self, plugin_ctx: 'PluginCtx', token_id):
-        async with aiohttp.ClientSession().post(
+        async with plugin_ctx.request.ctx.http_client.post(
                 self._auth_conf.login_url,
                 data={'personal_access_token': token_id},
                 headers={'Content-Type': 'application/x-www-form-urlencoded'},
@@ -167,7 +170,11 @@ class UCNKTokenAuth(AbstractRemoteTokenAuth):
     async def revalidate(self, plugin_ctx: PluginCtx):
         curr_user_id = plugin_ctx.session.get('user', {'id': None})['id']
         cookie_sid = plugin_ctx.request.headers.get(self._auth_conf.api_key_header)
-        response_obj = json.loads(await self._fetch_toolbar_api_response({self._auth_conf.cookie_sid: cookie_sid}))
+        api_response = await self._fetch_toolbar_api_response(
+            plugin_ctx.request.ctx.http_client,
+            {self._auth_conf.cookie_sid: cookie_sid},
+        )
+        response_obj = json.loads(api_response)
         if 'user' not in response_obj or 'id' not in response_obj['user']:
             response_obj['user'] = {'id': self._anonymous_id, 'user': 'anonymous'}
         response_obj['user']['id'] = int(response_obj['user']['id'])

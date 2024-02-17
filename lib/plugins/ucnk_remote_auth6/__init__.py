@@ -118,11 +118,12 @@ class CentralAuth(AbstractRemoteAuth):
 
     async def _fetch_toolbar_api_response(
             self,
+            http_client: aiohttp.ClientSession,
             args: List[Tuple[str, str]],
             cookies: Optional[Dict[str, str]] = None) -> str:
         if cookies is None:
             cookies = {}
-        async with aiohttp.ClientSession().post(
+        async with http_client.post(
                 self._auth_conf.toolbar_url,
                 headers={'Content-Type': 'application/x-www-form-urlencoded'},
                 params=args,
@@ -146,14 +147,10 @@ class CentralAuth(AbstractRemoteAuth):
         Method also stores the response for CNC toolbar to prevent an extra API call.
         """
         curr_user_id = plugin_ctx.session.get('user', {'id': None})['id']
-        cookie_sid = plugin_ctx.cookies[
-            self._auth_conf.cookie_sid] if self._auth_conf.cookie_sid in plugin_ctx.cookies else ''
-        cookie_at = plugin_ctx.cookies[
-            self._auth_conf.cookie_at] if self._auth_conf.cookie_at in plugin_ctx.cookies else ''
-        cookie_rmme = plugin_ctx.cookies[
-            self._auth_conf.cookie_rmme] if self._auth_conf.cookie_rmme in plugin_ctx.cookies else '0'
-        cookie_lang = plugin_ctx.cookies[
-            self._auth_conf.cookie_lang] if self._auth_conf.cookie_lang in plugin_ctx.cookies else 'en'
+        cookie_sid = plugin_ctx.cookies.get(self._auth_conf.cookie_sid, '')
+        cookie_at = plugin_ctx.cookies.get(self._auth_conf.cookie_at, '')
+        cookie_rmme = plugin_ctx.cookies.get(self._auth_conf.cookie_rmme, '0')
+        cookie_lang = plugin_ctx.cookies.get(self._auth_conf.cookie_lang, 'en')
         api_args = [
             ('sid', cookie_sid),
             ('at', cookie_at),
@@ -162,7 +159,7 @@ class CentralAuth(AbstractRemoteAuth):
             ('current', 'kontext'),
             ('continue', plugin_ctx.current_url)
         ]
-        api_response = await self._fetch_toolbar_api_response(api_args)
+        api_response = await self._fetch_toolbar_api_response(plugin_ctx.request.ctx.http_client, api_args)
         response_obj = json.loads(api_response)
         plugin_ctx.set_shared('toolbar', response_obj)  # toolbar plug-in will access this
 
@@ -178,7 +175,8 @@ class CentralAuth(AbstractRemoteAuth):
             response_obj['user']['id'] = int(response_obj['user']['id'])
 
         if curr_user_id != response_obj['user']['id']:
-            logging.getLogger(__name__).warning(f'>>>> changed user ID from {curr_user_id} to {response_obj["user"]["id"]}')
+            logging.getLogger(__name__).warning(
+                f'>>>> changed user ID from {curr_user_id} to {response_obj["user"]["id"]}')
             plugin_ctx.clear_session()
             if response_obj['user']['id'] != self._anonymous_id:
                 # user logged in => keep session data (except for credentials)

@@ -20,7 +20,7 @@
 import logging
 
 from plugin_types.token_connect import AbstractBackend, BackendException
-from plugins.common.http import HTTPClient
+from plugins.common.http import HTTPRequester
 from plugins.default_token_connect.backends.cache import cached
 
 
@@ -37,7 +37,7 @@ class DisplayLinkBackend(AbstractBackend):
     def get_required_attrs(self):
         return self._conf.get('posAttrs', [])
 
-    async def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, is_anonymous, context=None, cookies=None):
+    async def fetch(self, plugin_ctx, corpora, maincorp, token_id, num_tokens, query_args, lang, is_anonymous, context=None, cookies=None):
         attr = self._conf['posAttrs'][0]
         value = query_args[attr]
         if value:
@@ -77,19 +77,20 @@ class HTTPBackend(AbstractBackend):
         super().__init__(conf, ident, db, ttl)
         port_str = '' if self._conf.get('port', 80) else ':{}'.format(self._conf.get('port'))
         if self._conf['ssl']:
-            self._client = HTTPClient('https://{}{}'.format(self._conf['server'], port_str))
+            self._requester = HTTPRequester('https://{}{}'.format(self._conf['server'], port_str))
         else:
-            self._client = HTTPClient('http://{}{}'.format(self._conf['server'], port_str))
+            self._requester = HTTPRequester('http://{}{}'.format(self._conf['server'], port_str))
 
     @cached
-    async def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, is_anonymous, context=None, cookies=None):
+    async def fetch(
+            self, plugin_ctx, corpora, maincorp, token_id, num_tokens, query_args, lang, is_anonymous, context=None, cookies=None):
         args = dict(
-            ui_lang=self._client.enc_val(lang), corpus=self._client.enc_val(corpora[0]),
-            corpus2=self._client.enc_val(corpora[1] if len(corpora) > 1 else ''),
+            ui_lang=self._requester.enc_val(lang), corpus=self._requester.enc_val(corpora[0]),
+            corpus2=self._requester.enc_val(corpora[1] if len(corpora) > 1 else ''),
             token_id=token_id, num_tokens=num_tokens,
             **dict(
-                (k, dict((k2, self._client.enc_val(v2))
-                         for k2, v2 in list(v.items())) if type(v) is dict else self._client.enc_val(v))
+                (k, dict((k2, self._requester.enc_val(v2))
+                         for k2, v2 in list(v.items())) if type(v) is dict else self._requester.enc_val(v))
                 for k, v in list(query_args.items())))
         logging.getLogger(__name__).debug('HTTP Backend args: {0}'.format(args))
 
@@ -98,4 +99,4 @@ class HTTPBackend(AbstractBackend):
         except KeyError as ex:
             raise BackendException('Failed to build query - value {0} not found'.format(ex))
 
-        return await self._client.request('GET', query_string, {})
+        return await self._requester.request(plugin_ctx.http_client, 'GET', query_string, {})

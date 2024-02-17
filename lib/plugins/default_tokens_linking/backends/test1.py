@@ -38,7 +38,7 @@ class Test1Backend(AbstractBackend):
 
     async def fetch(
             self,
-            corp_factory,
+            plugin_ctx,
             corpus_id,
             token_id,
             token_length,
@@ -51,7 +51,7 @@ class Test1Backend(AbstractBackend):
         tokens = {}
         clicked_word = None
         for corp_id, tok_range in token_ranges.items():
-            corp = await corp_factory.get_corpus(corp_id)
+            corp = await plugin_ctx.corpus_factory.get_corpus(corp_id)
             data = conclib.get_detail_context(
                 corp=corp, pos=tok_range[0], attrs=self.required_attrs(), structs='', hitlen=token_length,
                 detail_left_ctx=0, detail_right_ctx=tok_range[1] - tok_range[0])

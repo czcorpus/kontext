@@ -12,11 +12,9 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import List
-
 import ujson as json
 from plugin_types.query_suggest import AbstractBackend
-from plugins.common.http import HTTPClient
+from plugins.common.http import HTTPRequester
 
 
 class WordSimilarityBackend(AbstractBackend):
@@ -30,16 +28,18 @@ class WordSimilarityBackend(AbstractBackend):
         self._conf = conf
         port_str = '' if self._conf.get('port', 80) else ':{}'.format(self._conf.get('port'))
         if self._conf['ssl']:
-            self._client = HTTPClient('https://{}{}'.format(self._conf['server'], port_str))
+            self._requester = HTTPRequester('https://{}{}'.format(self._conf['server'], port_str))
         else:
-            self._client = HTTPClient('http://{}{}'.format(self._conf['server'], port_str))
+            self._requester = HTTPRequester('http://{}{}'.format(self._conf['server'], port_str))
 
-    async def find_suggestion(self, user_id, ui_lang, maincorp, corpora, subcorpus, value, value_type, value_subformat,
-                              query_type, p_attr, struct, s_attr):
+    async def find_suggestion(
+            self, plugin_ctx, user_id, ui_lang, maincorp, corpora, subcorpus, value, value_type, value_subformat,
+            query_type, p_attr, struct, s_attr):
         if p_attr == 'lemma':
             path = '/'.join([self._conf['path'], 'corpora', self._conf['corpus'], 'similarWords',
-                             self._conf['model'], self._client.enc_val(value)])
-            ans, is_found = await self._client.request('GET', path, {}, None)
+                             self._conf['model'], self._requester.enc_val(value)])
+            ans, is_found = await self._requester.request(
+                plugin_ctx.http_client,'GET', path, {}, None)
             if is_found:
                 return [v['word'] for v in json.loads(ans)]
         return []

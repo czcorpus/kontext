@@ -40,8 +40,35 @@ class AbstractTokensLinking(CorpusDependentPlugin):
             token_ranges,
             lang
     ) -> List[Dict[str, Any]]:
+        """
+        Fetch data based on clicked token ID and currelt corpora
+        Args:
+            plugin_ctx: plug-in environment providing access to key runtime "per-request" resources
+            provider_ids: providers we want to ask data for
+            corpus_id: main corpus we work with
+            token_id: clicked token ID
+            token_length: number of words in token
+            token_ranges: is a dictionary [corpus ID] -> [text start ID, text end ID]
+                So it allows for specifying context in which we evaluate the clicked token.
+                Typically, this is something like an original sentence and its translation.
+            lang: language of the UI (in case we want some messages, labels etc. from the providers)
+
+        Returns:
+            responses from each provider
+        """
         pass
 
     @abc.abstractmethod
-    async def get_required_attrs(self, plugin_ctx: PluginCtx, provider_ids, corpora, row, lang) -> List[str]:
+    async def get_required_attrs(self, plugin_ctx: PluginCtx, provider_ids: List[str], corpora: List[str]) -> List[str]:
+        """
+        Return list of positional attributes our configured providers need to be able
+        to respond. KonText uses this fetch proper attributes from a corpus when preparing requests
+        for individual providers.
+        Args:
+            plugin_ctx: plug-in environment
+            provider_ids: providers we want to ask data for
+            corpora: involved corpora (one for most corpora, two or more for aligned corpora)
+        Returns:
+
+        """
         pass

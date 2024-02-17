@@ -141,7 +141,7 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
 
     @abc.abstractmethod
     async def fill_attrs(
-            self, corpus_id: str, search: str, values: List[str], fill: List[str]) -> Dict[str, Dict[str, str]]:
+            self, plugin_ctx: AbstractCorpusPluginCtx, corpus_id: str, search: str, values: List[str], fill: List[str]) -> Dict[str, Dict[str, str]]:
         """
         For a structattr and its values find values structattrs specified in fill list
 

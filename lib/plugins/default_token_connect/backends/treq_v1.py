@@ -20,6 +20,7 @@
 import logging
 import urllib.parse
 
+from aiohttp import ClientSession
 import ujson as json
 from plugins.common.http import HTTPApiLogin, HTTPUnauthorized
 from plugins.default_token_connect.backends import HTTPBackend
@@ -53,7 +54,7 @@ class TreqBackend(HTTPBackend):
     ANONYMOUS_SESSION_ID = None
 
     def __init__(self, conf, ident, db, ttl):
-        super(TreqBackend, self).__init__(conf, ident, db, ttl)
+        super().__init__(conf, ident, db, ttl)
         self._conf = conf
         self.BACKLINK_SERVER = conf.get('backlinkServer', conf['server'])
         self.AVAIL_GROUPS = conf.get('availGroups', {})
@@ -127,13 +128,14 @@ class TreqBackend(HTTPBackend):
             return f'https://{self.BACKLINK_SERVER}'
         return f'http://{self.BACKLINK_SERVER}'
 
-    async def make_request(self, path: str, session_id: str):
+    async def _make_request(self, client_session: ClientSession, path: str, session_id: str):
         headers = {'Cookie': f'{self.sid_cookie}={session_id}'}
-        data, valid = await self._client.request('GET', path, {}, headers=headers)
+        data, valid = await self._requester.request('GET', path, {}, headers=headers)
         return json.loads(data)
 
     @cached
-    async def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, is_anonymous, context=None, cookies=None):
+    async def fetch(
+            self, plugin_ctx, corpora, maincorp, token_id, num_tokens, query_args, lang, is_anonymous, context=None, cookies=None):
         """
         """
         primary_lang = self._lang_from_corpname(corpora[0])
@@ -142,8 +144,8 @@ class TreqBackend(HTTPBackend):
         if translat_corp and translat_lang:
             common_groups = self.find_lang_common_groups(primary_lang, translat_lang)
             args = dict(
-                lang1=self._client.enc_val(primary_lang), lang2=self._client.enc_val(translat_lang),
-                groups=[self._client.enc_val(s) for s in common_groups],
+                lang1=self._requester.enc_val(primary_lang), lang2=self._requester.enc_val(translat_lang),
+                groups=[self._requester.enc_val(s) for s in common_groups],
                 **query_args)
             t_args = self.mk_backlink_args(**args)
             treq_link = (self.mk_backlink_addr() + '/index.php', t_args)
@@ -156,12 +158,12 @@ class TreqBackend(HTTPBackend):
                 path = self.mk_api_path(ta_args)
                 if is_anonymous:
                     try:
-                        data = await self.make_request(path, self.ANONYMOUS_SESSION_ID)
+                        data = await self._make_request(plugin_ctx.http_client, path, self.ANONYMOUS_SESSION_ID)
                     except HTTPUnauthorized:
-                        self.ANONYMOUS_SESSION_ID = await self._token_api_client.login()
-                        data = await self.make_request(path, self.ANONYMOUS_SESSION_ID)
+                        self.ANONYMOUS_SESSION_ID = await self._token_api_client.login(plugin_ctx.http_client)
+                        data = await self._make_request(plugin_ctx.http_client, path, self.ANONYMOUS_SESSION_ID)
                 else:
-                    data = await self.make_request(path, cookies[self.sid_cookie])
+                    data = await self._make_request(plugin_ctx.http_client, path, cookies[self.sid_cookie])
 
                 max_items = self._conf.get('maxResultItems', self.DEFAULT_MAX_RESULT_LINES)
                 orig = data['lines'][:max_items]

@@ -15,6 +15,8 @@
 
 import hashlib
 from typing import Any, Dict, List, Optional, Tuple, Callable, Awaitable
+
+from aiohttp import ClientSession
 from sanic import Sanic
 from sanic.cookies.request import CookieRequestParameters
 
@@ -184,6 +186,10 @@ class BasePluginCtx(AbstractBasePluginCtx):
     @property
     def request(self) -> KRequest:
         return self._request
+
+    @property
+    def http_client(self) -> ClientSession:
+        return self._request.ctx.http_client
 
     @property
     def current_url(self) -> str:

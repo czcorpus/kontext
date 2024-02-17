@@ -349,7 +349,9 @@ async def view_conc(
             kwic_args.structs = amodel.get_struct_opts()
             kwic_args.ml_position_filters = ml_position_filters
             with plugins.runtime.TOKENS_LINKING as tl:
-                kwic_args.internal_attrs = await tl.get_required_attrs(corpus_info.tokens_linking.providers)
+                kwic_args.internal_attrs = await tl.get_required_attrs(
+                    amodel.plugin_ctx, corpus_info.tokens_linking.providers,
+                    [amodel.args.corpname] + amodel.args.align)
 
             kwic = Kwic(amodel.corp, conc)
 
@@ -519,7 +521,9 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
             kwic_args.structs = amodel.get_struct_opts()
             corpus_info = await amodel.get_corpus_info(amodel.args.corpname)
             with plugins.runtime.TOKENS_LINKING as tl:
-                kwic_args.internal_attrs = await tl.get_required_attrs(corpus_info.tokens_linking.providers)
+                kwic_args.internal_attrs = await tl.get_required_attrs(
+                    amodel.plugin_ctx, corpus_info.tokens_linking.providers,
+                    [amodel.args.corpname] + amodel.args.align)
 
             kwic = Kwic(amodel.corp, conc)
 

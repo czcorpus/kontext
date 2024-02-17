@@ -115,10 +115,9 @@ class StaticAuth(AbstractRemoteAuth):
             return None
         return hashlib.sha256(k.encode()).hexdigest()
 
-    def _get_api_key(self, plugin_ctx):
+    def _get_api_key(self, plugin_ctx: PluginCtx):
         if self._api_key_cookie_name:
-            api_key_cookie = plugin_ctx.cookies.get(self._api_key_cookie_name)
-            return api_key_cookie.value if api_key_cookie else None
+            return plugin_ctx.cookies.get(self._api_key_cookie_name)
         elif self._api_key_http_header:
             return plugin_ctx.request.headers.get(self._api_key_http_header)
 

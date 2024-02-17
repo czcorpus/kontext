@@ -52,7 +52,7 @@ def cached(fn):
     """
 
     @wraps(fn)
-    async def wrapper(self, corpora, maincorp, token_id, num_tokens, query_args, lang, is_anonymous, context, cookies):
+    async def wrapper(self, plugin_ctx, corpora, maincorp, token_id, num_tokens, query_args, lang, is_anonymous, context, cookies):
         """
         get cache db using a method defined in the abstract class
         """
@@ -63,7 +63,7 @@ def cached(fn):
         cached_data = await cache_db.get(key)
         # if no result is found in the cache, call the backend function
         if cached_data is None:
-            res = await fn(self, corpora, maincorp, token_id, num_tokens, query_args, lang, is_anonymous, context, cookies)
+            res = await fn(self, plugin_ctx, corpora, maincorp, token_id, num_tokens, query_args, lang, is_anonymous, context, cookies)
             # if a result is returned by the backend function, encode and zip its data part and store it in
             # the cache along with the "found" parameter
             await cache_db.set(key, {'data': res[0], 'found': res[1]})
