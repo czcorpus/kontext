@@ -1318,7 +1318,10 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
         kwic_args.rightctx = amodel.args.rightctx
         kwic_args.structs = amodel.get_struct_opts()
         with plugins.runtime.TOKENS_LINKING as tl:
-            kwic_args.internal_attrs = await tl.get_required_attrs(corpus_info.tokens_linking.providers)
+            kwic_args.internal_attrs = await tl.get_required_attrs(
+                amodel.plugin_ctx,
+                corpus_info.tokens_linking.providers,
+                [amodel.args.corpname] + amodel.args.align)
 
         data = kwic.kwicpage(kwic_args)
 
