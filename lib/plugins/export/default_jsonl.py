@@ -84,12 +84,12 @@ class JSONLExport(AbstractExport):
         for row_num, line in enumerate(data.Lines, args.from_line):
             row_obj = {}
             exported_line = self._process_lang(
-                line, left_key, kwic_key, right_key, add_linegroup=amodel.lines_groups.is_defined(), attr_vmode=amodel.args.attr_vmode)
+                line, left_key, kwic_key, right_key, amodel.lines_groups.is_defined(), amodel.args.attr_vmode, data.merged_attrs, data.merged_ctxattrs)
             self._enhance_refs(exported_line[0], used_refs)
             row_obj.update(exported_line[0])  # primary lang.
             if 'Align' in line:
                 aligned = self._process_lang(
-                    line['Align'], left_key, kwic_key, right_key, add_linegroup=False, attr_vmode=amodel.args.attr_vmode)
+                    line['Align'], left_key, kwic_key, right_key, False, amodel.args.attr_vmode, data.merged_attrs, data.merged_ctxattrs)
                 for aitem in aligned:
                     self._enhance_refs(aitem, used_refs)
                 row_obj['aligned'] = aligned
