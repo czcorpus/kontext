@@ -152,10 +152,10 @@ class XLSXExport(AbstractExport):
 
         for row_num, line in enumerate(data.Lines, args.from_line):
             lang_rows = self._process_lang(
-                line, left_key, kwic_key, right_key, add_linegroup=amodel.lines_groups.is_defined(), attr_vmode=amodel.args.attr_vmode)
+                line, left_key, kwic_key, right_key, amodel.lines_groups.is_defined(), amodel.args.attr_vmode, data.merged_attrs, data.merged_ctxattrs)
             if 'Align' in line:
                 lang_rows += self._process_lang(
-                    line['Align'], left_key, kwic_key, right_key, add_linegroup=False, attr_vmode=amodel.args.attr_vmode)
+                    line['Align'], left_key, kwic_key, right_key, False, amodel.args.attr_vmode, data.merged_attrs, data.merged_ctxattrs)
             self._writerow(row_num if args.numbering else None, *lang_rows)
 
     async def write_coll(self, amodel: ConcActionModel, data: CalculateCollsResult, args: SavecollArgs):

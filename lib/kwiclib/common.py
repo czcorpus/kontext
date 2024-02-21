@@ -94,13 +94,17 @@ class AttrRole(Enum):
     USER = 0b01
     INTERNAL = 0b10
 
+    @staticmethod
+    def is_role(value: int, role: 'AttrRole') -> bool:
+        return (value & role.value) == role.value
+
 
 class MergedPosAttrs(dict):
     def set_role(self, attr: str, role: AttrRole):
         self[attr] = self.get(attr, 0) | role.value
 
     def is_role(self, attr: str, role: AttrRole) -> bool:
-        return (self[attr] & role.value) == role.value
+        return AttrRole.is_role(self[attr], role)
 
 
 @dataclass

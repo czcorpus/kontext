@@ -34,7 +34,7 @@ from bgcalc.coll_calc import CalculateCollsResult
 from bgcalc.keywords import KeywordsResult
 from bgcalc.pquery.storage import PqueryDataLine
 from kwiclib import AttrRole
-from kwiclib.common import KwicPageData
+from kwiclib.common import KwicPageData, MergedPosAttrs
 from views.colls import SavecollArgs
 from views.concordance import SaveConcArgs
 from views.freqs import SavefreqArgs
@@ -52,7 +52,7 @@ class UnknownExporterException(Exception):
 
 class AbstractConcExportMixin(object):
 
-    def _merge_conc_line_parts(self, items: List[Dict[str, Any]], add_tail: bool = True) -> str:
+    def _merge_conc_line_parts(self, items: List[Dict[str, Any]], merged_attrs: List[Tuple[str, int]], add_tail: bool = True) -> str:
         """
         converts a list of dicts of the format [{'class': u'col0 coll', 'str': u' \\u0159ekl'},
             {'class': u'attr', 'str': u'/j\xe1/PH-S3--1--------'},...] to a CSV compatible form
@@ -64,8 +64,11 @@ class AbstractConcExportMixin(object):
             else:
                 ans.append([str(item['str']).strip()])
             if add_tail:
-                for posattr in item.get('posattrs', []):
-                    ans[-1].append(posattr)  # TODO take into account attr role
+                # enumerate from 1, merged_attrs[0] corresponds to item['str']
+                for i, posattr in enumerate(item.get('posattrs', []), 1):
+                    # display only user set attrs, filter out internals
+                    if AttrRole.is_role(merged_attrs[i][1], AttrRole.USER):
+                        ans[-1].append(posattr)
         return ' '.join('/'.join(x) for x in ans).strip()
 
     def _process_lang(
@@ -76,6 +79,8 @@ class AbstractConcExportMixin(object):
             right_key: str,
             add_linegroup: bool,
             attr_vmode: str,
+            merged_attrs: List[Tuple[str, int]],
+            merged_ctxattrs: List[Tuple[str, int]],
     ) -> List[Dict[str, str]]:
 
         if isinstance(root, dict):
@@ -89,11 +94,11 @@ class AbstractConcExportMixin(object):
             if add_linegroup:
                 ans_item['linegroup'] = items.get('linegroup', '')
             ans_item['left_context'] = self._merge_conc_line_parts(
-                items[left_key], attr_vmode not in ['visible-kwic', 'mouseover'])
+                items[left_key], merged_ctxattrs, attr_vmode not in ['visible-kwic', 'mouseover'])
             ans_item['kwic'] = self._merge_conc_line_parts(
-                items[kwic_key], attr_vmode not in ['mouseover'])
+                items[kwic_key], merged_attrs, attr_vmode not in ['mouseover'])
             ans_item['right_context'] = self._merge_conc_line_parts(
-                items[right_key], attr_vmode not in ['visible-kwic', 'mouseover'])
+                items[right_key], merged_ctxattrs, attr_vmode not in ['visible-kwic', 'mouseover'])
             ans.append(ans_item)
         return ans
 
