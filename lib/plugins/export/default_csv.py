@@ -101,7 +101,7 @@ class CSVExport(AbstractExport):
                     self._formatnumber(data.concsize),
                     self._formatnumber(data.result_arf),
                     ',\n'.join(
-                        f"{x.op}: {x.arg} ({self._formatnumber(x.size)})"
+                        f"{x.op}: {x.args} ({self._formatnumber(x.size)})"
                         for x in (await amodel.concdesc_json())
                     ),
                 ), '', '', ''])
