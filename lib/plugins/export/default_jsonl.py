@@ -71,7 +71,7 @@ class JSONLExport(AbstractExport):
 
     async def write_conc(self, amodel: ConcActionModel, data: KwicPageData, args: SaveConcArgs):
         refs_args = [x.strip('=') for x in amodel.args.refs.split(',')]
-        used_refs = [(x, x) for x in amodel.corp.get_structattrs()]
+        used_refs = [('#', '#')] + [(x, x) for x in amodel.corp.get_structattrs()]
         used_refs = [x[1] for x in used_refs if x[0] in refs_args]
 
         if 'Left' in data.Lines[0]:
