@@ -86,14 +86,18 @@ class ResultWrapper(AbstractResultWrapper[T]):
 
             if '.' in exc_params.path:
                 module, cls_name = exc_params.path.rsplit('.', 1)
-                try:
-                    m = importlib.import_module(module)
-                    cls = getattr(m, cls_name, None)
-                    err = cls(*exc_params.args) if cls else Exception(*exc_params.args)
-                except ModuleNotFoundError:
-                    logging.getLogger(__name__).warning(
-                        'Failed to infer calc backend job error {}'.format(exc_params.path))
-                    err = Exception(f'Task failed: {job_id}')
+                if module == 'manatee':
+                    # manatee does not store exception args in exc_params.args
+                    err = Exception(f'Manatee exception raised: {cls_name}')
+                else:
+                    try:
+                        m = importlib.import_module(module)
+                        cls = getattr(m, cls_name, None)
+                        err = cls(*exc_params.args) if cls else Exception(*exc_params.args)
+                    except ModuleNotFoundError:
+                        logging.getLogger(__name__).warning(
+                            'Failed to infer calc backend job error {}'.format(exc_params.path))
+                        err = Exception(f'Task failed: {job_id}')
             else:
                 cls = getattr(sys.modules['builtins'], exc_params.path, None)
                 err = cls(*exc_params.args) if cls else Exception(*exc_params.args)
