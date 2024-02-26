@@ -54,7 +54,6 @@ from texttypes.model import TextTypes
 T = TypeVar('T')
 
 
-
 PREFLIGHT_MIN_LARGE_CORPUS = 500_000_000
 """Specifies a minimum size of a corpus to be used along with preflight queries"""
 
@@ -216,7 +215,8 @@ class CorpusActionModel(UserActionModel):
                         req_args.add_forced_arg('usesubcorp', self._active_q_data['usesubcorp'])
                     return True
                 else:
-                    raise UserReadableException(self._req.translate('Invalid or expired query'))
+                    raise UserReadableException(self._req.translate(
+                        'Invalid or expired query'), code=404)
         return False
 
     async def _save_query_to_history(self, query_id: str, conc_data) -> Optional[int]:
@@ -717,7 +717,8 @@ class CorpusActionModel(UserActionModel):
                     if tagset.ident == corp_info.default_tagset:
                         poslist = tagset.pos_category
                         break
-                tpl_out['Wposlist_' + al] = [{'n': self._req.translate(x.pos), 'v': x.pattern} for x in poslist]
+                tpl_out['Wposlist_' +
+                        al] = [{'n': self._req.translate(x.pos), 'v': x.pattern} for x in poslist]
                 tpl_out['input_languages'][al] = corp_info.metadata.default_virt_keyboard if corp_info.metadata.default_virt_keyboard else corp_info.collator_locale
 
     async def create_preflight_subcorpus(self) -> str:
