@@ -54,7 +54,6 @@ from texttypes.model import TextTypes
 T = TypeVar('T')
 
 
-
 PREFLIGHT_MIN_LARGE_CORPUS = 500_000_000
 """Specifies a minimum size of a corpus to be used along with preflight queries"""
 
@@ -195,10 +194,10 @@ class CorpusActionModel(UserActionModel):
             if len(url_q) > 0 and query_persistence.is_valid_id(url_q[0]):
                 self._q_code = url_q[0][1:]
                 aqdata = await query_persistence.open(self._q_code)
-                self._active_q_data = await dh.transform_stored_query_data(aqdata) if dh is not None else aqdata
                 # !!! must create a copy here otherwise _q_data (as prev query)
                 # will be rewritten by self.args.q !!!
-                if self._active_q_data is not None:
+                if aqdata is not None:
+                    self._active_q_data = await dh.transform_stored_query_data(aqdata) if dh is not None else aqdata
                     req_args.add_forced_arg('q', *(self._active_q_data.get('q', [])[:] + url_q[1:]))
                     corpora = self._active_q_data.get('corpora', [])
                     if len(corpora) > 0:
@@ -216,7 +215,8 @@ class CorpusActionModel(UserActionModel):
                         req_args.add_forced_arg('usesubcorp', self._active_q_data['usesubcorp'])
                     return True
                 else:
-                    raise UserReadableException(self._req.translate('Invalid or expired query'))
+                    raise UserReadableException(self._req.translate(
+                        'Invalid or expired query'), code=404)
         return False
 
     async def _save_query_to_history(self, query_id: str, conc_data) -> Optional[int]:
@@ -717,7 +717,8 @@ class CorpusActionModel(UserActionModel):
                     if tagset.ident == corp_info.default_tagset:
                         poslist = tagset.pos_category
                         break
-                tpl_out['Wposlist_' + al] = [{'n': self._req.translate(x.pos), 'v': x.pattern} for x in poslist]
+                tpl_out['Wposlist_' +
+                        al] = [{'n': self._req.translate(x.pos), 'v': x.pattern} for x in poslist]
                 tpl_out['input_languages'][al] = corp_info.metadata.default_virt_keyboard if corp_info.metadata.default_virt_keyboard else corp_info.collator_locale
 
     async def create_preflight_subcorpus(self) -> str:
