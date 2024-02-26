@@ -17,7 +17,8 @@ import json
 import logging
 import secrets
 from functools import wraps
-from typing import Any, Callable, Coroutine, Optional, Type, Union, Tuple, Dict, Awaitable
+from typing import (
+    Any, Awaitable, Callable, Coroutine, Dict, Optional, Tuple, Type, Union)
 
 import settings
 from action.argmapping.action import create_mapped_args
@@ -25,12 +26,12 @@ from action.errors import (
     AlignedCorpusForbiddenException, CorpusForbiddenException,
     ForbiddenException, ImmediateRedirectException, UserReadableException)
 from action.krequest import KRequest
-from action.req_args import AnyRequestArgProxy
 from action.model import ModelsSharedData
 from action.model.abstract import AbstractPageModel, AbstractUserModel
 from action.model.base import BaseActionModel
 from action.model.user import UserActionModel
 from action.props import ActionProps
+from action.req_args import AnyRequestArgProxy
 from action.response import KResponse
 from action.result.base import BaseResult
 from action.templating import CustomJSONEncoder, ResultType, TplEngine
@@ -120,15 +121,18 @@ async def resolve_error(
         resp.set_http_status(err.code)
         if err.error_args:
             ans['error_args'] = err.error_args
-    elif is_debug:
-        resp.add_system_message('error', str(err))
-        resp.set_http_status(500)
+
     else:
-        resp.add_system_message('error', 'System problem detected. Please contact administrator.')
+        logging.getLogger(__name__).exception(err)
         resp.set_http_status(500)
+        if is_debug:
+            resp.add_system_message('error', str(err))
+
+        else:
+            resp.add_system_message(
+                'error', 'System problem detected. Please contact administrator.')
 
     if is_debug:
-        logging.getLogger(__name__).exception(err)
         import traceback
         resp.add_system_message('error', traceback.format_exc())
 
@@ -157,8 +161,9 @@ def http_action(
         mutates_result: bool = False,
         return_type: Optional[str] = None,
         action_log_mapper: Optional[Callable[[KRequest], Any]] = None,
-        corpus_name_determiner: Optional[Callable[[AnyRequestArgProxy, Dict[str, Any]], Awaitable[Tuple[str, bool]]]] = None
-        ):
+        corpus_name_determiner: Optional[Callable[[
+            AnyRequestArgProxy, Dict[str, Any]], Awaitable[Tuple[str, bool]]]] = None
+):
     """
     http_action decorator wraps Sanic view functions to provide more
     convenient arguments (including important action models). KonText
