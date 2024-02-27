@@ -23,7 +23,7 @@ services:
     networks:
       - databases
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
       interval: 1s
       timeout: 10s
       retries: 5
