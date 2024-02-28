@@ -47,6 +47,8 @@ export interface QuerySaveAsFormModelState {
     concTTLDays:number;
     concIsArchived:boolean;
     willBeArchived:boolean;
+    userQueryId:string;
+    userQueryIdValid:boolean;
 }
 
 /**
@@ -55,6 +57,8 @@ export interface QuerySaveAsFormModelState {
 export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelState> {
 
     private layoutModel:PageModel;
+
+    private userQueryValidator:RegExp;
 
     constructor(
         dispatcher:IActionDispatcher,
@@ -71,10 +75,13 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                 isValidated: false,
                 concTTLDays,
                 concIsArchived: false,
-                willBeArchived: false
+                willBeArchived: false,
+                userQueryId: '',
+                userQueryIdValid: true,
             }
         );
         this.layoutModel = layoutModel;
+        this.userQueryValidator = new RegExp('[^a-zA-Z0-9_-]+');
 
         this.addActionHandler(
             Actions.SaveAsFormSetName,
@@ -100,20 +107,20 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                             this.layoutModel.translate('query__save_as_cannot_have_empty_name'));
 
                 } else {
-                    this.submit(state).subscribe(
-                        () => {
+                    this.submit(state).subscribe({
+                        next: () => {
                             this.layoutModel.resetMenuActiveItemAndNotify();
                             dispatch<typeof Actions.SaveAsFormSubmitDone>({
                                 name: Actions.SaveAsFormSubmitDone.name
                             });
                         },
-                        (err) => {
+                        error: (err) => {
                             this.layoutModel.showMessage('error', err);
                             dispatch<typeof Actions.SaveAsFormSubmitDone>({
                                 name: Actions.SaveAsFormSubmitDone.name
                             });
                         }
-                    );
+                    });
                 }
             }
         );
@@ -253,6 +260,14 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                 this.layoutModel.showMessage(
                     'info', this.layoutModel.translate('global__link_copied_to_clipboard'));
             }
+        );
+
+        this.addActionHandler(
+            Actions.UserQueryIdChange,
+            (state, action) => {
+                state.userQueryId = action.payload.value;
+                state.userQueryIdValid = !this.userQueryValidator.test(action.payload.value) || action.payload.value.length > 191;
+            },
         );
     }
 

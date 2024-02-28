@@ -736,6 +736,8 @@ export function init({
             this.handleSubmit = this.handleSubmit.bind(this);
             this.handleRevokeSubmit = this.handleRevokeSubmit.bind(this);
             this.handleCopyToClipboard = this.handleCopyToClipboard.bind(this);
+            this.handleUserIdChange = this.handleUserIdChange.bind(this);
+            this.handleUserIdSubmit = this.handleUserIdSubmit.bind(this);
         }
 
         private handleCloseEvent() {
@@ -773,6 +775,14 @@ export function init({
             );
         }
 
+        private handleUserIdChange(value: string) {
+            dispatcher.dispatch(Actions.UserQueryIdChange, {value});
+        }
+
+        private handleUserIdSubmit() {
+            dispatcher.dispatch(Actions.UserQueryIdSubmit);
+        }
+
         componentDidMount() {
             dispatcher.dispatch(
                 ConcActions.GetConcArchiveStatus
@@ -791,6 +801,21 @@ export function init({
                         {this.props.isBusy ?
                             <layoutViews.AjaxLoaderImage /> :
                             <Style_PersistentConcordanceForm>
+                                <div className="input-row">
+                                    <input type="text" value={this.props.userQueryId}
+                                            onChange={e => this.handleUserIdChange(e.target.value)} />
+                                    <span style={{width: '1.8em', marginLeft: '0.3em'}} hidden={this.props.userQueryIdValid}>
+                                        <layoutViews.StatusIcon status="error" htmlClass="icon"/>
+                                    </span>
+                                </div>
+                                <p>
+                                    <button type="button"
+                                            className={this.props.userQueryId.length > 0 && this.props.userQueryIdValid ? "default-button" : "disabled"}
+                                            onClick={this.handleUserIdSubmit}
+                                            disabled={this.props.userQueryId.length === 0 || !this.props.userQueryIdValid}>
+                                        Create with new ID (TODO)
+                                    </button>
+                                </p>
                                 <Style_SaveHintParagraph>
                                     <layoutViews.StatusIcon status="info" inline={true} htmlClass="icon" />
                                     {this.props.concIsArchived || this.props.willBeArchived ?
@@ -798,11 +823,11 @@ export function init({
                                         he.translate('concview__permanent_link_hint_{ttl}', {ttl: this.props.concTTLDays})
                                     }
                                 </Style_SaveHintParagraph>
-                                <div className="link">
+                                <div className="input-row">
                                     <input type="text" readOnly={true}
                                             disabled={!this.props.concIsArchived}
                                             value={this.createPermanentUrl()}
-                                            className={this.props.concIsArchived || this.props.willBeArchived ? 'archived' : ''}
+                                            className={this.props.concIsArchived || this.props.willBeArchived ? 'link archived' : 'link'}
                                             onClick={e => this.props.concIsArchived || this.props.willBeArchived ?
                                                             (e.target as HTMLInputElement).select() : null} />
                                     <a onClick={this.handleCopyToClipboard}>

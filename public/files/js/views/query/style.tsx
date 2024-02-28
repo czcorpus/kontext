@@ -68,7 +68,7 @@ export const SaveHintParagraph = styled.p`
 
 export const PersistentConcordanceForm = styled.form`
 
-    .link {
+    .input-row {
         display: flex;
         align-items: center;
         margin-top: 0.4em;
@@ -77,6 +77,9 @@ export const PersistentConcordanceForm = styled.form`
         input {
             font-size: 1.5em;
             width: 30em;
+        }
+
+        input.link {
             color: ${theme.colorSuperlightText};
         }
     }
