@@ -311,8 +311,8 @@ CREATE TABLE kontext_conc_persistence (
   id varchar(191) NOT NULL,
   data json NOT NULL,
   created timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  num_access int(11) NOT NULL DEFAULT '0',
-  last_access timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  num_access int(11) NOT NULL DEFAULT 0,
+  last_access timestamp,
   PRIMARY KEY (id,created)
 ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
