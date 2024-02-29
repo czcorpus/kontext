@@ -229,10 +229,10 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
                     r1.get('lines_groups') != r2.get('lines_groups'))
 
         if prev_data is None or records_differ(curr_data, prev_data):
-            data_id = generate_idempotent_id(curr_data)
-            curr_data[ID_KEY] = data_id
             if prev_data is not None:
                 curr_data['prev_id'] = prev_data['id']
+            data_id = generate_idempotent_id(curr_data)
+            curr_data[ID_KEY] = data_id
             curr_data[PERSIST_LEVEL_KEY] = self._get_persist_level_for(user_id)
             curr_data[USER_ID_KEY] = user_id
             data_key = mk_key(data_id)
