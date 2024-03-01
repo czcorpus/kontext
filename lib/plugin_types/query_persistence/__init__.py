@@ -18,9 +18,12 @@
 
 import abc
 import logging
-from typing import Any, Callable, Coroutine, Dict, List, Optional, Tuple, Union, TypeVar, Awaitable
+from typing import (
+    Any, Awaitable, Callable, Coroutine, Dict, List, Optional, Tuple, TypeVar,
+    Union)
 
 import settings
+from action.argmapping.conc import decode_raw_query
 
 if settings.get_bool('global', 'legacy_support', False):
     from legacy.concordance import upgrade_stored_record
@@ -177,7 +180,7 @@ class AbstractQueryPersistence(abc.ABC):
 
     MapRes = TypeVar('MapRes')
 
-    async def map_pipeline_ops(self, last_id: str, fn: Callable[[str, Dict], Awaitable[MapRes]]) -> List[MapRes]:
+    async def map_pipeline_ops(self, plugin_ctx: PluginCtx, last_id: str, fn: Callable[[str, Dict], Awaitable[MapRes]]) -> List[MapRes]:
         """
         Go back to the first operation of a query chain starting from 'last_id' and apply
         a provided map function to the value
@@ -190,10 +193,33 @@ class AbstractQueryPersistence(abc.ABC):
             ans.append(await fn(data['id'], data))
         limit = 100
         while data is not None and data.get('prev_id') and limit > 0:
-            prev_id = data['prev_id']
-            data = await self.open(prev_id)
+            last_data = data
+            data = await self.open(data.get('prev_id'))
             if data is None:
-                raise QueryPersistenceRecNotFound(f'no data found for query "{prev_id}"')
+                logging.warning("Query persistence data %s not found, attempting reconstruction")
+                if limit <= len(last_data['q'][:-1]):
+                    limit = 0
+                    break
+
+                op_forms = await decode_raw_query(plugin_ctx, last_data['corpora'], last_data['q'][:-1])
+                query_list = []
+                for q, form in op_forms:
+                    query_list.append(q)
+                    tmp = {
+                        "user_id": last_data['user_id'],
+                        "q": [*query_list],
+                        "corpora": last_data['corpora'],
+                        "usesubcorp": last_data['usesubcorp'],
+                        "lines_groups": last_data['lines_groups'],
+                        "lastop_form": form.to_dict(),
+                        "prev_id": "TODO",
+                        "id": "TODO",
+                        "persist_level": last_data['persist_level'],
+                    }
+                    ans.insert(0, await fn(tmp['id'], tmp))
+
+                logging.info(ans)
+                #raise QueryPersistenceRecNotFound(f'no data found for query "{prev_id}"')
             else:
                 ans.insert(0, await fn(data['id'], data))
             limit -= 1
@@ -219,7 +245,7 @@ class AbstractQueryPersistence(abc.ABC):
             return await conc_form_args_factory(plugin_ctx, data.get('corpora', []), form_data, op_id)
 
         attr_list = plugin_ctx.current_corpus.get_posattrs()
-        ans = await self.map_pipeline_ops(last_id, map_fn)
+        ans = await self.map_pipeline_ops(plugin_ctx, last_id, map_fn)
         logging.getLogger(__name__).debug('load pipeline ops: {}'.format(ans))
         return ans
 
