@@ -48,6 +48,7 @@ export interface QuerySaveAsFormModelState {
     concIsArchived:boolean;
     willBeArchived:boolean;
     userQueryId:string;
+    userQueryIdMsg:Array<string>;
     userQueryIdValid:boolean;
 }
 
@@ -77,6 +78,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                 concIsArchived: false,
                 willBeArchived: false,
                 userQueryId: '',
+                userQueryIdMsg: [],
                 userQueryIdValid: true,
             }
         );
@@ -266,7 +268,16 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
             Actions.UserQueryIdChange,
             (state, action) => {
                 state.userQueryId = action.payload.value;
-                state.userQueryIdValid = !this.userQueryValidator.test(action.payload.value) || action.payload.value.length > 191;
+                state.userQueryIdMsg = [];
+                state.userQueryIdValid = true;
+                if (action.payload.value.length > 191) {
+                    state.userQueryIdValid = false;
+                    state.userQueryIdMsg.push(this.layoutModel.translate('concview__create_new_id_msg_too_long'));
+                }
+                if (this.userQueryValidator.test(action.payload.value)) {
+                    state.userQueryIdValid = false;
+                    state.userQueryIdMsg.push(this.layoutModel.translate('concview__create_new_id_msg_invalid_chars'));
+                }
             },
         );
     }

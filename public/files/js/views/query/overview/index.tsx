@@ -813,8 +813,9 @@ export function init({
                                             className={this.props.userQueryId.length > 0 && this.props.userQueryIdValid ? "default-button" : "disabled"}
                                             onClick={this.handleUserIdSubmit}
                                             disabled={this.props.userQueryId.length === 0 || !this.props.userQueryIdValid}>
-                                        Create with new ID (TODO)
+                                        {he.translate('concview__create_new_id_button')}
                                     </button>
+                                    <span style={{marginLeft: "1em"}}>{this.props.userQueryIdMsg.join(", ")}</span>
                                 </p>
                                 <Style_SaveHintParagraph>
                                     <layoutViews.StatusIcon status="info" inline={true} htmlClass="icon" />
