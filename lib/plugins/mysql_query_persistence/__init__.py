@@ -338,6 +338,23 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
                                      dry_run=dry_run, num_proc=num_proc)
         return archive_concordance,
 
+    async def _update(self, data):
+        """
+        Update stored data by data['id']. Used only for internal data correction!
+        """
+        data_id = data[ID_KEY]
+        data_key = mk_key(data_id)
+        if await self.db.exists(data_key):
+            await self.db.set(data_key, data)
+
+        async with self._archive.cursor() as cursor:
+            await cursor.execute(
+                'UPDATE kontext_conc_persistence '
+                'SET data = %s WHERE id = %s',
+                (json.dumps(data), data_id)
+            )
+            await cursor.connection.commit()
+
 
 @inject(plugins.runtime.DB, plugins.runtime.INTEGRATION_DB, plugins.runtime.AUTH)
 def create_instance(settings, db: KeyValueStorage, integration_db: MySqlIntegrationDb, auth: AbstractAuth):

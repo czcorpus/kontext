@@ -285,6 +285,14 @@ class DefaultQueryPersistence(AbstractQueryPersistence):
             and self._settings.get('plugins', 'query_persistence').get('implicit_archiving', None) in ('true', '1', 1)\
             and not self._auth.is_anonymous(plugin_ctx.user_id)
 
+    async def _update(self, data):
+        """
+        Update stored data by data['id']. Used only for internal data correction!
+        """
+        data_key = self._mk_key(data[ID_KEY])
+        if self._db.exists(data_key):
+            await self._db.set(data_key, data)
+
 
 @inject(plugins.runtime.DB, plugins.runtime.AUTH)
 def create_instance(settings, db, auth):

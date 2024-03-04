@@ -219,6 +219,20 @@ class StableQueryPersistence(AbstractQueryPersistence):
             'using conc_persistence archives {0}'.format([x[0] for x in dbs]))
         return [x[1] for x in dbs]
 
+    async def _update(self, data):
+        """
+        Update stored data by data['id']. Used only for internal data correction!
+        """
+        data_id = data[ID_KEY]
+        data_key = mk_key(data_id)
+        if await self.db.exists(data_key):
+            await self.db.set(data_key, data)
+
+        archive_db = self.find_key_db(data_id)
+        cursor = archive_db.cursor()
+        cursor.execute('UPDATE archive SET data = ? WHERE id = ?', (json.dumps(data), data_id))
+        archive_db.commit()
+
 
 @inject(plugins.runtime.DB)
 def create_instance(settings, db: KeyValueStorage):

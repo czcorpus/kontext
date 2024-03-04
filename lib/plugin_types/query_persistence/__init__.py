@@ -104,6 +104,12 @@ class AbstractQueryPersistence(abc.ABC):
         """
 
     @abc.abstractmethod
+    async def _update(self, data: Dict):
+        """
+        Update stored data by data['id']. Used only for internal data correction!
+        """
+
+    @abc.abstractmethod
     async def archive(self, user_id: int, conc_id: str, revoke: bool = False) -> Tuple[int, Dict[str, Any]]:
         """
         Make the concordance record persistent. For implementations which
@@ -205,7 +211,7 @@ class AbstractQueryPersistence(abc.ABC):
                     limit = 0
                     break
 
-                user_id = last_data['user_id']
+                # generate missing operations chain and store in db
                 op_forms = await decode_raw_query(plugin_ctx, last_data['corpora'], last_data['q'][:-1])
                 last_new_entry = None
                 for i, (q, form) in enumerate(op_forms):
@@ -216,10 +222,13 @@ class AbstractQueryPersistence(abc.ABC):
                         "lines_groups": last_data['lines_groups'],
                         "lastop_form": form.to_dict(),
                     }
-                    await self.store(user_id, new_entry, last_new_entry)
+                    await self.store(last_data['user_id'], new_entry, last_new_entry)
                     ans.insert(i, await fn(new_entry['id'], new_entry))
                     last_new_entry = new_entry
-                # TODO update last link `prev_id` with `last_new_entry['id]``
+
+                # update last_data to connect the chain
+                last_data['prev_id'] = last_new_entry['id']
+                await self._update(last_data)
                 logging.debug("Query persistence chain reconstruction result: %s", ans)
 
             else:
