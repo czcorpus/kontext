@@ -38,11 +38,10 @@ from action.errors import ForbiddenException, UserReadableException
 from plugin_types.auth import AbstractAuth
 from plugin_types.general_storage import KeyValueStorage
 from plugin_types.query_persistence import AbstractQueryPersistence
+from plugin_types.query_persistence.common import (
+    ID_KEY, PERSIST_LEVEL_KEY, QUERY_KEY, USER_ID_KEY, generate_idempotent_id)
 from plugins import inject
 from util import int2chash
-
-
-DEFAULT_CONC_ID_LENGTH = 12
 
 DEFAULT_TTL_DAYS = 100
 
@@ -69,10 +68,6 @@ def mk_short_id(s, min_length):
     """
     x = int(hashlib.md5(s).hexdigest(), 16)
     return int2chash(x, min_length)
-
-
-def generate_uniq_id():
-    return mk_short_id(uuid.uuid1().hex.encode(), min_length=DEFAULT_CONC_ID_LENGTH)
 
 
 class Sqlite3ArchBackend(object):
@@ -176,6 +171,12 @@ class DefaultQueryPersistence(AbstractQueryPersistence):
         self._anonymous_user_ttl_days = anonymous_ttl_days
         self._archive_backend = archive_backend
 
+    def _get_persist_level_for(self, user_id):
+        if self._auth.is_anonymous(user_id):
+            return 0
+        else:
+            return 1
+
     @property
     def ttl(self):
         return self._ttl_days * 24 * 3600
@@ -241,21 +242,21 @@ class DefaultQueryPersistence(AbstractQueryPersistence):
         3) None if neither previous nor new operation is defined
         """
         def records_differ(r1, r2):
-            return r1['q'] != r2['q'] or r1.get('lines_groups') != r2.get('lines_groups')
+            return r1[QUERY_KEY] != r2[QUERY_KEY] or r1.get('lines_groups') != r2.get('lines_groups')
 
         if prev_data is None or records_differ(curr_data, prev_data):
-            data_id = generate_uniq_id()
-            curr_data['id'] = data_id
-            curr_data['user_id'] = user_id
             if prev_data is not None:
-                curr_data['prev_id'] = prev_data['id']
+                curr_data['prev_id'] = prev_data[ID_KEY]
+            data_id = generate_idempotent_id(curr_data)
+            curr_data[ID_KEY] = data_id
+            curr_data[PERSIST_LEVEL_KEY] = self._get_persist_level_for(user_id)
+            curr_data[USER_ID_KEY] = user_id
             data_key = self._mk_key(data_id)
-
             await self._db.set(data_key, curr_data)
             await self._db.set_ttl(data_key, self._get_ttl_for(user_id))
-            latest_id = curr_data['id']
+            latest_id = curr_data[ID_KEY]
         else:
-            latest_id = prev_data['id']
+            latest_id = prev_data[ID_KEY]
         return latest_id
 
     async def archive(self, user_id, conc_id, revoke=False):

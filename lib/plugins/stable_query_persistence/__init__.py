@@ -39,12 +39,10 @@ import ujson as json
 from action.errors import ForbiddenException, NotFoundException
 from plugin_types.general_storage import KeyValueStorage
 from plugin_types.query_persistence import AbstractQueryPersistence
-from plugin_types.query_persistence.common import generate_idempotent_hex_id
+from plugin_types.query_persistence.common import (
+    ID_KEY, QUERY_KEY, USER_ID_KEY, generate_idempotent_hex_id)
 from plugins import inject
 
-QUERY_KEY = 'q'
-ID_KEY = 'id'
-USER_ID_KEY = 'user_id'
 DEFAULT_TTL_DAYS = 7
 
 

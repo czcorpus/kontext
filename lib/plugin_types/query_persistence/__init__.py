@@ -189,40 +189,45 @@ class AbstractQueryPersistence(abc.ABC):
         data = await self.open(last_id)
         if data is None:
             raise QueryPersistenceRecNotFound(f'no data found for query "{last_id}"')
+
         else:
             ans.append(await fn(data['id'], data))
+
         limit = 100
-        while data is not None and data.get('prev_id') and limit > 0:
+        prev_id = data.get('prev_id')
+        while data is not None and prev_id is not None and limit > 0:
             last_data = data
-            data = await self.open(data.get('prev_id'))
+            data = await self.open(prev_id)
             if data is None:
-                logging.warning("Query persistence data %s not found, attempting reconstruction")
+                logging.warning(
+                    "Query persistence data %s not found, attempting reconstruction", prev_id)
                 if limit <= len(last_data['q'][:-1]):
                     limit = 0
                     break
 
+                user_id = last_data['user_id']
                 op_forms = await decode_raw_query(plugin_ctx, last_data['corpora'], last_data['q'][:-1])
-                query_list = []
-                for q, form in op_forms:
-                    query_list.append(q)
-                    tmp = {
-                        "user_id": last_data['user_id'],
-                        "q": [*query_list],
+                last_new_entry = None
+                for i, (q, form) in enumerate(op_forms):
+                    new_entry = {
+                        "q": [q] if last_new_entry is None else [*last_new_entry['q'], q],
                         "corpora": last_data['corpora'],
                         "usesubcorp": last_data['usesubcorp'],
                         "lines_groups": last_data['lines_groups'],
                         "lastop_form": form.to_dict(),
-                        "prev_id": "TODO",
-                        "id": "TODO",
-                        "persist_level": last_data['persist_level'],
                     }
-                    ans.insert(0, await fn(tmp['id'], tmp))
+                    await self.store(user_id, new_entry, last_new_entry)
+                    ans.insert(i, await fn(new_entry['id'], new_entry))
+                    last_new_entry = new_entry
+                # TODO update last link `prev_id` with `last_new_entry['id]``
+                logging.debug("Query persistence chain reconstruction result: %s", ans)
 
-                logging.info(ans)
-                #raise QueryPersistenceRecNotFound(f'no data found for query "{prev_id}"')
             else:
                 ans.insert(0, await fn(data['id'], data))
+                prev_id = data.get('prev_id')
+
             limit -= 1
+
         if limit == 0:
             logging.getLogger(__name__).warning(
                 'Reached hard limit when loading query pipeline {0}'.format(last_id))
