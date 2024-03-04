@@ -22,9 +22,12 @@ import uuid
 from typing import Any, Dict, Union
 
 import ujson as json
-
 from util import int2chash
 
+PERSIST_LEVEL_KEY = 'persist_level'
+USER_ID_KEY = 'user_id'
+ID_KEY = 'id'
+QUERY_KEY = 'q'
 
 DEFAULT_CONC_ID_LENGTH = 12
 

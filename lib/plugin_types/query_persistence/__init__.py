@@ -18,9 +18,12 @@
 
 import abc
 import logging
-from typing import Any, Callable, Coroutine, Dict, List, Optional, Tuple, Union, TypeVar, Awaitable
+from typing import (
+    Any, Awaitable, Callable, Coroutine, Dict, List, Optional, Tuple, TypeVar,
+    Union)
 
 import settings
+from action.argmapping.conc import decode_raw_query
 
 if settings.get_bool('global', 'legacy_support', False):
     from legacy.concordance import upgrade_stored_record
@@ -101,6 +104,12 @@ class AbstractQueryPersistence(abc.ABC):
         """
 
     @abc.abstractmethod
+    async def _update(self, data: Dict):
+        """
+        Update stored data by data['id']. Used only for internal data correction!
+        """
+
+    @abc.abstractmethod
     async def archive(self, user_id: int, conc_id: str, revoke: bool = False) -> Tuple[int, Dict[str, Any]]:
         """
         Make the concordance record persistent. For implementations which
@@ -177,7 +186,7 @@ class AbstractQueryPersistence(abc.ABC):
 
     MapRes = TypeVar('MapRes')
 
-    async def map_pipeline_ops(self, last_id: str, fn: Callable[[str, Dict], Awaitable[MapRes]]) -> List[MapRes]:
+    async def map_pipeline_ops(self, plugin_ctx: PluginCtx, last_id: str, fn: Callable[[str, Dict], Awaitable[MapRes]]) -> List[MapRes]:
         """
         Go back to the first operation of a query chain starting from 'last_id' and apply
         a provided map function to the value
@@ -186,17 +195,48 @@ class AbstractQueryPersistence(abc.ABC):
         data = await self.open(last_id)
         if data is None:
             raise QueryPersistenceRecNotFound(f'no data found for query "{last_id}"')
+
         else:
             ans.append(await fn(data['id'], data))
+
         limit = 100
-        while data is not None and data.get('prev_id') and limit > 0:
-            prev_id = data['prev_id']
+        prev_id = data.get('prev_id')
+        while data is not None and prev_id is not None and limit > 0:
+            last_data = data
             data = await self.open(prev_id)
             if data is None:
-                raise QueryPersistenceRecNotFound(f'no data found for query "{prev_id}"')
+                logging.warning(
+                    "Query persistence data %s not found, attempting reconstruction", prev_id)
+                if limit <= len(last_data['q'][:-1]):
+                    limit = 0
+                    break
+
+                # generate missing operations chain and store in db
+                op_forms = await decode_raw_query(plugin_ctx, last_data['corpora'], last_data['q'][:-1])
+                last_new_entry = None
+                for i, (q, form) in enumerate(op_forms):
+                    new_entry = {
+                        "q": [q] if last_new_entry is None else [*last_new_entry['q'], q],
+                        "corpora": last_data['corpora'],
+                        "usesubcorp": last_data['usesubcorp'],
+                        "lines_groups": last_data['lines_groups'],
+                        "lastop_form": form.to_dict(),
+                    }
+                    await self.store(last_data['user_id'], new_entry, last_new_entry)
+                    ans.insert(i, await fn(new_entry['id'], new_entry))
+                    last_new_entry = new_entry
+
+                # update last_data to connect the chain
+                last_data['prev_id'] = last_new_entry['id']
+                await self._update(last_data)
+                logging.debug("Query persistence chain reconstruction result: %s", ans)
+
             else:
                 ans.insert(0, await fn(data['id'], data))
+                prev_id = data.get('prev_id')
+
             limit -= 1
+
         if limit == 0:
             logging.getLogger(__name__).warning(
                 'Reached hard limit when loading query pipeline {0}'.format(last_id))
@@ -219,7 +259,7 @@ class AbstractQueryPersistence(abc.ABC):
             return await conc_form_args_factory(plugin_ctx, data.get('corpora', []), form_data, op_id)
 
         attr_list = plugin_ctx.current_corpus.get_posattrs()
-        ans = await self.map_pipeline_ops(last_id, map_fn)
+        ans = await self.map_pipeline_ops(plugin_ctx, last_id, map_fn)
         logging.getLogger(__name__).debug('load pipeline ops: {}'.format(ans))
         return ans
 

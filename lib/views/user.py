@@ -13,8 +13,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import logging
 import datetime
+import logging
 
 import plugins
 import settings
@@ -141,7 +141,8 @@ async def sign_up_confirm_email(amodel: UserActionModel, req: KRequest, resp: KR
             return ans
         except SignUpNeedsUpdateException as ex:
             logging.getLogger(__name__).warning(ex)
-            raise ImmediateRedirectException(req.create_url('user/sign_up_form', dict(key=key, username_taken=1)))
+            raise ImmediateRedirectException(req.create_url(
+                'user/sign_up_form', dict(key=key, username_taken=1)))
 
 
 @bp.route('/set_user_password', methods=['POST'])
@@ -194,6 +195,7 @@ async def _load_query_history(
     rows = []
     with plugins.runtime.QUERY_HISTORY as qh:
         rows = await qh.get_user_queries(
+            amodel.plugin_ctx,
             user_id,
             amodel.cf,
             offset=offset, limit=limit,

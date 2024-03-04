@@ -39,12 +39,10 @@ import ujson as json
 from action.errors import ForbiddenException, NotFoundException
 from plugin_types.general_storage import KeyValueStorage
 from plugin_types.query_persistence import AbstractQueryPersistence
-from plugin_types.query_persistence.common import generate_idempotent_hex_id
+from plugin_types.query_persistence.common import (
+    ID_KEY, QUERY_KEY, USER_ID_KEY, generate_idempotent_hex_id)
 from plugins import inject
 
-QUERY_KEY = 'q'
-ID_KEY = 'id'
-USER_ID_KEY = 'user_id'
 DEFAULT_TTL_DAYS = 7
 
 
@@ -220,6 +218,20 @@ class StableQueryPersistence(AbstractQueryPersistence):
         logging.getLogger(__name__).info(
             'using conc_persistence archives {0}'.format([x[0] for x in dbs]))
         return [x[1] for x in dbs]
+
+    async def _update(self, data):
+        """
+        Update stored data by data['id']. Used only for internal data correction!
+        """
+        data_id = data[ID_KEY]
+        data_key = mk_key(data_id)
+        if await self.db.exists(data_key):
+            await self.db.set(data_key, data)
+
+        archive_db = self.find_key_db(data_id)
+        cursor = archive_db.cursor()
+        cursor.execute('UPDATE archive SET data = ? WHERE id = ?', (json.dumps(data), data_id))
+        archive_db.commit()
 
 
 @inject(plugins.runtime.DB)

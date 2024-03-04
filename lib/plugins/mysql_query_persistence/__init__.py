@@ -72,18 +72,13 @@ from action.errors import ForbiddenException, NotFoundException
 from plugin_types.auth import AbstractAuth
 from plugin_types.general_storage import KeyValueStorage
 from plugin_types.query_persistence import AbstractQueryPersistence
-from plugin_types.query_persistence.common import generate_idempotent_id
+from plugin_types.query_persistence.common import (
+    ID_KEY, PERSIST_LEVEL_KEY, QUERY_KEY, USER_ID_KEY, generate_idempotent_id)
 from plugins import inject
 from plugins.common.mysql import MySQLConf, MySQLOps
 from plugins.mysql_integration_db import MySqlIntegrationDb
 
 from .archive import get_iso_datetime, is_archived
-
-PERSIST_LEVEL_KEY = 'persist_level'
-USER_ID_KEY = 'user_id'
-ID_KEY = 'id'
-QUERY_KEY = 'q'
-DEFAULT_CONC_ID_LENGTH = 12
 
 
 def id_exists(id):
@@ -230,7 +225,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
 
         if prev_data is None or records_differ(curr_data, prev_data):
             if prev_data is not None:
-                curr_data['prev_id'] = prev_data['id']
+                curr_data['prev_id'] = prev_data[ID_KEY]
             data_id = generate_idempotent_id(curr_data)
             curr_data[ID_KEY] = data_id
             curr_data[PERSIST_LEVEL_KEY] = self._get_persist_level_for(user_id)
@@ -342,6 +337,23 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
             return await archive.run(from_db=self.db, to_db=self._archive, archive_queue_key=self._archive_queue_key,
                                      dry_run=dry_run, num_proc=num_proc)
         return archive_concordance,
+
+    async def _update(self, data):
+        """
+        Update stored data by data['id']. Used only for internal data correction!
+        """
+        data_id = data[ID_KEY]
+        data_key = mk_key(data_id)
+        if await self.db.exists(data_key):
+            await self.db.set(data_key, data)
+
+        async with self._archive.cursor() as cursor:
+            await cursor.execute(
+                'UPDATE kontext_conc_persistence '
+                'SET data = %s WHERE id = %s',
+                (json.dumps(data), data_id)
+            )
+            await cursor.connection.commit()
 
 
 @inject(plugins.runtime.DB, plugins.runtime.INTEGRATION_DB, plugins.runtime.AUTH)

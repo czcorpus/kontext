@@ -461,7 +461,7 @@ async def create_view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     This is intended for direct conc. access via external pages (i.e. no query_submit + view and just directly
     to the result by providing raw CQL query
     """
-    form_args = await decode_raw_query(amodel.plugin_ctx, [amodel.args.corpname], req.args)
+    form_args = await decode_raw_query(amodel.plugin_ctx, [amodel.args.corpname], req.args.getlist('q'))
     await amodel.store_unbound_query_chain(form_args)
     asnc = int(req.args.get('asnc')) if 'asnc' in req.args else 0
     return await view_conc(amodel, req, resp, asnc, req.session_get('user', 'id'))

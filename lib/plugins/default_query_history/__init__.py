@@ -143,19 +143,21 @@ class QueryHistory(AbstractQueryHistory):
         q_id = data['query_id']
         return await self._query_persistence.open(q_id) is not None
 
-    async def _merge_conc_data(self, data):
-        async def extract_id(item_id: str, item_data: Dict) -> Tuple[str, Dict]: return item_id, item_data
+    async def _merge_conc_data(self, plugin_ctx, data):
+        async def extract_id(
+            item_id: str, item_data: Dict) -> Tuple[str, Dict]: return item_id, item_data
         q_id = data['query_id']
         edata = await self._query_persistence.open(q_id)
         if edata:
             form_type = edata.get('lastop_form', {}).get('form_type', None)
             if form_type not in ('query', 'filter'):
-                logging.getLogger(__name__).warning(f'Fixing broken query history record {q_id} of invalid type {form_type}')
-                ops = await self._query_persistence.map_pipeline_ops(q_id, extract_id)
+                logging.getLogger(__name__).warning(
+                    f'Fixing broken query history record {q_id} of invalid type {form_type}')
+                ops = await self._query_persistence.map_pipeline_ops(plugin_ctx, q_id, extract_id)
                 lastop_qid = q_id
                 q_id, edata = ops[0]
                 edata['lastop_query_id'] = lastop_qid
-                
+
         def get_ac_val(data, name, corp): return data[name][corp] if name in data else None
 
         if edata and 'lastop_form' in edata:
@@ -195,7 +197,7 @@ class QueryHistory(AbstractQueryHistory):
             return None   # persistent result not available
 
     async def get_user_queries(
-            self, user_id, corpus_factory, from_date=None, to_date=None, q_supertype=None, corpname=None,
+            self, plugin_ctx, user_id, corpus_factory, from_date=None, to_date=None, q_supertype=None, corpname=None,
             archived_only=False, offset=0, limit=None):
         """
         Returns list of queries of a specific user.
@@ -223,7 +225,7 @@ class QueryHistory(AbstractQueryHistory):
                 item_qs = item.get('q_supertype', item.get('qtype'))
                 item['q_supertype'] = item_qs  # upgrade possible deprecated qtype
                 if item_qs is None or item_qs == 'conc':
-                    tmp = await self._merge_conc_data(item)
+                    tmp = await self._merge_conc_data(plugin_ctx, item)
                     if not tmp:
                         continue
                     tmp['human_corpname'] = (await corpora.corpus(

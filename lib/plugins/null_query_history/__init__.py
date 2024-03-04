@@ -20,6 +20,7 @@ where there is no need to store query history.
 """
 
 from datetime import datetime
+
 from plugin_types.query_history import AbstractQueryHistory
 
 
@@ -41,7 +42,7 @@ class NullQueryHistory(AbstractQueryHistory):
         return 0
 
     async def get_user_queries(
-            self, user_id,
+            self, plugin_ctx, user_id,
             corpus_factory,
             from_date=None,
             to_date=None,
