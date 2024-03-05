@@ -21,7 +21,7 @@
 import { PageModel } from '../../app/page';
 import * as Kontext from '../../types/kontext';
 import { StatelessModel, IActionDispatcher, SEDispatcher } from 'kombo';
-import { concatMap, map, Observable } from 'rxjs';
+import { concatMap, map, Observable, of as rxOf } from 'rxjs';
 import { Actions } from './actions';
 import { Actions as ConcActions } from '../concordance/actions';
 import { HTTP } from 'cnc-tskit';
@@ -47,6 +47,11 @@ export interface QuerySaveAsFormModelState {
     concTTLDays:number;
     concIsArchived:boolean;
     willBeArchived:boolean;
+    userQueryId:string;
+    userQueryIdMsg:Array<string>;
+    userQueryIdValid:boolean;
+    userQueryIdIsBusy:boolean;
+    userQueryIdSubmit:boolean;
 }
 
 /**
@@ -55,6 +60,10 @@ export interface QuerySaveAsFormModelState {
 export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelState> {
 
     private layoutModel:PageModel;
+
+    private userQueryValidator:RegExp;
+
+    private inputThrottleTimer:number;
 
     constructor(
         dispatcher:IActionDispatcher,
@@ -71,10 +80,17 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                 isValidated: false,
                 concTTLDays,
                 concIsArchived: false,
-                willBeArchived: false
+                willBeArchived: false,
+                userQueryId: '',
+                userQueryIdMsg: [],
+                userQueryIdValid: true,
+                userQueryIdIsBusy: false,
+                userQueryIdSubmit: false,
             }
         );
         this.layoutModel = layoutModel;
+        this.userQueryValidator = new RegExp('[^a-zA-Z0-9_-]+');
+        this.inputThrottleTimer = null;
 
         this.addActionHandler(
             Actions.SaveAsFormSetName,
@@ -100,20 +116,20 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                             this.layoutModel.translate('query__save_as_cannot_have_empty_name'));
 
                 } else {
-                    this.submit(state).subscribe(
-                        () => {
+                    this.submit(state).subscribe({
+                        next: () => {
                             this.layoutModel.resetMenuActiveItemAndNotify();
                             dispatch<typeof Actions.SaveAsFormSubmitDone>({
                                 name: Actions.SaveAsFormSubmitDone.name
                             });
                         },
-                        (err) => {
+                        error: (err) => {
                             this.layoutModel.showMessage('error', err);
                             dispatch<typeof Actions.SaveAsFormSubmitDone>({
                                 name: Actions.SaveAsFormSubmitDone.name
                             });
                         }
-                    );
+                    });
                 }
             }
         );
@@ -254,6 +270,90 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                     'info', this.layoutModel.translate('global__link_copied_to_clipboard'));
             }
         );
+
+        this.addActionHandler(
+            Actions.UserQueryIdChange,
+            (state, action) => {
+                state.userQueryId = action.payload.value;
+                state.userQueryIdMsg = [];
+                state.userQueryIdValid = true;
+                if (action.payload.value.length > 191) {
+                    state.userQueryIdValid = false;
+                    state.userQueryIdMsg.push(this.layoutModel.translate('concview__create_new_id_msg_too_long'));
+                }
+                if (this.userQueryValidator.test(action.payload.value)) {
+                    state.userQueryIdValid = false;
+                    state.userQueryIdMsg.push(this.layoutModel.translate('concview__create_new_id_msg_invalid_chars'));
+                }
+                if (this.shouldStartCheck(state)) {
+                    state.userQueryIdMsg = [this.layoutModel.translate('concview__create_new_id_msg_checking_availability')]
+                    state.userQueryIdIsBusy = true;
+                }
+            },
+            (state, action, dispatch) => {
+                let obs = this.checkAvailableDelayed(state);
+                if (obs) {
+                    obs.subscribe({
+                        next: data => {
+                            dispatch(
+                                Actions.UserQueryIdAvailable,
+                                data,
+                            );
+                        },
+                        error: error => {
+                            dispatch(
+                                Actions.UserQueryIdAvailable,
+                                {},
+                                error,
+                            );
+                        }
+                    });
+                }
+            },
+        );
+
+        this.addActionHandler(
+            Actions.UserQueryIdSubmit,
+            (state, action) => {
+                state.userQueryIdIsBusy = true;
+                state.userQueryIdSubmit = true;
+            },
+            (state, action, dispatch) => {
+                this.renameQuery(state.queryId, state.userQueryId, dispatch);
+            }
+        );
+
+        this.addActionHandler(
+            Actions.UserQueryIdSubmitDone,
+            (state, action) => {
+                if (action.error) {
+                    state.userQueryIdIsBusy = false;
+                    state.userQueryIdSubmit = false;
+                    this.layoutModel.showMessage('error', action.error);
+                } else {
+                    window.location.href = this.layoutModel.createActionUrl('view', {q: `~${action.payload.id}`})
+                }
+            },
+        );
+
+        this.addActionHandler(
+            Actions.UserQueryIdAvailable,
+            (state, action) => {
+                state.userQueryIdIsBusy = false;
+                if (action.error) {
+                    this.layoutModel.showMessage('error', action.error);
+                    state.userQueryIdValid = false;
+
+                } else {
+                    if (!action.payload.available) {
+                        state.userQueryIdValid = false;
+                        state.userQueryIdMsg.push(this.layoutModel.translate('concview__create_new_id_msg_unavailable'));
+                    } else {
+                        state.userQueryIdMsg = [];
+                    }
+                }
+            },
+        );
     }
 
     private loadStatus(queryId:string, dispatch:SEDispatcher):Observable<IsArchivedResponse> {
@@ -280,5 +380,71 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                 resp => resp.saved
             )
         );
+    }
+
+    private shouldStartCheck(state:QuerySaveAsFormModelState):boolean {
+        return state.userQueryId.length > 0 && state.userQueryIdValid;
+    }
+
+    private checkAvailableDelayed(state:QuerySaveAsFormModelState):Observable<{id:string; available:boolean;}> {
+        if (this.inputThrottleTimer) {
+            window.clearTimeout(this.inputThrottleTimer);
+        }
+        if (this.shouldStartCheck(state)) {
+            return new Observable<{id:string; available:boolean;}>(observer => {
+                this.inputThrottleTimer = window.setTimeout(() => { // TODO - antipattern here
+                    this.checkIdExists(
+                        state.userQueryId,
+
+                    ).subscribe({
+                        next: data => {
+                            observer.next(data);
+                            observer.complete();
+                        },
+                        error: error => {
+                            observer.error(error);
+                        }
+                    });
+                }, 350);
+            });
+        }
+        return null;
+    }
+
+    private checkIdExists(queryId:string):Observable<{id:string; available:boolean;}> {
+        return this.layoutModel.ajax$<{id:string; available:boolean;}>(
+            HTTP.Method.GET,
+            this.layoutModel.createActionUrl('query_id_available'),
+            {id: queryId},
+
+        );
+    }
+
+    private renameQuery(queryId:string, newQueryId:string, dispatch:SEDispatcher) {
+        this.layoutModel.ajax$<{ok: boolean; id: string;}>(
+            HTTP.Method.POST,
+            this.layoutModel.createActionUrl('create_query_id'),
+            {
+                old: queryId,
+                new: newQueryId,
+            },
+            {contentType: 'application/json'},
+
+        ).subscribe({
+            next: data => {
+                dispatch(
+                    Actions.UserQueryIdSubmitDone,
+                    data,
+                );
+
+            },
+            error: error => {
+                dispatch(
+                    Actions.UserQueryIdSubmitDone,
+                    {},
+                    error,
+                );
+            }
+        });
     }
 }

@@ -184,6 +184,18 @@ class AbstractQueryPersistence(abc.ABC):
             raise ValueError(f'Cannot determine query supertype from type {form_type}')
         raise ValueError(f'Cannot determine query supertype from data {data}')
 
+    @abc.abstractmethod
+    async def clone_with_id(self, old_id: str, new_id: str):
+        """
+        Duplicate entry with new id
+        """
+
+    @abc.abstractmethod
+    async def id_exists(self, id: str) -> bool:
+        """
+        Check if ID already exists
+        """
+
     MapRes = TypeVar('MapRes')
 
     async def map_pipeline_ops(self, plugin_ctx: PluginCtx, last_id: str, fn: Callable[[str, Dict], Awaitable[MapRes]]) -> List[MapRes]:

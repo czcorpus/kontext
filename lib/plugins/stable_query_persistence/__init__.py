@@ -233,6 +233,51 @@ class StableQueryPersistence(AbstractQueryPersistence):
         cursor.execute('UPDATE archive SET data = ? WHERE id = ?', (json.dumps(data), data_id))
         archive_db.commit()
 
+    async def clone_with_id(self, old_id: str, new_id: str):
+        """
+        Duplicate entry with new id
+        """
+        # check if new id is available
+        if await self.id_exists(new_id):
+            raise ValueError(f'ID {new_id} already exists')
+
+        # get original data
+        original_data = await self.db.get(mk_key(old_id))
+        if original_data is None:
+            archive_db = self.find_key_db(old_id)
+            cursor = archive_db.cursor()
+            cursor.execute(
+                'SELECT data '
+                'FROM kontext_conc_persistence '
+                'WHERE id = ? '
+                'LIMIT 1',
+                (old_id,)
+            )
+            row = await cursor.fetchone()
+            if row is None:
+                raise ValueError(f'Data for {old_id} not found')
+            original_data = json.loads(row[0])
+
+        # set new values
+        original_data[ID_KEY] = new_id
+        await self.db.set(mk_key(new_id), original_data)
+
+    async def id_exists(self, id: str) -> bool:
+        """
+        Check if ID already exists
+        """
+        archive_db = self.find_key_db(id)
+        cursor = archive_db.cursor()
+        cursor.execute(
+            'SELECT * '
+            'FROM kontext_conc_persistence '
+            'WHERE id = ? '
+            'LIMIT 1',
+            (id,)
+        )
+        row = cursor.fetchone()
+        return row is not None or await self.db.exists(mk_key(id))
+
 
 @inject(plugins.runtime.DB)
 def create_instance(settings, db: KeyValueStorage):
