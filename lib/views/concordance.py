@@ -499,18 +499,18 @@ async def get_stored_conc_archived_status(amodel: UserActionModel, req: KRequest
         }
 
 
-@bp.route('/id_is_available', ['GET'])
+@bp.route('/query_id_available', ['GET'])
 @http_action(access_level=2, return_type='json', action_model=UserActionModel)
-async def id_is_available(amodel: UserActionModel, req: KRequest, resp: KResponse):
+async def query_id_available(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.QUERY_PERSISTENCE as qp:
         id = req.args.get('id')
         exists = await qp.id_exists(id)
     return dict(id=id, available=not exists)
 
 
-@bp.route('/clone_with_id', ['POST'])
+@bp.route('/create_query_id', ['POST'])
 @http_action(access_level=2, return_type='json', action_model=UserActionModel)
-async def clone_with_id(amodel: UserActionModel, req: KRequest, resp: KResponse):
+async def create_query_id(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.QUERY_PERSISTENCE as qp:
         await qp.clone_with_id(req.json['old'], req.json['new'])
     return dict(id=req.json['new'], ok=True)

@@ -51,6 +51,7 @@ export interface QuerySaveAsFormModelState {
     userQueryIdMsg:Array<string>;
     userQueryIdValid:boolean;
     userQueryIdIsBusy:boolean;
+    userQueryIdSubmit:boolean;
 }
 
 /**
@@ -84,6 +85,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                 userQueryIdMsg: [],
                 userQueryIdValid: true,
                 userQueryIdIsBusy: false,
+                userQueryIdSubmit: false,
             }
         );
         this.layoutModel = layoutModel;
@@ -314,6 +316,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
             Actions.UserQueryIdSubmit,
             (state, action) => {
                 state.userQueryIdIsBusy = true;
+                state.userQueryIdSubmit = true;
             },
             (state, action, dispatch) => {
                 this.renameQuery(state.queryId, state.userQueryId, dispatch);
@@ -325,6 +328,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
             (state, action) => {
                 if (action.error) {
                     state.userQueryIdIsBusy = false;
+                    state.userQueryIdSubmit = false;
                     this.layoutModel.showMessage('error', action.error);
                 } else {
                     window.location.href = this.layoutModel.createActionUrl('view', {q: `~${action.payload.id}`})
@@ -410,7 +414,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
     private checkIdExists(queryId:string):Observable<{id:string; available:boolean;}> {
         return this.layoutModel.ajax$<{id:string; available:boolean;}>(
             HTTP.Method.GET,
-            this.layoutModel.createActionUrl('id_is_available'),
+            this.layoutModel.createActionUrl('query_id_available'),
             {id: queryId},
 
         );
@@ -419,7 +423,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
     private renameQuery(queryId:string, newQueryId:string, dispatch:SEDispatcher) {
         this.layoutModel.ajax$<{ok: boolean; id: string;}>(
             HTTP.Method.POST,
-            this.layoutModel.createActionUrl('clone_with_id'),
+            this.layoutModel.createActionUrl('create_query_id'),
             {
                 old: queryId,
                 new: newQueryId,
