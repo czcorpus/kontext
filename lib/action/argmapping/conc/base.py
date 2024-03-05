@@ -43,12 +43,13 @@ class ConcFormArgs(Generic[T]):
     def __init__(self, persist: bool) -> None:
         self._persistent = persist
         self._op_key = '__new__'
+        self._author_id = None
         self.data: T = None
 
     def __repr__(self):
         return f'<{self.__class__.__name__}{{ _op_key: {self._op_key}, _persistent: {self._persistent} }}>'
 
-    def updated(self, attrs: Dict[str, Any], op_key: str) -> 'ConcFormArgs[T]':
+    def updated(self, attrs: Dict[str, Any], op_key: str, author_id: int) -> 'ConcFormArgs[T]':
         """
         Return an updated self object (the same instance). There must
         be always the 'op_key' value present to emphasize the fact
@@ -59,6 +60,7 @@ class ConcFormArgs(Generic[T]):
             if hasattr(self.data, k):
                 setattr(self.data, k, v)
         self._op_key = op_key
+        self._author_id = author_id
         return self
 
     def from_raw_query(self, q: str, corpname: str) -> 'ConcFormArgs[T]':
@@ -104,6 +106,16 @@ class ConcFormArgs(Generic[T]):
         should not export it.
         """
         return self._op_key
+
+    @property
+    def author_id(self) -> int:
+        """
+        Author here is the one who created the query first. We don't have
+        to care much about access privileges as stored queries are immutable.
+        But sometimes we e.g. need to distinguish anonymous author
+        and registered one.
+        """
+        return self._author_id
 
     def make_saveable(self):
         self._op_key = '__new__'

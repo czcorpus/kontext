@@ -75,12 +75,15 @@ class ParadigmaticQueryActionModel(CorpusActionModel):
                         'Source concordance query does not exist: {}'.format(conc_id))
                 if qs.stored_form_type(data) != form_type:
                     raise UserReadableException('Invalid source query used: {}'.format(conc_id))
+                author_id = data.get('user_id')
                 if form_type == 'query':
                     args = (await QueryFormArgs.create(
-                        plugin_ctx=self.plugin_ctx, corpora=[corpus_id], persist=True)).updated(data['lastop_form'], conc_id)
+                        plugin_ctx=self.plugin_ctx, corpora=[corpus_id], persist=True)).updated(
+                        data['lastop_form'], conc_id, author_id)
                 elif form_type == 'filter':
                     args = (await FilterFormArgs.create(
-                        plugin_ctx=self.plugin_ctx, maincorp=corpus_id, persist=True)).updated(data['lastop_form'], conc_id)
+                        plugin_ctx=self.plugin_ctx, maincorp=corpus_id, persist=True)).updated(
+                        data['lastop_form'], conc_id, author_id)
                 forms[args.op_key] = args.to_dict()
                 raw_queries[args.op_key] = data['q']
         return forms, raw_queries

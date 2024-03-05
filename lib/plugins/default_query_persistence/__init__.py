@@ -285,7 +285,7 @@ class DefaultQueryPersistence(AbstractQueryPersistence):
             and self._settings.get('plugins', 'query_persistence').get('implicit_archiving', None) in ('true', '1', 1)\
             and not self._auth.is_anonymous(plugin_ctx.user_id)
 
-    async def _update(self, data):
+    async def update(self, data, arch_enqueue=False):
         """
         Update stored data by data['id']. Used only for internal data correction!
         """

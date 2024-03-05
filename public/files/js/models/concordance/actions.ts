@@ -61,6 +61,12 @@ export class Actions {
         name: 'CONCORDANCE_ADDED_NEW_OPERATION'
     };
 
+    static ConcFormArgsNormalizationDone:Action<{
+        authorId:number;
+    }> = {
+        name: 'CONCORDANCE_FORM_ARGS_NORMALIZATION_DONE'
+    };
+
     static ChangeMainCorpus:Action<{
         maincorp:string;
     }> = {

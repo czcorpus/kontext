@@ -27,7 +27,13 @@ from .query import QueryFormArgs
 from .sort import SortFormArgs
 
 
-async def build_conc_form_args(plugin_ctx: PluginCtx, corpora: List[str], data: Dict[str, Any], op_key: str) -> ConcFormArgs:
+async def build_conc_form_args(
+        plugin_ctx: PluginCtx,
+        corpora: List[str],
+        data: Dict[str, Any],
+        op_key: str,
+        author_id: int
+) -> ConcFormArgs:
     """
     A factory method to create a conc form args
     instance based on deserialized data from
@@ -35,27 +41,29 @@ async def build_conc_form_args(plugin_ctx: PluginCtx, corpora: List[str], data: 
     """
     tp = data['form_type']
     if tp == 'query':
-        return (await QueryFormArgs.create(plugin_ctx=plugin_ctx, corpora=corpora, persist=False)).updated(data, op_key)
+        return (await QueryFormArgs.create(
+            plugin_ctx=plugin_ctx, corpora=corpora, persist=False)).updated(data, op_key, author_id)
     elif tp == 'filter':
-        return (await FilterFormArgs.create(plugin_ctx=plugin_ctx, maincorp=data['maincorp'], persist=False)).updated(data, op_key)
+        return (await FilterFormArgs.create(
+            plugin_ctx=plugin_ctx, maincorp=data['maincorp'], persist=False)).updated(data, op_key, author_id)
     elif tp == 'sort':
-        return SortFormArgs(persist=False).updated(data, op_key)
+        return SortFormArgs(persist=False).updated(data, op_key, author_id)
     elif tp == 'sample':
-        return SampleFormArgs(persist=False).updated(data, op_key)
+        return SampleFormArgs(persist=False).updated(data, op_key, author_id)
     elif tp == 'shuffle':
-        return ShuffleFormArgs(persist=False).updated(data, op_key)
+        return ShuffleFormArgs(persist=False).updated(data, op_key, author_id)
     elif tp == 'switchmc':
-        return KwicSwitchArgs(maincorp=data['maincorp'], persist=False).updated(data, op_key)
+        return KwicSwitchArgs(maincorp=data['maincorp'], persist=False).updated(data, op_key, author_id)
     elif tp == 'lgroup':
-        return LgroupOpArgs(persist=False).updated(data, op_key)
+        return LgroupOpArgs(persist=False).updated(data, op_key, author_id)
     elif tp == 'locked':
-        return LockedOpFormsArgs(persist=False).updated(data, op_key)
+        return LockedOpFormsArgs(persist=False).updated(data, op_key, author_id)
     elif tp == 'subhits':
-        return SubHitsFilterFormArgs(persist=False).updated(data, op_key)
+        return SubHitsFilterFormArgs(persist=False).updated(data, op_key, author_id)
     elif tp == 'firsthits':
         # doc_struct is a legacy key
         struct = data['doc_struct'] if 'doc_struct' in data else data['struct']
-        return FirstHitsFilterFormArgs(persist=False, struct=struct).updated(data, op_key)
+        return FirstHitsFilterFormArgs(persist=False, struct=struct).updated(data, op_key, author_id)
     else:
         raise ValueError(f'cannot determine stored conc args class from type {tp}')
 
