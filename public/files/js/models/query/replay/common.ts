@@ -38,7 +38,7 @@ export interface QueryOverviewResponseRow {
 }
 
 /**
- *
+ * for attribute description, see Kontext.QueryOperation
  */
 export interface PersistentQueryOperation {
 
@@ -48,6 +48,8 @@ export interface PersistentQueryOperation {
      * note: if undefined then the operation is not synced yet
      */
     concPersistenceId:string|undefined;
+
+    isRegisteredAuthor:boolean;
 
     op:string;
 
@@ -71,6 +73,10 @@ export interface QueryPipelineResponseItem {
 export interface QueryPipelineResponse extends Kontext.AjaxResponse {
     ops:Array<QueryPipelineResponseItem>;
     query_overview:Array<Kontext.QueryOperation>;
+}
+
+export interface NormalizeConcFormArgsResp {
+    author_id:number;
 }
 
 /**
@@ -104,6 +110,19 @@ export function mapOpIdToFormType(opId:Kontext.ManateeOpCode):string {
     }
 }
 
+export function exportDecodedOperation(operation:PersistentQueryOperation):Kontext.QueryOperation {
+    return {
+        op: operation.op,
+        opid: operation.opid,
+        nicearg: null,
+        arg: operation.encodedArgs,
+        size: operation.size,
+        fullsize: operation.fullSize,
+        conc_persistence_op_id: operation.concPersistenceId,
+        is_registered_author: operation.isRegisteredAuthor
+    };
+}
+
 export function importEncodedOperation(operation:Kontext.QueryOperation):PersistentQueryOperation {
 
     return {
@@ -112,6 +131,7 @@ export function importEncodedOperation(operation:Kontext.QueryOperation):Persist
         userEntry: operation.nicearg,
         encodedArgs: operation.arg,
         concPersistenceId: operation.conc_persistence_op_id,
+        isRegisteredAuthor: operation.is_registered_author,
         size: operation.size,
         fullSize: operation.fullsize,
         formType: mapOpIdToFormType(operation.opid)

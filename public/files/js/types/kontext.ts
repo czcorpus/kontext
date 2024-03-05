@@ -457,6 +457,16 @@ export interface QueryOperation {
       * op list.
       */
      conc_persistence_op_id:string|null;
+
+     /**
+      * Provides info whether this operation was
+      * created by a registered author. This helps
+      * e.g. to decide about operation chain archiving
+      * normalization (first few ops by anonymous,
+      * additional ones by registered => only partially
+      * archived chain)
+      */
+     is_registered_author:boolean;
 }
 
 export type VirtualKeys = Array<Array<[string, string]>>;

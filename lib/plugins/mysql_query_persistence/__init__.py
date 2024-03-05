@@ -338,14 +338,16 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
                                      dry_run=dry_run, num_proc=num_proc)
         return archive_concordance,
 
-    async def _update(self, data):
+    async def update(self, data, arch_enqueue=False):
         """
-        Update stored data by data['id']. Used only for internal data correction!
+        Update stored data by data['id'].
         """
         data_id = data[ID_KEY]
         data_key = mk_key(data_id)
         if await self.db.exists(data_key):
             await self.db.set(data_key, data)
+            if arch_enqueue:
+                await self.db.list_append(self._archive_queue_key, dict(key=data_key))
 
         async with self._archive.cursor() as cursor:
             await cursor.execute(

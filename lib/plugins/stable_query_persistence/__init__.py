@@ -219,7 +219,7 @@ class StableQueryPersistence(AbstractQueryPersistence):
             'using conc_persistence archives {0}'.format([x[0] for x in dbs]))
         return [x[1] for x in dbs]
 
-    async def _update(self, data):
+    async def update(self, data, arch_enqueue=False):
         """
         Update stored data by data['id']. Used only for internal data correction!
         """

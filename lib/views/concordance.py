@@ -661,6 +661,29 @@ async def delete_query(amodel: UserActionModel, req: KRequest, resp: KResponse):
         )
     return dict(num_deleted=ans)
 
+@bp.route('/normalize_conc_form_args_arch', ['POST'])
+@http_action(return_type='json', action_model=ConcActionModel)
+async def normalize_conc_form_args_arch(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    last_id = req.args.get('last_id')
+
+    with plugins.runtime.QUERY_PERSISTENCE as qp:
+        data = await qp.open(last_id)
+        chain = [last_id]
+        prev_id = data.get('prev_id')
+        author_id = data.get('user_id')
+        hard_limit = 100
+        while prev_id is not None and hard_limit > 0:
+            data = await qp.open(prev_id)
+            chain.append(prev_id)
+            curr_author_id = data.get('user_id')
+            if amodel.is_anonymous_id(curr_author_id) or curr_author_id is None:
+                data['user_id'] = author_id
+                await qp.update(data, arch_enqueue=True)
+            prev_id = data.get('prev_id')
+            hard_limit -= 1
+    logging.getLogger(__name__).debug('normalizing query chain {}, with author_id {}'.format(
+        ' -> '.join(chain), author_id))
+    return dict(author_id=author_id)
 
 @bp.route('/concdesc_json')
 @http_action(return_type='json', action_model=ConcActionModel)
