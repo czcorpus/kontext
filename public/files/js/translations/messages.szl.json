@@ -550,6 +550,7 @@
         "concview__create_new_id_msg_too_long": "too long UNTRANSLATED",
         "concview__create_new_id_msg_invalid_chars": "invalid characters (use [a-zA-Z0-9_-]) UNTRANSLATED",
         "concview__create_new_id_msg_unavailable": "selected id already exists UNTRANSLATED",
+        "concview__create_new_id_msg_checking_availability": "checking availability... UNTRANSLATED",
         "concview__tips_heading": "Dorady używaniŏ",
         "concview__tip_01": "Możesz używać skrōtōw tastaturowych na tyj strōnie. Wciś <Shift> <k>, żeby wejzdrzeć na jejich wykŏz.",
         "concview__tip_02": "Jak twoje zapytanie CQL używŏ zagniyżdzōnych trefiyń (bp. jak szukŏsz jednego abo wiyncyj przimiotnikōw przed rzeczownikym), możesz użyć 'Filter -> Skasuj zagniyżdzōne trefiynia'.",

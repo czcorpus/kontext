@@ -648,6 +648,7 @@ export class Actions {
 
     static UserQueryIdSubmitDone:Action<{
         id:string;
+        ok:boolean;
     }> = {
         name: 'USER_QUERY_ID_SUBMIT_DONE'
     }

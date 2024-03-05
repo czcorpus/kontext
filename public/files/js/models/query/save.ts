@@ -50,7 +50,7 @@ export interface QuerySaveAsFormModelState {
     userQueryId:string;
     userQueryIdMsg:Array<string>;
     userQueryIdValid:boolean;
-    userQueryIdAvailableIsBusy:boolean;
+    userQueryIdIsBusy:boolean;
 }
 
 /**
@@ -83,7 +83,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                 userQueryId: '',
                 userQueryIdMsg: [],
                 userQueryIdValid: true,
-                userQueryIdAvailableIsBusy: false,
+                userQueryIdIsBusy: false,
             }
         );
         this.layoutModel = layoutModel;
@@ -284,7 +284,8 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                     state.userQueryIdMsg.push(this.layoutModel.translate('concview__create_new_id_msg_invalid_chars'));
                 }
                 if (this.shouldStartCheck(state)) {
-                    state.userQueryIdAvailableIsBusy = true;
+                    state.userQueryIdMsg = [this.layoutModel.translate('concview__create_new_id_msg_checking_availability')]
+                    state.userQueryIdIsBusy = true;
                 }
             },
             (state, action, dispatch) => {
@@ -312,6 +313,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
         this.addActionHandler(
             Actions.UserQueryIdSubmit,
             (state, action) => {
+                state.userQueryIdIsBusy = true;
             },
             (state, action, dispatch) => {
                 this.renameQuery(state.queryId, state.userQueryId, dispatch);
@@ -322,10 +324,10 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
             Actions.UserQueryIdSubmitDone,
             (state, action) => {
                 if (action.error) {
+                    state.userQueryIdIsBusy = false;
                     this.layoutModel.showMessage('error', action.error);
-
                 } else {
-
+                    window.location.href = this.layoutModel.createActionUrl('view', {q: `~${action.payload.id}`})
                 }
             },
         );
@@ -333,7 +335,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
         this.addActionHandler(
             Actions.UserQueryIdAvailable,
             (state, action) => {
-                state.userQueryIdAvailableIsBusy = false;
+                state.userQueryIdIsBusy = false;
                 if (action.error) {
                     this.layoutModel.showMessage('error', action.error);
                     state.userQueryIdValid = false;
@@ -342,6 +344,8 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                     if (!action.payload.available) {
                         state.userQueryIdValid = false;
                         state.userQueryIdMsg.push(this.layoutModel.translate('concview__create_new_id_msg_unavailable'));
+                    } else {
+                        state.userQueryIdMsg = [];
                     }
                 }
             },
@@ -375,7 +379,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
     }
 
     private shouldStartCheck(state:QuerySaveAsFormModelState):boolean {
-        return state.userQueryIdValid;
+        return state.userQueryId.length > 0 && state.userQueryIdValid;
     }
 
     private checkAvailableDelayed(state:QuerySaveAsFormModelState):Observable<{id:string; available:boolean;}> {
@@ -426,7 +430,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
             next: data => {
                 dispatch(
                     Actions.UserQueryIdSubmitDone,
-                    {id: data.id},
+                    data,
                 );
 
             },
