@@ -646,6 +646,12 @@ export class Actions {
         name: 'USER_QUERY_ID_SUBMIT'
     }
 
+    static UserQueryIdSubmitDone:Action<{
+        id:string;
+    }> = {
+        name: 'USER_QUERY_ID_SUBMIT_DONE'
+    }
+
     /**
      * This is an action a tag-helper plug-in should be able to respond to
      */

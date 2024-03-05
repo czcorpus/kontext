@@ -280,6 +280,27 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                 }
             },
         );
+
+        this.addActionHandler(
+            Actions.UserQueryIdSubmit,
+            (state, action) => {
+            },
+            (state, action, dispatch) => {
+                this.renameQuery(state.queryId, state.userQueryId, dispatch);
+            }
+        );
+
+        this.addActionHandler(
+            Actions.UserQueryIdSubmitDone,
+            (state, action) => {
+                if (action.error) {
+                    this.layoutModel.showMessage('error', action.error);
+
+                } else {
+
+                }
+            },
+        );
     }
 
     private loadStatus(queryId:string, dispatch:SEDispatcher):Observable<IsArchivedResponse> {
@@ -306,5 +327,33 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                 resp => resp.saved
             )
         );
+    }
+
+    private renameQuery(queryId:string, newQueryId:string, dispatch:SEDispatcher) {
+        this.layoutModel.ajax$<{ok: boolean; id: string;}>(
+            HTTP.Method.POST,
+            this.layoutModel.createActionUrl('clone_with_id'),
+            {
+                old: queryId,
+                new: newQueryId,
+            },
+            {contentType: 'application/json'},
+
+        ).subscribe({
+            next: data => {
+                dispatch(
+                    Actions.UserQueryIdSubmitDone,
+                    {id: data.id},
+                );
+
+            },
+            error: error => {
+                dispatch(
+                    Actions.UserQueryIdSubmitDone,
+                    {},
+                    error,
+                );
+            }
+        });
     }
 }

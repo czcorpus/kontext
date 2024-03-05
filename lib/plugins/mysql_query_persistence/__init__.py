@@ -355,6 +355,49 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
             )
             await cursor.connection.commit()
 
+    async def clone_with_id(self, old_id: str, new_id: str):
+        """
+        Duplicate entry with new id
+        """
+        # check if new id is available
+        if await self.id_exists(new_id):
+            raise ValueError(f'ID {new_id} already exists')
+
+        # get original data
+        original_data = await self.db.get(mk_key(old_id))
+        if original_data is None:
+            async with self._archive.cursor() as cursor:
+                await cursor.execute(
+                    'SELECT data '
+                    'FROM kontext_conc_persistence '
+                    'WHERE id = %s '
+                    'LIMIT 1',
+                    (old_id,)
+                )
+                row = await cursor.fetchone()
+            if row is None:
+                raise ValueError(f'Data for {old_id} not found')
+            original_data = json.loads(row['data'])
+
+        # set new values
+        original_data[ID_KEY] = new_id
+        await self.db.set(mk_key(new_id), original_data)
+
+    async def id_exists(self, id: str) -> bool:
+        """
+        Check if ID already exists
+        """
+        async with self._archive.cursor() as cursor:
+            await cursor.execute(
+                'SELECT * '
+                'FROM kontext_conc_persistence '
+                'WHERE id = %s '
+                'LIMIT 1',
+                (id,)
+            )
+            row = await cursor.fetchone()
+        return row is not None or await self.db.exists(mk_key(id))
+
 
 @inject(plugins.runtime.DB, plugins.runtime.INTEGRATION_DB, plugins.runtime.AUTH)
 def create_instance(settings, db: KeyValueStorage, integration_db: MySqlIntegrationDb, auth: AbstractAuth):

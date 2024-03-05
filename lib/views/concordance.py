@@ -499,6 +499,25 @@ async def get_stored_conc_archived_status(amodel: UserActionModel, req: KRequest
         }
 
 
+@bp.route('/id_is_available', ['GET'])
+@http_action(access_level=2, return_type='json', action_model=UserActionModel)
+async def id_is_available(amodel: UserActionModel, req: KRequest, resp: KResponse):
+    with plugins.runtime.QUERY_PERSISTENCE as qp:
+        id = req.args.get('id')
+        exists = await qp.id_exists(id)
+    return dict(id=id, available=not exists)
+
+
+@bp.route('/clone_with_id', ['POST'])
+@http_action(access_level=2, return_type='json', action_model=UserActionModel)
+async def clone_with_id(amodel: UserActionModel, req: KRequest, resp: KResponse):
+    with plugins.runtime.QUERY_PERSISTENCE as qp:
+        old_id = req.json.get('old')
+        new_id = req.json.get('new')
+        await qp.clone_with_id(old_id, new_id)
+    return dict(ok=True)
+
+
 @bp.route('/restore_conc')
 @http_action(mutates_result=True, action_model=ConcActionModel, template='restore_conc.html')
 async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
