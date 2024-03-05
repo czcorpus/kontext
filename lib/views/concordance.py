@@ -503,8 +503,7 @@ async def get_stored_conc_archived_status(amodel: UserActionModel, req: KRequest
 @http_action(access_level=2, return_type='json', action_model=UserActionModel)
 async def id_is_available(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.QUERY_PERSISTENCE as qp:
-        id = req.args.get('id')
-        exists = await qp.id_exists(id)
+        exists = await qp.id_exists(req.args['id'])
     return dict(id=id, available=not exists)
 
 
@@ -512,9 +511,7 @@ async def id_is_available(amodel: UserActionModel, req: KRequest, resp: KRespons
 @http_action(access_level=2, return_type='json', action_model=UserActionModel)
 async def clone_with_id(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.QUERY_PERSISTENCE as qp:
-        old_id = req.json.get('old')
-        new_id = req.json.get('new')
-        await qp.clone_with_id(old_id, new_id)
+        await qp.clone_with_id(req.json['old'], req.json['new'])
     return dict(ok=True)
 
 

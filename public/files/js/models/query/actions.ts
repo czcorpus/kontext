@@ -652,6 +652,13 @@ export class Actions {
         name: 'USER_QUERY_ID_SUBMIT_DONE'
     }
 
+    static UserQueryIdAvailable:Action<{
+        id:string;
+        available:boolean;
+    }> = {
+        name: 'USER_QUERY_ID_AVAILABLE'
+    }
+
     /**
      * This is an action a tag-helper plug-in should be able to respond to
      */

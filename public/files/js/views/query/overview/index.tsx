@@ -810,9 +810,9 @@ export function init({
                                 </div>
                                 <p>
                                     <button type="button"
-                                            className={this.props.userQueryId.length > 0 && this.props.userQueryIdValid ? "default-button" : "disabled-button"}
-                                            onClick={this.handleUserIdSubmit}
-                                            disabled={this.props.userQueryId.length === 0 || !this.props.userQueryIdValid}>
+                                            className={this.props.userQueryId.length === 0 || !this.props.userQueryIdValid || this.props.userQueryIdAvailableIsBusy ? "disabled-button" : "default-button"}
+                                            disabled={this.props.userQueryId.length === 0 || !this.props.userQueryIdValid || this.props.userQueryIdAvailableIsBusy}
+                                            onClick={this.handleUserIdSubmit}>
                                         {he.translate('concview__create_new_id_button')}
                                     </button>
                                     <span style={{marginLeft: "1em"}}>{this.props.userQueryIdMsg.join(", ")}</span>
