@@ -21,7 +21,7 @@
 import { PageModel } from '../../app/page';
 import * as Kontext from '../../types/kontext';
 import { StatelessModel, IActionDispatcher, SEDispatcher } from 'kombo';
-import { concatMap, map, Observable, of as rxOf } from 'rxjs';
+import { concatMap, debounceTime, map, Observable, of as rxOf, Subject } from 'rxjs';
 import { Actions } from './actions';
 import { Actions as ConcActions } from '../concordance/actions';
 import { HTTP } from 'cnc-tskit';
@@ -59,11 +59,13 @@ export interface QuerySaveAsFormModelState {
  */
 export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelState> {
 
+    QUERY_ID_CHECK_INTERVAL_MS = 350;
+
     private layoutModel:PageModel;
 
     private userQueryValidator:RegExp;
 
-    private inputThrottleTimer:number;
+    private readonly debouncedIdCheck$:Subject<null|string>;
 
     constructor(
         dispatcher:IActionDispatcher,
@@ -90,7 +92,32 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
         );
         this.layoutModel = layoutModel;
         this.userQueryValidator = new RegExp('[^a-zA-Z0-9_-]+');
-        this.inputThrottleTimer = null;
+
+        this.debouncedIdCheck$ = new Subject();
+        this.debouncedIdCheck$.pipe(
+            debounceTime(this.QUERY_ID_CHECK_INTERVAL_MS)
+
+        ).subscribe({
+            next: id => {
+                if (id !== null) {
+                    this.checkIdExists(id).subscribe({
+                        next: data => {
+                            dispatcher.dispatch(
+                                Actions.UserQueryIdAvailable,
+                                data,
+                            );
+                        },
+                        error: error => {
+                            dispatcher.dispatch(
+                                Actions.UserQueryIdAvailable,
+                                {},
+                                error,
+                            );
+                        }
+                    });
+                }
+            }
+        });
 
         this.addActionHandler(
             Actions.SaveAsFormSetName,
@@ -285,31 +312,17 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                     state.userQueryIdValid = false;
                     state.userQueryIdMsg.push(this.layoutModel.translate('concview__create_new_id_msg_invalid_chars'));
                 }
-                if (this.shouldStartCheck(state)) {
+
+                if (state.userQueryId.length > 0 && state.userQueryIdValid) {
                     state.userQueryIdMsg = [this.layoutModel.translate('concview__create_new_id_msg_checking_availability')]
                     state.userQueryIdIsBusy = true;
+                    this.debouncedIdCheck$.next(state.userQueryId);
+
+                } else {
+                    state.userQueryIdIsBusy = false;
+                    this.debouncedIdCheck$.next(null);
                 }
-            },
-            (state, action, dispatch) => {
-                let obs = this.checkAvailableDelayed(state);
-                if (obs) {
-                    obs.subscribe({
-                        next: data => {
-                            dispatch(
-                                Actions.UserQueryIdAvailable,
-                                data,
-                            );
-                        },
-                        error: error => {
-                            dispatch(
-                                Actions.UserQueryIdAvailable,
-                                {},
-                                error,
-                            );
-                        }
-                    });
-                }
-            },
+            }
         );
 
         this.addActionHandler(
@@ -387,39 +400,6 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                 resp => resp.saved
             )
         );
-    }
-
-    private shouldStartCheck(state:QuerySaveAsFormModelState):boolean {
-        return state.userQueryId.length > 0 && state.userQueryIdValid;
-    }
-
-    private checkAvailableDelayed(state:QuerySaveAsFormModelState):null|Observable<{
-        id:string;
-        available:boolean;
-        pattern:string;
-    }> {
-        if (this.inputThrottleTimer) {
-            window.clearTimeout(this.inputThrottleTimer);
-        }
-        if (this.shouldStartCheck(state)) {
-            return new Observable(observer => {
-                this.inputThrottleTimer = window.setTimeout(() => { // TODO - antipattern here
-                    this.checkIdExists(
-                        state.userQueryId,
-
-                    ).subscribe({
-                        next: data => {
-                            observer.next(data);
-                            observer.complete();
-                        },
-                        error: error => {
-                            observer.error(error);
-                        }
-                    });
-                }, 350);
-            });
-        }
-        return null;
     }
 
     private checkIdExists(queryId:string) {
