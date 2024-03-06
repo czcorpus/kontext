@@ -518,7 +518,7 @@ async def create_query_id(amodel: UserActionModel, req: KRequest, resp: KRespons
     with plugins.runtime.QUERY_PERSISTENCE as qp:
         reserved, pattern = await qp.id_reserved(new_id)
         if reserved:
-            raise ValueError(f'ID {new_id} blacklisted by pattern `{pattern}`')
+            raise ValueError(f'ID {new_id} reserved by pattern `{pattern}`')
         await qp.clone_with_id(req.json['old'], new_id)
     return dict(id=new_id, ok=True)
 
