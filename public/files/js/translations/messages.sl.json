@@ -571,6 +571,7 @@
         "concview__create_new_id_msg_too_long": "too long UNTRANSLATED",
         "concview__create_new_id_msg_invalid_chars": "invalid characters (use [a-zA-Z0-9_-]) UNTRANSLATED",
         "concview__create_new_id_msg_unavailable": "selected id already exists UNTRANSLATED",
+        "concview__create_new_id_msg_reserved_{pattern}": "selected id contains reserved pattern `{pattern}` UNTRANSLATED",
         "concview__create_new_id_msg_checking_availability": "checking availability... UNTRANSLATED",
         "concview__tips_heading": "Namigi za uporabo",
         "concview__tip_01": "Na tej strani lahko uporabljate bližnjice na tipkovnici. Pritisnite <Shift> <k> za ogled seznama.",

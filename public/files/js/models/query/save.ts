@@ -340,16 +340,23 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
             Actions.UserQueryIdAvailable,
             (state, action) => {
                 state.userQueryIdIsBusy = false;
+                state.userQueryIdMsg = [];
                 if (action.error) {
                     this.layoutModel.showMessage('error', action.error);
                     state.userQueryIdValid = false;
 
-                } else {
-                    if (!action.payload.available) {
-                        state.userQueryIdValid = false;
-                        state.userQueryIdMsg.push(this.layoutModel.translate('concview__create_new_id_msg_unavailable'));
+                } else if (!action.payload.available) {
+                    state.userQueryIdValid = false;
+                    if (action.payload.pattern) {
+                        state.userQueryIdMsg.push(this.layoutModel.translate(
+                            'concview__create_new_id_msg_reserved_{pattern}',
+                            {pattern: action.payload.pattern},
+                        ));
+
                     } else {
-                        state.userQueryIdMsg = [];
+                        state.userQueryIdMsg.push(
+                            this.layoutModel.translate('concview__create_new_id_msg_unavailable')
+                        );
                     }
                 }
             },
@@ -386,12 +393,16 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
         return state.userQueryId.length > 0 && state.userQueryIdValid;
     }
 
-    private checkAvailableDelayed(state:QuerySaveAsFormModelState):Observable<{id:string; available:boolean;}> {
+    private checkAvailableDelayed(state:QuerySaveAsFormModelState):null|Observable<{
+        id:string;
+        available:boolean;
+        pattern:string;
+    }> {
         if (this.inputThrottleTimer) {
             window.clearTimeout(this.inputThrottleTimer);
         }
         if (this.shouldStartCheck(state)) {
-            return new Observable<{id:string; available:boolean;}>(observer => {
+            return new Observable(observer => {
                 this.inputThrottleTimer = window.setTimeout(() => { // TODO - antipattern here
                     this.checkIdExists(
                         state.userQueryId,
@@ -411,8 +422,8 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
         return null;
     }
 
-    private checkIdExists(queryId:string):Observable<{id:string; available:boolean;}> {
-        return this.layoutModel.ajax$<{id:string; available:boolean;}>(
+    private checkIdExists(queryId:string) {
+        return this.layoutModel.ajax$<{id:string; available:boolean; pattern:string;}>(
             HTTP.Method.GET,
             this.layoutModel.createActionUrl('query_id_available'),
             {id: queryId},

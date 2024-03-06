@@ -53,6 +53,7 @@ def mk_key(code):
 class StableQueryPersistence(AbstractQueryPersistence):
 
     def __init__(self, db: KeyValueStorage, settings):
+        super().__init__(settings)
         self.db = db
         plugin_conf = settings.get('plugins', 'query_persistence')
         self._ttl_days = int(plugin_conf.get('ttl_days', DEFAULT_TTL_DAYS))

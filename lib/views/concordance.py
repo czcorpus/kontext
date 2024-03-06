@@ -504,6 +504,9 @@ async def get_stored_conc_archived_status(amodel: UserActionModel, req: KRequest
 async def query_id_available(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.QUERY_PERSISTENCE as qp:
         id = req.args.get('id')
+        reserved, pattern = await qp.id_reserved(id)
+        if reserved:
+            return dict(id=id, available=False, pattern=pattern)
         exists = await qp.id_exists(id)
     return dict(id=id, available=not exists)
 
@@ -511,9 +514,13 @@ async def query_id_available(amodel: UserActionModel, req: KRequest, resp: KResp
 @bp.route('/create_query_id', ['POST'])
 @http_action(access_level=2, return_type='json', action_model=UserActionModel)
 async def create_query_id(amodel: UserActionModel, req: KRequest, resp: KResponse):
+    new_id = req.json['new']
     with plugins.runtime.QUERY_PERSISTENCE as qp:
-        await qp.clone_with_id(req.json['old'], req.json['new'])
-    return dict(id=req.json['new'], ok=True)
+        reserved, pattern = await qp.id_reserved(new_id)
+        if reserved:
+            raise ValueError(f'ID {new_id} reserved by pattern `{pattern}`')
+        await qp.clone_with_id(req.json['old'], new_id)
+    return dict(id=new_id, ok=True)
 
 
 @bp.route('/restore_conc')
@@ -661,6 +668,7 @@ async def delete_query(amodel: UserActionModel, req: KRequest, resp: KResponse):
         )
     return dict(num_deleted=ans)
 
+
 @bp.route('/normalize_conc_form_args_arch', ['POST'])
 @http_action(return_type='json', action_model=ConcActionModel)
 async def normalize_conc_form_args_arch(amodel: ConcActionModel, req: KRequest, resp: KResponse):
@@ -684,6 +692,7 @@ async def normalize_conc_form_args_arch(amodel: ConcActionModel, req: KRequest, 
     logging.getLogger(__name__).debug('normalizing query chain {}, with author_id {}'.format(
         ' -> '.join(chain), author_id))
     return dict(author_id=author_id)
+
 
 @bp.route('/concdesc_json')
 @http_action(return_type='json', action_model=ConcActionModel)

@@ -48,28 +48,6 @@ DEFAULT_TTL_DAYS = 100
 DEFAULT_ANONYMOUS_USER_TTL_DAYS = 7
 
 
-def id_exists(id):
-    """
-    Tests whether passed id exists
-    """
-    # currently we assume that id (= prefix of md5 hash with 52^12 possible values)
-    #  conflicts are very unlikely
-    return False
-
-
-def mk_short_id(s, min_length):
-    """
-    Generates a hash based on md5 but using [a-zA-Z0-9] characters and with
-    limited length.
-
-    arguments:ucnk_op_persistence
-    s -- a string to be hashed
-    min_length -- minimum length of the output hash
-    """
-    x = int(hashlib.md5(s).hexdigest(), 16)
-    return int2chash(x, min_length)
-
-
 class Sqlite3ArchBackend(object):
     """
     A recommended backend for storing persistent concordances.
@@ -164,7 +142,8 @@ class DefaultQueryPersistence(AbstractQueryPersistence):
     This class stores user's queries in their internal form (see Kontext.q attribute).
     """
 
-    def __init__(self, db: KeyValueStorage, auth: AbstractAuth, ttl_days: int, anonymous_ttl_days: int, archive_backend: Union[DbPluginArchBackend, Sqlite3ArchBackend]):
+    def __init__(self, db: KeyValueStorage, auth: AbstractAuth, ttl_days: int, anonymous_ttl_days: int, archive_backend: Union[DbPluginArchBackend, Sqlite3ArchBackend], settings):
+        super().__init__(settings)
         self._db = db
         self._auth = auth
         self._ttl_days = ttl_days
