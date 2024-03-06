@@ -552,6 +552,7 @@
         "concview__create_new_id_msg_invalid_chars": "nepovolené znaky (použijte [a-zA-Z0-9_-])",
         "concview__create_new_id_msg_unavailable": "zadané id už existuje",
         "concview__create_new_id_msg_checking_availability": "kontroluji dostupnost...",
+        "concview__create_new_id_renamed": "Dotaz uložen s novým ID",
         "concview__tips_heading": "Uživatelské tipy",
         "concview__tip_01": "Na této stránce můžete používat řadu klávesových zkratek. Stiskněte <Shift> <k> pro získání jejich seznamu.",
         "concview__tip_02": "V případě že váš CQL dotaz produkuje vnořené shody (např. při hledání jednoho a více adjektiv před podstatným jménem), použijte 'Filtr -> Odstranit vnořené shody'.",
