@@ -99,7 +99,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
 
         ).subscribe({
             next: id => {
-                if (id !== null) {
+                if (id) {
                     this.checkIdExists(id).subscribe({
                         next: data => {
                             dispatcher.dispatch(
