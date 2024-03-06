@@ -514,12 +514,15 @@ async def query_id_available(amodel: UserActionModel, req: KRequest, resp: KResp
 @bp.route('/create_query_id', ['POST'])
 @http_action(access_level=2, return_type='json', action_model=UserActionModel)
 async def create_query_id(amodel: UserActionModel, req: KRequest, resp: KResponse):
+    old_id = req.json['old']
     new_id = req.json['new']
     with plugins.runtime.QUERY_PERSISTENCE as qp:
         reserved, pattern = await qp.id_reserved(new_id)
         if reserved:
             raise ValueError(f'ID {new_id} reserved by pattern `{pattern}`')
-        await qp.clone_with_id(req.json['old'], new_id)
+        await qp.clone_with_id(old_id, new_id)
+        if await qp.is_archived(old_id):
+            await qp.archive(amodel.session_get('user', 'id'), new_id)
     return dict(id=new_id, ok=True)
 
 
