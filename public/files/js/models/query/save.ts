@@ -331,7 +331,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                     state.userQueryIdSubmit = false;
                     this.layoutModel.showMessage('error', action.error);
                 } else {
-                    window.location.href = this.layoutModel.createActionUrl('view', {q: `~${action.payload.id}`})
+                    window.location.href = this.layoutModel.createActionUrl('view', {q: `~${action.payload.id}`}) + '#show_permalink';
                 }
             },
         );
