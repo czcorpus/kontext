@@ -88,6 +88,48 @@ export const PersistentConcordanceForm = styled.form`
         color: ${theme.colorDefaultText};
     }
 
+    .archive-toggle {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1em;
+
+        label {
+            margin-right: 0.4em;
+        }
+    }
+
+    .custom-name {
+        display: flex;
+        align-items: center;
+
+        label {
+            margin-right: 0.4em;
+        }
+
+        .submit {
+            margin-left: 1em;
+        }
+
+        input {
+            width: 20em;
+        }
+    }
+
+    .messages {
+        display: flex;
+        align-items: center;
+        margin-top: 0.7em;
+        height: 3em;
+
+        .icon {
+            width: 1.2em;
+
+            img {
+                display: block;
+                width: 1.2em;
+            }
+        }
+    }
 `;
 
 // ---------------- <PoSFilter /> ----------------------------------------
