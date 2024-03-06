@@ -35,7 +35,7 @@ from action.plugin.ctx import PluginCtx
 from plugin_types.query_persistence.error import QueryPersistenceRecNotFound
 
 ConcFormArgsFactory = Callable[
-#   plugin_ctx, corpora,   data,         op_key, author_id
+    #   plugin_ctx, corpora,   data,         op_key, author_id
     [PluginCtx, List[str], Dict[str, Any], str, int],
     Coroutine[Any, Any, ConcFormArgs]
 ]
@@ -57,6 +57,15 @@ class AbstractQueryPersistence(abc.ABC):
     user experience (1) should be stored too as it allows easy restoring
     of a state of respective forms.
     """
+
+    def __init__(self, settings):
+        self._id_reserved_patterns = []
+        plugin_conf = settings.get('plugins', 'query_persistence')
+        path = plugin_conf.get('reserved_ids_path', '')
+        if path:
+            with open(path) as f:
+                for line in f:
+                    self._id_reserved_patterns.append(line.strip())
 
     @abc.abstractmethod
     def is_valid_id(self, data_id: str) -> bool:
@@ -203,7 +212,6 @@ class AbstractQueryPersistence(abc.ABC):
 
     MapRes = TypeVar('MapRes')
 
-
     async def _fix_forms(
             self,
             plugin_ctx: PluginCtx,
@@ -231,7 +239,6 @@ class AbstractQueryPersistence(abc.ABC):
         last_data['prev_id'] = last_new_entry['id']
         await self.update(last_data)
         logging.getLogger(__name__).info(f"Query persistence chain reconstruction result: {ans}")
-
 
     async def map_pipeline_ops(
             self,
@@ -312,3 +319,16 @@ class AbstractQueryPersistence(abc.ABC):
         2nd call: (foo, syn2020, afac, None,         None,  None, 4100) will update existing record with actual_size
         """
         pass
+
+    async def id_reserved(self, id: str) -> Tuple[bool, str]:
+        """
+        Compare id with blacklist, used to limit user query id
+        """
+        for pattern in self._id_reserved_patterns:
+            if id == pattern:
+                return True, pattern
+            if id.startswith(pattern):
+                return True, f'prefix {pattern}'
+            if id.endswith(pattern):
+                return True, f'suffix {pattern}'
+        return False, ''

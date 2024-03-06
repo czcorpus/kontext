@@ -551,6 +551,7 @@
         "concview__create_new_id_msg_too_long": "too long",
         "concview__create_new_id_msg_invalid_chars": "invalid characters (use [a-zA-Z0-9_-])",
         "concview__create_new_id_msg_unavailable": "selected id already exists",
+        "concview__create_new_id_msg_reserved_{pattern}": "selected id contains reserved pattern `{pattern}`",
         "concview__create_new_id_msg_checking_availability": "checking availability...",
         "concview__tips_heading": "Usage tips",
         "concview__tip_01": "You can use keyboard shorcuts on this page. Hit <Shift> <k> to view the list.",

@@ -551,6 +551,7 @@
         "concview__create_new_id_msg_too_long": "příliš dlouhé",
         "concview__create_new_id_msg_invalid_chars": "nepovolené znaky (použijte [a-zA-Z0-9_-])",
         "concview__create_new_id_msg_unavailable": "zadané id už existuje",
+        "concview__create_new_id_msg_reserved_{pattern}": "zadané id obsahuje rezervovaný vzor `{pattern}`",
         "concview__create_new_id_msg_checking_availability": "kontroluji dostupnost...",
         "concview__tips_heading": "Uživatelské tipy",
         "concview__tip_01": "Na této stránce můžete používat řadu klávesových zkratek. Stiskněte <Shift> <k> pro získání jejich seznamu.",

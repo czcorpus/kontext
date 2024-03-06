@@ -81,15 +81,6 @@ from plugins.mysql_integration_db import MySqlIntegrationDb
 from .archive import get_iso_datetime, is_archived
 
 
-def id_exists(id):
-    """
-    Tests whether passed id exists
-    """
-    # currently we assume that id (= prefix of md5 hash with 52^6 possible values)
-    #  conflicts are very unlikely
-    return False
-
-
 def mk_key(code):
     return 'concordance:%s' % (code, )
 
@@ -109,6 +100,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
             db: KeyValueStorage,
             sql_backend: MySQLOps,
             auth: AbstractAuth):
+        super().__init__(settings)
         plugin_conf = settings.get('plugins', 'query_persistence')
         ttl_days = int(plugin_conf.get('ttl_days', MySqlQueryPersistence.DEFAULT_TTL_DAYS))
         self._ttl_days = ttl_days
