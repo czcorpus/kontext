@@ -803,7 +803,8 @@ export function init({
                             <Style_PersistentConcordanceForm>
                                 <div className="input-row">
                                     <input type="text" value={this.props.userQueryId}
-                                            onChange={e => this.handleUserIdChange(e.target.value)}/>
+                                            onChange={e => this.handleUserIdChange(e.target.value)}
+                                            disabled={this.props.userQueryIdSubmit}/>
                                     <span style={{width: '1.8em', marginLeft: '0.3em'}} hidden={this.props.userQueryIdValid}>
                                         <layoutViews.StatusIcon status="error" htmlClass="icon"/>
                                     </span>

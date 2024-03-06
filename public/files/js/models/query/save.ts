@@ -51,6 +51,7 @@ export interface QuerySaveAsFormModelState {
     userQueryIdMsg:Array<string>;
     userQueryIdValid:boolean;
     userQueryIdIsBusy:boolean;
+    userQueryIdSubmit:boolean;
 }
 
 /**
@@ -84,6 +85,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                 userQueryIdMsg: [],
                 userQueryIdValid: true,
                 userQueryIdIsBusy: false,
+                userQueryIdSubmit: false,
             }
         );
         this.layoutModel = layoutModel;
@@ -314,6 +316,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
             Actions.UserQueryIdSubmit,
             (state, action) => {
                 state.userQueryIdIsBusy = true;
+                state.userQueryIdSubmit = true;
             },
             (state, action, dispatch) => {
                 this.renameQuery(state.queryId, state.userQueryId, dispatch);
@@ -325,13 +328,10 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
             (state, action) => {
                 if (action.error) {
                     state.userQueryIdIsBusy = false;
+                    state.userQueryIdSubmit = false;
                     this.layoutModel.showMessage('error', action.error);
                 } else {
-                    state.queryId = action.payload.id;
-                    state.concIsArchived = false;
-                    state.willBeArchived = false;
-                    state.userQueryId = '';
-                    this.layoutModel.showMessage('info', this.layoutModel.translate('concview__create_new_id_renamed') + `: ${state.queryId}`);
+                    window.location.href = this.layoutModel.createActionUrl('view', {q: `~${action.payload.id}`})
                 }
             },
         );
@@ -340,14 +340,17 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
             Actions.UserQueryIdAvailable,
             (state, action) => {
                 state.userQueryIdIsBusy = false;
-                state.userQueryIdMsg = [];
                 if (action.error) {
                     this.layoutModel.showMessage('error', action.error);
                     state.userQueryIdValid = false;
 
-                } else if (!action.payload.available) {
-                    state.userQueryIdValid = false;
-                    state.userQueryIdMsg.push(this.layoutModel.translate('concview__create_new_id_msg_unavailable'));
+                } else {
+                    if (!action.payload.available) {
+                        state.userQueryIdValid = false;
+                        state.userQueryIdMsg.push(this.layoutModel.translate('concview__create_new_id_msg_unavailable'));
+                    } else {
+                        state.userQueryIdMsg = [];
+                    }
                 }
             },
         );
@@ -383,9 +386,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
         return state.userQueryId.length > 0 && state.userQueryIdValid;
     }
 
-    private checkAvailableDelayed(state:QuerySaveAsFormModelState):Observable<
-        {id:string; available:boolean;}
-    > {
+    private checkAvailableDelayed(state:QuerySaveAsFormModelState):Observable<{id:string; available:boolean;}> {
         if (this.inputThrottleTimer) {
             window.clearTimeout(this.inputThrottleTimer);
         }
@@ -431,22 +432,18 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
 
         ).subscribe({
             next: data => {
-                dispatch(Actions.UserQueryIdSubmitDone, data);
-                dispatch({
-                    name: ConcActions.ReloadConc.name,
-                    payload: {
-                        concId: data.id,
-                        viewMode: this.layoutModel.getConcArgs().viewmode,
-                        arf: this.layoutModel.getConf<number>('ResultArf'),
-                        concSize: this.layoutModel.getConf<number>('ConcSize'),
-                        fullSize: this.layoutModel.getConf<number>('FullSize'),
-                        corpusIpm: this.layoutModel.getConf<number>('ResultIpm'),
-                        queryChainSize: 1, // TODO size 1 even for attached default shuffle?
-                    },
-                });
+                dispatch(
+                    Actions.UserQueryIdSubmitDone,
+                    data,
+                );
+
             },
             error: error => {
-                dispatch(Actions.UserQueryIdSubmitDone, null, error);
+                dispatch(
+                    Actions.UserQueryIdSubmitDone,
+                    {},
+                    error,
+                );
             }
         });
     }
