@@ -360,17 +360,9 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
 
                 } else if (!action.payload.available) {
                     state.userQueryIdValid = false;
-                    if (action.payload.pattern) {
-                        state.userQueryIdMsg.push(this.layoutModel.translate(
-                            'concview__create_new_id_msg_reserved_{pattern}',
-                            {pattern: action.payload.pattern},
-                        ));
-
-                    } else {
-                        state.userQueryIdMsg.push(
-                            this.layoutModel.translate('concview__create_new_id_msg_unavailable')
-                        );
-                    }
+                    state.userQueryIdMsg.push(
+                        this.layoutModel.translate('concview__create_new_id_msg_unavailable')
+                    );
                 }
             },
         );
@@ -403,7 +395,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
     }
 
     private checkIdExists(queryId:string) {
-        return this.layoutModel.ajax$<{id:string; available:boolean; pattern:string;}>(
+        return this.layoutModel.ajax$<{id:string; available:boolean}>(
             HTTP.Method.GET,
             this.layoutModel.createActionUrl('query_id_available'),
             {id: queryId},

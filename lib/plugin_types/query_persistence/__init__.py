@@ -18,6 +18,7 @@
 
 import abc
 import logging
+import re
 from typing import (
     Any, Awaitable, Callable, Coroutine, Dict, List, Optional, Tuple, TypeVar,
     Union)
@@ -320,15 +321,11 @@ class AbstractQueryPersistence(abc.ABC):
         """
         pass
 
-    async def id_reserved(self, id: str) -> Tuple[bool, str]:
+    async def id_reserved(self, id: str) -> bool:
         """
         Compare id with blacklist, used to limit user query id
         """
         for pattern in self._id_reserved_patterns:
-            if id == pattern:
-                return True, pattern
-            if id.startswith(pattern):
-                return True, f'prefix {pattern}'
-            if id.endswith(pattern):
-                return True, f'suffix {pattern}'
-        return False, ''
+            if re.match(pattern, id):
+                return True
+        return False
