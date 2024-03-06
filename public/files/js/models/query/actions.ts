@@ -656,7 +656,6 @@ export class Actions {
     static UserQueryIdAvailable:Action<{
         id:string;
         available:boolean;
-        pattern:string;
     }> = {
         name: 'USER_QUERY_ID_AVAILABLE'
     }

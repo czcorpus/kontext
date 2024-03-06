@@ -504,9 +504,9 @@ async def get_stored_conc_archived_status(amodel: UserActionModel, req: KRequest
 async def query_id_available(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.QUERY_PERSISTENCE as qp:
         id = req.args.get('id')
-        reserved, pattern = await qp.id_reserved(id)
+        reserved = await qp.id_reserved(id)
         if reserved:
-            return dict(id=id, available=False, pattern=pattern)
+            return dict(id=id, available=False)
         exists = await qp.id_exists(id)
     return dict(id=id, available=not exists)
 
