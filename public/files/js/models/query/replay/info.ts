@@ -26,12 +26,13 @@ import { map } from 'rxjs/operators';
 import { PageModel } from '../../../app/page';
 import { Actions } from '../actions';
 import { Actions as MainMenuActions } from '../../mainMenu/actions';
-import { mapOpIdToFormType, PersistentQueryOperation, QueryOverviewResponseRow } from './common';
+import { PersistentQueryOperation, importEncodedOperation } from './common';
 import { AjaxConcResponse } from '../../concordance/common';
+import { QueryOperation } from '../../../types/kontext';
 
 
 interface QueryOverviewResponse extends AjaxConcResponse {
-    Desc:Array<QueryOverviewResponseRow>;
+    Desc:Array<QueryOperation>;
 }
 
 export interface QueryInfoModelState {
@@ -104,17 +105,7 @@ export class QueryInfoModel<T extends QueryInfoModelState> extends StatelessMode
         ).pipe(
             map(
                 data => List.map(
-                    v => ({
-                        formType: mapOpIdToFormType(v.opid),
-                        concPersistenceId: v.conc_persistence_op_id,
-                        op: v.op,
-                        opid: v.opid,
-                        userEntry: v.nicearg,
-                        encodedArgs: v.arg,
-                        size: v.size,
-                        fullSize: v.fullsize
-
-                    }),
+                    importEncodedOperation,
                     data.Desc
                 )
             )

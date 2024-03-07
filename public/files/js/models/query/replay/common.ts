@@ -22,21 +22,6 @@ import * as Kontext from '../../../types/kontext';
 import { ConcFormArgs } from '../formArgs';
 
 
-export interface QueryOverviewResponseRow {
-    op:string;
-    opid:Kontext.ManateeOpCode;
-    conc_persistence_op_id:string;
-    nicearg:string;
-    arg:string;
-    size:number;
-
-    /**
-     * in case an implicit sample (= a concordance cut) is used,
-     * this value represents the possible full concordance size
-     */
-    fullsize:number;
-}
-
 /**
  * for attribute description, see Kontext.QueryOperation
  */
