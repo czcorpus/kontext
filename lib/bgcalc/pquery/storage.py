@@ -32,6 +32,10 @@ from dataclasses_json import dataclass_json
 from .errors import PqueryArgumentError, PqueryResultNotFound
 
 
+def _cache_dir_path(pquery: PqueryFormArgs) -> str:
+    return os.path.join(settings.get('corpora', 'freqs_cache_dir'), pquery.corpname)
+
+
 def _create_cache_path(pquery: PqueryFormArgs) -> str:
     corpname = pquery.corpname
     subcname = pquery.usesubcorp
@@ -47,7 +51,7 @@ def _create_cache_path(pquery: PqueryFormArgs) -> str:
     key = (f'{corpname}:{subcname}:{conc_ids}:{position}:{attr}:{min_freq}:{subset_cond}:{subset_limit}:'
            f'{superset_cond}:{superset_limit}')
     result_id = hashlib.sha1(key.encode('utf-8')).hexdigest()
-    return os.path.join(settings.get('corpora', 'freqs_cache_dir'), f'pquery_{result_id}.csv')
+    return os.path.join(_cache_dir_path(pquery), f'pquery_{result_id}.csv')
 
 
 def stored_to_fs(f):
@@ -65,6 +69,11 @@ def stored_to_fs(f):
                 csv_reader = csv.reader(fr)
                 return [item for item in csv_reader]
         else:
+            cache_dir = _cache_dir_path(pquery)
+            if not await aiofiles.os.path.isdir(cache_dir):
+                await aiofiles.os.makedirs(cache_dir)
+                os.chmod(cache_dir, 0o775)
+
             ans = await f(worker, pquery, raw_queries, subcpath, user_id, collator_locale)
             num_lines = ans[0][1]
             async with aiofiles.open(path, 'w') as fw:

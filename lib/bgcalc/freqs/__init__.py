@@ -15,6 +15,7 @@
 import logging
 import math
 import os
+import os.path
 import re
 import time
 from dataclasses import asdict
@@ -272,18 +273,24 @@ def clean_freqs_cache():
     root_dir = settings.get('corpora', 'freqs_cache_dir')
     cache_ttl = settings.get_int('corpora', 'freqs_cache_ttl', 3600)
     test_time = time.time()
-    all_files = os.listdir(root_dir)
+    corpora = os.listdir(root_dir)
     num_removed = 0
     num_error = 0
-    for item in all_files:
-        file_path = os.path.join(root_dir, item)
-        if test_time - os.path.getmtime(file_path) >= cache_ttl:
-            try:
-                os.unlink(file_path)
-                num_removed += 1
-            except OSError:
-                num_error += 1
-    return dict(total_files=len(all_files), num_removed=num_removed, num_error=num_error)
+    total_files = 0
+    for corpus in corpora:
+        corpus_dir = os.path.join(root_dir, corpus)
+        if os.path.isdir(corpus_dir):
+            files = os.listdir(corpus_dir)
+            for item in files:
+                file_path = os.path.join(corpus_dir, item)
+                if test_time - os.path.getmtime(file_path) >= cache_ttl:
+                    try:
+                        os.unlink(file_path)
+                        num_removed += 1
+                    except OSError:
+                        num_error += 1
+                total_files += len(files)
+    return dict(total_files=total_files, num_removed=num_removed, num_error=num_error)
 
 
 # ------------------ 2-attribute freq. distribution --------------

@@ -32,11 +32,15 @@ from manatee import Structure  # TODO wrap this out
 from util import AsyncBatchWriter
 
 
+def _cache_dir_path(form: WordlistFormArgs) -> str:
+    return os.path.join(settings.get('corpora', 'freqs_cache_dir'), form.corpname)
+
+
 def _create_cache_path(form: WordlistFormArgs) -> str:
     key = (f'{form.corpname}:{form.usesubcorp}:{form.wlattr}:{form.wlpat}:{form.pfilter_words}:{form.nfilter_words}:'
            f'{form.include_nonwords}:{form.wltype}:{form.wlnums}:{form.wlminfreq}')
     result_id = hashlib.sha1(key.encode('utf-8')).hexdigest()
-    return os.path.join(settings.get('corpora', 'freqs_cache_dir'), f'wlist_{result_id}.jsonl')
+    return os.path.join(_cache_dir_path(form), f'wlist_{result_id}.jsonl')
 
 
 async def require_existing_wordlist(
@@ -74,6 +78,11 @@ def cached(f):
                 fr.readline()
                 return [json.loads(item) for item in fr]
         else:
+            cache_dir = _cache_dir_path(args)
+            if not await aiofiles.os.path.isdir(cache_dir):
+                await aiofiles.os.makedirs(cache_dir)
+                os.chmod(cache_dir, 0o775)
+
             ans = await f(corp, args, sys.maxsize)
             ans = sorted(ans, key=lambda x: x[1], reverse=True)
             num_lines = len(ans)
