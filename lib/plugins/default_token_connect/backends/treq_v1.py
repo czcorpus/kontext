@@ -130,7 +130,7 @@ class TreqBackend(HTTPBackend):
 
     async def _make_request(self, client_session: ClientSession, path: str, session_id: str):
         headers = {'Cookie': f'{self.sid_cookie}={session_id}'}
-        data, valid = await self._requester.request('GET', path, {}, headers=headers)
+        data, valid = await self._requester.request(client_session, 'GET', path, {}, headers=headers)
         return json.loads(data)
 
     @cached
