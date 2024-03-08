@@ -33,6 +33,10 @@ from dataclasses_json import dataclass_json
 from util import AsyncBatchWriter
 
 
+def _cache_dir_path(args: FreqCalcArgs) -> str:
+    return os.path.join(settings.get('corpora', 'freqs_cache_dir'), args.corpname)
+
+
 def _cache_file_path(args: FreqCalcArgs):
     v = ''.join([
         str(args.corpname),
@@ -46,7 +50,7 @@ def _cache_file_path(args: FreqCalcArgs):
         str(args.collator_locale),
     ])
     filename = '{}.jsonl'.format(hashlib.sha1(v.encode('utf-8')).hexdigest())
-    return os.path.join(settings.get('corpora', 'freqs_cache_dir'), filename)
+    return os.path.join(_cache_dir_path(args), filename)
 
 
 class _Head(TypedDict):
@@ -101,6 +105,11 @@ def stored_to_fs(func):
     async def wrapper(args: FreqCalcArgs) -> FreqCalcResult:
         data, cache_path = await find_cached_result(args)
         if data is None:
+            cache_dir = _cache_dir_path(args)
+            if not await aiofiles.os.path.isdir(cache_dir):
+                await aiofiles.os.makedirs(cache_dir)
+                os.chmod(cache_dir, 0o775)
+
             data: FreqCalcResult = await func(args)
             async with AsyncBatchWriter(cache_path, 'w', 100) as bw:
                 common_md = CommonMetadata(num_blocks=len(data.freqs), conc_size=data.conc_size)
