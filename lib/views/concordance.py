@@ -572,6 +572,9 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
                     'fcrit': req.args.get('fcrit'),
                     'flimit': req.args.get('flimit'),
                     'alpha_level': req.args.get('alpha_level'),
+                    'fpage': req.args.get('fpage'),
+                    'fdefault_view': req.args.get('fdefault_view'),
+                    'freqlevel': req.args.get('freqlevel'),
                     # client does not always fills this
                     'freq_sort': req.args.get('freq_sort'),
                     'freq_type': req.args.get('freq_type'),
