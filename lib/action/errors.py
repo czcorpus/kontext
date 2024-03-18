@@ -26,6 +26,10 @@ class UserReadableException(Exception):
     not have access rights etc.).
 
     args - additional positional arguments that will be also stored in self.args
+
+    IMPORTANT
+    self.args need to reflect error initializer positional arguments!!!
+    so error can be rebuilt from Rq result
     """
 
     def __init__(self, message: Union[str, Exception], *args, code=400, error_code=None, error_args=None, internal_message=None):
@@ -33,13 +37,14 @@ class UserReadableException(Exception):
         self.code = code
         self.error_code = error_code
         self.error_args = error_args
+        self._message = message
         self._internal_message = internal_message
 
     def __repr__(self):
         return f'UserReadableException, code: {self.code}, message: {self.args[0] if len(self.args) > 0 else "--"}'
 
     def __str__(self):
-        return self.args[0]
+        return self._message
 
     @property
     def internal_message(self):
@@ -82,7 +87,7 @@ class CorpusForbiddenException(ForbiddenException):
         self.corpname = corpname
         self.variant = variant
         # args need to reflect positional arguments of constructor
-        # so it is Rq serializable
+        # so error can be rebuilt from Rq result
         self.args = (corpname, variant)
 
 
@@ -93,7 +98,7 @@ class AlignedCorpusForbiddenException(ForbiddenException):
         self.corpname = corpname
         self.variant = variant
         # args need to reflect positional arguments of constructor
-        # so it is Rq serializable
+        # so error can be rebuilt from Rq result
         self.args = (corpname, variant)
 
 
