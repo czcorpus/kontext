@@ -37,11 +37,11 @@ class UserReadableException(Exception):
         self.code = code
         self.error_code = error_code
         self.error_args = error_args
-        self._message = message
+        self._message = str(message)
         self._internal_message = internal_message
 
     def __repr__(self):
-        return f'UserReadableException, code: {self.code}, message: {self.args[0] if len(self.args) > 0 else "--"}'
+        return f'UserReadableException, code: {self.code}, message: {self._message if len(self._message) > 0 else "--"}'
 
     def __str__(self):
         return self._message
