@@ -242,6 +242,7 @@
         "global__save_form_submit_btn": "Save",
         "global__save_form_line_from": "From",
         "global__save_form_line_to": "To",
+        "global__advanced_options": "Advanced options",
         "linesel__remove_selected_lines": "Remove selected lines",
         "linesel__remove_all_but_selected_lines": "Keep only selected lines",
         "linesel__clear_the_selection": "Clear the selection",

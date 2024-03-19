@@ -633,7 +633,13 @@ export class Actions {
         url:string;
     }> = {
         name: 'QUERY_COPY_CONCORDANCE_PERMALINK_TO_CLIPBOARD'
-    }
+    };
+
+    static PermalinkAdvancedModeSet:Action<{
+        value:boolean;
+    }> = {
+        name: 'QUERY_PERMALINK_ADVANCED_MODE_SET',
+    };
 
     static UserQueryIdChange:Action<{
         value:string;
@@ -688,6 +694,7 @@ export class Actions {
     }> = {
         name: 'QUERY_HIDE_QUICK_SUBCORP_WIDGET'
     };
+
 }
 
 export function isSetActiveInputWidgetAction(a: Action): a is typeof Actions.SetActiveInputWidget {
