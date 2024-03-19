@@ -296,7 +296,7 @@ class ConcActionModel(CorpusActionModel):
         (otherwise nothing is done).
 
         returns:
-        a 2-tuple (
+        a list of 2-tuple (
             ID of the stored operation (or the current ID of nothing was stored),
             UNIX timestamp of stored history item (or None)
         """
@@ -348,6 +348,7 @@ class ConcActionModel(CorpusActionModel):
                     conc_forms_args[item.op_key] = item.to_dict()
                     if i < len(query_overview):
                         query_overview[i].conc_persistence_op_id = item.op_key
+                        query_overview[i].is_registered_author = item.author_id is not None and not self.is_anonymous_id(item.author_id)
                     elif item.form_type != 'lgroup':
                         raise RuntimeError(
                             'Found a mismatch between Manatee query encoding and stored metadata')

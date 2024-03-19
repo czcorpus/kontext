@@ -492,7 +492,7 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
     async def resolve_error_state(self, req, resp, result, err):
         if self.cf:
             with plugins.runtime.QUERY_HISTORY as qh:
-                queries = await qh.get_user_queries(self.session_get('user', 'id'), self.cf, limit=1)
+                queries = await qh.get_user_queries(self.plugin_ctx, self.session_get('user', 'id'), self.cf, limit=1)
                 if len(queries) > 0:
                     corpname = queries[0].get('corpname', None)
                     if corpname is not None:

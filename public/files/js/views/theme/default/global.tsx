@@ -627,7 +627,7 @@ export const GlobalStyle = createGlobalStyle`
         font-family: ${theme.monospaceFontFamily};
     }
 
-    .default-button, .danger-button {
+    .disabled-button, .default-button, .danger-button {
         font-size: 1em;
         color: ${theme.colorWhiteText};
         text-decoration: none;
@@ -636,6 +636,12 @@ export const GlobalStyle = createGlobalStyle`
         border-radius: 0.2em;
         border: 1px solid ${theme.colorLogoBlue};
         box-shadow: 0px 1px 2px rgba(000, 000, 000, 0.5), inset 0px 0px 2px rgba(255, 255, 255, 0.2);
+    }
+
+    .disabled-button {
+        color: ${theme.colorLightText};
+        background-color: ${theme.colorLightGrey};
+        border: 1px solid ${theme.colorLightGrey};
     }
 
     .danger-button {

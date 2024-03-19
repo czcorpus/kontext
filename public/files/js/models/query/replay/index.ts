@@ -39,7 +39,9 @@ import { Actions as TTActions } from '../../textTypes/actions';
 import { Actions as QueryActions } from '../../query/actions';
 import {
     PersistentQueryOperation, importEncodedOperation, QueryPipelineResponse,
-    QueryPipelineResponseItem } from './common';
+    QueryPipelineResponseItem,
+    exportDecodedOperation,
+    NormalizeConcFormArgsResp} from './common';
 import { AjaxConcResponse, ConcQueryResponse } from '../../concordance/common';
 import { QueryContextArgs } from '../common';
 import { ConcSortModel } from '../sort/single';
@@ -212,6 +214,52 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                         importEncodedOperation, action.payload.data.query_overview);
                     state.concFormsCache = {};
                 }
+            },
+            (state, action, dispatch) => {
+                const numVariants = pipe(
+                    state.operations,
+                    List.unique(x => x.isRegisteredAuthor),
+                    List.size()
+                );
+                if (numVariants > 1) {
+                    this.pageModel.ajax$<NormalizeConcFormArgsResp>(
+                        HTTP.Method.POST,
+                        this.pageModel.createActionUrl(
+                            'normalize_conc_form_args_arch',
+                            {
+                                last_id: List.last(state.operations).concPersistenceId,
+                                corpname: this.getActualCorpname()
+                            }
+                        ),
+                        {}
+
+                    ).subscribe({
+                        next: (resp) => {
+                            dispatch(
+                                ConcActions.ConcFormArgsNormalizationDone,
+                                {
+                                    authorId: resp.author_id
+                                }
+                            );
+                        },
+                        error: (error) => {
+                            dispatch(
+                                ConcActions.ConcFormArgsNormalizationDone,
+                                error
+                            );
+                        }
+                    });
+                }
+            }
+        );
+
+        this.addActionHandler(
+            ConcActions.ConcFormArgsNormalizationDone,
+            (state, action) => {
+                state.operations = List.map(
+                    item => ({...item, isRegisteredAuthor: true}),
+                    state.operations
+                )
             }
         );
 
@@ -842,15 +890,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             ),
             query_overview: pipe(
                 state.operations,
-                List.map(op => ({
-                    op: op.op,
-                    opid: op.opid,
-                    nicearg: null,
-                    arg: op.encodedArgs,
-                    size: op.size,
-                    fullsize: op.fullSize,
-                    conc_persistence_op_id: op.concPersistenceId
-                }))
+                List.map(exportDecodedOperation)
             )
         });
     }

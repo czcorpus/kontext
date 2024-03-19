@@ -461,7 +461,7 @@ async def create_view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     This is intended for direct conc. access via external pages (i.e. no query_submit + view and just directly
     to the result by providing raw CQL query
     """
-    form_args = await decode_raw_query(amodel.plugin_ctx, [amodel.args.corpname], req.args)
+    form_args = await decode_raw_query(amodel.plugin_ctx, [amodel.args.corpname], req.args.getlist('q'))
     await amodel.store_unbound_query_chain(form_args)
     asnc = int(req.args.get('asnc')) if 'asnc' in req.args else 0
     return await view_conc(amodel, req, resp, asnc, req.session_get('user', 'id'))
@@ -499,6 +499,33 @@ async def get_stored_conc_archived_status(amodel: UserActionModel, req: KRequest
         }
 
 
+@bp.route('/query_id_available', ['GET'])
+@http_action(access_level=2, return_type='json', action_model=UserActionModel)
+async def query_id_available(amodel: UserActionModel, req: KRequest, resp: KResponse):
+    with plugins.runtime.QUERY_PERSISTENCE as qp:
+        id = req.args.get('id')
+        reserved = await qp.id_reserved(id)
+        if reserved:
+            return dict(id=id, available=False)
+        exists = await qp.id_exists(id)
+    return dict(id=id, available=not exists)
+
+
+@bp.route('/create_query_id', ['POST'])
+@http_action(access_level=2, return_type='json', action_model=UserActionModel)
+async def create_query_id(amodel: UserActionModel, req: KRequest, resp: KResponse):
+    old_id = req.json['old']
+    new_id = req.json['new']
+    with plugins.runtime.QUERY_PERSISTENCE as qp:
+        reserved, pattern = await qp.id_reserved(new_id)
+        if reserved:
+            raise ValueError(f'ID {new_id} reserved by pattern `{pattern}`')
+        await qp.clone_with_id(old_id, new_id)
+        if await qp.is_archived(old_id):
+            await qp.archive(amodel.session_get('user', 'id'), new_id)
+    return dict(id=new_id, ok=True)
+
+
 @bp.route('/restore_conc')
 @http_action(mutates_result=True, action_model=ConcActionModel, template='restore_conc.html')
 async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
@@ -513,7 +540,6 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         if conc:
             amodel.apply_linegroups(conc)
             conc.switch_aligned(os.path.basename(amodel.args.corpname))
-
             kwic_args = KwicPageArgs(asdict(amodel.args), base_attr=amodel.BASE_ATTR)
             kwic_args.speech_attr = await amodel.get_speech_segment()
             kwic_args.labelmap = {}
@@ -524,9 +550,7 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
                 kwic_args.internal_attrs = await tl.get_required_attrs(
                     amodel.plugin_ctx, corpus_info.tokens_linking.providers,
                     [amodel.args.corpname] + amodel.args.align)
-
             kwic = Kwic(amodel.corp, conc)
-
             out['Sort_idx'] = kwic.get_sort_idx(q=amodel.args.q, pagesize=amodel.args.pagesize)
             out.update(asdict(kwic.kwicpage(kwic_args)))
             out.update(await amodel.get_conc_sizes(conc))
@@ -536,7 +560,7 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
                     'fcrit': req.args.get('fcrit'),
                     'fcrit_async': req.args_getlist('fcrit_async'),
                     'flimit': req.args.get('flimit'),
-                    # client does not always fills this
+                    # client does not always fill this
                     'freq_sort': req.args.get('freq_sort', 'freq'),
                     'freq_type': req.args.get('freq_type')}
             elif req.args.get('next') == 'shared_freqs':
@@ -548,7 +572,7 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
                     'fpage': req.args.get('fpage'),
                     'fdefault_view': req.args.get('fdefault_view'),
                     'freqlevel': req.args.get('freqlevel'),
-                    # client does not always fills this
+                    # client does not always fill this
                     'freq_sort': req.args.get('freq_sort'),
                     'freq_type': req.args.get('freq_type'),
                 }
@@ -646,6 +670,31 @@ async def delete_query(amodel: UserActionModel, req: KRequest, resp: KResponse):
             int(req.json['created'])
         )
     return dict(num_deleted=ans)
+
+
+@bp.route('/normalize_conc_form_args_arch', ['POST'])
+@http_action(return_type='json', action_model=ConcActionModel)
+async def normalize_conc_form_args_arch(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    last_id = req.args.get('last_id')
+
+    with plugins.runtime.QUERY_PERSISTENCE as qp:
+        data = await qp.open(last_id)
+        chain = [last_id]
+        prev_id = data.get('prev_id')
+        author_id = data.get('user_id')
+        hard_limit = 100
+        while prev_id is not None and hard_limit > 0:
+            data = await qp.open(prev_id)
+            chain.append(prev_id)
+            curr_author_id = data.get('user_id')
+            if amodel.is_anonymous_id(curr_author_id) or curr_author_id is None:
+                data['user_id'] = author_id
+                await qp.update(data, arch_enqueue=True)
+            prev_id = data.get('prev_id')
+            hard_limit -= 1
+    logging.getLogger(__name__).debug('normalizing query chain {}, with author_id {}'.format(
+        ' -> '.join(chain), author_id))
+    return dict(author_id=author_id)
 
 
 @bp.route('/concdesc_json')

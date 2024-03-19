@@ -19,14 +19,14 @@
  */
 
 import * as React from 'react';
-import { IActionDispatcher, BoundWithProps, IModel, Bound } from 'kombo';
+import { IActionDispatcher, BoundWithProps, IModel } from 'kombo';
 import { List, tuple } from 'cnc-tskit';
 
 import { init as basicOverviewInit } from '../basicOverview';
 import * as Kontext from '../../../types/kontext';
 import { QueryReplayModelState, QueryReplayModel } from '../../../models/query/replay';
 import { IndirectQueryReplayModel, IndirectQueryReplayModelState } from '../../../models/query/replay/indirect';
-import { QuerySaveAsFormModel, QuerySaveAsFormModelState } from '../../../models/query/save';
+import { QuerySaveAsFormModel } from '../../../models/query/save';
 import { Actions } from '../../../models/query/actions';
 import { Actions as MainMenuActions } from '../../../models/mainMenu/actions';
 import { Actions as ConcActions } from '../../../models/concordance/actions';
@@ -36,10 +36,9 @@ import { FilterFormProps, SubHitsFormProps, FirstHitsFormProps} from '../filter'
 import { SortFormProps } from '../sort';
 import { MainMenuModelState } from '../../../models/mainMenu';
 import * as S from './style';
-import { PersistentConcordanceForm as Style_PersistentConcordanceForm,
-        SaveHintParagraph as Style_SaveHintParagraph } from '../style';
 import { QueryOverviewBarUL as Style_QueryOverviewBarUL } from '../basicOverview/style';
 import { PersistentQueryOperation } from '../../../models/query/replay/common';
+import { init as permalinkViewInit } from './permalink';
 
 /*
 Important note regarding variable naming conventions:
@@ -131,6 +130,7 @@ export function init({
 
     const layoutViews = he.getLayoutViews();
     const basicOverviewViews = basicOverviewInit(dispatcher, he, mainMenuModel);
+    const PermalinkView = permalinkViewInit(dispatcher, he, querySaveAsModel);
 
 
     const formTypeToTitle = (opFormType:string, subvariant?:string) => {
@@ -726,116 +726,6 @@ export function init({
         AppendOperationOverlayProps, QueryReplayModelState|IndirectQueryReplayModelState
     >(AppendOperationOverlay, queryReplayModel);
 
-    // ------------------------ <PersistentConcordanceForm /> --------------------------------
-
-    class PersistentConcordanceForm extends React.PureComponent<QuerySaveAsFormModelState> {
-
-        constructor(props) {
-            super(props);
-            this.handleCloseEvent = this.handleCloseEvent.bind(this);
-            this.handleSubmit = this.handleSubmit.bind(this);
-            this.handleRevokeSubmit = this.handleRevokeSubmit.bind(this);
-            this.handleCopyToClipboard = this.handleCopyToClipboard.bind(this);
-        }
-
-        private handleCloseEvent() {
-            dispatcher.dispatch<typeof MainMenuActions.ClearActiveItem>({
-                name: MainMenuActions.ClearActiveItem.name
-            });
-        }
-
-        private handleSubmit() {
-            dispatcher.dispatch<typeof ConcActions.MakeConcPermanent>({
-                name: ConcActions.MakeConcPermanent.name,
-                payload: {
-                    revoke: false
-                }
-            });
-        }
-
-        private handleRevokeSubmit() {
-            dispatcher.dispatch<typeof ConcActions.MakeConcPermanent>({
-                name: ConcActions.MakeConcPermanent.name,
-                payload: {
-                    revoke: true
-                }
-            });
-        }
-
-        private createPermanentUrl() {
-            return he.createActionLink('view', {q: '~' + this.props.queryId});
-        }
-
-        private handleCopyToClipboard() {
-            dispatcher.dispatch(
-                Actions.CopyPermalinkToClipboard,
-                {url: this.createPermanentUrl()}
-            );
-        }
-
-        componentDidMount() {
-            dispatcher.dispatch(
-                ConcActions.GetConcArchiveStatus
-            );
-        }
-
-        render() {
-            return (
-                <layoutViews.ModalOverlay onCloseKey={this.handleCloseEvent}>
-                    <layoutViews.CloseableFrame onCloseClick={this.handleCloseEvent}
-                                label={he.translate('concview__make_conc_link_permanent_hd')}
-                                icon={<img
-                                        src={he.createStaticUrl('img/share.svg')}
-                                        alt="share"
-                                        style={{width: '1em'}} />}>
-                        {this.props.isBusy ?
-                            <layoutViews.AjaxLoaderImage /> :
-                            <Style_PersistentConcordanceForm>
-                                <Style_SaveHintParagraph>
-                                    <layoutViews.StatusIcon status="info" inline={true} htmlClass="icon" />
-                                    {this.props.concIsArchived || this.props.willBeArchived ?
-                                        he.translate('concview__permanent_link_is_archived') + ':' :
-                                        he.translate('concview__permanent_link_hint_{ttl}', {ttl: this.props.concTTLDays})
-                                    }
-                                </Style_SaveHintParagraph>
-                                <div className="link">
-                                    <input type="text" readOnly={true}
-                                            disabled={!this.props.concIsArchived}
-                                            value={this.createPermanentUrl()}
-                                            className={this.props.concIsArchived || this.props.willBeArchived ? 'archived' : ''}
-                                            onClick={e => this.props.concIsArchived || this.props.willBeArchived ?
-                                                            (e.target as HTMLInputElement).select() : null} />
-                                    <a onClick={this.handleCopyToClipboard}>
-                                        <layoutViews.ImgWithMouseover
-                                                src={he.createStaticUrl('img/copy-icon.svg')}
-                                                src2={he.createStaticUrl('img/copy-icon_s.svg')}
-                                                alt={he.translate('global__copy_to_clipboard')}
-                                                style={{width: '1.8em', marginLeft: '0.3em'}} />
-                                    </a>
-                                </div>
-                                <p>
-                                    {this.props.concIsArchived || this.props.willBeArchived ?
-                                        <button type="button" className="danger-button"
-                                                onClick={this.handleRevokeSubmit}>
-                                            {he.translate('concview__make_conc_link_permanent_revoke_archived')}
-                                        </button> :
-                                        <button type="button" className="default-button"
-                                                onClick={this.handleSubmit}>
-                                            {he.translate('global__proceed')}
-                                        </button>
-                                    }
-                                </p>
-                            </Style_PersistentConcordanceForm>
-                        }
-                    </layoutViews.CloseableFrame>
-                </layoutViews.ModalOverlay>
-            );
-        }
-    }
-
-    const BoundPersistentConcordanceForm = Bound<QuerySaveAsFormModelState>(
-        PersistentConcordanceForm, querySaveAsModel);
-
 
     // ------------------------ <QueryToolbar /> --------------------------------
 
@@ -865,7 +755,7 @@ export function init({
             if (this.props.activeItem) {
                 switch (this.props.activeItem.actionName) {
                     case MainMenuActions.MakeConcLinkPersistent.name:
-                        return <BoundPersistentConcordanceForm />;
+                        return <PermalinkView />;
                 }
             }
             return null;

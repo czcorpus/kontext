@@ -257,6 +257,9 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
                 ConcActions.AddedNewOperation
             ],
             (state, action) => {
+                if (window.location.hash) {
+                    window.location.hash = '';
+                }
                 state.activeItem = null;
             }
         );

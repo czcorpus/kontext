@@ -391,7 +391,7 @@ class CorpusActionModel(UserActionModel):
             cn = form.corpora[0]
         elif not self.user_is_anonymous():
             with plugins.runtime.QUERY_HISTORY as qh:
-                queries = await qh.get_user_queries(self.session_get('user', 'id'), self.cf, limit=1)
+                queries = await qh.get_user_queries(self.plugin_ctx, self.session_get('user', 'id'), self.cf, limit=1)
                 if len(queries) > 0:
                     cn = queries[0].get('corpname', '')
                     redirect = True

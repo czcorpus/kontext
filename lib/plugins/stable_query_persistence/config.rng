@@ -24,6 +24,15 @@
                     </choice>
                 </element>
             </optional>
+            <optional>
+                <element name="reserved_ids_path">
+                    <a:documentation>
+                        A filesystem path to a file containing list of regexp patterns
+                        (one per line) with forbidden IDs for persistent queries.
+                    </a:documentation>
+                    <text />
+                </element>
+            </optional>
         </element>
     </start>
 </grammar>

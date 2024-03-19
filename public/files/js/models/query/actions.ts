@@ -635,6 +635,31 @@ export class Actions {
         name: 'QUERY_COPY_CONCORDANCE_PERMALINK_TO_CLIPBOARD'
     }
 
+    static UserQueryIdChange:Action<{
+        value:string;
+    }> = {
+        name: 'USER_QUERY_ID_CHANGE'
+    }
+
+    static UserQueryIdSubmit:Action<{
+    }> = {
+        name: 'USER_QUERY_ID_SUBMIT'
+    }
+
+    static UserQueryIdSubmitDone:Action<{
+        id:string;
+        ok:boolean;
+    }> = {
+        name: 'USER_QUERY_ID_SUBMIT_DONE'
+    }
+
+    static UserQueryIdAvailable:Action<{
+        id:string;
+        available:boolean;
+    }> = {
+        name: 'USER_QUERY_ID_AVAILABLE'
+    }
+
     /**
      * This is an action a tag-helper plug-in should be able to respond to
      */

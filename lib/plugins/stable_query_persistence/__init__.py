@@ -39,12 +39,10 @@ import ujson as json
 from action.errors import ForbiddenException, NotFoundException
 from plugin_types.general_storage import KeyValueStorage
 from plugin_types.query_persistence import AbstractQueryPersistence
-from plugin_types.query_persistence.common import generate_idempotent_hex_id
+from plugin_types.query_persistence.common import (
+    ID_KEY, QUERY_KEY, USER_ID_KEY, generate_idempotent_hex_id)
 from plugins import inject
 
-QUERY_KEY = 'q'
-ID_KEY = 'id'
-USER_ID_KEY = 'user_id'
 DEFAULT_TTL_DAYS = 7
 
 
@@ -55,6 +53,7 @@ def mk_key(code):
 class StableQueryPersistence(AbstractQueryPersistence):
 
     def __init__(self, db: KeyValueStorage, settings):
+        super().__init__(settings)
         self.db = db
         plugin_conf = settings.get('plugins', 'query_persistence')
         self._ttl_days = int(plugin_conf.get('ttl_days', DEFAULT_TTL_DAYS))
@@ -220,6 +219,65 @@ class StableQueryPersistence(AbstractQueryPersistence):
         logging.getLogger(__name__).info(
             'using conc_persistence archives {0}'.format([x[0] for x in dbs]))
         return [x[1] for x in dbs]
+
+    async def update(self, data, arch_enqueue=False):
+        """
+        Update stored data by data['id']. Used only for internal data correction!
+        """
+        data_id = data[ID_KEY]
+        data_key = mk_key(data_id)
+        if await self.db.exists(data_key):
+            await self.db.set(data_key, data)
+
+        archive_db = self.find_key_db(data_id)
+        cursor = archive_db.cursor()
+        cursor.execute('UPDATE archive SET data = ? WHERE id = ?', (json.dumps(data), data_id))
+        archive_db.commit()
+
+    async def clone_with_id(self, old_id: str, new_id: str):
+        """
+        Duplicate entry with new id
+        """
+        # check if new id is available
+        if await self.id_exists(new_id):
+            raise ValueError(f'ID {new_id} already exists')
+
+        # get original data
+        original_data = await self.db.get(mk_key(old_id))
+        if original_data is None:
+            archive_db = self.find_key_db(old_id)
+            cursor = archive_db.cursor()
+            cursor.execute(
+                'SELECT data '
+                'FROM kontext_conc_persistence '
+                'WHERE id = ? '
+                'LIMIT 1',
+                (old_id,)
+            )
+            row = await cursor.fetchone()
+            if row is None:
+                raise ValueError(f'Data for {old_id} not found')
+            original_data = json.loads(row[0])
+
+        # set new values
+        original_data[ID_KEY] = new_id
+        await self.db.set(mk_key(new_id), original_data)
+
+    async def id_exists(self, id: str) -> bool:
+        """
+        Check if ID already exists
+        """
+        archive_db = self.find_key_db(id)
+        cursor = archive_db.cursor()
+        cursor.execute(
+            'SELECT * '
+            'FROM kontext_conc_persistence '
+            'WHERE id = ? '
+            'LIMIT 1',
+            (id,)
+        )
+        row = cursor.fetchone()
+        return row is not None or await self.db.exists(mk_key(id))
 
 
 @inject(plugins.runtime.DB)

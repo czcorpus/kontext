@@ -18,9 +18,13 @@
 
 import abc
 import logging
-from typing import Any, Callable, Coroutine, Dict, List, Optional, Tuple, Union, TypeVar, Awaitable
+import re
+from typing import (
+    Any, Awaitable, Callable, Coroutine, Dict, List, Optional, Tuple, TypeVar,
+    Union)
 
 import settings
+from action.argmapping.conc import decode_raw_query
 
 if settings.get_bool('global', 'legacy_support', False):
     from legacy.concordance import upgrade_stored_record
@@ -32,7 +36,8 @@ from action.plugin.ctx import PluginCtx
 from plugin_types.query_persistence.error import QueryPersistenceRecNotFound
 
 ConcFormArgsFactory = Callable[
-    [PluginCtx, List[str], Dict[str, Any], str],
+    #   plugin_ctx, corpora,   data,         op_key, author_id
+    [PluginCtx, List[str], Dict[str, Any], str, int],
     Coroutine[Any, Any, ConcFormArgs]
 ]
 
@@ -53,6 +58,15 @@ class AbstractQueryPersistence(abc.ABC):
     user experience (1) should be stored too as it allows easy restoring
     of a state of respective forms.
     """
+
+    def __init__(self, settings):
+        self._id_reserved_patterns = []
+        plugin_conf = settings.get('plugins', 'query_persistence')
+        path = plugin_conf.get('reserved_ids_path', '')
+        if path:
+            with open(path) as f:
+                for line in f:
+                    self._id_reserved_patterns.append(line.strip())
 
     @abc.abstractmethod
     def is_valid_id(self, data_id: str) -> bool:
@@ -98,6 +112,16 @@ class AbstractQueryPersistence(abc.ABC):
 
         returns:
         new operation ID if a new record is created or current ID if no new operation is defined
+        """
+
+    @abc.abstractmethod
+    async def update(self, data: Dict, arch_enqueue: bool = False):
+        """
+        Update data stored in key-value database with id `data['id']`. If applicable,
+        it should also try to update an archive item to prevent possible inconsistencies.
+
+        If arch_enqueue is set to True then the method should set the item to be archived
+        (no matter what is actual status of item's archiving).
         """
 
     @abc.abstractmethod
@@ -175,9 +199,53 @@ class AbstractQueryPersistence(abc.ABC):
             raise ValueError(f'Cannot determine query supertype from type {form_type}')
         raise ValueError(f'Cannot determine query supertype from data {data}')
 
+    @abc.abstractmethod
+    async def clone_with_id(self, old_id: str, new_id: str):
+        """
+        Duplicate entry with new id
+        """
+
+    @abc.abstractmethod
+    async def id_exists(self, id: str) -> bool:
+        """
+        Check if ID already exists
+        """
+
     MapRes = TypeVar('MapRes')
 
-    async def map_pipeline_ops(self, last_id: str, fn: Callable[[str, Dict], Awaitable[MapRes]]) -> List[MapRes]:
+    async def _fix_forms(
+            self,
+            plugin_ctx: PluginCtx,
+            last_data: Dict[str, Any],
+            ans: List[Dict[str, Any]],
+            fn: Callable[[str, Dict], Awaitable[MapRes]]):
+        """
+        generate missing operations chain and store in db
+        """
+        op_forms = await decode_raw_query(plugin_ctx, last_data['corpora'], last_data['q'][:-1])
+        last_new_entry = None
+        for i, (q, form) in enumerate(op_forms):
+            new_entry = {
+                'q': [q] if last_new_entry is None else [*last_new_entry['q'], q],
+                'corpora': last_data['corpora'],
+                'usesubcorp': last_data['usesubcorp'],
+                'lines_groups': last_data['lines_groups'],
+                'lastop_form': form.to_dict(),
+            }
+            await self.store(last_data['user_id'], new_entry, last_new_entry)
+            ans.insert(i, await fn(new_entry['id'], new_entry))
+            last_new_entry = new_entry
+
+        # update last_data to connect the chain
+        last_data['prev_id'] = last_new_entry['id']
+        await self.update(last_data)
+        logging.getLogger(__name__).info(f"Query persistence chain reconstruction result: {ans}")
+
+    async def map_pipeline_ops(
+            self,
+            plugin_ctx: PluginCtx,
+            last_id: str,
+            fn: Callable[[str, Dict], Awaitable[MapRes]]) -> List[MapRes]:
         """
         Go back to the first operation of a query chain starting from 'last_id' and apply
         a provided map function to the value
@@ -186,17 +254,27 @@ class AbstractQueryPersistence(abc.ABC):
         data = await self.open(last_id)
         if data is None:
             raise QueryPersistenceRecNotFound(f'no data found for query "{last_id}"')
+
         else:
             ans.append(await fn(data['id'], data))
+
         limit = 100
-        while data is not None and data.get('prev_id') and limit > 0:
-            prev_id = data['prev_id']
+        prev_id = data.get('prev_id')
+        while data is not None and prev_id is not None and limit > 0:
+            last_data = data
             data = await self.open(prev_id)
             if data is None:
-                raise QueryPersistenceRecNotFound(f'no data found for query "{prev_id}"')
+                if limit <= len(last_data['q'][:-1]):
+                    limit = 0
+                    break
+                logging.getLogger(__name__).error(
+                    f'Query persistence data {prev_id} not found, attempting reconstruction from CQL')
+                await self._fix_forms(plugin_ctx, last_data, ans, fn)
             else:
                 ans.insert(0, await fn(data['id'], data))
+                prev_id = data.get('prev_id')
             limit -= 1
+
         if limit == 0:
             logging.getLogger(__name__).warning(
                 'Reached hard limit when loading query pipeline {0}'.format(last_id))
@@ -216,10 +294,11 @@ class AbstractQueryPersistence(abc.ABC):
         """
         async def map_fn(op_id: str, data: Dict) -> ConcFormArgs:
             form_data = upgrade_stored_record(data.get('lastop_form', {}), attr_list)
-            return await conc_form_args_factory(plugin_ctx, data.get('corpora', []), form_data, op_id)
+            author_id = data.get('user_id')
+            return await conc_form_args_factory(plugin_ctx, data.get('corpora', []), form_data, op_id, author_id)
 
         attr_list = plugin_ctx.current_corpus.get_posattrs()
-        ans = await self.map_pipeline_ops(last_id, map_fn)
+        ans = await self.map_pipeline_ops(plugin_ctx, last_id, map_fn)
         logging.getLogger(__name__).debug('load pipeline ops: {}'.format(ans))
         return ans
 
@@ -241,3 +320,12 @@ class AbstractQueryPersistence(abc.ABC):
         2nd call: (foo, syn2020, afac, None,         None,  None, 4100) will update existing record with actual_size
         """
         pass
+
+    async def id_reserved(self, id: str) -> bool:
+        """
+        Compare id with blacklist, used to limit user query id
+        """
+        for pattern in self._id_reserved_patterns:
+            if re.match(pattern, id):
+                return True
+        return False

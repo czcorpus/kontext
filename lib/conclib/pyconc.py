@@ -30,8 +30,7 @@ from kwiclib.common import lngrp_sortcrit
 from strings import escape_attr_val
 
 from .errors import (
-    ConcordanceException, EmptyParallelCorporaIntersection,
-    UnknownConcordanceAction)
+    ConcordanceException, ConcNotFoundException, EmptyParallelCorporaIntersection, UnknownConcordanceAction)
 
 
 def get_conc_labelmap(infopath):
@@ -69,9 +68,9 @@ def _extract_file_acc_err(ex):
         return f'failed with error {ex.__class__.__name__}'
     srch = re.match(r'FileAccessError\s*\(([^)]+)\) in', msg)
     if srch:
-        att_path = srch.group(1)
-        if os.path.exists(os.path.dirname(att_path)):
-            return f'failed to access attribute/structure {os.path.splitext(os.path.basename(att_path))[0]}'
+        file_path = srch.group(1)
+        if os.path.exists(os.path.dirname(file_path)):
+            return f'failed to access index/cache file {os.path.splitext(os.path.basename(file_path))[0]}'
     return msg
 
 
@@ -86,6 +85,19 @@ class PyConc(manatee.Concordance):
             sample_size=0,
             full_size=-1,
             orig_corp=None):
+        """
+        Load or create a concordance.
+
+        Args:
+            corp: a corpus object
+            action: single letter code of the operation (q, a, l, s)
+            params: params play different roles based on the way how
+                the concordance is created (for loaded conc, it is
+                the path, for query-based conc, it is the query)
+            sample_size:
+            full_size:
+            orig_corp: in case aligned corpora and main corp switching is involved
+        """
         self.pycorp = corp
         self.corpname = corp.get_conffile()
         self.orig_corp = orig_corp or self.pycorp
@@ -117,8 +129,12 @@ class PyConc(manatee.Concordance):
                 'Character encoding of this corpus ({0}) does not support one or more characters in the query.'
                 .format(self.corpus_encoding))
         except manatee.FileAccessError as ex:
-            raise ConcordanceException(
-                getattr(ex, 'message', f'failed to create concordance: {_extract_file_acc_err(ex)}'))
+            if action == 'l':
+                raise ConcNotFoundException(
+                    getattr(ex, 'message', f'failed to load concordance: {_extract_file_acc_err(ex)}'))
+            else:
+                raise ConcordanceException(
+                    getattr(ex, 'message', f'failed to create concordance: {_extract_file_acc_err(ex)}'))
 
     def get_conc_file(self):
         return self._conc_file

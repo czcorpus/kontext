@@ -72,27 +72,13 @@ from action.errors import ForbiddenException, NotFoundException
 from plugin_types.auth import AbstractAuth
 from plugin_types.general_storage import KeyValueStorage
 from plugin_types.query_persistence import AbstractQueryPersistence
-from plugin_types.query_persistence.common import generate_idempotent_id
+from plugin_types.query_persistence.common import (
+    ID_KEY, PERSIST_LEVEL_KEY, QUERY_KEY, USER_ID_KEY, generate_idempotent_id)
 from plugins import inject
 from plugins.common.mysql import MySQLConf, MySQLOps
 from plugins.mysql_integration_db import MySqlIntegrationDb
 
 from .archive import get_iso_datetime, is_archived
-
-PERSIST_LEVEL_KEY = 'persist_level'
-USER_ID_KEY = 'user_id'
-ID_KEY = 'id'
-QUERY_KEY = 'q'
-DEFAULT_CONC_ID_LENGTH = 12
-
-
-def id_exists(id):
-    """
-    Tests whether passed id exists
-    """
-    # currently we assume that id (= prefix of md5 hash with 52^6 possible values)
-    #  conflicts are very unlikely
-    return False
 
 
 def mk_key(code):
@@ -114,6 +100,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
             db: KeyValueStorage,
             sql_backend: MySQLOps,
             auth: AbstractAuth):
+        super().__init__(settings)
         plugin_conf = settings.get('plugins', 'query_persistence')
         ttl_days = int(plugin_conf.get('ttl_days', MySqlQueryPersistence.DEFAULT_TTL_DAYS))
         self._ttl_days = ttl_days
@@ -230,7 +217,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
 
         if prev_data is None or records_differ(curr_data, prev_data):
             if prev_data is not None:
-                curr_data['prev_id'] = prev_data['id']
+                curr_data['prev_id'] = prev_data[ID_KEY]
             data_id = generate_idempotent_id(curr_data)
             curr_data[ID_KEY] = data_id
             curr_data[PERSIST_LEVEL_KEY] = self._get_persist_level_for(user_id)
@@ -342,6 +329,68 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
             return await archive.run(from_db=self.db, to_db=self._archive, archive_queue_key=self._archive_queue_key,
                                      dry_run=dry_run, num_proc=num_proc)
         return archive_concordance,
+
+    async def update(self, data, arch_enqueue=False):
+        """
+        Update stored data by data['id'].
+        """
+        data_id = data[ID_KEY]
+        data_key = mk_key(data_id)
+        if await self.db.exists(data_key):
+            await self.db.set(data_key, data)
+            if arch_enqueue:
+                await self.db.list_append(self._archive_queue_key, dict(key=data_key))
+
+        async with self._archive.cursor() as cursor:
+            await cursor.execute(
+                'UPDATE kontext_conc_persistence '
+                'SET data = %s WHERE id = %s',
+                (json.dumps(data), data_id)
+            )
+            await cursor.connection.commit()
+
+    async def clone_with_id(self, old_id: str, new_id: str):
+        """
+        Duplicate entry with new id
+        """
+        # check if new id is available
+        if await self.id_exists(new_id):
+            raise ValueError(f'ID {new_id} already exists')
+
+        # get original data
+        original_data = await self.db.get(mk_key(old_id))
+        if original_data is None:
+            async with self._archive.cursor() as cursor:
+                await cursor.execute(
+                    'SELECT data '
+                    'FROM kontext_conc_persistence '
+                    'WHERE id = %s '
+                    'LIMIT 1',
+                    (old_id,)
+                )
+                row = await cursor.fetchone()
+            if row is None:
+                raise ValueError(f'Data for {old_id} not found')
+            original_data = json.loads(row['data'])
+
+        # set new values
+        original_data[ID_KEY] = new_id
+        await self.db.set(mk_key(new_id), original_data)
+
+    async def id_exists(self, id: str) -> bool:
+        """
+        Check if ID already exists
+        """
+        async with self._archive.cursor() as cursor:
+            await cursor.execute(
+                'SELECT * '
+                'FROM kontext_conc_persistence '
+                'WHERE id = %s '
+                'LIMIT 1',
+                (id,)
+            )
+            row = await cursor.fetchone()
+        return row is not None or await self.db.exists(mk_key(id))
 
 
 @inject(plugins.runtime.DB, plugins.runtime.INTEGRATION_DB, plugins.runtime.AUTH)

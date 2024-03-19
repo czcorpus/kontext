@@ -39,6 +39,10 @@ class KeywordsResultNotFound(Exception):
     pass
 
 
+def _cache_dir_path(form: KeywordsFormArgs) -> str:
+    return os.path.join(settings.get('corpora', 'freqs_cache_dir'), form.corpname)
+
+
 def _create_cache_path(form: KeywordsFormArgs) -> str:
     if manatee_is_custom_cnc():
         key = (f'{form.corpname}:{form.usesubcorp}:{form.ref_corpname}:{form.ref_usesubcorp}:{form.wlattr}:{form.wlpat}:'
@@ -48,7 +52,7 @@ def _create_cache_path(form: KeywordsFormArgs) -> str:
                f'{form.include_nonwords}:{form.wltype}:{form.wlnums}:{form.wlminfreq}:{form.wlmaxfreq}')
 
     result_id = hashlib.sha1(key.encode('utf-8')).hexdigest()
-    return os.path.join(settings.get('corpora', 'freqs_cache_dir'), f'kwords_{result_id}.jsonl')
+    return os.path.join(_cache_dir_path(form), f'kwords_{result_id}.jsonl')
 
 
 @dataclass_json
@@ -105,6 +109,11 @@ def cached(f):
                 fr.readline()
                 return [LineDataClass.from_dict(json.loads(item)) for item in fr][:max_items]
         else:
+            cache_dir = _cache_dir_path(args)
+            if not await aiofiles.os.path.isdir(cache_dir):
+                await aiofiles.os.makedirs(cache_dir)
+                os.chmod(cache_dir, 0o775)
+
             ans = await f(corp, ref_corp, args, max_items)
             # ans = sorted(ans, key=lambda x: x[1], reverse=True)
             num_lines = len(ans)

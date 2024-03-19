@@ -38,41 +38,14 @@ from action.errors import ForbiddenException, UserReadableException
 from plugin_types.auth import AbstractAuth
 from plugin_types.general_storage import KeyValueStorage
 from plugin_types.query_persistence import AbstractQueryPersistence
+from plugin_types.query_persistence.common import (
+    ID_KEY, PERSIST_LEVEL_KEY, QUERY_KEY, USER_ID_KEY, generate_idempotent_id)
 from plugins import inject
 from util import int2chash
-
-
-DEFAULT_CONC_ID_LENGTH = 12
 
 DEFAULT_TTL_DAYS = 100
 
 DEFAULT_ANONYMOUS_USER_TTL_DAYS = 7
-
-
-def id_exists(id):
-    """
-    Tests whether passed id exists
-    """
-    # currently we assume that id (= prefix of md5 hash with 52^12 possible values)
-    #  conflicts are very unlikely
-    return False
-
-
-def mk_short_id(s, min_length):
-    """
-    Generates a hash based on md5 but using [a-zA-Z0-9] characters and with
-    limited length.
-
-    arguments:ucnk_op_persistence
-    s -- a string to be hashed
-    min_length -- minimum length of the output hash
-    """
-    x = int(hashlib.md5(s).hexdigest(), 16)
-    return int2chash(x, min_length)
-
-
-def generate_uniq_id():
-    return mk_short_id(uuid.uuid1().hex.encode(), min_length=DEFAULT_CONC_ID_LENGTH)
 
 
 class Sqlite3ArchBackend(object):
@@ -169,12 +142,19 @@ class DefaultQueryPersistence(AbstractQueryPersistence):
     This class stores user's queries in their internal form (see Kontext.q attribute).
     """
 
-    def __init__(self, db: KeyValueStorage, auth: AbstractAuth, ttl_days: int, anonymous_ttl_days: int, archive_backend: Union[DbPluginArchBackend, Sqlite3ArchBackend]):
+    def __init__(self, db: KeyValueStorage, auth: AbstractAuth, ttl_days: int, anonymous_ttl_days: int, archive_backend: Union[DbPluginArchBackend, Sqlite3ArchBackend], settings):
+        super().__init__(settings)
         self._db = db
         self._auth = auth
         self._ttl_days = ttl_days
         self._anonymous_user_ttl_days = anonymous_ttl_days
         self._archive_backend = archive_backend
+
+    def _get_persist_level_for(self, user_id):
+        if self._auth.is_anonymous(user_id):
+            return 0
+        else:
+            return 1
 
     @property
     def ttl(self):
@@ -241,21 +221,21 @@ class DefaultQueryPersistence(AbstractQueryPersistence):
         3) None if neither previous nor new operation is defined
         """
         def records_differ(r1, r2):
-            return r1['q'] != r2['q'] or r1.get('lines_groups') != r2.get('lines_groups')
+            return r1[QUERY_KEY] != r2[QUERY_KEY] or r1.get('lines_groups') != r2.get('lines_groups')
 
         if prev_data is None or records_differ(curr_data, prev_data):
-            data_id = generate_uniq_id()
-            curr_data['id'] = data_id
-            curr_data['user_id'] = user_id
             if prev_data is not None:
-                curr_data['prev_id'] = prev_data['id']
+                curr_data['prev_id'] = prev_data[ID_KEY]
+            data_id = generate_idempotent_id(curr_data)
+            curr_data[ID_KEY] = data_id
+            curr_data[PERSIST_LEVEL_KEY] = self._get_persist_level_for(user_id)
+            curr_data[USER_ID_KEY] = user_id
             data_key = self._mk_key(data_id)
-
             await self._db.set(data_key, curr_data)
             await self._db.set_ttl(data_key, self._get_ttl_for(user_id))
-            latest_id = curr_data['id']
+            latest_id = curr_data[ID_KEY]
         else:
-            latest_id = prev_data['id']
+            latest_id = prev_data[ID_KEY]
         return latest_id
 
     async def archive(self, user_id, conc_id, revoke=False):
@@ -283,6 +263,38 @@ class DefaultQueryPersistence(AbstractQueryPersistence):
         return not self.is_archived(conc_id)\
             and self._settings.get('plugins', 'query_persistence').get('implicit_archiving', None) in ('true', '1', 1)\
             and not self._auth.is_anonymous(plugin_ctx.user_id)
+
+    async def update(self, data, arch_enqueue=False):
+        """
+        Update stored data by data['id']. Used only for internal data correction!
+        """
+        data_key = self._mk_key(data[ID_KEY])
+        if self._db.exists(data_key):
+            await self._db.set(data_key, data)
+
+    async def clone_with_id(self, old_id: str, new_id: str):
+        """
+        Duplicate entry with new id
+        """
+        # check if new id is available
+        new_key = self._mk_key(id)
+        if await self._db.exists(new_key):
+            raise ValueError(f'ID {new_id} already exists')
+
+        # get original data
+        original_data = await self._db.get(self._mk_key(old_id))
+        if original_data is None:
+            raise ValueError(f'Data for {old_id} not found')
+
+        # set new values
+        original_data[ID_KEY] = new_id
+        await self._db.set(new_key, original_data)
+
+    async def id_exists(self, id: str) -> bool:
+        """
+        Check if ID already exists
+        """
+        return await self._db.exists(self._mk_key(id))
 
 
 @inject(plugins.runtime.DB, plugins.runtime.AUTH)

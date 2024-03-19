@@ -179,7 +179,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
             return None   # persistent result not available
 
     async def get_user_queries(
-            self, user_id, corpus_factory, from_date=None, to_date=None, q_supertype=None, corpname=None,
+            self, plugin_ctx, user_id, corpus_factory, from_date=None, to_date=None, q_supertype=None, corpname=None,
             archived_only=False, offset=0, limit=None):
         """
         Returns list of queries of a specific user.
@@ -238,7 +238,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
                     # to the first query in chain (this fixes possibly broken query history records)
                     form_type = qdata.get('lastop_form', {}).get('form_type', None)
                     if form_type not in ('query', 'filter'):
-                        ops = await self._query_persistence.map_pipeline_ops(q_id, extract_id)
+                        ops = await self._query_persistence.map_pipeline_ops(plugin_ctx, q_id, extract_id)
                         logging.getLogger(__name__).warning(
                             'Runtime patching broken query history record '
                             f'{q_id} of invalid type "{form_type}" (proper id: {ops[0][0]})')

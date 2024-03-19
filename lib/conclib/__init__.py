@@ -66,6 +66,7 @@ class ConcDescJsonItem:
     size: int
     fullsize: int
     conc_persistence_op_id: Optional[str] = None
+    is_registered_author: Optional[bool] = None
 
 
 async def get_conc_desc(

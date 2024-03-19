@@ -20,7 +20,7 @@
 import logging
 import os
 import time
-from typing import Callable, List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 import aiofiles.os
 import bgcalc
@@ -31,8 +31,7 @@ from bgcalc.errors import CalcTaskNotFoundError
 from conclib.calc.base import GeneralWorker
 from conclib.empty import InitialConc
 from conclib.errors import (
-    ConcCalculationStatusException, ConcNotFoundException,
-    UnreadableConcordanceException, extract_manatee_error)
+    ConcCalculationStatusException, ConcNotFoundException, UnreadableConcordanceException, extract_manatee_error)
 from conclib.pyconc import PyConc
 from corplib import CorpusFactory
 from corplib.corpus import AbstractKCorpus
@@ -167,16 +166,17 @@ async def require_existing_conc(
     status = await cache_map.get_calc_status(corp.cache_key, q, cutoff)
     if status is None:
         raise ConcNotFoundException('Concordance not found: {}'.format(', '.join(q)))
+    if status.finished and not await cache_map.readable_cache_path(corp.cache_key, q, cutoff):
+        logging.getLogger(__name__).warning('require_existing_conc - found cache entry without a respective cache file')
+        await cache_map.del_full_entry(corp.cache_key, q, cutoff)
+        raise ConcNotFoundException('Concordance not found: {}'.format(', '.join(q)))
     if status.finished and status.readable:
         mcorp = corp
         for qq in reversed(q):  # find the right main corp, if aligned
             if qq.startswith('x-'):
                 mcorp = await corpus_factory.get_corpus(qq[2:])
                 break
-        try:
-            return PyConc(mcorp, 'l', status.cachefile, orig_corp=corp)
-        except manatee.FileAccessError as ex:
-            raise ConcNotFoundException(ex)
+        return PyConc(mcorp, 'l', status.cachefile, orig_corp=corp)
     logging.getLogger(__name__).error('Unreadable concordance, status: {}'.format(status.to_dict()))
     raise UnreadableConcordanceException(
         'Unreadable concordance. File: {}, error: {}'.format(status.cachefile, status.error))
