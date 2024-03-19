@@ -52,6 +52,7 @@ export interface QuerySaveAsFormModelState {
     userQueryIdValid:boolean;
     userQueryIdIsBusy:boolean;
     userQueryIdSubmit:boolean;
+    advancedMode:boolean;
 }
 
 /**
@@ -88,6 +89,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                 userQueryIdValid: true,
                 userQueryIdIsBusy: false,
                 userQueryIdSubmit: false,
+                advancedMode: false
             }
         );
         this.layoutModel = layoutModel;
@@ -365,6 +367,13 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                     );
                 }
             },
+        );
+
+        this.addActionHandler(
+            Actions.PermalinkAdvancedModeSet,
+            (state, action) => {
+                state.advancedMode = action.payload.value;
+            }
         );
     }
 

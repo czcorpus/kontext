@@ -26,8 +26,8 @@ import { QuerySaveAsFormModel, QuerySaveAsFormModelState } from '../../../models
 import { Actions } from '../../../models/query/actions';
 import { Actions as MainMenuActions } from '../../../models/mainMenu/actions';
 import { Actions as ConcActions } from '../../../models/concordance/actions';
-import { PersistentConcordanceForm as Style_PersistentConcordanceForm,
-        SaveHintParagraph as Style_SaveHintParagraph } from '../style';
+import { SaveHintParagraph as Style_SaveHintParagraph } from '../style';
+import * as S from './style';
 
 
 export function init(
@@ -75,6 +75,10 @@ export function init(
             dispatcher.dispatch(Actions.UserQueryIdSubmit);
         }
 
+        const handleAdvancedModeSwitch = () => {
+            dispatcher.dispatch(Actions.PermalinkAdvancedModeSet, {value: !props.advancedMode});
+        }
+
         React.useEffect(
             () => {
                 dispatcher.dispatch(
@@ -94,7 +98,7 @@ export function init(
                                     style={{width: '1em'}} />}>
                     {props.isBusy ?
                         <layoutViews.AjaxLoaderImage /> :
-                        <Style_PersistentConcordanceForm>
+                        <S.PersistentConcordanceForm>
 
                             <Style_SaveHintParagraph>
                                 <layoutViews.StatusIcon status="info" inline={true} htmlClass="icon" />
@@ -129,26 +133,36 @@ export function init(
                                         checked={hasFlagArchived} />
                                 </div>
                             </div>
-                            <div className="custom-name">
-                                <div>
-                                    <label>
-                                        {he.translate('concview__create_new_id_label')}:
-                                    </label>
-                                </div>
-                                <div className="input">
-                                    <input type="text" value={props.userQueryId}
-                                            onChange={e => handleUserIdChange(e.target.value)}
-                                            disabled={props.userQueryIdSubmit}/>
-                                </div>
-                                <div className="submit">
-                                    <button type="button"
-                                                className={props.userQueryId.length === 0 || !props.userQueryIdValid || props.userQueryIdIsBusy ? "disabled-button" : "default-button"}
-                                                disabled={props.userQueryId.length === 0 || !props.userQueryIdValid || props.userQueryIdIsBusy}
-                                                onClick={handleUserIdSubmit}>
-                                            {he.translate('concview__set_new_id_button')}
-                                    </button>
-                                </div>
-                            </div>
+                            <S.AdvancedOptions>
+                                <S.AdvancedModeSwitch>
+                                    <layoutViews.ExpandButton isExpanded={props.advancedMode}
+                                        onClick={handleAdvancedModeSwitch} />
+                                    <a onClick={handleAdvancedModeSwitch}>{he.translate('global__advanced_options')}</a>
+                                </S.AdvancedModeSwitch>
+                                {props.advancedMode ?
+                                    <div className="custom-name">
+                                        <div>
+                                            <label>
+                                                {he.translate('concview__create_new_id_label')}:
+                                            </label>
+                                        </div>
+                                        <div className="input">
+                                            <input type="text" value={props.userQueryId}
+                                                    onChange={e => handleUserIdChange(e.target.value)}
+                                                    disabled={props.userQueryIdSubmit}/>
+                                        </div>
+                                        <div className="submit">
+                                            <button type="button"
+                                                        className={props.userQueryId.length === 0 || !props.userQueryIdValid || props.userQueryIdIsBusy ? "disabled-button" : "default-button"}
+                                                        disabled={props.userQueryId.length === 0 || !props.userQueryIdValid || props.userQueryIdIsBusy}
+                                                        onClick={handleUserIdSubmit}>
+                                                    {he.translate('concview__set_new_id_button')}
+                                            </button>
+                                        </div>
+                                    </div> :
+                                    null
+                                }
+                            </S.AdvancedOptions>
                             <div className="messages">
                                 <span style={{marginLeft: "1em"}}>{props.userQueryIdMsg.join(", ")}</span>
                                 <div style={{width: '1.2em', marginLeft: '0.3em'}} hidden={props.userQueryIdValid}>
@@ -156,7 +170,7 @@ export function init(
                                         status="error" htmlClass="icon"/>
                                 </div>
                             </div>
-                        </Style_PersistentConcordanceForm>
+                        </S.PersistentConcordanceForm>
                     }
                 </layoutViews.CloseableFrame>
             </layoutViews.ModalOverlay>

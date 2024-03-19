@@ -93,6 +93,77 @@ export const ExecutionOptionsFieldset = styled.div`
 
 `;
 
+
+// ---------------- <PersistentConcordanceForm /> -----------------------
+
+export const PersistentConcordanceForm = styled.form`
+
+    .input-row {
+        display: flex;
+        align-items: center;
+        margin-top: 0.4em;
+        margin-bottom: 1em;
+
+        input {
+            font-size: 1.5em;
+            width: 30em;
+        }
+
+        input.link {
+            color: ${theme.colorSuperlightText};
+        }
+    }
+
+    input.archived {
+        color: ${theme.colorDefaultText};
+    }
+
+    .archive-toggle {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1em;
+
+        label {
+            margin-right: 0.4em;
+        }
+    }
+
+    .custom-name {
+
+        margin-top: 0.7em;
+        display: flex;
+        align-items: center;
+
+        label {
+            margin-right: 0.4em;
+        }
+
+        .submit {
+            margin-left: 1em;
+        }
+
+        input {
+            width: 20em;
+        }
+    }
+
+    .messages {
+        display: flex;
+        align-items: center;
+        margin-top: 0.7em;
+        height: 3em;
+
+        .icon {
+            width: 1.2em;
+
+            img {
+                display: block;
+                width: 1.2em;
+            }
+        }
+    }
+`;
+
 // -------------------------- <GroupIndicator /> -------------------
 
 export const Rect = styled.span<{color:string}>`
@@ -120,4 +191,30 @@ export const GroupIndicator = styled.a`
 export const QueryOpInfoLI = styled.li`
 
 
+`;
+
+// ------ <AdvancedOptions /> ----------
+
+
+export const AdvancedOptions = styled.div`
+    margin-top: 1.7em;
+`;
+
+// ------ <AdvancedModeSwitch /> ------
+
+export const AdvancedModeSwitch = styled.div`
+
+    display: flex;
+    align-items: center;
+
+    a {
+        color: ${theme.colorLogoBlue};
+        margin-left: 0.3em;
+        font-size: 1.1em;
+        text-decoration: none;
+    }
+
+    a:hover {
+        text-decoration: underline;
+    }
 `;
