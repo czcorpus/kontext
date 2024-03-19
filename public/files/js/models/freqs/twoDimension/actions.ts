@@ -76,6 +76,12 @@ export class Actions {
             name: 'FREQ_CT_SET_MIN_FREQ'
         };
 
+    static FreqctSetMinFreqType: Action<{
+        value:FreqFilterQuantities;
+    }> = {
+            name: 'FREQ_CT_SET_MIN_FREQ_TYPE'
+    };
+
     static FreqctSetEmptyVecVisibility: Action<{
         value:boolean;
     }> = {

@@ -100,8 +100,8 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel<Freq2DFlatViewModelS
             }
         );
 
-        this.addActionHandler<typeof Actions.FreqctFormSetMinFreq>(
-            Actions.FreqctFormSetMinFreq.name,
+        this.addActionHandler<typeof Actions.FreqctSetMinFreq>(
+            Actions.FreqctSetMinFreq.name,
             action => {
                 if (this.validateMinAbsFreqAttr(action.payload.value)) {
                     this.changeState(state => {
@@ -117,8 +117,8 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel<Freq2DFlatViewModelS
             }
         );
 
-        this.addActionHandler<typeof Actions.FreqctFormSetMinFreqType>(
-            Actions.FreqctFormSetMinFreqType.name,
+        this.addActionHandler<typeof Actions.FreqctSetMinFreqType>(
+            Actions.FreqctSetMinFreqType.name,
             action => {
                 this.changeState(state => {
                     state.minFreqType = action.payload.value;

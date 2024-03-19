@@ -72,8 +72,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
         };
 
         const handleTypeChange = (evt) => {
-            dispatcher.dispatch<typeof Actions.FreqctFormSetMinFreqType>({
-                name: Actions.FreqctFormSetMinFreqType.name,
+            dispatcher.dispatch<typeof Actions.FreqctSetMinFreqType>({
+                name: Actions.FreqctSetMinFreqType.name,
                 payload: {
                     value: evt.target.value
                 }

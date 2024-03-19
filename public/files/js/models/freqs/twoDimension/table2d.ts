@@ -234,8 +234,8 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
             }
         );
 
-        this.addActionHandler<typeof Actions.FreqctFormSetMinFreqType>(
-            Actions.FreqctFormSetMinFreqType.name,
+        this.addActionHandler<typeof Actions.FreqctSetMinFreqType>(
+            Actions.FreqctSetMinFreqType.name,
             action => {
                 this.changeState(state =>  {
                     state.minFreqType = action.payload.value;
