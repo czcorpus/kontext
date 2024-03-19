@@ -175,7 +175,12 @@ export abstract class GeneralFreq2DModel<T extends GeneralFreq2DModelState> exte
             const begin1 = state.ctFcrit1;
             const end1 = state.ctFcrit1;
             const icase2 = ''; // TODO - optionally (?i)
-            args.q2 =`p${begin1} ${end1} 0 [${state.attr1}="${icase1}${v1}" & ${state.attr2}="${icase2}${v2}"]`;
+            const begin2 = state.ctFcrit2;
+            const end2 = state.ctFcrit2;
+            args.q2 = [
+                `p${begin1} ${end1} 0 [${state.attr1}="${icase1}${v1}"]`,
+                `p${begin2} ${end2} 0 [${state.attr2}="${icase2}${v2}"]`,
+            ];
 
         } else if (isStructAttr(state.attr1) && !isStructAttr(state.attr2)) {
             const [s1, a1] = state.attr1.split('.');
