@@ -70,6 +70,12 @@ export class Actions {
             name: 'FREQ_CT_SET_ALPHA_LEVEL'
         };
 
+    static FreqctReload: Action<{
+        resetServerMinFreq:boolean;
+    }> = {
+            name: 'FREQ_CT_RELOAD'
+        };
+
     static FreqctSetMinFreq: Action<{
         value:string;
     }> = {

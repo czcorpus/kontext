@@ -100,8 +100,8 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel<Freq2DFlatViewModelS
             }
         );
 
-        this.addActionHandler<typeof Actions.FreqctSetMinFreq>(
-            Actions.FreqctSetMinFreq.name,
+        this.addActionHandler(
+            Actions.FreqctSetMinFreq,
             action => {
                 if (this.validateMinAbsFreqAttr(action.payload.value)) {
                     this.changeState(state => {
@@ -117,8 +117,8 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel<Freq2DFlatViewModelS
             }
         );
 
-        this.addActionHandler<typeof Actions.FreqctSetMinFreqType>(
-            Actions.FreqctSetMinFreqType.name,
+        this.addActionHandler(
+            Actions.FreqctSetMinFreqType,
             action => {
                 this.changeState(state => {
                     state.minFreqType = action.payload.value;
@@ -126,8 +126,8 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel<Freq2DFlatViewModelS
             }
         );
 
-        this.addActionHandler<typeof Actions.FreqctSetAlphaLevel>(
-            Actions.FreqctSetAlphaLevel.name,
+        this.addActionHandler(
+            Actions.FreqctSetAlphaLevel,
             action => {
                 this.changeState(state => {
                     state.alphaLevel = action.payload.value;
@@ -137,8 +137,8 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel<Freq2DFlatViewModelS
             }
         );
 
-        this.addActionHandler<typeof Actions.FreqctSortFlatList>(
-            Actions.FreqctSortFlatList.name,
+        this.addActionHandler(
+            Actions.FreqctSortFlatList,
             action => {
                 this.changeState(state => {
                     state.sortBy = action.payload.value;
