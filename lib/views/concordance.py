@@ -540,7 +540,6 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         if conc:
             amodel.apply_linegroups(conc)
             conc.switch_aligned(os.path.basename(amodel.args.corpname))
-
             kwic_args = KwicPageArgs(asdict(amodel.args), base_attr=amodel.BASE_ATTR)
             kwic_args.speech_attr = await amodel.get_speech_segment()
             kwic_args.labelmap = {}
@@ -551,9 +550,7 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
                 kwic_args.internal_attrs = await tl.get_required_attrs(
                     amodel.plugin_ctx, corpus_info.tokens_linking.providers,
                     [amodel.args.corpname] + amodel.args.align)
-
             kwic = Kwic(amodel.corp, conc)
-
             out['Sort_idx'] = kwic.get_sort_idx(q=amodel.args.q, pagesize=amodel.args.pagesize)
             out.update(asdict(kwic.kwicpage(kwic_args)))
             out.update(await amodel.get_conc_sizes(conc))
@@ -563,7 +560,7 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
                     'fcrit': req.args.get('fcrit'),
                     'fcrit_async': req.args_getlist('fcrit_async'),
                     'flimit': req.args.get('flimit'),
-                    # client does not always fills this
+                    # client does not always fill this
                     'freq_sort': req.args.get('freq_sort', 'freq'),
                     'freq_type': req.args.get('freq_type')}
             elif req.args.get('next') == 'shared_freqs':
@@ -575,7 +572,7 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
                     'fpage': req.args.get('fpage'),
                     'fdefault_view': req.args.get('fdefault_view'),
                     'freqlevel': req.args.get('freqlevel'),
-                    # client does not always fills this
+                    # client does not always fill this
                     'freq_sort': req.args.get('freq_sort'),
                     'freq_type': req.args.get('freq_type'),
                 }
