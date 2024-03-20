@@ -817,6 +817,7 @@
         "freq__ct_total_abs_frequency": "celková abs. frekvence",
         "freq__ct_percentile_hint_{value}": "Výsledek bude obsahovat horních {value}% hodnot",
         "freq__ct_current_adhoc_subc_is": "Aktuální ad-hoc subkorpus je",
+        "freq__ct_confidence_interval_{level}": "Konfidenční interval ({level}% Cl)",
         "freq__visualisation_type": "Typ grafu",
         "freq__visualisation_type_bar": "sloupcový",
         "freq__visualisation_type_line": "čárový (časově závislá data)",

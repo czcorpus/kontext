@@ -821,6 +821,7 @@
         "freq__ct_total_abs_frequency": "skupna abs. frekvenca",
         "freq__ct_percentile_hint_{value}": "Prikazanih bodo zgornjih {value}% vrednosti.",
         "freq__ct_current_adhoc_subc_is": "Trenutni ad-hoc podkorpus je",
+        "freq__ct_confidence_interval_{level}": "Confidence interval ({level}% Cl) UNTRANSLATED",
         "freq__visualisation_type": "Visualization type UNTRANSLATED",
         "freq__visualisation_type_bar": "bar UNTRANSLATED",
         "freq__visualisation_type_line": "line (time-based) UNTRANSLATED",

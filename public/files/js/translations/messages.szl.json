@@ -815,6 +815,7 @@
         "freq__ct_total_abs_frequency": "cołkŏ abs. frekwyncyjŏ",
         "freq__ct_percentile_hint_{value}": "Piyrszy {value}% wertōw bydzie pokŏzanych",
         "freq__ct_current_adhoc_subc_is": "Terŏźny korpus ad-hoc to",
+        "freq__ct_confidence_interval_{level}": "Confidence interval ({level}% Cl) UNTRANSLATED",
         "freq__visualisation_type": "Visualization type UNTRANSLATED",
         "freq__visualisation_type_bar": "bar UNTRANSLATED",
         "freq__visualisation_type_line": "line (time-based) UNTRANSLATED",

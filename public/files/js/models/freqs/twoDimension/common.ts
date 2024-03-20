@@ -147,12 +147,3 @@ export interface CTFreqResultResponse extends AjaxConcResponse {
         ctminfreq:string
     };
 }
-
-export interface CTFreqResultDummyResponse {
-    data:CTFreqResultData;
-    isDummy:true;
-}
-
-export function isDummyResponse(v:CTFreqResultResponse|CTFreqResultDummyResponse):v is CTFreqResultDummyResponse {
-    return v['isDummy'] === true;
-}
