@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 import { IFullActionControl } from 'kombo';
-import { Observable, of as rxOf } from 'rxjs';
+import { Observable, Subject, debounceTime } from 'rxjs';
 import { Maths, HTTP, pipe, List, tuple, Dict } from 'cnc-tskit';
 
 import { PageModel, DownloadType } from '../../../app/page';
@@ -29,8 +29,7 @@ import { DataPoint, ConfIntervals } from '../../../charts/confIntervals';
 import { CTFreqServerArgs } from './common';
 import {
     CTFormProperties, roundFloat, Dimensions, FreqQuantities, FreqFilterQuantities,
-    CTFreqResultDummyResponse, CTFreqResultResponse, CTFreqResultData,
-    isDummyResponse } from './common';
+    CTFreqResultResponse, CTFreqResultData } from './common';
 import { Actions } from './actions';
 import * as TextTypes from '../../../types/textTypes';
 import { colorHeatmap } from '../../../views/theme/default';
@@ -116,13 +115,9 @@ export const enum ColorMappings {
 
 export interface Freq2DTableModelState extends GeneralFreq2DModelState {
 
-    /**
-     * Original data as imported from page initialization.
-     */
-    origData:Data2DTable;
 
     /**
-     * Current data derived from origData by applying filters etc.
+     * Current result data
      */
     data:Data2DTable;
 
@@ -186,7 +181,8 @@ export interface Freq2DTableModelState extends GeneralFreq2DModelState {
  */
 export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> {
 
-    private throttleTimeout:number;
+    private readonly debouncedAction$:Subject<typeof Actions.FreqctSetMinFreq>;
+
 
     constructor(dispatcher:IFullActionControl, pageModel:PageModel, props:CTFormProperties) {
         super(
@@ -215,7 +211,6 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
                 displayQuantity: FreqQuantities.ABS,
                 onNewDataHandlers: [], // TODO ??
                 highlightedGroup: [null, null],
-                origData: {},
                 data: {},
                 confIntervalLeftMinWarn: GeneralFreq2DModel.CONF_INTERVAL_LEFT_MIN_WARN,
                 highlightedCoord: null,
@@ -223,56 +218,74 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
             }
         );
 
-        this.addActionHandler<typeof Actions.FreqctSetAlphaLevel>(
-            Actions.FreqctSetAlphaLevel.name,
+        this.debouncedAction$ = new Subject<typeof Actions.FreqctSetMinFreq>();
+        this.debouncedAction$.pipe(
+            debounceTime(500)
+
+        ).subscribe({
+            next: value => {
+                dispatcher.dispatch({
+                    ...value,
+                    payload: {...value.payload, isDebounced: true}
+                });
+            }
+        });
+
+        this.addActionHandler(
+            Actions.FreqctSetAlphaLevel,
             action => {
                 this.changeState(state => {
                     state.alphaLevel = action.payload.value;
                     this.recalculateConfIntervals(state);
-                    this.updateLocalData(state);
+                    this.normalizeData(state);
                 });
             }
         );
 
-        this.addActionHandler<typeof Actions.FreqctFormSetMinFreqType>(
-            Actions.FreqctFormSetMinFreqType.name,
+        this.addActionHandler(
+            Actions.FreqctFormSetMinFreqType,
             action => {
                 this.changeState(state =>  {
                     state.minFreqType = action.payload.value;
                     state.isWaiting = true;
                 });
-                this.waitAndReload(true);
+                this.reload(true);
             }
         );
 
-        this.addActionHandler<typeof Actions.FreqctSetMinFreq>(
-            Actions.FreqctSetMinFreq.name,
+        this.addActionHandler(
+            Actions.FreqctSetMinFreq,
             action => {
-                if (this.validateMinAbsFreqAttr(action.payload.value)) {
+                if (action.payload.isDebounced) {
+                    if (this.validateMinAbsFreqAttr(action.payload.value)) {
+                        this.reload(false);
+
+                    } else {
+                        this.pageModel.showMessage('error', this.pageModel.translate('freq__ct_min_freq_val_error'));
+                    }
+
+                } else {
                     this.changeState(state => {
                         state.minFreq = action.payload.value;
                         state.isWaiting = true;
                     });
-                    this.waitAndReload(false);
-
-                } else {
-                    this.pageModel.showMessage('error', this.pageModel.translate('freq__ct_min_freq_val_error'));
+                    this.debouncedAction$.next(action);
                 }
             }
         );
 
-        this.addActionHandler<typeof Actions.FreqctSetEmptyVecVisibility>(
-            Actions.FreqctSetEmptyVecVisibility.name,
+        this.addActionHandler(
+            Actions.FreqctSetEmptyVecVisibility,
             action => {
                 this.changeState(state => {
                     state.filterZeroVectors = action.payload.value;
-                    this.updateLocalData(state);
+                    this.normalizeData(state);
                 });
             }
         );
 
-        this.addActionHandler<typeof Actions.FreqctTransposeTable>(
-            Actions.FreqctTransposeTable.name,
+        this.addActionHandler(
+            Actions.FreqctTransposeTable,
             action => {
                 this.changeState(state => {
                     this.transposeTable(state);
@@ -280,8 +293,8 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
             }
         );
 
-        this.addActionHandler<typeof Actions.FreqctSortByDimension>(
-            Actions.FreqctSortByDimension.name,
+        this.addActionHandler(
+            Actions.FreqctSortByDimension,
             action => {
                 this.changeState(state => {
                     this.sortByDimension(
@@ -289,13 +302,13 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
                         action.payload.dim,
                         action.payload.attr
                     );
-                    this.updateLocalData(state);
+                    this.normalizeData(state);
                 });
             }
         );
 
-        this.addActionHandler<typeof Actions.FreqctSetDisplayQuantity>(
-            Actions.FreqctSetDisplayQuantity.name,
+        this.addActionHandler(
+            Actions.FreqctSetDisplayQuantity,
             action => {
                 this.changeState(state => {
                     state.displayQuantity = action.payload.value;
@@ -304,8 +317,8 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
             }
         );
 
-        this.addActionHandler<typeof Actions.FreqctSetColorMapping>(
-            Actions.FreqctSetColorMapping.name,
+        this.addActionHandler(
+            Actions.FreqctSetColorMapping,
             action => {
                 this.changeState(state => {
                     state.colorMapping = action.payload.value;
@@ -314,8 +327,8 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
             }
         );
 
-        this.addActionHandler<typeof Actions.FreqctSetHighlightedGroup>(
-            Actions.FreqctSetHighlightedGroup.name,
+        this.addActionHandler(
+            Actions.FreqctSetHighlightedGroup,
             action => {
                 this.changeState(state => {
                     state.highlightedGroup = action.payload.value;
@@ -323,8 +336,8 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
             }
         );
 
-        this.addActionHandler<typeof Actions.FreqctHighlight2DCoord>(
-            Actions.FreqctHighlight2DCoord.name,
+        this.addActionHandler(
+            Actions.FreqctHighlight2DCoord,
             action =>  {
                 this.changeState(state => {
                     state.highlightedCoord = action.payload.coord
@@ -332,8 +345,8 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
             }
         );
 
-        this.addActionHandler<typeof Actions.FreqctReset2DCoordHighlight>(
-            Actions.FreqctReset2DCoordHighlight.name,
+        this.addActionHandler(
+            Actions.FreqctReset2DCoordHighlight,
             action => {
                 this.changeState(state => {
                     state.highlightedCoord = null;
@@ -341,8 +354,8 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
             }
         );
 
-        this.addActionHandler<typeof Actions.FreqctApplyQuickFilter>(
-            Actions.FreqctApplyQuickFilter.name,
+        this.addActionHandler(
+            Actions.FreqctApplyQuickFilter,
             action => {
                 this.pageModel.setLocationPost(action.payload.url, {});
             }
@@ -358,53 +371,37 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
         );
     }
 
-    private waitAndReload(resetServerMinFreq:boolean):void {
+    private reload(resetServerMinFreq:boolean):void {
 
-        const mustLoadDueToLimit = () => parseInt(this.state.minFreq, 10) < this.state.serverMinFreq || this.state.serverMinFreq === null;
 
-        if (this.throttleTimeout) {
-            window.clearTimeout(this.throttleTimeout);
-        }
-        this.throttleTimeout = window.setTimeout(() => {
-            if (this.state.data) {
-                this.changeState(state => {
-                    if (resetServerMinFreq) {
-                        state.serverMinFreq = null; // we must force data reload
-                    }
-                    state.isWaiting = true;
-                });
-                const data$:Observable<CTFreqResultResponse|CTFreqResultDummyResponse> = mustLoadDueToLimit() ?
-                    this.fetchData() :
-                    rxOf<CTFreqResultDummyResponse>({
-                        data: {
-                            data: [],
-                            size: 0
-                        },
-                        isDummy: true
+        if (this.state.data) {
+            this.changeState(state => {
+                if (resetServerMinFreq) {
+                    state.serverMinFreq = null; // we must force data reload
+                }
+                state.isWaiting = true;
+            });
+            this.fetchData().subscribe({
+                next: data => {
+                    this.changeState(state => {
+                        state.serverMinFreq = parseInt(data.ctfreq_form_args.ctminfreq, 10);
+                        this.importData(state, data.data);
+                        state.isWaiting = false;
                     });
-                data$.subscribe({
-                    next: data => {
-                        this.changeState(state => {
-                            if (isDummyResponse(data)) {
-                                this.updateLocalData(state);
-
-                            } else {
-                                state.serverMinFreq = parseInt(data.ctfreq_form_args.ctminfreq, 10);
-                                this.importData(state, data.data);
-                            }
-                            state.isWaiting = false;
-                        });
-                        this.pushStateToHistory();
-                    },
-                    error: error => {
-                        this.changeState(state => {
-                            state.isWaiting = false;
-                        });
-                        this.pageModel.showMessage('error', error);
-                    }
-                });
-            }
-        }, 400);
+                    this.pushStateToHistory();
+                    this.dispatchSideEffect(
+                        Actions.LoadedDataAvailable,
+                        {data: data.data}
+                    )
+                },
+                error: error => {
+                    this.changeState(state => {
+                        state.isWaiting = false;
+                    });
+                    this.pageModel.showMessage('error', error);
+                }
+            });
+        }
     }
 
     submitDataConversion(format:string):void {
@@ -481,21 +478,6 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
         }
     }
 
-    createPercentileSortMapping(state:Freq2DTableModelState):[{[key:string]:number}, number] {
-        const fetchFreq = this.getFreqFetchFn(state);
-        const data = mapDataTableAsList(state.origData, x => tuple(x.origOrder, fetchFreq(x)));
-        const asList = pipe(
-            data,
-            List.filter(x => x !== undefined),
-            List.sortedBy(([,v]) => v),
-            List.map(([x,], i) => tuple(x.toFixed(), i)),
-        );
-        return tuple(
-            Dict.fromEntries(asList),
-            List.size(asList)
-        );
-    }
-
     static getTableInfo(state:Freq2DTableModelState):TableInfo {
         let size = state.dataSize;
         let numNonZero:number = 0;
@@ -511,8 +493,7 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
         return {size: size, numNonZero: numNonZero, totalAbs: totalAbs};
     }
 
-    updateLocalData(state:Freq2DTableModelState):void {
-        state.data = filterDataTable(state.origData, this.createMinFreqFilterFn(state));
+    normalizeData(state:Freq2DTableModelState):void {
         if (state.filterZeroVectors) {
             this.removeZeroVectors(state);
 
@@ -527,20 +508,20 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
 
     private transposeTable(state:Freq2DTableModelState):void {
         const ans:Data2DTable = {};
-        for (let k1 in state.origData) {
-            const tmp = state.origData[k1] || {};
+        for (let k1 in state.data) {
+            const tmp = state.data[k1] || {};
             for (let k2 in tmp) {
                 if (ans[k2] === undefined) {
                     ans[k2] = {};
                 }
-                ans[k2][k1] = state.origData[k1][k2];
+                ans[k2][k1] = state.data[k1][k2];
             }
         }
-        state.origData = ans;
+        state.data = ans;
         [state.d1Labels, state.d2Labels] = [state.d2Labels, state.d1Labels];
         [state.attr1, state.attr2] = [state.attr2, state.attr1];
         state.isTransposed = !state.isTransposed;
-        this.updateLocalData(state);
+        this.normalizeData(state);
     }
 
     private removeZeroVectors(state:Freq2DTableModelState):void {
@@ -553,14 +534,16 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
             counts2.push(0);
         }
 
-        state.d1Labels.forEach((d1, i1) => {
-            state.d2Labels.forEach((d2, i2) => {
-                if (!state.data[d1[0]][d2[0]] || state.data[d1[0]][d2[0]].abs === 0) {
-                    counts1[i1] += 1;
-                    counts2[i2] += 1;
-                }
+        if (Dict.size(state.data) > 0) {
+            state.d1Labels.forEach((d1, i1) => {
+                state.d2Labels.forEach((d2, i2) => {
+                    if (!state.data[d1[0]][d2[0]] || state.data[d1[0]][d2[0]].abs === 0) {
+                        counts1[i1] += 1;
+                        counts2[i2] += 1;
+                    }
+                });
             });
-        });
+        }
         const remove1 = counts1.map(x => x === counts2.length);
         state.d1Labels = state.d1Labels.map<[string, boolean]>((item, i) => {
             return [item[0], !remove1[i]];
@@ -569,11 +552,6 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
         state.d2Labels = state.d2Labels.map<[string, boolean]>((item, i) => {
             return [item[0], !remove2[i]];
         });
-    }
-
-
-    private resetData(state:Freq2DTableModelState):void { // TODO do we need this?
-        state.data = state.origData;
     }
 
     getSubmitArgs():CTFreqServerArgs {
@@ -595,14 +573,14 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
     }
 
     private recalculateConfIntervals(state:Freq2DTableModelState):void {
-        state.origData = mapDataTable(state.origData, cell => {
+        state.data = mapDataTable(state.data, cell => {
             const confInt = Maths.wilsonConfInterval(cell.abs, cell.domainSize, state.alphaLevel);
             return {
                 origOrder: cell.origOrder,
                 ipm: cell.ipm,
-                ipmConfInterval: [confInt[0] * 1e6, confInt[1] * 1e6],
+                ipmConfInterval: tuple(roundFloat(confInt[0] * 1e6), roundFloat(confInt[1] * 1e6)),
                 abs: cell.abs,
-                absConfInterval: [confInt[0] * cell.domainSize, confInt[1] * cell.domainSize],
+                absConfInterval: tuple(roundFloat(confInt[0] * cell.domainSize), roundFloat(confInt[1] * cell.domainSize)),
                 domainSize: cell.domainSize,
                 bgColor: cell.bgColor,
                 pfilter: cell.pfilter
@@ -680,8 +658,8 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
             List.map(x => tuple<string, boolean>(x, true))
         );
         state.d2Labels = Object.keys(d2Labels).sort().map(x => [x, true]);
-        state.origData = tableData;
-        this.updateLocalData(state);
+        state.data = tableData;
+        this.normalizeData(state);
 
     }
 

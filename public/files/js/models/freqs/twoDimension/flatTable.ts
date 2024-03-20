@@ -57,12 +57,7 @@ export interface FormatConversionExportData {
 export interface Freq2DFlatViewModelState extends GeneralFreq2DModelState {
 
     /**
-     * Original data as imported from page initialization.
-     */
-    origData:Array<FreqDataItem>;
-
-    /**
-     * Current data derived from origData by applying filters etc.
+     * Result data
      */
     data:Array<FreqDataItem>;
 
@@ -92,7 +87,6 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel<Freq2DFlatViewModelS
                 availAlphaLevels: importAvailAlphaLevels(),
                 dataSize: null,
                 usesAdHocSubcorpus: props.usesAdHocSubcorpus,
-                origData: [],
                 data: [],
                 sortBy: FreqQuantities.IPM,
                 sortReversed: true,
@@ -100,14 +94,34 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel<Freq2DFlatViewModelS
             }
         );
 
-        this.addActionHandler<typeof Actions.FreqctFormSetMinFreq>(
-            Actions.FreqctFormSetMinFreq.name,
+        this.addActionHandler(
+            Actions.FreqctSetMinFreq,
             action => {
-                if (this.validateMinAbsFreqAttr(action.payload.value)) {
-                    this.changeState(state => {
-                        state.minFreq = action.payload.value;
-                        if (state.data) {
-                            this.updateData(state);
+                this.changeState(state => {
+                    state.minFreq = action.payload.value;
+                });
+                if (action.payload.isDebounced && this.validateMinAbsFreqAttr(action.payload.value)) {
+                    this.waitForActionWithTimeout(
+                        2000,
+                        {},
+                        (action, syncData) => {
+                            if (Actions.isLoadedDataAvailable(action)) {
+                                return null;
+                            }
+                            return syncData;
+                        }
+                    ).subscribe({
+                        next: (action) => {
+                            if (Actions.isLoadedDataAvailable(action)) {
+                                this.changeState(
+                                    state => {
+                                        this.importData(state, action.payload.data);
+                                    }
+                                );
+                            }
+                        },
+                        error: (error) => {
+                            this.pageModel.showMessage('error', error);
                         }
                     });
 
@@ -117,89 +131,87 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel<Freq2DFlatViewModelS
             }
         );
 
-        this.addActionHandler<typeof Actions.FreqctFormSetMinFreqType>(
-            Actions.FreqctFormSetMinFreqType.name,
+        this.addActionHandler(
+            Actions.FreqctFormSetMinFreqType,
             action => {
                 this.changeState(state => {
                     state.minFreqType = action.payload.value;
                 });
+                this.waitForActionWithTimeout(
+                    2000,
+                    {},
+                    (action, syncData) => {
+                        if (Actions.isLoadedDataAvailable(action)) {
+                            return null;
+                        }
+                        return syncData;
+                    }
+                ).subscribe({
+                    next: (action) => {
+                        if (Actions.isLoadedDataAvailable(action)) {
+                            this.changeState(
+                                state => {
+                                    this.importData(state, action.payload.data);
+                                }
+                            );
+                        }
+                    },
+                    error: (error) => {
+                        this.pageModel.showMessage('error', error);
+                    }
+                });
             }
         );
 
-        this.addActionHandler<typeof Actions.FreqctSetAlphaLevel>(
-            Actions.FreqctSetAlphaLevel.name,
+        this.addActionHandler(
+            Actions.FreqctSetAlphaLevel,
             action => {
                 this.changeState(state => {
                     state.alphaLevel = action.payload.value;
                     this.recalculateConfIntervals(state);
-                    this.updateData(state);
                 });
             }
         );
 
-        this.addActionHandler<typeof Actions.FreqctSortFlatList>(
-            Actions.FreqctSortFlatList.name,
+        this.addActionHandler(
+            Actions.FreqctSortFlatList,
             action => {
                 this.changeState(state => {
                     state.sortBy = action.payload.value;
                     state.sortReversed = action.payload.reversed;
-                    this.updateData(state);
+                    this.resortLocalData(state);
                 });
             }
         );
     }
 
-    private recalculateConfIntervals(state:Freq2DFlatViewModelState):void {
-        state.origData = List.map(
-            (cell, i) => {
-                const confInt = Maths.wilsonConfInterval(cell.abs, cell.domainSize, state.alphaLevel);
-                return {
-                    origOrder: i,
-                    val1: cell.val1,
-                    val2: cell.val2,
-                    ipm: cell.ipm,
-                    ipmConfInterval: tuple(confInt[0] * 1e6, confInt[1] * 1e6),
-                    abs: cell.abs,
-                    absConfInterval: tuple(confInt[0] * cell.domainSize, confInt[1] * cell.domainSize),
-                    domainSize: cell.domainSize,
-                    pfilter: cell.pfilter,
-                    bgColor: cell.bgColor
-                }
-            },
-            state.origData
-        );
-    }
-
-    private updateData(state:Freq2DFlatViewModelState):void {
-        const a1 = state.sortReversed ? -1 : 1;
-        const a2 = state.sortReversed ? 1 : -1;
-        state.data = List.filter(
-            this.createMinFreqFilterFn(state),
-            state.origData
-        );
-
+    private resortLocalData(state:Freq2DFlatViewModelState) {
         switch (state.sortBy) {
             case state.attr1:
-                state.data = List.sorted(
-                    (v1, v2) => {
-                        const s1 = v1.val1 + v1.val2;
-                        const s2 = v2.val1 + v2.val2;
-                        return s1.localeCompare(s2) * a1;
-                    },
-                    state.data
+                state.data = pipe(
+                    state.data,
+                    List.sorted(
+                        (v1, v2) => {
+                            const cmp = v1.val1.localeCompare(v2.val1);
+                            if (cmp === 0) {
+                                return v1.val2.localeCompare(v2.val2);
+                            }
+                            return cmp;
+                        },
+                    ),
                 );
             break;
             case 'abs':
                 state.data = List.sorted(
                     (v1, v2) => {
                         if (v1.abs > v2.abs) {
-                            return a1;
+                            return -1;
                         }
                         if (v1.abs === v2.abs) {
                             return 0;
                         }
                         if (v1.abs < v2.abs) {
-                            return a2;
+                            return 1;
                         }
                     },
                     state.data
@@ -209,19 +221,47 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel<Freq2DFlatViewModelS
                 state.data = List.sorted(
                     (v1, v2) => {
                         if (v1.ipm > v2.ipm) {
-                            return a1;
+                            return -1;
                         }
                         if (v1.ipm === v2.ipm) {
                             return 0;
                         }
                         if (v1.ipm < v2.ipm) {
-                            return a2;
+                            return 1;
                         }
                     },
                     state.data
                 );
             break;
         }
+
+    }
+
+    private recalculateConfIntervals(state:Freq2DFlatViewModelState):void {
+        state.data = List.map(
+            (cell, i) => {
+                const confInt = Maths.wilsonConfInterval(cell.abs, cell.domainSize, state.alphaLevel);
+                return {
+                    origOrder: i,
+                    val1: cell.val1,
+                    val2: cell.val2,
+                    ipm: cell.ipm,
+                    ipmConfInterval: tuple(
+                        roundFloat(confInt[0] * 1e6),
+                        roundFloat(confInt[1] * 1e6)
+                    ),
+                    abs: cell.abs,
+                    absConfInterval: tuple(
+                        roundFloat(confInt[0] * cell.domainSize),
+                        roundFloat(confInt[1] * cell.domainSize)
+                    ),
+                    domainSize: cell.domainSize,
+                    pfilter: cell.pfilter,
+                    bgColor: cell.bgColor
+                }
+            },
+            state.data
+        );
     }
 
     initialImportData(data:CTFreqResultData):void {
@@ -230,7 +270,7 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel<Freq2DFlatViewModelS
 
     protected importData(state:Freq2DFlatViewModelState, data:CTFreqResultData):void {
         state.dataSize = data.size;
-        state.origData = List.map(
+        state.data = List.map(
             ([label1, label2, absFreq, total], i) => {
                 const confInt = Maths.wilsonConfInterval(absFreq, total, state.alphaLevel);
                 return {
@@ -248,32 +288,6 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel<Freq2DFlatViewModelS
             },
             data.data
         );
-        this.updateData(state);
-    }
-
-    private getFreqFetchFn(state:Freq2DFlatViewModelState):(c:CTFreqCell)=>number {
-        switch (state.minFreqType) {
-            case FreqFilterQuantities.ABS:
-            case FreqFilterQuantities.ABS_PERCENTILE:
-                return (c:CTFreqCell) => c.abs;
-            case FreqFilterQuantities.IPM:
-            case FreqFilterQuantities.IPM_PERCENTILE:
-                return (c:CTFreqCell) => c.ipm;
-            default:
-                throw new Error('Unknown quantity: ' + state.minFreqType);
-        }
-    }
-
-    createPercentileSortMapping(state:Freq2DFlatViewModelState):[{[key:string]:number}, number] {
-        const fetchFreq = this.getFreqFetchFn(state);
-        const asList = pipe(
-            this.state.origData,
-            List.map(x => tuple(x.origOrder, fetchFreq(x))),
-            List.filter(x => x !== undefined),
-            List.sorted((x1, x2) => x1[1] - x2[1]),
-            List.map((x, i) => tuple(x[0].toFixed(), i))
-        );
-        return tuple(Dict.fromEntries(asList), List.size(asList));
     }
 
     exportData():FormatConversionExportData {

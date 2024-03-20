@@ -590,9 +590,9 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
                 out['next_action_args'] = {
                     'ctminfreq': req.args.get('ctminfreq', '1'),
                     'ctminfreq_type': req.args.get('ctminfreq_type'),
-                    'ctattr1': amodel.args.ctattr1,
+                    'ctattr1': req.args.get('ctattr1'),
                     'ctfcrit1': amodel.args.ctfcrit1,
-                    'ctattr2': amodel.args.ctattr2,
+                    'ctattr2': req.args.get('ctattr2'),
                     'ctfcrit2': amodel.args.ctfcrit2}
             elif req.args.get('next') == 'collx':
                 out['next_action'] = 'collx'

@@ -24,6 +24,7 @@ import { Maths, Dict, tuple, pipe, List } from 'cnc-tskit';
 import { PageModel } from '../../../app/page';
 import { ConcQuickFilterServerArgs } from '../../concordance/common';
 import { FreqFilterQuantities, validateMinAbsFreqAttr, isStructAttr } from './common';
+import { empty } from 'rxjs';
 
 
 /**
@@ -120,40 +121,6 @@ export abstract class GeneralFreq2DModel<T extends GeneralFreq2DModelState> exte
 
     static calcIpm(absFreq:number, totalSize:number) {
         return Math.round(absFreq / totalSize * 1e6 * 100) / 100;
-    }
-
-    /**
-     * Generate a mapping from original items' order generated during
-     * import to indices within sorted list of these items according
-     * to the current freq. mode (ipm, abs). This is used when filtering
-     * values by percentile.
-     * Because the original order may be same for some items, it is
-     * also necessary to return the actual number of items before
-     * the mapping is created (where multiple values per key are lost).
-     */
-    abstract createPercentileSortMapping(state:GeneralFreq2DModelState):[{[key:string]:number}, number];
-
-
-    /**
-     *
-     */
-    protected createMinFreqFilterFn(state:GeneralFreq2DModelState):(CTFreqCell)=>boolean {
-        const minFreq = parseInt(state.minFreq || '0', 10);
-        switch (state.minFreqType) {
-            case FreqFilterQuantities.ABS:
-                return (v:CTFreqCell) => v && v.abs >= minFreq;
-            case FreqFilterQuantities.IPM:
-                return (v:CTFreqCell) => v && v.ipm >= minFreq;
-            case FreqFilterQuantities.ABS_PERCENTILE:
-            case FreqFilterQuantities.IPM_PERCENTILE:
-                const [sortMap, origSize] = this.createPercentileSortMapping(state);
-                const emptyItemsRatio = 1 - origSize / state.dataSize;
-                return (v:CTFreqCell) => {
-                    return v && sortMap[v.origOrder] / state.dataSize + emptyItemsRatio >= minFreq / 100;
-                }
-            default:
-                throw new Error('Unknown freq type: ' + state.minFreqType);
-        }
     }
 
     /**

@@ -817,6 +817,7 @@
         "freq__ct_total_abs_frequency": "total abs. frequency",
         "freq__ct_percentile_hint_{value}": "The top {value}% of values will be returned",
         "freq__ct_current_adhoc_subc_is": "The current ad-hoc subcorpus is",
+        "freq__ct_confidence_interval_{level}": "Confidence interval ({level}% Cl)",
         "freq__visualisation_type": "Visualization type",
         "freq__visualisation_type_bar": "bar",
         "freq__visualisation_type_line": "line (time-based)",
