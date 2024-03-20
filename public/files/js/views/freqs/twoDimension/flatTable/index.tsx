@@ -22,7 +22,7 @@ import * as React from 'react';
 import { IActionDispatcher, Bound } from 'kombo';
 
 import * as Kontext from '../../../../types/kontext';
-import { Freq2DFlatViewModel, Freq2DFlatViewModelState } from '../../../../models/freqs/twoDimension/flatTable';
+import { Freq2DFlatViewModel, Freq2DFlatViewModelState, FreqDataItem } from '../../../../models/freqs/twoDimension/flatTable';
 import { GeneralFreq2DModel } from '../../../../models/freqs/twoDimension/generalDisplay';
 import { init as ctViewOptsFactory } from '../viewOpts';
 import { Actions } from '../../../../models/freqs/twoDimension/actions';
@@ -47,11 +47,14 @@ export function init(
     const ctViewOpts = ctViewOptsFactory(dispatcher, he);
     const layoutViews = he.getLayoutViews();
 
-    /**
-     *
-     * @param {*} props
-     */
-    const TRFlatListRow = (props) => {
+
+    const TRFlatListRow:React.FC<{
+        idx:number;
+        data:FreqDataItem;
+        confIntervalLeftMinWarn:number;
+        canProvideIpm:boolean;
+        alphaLevel:string;
+    }> = (props) => {
 
         const shouldWarn = (props) => {
                 return props.data.ipmConfInterval[0] <= props.confIntervalLeftMinWarn ||
@@ -84,6 +87,10 @@ export function init(
             });
         };
 
+        const alphaLevelNum = (1 - parseFloat(props.alphaLevel)) * 100;
+        const ciLabel = he.translate(
+            'freq__ct_confidence_interval_{level}', {level: alphaLevelNum})
+
         return (
             <tr>
                 <td className="num">{props.idx}.</td>
@@ -96,11 +103,27 @@ export function init(
                     {renderWarning()}
                     {props.data.abs}
                 </td>
+                <td title={ciLabel}>
+                    <span className="bracket">[</span>
+                        {props.data.absConfInterval[0]}
+                        <span className="separ">, </span>
+                        {props.data.absConfInterval[1]}
+                    <span className="bracket">]</span>
+                </td>
                 {props.canProvideIpm ?
-                    <td className="num" title={formatRange(props.data.ipmConfInterval)}>
-                        {renderWarning()}
-                        {props.data.ipm}
-                    </td> :
+                    <>
+                        <td className="num" title={formatRange(props.data.ipmConfInterval)}>
+                            {renderWarning()}
+                            {props.data.ipm}
+                        </td>
+                        <td title={ciLabel}>
+                            <span className="bracket">[</span>
+                            {props.data.ipmConfInterval[0]}
+                            <span className="separ">, </span>
+                            {props.data.ipmConfInterval[1]}
+                            <span className="bracket">]</span>
+                        </td>
+                    </>:
                     null
                 }
             </tr>
@@ -111,14 +134,20 @@ export function init(
      *
      * @param {*} props
      */
-    const THSortableCol = (props) => {
+    const THSortableCol:React.FC<{
+        value:string;
+        label:string;
+        isActive:boolean;
+        isReversed:boolean;
+        colSpan:number;
+    }> = (props) => {
 
         const handleClick = () => {
             dispatcher.dispatch<typeof Actions.FreqctSortFlatList>({
                 name: Actions.FreqctSortFlatList.name,
                 payload: {
                     value: props.value,
-                    reversed: props.isActive ? !props.isReversed : false
+                    reversed: props.value === 'ipm' || props.value === 'abs' ? true : false
                 }
             });
         };
@@ -136,7 +165,7 @@ export function init(
         };
 
         return (
-            <th className="sort-col">
+            <th colSpan={props.colSpan} className="sort-col">
                 <a onClick={handleClick} title={he.translate('global__sort_by_this_col')}>
                     {props.label}
                     {renderFlag()}
@@ -182,17 +211,17 @@ export function init(
                                 <th>
                                     {he.translate('freq__ct_filter_th')}
                                 </th>
-                                <THSortableCol label={this.props.attr1} value={this.props.attr1}
+                                <THSortableCol colSpan={1} label={this.props.attr1} value={this.props.attr1}
                                         isActive={this.props.sortBy === this.props.attr1}
                                         isReversed={this.props.sortBy === this.props.attr1 && this.props.sortReversed}
                                             />
                                 <th>{this.props.attr2}</th>
-                                <THSortableCol label={he.translate('freq__ct_abs_freq_label')}
+                                <THSortableCol colSpan={2} label={he.translate('freq__ct_abs_freq_label')}
                                         value="abs" isActive={this.props.sortBy === 'abs'}
                                         isReversed={this.props.sortBy === 'abs' && this.props.sortReversed}
                                         />
                                 {GeneralFreq2DModel.canProvideIpm(this.props) ?
-                                        <THSortableCol label={he.translate('freq__ct_ipm_freq_label')}
+                                        <THSortableCol colSpan={2} label={he.translate('freq__ct_ipm_freq_label')}
                                                 value="ipm" isActive={this.props.sortBy === 'ipm'}
                                                 isReversed={this.props.sortBy === 'ipm' && this.props.sortReversed} /> :
                                     null
@@ -201,7 +230,8 @@ export function init(
                             {this.props.data.map((item, i) =>
                                 <TRFlatListRow key={`r_${i}`} idx={i+1} data={item}
                                         confIntervalLeftMinWarn={this.props.confIntervalLeftMinWarn}
-                                        canProvideIpm={GeneralFreq2DModel.canProvideIpm(this.props)} />)}
+                                        canProvideIpm={GeneralFreq2DModel.canProvideIpm(this.props)}
+                                        alphaLevel={this.props.alphaLevel} />)}
                         </tbody>
                     </table>
                 </S.CTFlatFreqResultView>
