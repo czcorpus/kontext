@@ -529,16 +529,18 @@ export function init(
 
     // ------------------------------ <Messages /> -----------------------------
 
-    const Messages:React.FC<CoreViews.Messages.Props & MessageModelState> = (props) => (
+    const Messages:React.FC<CoreViews.Messages.Props & MessageModelState> = (props) => {
 
-        List.empty(props.messages) ?
+        React.useEffect(props.initCallback, []);
+
+        return List.empty(props.messages) ?
             null :
-            <S.MessagesDiv ref={props.initCallback}>
+            <S.MessagesDiv>
                 {props.messages.map((item, i) => (
                     <Message key={`msg:${i}`} {...item} />
                 ))}
             </S.MessagesDiv>
-    );
+    };
 
     // ------------------------ <CorpnameInfoTrigger /> --------------------------------
 
