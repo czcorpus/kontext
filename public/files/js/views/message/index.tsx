@@ -79,6 +79,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     const MessagePageHelp:React.FC<MessageViewProps & MessageModelState> = (props) => {
 
+        React.useEffect(props.initCallback, []);
+
         const handleCorporaClick = () => {
             window.location.href = he.createActionLink('corpora/corplist');
         };
@@ -95,7 +97,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         };
 
         return (
-            <S.MessagePageHelp ref={props.initCallback}>
+            <S.MessagePageHelp>
                 <div className="messages">
                     {props.messages.map(message => {
                         return <Message key={message.messageId} status={message.messageType} text={message.messageText} />;

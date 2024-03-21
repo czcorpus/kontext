@@ -392,7 +392,11 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
                     this.dispatchSideEffect(
                         Actions.LoadedDataAvailable,
                         {data: data.data}
-                    )
+                    );
+                    List.forEach(([level, msg]) =>
+                        this.pageModel.showMessage(level, msg),
+                        data.messages,
+                    );
                 },
                 error: error => {
                     this.changeState(state => {
