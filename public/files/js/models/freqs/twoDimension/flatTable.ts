@@ -124,9 +124,6 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel<Freq2DFlatViewModelS
                             this.pageModel.showMessage('error', error);
                         }
                     });
-
-                } else {
-                    // we do not show error because other active model for 2d table handles this
                 }
             }
         );
