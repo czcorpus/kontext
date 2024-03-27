@@ -115,33 +115,7 @@ export class SyntaxTreeModel extends StatefulModel<SyntaxTreeModelState> {
                     state.targetHTMLElementID = action.payload.targetHTMLElementID;
                     state.isBusy = true;
                 });
-
-                const activeToken = this.state.sentenceTokens[this.state.activeToken];
-
-                this.pluginApi.ajax$<Array<srcData.Data>>(
-                    HTTP.Method.GET,
-                    this.pluginApi.createActionUrl('get_syntax_data'),
-                    {
-                        corpname: activeToken.corpus,
-                        kwic_id: activeToken.tokenId,
-                        kwic_len: activeToken.kwicLength
-                    }
-
-                ).subscribe({
-                    next: data => {
-                        this.changeState(state => {
-                            state.data = data;
-                            state.isBusy = false;
-                        });
-                        window.addEventListener('resize', this.onPageResize);
-                    },
-                    error: error => {
-                        this.changeState(state => {
-                            state.isBusy = false;
-                        });
-                        this.pluginApi.showMessage('error', error);
-                    },
-                });
+                this.reloadData();
             }
         );
 
@@ -159,6 +133,7 @@ export class SyntaxTreeModel extends StatefulModel<SyntaxTreeModelState> {
                     );
                     state.isBusy = true;
                 });
+                this.reloadData();
             }
         );
 
@@ -172,5 +147,33 @@ export class SyntaxTreeModel extends StatefulModel<SyntaxTreeModelState> {
 
     onPageResize = () => {
         this.resizeEvents.next([window.innerWidth, window.innerHeight])
+    }
+
+    reloadData() {
+        const activeToken = this.state.sentenceTokens[this.state.activeToken];
+        this.pluginApi.ajax$<Array<srcData.Data>>(
+            HTTP.Method.GET,
+            this.pluginApi.createActionUrl('get_syntax_data'),
+            {
+                corpname: activeToken.corpus,
+                kwic_id: activeToken.tokenId,
+                kwic_len: activeToken.kwicLength
+            }
+
+        ).subscribe({
+            next: data => {
+                this.changeState(state => {
+                    state.data = data;
+                    state.isBusy = false;
+                });
+                window.addEventListener('resize', this.onPageResize);
+            },
+            error: error => {
+                this.changeState(state => {
+                    state.isBusy = false;
+                });
+                this.pluginApi.showMessage('error', error);
+            },
+        });
     }
 }
