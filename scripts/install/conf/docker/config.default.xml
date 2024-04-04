@@ -42,7 +42,7 @@
     <calc_backend>
         <type>rq</type>
         <task_time_limit>300</task_time_limit>
-        <rq_redis_host>kontext_redis_1</rq_redis_host>
+        <rq_redis_host>kontext-redis-1</rq_redis_host>
         <rq_redis_port>6379</rq_redis_port>
         <rq_redis_db>2</rq_redis_db>
         <rq_log_path>/var/log/rq/worker.log</rq_log_path>
@@ -115,7 +115,7 @@
         </subc_storage>
         <db>
             <module>redis_db</module>
-            <host>kontext_redis_1</host>
+            <host>kontext-redis-1</host>
             <port>6379</port>
             <id>1</id>
         </db>
