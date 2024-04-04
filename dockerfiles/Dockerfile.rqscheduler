@@ -2,4 +2,4 @@ FROM python:3.8-slim
 
 RUN pip3 install --upgrade pip && pip3 install rq-scheduler
 
-CMD [ "rqscheduler", "--host", "kontext_redis_1", "--db", "2", "-i", "10" ]
+CMD [ "rqscheduler", "--host", "kontext-redis-1", "--db", "2", "-i", "10" ]

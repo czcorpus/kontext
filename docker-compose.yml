@@ -1,5 +1,3 @@
-version: "3"
-
 services:
   kontext:
     build:
@@ -30,7 +28,7 @@ services:
     build:
       context: .
       dockerfile: dockerfiles/Dockerfile.rqscheduler
-    command: rqscheduler --host kontext_redis_1 --db 2 -i 10
+    command: rqscheduler --host kontext-redis-1 --db 2 -i 10
     networks:
       - databases
     depends_on:
