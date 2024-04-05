@@ -269,11 +269,6 @@ async def extract_jwt(request: Request):
 
 
 @application.middleware('request')
-async def set_http_client(request: Request):
-    request.ctx.http_client = await aiohttp.ClientSession().__aenter__()
-
-
-@application.middleware('request')
 async def set_locale(request: Request):
     request.ctx.locale = get_locale(request)
     if request.ctx.locale in application.ctx.translations:
@@ -297,12 +292,6 @@ async def store_jwt(request: Request, response: HTTPResponse):
             or request.headers.get('x-forwarded-proto') == 'https'
         )
     )
-
-
-@application.middleware('response')
-async def close_http_client(request: Request, response: HTTPResponse):
-    await request.ctx.http_client.__aexit__(None, None, None)
-    await asyncio.sleep(0)
 
 
 @application.signal('kontext.internal.reset')
