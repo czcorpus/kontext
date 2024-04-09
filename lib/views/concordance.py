@@ -258,6 +258,9 @@ async def _get_conc_cache_status(amodel: ConcActionModel):
             err = worker.get_task_error(cache_status.task_id)
             if err is not None:
                 raise err
+        elif cache_status.normalized_error is not None:
+            raise cache_status.normalized_error
+
         if corpus_info.preflight_subcorpus and cache_status.finished:
             with plugins.runtime.QUERY_PERSISTENCE as qp:
                 await qp.update_preflight_stats(

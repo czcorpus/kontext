@@ -60,7 +60,6 @@ SIGNAL_CHANNEL_ID = "channel:signals"
 
 from typing import Optional
 
-import aiohttp
 import jwt
 import plugins
 import plugins.export

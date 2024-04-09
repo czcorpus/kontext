@@ -13,7 +13,7 @@
 # GNU General Public License for more details.
 
 import asyncio
-from typing import Type, TypeVar, Optional
+from typing import Optional, Type, TypeVar
 
 import settings
 import ujson as json
@@ -23,10 +23,10 @@ from action.model.abstract import AbstractPageModel, AbstractUserModel
 from action.model.concordance import ConcActionModel
 from action.model.user import UserActionModel
 from action.props import ActionProps
+from bgcalc.task import AsyncTaskStatus
 from sanic import Blueprint, Request, Sanic, Websocket
 from views.concordance import _get_conc_cache_status
 from views.root import _check_task_status
-from bgcalc.task import AsyncTaskStatus
 
 bp = Blueprint('websocket', 'ws')
 
@@ -78,6 +78,7 @@ async def _prepare_websocket_amodel(req: Request, ws: Websocket, amodel: Type[T]
     except PermissionError:
         await ws.close(code=1008, reason='Access forbidden - please log-in.')
 
+
 async def _send_status(amodel, task_id: str, ws: Websocket) -> Optional[AsyncTaskStatus]:
     task = await _check_task_status(amodel, task_id)
     if task:
@@ -107,7 +108,8 @@ async def conc_cache_status(req: Request, ws: Websocket):
         try:
             response = await _get_conc_cache_status(amodel)
         except Exception as e:
-            await ws.close(code=1011, reason=str(e))
+            # close wont be handled as error on frontend
+            await ws.fail_connection(code=1011, reason=str(e))
         await ws.send(json.dumps(response))
 
         if response['finished']:
