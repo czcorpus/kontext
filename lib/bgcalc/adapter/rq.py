@@ -72,7 +72,7 @@ class ResultWrapper(AbstractResultWrapper[T]):
         failed='FAILURE'
     )
 
-    def __init__(self, job):
+    def __init__(self, job: Job):
         self._job = job
         self.result: Union[T, Exception] = None
 
