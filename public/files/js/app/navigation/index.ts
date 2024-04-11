@@ -68,12 +68,13 @@ export function parseUrlArgs(args:string):Array<[string, string]> {
  *
  */
 interface AjaxRequestProps {
-    accept:string,
-    contentType:string,
-    responseType:XMLHttpRequestResponseType,
-    method:string,
-    requestBody:string,
-    url:string
+    accept:string;
+    contentType:string;
+    responseType:XMLHttpRequestResponseType;
+    method:string;
+    requestBody:string;
+    url:string;
+    timeout:number;
 }
 
 /**
@@ -253,7 +254,8 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
             responseType: options.responseType,
             method,
             requestBody: body,
-            url
+            url,
+            timeout: options.timeout ? options.timeout : 0
         }
     }
 
@@ -282,7 +284,9 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
             responseType: callArgs.responseType,
             headers: {
                 'Content-Type': callArgs.contentType
-            }
+            },
+            timeout: callArgs.timeout
+
         }).pipe(
             map<RxAjaxResponse<T>, T>(v => v.response)
         );
