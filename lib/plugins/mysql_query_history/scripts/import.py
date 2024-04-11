@@ -58,7 +58,6 @@ if __name__ == '__main__':
     logging.basicConfig()
     conf_path = os.path.realpath(os.path.join(os.path.dirname(
         __file__), '..', '..', '..', '..', 'conf', 'config.xml'))
-    settings.load(conf_path, defaultdict(lambda: None))
 
     initializer.init_plugin('integration_db')
     initializer.init_plugin('db')

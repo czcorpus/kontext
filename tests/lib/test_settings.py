@@ -48,7 +48,7 @@ class SettingsMockedDataTest(unittest.TestCase):
         }
 
     def test_no_conf_path_before_load(self):
-        v = settings.conf_path()
+        v = settings.CONF_PATH
         self.assertIsNone(v)
 
     def test_get(self):
@@ -127,11 +127,8 @@ class SettingsMockedDataTest(unittest.TestCase):
 
 class SettingsSampleTest(unittest.IsolatedAsyncioTestCase):
 
-    def setUp(self):
-        settings.load(conf_path)
-
     def test_has_set_path(self):
-        v = settings.conf_path()
+        v = settings.CONF_PATH
         self.assertEqual(v, conf_path)
 
     async def test_get_default_corpus_permitted(self):

@@ -28,21 +28,20 @@ from lxml import etree
 TypeAliasTable = Union[Dict[str, Union[str, None]], DefaultDict[str, Union[str, None]]]
 
 
-class ConfState(object):
-    conf_path = None
-
-
 # contains parsed data, it should not be accessed directly (use set, get, get_*)
 _conf: Dict[str, Any] = {}
 # contains data of attributes of XML elements representing configuration values
 _meta: Dict[str, Any] = {}
 _help_links: Dict[str, Any] = {}
-_state: ConfState = ConfState()
 
 SECTIONS = (
     'theme', 'global', 'sessions', 'calc_backend', 'job_scheduler', 'mailing', 'logging', 'corpora', 'fcs', 'plugins')
 
 DEFAULT_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
+_IS_LOADED = False
+CONF_PATH = os.getenv(
+    'KONTEXT_CONF', os.path.realpath(
+        os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'conf', 'config.xml')))
 
 
 def contains(section, key=None):
@@ -218,14 +217,7 @@ def parse_config_section(section):
     return ans, meta
 
 
-def _update_path_with_alias(alias_table: TypeAliasTable, path: str) -> Optional[str]:
-    try:
-        return alias_table[path]
-    except KeyError:
-        return path
-
-
-def _parse_config(path, plg_conf_aliases: TypeAliasTable):
+def _parse_config(path):
     """
     Parses application configuration XML file. A two-level structure is expected where
     first level represents sections and second level key->value pairs. It is also possible
@@ -233,9 +225,6 @@ def _parse_config(path, plg_conf_aliases: TypeAliasTable):
 
     arguments:
     path -- a file system path to the configuration file
-    plg_conf_aliases -- individual plug-in JSON config paths can be remapped
-                        via this argument; the JSON config loading can be disabled
-                        by providing None as alias
     """
     xml = etree.parse(open(path))
     root = xml.getroot()
@@ -253,15 +242,14 @@ def _parse_config(path, plg_conf_aliases: TypeAliasTable):
                     plg_conf, _meta['plugins'][item.tag] = parse_config_section(item)
                     _conf['plugins'][item.tag] = plg_conf
                     if 'conf_path' in plg_conf:
-                        plg_subconf = _update_path_with_alias(
-                            plg_conf_aliases, plg_conf['conf_path'])
+                        plg_subconf = plg_conf['conf_path']
                         if plg_subconf:
                             with open(plg_subconf) as fr:
                                 _conf['plugins'][item.tag]['__conf__'] = json.load(fr)
 
 
-def _load_help_links(path_aliases: TypeAliasTable):
-    hlpath = _update_path_with_alias(path_aliases, get('global', 'help_links_path', None))
+def _load_help_links():
+    hlpath = get('global', 'help_links_path', None)
     if hlpath is not None:
         with open(hlpath, 'rb') as fr:
             _help_links.update(json.load(fr))
@@ -271,29 +259,22 @@ def get_help_links(lang_id):
     return dict((k, v.get(lang_id, None)) for k, v in list(_help_links.items()))
 
 
-def load(path, path_aliases: Optional[TypeAliasTable] = None):
+def _load():
     """
     Loads application's configuration from a provided file
 
     arguments:
       conf_path -- path to a configuration XML file
     """
-    _state.conf_path = path
-    if path_aliases is None:
-        path_aliases = {}
-    _parse_config(_state.conf_path, path_aliases)
+    _parse_config(CONF_PATH)
     _load_version()
-    _load_help_links(path_aliases)
-
-
-def conf_path():
-    return _state.conf_path
+    _load_help_links()
 
 
 async def get_default_corpus(test_access_fn):
     """
     Returns name of the default corpus to be offered to a user. Select first
-    corpus from the list which is conform with user's access rights
+    corpus from the list which is conforming with user's access rights
 
     arguments:
     test_access_fn -- a function returning True if a corpus is accessible else false
@@ -339,6 +320,13 @@ def is_debug_mode():
 
 
 def _load_version():
-    with open('%s/../package.json' % os.path.abspath(os.path.dirname(__file__))) as f:
+    with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'package.json')) as f:
         d = json.load(f)
         set('global', '__version__', d.get('version', '??'))
+
+
+if not _IS_LOADED:
+    try:
+        _load()
+    except Exception as ex:
+        raise Exception(f'failed to load settings from {CONF_PATH}: {ex}')

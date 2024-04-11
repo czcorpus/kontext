@@ -44,7 +44,6 @@ import settings
 from action.plugin import initializer
 from stderr2f import get_stderr_redirector
 
-settings.load(os.path.join(APP_PATH, 'conf', 'config.xml'))
 if settings.get('global', 'manatee_path', None):
     sys.path.insert(0, settings.get('global', 'manatee_path'))
 import manatee

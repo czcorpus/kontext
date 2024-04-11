@@ -72,7 +72,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
     conf_path = os.path.realpath(os.path.join(os.path.dirname(
         __file__), '..', '..', '..', '..', 'conf', 'config.xml'))
-    settings.load(conf_path, defaultdict(lambda: None))
     initializer.init_plugin('integration_db')
     try:
         import_sqlite_db(args.path, args.chunk_size)
