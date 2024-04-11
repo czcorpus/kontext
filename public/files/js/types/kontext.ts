@@ -356,6 +356,7 @@ export interface AjaxOptions {
     contentType?:string;
     responseType?:XMLHttpRequestResponseType;
     accept?:string;
+    timeout?:number;
 }
 
 export type AsyncTaskStatus = 'PENDING'|'STARTED'|'SUCCESS'|'FAILURE';
