@@ -40,6 +40,7 @@
         <no_anonymous_access>0</no_anonymous_access>
         <jwt_secret>my_secret</jwt_secret>
         <enabled_websockets>0</enabled_websockets>
+        <preflight_query_timeout_ms>3000</preflight_query_timeout_ms>
     </global>
     <calc_backend>
         <type>rq</type>

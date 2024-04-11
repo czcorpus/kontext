@@ -19,7 +19,6 @@
 
 
 import logging
-import urllib.parse
 from dataclasses import asdict
 from functools import partial
 from typing import (

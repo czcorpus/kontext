@@ -126,6 +126,7 @@ class BaseActionModel(AbstractPageModel):
         result['issue_reporting_action'] = None
         result['help_links'] = {}
         result['_version'] = None
+        result['preflight_query_timeout_ms'] = settings.get_int('global', 'preflight_query_timeout_ms', 0)
         return result
 
     def init_menu(self, result):
