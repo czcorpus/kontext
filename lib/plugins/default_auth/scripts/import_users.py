@@ -73,7 +73,6 @@ if __name__ == '__main__':
     import settings
     conf_path = os.path.realpath(os.path.join(
         os.path.dirname(__file__), '../../../../conf/config.xml'))
-    settings.load(conf_path)
     db_conf = settings.get('plugins', 'db')
 
     with open(args.file, 'rb') as fr:
