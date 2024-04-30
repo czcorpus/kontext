@@ -27,7 +27,9 @@ from action.argmapping.keywords import KeywordsFormArgs
 from bgcalc import wordlist
 from bgcalc.jsonl_cache import load_cached_partial
 from corplib import manatee_is_custom_cnc
+from corplib.errors import MissingSubCorpFreqFile
 from corplib.corpus import KCorpus
+from corplib.abstract import AbstractKCorpus
 from dataclasses_json import dataclass_json
 from manatee import Keyword  # TODO wrap this out
 from util import AsyncBatchWriter
@@ -131,9 +133,24 @@ def filter_nan(v: float, round_num):
 
 
 @cached
-async def keywords(corp: KCorpus, ref_corp: KCorpus, args: KeywordsFormArgs, max_items: int) -> KeywordsResultType:
+async def keywords(
+        corp: AbstractKCorpus,
+        ref_corp: AbstractKCorpus,
+        args: KeywordsFormArgs,
+        max_items: int
+) -> KeywordsResultType:
     c_wl = corp.get_attr(args.wlattr)
     rc_wl = ref_corp.get_attr(args.wlattr)
+
+    # check for precalculated freq. data in case ref. corpus is a subcorpus
+    # for the main corpus, this is handled by the get_attrfreq call below
+    if ref_corp.subcorpus_id:
+        filename = ref_corp.freq_precalc_file(args.wlattr, 'frq')
+        if not os.path.isfile(filename):
+            pass
+            raise MissingSubCorpFreqFile(
+                "auxiliary freq file not available", ref_corp.corpname, ref_corp.subcorpus_id)
+
     if not args.include_nonwords:
         nwre = corp.get_conf('NONWORDRE')
     else:
