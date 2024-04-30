@@ -18,8 +18,8 @@
 
 import abc
 from contextlib import asynccontextmanager
-from typing import (Any, Dict, Generator, Generic, Iterable, List, Optional,
-                    Tuple, TypeVar)
+from typing import (
+    Any, Dict, Generator, Generic, Iterable, List, Optional, Tuple, TypeVar)
 
 from plugin_types.auth import CorpusAccess
 from plugin_types.corparch.corpus import TagsetInfo
@@ -45,6 +45,10 @@ class DatabaseBackend(Generic[CursorType], abc.ABC):
 
     @abc.abstractmethod
     async def load_corpus_articles(self, cursor: CursorType, corpus_id: str) -> Iterable[Dict[str, Any]]:
+        pass
+
+    @abc.abstractmethod
+    async def load_corpus_as_source_info(self, cursor: CursorType, corpus_id: str) -> str:
         pass
 
     @abc.abstractmethod

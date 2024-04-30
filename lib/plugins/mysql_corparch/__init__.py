@@ -75,7 +75,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
 
     LABEL_OVERLAY_TRANSPARENCY = 0.20
 
-    def __init__(self, db_backend: DatabaseBackend, user_items: AbstractUserItems, tag_prefix, max_num_hints, max_page_size, registry_lang):
+    def __init__(self, db_backend: DatabaseBackend, user_items: AbstractUserItems, tag_prefix: str, max_num_hints, max_page_size, registry_lang: str, citation_from_metadata: bool):
         """
 
         arguments:
@@ -100,6 +100,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
         self._kc_providers = {}
         self._tl_providers = {}
         self._qs_providers = {}
+        self._citation_from_metadata = citation_from_metadata
 
     @property
     def max_page_size(self):
@@ -292,6 +293,10 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
                         corp.citation_info.article_ref.append(markdown(art['entry']))
                     elif art['role'] == 'other':
                         corp.citation_info.other_bibliography = markdown(art['entry'])
+                if self._citation_from_metadata:
+                    default_ref = await self._backend.load_corpus_as_source_info(cursor, corpus_id, user_lang)
+                    if default_ref is not None:
+                        corp.citation_info.default_ref = default_ref
                 if row['ttdesc_id'] not in self._tt_desc_i18n:
                     for drow in await self._backend.load_ttdesc(cursor, row['ttdesc_id']):
                         self._tt_desc_i18n['cs'][row['ttdesc_id']] = drow['text_cs']
@@ -424,4 +429,6 @@ def create_instance(conf, user_items: AbstractUserItems, integ_db: MySqlIntegrat
         tag_prefix=plugin_conf['tag_prefix'],
         max_num_hints=plugin_conf['max_num_hints'],
         max_page_size=plugin_conf.get('default_page_list_size', None),
-        registry_lang=conf.get('corpora', 'manatee_registry_locale', 'en_US'))
+        registry_lang=conf.get('corpora', 'manatee_registry_locale', 'en_US'),
+        citation_from_metadata=plugin_conf.get('citation_from_metadata', False),
+    )
