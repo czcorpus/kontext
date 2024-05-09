@@ -140,7 +140,10 @@ RgGrouped =
     LPAREN _ RegExpRaw _ RPAREN
 
 RgSimple =
-    (RgRange / RgChar / RgAlt)+
+    (RgRange / RgChar / RgAlt / RgPosixClass)+
+
+RgPosixClass =
+    LBRACKET LBRACKET COLON POSIX_CHAR_CLS COLON RBRACKET RBRACKET
 
 // negative/positive lookbehind/lookahead
 RgLook =
@@ -171,6 +174,8 @@ RG_UNICODE_PROP =
     '\\p\{P\}' / '\\p\{Pd\}' / '\\p\{Ps\}' / '\\p\{Pe\}' / '\\p\{Pi\}' / '\\p\{Pf\}' / '\\p\{Pc\}' / '\\p\{Po\}' /
     '\\p\{C\}' / '\\p\{Cc\}' / '\\p\{Cf\}' / '\\p\{Co\}' / '\\p\{Cs\}' / '\\p\{Cn\}'
 
+POSIX_CHAR_CLS =
+    'alnum' / 'alpha' / 'digit' / 'lower' / 'upper' / 'punct' / 'xdigit'
 
 // {n}, {n,}, {n,m}
 RgRange =
