@@ -58,3 +58,12 @@ export const MainFieldset = styled.div`
     }
 
 `;
+
+
+// ---------------- <IncludeNonWordsCheckboxSpan /> --------------------------------------
+
+export const IncludeNonWordsCheckboxSpan = styled.span`
+    input[type='checkbox'] {
+        margin: 0;
+    }
+`;

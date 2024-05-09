@@ -54,6 +54,37 @@ export function init({
 
     const layoutViews = he.getLayoutViews();
 
+
+    // --------------- <IncludeNonWordsCheckbox /> ------------------------
+
+    const IncludeNonWordsCheckbox:React.FC<{
+        value:boolean;
+
+    }> = (props) => {
+
+        const handleChange = (value:boolean) => {
+            dispatcher.dispatch(
+                Actions.KeywordsFormSetIncludeNonwords,
+                {
+                    value
+                }
+            );
+        };
+
+        return (
+            <>
+                <label htmlFor="wl-include-non-words-checkbox">
+                    {he.translate('wordlist__incl_non_word_label')}:
+                </label>
+                <S.IncludeNonWordsCheckboxSpan>
+                    <layoutViews.ToggleSwitch checked={props.value} onChange={handleChange}
+                        id="wl-include-non-words-checkbox"/>
+                </S.IncludeNonWordsCheckboxSpan>
+            </>
+        );
+    };
+
+
     const KeywordsForm:React.FC<KeywordsFormState> = (props) => {
 
         const handleAttrChange = (evt:React.ChangeEvent<HTMLSelectElement>) => {
@@ -139,6 +170,7 @@ export function init({
                             htmlClass="freq">
                         <input id="kw-maxfreq" type="text" value={props.wlMaxFreqInput.value} onChange={handleMaxFreq} />
                     </layoutViews.ValidatedItem>
+                    <IncludeNonWordsCheckbox value={props.includeNonWords} />
                 </S.MainFieldset>
                 <div className="buttons">
                     {
