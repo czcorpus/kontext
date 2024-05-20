@@ -528,6 +528,7 @@
         "concview__save_btn": "Zapisz",
         "concview__save_form_line_from_err_msg_{value}": "Werta musi być liczbōm miyndzy 1 i {value}",
         "concview__save_form_line_to_err_msg_{value1}{value2}": "Werta musi być liczbōm miyndzy {value1} i {value2}",
+        "concview__save_kwic_too_large": "KWIC too large UNTRANSLATED",
         "concview__click_to_see_the_tree": "Kliknij, żeby ôbejzdrzeć strōm składnie",
         "concview__click_to_hide_the_corpus": "Kliknij, żeby skryć wynik tego korpusu",
         "concview__click_to_show_the_corpus": "Kliknij, żeby pokŏzać wynik tego korpusu",

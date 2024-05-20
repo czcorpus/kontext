@@ -200,10 +200,16 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
     }
 
     private decodeError(status:Kontext.AsyncTaskInfo, error:Error):string {
-        if (isDownloadType(status.category) &&
-                error instanceof AjaxError &&
-                error.status === HTTP.Status.NotFound) {
-            return this.pageModel.translate('global__result_no_more_avail_for_download_pls_update');
+        if (isDownloadType(status.category) && error instanceof AjaxError) {
+            switch (error.status) {
+                case HTTP.Status.NotFound:
+                    return this.pageModel.translate('global__result_no_more_avail_for_download_pls_update');
+                case HTTP.Status.UnavailableForLegalReasons:
+                    if (status.category === DownloadType.CONCORDANCE) {
+                        return this.pageModel.translate('concview__save_kwic_too_large');
+                    }
+                    break
+            }
         }
         return error.message;
     }

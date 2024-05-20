@@ -269,6 +269,11 @@ def http_action(
 
             except Exception as ex:
                 if aprops.return_type == 'plain':
+                    if isinstance(ex, UserReadableException):
+                        return HTTPResponse(
+                            body=ex.internal_message,
+                            status=ex.code,
+                            headers=resp.output_headers(aprops.return_type))
                     raise
                 await resolve_error(amodel, req, resp, ex, settings.is_debug_mode())
                 if aprops.template:
