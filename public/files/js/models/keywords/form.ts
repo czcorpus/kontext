@@ -75,7 +75,7 @@ export interface KeywordsFormModelArgs {
         wlattr:string;
         wlpat:string;
         score_type:ScoreType;
-        includeNonWords:boolean;
+        include_nonwords:boolean;
     };
 }
 
@@ -119,7 +119,7 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
                 availAttrs,
                 focusCorpusAttrs,
                 manateeIsCustomCNC: layoutModel.getConf<boolean>('manateeIsCustomCNC'),
-                includeNonWords: initialArgs.includeNonWords
+                includeNonWords: initialArgs.include_nonwords
             }
         );
         this.layoutModel = layoutModel;
