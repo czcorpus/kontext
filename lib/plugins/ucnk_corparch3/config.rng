@@ -63,6 +63,12 @@
                     <data type="integer" />
                 </element>
             </optional>
+            <optional>
+                <element name="citation_from_metadata">
+                    <a:documentation>Citation info will be constructed from vlo_metadata table</a:documentation>
+                    <data type="boolean" />
+                </element>
+            </optional>
         </element>
     </start>
 </grammar>
