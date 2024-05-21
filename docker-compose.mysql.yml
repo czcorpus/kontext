@@ -14,8 +14,8 @@ services:
     networks:
       - databases
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "--password=$MYSQL_ROOT_PASSWORD"]
-      interval: 1s
+      test: ["CMD", "healthcheck.sh", "--su-mysql", "--connect", "--innodb_initialized"]
+      interval: 10s
       timeout: 10s
       retries: 5
 
