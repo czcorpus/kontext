@@ -14,7 +14,7 @@ services:
     networks:
       - databases
     healthcheck:
-      test: ["CMD", "healthcheck.sh", "--su-mysql", "--connect", "--innodb_initialized"]
+      test: ["CMD", "healthcheck.sh", "--su-mysql", "--connect"]
       interval: 10s
       timeout: 10s
       retries: 5
