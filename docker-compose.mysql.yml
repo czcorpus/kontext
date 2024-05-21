@@ -19,6 +19,16 @@ services:
       timeout: 10s
       retries: 5
 
+  kontext:
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+  rq-worker:
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
 volumes:
   mdbdata: {}
 
