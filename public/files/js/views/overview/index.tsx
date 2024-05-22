@@ -157,10 +157,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             }
         };
 
+        const renderDescription = () => (
+            props.data.description ? props.data.description : '-'
+        );
+
         return (
             <dl>
             <dt>{he.translate('global__description')}:</dt>
-            <dd>{props.data.description}</dd>
+            <dd>{renderDescription()}</dd>
             <dt>{he.translate('global__size')}:</dt>
             <dd>{he.formatNumber(props.data.size, 0)} {he.translate('global__positions')}
             </dd>
@@ -277,9 +281,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         if (props.data['article_ref'].length > 0 || props.data['default_ref']
                 || props.data['other_bibliography']) {
             return (
-                <>
+                <S.CitationInfo>
                     <h4>
-                        {he.translate('global__corpus_as_resource_{corpus}', {corpus: props.data.corpname})}:
+                        {he.translate('global__corpus_as_resource_{corpus}', {corpus: props.data.corpname})}
                     </h4>
                     <div className="html" dangerouslySetInnerHTML={{__html: props.data.default_ref}} />
                     {props.data.article_ref.length > 0 ?
@@ -296,11 +300,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             <div className="html" dangerouslySetInnerHTML={{__html: props.data.other_bibliography}} />
                         </>) :
                         null}
-                </>
+                </S.CitationInfo>
             );
 
         } else {
-            return <div className="empty-citation-info">{he.translate('global__no_citation_info')}</div>
+            return <S.CitationInfo className="empty-citation-info">{he.translate('global__no_citation_info')}</S.CitationInfo>
         }
     };
 

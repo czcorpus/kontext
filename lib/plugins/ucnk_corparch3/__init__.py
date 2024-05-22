@@ -115,10 +115,11 @@ class UcnkCorpArch3(MySQLCorparch):
 
     def __init__(self, db_backend: Backend, auth: AbstractAuth, user_items: AbstractUserItems, tag_prefix, max_num_hints,
                  max_page_size, access_req_sender, access_req_smtp_server,
-                 access_req_recipients, default_label, registry_lang, citation_from_metadata):
+                 access_req_recipients, default_label, registry_lang, prefer_vlo_metadata):
         super().__init__(
             db_backend=db_backend, user_items=user_items, tag_prefix=tag_prefix,
-            max_num_hints=max_num_hints, max_page_size=max_page_size, registry_lang=registry_lang, citation_from_metadata=citation_from_metadata)
+            max_num_hints=max_num_hints, max_page_size=max_page_size, registry_lang=registry_lang,
+            prefer_vlo_metadata=prefer_vlo_metadata)
         self._auth = auth
         self.access_req_sender = access_req_sender
         self.access_req_smtp_server = access_req_smtp_server
@@ -240,4 +241,4 @@ def create_instance(conf, user_items: AbstractUserItems, auth: AbstractAuth, cnc
         access_req_recipients=conf.get('plugins', 'corparch')['access_req_recipients'],
         default_label=conf.get('plugins', 'corparch')['default_label'],
         registry_lang=conf.get('corpora', 'manatee_registry_locale', 'en_US'),
-        citation_from_metadata=conf.get('citation_from_metadata', False))
+        prefer_vlo_metadata=conf.get('prefer_vlo_metadata', False))
