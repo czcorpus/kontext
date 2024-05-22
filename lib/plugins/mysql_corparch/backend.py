@@ -177,7 +177,7 @@ class Backend(DatabaseBackend):
         lang = user_lang.split('_')[0]
         lang = lang if lang in ('en', 'cs') else 'en'
         await cursor.execute(
-            f'SELECT com.title_{lang} as title, com.authors '
+            f'SELECT IFNULL(com.title_{lang}, com.title_en) AS title, com.authors '
             'FROM vlo_metadata_common AS com '
             'JOIN vlo_metadata_corpus AS cor ON com.corpus_metadata_id = cor.id '
             'WHERE cor.corpus_name = %s AND com.deleted = FALSE', (corpus_id,))
@@ -186,6 +186,8 @@ class Backend(DatabaseBackend):
             return None
         authors = ' – '.join(', '.join(reversed(author.split(' ')))
                              for author in data['authors'].splitlines())
+        if not authors:
+            authors = '[unknown author]'
         return f"{authors}: {data['title']}"
 
     async def load_all_keywords(self, cursor: Cursor) -> Iterable[Dict[str, str]]:

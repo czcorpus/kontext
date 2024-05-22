@@ -64,7 +64,7 @@
                 </element>
             </optional>
             <optional>
-                <element name="citation_from_metadata">
+                <element name="prefer_vlo_metadata">
                     <a:documentation>Citation info will be constructed from vlo_metadata table</a:documentation>
                     <data type="boolean" />
                 </element>
