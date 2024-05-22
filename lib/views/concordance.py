@@ -1382,9 +1382,10 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
         data = kwic.kwicpage(kwic_args)
 
         maxcontext = int(amodel.corp.get_conf('MAXCONTEXT'))
-        for line in data.Lines:
-            if len(line["Kwic"]) > maxcontext:
-                raise UnavailableForLegalReasons('KWIC size too large')
+        if maxcontext:
+            for line in data.Lines:
+                if len(line["Kwic"]) > maxcontext:
+                    raise UnavailableForLegalReasons('KWIC too large')
 
         def mkfilename(suffix): return f'{amodel.args.corpname}-concordance.{suffix}'
         with plugins.runtime.EXPORT as export:
