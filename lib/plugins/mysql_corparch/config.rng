@@ -27,6 +27,13 @@
             <optional>
                 <externalRef href="../common/mysql.rng" />
             </optional>
+            <optional>
+                <element name="prefer_vlo_metadata">
+                    <a:documentation>Citation info will be constructed from the vlo_metadata table which is part of
+                    CNC's implementation of the Clarin Virtual Language Observatory node specification.</a:documentation>
+                    <data type="boolean" />
+                </element>
+            </optional>
         </element>
     </start>
 </grammar>

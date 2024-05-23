@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   kontext-test:
     build:
@@ -8,7 +6,7 @@ services:
 
     command: bash -c "pip3 install pulp piwikapi && python3 tests/runtests.py"
     environment:
-      - REDIS_HOST=kontext_redis_1
+      - REDIS_HOST=kontext-redis-1
     volumes:
       - ./tests:/opt/kontext/tests
       - ./test-data:/opt/kontext/test-data

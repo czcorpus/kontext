@@ -462,7 +462,6 @@ if __name__ == '__main__':
     parser.add_argument('-g', '--webserver-group', type=str, default=def_usr,
                         help='A system group a webserver runs under.')
     args = parser.parse_args()
-    settings.load(args.config_file)
     finfo = FileInfo(args.test_setuid, webserver_user=args.webserver_user, webserver_group=args.webserver_group,
                      config_path=args.config_file)
     print('--------------------------------------')

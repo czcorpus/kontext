@@ -42,7 +42,8 @@ from action.argmapping.conc.other import (
 from action.argmapping.conc.sort import SortFormArgs
 from action.control import http_action
 from action.errors import (
-    ImmediateRedirectException, NotFoundException, UserReadableException)
+    ImmediateRedirectException, NotFoundException, UnavailableForLegalReasons,
+    UserReadableException)
 from action.krequest import KRequest
 from action.model.base import BaseActionModel
 from action.model.concordance import ConcActionModel
@@ -258,6 +259,9 @@ async def _get_conc_cache_status(amodel: ConcActionModel):
             err = worker.get_task_error(cache_status.task_id)
             if err is not None:
                 raise err
+        elif cache_status.normalized_error is not None:
+            raise cache_status.normalized_error
+
         if corpus_info.preflight_subcorpus and cache_status.finished:
             with plugins.runtime.QUERY_PERSISTENCE as qp:
                 await qp.update_preflight_stats(
@@ -1376,6 +1380,12 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
                 [amodel.args.corpname] + amodel.args.align)
 
         data = kwic.kwicpage(kwic_args)
+
+        maxcontext = int(amodel.corp.get_conf('MAXCONTEXT'))
+        if maxcontext:
+            for line in data.Lines:
+                if len(line["Kwic"]) > maxcontext:
+                    raise UnavailableForLegalReasons('KWIC too large')
 
         def mkfilename(suffix): return f'{amodel.args.corpname}-concordance.{suffix}'
         with plugins.runtime.EXPORT as export:

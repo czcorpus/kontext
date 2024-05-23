@@ -22,7 +22,8 @@
 
 import { IFullActionControl } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
-import { tap, map, concatMap, reduce } from 'rxjs/operators';
+import { AjaxTimeoutError } from 'rxjs/ajax';
+import { tap, map, concatMap, reduce, catchError } from 'rxjs/operators';
 import { Dict, tuple, List, pipe, HTTP, Rx } from 'cnc-tskit';
 
 import * as Kontext from '../../types/kontext';
@@ -1119,9 +1120,20 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             ),
             this.createPreflightArgs(contextData, ttSelections, preflightSubc),
             {
-                contentType: 'application/json'
+                contentType: 'application/json',
+                timeout: this.pageModel.getConf('PreflightTimeoutMs') || 0
             }
         ).pipe(
+            catchError(
+                err => {
+                    if (err instanceof AjaxTimeoutError) {
+                        return rxOf({
+                            sizeIpm: preflightSubc.threshold_ipm + 1
+                        });
+                    }
+                    throw err;
+                }
+            ),
             map(
                 ans => ({
                     contextData,

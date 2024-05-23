@@ -549,6 +549,7 @@
         "concview__save_btn": "Shrani",
         "concview__save_form_line_from_err_msg_{value}": "Vrednost mora biti število med 1 in {value}",
         "concview__save_form_line_to_err_msg_{value1}{value2}": "Vrednost mora biti število med {value1} in {value2}",
+        "concview__save_kwic_too_large": "KWIC too large UNTRANSLATED",
         "concview__click_to_see_the_tree": "Kliknite za ogled sintaktičnega drevesa",
         "concview__click_to_hide_the_corpus": "Kliknite, da skrijete rezultat tega korpusa",
         "concview__click_to_show_the_corpus": "Kliknite za prikaz rezultata tega korpusa",

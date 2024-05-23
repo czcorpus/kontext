@@ -529,6 +529,7 @@
         "concview__save_btn": "Save",
         "concview__save_form_line_from_err_msg_{value}": "The value must be a number between 1 and {value}",
         "concview__save_form_line_to_err_msg_{value1}{value2}": "The value must be a number between {value1} and {value2}",
+        "concview__save_kwic_too_large": "KWIC too large",
         "concview__click_to_see_the_tree": "Click to see the syntax tree",
         "concview__click_to_hide_the_corpus": "Click to hide the result of this corpus",
         "concview__click_to_show_the_corpus": "Click to show the result of this corpus",

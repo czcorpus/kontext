@@ -20,6 +20,7 @@ from functools import wraps
 from typing import (
     Any, Awaitable, Callable, Coroutine, Dict, Optional, Tuple, Type, Union)
 
+import aiohttp
 import settings
 from action.argmapping.action import create_mapped_args
 from action.errors import (
@@ -245,27 +246,34 @@ def http_action(
             else:
                 amodel = BaseActionModel(req, resp, aprops, shared_data)
             try:
-                await amodel.init_session()
-                if _is_authorized_to_execute_action(amodel, aprops):
-                    await amodel.pre_dispatch(None)
-                    ans = await func(amodel, req, resp)
-                    if resp.result and ans:
-                        raise RuntimeError(
-                            'Cannot use both KResponse result container and legacy result return')
-                    elif ans is not None:
-                        resp.set_result(ans)
-                    await amodel.post_dispatch(aprops, resp, None)
-                else:
-                    amodel = UserActionModel(req, resp, aprops, shared_data)
-                    await amodel.pre_dispatch(None)
-                    await amodel.post_dispatch(aprops, None, None)
-                    raise ForbiddenException(req.translate('Access forbidden - please log-in.'))
+                async with aiohttp.ClientSession() as client:
+                    req._request.ctx.http_client = client
+                    await amodel.init_session()
+                    if _is_authorized_to_execute_action(amodel, aprops):
+                        await amodel.pre_dispatch(None)
+                        ans = await func(amodel, req, resp)
+                        if resp.result and ans:
+                            raise RuntimeError(
+                                'Cannot use both KResponse result container and legacy result return')
+                        elif ans is not None:
+                            resp.set_result(ans)
+                        await amodel.post_dispatch(aprops, resp, None)
+                    else:
+                        amodel = UserActionModel(req, resp, aprops, shared_data)
+                        await amodel.pre_dispatch(None)
+                        await amodel.post_dispatch(aprops, None, None)
+                        raise ForbiddenException(req.translate('Access forbidden - please log-in.'))
 
             except ImmediateRedirectException as ex:
                 return response.redirect(ex.url, status=ex.code)
 
             except Exception as ex:
                 if aprops.return_type == 'plain':
+                    if isinstance(ex, UserReadableException):
+                        return HTTPResponse(
+                            body=ex.internal_message,
+                            status=ex.code,
+                            headers=resp.output_headers(aprops.return_type))
                     raise
                 await resolve_error(amodel, req, resp, ex, settings.is_debug_mode())
                 if aprops.template:

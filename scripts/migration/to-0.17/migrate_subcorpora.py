@@ -229,7 +229,6 @@ if __name__ == "__main__":
         help='Set environment to UCNK (likely suitable only for the Institute of the Czech National Corpus)')
     args = parser.parse_args()
 
-    settings.load(args.config_path, defaultdict(lambda: None))
     initializer.init_plugin('integration_db')
 
     users_subcpath = settings.get(

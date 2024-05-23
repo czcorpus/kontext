@@ -66,6 +66,15 @@ class NotFoundException(UserReadableException):
         super().__init__(message, code=404, internal_message=internal_message)
 
 
+class UnavailableForLegalReasons(UserReadableException):
+    """
+    Raised in case response could be used to violate legal arangements, eg. copyright
+    """
+
+    def __init__(self, message, internal_message=None):
+        super().__init__(message, code=451, internal_message=internal_message)
+
+
 class ForbiddenException(UserReadableException):
     """
     Raised in case user access is forbidden

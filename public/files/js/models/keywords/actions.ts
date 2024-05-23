@@ -146,4 +146,10 @@ export class Actions {
     }> = {
         name: 'KEYWORDS_RESULT_CLOSE_SAVE_FORM'
     };
+
+    static KeywordsFormSetIncludeNonwords:Action<{
+        value:boolean;
+    }> = {
+        name: 'KEYWORDS_SET_INCLUDE_NONWORDS'
+    };
 }

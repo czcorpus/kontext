@@ -47,20 +47,14 @@ except ImportError:
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'lib'))  # application libraries
 
-CONF_PATH = os.getenv(
-    'KONTEXT_CONF', os.path.realpath(f'{os.path.dirname(os.path.realpath(__file__))}/../conf/config.xml'))
 LOCALE_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), '../locale'))
 JWT_COOKIE_NAME = 'kontext_jwt'
 JWT_ALGORITHM = 'HS256'
 DFLT_HTTP_CLIENT_TIMEOUT = 20
-# a file for storing soft-reset token (the stored value is auto-generated on each (re)start)
-SOFT_RESET_TOKEN_FILE = os.path.join(
-    tempfile.gettempdir(), 'kontext_srt', hashlib.sha1(CONF_PATH.encode()).hexdigest())
 SIGNAL_CHANNEL_ID = "channel:signals"
 
 from typing import Optional
 
-import aiohttp
 import jwt
 import plugins
 import plugins.export
@@ -95,6 +89,9 @@ from views.wordlist import bp as wordlist_bp
 # we ensure that the application's locale is always the same
 locale.setlocale(locale.LC_ALL, 'en_US.utf-8')
 logger = logging.getLogger()  # root logger
+# a file for storing soft-reset token (the stored value is auto-generated on each (re)start)
+SOFT_RESET_TOKEN_FILE = os.path.join(
+    tempfile.gettempdir(), 'kontext_srt', hashlib.sha1(settings.CONF_PATH.encode()).hexdigest())
 
 
 def setup_logger(conf) -> Optional[logging.handlers.QueueListener]:
@@ -121,8 +118,6 @@ def setup_logger(conf) -> Optional[logging.handlers.QueueListener]:
     logger.setLevel(logging.INFO if not settings.is_debug_mode() else logging.DEBUG)
     return listener
 
-
-settings.load(path=CONF_PATH)
 
 if settings.get('global', 'manatee_path', None):
     sys.path.insert(0, settings.get('global', 'manatee_path'))
@@ -195,7 +190,7 @@ async def main_process_init(*_):
 
 @application.listener('before_server_start')
 async def server_init(app: Sanic, loop: asyncio.BaseEventLoop):
-    setproctitle(f'sanic-kontext [{CONF_PATH}][worker]')
+    setproctitle(f'sanic-kontext [{settings.CONF_PATH}][worker]')
     # workers will handle SIGUSR1
     loop.add_signal_handler(signal.SIGUSR1, lambda: asyncio.create_task(sigusr1_handler()))
     # init extensions fabrics
@@ -269,11 +264,6 @@ async def extract_jwt(request: Request):
 
 
 @application.middleware('request')
-async def set_http_client(request: Request):
-    request.ctx.http_client = await aiohttp.ClientSession().__aenter__()
-
-
-@application.middleware('request')
 async def set_locale(request: Request):
     request.ctx.locale = get_locale(request)
     if request.ctx.locale in application.ctx.translations:
@@ -297,12 +287,6 @@ async def store_jwt(request: Request, response: HTTPResponse):
             or request.headers.get('x-forwarded-proto') == 'https'
         )
     )
-
-
-@application.middleware('response')
-async def close_http_client(request: Request, response: HTTPResponse):
-    await request.ctx.http_client.__aexit__(None, None, None)
-    await asyncio.sleep(0)
 
 
 @application.signal('kontext.internal.reset')
@@ -400,7 +384,7 @@ if __name__ == '__main__':
             os.environ['_DEBUGPY_RUNNING'] = '1'
 
     try:
-        setproctitle(f'sanic-kontext [{CONF_PATH}][master]')
+        setproctitle(f'sanic-kontext [{settings.CONF_PATH}][master]')
         if args.debugmode and not settings.is_debug_mode():
             settings.activate_debug()
         if settings.is_debug_mode():

@@ -33,7 +33,6 @@ import plugins
 import settings
 from util import as_sync
 
-settings.load(os.path.join(APP_PATH, 'conf', 'config.xml'))
 if settings.get('global', 'manatee_path', None):
     sys.path.insert(0, settings.get('global', 'manatee_path'))
 

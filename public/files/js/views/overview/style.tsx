@@ -111,7 +111,7 @@ export const CorpusInfoBox = styled.div`
     table.struct-list th,
     table.attrib-list td,
     table.struct-list td {
-        font-size: 0.8em;
+        font-size: 0.9em;
     }
 
     table.attrib-list th,
@@ -217,4 +217,16 @@ export const CorpusInfoBox = styled.div`
         padding: 0.2em 0.4em;
         font-size: small;
     }
+`;
+
+// ---------------- <CitationInfo /> --------------
+export const CitationInfo = styled.div`
+
+    padding-top: 0.4em;
+
+    h4 {
+        margin-bottom: 1em;
+        font-size: 1.3em;
+    }
+
 `;

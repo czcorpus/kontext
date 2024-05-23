@@ -49,6 +49,7 @@ export interface KeywordsFormState {
     wlMinFreqInput:FormValue<string>;
     wlMaxFreqInput:FormValue<string>;
     precalcTasks:Array<AsyncTaskInfo<{}>>;
+    includeNonWords:boolean;
     manateeIsCustomCNC:boolean;
 }
 
@@ -74,6 +75,7 @@ export interface KeywordsFormModelArgs {
         wlattr:string;
         wlpat:string;
         score_type:ScoreType;
+        include_nonwords:boolean;
     };
 }
 
@@ -117,6 +119,7 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
                 availAttrs,
                 focusCorpusAttrs,
                 manateeIsCustomCNC: layoutModel.getConf<boolean>('manateeIsCustomCNC'),
+                includeNonWords: initialArgs.include_nonwords
             }
         );
         this.layoutModel = layoutModel;
@@ -274,6 +277,13 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
         );
 
         this.addActionHandler(
+            Actions.KeywordsFormSetIncludeNonwords,
+            (state, action) => {
+                state.includeNonWords = action.payload.value;
+            }
+        );
+
+        this.addActionHandler(
             Actions.RegisterPrecalcTasks,
             (state, action) => {
                 state.precalcTasks = action.payload.tasks;
@@ -395,7 +405,7 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
             usesubcorp: subcorp,
             ref_corpname: state.refCorp,
             ref_usesubcorp: state.refSubcorp,
-            include_nonwords: false,
+            include_nonwords: state.includeNonWords,
             wlattr: state.attr,
             wlminfreq: parseInt(state.wlMinFreqInput.value),
             wlmaxfreq: parseInt(state.wlMaxFreqInput.value),

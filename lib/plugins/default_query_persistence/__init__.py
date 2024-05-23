@@ -23,13 +23,11 @@ as a back-end.
 required config.xml entries: please see config.rng
 """
 
-import hashlib
 import logging
 import os
 import re
 import sqlite3
 import time
-import uuid
 from typing import Union
 
 import plugins
@@ -41,7 +39,6 @@ from plugin_types.query_persistence import AbstractQueryPersistence
 from plugin_types.query_persistence.common import (
     ID_KEY, PERSIST_LEVEL_KEY, QUERY_KEY, USER_ID_KEY, generate_idempotent_id)
 from plugins import inject
-from util import int2chash
 
 DEFAULT_TTL_DAYS = 100
 
@@ -142,7 +139,15 @@ class DefaultQueryPersistence(AbstractQueryPersistence):
     This class stores user's queries in their internal form (see Kontext.q attribute).
     """
 
-    def __init__(self, db: KeyValueStorage, auth: AbstractAuth, ttl_days: int, anonymous_ttl_days: int, archive_backend: Union[DbPluginArchBackend, Sqlite3ArchBackend], settings):
+    def __init__(
+            self,
+            db: KeyValueStorage,
+            auth: AbstractAuth,
+            ttl_days: int,
+            anonymous_ttl_days: int,
+            archive_backend: Union[DbPluginArchBackend, Sqlite3ArchBackend],
+            settings
+    ):
         super().__init__(settings)
         self._db = db
         self._auth = auth
@@ -310,14 +315,14 @@ def create_instance(settings, db, auth):
     if archive_dir:
         backend = Sqlite3ArchBackend(archive_dir=archive_dir)
     else:
-        logging.getLogger(__name__).warning('Using DB plug-in as archiving storage for concordances. '
-                                            'In case you use redis_db then please consider setting archive_dir '
-                                            'for default_conc_persistence to prevent filling up RAM with archived '
-                                            'concordances.')
-        backend = DbPluginArchBackend(db=db, ttl=ttl_days * 24 * 3600,
-                                      anonymous_ttl=anonymous_ttl_days * 24 * 3600)
+        logging.getLogger(__name__).warning(
+            'Using DB plug-in as archiving storage for concordances. '
+            'In case you use redis_db then please consider setting archive_dir '
+            'for default_conc_persistence to prevent filling up RAM with archived '
+            'concordances.')
+        backend = DbPluginArchBackend(
+            db=db, ttl=ttl_days * 24 * 3600, anonymous_ttl=anonymous_ttl_days * 24 * 3600)
 
-    return DefaultQueryPersistence(db=db, auth=auth,
-                                   ttl_days=ttl_days,
-                                   anonymous_ttl_days=anonymous_ttl_days,
-                                   archive_backend=backend)
+    return DefaultQueryPersistence(
+        db=db, auth=auth, ttl_days=ttl_days, anonymous_ttl_days=anonymous_ttl_days, archive_backend=backend,
+        settings=settings)

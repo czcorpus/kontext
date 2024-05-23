@@ -1,5 +1,3 @@
-version: '3.7'
-
 services:
   mariadb:
     build:
@@ -16,10 +14,20 @@ services:
     networks:
       - databases
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "--password=$MYSQL_ROOT_PASSWORD"]
-      interval: 1s
+      test: ["CMD", "healthcheck.sh", "--su-mysql", "--connect"]
+      interval: 10s
       timeout: 10s
       retries: 5
+
+  kontext:
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+  rq-worker:
+    depends_on:
+      mariadb:
+        condition: service_healthy
 
 volumes:
   mdbdata: {}

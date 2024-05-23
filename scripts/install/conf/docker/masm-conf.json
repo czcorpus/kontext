@@ -22,7 +22,7 @@
     },
     "kontextSoftResetURL": ["http://localhost:8989/kontext-services/soft-reset-all"],
     "cncDb": {
-        "host": "kontext_mariadb_1:3306",
+        "host": "kontext-mariadb-1:3306",
         "user": "kontext",
         "passwd": "kontext-secret",
         "db": "kontext"
@@ -31,7 +31,7 @@
         "db": {
             "type": "mysql",
             "name": "liveattrs",
-            "host": "kontext_mariadb_1:3306",
+            "host": "kontext-mariadb-1:3306",
             "user": "liveattrs",
             "password": "liveattrs-secret",
             "preconfSettings": []
