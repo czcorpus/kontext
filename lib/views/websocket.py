@@ -13,6 +13,7 @@
 # GNU General Public License for more details.
 
 import asyncio
+import aiohttp
 from typing import Optional, Type, TypeVar
 
 import settings
@@ -64,11 +65,13 @@ async def _init_action_model(req: Request, action_model: Type[T], access_level: 
     shared_data = ModelsSharedData(application.ctx.tt_cache, dict())
     krequest = KRequest(req, app_url_prefix, None)
     amodel = action_model(krequest, None, aprops, shared_data)
-    await amodel.init_session()
-    if not _is_authorized_to_execute_action(amodel, aprops):
-        raise PermissionError
-    await amodel.pre_dispatch(None)
-    return amodel
+    async with aiohttp.ClientSession() as client:
+        req.ctx.http_client = client
+        await amodel.init_session()
+        if not _is_authorized_to_execute_action(amodel, aprops):
+            raise PermissionError
+        await amodel.pre_dispatch(None)
+        return amodel
 
 
 async def _prepare_websocket_amodel(req: Request, ws: Websocket, amodel: Type[T], access_level: int) -> T:
