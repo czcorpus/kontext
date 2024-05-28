@@ -39,7 +39,7 @@ function importTextChunk(
     roles:Array<[string, number]>
 ):TextChunk {
     const posattrs = roles.length === 2 ?
-        // for single addiditonal attribute all posattr parts are in fact one attr
+        // for single additional attribute all posattr parts are in fact one attr
         [(item.posattrs || []).join('/')] :
         item.posattrs || [];
 
