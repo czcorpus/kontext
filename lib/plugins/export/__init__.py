@@ -63,12 +63,26 @@ class AbstractConcExportMixin(object):
                 ans.append([str(item['str']).strip()])
             else:
                 ans.append([str(item['str']).strip()])
+
             if add_tail:
-                # enumerate from 1, merged_attrs[0] corresponds to item['str']
-                for i, posattr in enumerate(item.get('posattrs', []), 1):
-                    # display only user set attrs, filter out internals
-                    if AttrRole.is_role(merged_attrs[i][1], AttrRole.USER):
-                        ans[-1].append(posattr)
+                # in case of single additional attr, all posattrs parts are in fact one attr
+                posattrs = ['/'.join(item.get('posattrs', []))
+                            ] if len(merged_attrs) == 2 else item.get('posattrs', [])
+                # there can be tokens containing `/` like `km/h`
+                # manatee also uses `/` as separator of attrs
+                # in this case there will be more items in `item.possattrs` after splitting the attr string
+                # we can not confidently assign values to its requested attributes
+                if len(merged_attrs) - 1 != len(posattrs):
+                    ans[-1].append(
+                        f'UNPARSEABLE TOKENS {"/".join(attr[0] for attr in merged_attrs[1:])}:{"/".join(posattrs)}')
+
+                else:
+                    # enumerate from 1, merged_attrs[0] corresponds to item['str']
+                    for i, posattr in enumerate(posattrs, 1):
+                        # display only user set attrs, filter out internals
+                        if AttrRole.is_role(merged_attrs[i][1], AttrRole.USER):
+                            ans[-1].append(posattr)
+
         return ' '.join('/'.join(x) for x in ans).strip()
 
     def _process_lang(

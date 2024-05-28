@@ -38,23 +38,27 @@ function importTextChunk(
     startWlIdx:number,
     roles:Array<[string, number]>
 ):TextChunk {
+    const posattrs = roles.length === 2 ?
+        // for single addiditonal attribute all posattr parts are in fact one attr
+        [(item.posattrs || []).join('/')] :
+        item.posattrs || [];
 
     // there can be tokens containing `/` like `km/h`
     // manatee also uses `/` as separator of attrs
     // in this case there will be more items in `item.possattrs` after splitting the attr string
     // we can not confidently assign values to its requested attributes
-    const description = ((item.posattrs || []).length + 1 > roles.length) ?
+    const description = (posattrs.length !== roles.length - 1) ?
         [
             'concview__unparseable_token',
             `${roles[0][0]}: ${item.str}`,
-            `${roles.slice(1).map(v => v[0]).join('/')}: ${item.posattrs.join('/')}`,
+            `${roles.slice(1).map(v => v[0]).join('/')}: ${posattrs.join('/')}`,
         ] :
         undefined;
 
     const displayPosAttrs = List.filter(
         // tslint:disable-next-line:no-bitwise
         (_, i) => i+1 > roles.length-1 ? false : (roles[i+1][1] & PosAttrRole.USER) === PosAttrRole.USER,
-        item.posattrs || [],
+        posattrs,
     );
     if (mainAttrIdx === -1) {
         return {
@@ -70,7 +74,7 @@ function importTextChunk(
             closeLink: item.close_link ? {speechPath: item.close_link.speech_path} : undefined,
             continued: item.continued,
             showAudioPlayer: false,
-            posAttrs: item.posattrs || [],
+            posAttrs: posattrs,
             displayPosAttrs,
             description,
         };
@@ -91,7 +95,7 @@ function importTextChunk(
             closeLink: item.close_link ? {speechPath: item.close_link.speech_path} : undefined,
             continued: item.continued,
             showAudioPlayer: false,
-            posAttrs: item.posattrs || [],
+            posAttrs: posattrs,
             displayPosAttrs,
             description,
         };
