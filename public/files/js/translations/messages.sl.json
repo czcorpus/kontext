@@ -609,6 +609,7 @@
         "options__conc_kwic_context": "Velikost konteksta KWIC (položaji)",
         "options__conc_show_line_nums": "Prikaži številke vrstic",
         "options__use_rich_query_editor": "Uporabi urejevalnik za kompleksne poizvedbe",
+        "options__refs_max_width": "Max. width (in characters) of the meta-information column UNTRANSLATED",
         "options__worlist_fieldset_heading": "Seznam besed",
         "options__wordlist_page_size": "Velikost strani (število vrstic)",
         "options__freq_fieldset_heading": "Frekvenčna porazdelitev",

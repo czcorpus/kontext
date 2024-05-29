@@ -24,14 +24,30 @@ from action.model.concordance import ConcActionModel
 from action.model.corpus import CorpusActionModel
 from action.model.user import UserActionModel
 from action.response import KResponse
+from action.errors import UserReadableException
 from sanic import Blueprint
 
 bp = Blueprint('options', url_prefix='options')
 
 
 def _set_new_viewopts(
-        amodel: UserActionModel, pagesize=0, newctxsize=0, ctxunit='', line_numbers=False, shuffle=False, wlpagesize=0,
-        fmaxitems=0, fdefault_view='charts', citemsperpage=0, pqueryitemsperpage=0, rich_query_editor=False, subcpagesize=0, kwpagesize=0):
+        amodel: UserActionModel,
+        pagesize=0,
+        newctxsize=0,
+        ctxunit='',
+        line_numbers=False,
+        shuffle=False,
+        wlpagesize=0,
+        fmaxitems=0,
+        fdefault_view='charts',
+        citemsperpage=0,
+        pqueryitemsperpage=0,
+        rich_query_editor=False,
+        ref_max_width=0,
+        subcpagesize=0,
+        kwpagesize=0):
+    if pagesize <= 0:
+        raise ValueError('invalid value for pagesize')
     amodel.args.pagesize = pagesize
     if ctxunit == '@pos':
         ctxunit = ''
@@ -41,13 +57,28 @@ def _set_new_viewopts(
         amodel.args.kwicrightctx = new_kwicright
     amodel.args.line_numbers = line_numbers
     amodel.args.shuffle = int(shuffle)
+    if wlpagesize <= 0:
+        raise ValueError('invalid value for wlpagesize')
     amodel.args.wlpagesize = wlpagesize
+    if fmaxitems <= 0:
+        raise ValueError('invalid value for fmaxitems')
     amodel.args.fmaxitems = fmaxitems
     amodel.args.fdefault_view = fdefault_view
+    if citemsperpage <= 0:
+        raise ValueError('invalid value for citemsperpage')
     amodel.args.citemsperpage = citemsperpage
+    if pqueryitemsperpage <= 0:
+        raise ValueError('invalid value for pqueryitemsperpage')
     amodel.args.pqueryitemsperpage = pqueryitemsperpage
     amodel.args.rich_query_editor = rich_query_editor
+    if ref_max_width <= 0:
+        raise ValueError('invalid value for ref_max_width')
+    amodel.args.ref_max_width = ref_max_width
+    if subcpagesize <= 0:
+        raise ValueError('invalid value for subcpagesize')
     amodel.args.subcpagesize = subcpagesize
+    if kwpagesize <= 0:
+        raise ValueError('invalid value for kwpagesize')
     amodel.args.kwpagesize = kwpagesize
 
 
@@ -177,6 +208,7 @@ async def viewopts(amodel: UserActionModel, req: KRequest, resp: KResponse):
         citemsperpage=amodel.args.citemsperpage,
         pqueryitemsperpage=amodel.args.pqueryitemsperpage,
         rich_query_editor=amodel.args.rich_query_editor,
+        ref_max_width=amodel.args.ref_max_width,
         subcpagesize=amodel.args.subcpagesize,
         kwpagesize=amodel.args.kwpagesize,
     )
@@ -185,24 +217,28 @@ async def viewopts(amodel: UserActionModel, req: KRequest, resp: KResponse):
 @bp.route('/viewoptsx', ['POST'])
 @http_action(return_type='json', action_model=UserActionModel)
 async def viewoptsx(amodel: UserActionModel, req: KRequest, resp: KResponse):
-    _set_new_viewopts(
-        amodel,
-        pagesize=req.json.get('pagesize'),
-        newctxsize=req.json.get('newctxsize'),
-        ctxunit=req.json.get('ctxunit'),
-        line_numbers=req.json.get('line_numbers'),
-        wlpagesize=req.json.get('wlpagesize'),
-        fmaxitems=req.json.get('fmaxitems'),
-        fdefault_view=req.json.get('fdefault_view'),
-        citemsperpage=req.json.get('citemsperpage'),
-        pqueryitemsperpage=req.json.get('pqueryitemsperpage'),
-        rich_query_editor=req.json.get('rich_query_editor'),
-        subcpagesize=req.json.get('subcpagesize'),
-        kwpagesize=req.json.get('kwpagesize'),
-    )
-    await amodel.save_options(
-        optlist=[field.name for field in fields(GeneralOptionsArgs)])
-    return {}
+    try:
+        _set_new_viewopts(
+            amodel,
+            pagesize=req.json.get('pagesize'),
+            newctxsize=req.json.get('newctxsize'),
+            ctxunit=req.json.get('ctxunit'),
+            line_numbers=req.json.get('line_numbers'),
+            wlpagesize=req.json.get('wlpagesize'),
+            fmaxitems=req.json.get('fmaxitems'),
+            fdefault_view=req.json.get('fdefault_view'),
+            citemsperpage=req.json.get('citemsperpage'),
+            pqueryitemsperpage=req.json.get('pqueryitemsperpage'),
+            rich_query_editor=req.json.get('rich_query_editor'),
+            ref_max_width=req.json.get('ref_max_width'),
+            subcpagesize=req.json.get('subcpagesize'),
+            kwpagesize=req.json.get('kwpagesize'),
+        )
+        await amodel.save_options(
+            optlist=[field.name for field in fields(GeneralOptionsArgs)])
+        return {}
+    except ValueError as ex:
+        raise UserReadableException(ex, code=422)
 
 
 @bp.route('/toggle_conc_dashboard', ['POST'])

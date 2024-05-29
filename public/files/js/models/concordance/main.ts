@@ -119,6 +119,8 @@ export interface ConcordanceModelState {
 
     viewMode:ConcViewMode;
 
+    refMaxWidth:number;
+
     attrViewMode:ViewOptions.AttrViewMode;
 
     showLineNumbers:boolean;
@@ -254,6 +256,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 highlightedMatches: [],
                 highlightedMatchConcId: null,
                 viewAttrs,
+                refMaxWidth: lineViewProps.RefMaxWidth,
                 numItemsInLockedGroups: lineViewProps.NumItemsInLockedGroups,
                 pagination: lineViewProps.pagination, // TODO possible mutable mess
                 currentPage: lineViewProps.currentPage || 1,
@@ -264,7 +267,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 showAnonymousUserWarn: lineViewProps.anonymousUser,
                 supportsTokenConnect: lineViewProps.supportsTokenConnect,
                 supportsTokensLinking: lineViewProps.supportsTokensLinking,
-                emptyRefValPlaceholder: '\u2014',
+                emptyRefValPlaceholder: 'N/A',
                 lineGroupIds: attachColorsToIds(
                     layoutModel.getConf<Array<number>>('LinesGroupsNumbers'),
                     v => v,
@@ -684,6 +687,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                     this.changeState(state => {
                         state.showLineNumbers = action.payload.showLineNumbers;
                         state.currentPage = 1;
+                        state.refMaxWidth = action.payload.refMaxWidth;
                     });
                     this.loadConcPage().subscribe({
                         next: ([resp,]) => {
@@ -695,7 +699,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                                     corpusIpm: resp.result_relative_freq,
                                     concSize: resp.concsize,
                                     fullSize: resp.fullsize,
-                                    queryChainSize: List.size(resp.query_overview)
+                                    queryChainSize: List.size(resp.query_overview),
                                 }
                             });
                             this.emitChange();
@@ -1186,6 +1190,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             viewmode: this.state.viewMode,
             format: 'json'
         };
+
         if (concId) {
             args.q = [concId];
         }

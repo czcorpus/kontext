@@ -20,6 +20,7 @@
 
 import * as React from 'react';
 import { IActionDispatcher } from 'kombo';
+import { List, Strings, pipe } from 'cnc-tskit';
 
 import * as Kontext from '../../../types/kontext';
 import { ConcordanceModel } from '../../../models/concordance/main';
@@ -60,6 +61,7 @@ export interface LineExtrasViews {
         tokenNumber:number;
         lineIdx:number;
         data:Array<string>;
+        refMaxWidth:number;
         emptyRefValPlaceholder:string;
         refsDetailClickHandler:(corpusId:string, tokNum:number, lineIdx:number)=>void;
     }>;
@@ -236,17 +238,88 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         );
     };
 
+    const EmptyVal:React.FC<{}> = (props) => (
+        <S.EmptyVal>N/A</S.EmptyVal>
+    );
+
     // ------------------------- <RefInfo /> ---------------------
+
+    function normalizeLabels(data:Array<string>, maxWidth: number) {
+        return List.foldl<
+            string,
+            {
+                total:number;
+                i:number;
+                text:Array<{t:string|undefined; m:string}>;
+                shortenedAt:number;
+            }>(
+            (acc, x) => {
+                const currLen = x ? x.length : 4; // placeholder takes space too
+                if (acc.shortenedAt > 0) {
+                    return {
+                        ...acc,
+                        i: acc.i + 1,
+                        total: acc.total + currLen,
+                        text: List.concat(
+                            [x ? {t: undefined, m: x} : {t: undefined, m: 'N/A'}],
+                            acc.text
+                        )
+                    };
+                }
+                let chunk:string;
+                if (acc.total + currLen > maxWidth && acc.shortenedAt == 0) {
+                    if (maxWidth - acc.total > 0) {
+                        acc.shortenedAt = acc.i;
+                        chunk = Strings.shortenText(x, maxWidth - acc.total, '');
+
+                    } else {
+                        acc.shortenedAt = acc.i - 1;
+                        chunk = undefined;
+                    }
+
+                } else {
+                    chunk = x;
+                }
+                return {
+                    ...acc,
+                    total: acc.total + currLen,
+                    i: acc.i + 1,
+                    text: List.concat(
+                        [x ? {t: chunk, m: x} : {t: undefined, m: 'N/A'}],
+                        acc.text
+                    )
+                };
+            },
+            {total: 0, shortenedAt: 0, i: 0, text: []},
+            data
+        );
+    }
 
 
     const RefInfo:LineExtrasViews['RefInfo']  = (props) => {
+        const normLabels = normalizeLabels(props.data, props.refMaxWidth);
+        const title = normLabels.shortenedAt < normLabels.i ?
+            List.map(x => x.m, normLabels.text).join('\u00a0\u2726\u00a0') + `\n(${he.translate('concview__click_for_details')})` :
+            he.translate('concview__click_for_details');
         return (
-            <a title={he.translate('concview__click_for_details')}
+            <a title={title}
                     onClick={()=>props.refsDetailClickHandler(props.corpusId, props.tokenNumber, props.lineIdx)}>
-                {props.data.map((x, i) => x !== '' ?
-                    <layoutViews.Shortener key={`${i}:${x.substr(0, 5)}`} text={x} limit={50} className="item" /> :
-                    props.emptyRefValPlaceholder)
-                }
+                {pipe(
+                    normLabels.text,
+                    List.filter((_, i) => normLabels.shortenedAt > 0 ? i <= normLabels.shortenedAt : true),
+                    List.map(
+                        (x, i) => x.t ?
+                            <React.Fragment key={`item:${i}:${x.t}`}>
+                                <span className="item">{x.t}</span>
+                                {i < normLabels.shortenedAt ? '\u00a0\u2726\u00a0' : ''}
+                            </React.Fragment> :
+                            <React.Fragment key={`item:empty:${i}`}>
+                                <EmptyVal />
+                                {i < normLabels.shortenedAt ? '\u00a0\u2726\u00a0' : ''}
+                            </React.Fragment>
+                    )
+                )}
+                {normLabels.shortenedAt > 0 ? '\u2026' : ''}
             </a>
         );
     };

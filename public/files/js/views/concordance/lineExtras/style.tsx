@@ -85,3 +85,10 @@ export const ManualSelectionTd = styled.td`
 
 `;
 
+// ---------------- <EmptyVal> ----------------------
+
+export const EmptyVal = styled.span`
+
+    color: ${theme.colorLightText};
+`
+
