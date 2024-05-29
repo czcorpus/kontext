@@ -47,6 +47,13 @@ export class Actions {
         name: 'GENERAL_VIEW_OPTIONS_SET_CONTEXTSIZE'
     };
 
+    static GeneralSetMaxRefsWidth:Action<{
+        value:string;
+        debounced?:boolean;
+    }> = {
+        name: 'GENERAL_VIEW_OPTIONS_SET_MAX_REFS_WIDTH'
+    };
+
     static GeneralSetLineNums:Action<{
         value:boolean;
     }> = {

@@ -589,6 +589,7 @@
         "options__conc_kwic_context": "KWIC Context size (positions)",
         "options__conc_show_line_nums": "Show line numbers",
         "options__use_rich_query_editor": "Use rich query editor",
+        "options__refs_max_width": "Max. width (in characters) of the meta-information column",
         "options__worlist_fieldset_heading": "Word list",
         "options__wordlist_page_size": "Page size (number of lines)",
         "options__freq_fieldset_heading": "Frequency distribution",

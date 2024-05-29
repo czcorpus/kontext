@@ -278,6 +278,7 @@ export interface ConcServerArgs {
     ctxattrs:Array<string>;
     structs:Array<string>;
     refs:Array<string>;
+    ref_max_width:number;
     fromp:number;
     q:Array<string>;
     cutoff:number;
@@ -449,6 +450,11 @@ export interface ViewConfiguration {
      * Determine concordance view mode
      */
     ViewMode:ConcViewMode;
+
+    /**
+     * Width of the refs (= metadata) column section in num. of characters
+     */
+    RefMaxWidth:number;
 
     /**
      * How we should display positional attributes

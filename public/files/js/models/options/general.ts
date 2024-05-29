@@ -43,6 +43,7 @@ interface GeneralOptionsArgsSubmit {
     citemsperpage:number;
     pqueryitemsperpage:number;
     rich_query_editor:boolean;
+    ref_max_width:number;
     subcpagesize:number;
     kwpagesize:number;
 }
@@ -56,6 +57,8 @@ export interface GeneralViewOptionsModelState {
     wlpagesize:Kontext.FormValue<string>;
 
     fmaxitems:Kontext.FormValue<string>;
+
+    refMaxWidth:Kontext.FormValue<string>;
 
     fdefaultView:FreqResultViews;
 
@@ -88,7 +91,8 @@ type DebouncedActions =
     typeof Actions.GeneralSetFmaxItems |
     typeof Actions.GeneralSetCitemsPerPage |
     typeof Actions.GeneralSetPQueryitemsPerPage |
-    typeof Actions.GeneralSetSubcListPageSize ;
+    typeof Actions.GeneralSetSubcListPageSize |
+    typeof Actions.GeneralSetMaxRefsWidth;
 
 
 export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsModelState> {
@@ -110,6 +114,7 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                 userIsAnonymous,
                 pageSize: Kontext.newFormValue('0', true),
                 newCtxSize: Kontext.newFormValue('0', true),
+                refMaxWidth: Kontext.newFormValue('0', true),
                 ctxUnit: '',
                 lineNumbers: false,
                 useRichQueryEditor: false,
@@ -218,6 +223,11 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                         isInvalid: false,
                         isRequired: true
                     };
+                    state.refMaxWidth = {
+                        value: action.payload.data.ref_max_width + '',
+                        isInvalid: false,
+                        isRequired: true
+                    };
                 }
             }
         );
@@ -239,6 +249,24 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                 }
             }
         );
+
+        this.addActionHandler(
+            Actions.GeneralSetMaxRefsWidth,
+            (state, action) => {
+                state.refMaxWidth.value = action.payload.value;
+                if (action.payload.debounced) {
+                    state.refMaxWidth = this.validateGt1Value(state.refMaxWidth, action.payload.value);
+
+                } else {
+                    this.debouncedAction$.next(action);
+                }
+            },
+            (state, action) => {
+                if (action.payload.debounced && state.pageSize.errorDesc) {
+                    this.layoutModel.showMessage('error', state.pageSize.errorDesc);
+                }
+            }
+        )
 
         this.addActionHandler(
             Actions.GeneralSetContextSize,
@@ -375,6 +403,7 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                                 payload: {
                                     showLineNumbers: state.lineNumbers,
                                     pageSize: parseInt(state.pageSize.value),
+                                    refMaxWidth: parseInt(state.refMaxWidth.value),
                                     newCtxSize: parseInt(state.newCtxSize.value),
                                     wlpagesize: parseInt(state.wlpagesize.value),
                                     fmaxitems: parseInt(state.fmaxitems.value),
@@ -491,6 +520,7 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
             citemsperpage: parseInt(state.citemsperpage.value),
             pqueryitemsperpage: parseInt(state.pqueryitemsperpage.value),
             rich_query_editor: state.useRichQueryEditor,
+            ref_max_width: parseInt(state.refMaxWidth.value),
             subcpagesize: parseInt(state.subcpagesize.value),
             kwpagesize: parseInt(state.kwpagesize.value),
         };
@@ -507,7 +537,8 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
         ).pipe(
             tap(d => {
                 this.layoutModel.updateConcArgs({
-                    pagesize: parseInt(state.pageSize.value)
+                    pagesize: parseInt(state.pageSize.value),
+                    ref_max_width: parseInt(state.refMaxWidth.value)
                 });
             })
         );
