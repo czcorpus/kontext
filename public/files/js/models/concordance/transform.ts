@@ -47,7 +47,7 @@ function importTextChunk(
     // manatee also uses `/` as separator of attrs
     // in this case there will be more items in `item.possattrs` after splitting the attr string
     // we can not confidently assign values to its requested attributes
-    const description = (posattrs.length !== roles.length - 1) ?
+    const description = (posattrs.length !== roles.length - 1 && item.class !== 'strc') ?
         [
             'concview__unparseable_token',
             `${roles[0][0]}: ${item.str}`,
