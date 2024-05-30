@@ -521,9 +521,9 @@ async def create_query_id(amodel: UserActionModel, req: KRequest, resp: KRespons
     old_id = req.json['old']
     new_id = req.json['new']
     with plugins.runtime.QUERY_PERSISTENCE as qp:
-        reserved, pattern = await qp.id_reserved(new_id)
+        reserved = await qp.id_reserved(new_id)
         if reserved:
-            raise ValueError(f'ID {new_id} reserved by pattern `{pattern}`')
+            raise ValueError(req.translate('ID {} is not available').format(new_id))
         await qp.clone_with_id(old_id, new_id)
         if await qp.is_archived(old_id):
             await qp.archive(amodel.session_get('user', 'id'), new_id)
