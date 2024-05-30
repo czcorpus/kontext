@@ -602,3 +602,6 @@ msgstr "interpunkce"
 
 msgid "unknown"
 msgstr "neznámý"
+
+msgid "ID {} is not available"
+msgstr "ID {} není k dispozici"
