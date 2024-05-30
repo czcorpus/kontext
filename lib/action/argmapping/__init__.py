@@ -199,7 +199,7 @@ class Args(UserActionArgs):
     ml4ctx: str = field(default='0~0>0', metadata=mk_metdata())
     ml5ctx: str = field(default='0~0>0', metadata=mk_metdata())
 
-    freq_sort: str = field(default='', metadata=mk_metdata())
+    freq_sort: str = field(default='freq', metadata=mk_metdata())
     heading: int = field(default=0, metadata=mk_metdata())
     saveformat: str = field(default='txt', metadata=mk_metdata())
     simple_n: int = field(default=1, metadata=mk_metdata())
