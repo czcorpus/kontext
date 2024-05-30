@@ -35,11 +35,13 @@ export interface ViewOptsResponse extends Kontext.AjaxResponse {
     rich_query_editor:boolean;
     subcpagesize:number;
     kwpagesize:number;
+    ref_max_width:number;
 }
 
 export interface GeneralOptionsShared {
     showLineNumbers:boolean;
     pageSize:number;
+    refMaxWidth:number;
     newCtxSize:number;
     wlpagesize:number;
     fmaxitems:number;

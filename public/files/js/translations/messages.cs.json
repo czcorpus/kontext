@@ -589,6 +589,7 @@
         "options__conc_kwic_context": "Velikost KWIC kontextu (počet pozic)",
         "options__conc_show_line_nums": "Zobrazovat čísla řádků",
         "options__use_rich_query_editor": "Používat rozšířený editor dotazu",
+        "options__refs_max_width": "Max. šířka sloupce metainformací (ve znacích)",
         "options__worlist_fieldset_heading": "Seznam slov",
         "options__wordlist_page_size": "Velikost stránky (počet řádků)",
         "options__freq_fieldset_heading": "Frekvenční distribuce",
