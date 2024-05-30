@@ -36,6 +36,7 @@ KonText is an **advanced corpus query interface** and corpus data **integration 
     * multiple ways how to display other attributes
     * **user-defined line groups** - filtering, reviewing groups ratios
     * tokens and KWICs can be connected to external data services (e.g. dictionaries, encyclopedias)
+    * individual tokens can be linked to each other using an external service (e.g. for word translation equivalents)
 * **rich subcorpus-related functionality**
     * any subcorpus is accesible by other users (in case they obtain a URL, otherwise the subcorpus is not discoverable by default)
       * once a public description is set, the subcorpus can be discovered on the "public subcorpora" page
