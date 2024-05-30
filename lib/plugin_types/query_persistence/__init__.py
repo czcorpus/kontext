@@ -66,7 +66,9 @@ class AbstractQueryPersistence(abc.ABC):
         if path:
             with open(path) as f:
                 for line in f:
-                    self._id_reserved_patterns.append(line.strip())
+                    patt = line.strip()
+                    if patt:
+                        self._id_reserved_patterns.append(patt)
 
     @abc.abstractmethod
     def is_valid_id(self, data_id: str) -> bool:
