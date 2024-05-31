@@ -42,15 +42,15 @@ from .abstract import AbstractBackend
 #
 
 
-class AwesomeAlignerBackend(AbstractBackend):
+class InvalidLanguagePairException(Exception):
+    pass
 
-    SUPPORTED_LANGUAGES = None
+
+class AwesomeAlignerBackend(AbstractBackend):
 
     def __init__(self, conf, ident, db, ttl):
         super(AwesomeAlignerBackend, self).__init__(conf, ident, db, ttl)
         self._conf = conf
-        self.SUPPORTED_LANGUAGES = conf.get('supportedLangs', [])
-
         port_str = '' if self._conf.get('port', 80) else ':{}'.format(self._conf.get('port'))
         if self._conf['ssl']:
             self._requester = HTTPRequester('https://{}{}'.format(self._conf['server'], port_str))
@@ -88,41 +88,34 @@ class AwesomeAlignerBackend(AbstractBackend):
 
         primary_lang = self._lang_from_corpname(corpus_id)
         translat_corpora = [x for x in token_ranges.keys() if x != corpus_id]
-        if clicked_word_idx is not None and primary_lang in self.SUPPORTED_LANGUAGES:
-            if primary_lang not in self.SUPPORTED_LANGUAGES:
-                logging.warning("Awesome Aligner unsupported primary language `%s`", primary_lang)
+        if clicked_word_idx is not None:
+            for translat_corp in translat_corpora:
+                translat_lang = self._lang_from_corpname(translat_corp)
+                if translat_corp and translat_lang:
+                    data = await self._get_translations(
+                        plugin_ctx,
+                        [t['str'] for t in tokens[corpus_id]],
+                        [t['str'] for t in tokens[translat_corp]],
+                        primary_lang,
+                        translat_lang,
+                    )
+                    for src, trg in data['alignment']:
+                        if src == clicked_word_idx:
+                            selected_token['link'].append({
+                                'corpusId': translat_corp,
+                                'tokenId': token_ranges[translat_corp][0] + trg,
+                                'color': self._conf['colors'][0],
+                                'altColors': self._conf['colors'][1:],
+                                'comment': 'Lindat Awesome Aligner link',
+                            })
 
-            else:
-                for translat_corp in translat_corpora:
-                    translat_lang = self._lang_from_corpname(translat_corp)
-                    if translat_lang not in self.SUPPORTED_LANGUAGES:
-                        logging.warning("Awesome Aligner unsupported language `%s`", translat_lang)
-                        continue
-                    if translat_corp and translat_lang:
-                        data = await self._get_translations(
-                            plugin_ctx,
-                            [t['str'] for t in tokens[corpus_id]],
-                            [t['str'] for t in tokens[translat_corp]],
-                            primary_lang,
-                            translat_lang,
-                        )
-                        for src, trg in data['alignment']:
-                            if src == clicked_word_idx:
-                                selected_token['link'].append({
-                                    'corpusId': translat_corp,
-                                    'tokenId': token_ranges[translat_corp][0] + trg,
-                                    'color': self._conf['colors'][0],
-                                    'altColors': self._conf['colors'][1:],
-                                    'comment': 'Lindat Awesome Aligner link',
-                                })
-
-                    selected_token['link'].append({
-                        'corpusId': corpus_id,
-                        'tokenId': token_ranges[corpus_id][0] + clicked_word_idx,
-                        'color': self._conf['colors'][0],
-                        'altColors': self._conf['colors'][1:],
-                        'comment': 'Clicked token (or equal to the clicked token)',
-                    })
+                selected_token['link'].append({
+                    'corpusId': corpus_id,
+                    'tokenId': token_ranges[corpus_id][0] + clicked_word_idx,
+                    'color': self._conf['colors'][0],
+                    'altColors': self._conf['colors'][1:],
+                    'comment': 'Clicked token (or equal to the clicked token)',
+                })
 
         if len(selected_token['link']) == 0:
             logging.getLogger(__name__).warning(
@@ -146,7 +139,7 @@ class AwesomeAlignerBackend(AbstractBackend):
     def is_align_available(self, lang1: str, lang2: str) -> bool:
         return lang1 in self.AVAIL_LANG_MAPPINGS.get(lang2, []) or lang2 in self.AVAIL_LANG_MAPPINGS.get(lang1, [])
 
-    async def _make_request(self, client_session: aiohttp.ClientSession, path: str, src_tokens: List[str], trg_tokens: List[str]):
+    async def _make_request(self, client_session: aiohttp.ClientSession, path: str, src_tokens: List[str], trg_tokens: List[str]) -> Any:
         data, valid = await self._requester.json_request(
             client_session, 'POST', path,
             args={},
@@ -154,8 +147,15 @@ class AwesomeAlignerBackend(AbstractBackend):
         )
         if valid:
             return json.loads(data)
+
+        if data == "Invalid language pair":
+            raise InvalidLanguagePairException
         raise Exception(data)
 
     async def _get_translations(self, plugin_ctx: AbstractCorpusPluginCtx, src_tokens: List[str], trg_tokens: List[str], primary_lang: str, translat_lang: str):
-        path = self.mk_api_path(primary_lang, translat_lang)
-        return await self._make_request(plugin_ctx.http_client, path, src_tokens, trg_tokens)
+        try:
+            return await self._make_request(plugin_ctx.http_client, self.mk_api_path(primary_lang, translat_lang), src_tokens, trg_tokens)
+        except InvalidLanguagePairException:
+            logging.getLogger(__name__).warning(
+                "Invalid language pair `%s-%s` encountered, using `en-en`", primary_lang, translat_lang)
+            return await self._make_request(plugin_ctx.http_client, self.mk_api_path("en", "en"), src_tokens, trg_tokens)
