@@ -18,12 +18,14 @@
 
 import logging
 import posixpath
+from hashlib import md5
 from typing import Any, List, Tuple
 
 import aiohttp
 import conclib
 import ujson as json
 from action.plugin.ctx import AbstractCorpusPluginCtx
+from plugin_types.general_storage import KeyValueStorage
 from plugins.common.http import HTTPRequester
 
 from .abstract import AbstractBackend
@@ -140,17 +142,28 @@ class AwesomeAlignerBackend(AbstractBackend):
         return lang1 in self.AVAIL_LANG_MAPPINGS.get(lang2, []) or lang2 in self.AVAIL_LANG_MAPPINGS.get(lang1, [])
 
     async def _make_request(self, client_session: aiohttp.ClientSession, path: str, src_tokens: List[str], trg_tokens: List[str]) -> Any:
-        data, valid = await self._requester.json_request(
-            client_session, 'POST', path,
-            args={},
-            data={'src_tokens': src_tokens, 'trg_tokens': trg_tokens},
-        )
-        if valid:
-            return json.loads(data)
+        cache_db: KeyValueStorage = self.get_cache_db()
+        cache_key = f'awesome_aligner_cache:{md5(f"{src_tokens}{trg_tokens}{path}".encode()).hexdigest()}'
+        result = await cache_db.get(cache_key)
 
-        if data == "Invalid language pair":
-            raise InvalidLanguagePairException
-        raise Exception(data)
+        if result is None:
+            data, valid = await self._requester.json_request(
+                client_session, 'POST', path,
+                args={},
+                data={'src_tokens': src_tokens, 'trg_tokens': trg_tokens},
+            )
+            if valid:
+                result = json.loads(data)
+                await cache_db.set(cache_key, result)
+
+            elif data == "Invalid language pair":
+                raise InvalidLanguagePairException
+
+            else:
+                raise Exception(data)
+
+        await cache_db.set_ttl(cache_key, self.cache_ttl)
+        return result
 
     async def _get_translations(self, plugin_ctx: AbstractCorpusPluginCtx, src_tokens: List[str], trg_tokens: List[str], primary_lang: str, translat_lang: str):
         try:

@@ -54,6 +54,7 @@ class HTTPRequester:
         self._ssl_context = ssl.create_default_context() if enable_ssl else None
         self._client_timeout = None
         self._client_session = None
+
     @property
     def client_timeout(self) -> int:
         if not self._client_timeout:
@@ -94,7 +95,8 @@ class HTTPRequester:
             args: Union[Dict[str, Any], List[Tuple[str, Any]]],
             data: Any = None,
             headers=None):
-        url = urllib.parse.urljoin(self._server, path + '?' + self._process_args(args) if args else path)
+        url = urllib.parse.urljoin(self._server, path + '?' +
+                                   self._process_args(args) if args else path)
         async with client_session.request(
                 method,
                 url,
