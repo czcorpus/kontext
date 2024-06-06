@@ -119,7 +119,7 @@ export class QueryPage {
         subcorpTTStructure:ExportedSelection
     ):[QueryFormProps, Array<AnyTTSelection>] {
         const attributes = importInitialTTData(
-            textTypesData, subcorpTTStructure, subcorpTTStructure);
+            textTypesData, queryFormArgs.selected_text_types, subcorpTTStructure);
         this.textTypesModel = new TextTypesModel({
                 dispatcher: this.layoutModel.dispatcher,
                 pluginApi: this.layoutModel.pluginApi(),
@@ -144,7 +144,7 @@ export class QueryPage {
                 refineEnabled: hasSelectedItems,
                 manualAlignCorporaMode: false,
                 subcorpTTStructure,
-                textTypesData: this.layoutModel.getConf<TTInitialData>('textTypesData')
+                textTypesData,
             }
         );
 
