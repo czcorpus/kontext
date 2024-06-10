@@ -19,7 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 -#}
 {% extends "document.html" %}
 
-{% block title %}KonText - {{ 'Compatibility notice'|_ }}{% endblock %}
+{% block title %}KonText - {{ translate('Compatibility notice') }}{% endblock %}
 
 {% block js_init %}
 {% endblock %}
@@ -140,19 +140,19 @@ footer {
 
 {% block main %}
 <section>
-    <div class="bar"><h2>{{ 'Compatibility notice'|_ }}</h2></div>
+    <div class="bar"><h2>{{ translate('Compatibility notice') }}</h2></div>
 
-    <p>{{ 'Please note that KonText is not compatible with Microsoft Internet Explorer browser which has been discontinued by Microsoft in favour of the Edge browser in 2015.'|_ }}</p>
+    <p>{{ translate('Please note that KonText is not compatible with Microsoft Internet Explorer browser which has been discontinued by Microsoft in favour of the Edge browser in 2015.') }}</p>
 
-    <p>{{ 'To use KonText please install any modern web browser. E.g.'|_ }}:</p>
+    <p>{{ translate('To use KonText please install any modern web browser. E.g.') }}:</p>
 
     <ul>
         <li><a target="_blank" href="https://www.mozilla.org/en-US/firefox/new/">Mozilla Firefox</a></li>
         <li><a target="_blank" href="https://www.google.com/chrome/">Google Chrome</a></li>
-        <li><a target="_blank" href="https://www.microsoft.com/en-us/windows/microsoft-edge">Microsoft Edge</a> ({{ 'pre-installed on Windows 10'|_ }})</li>
+        <li><a target="_blank" href="https://www.microsoft.com/en-us/windows/microsoft-edge">Microsoft Edge</a> ({{ translate('pre-installed on Windows 10') }})</li>
         <li><a target="_blank" href="https://www.opera.com/">Opera</a></li>
         <li><a target="_blank" href="https://brave.com/">Brave</a></li>
-        <li><a target="_blank" href="https://www.apple.com/lae/safari/">Safari</a> ({{ 'pre-installed on Apple macOS'|_ }})</li>
+        <li><a target="_blank" href="https://www.apple.com/lae/safari/">Safari</a> ({{ translate('pre-installed on Apple macOS') }})</li>
     </ul>
 </section>
 {% endblock %}

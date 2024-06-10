@@ -17,7 +17,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 -#}
 {% extends "document.html" %}
 
-{% block title %}KonText - {{ "Find a published subcorpus"|_ }}{% endblock %}
+{% block title %}KonText - {{ translate("Find a published subcorpus") }}{% endblock %}
 
 {% block bodyonload %}
 __conf.Data = {{ data|to_json }};
@@ -27,7 +27,7 @@ pubSubcorpListPage.init(__conf);
 
 {% block main %}
 <section>
-    <div class="bar"><h2>{{ 'Find a published subcorpus'|_ }}</h2></div>
+    <div class="bar"><h2>{{ translate('Find a published subcorpus') }}</h2></div>
     <div id="published-subcorpora-mount"></div>
 </section>
 {% endblock %}

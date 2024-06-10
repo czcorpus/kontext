@@ -19,7 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 -#}
 {% extends "document.html" %}
 
-{% block title %}{{ "Verification key confirmation"|_ }}{% endblock %}
+{% block title %}{{ translate("Verification key confirmation") }}{% endblock %}
 
 {% block bodyonload %}
 userTokenConfirmPage.init(__conf);
@@ -35,19 +35,19 @@ userTokenConfirmPage.init(__conf);
 
 {% block main %}
 <section>
-    <div class="bar"><h2>{{ "Verification key confirmation"|_ }}</h2></div>
+    <div class="bar"><h2>{{ translate("Verification key confirmation") }}</h2></div>
     <div>
     {% if ok %}
-        <p class="token-confirmation">{{ label }} - {{ 'confirmed'|_ }}<p>
+        <p class="token-confirmation">{{ label }} - {{ translate('confirmed') }}<p>
         <p>
-            <a id="try-login" class="util-button">{{ 'Sign in'|_ }}</a>
+            <a id="try-login" class="util-button">{{ translate('Sign in') }}</a>
         </p>
     {% else %}
         <p class="token-confirmation">
-            {{ 'Confirmation key not found'|_ }}
+            {{ translate('Confirmation key not found') }}
         </p>
         <p>
-            <a class="util-button" href={{ sign_up_url }}>{{ 'Sign up'|_ }}</a>
+            <a class="util-button" href={{ sign_up_url }}>{{ translate('Sign up') }}</a>
         </p>
     {% endif %}
     </div>

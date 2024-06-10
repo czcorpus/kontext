@@ -19,7 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 -#}
 {% extends "document.html" %}
 
-{% block title %}KonText - {{ page_title }} - {{ "Collocations"|_|lower }}{% endblock %}
+{% block title %}KonText - {{ page_title }} - {{ translate("Collocations")|lower }}{% endblock %}
 
 {% block bodyonload %}
 __conf.concPersistenceOpId = {{ conc_persistence_op_id|to_json }};
@@ -43,7 +43,7 @@ collPage.init(__conf, {{ processing|to_json}});
 
 {% block main %}
 <section>
-    <div class="bar"><h2>{{ "Collocation candidates"|_ }}</h2></div>
+    <div class="bar"><h2>{{ translate("Collocation candidates") }}</h2></div>
     <div id="coll-view-mount"></div>
     <a id="download-link" style="display:none"></a>
 </section>

@@ -19,7 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 -#}
 {% extends "document.html" %}
 
-{% block title %}KonText - {{ page_title }} - ({{ "Frequency list"|_|lower }}){% endblock %}
+{% block title %}KonText - {{ page_title }} - ({{ translate("Frequency list")|lower }}){% endblock %}
 
 {% block bodyonload %}
 __conf.concPersistenceOpId = {{ conc_persistence_op_id|to_json }};
@@ -53,7 +53,7 @@ freqPage.init(__conf);
 {% block main %}
 <section>
     <div class="bar">
-        <h2>{% if freq_type == '2-attribute' %}{{ 'Two-attribute interrelationship'|_ }}{% else %}{{ "Frequency list"|_ }}{% endif %}</h2>
+        <h2>{% if freq_type == '2-attribute' %}{{ translate('Two-attribute interrelationship') }}{% else %}{{ translate("Frequency list") }}{% endif %}</h2>
         <span id="topbar-help-mount"></span>
     </div>
     <div id="result-mount" class="no-margin"></div>

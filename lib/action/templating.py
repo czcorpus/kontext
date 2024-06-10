@@ -19,12 +19,11 @@ from typing import Any, Callable, Dict, Union
 from xml.sax.saxutils import escape
 
 import jinja2
-import markupsafe
-
 import l10n
+import markupsafe
 import strings
-from dataclasses_json import DataClassJsonMixin
 from action.result.base import BaseResult
+from dataclasses_json import DataClassJsonMixin
 
 ResultType = Union[
     Callable[[], Union[str, bytes, DataClassJsonMixin, Dict[str, Any]]],
@@ -70,6 +69,6 @@ class TplEngine:
             xmle=escape)
 
     def render(self, template: str, data: Dict[str, Any], translate: Callable[[str], str] = lambda x: x):
-        self._template_env.filters.update(_=translate)
-        template_object = self._template_env.get_template(template)
+        template_object = self._template_env.get_template(
+            template, globals={"translate": translate})
         return template_object.render(data)
