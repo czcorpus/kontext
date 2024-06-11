@@ -310,12 +310,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                     List.map(
                         (x, i) => x.t ?
                             <React.Fragment key={`item:${i}:${x.t}`}>
+                                {i > 0 ? '\u00a0\u2726\u00a0' : ''}
                                 <span className="item">{x.t}</span>
-                                {i < normLabels.shortenedAt ? '\u00a0\u2726\u00a0' : ''}
                             </React.Fragment> :
                             <React.Fragment key={`item:empty:${i}`}>
+                                {i > 0 ? '\u00a0\u2726\u00a0' : ''}
                                 <EmptyVal />
-                                {i < normLabels.shortenedAt ? '\u00a0\u2726\u00a0' : ''}
                             </React.Fragment>
                     )
                 )}
