@@ -325,7 +325,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
                     full_corp_info.tokens_linking, full_corp_info.query_suggest
                 ) = await self._get_tckcqs_providers(cursor, corpus_id)
                 full_corp_info.metadata.interval_attrs = await self._backend.load_interval_attrs(cursor, corpus_id)
-                self._corpus_info_cache[cache_key] = corp
+                self._corpus_info_cache[cache_key] = full_corp_info
             else:
                 return BrokenCorpusInfo(name=corpus_id)
         return self._corpus_info_cache.get(cache_key, None)
