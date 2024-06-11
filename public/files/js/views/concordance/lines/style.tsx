@@ -98,11 +98,6 @@ export const ConcLines = styled.table`
         overflow: hidden;
         text-overflow: ellipsis;
 
-        .item:not(:last-child)::after {
-            content: " \u2726  ";
-            white-space: pre;
-        }
-
         ${theme.mediaPhone} {
             white-space: wrap;
             padding-right: 1em;

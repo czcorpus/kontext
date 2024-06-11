@@ -22,7 +22,7 @@ except ImportError:
     from typing_extensions import TypedDict
 
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 import aiofiles.os
 import settings
@@ -37,13 +37,27 @@ def _cache_dir_path(args: FreqCalcArgs) -> str:
     return os.path.join(settings.get('corpora', 'freqs_cache_dir'), args.corpname)
 
 
+def norm_list(v: Union[Tuple, List]) -> List:
+    """
+    This is used for normalizing lists and tuples
+    to generate proper hashes for cache files
+    (.e.g. str(('foo')) produces different result
+    than str(['foo']))
+    """
+    if type(v) is None:
+        return []
+    if type(v) is tuple:
+        return list(v)
+    return v
+
+
 def _cache_file_path(args: FreqCalcArgs):
     v = ''.join([
         str(args.corpname),
         str(args.subcname),
         str(args.user_id),
-        ''.join(args.q),
-        str(args.fcrit),
+        ''.join(norm_list(args.q)),
+        str(norm_list(args.fcrit)),
         str(args.flimit),
         str(args.freq_sort),
         str(args.rel_mode),

@@ -167,11 +167,44 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         );
     }
 
+    // ------------- <TrRefMaxWidth /> ---------------------------
+
+    const TrRefMaxWidth:React.FC<{
+        value:Kontext.FormValue<string>;
+    }> = (props) => {
+
+        const handleInputChange = (evt) => {
+            dispatcher.dispatch<typeof Actions.GeneralSetMaxRefsWidth>({
+                name: Actions.GeneralSetMaxRefsWidth.name,
+                payload: {
+                    value: evt.target.value
+                }
+            });
+        };
+
+        return (
+            <tr>
+                <th>
+                    <label htmlFor="refs-max-width">
+                        {he.translate('options__refs_max_width')}:
+                    </label>
+                </th>
+                <td align="center">
+                    <layoutViews.ValidatedItem invalid={props.value.isInvalid}>
+                        <input className="tst-conc-kwic-size"  type="text" value={props.value.value} min={0}
+                                onChange={handleInputChange} style={{width: '2em'}} />
+                    </layoutViews.ValidatedItem>
+                </td>
+            </tr>
+        )
+    }
+
     // ------------- <FieldsetConcordance /> ---------------------
 
     const FieldsetConcordance:React.FC<{
         pageSize:Kontext.FormValue<string>;
         newCtxSize:Kontext.FormValue<string>;
+        refMaxWidth:Kontext.FormValue<string>;
         lineNumbers:boolean;
         useRichQueryEditor:boolean;
 
@@ -186,6 +219,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         <TRConcPageSizeInput value={props.pageSize} />
                         <TRKwicContextSize value={props.newCtxSize} />
                         <TRShowLineNumbersCheckbox value={props.lineNumbers} />
+                        <TrRefMaxWidth value={props.refMaxWidth} />
                         <TRUseRichQueryEditor value={props.useRichQueryEditor} />
                     </tbody>
                 </S.ResultRangeAndPagingTable>
@@ -576,6 +610,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 <FieldsetConcordance pageSize={this.props.pageSize}
                                     newCtxSize={this.props.newCtxSize}
                                     lineNumbers={this.props.lineNumbers}
+                                    refMaxWidth={this.props.refMaxWidth}
                                     useRichQueryEditor={this.props.useRichQueryEditor} />
                                 <FieldsetWordlist wlPageSize={this.props.wlpagesize}  />
                                 <FieldsetFreqDistrib fmaxItems={this.props.fmaxitems}

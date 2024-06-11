@@ -970,6 +970,7 @@ export class ViewPage {
             activePosAttrs: this.layoutModel.getConcArgs().attrs,
             anonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
             ViewMode: this.layoutModel.getConf<ConcViewMode>('ViewMode'),
+            RefMaxWidth: this.layoutModel.getConcArgs().ref_max_width,
             AttrViewMode: this.layoutModel.getConf<ViewOptions.AttrViewMode>('AttrViewMode'),
             ShowLineNumbers: this.layoutModel.getConf<boolean>('ShowLineNumbers'),
             KWICCorps: this.layoutModel.getConf<Array<string>>('KWICCorps'),

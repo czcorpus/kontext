@@ -558,6 +558,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             ctxattrs: [],
             structs: [],
             refs: [],
+            ref_max_width: undefined,
             fromp: undefined,
             q: undefined,
             ...this.getConf<ConcServerArgs>('currentArgs')

@@ -43,7 +43,8 @@ ConcArgsMapping = (
     'attr_vmode',
     'base_viewattr',  # attribute used in a text flow
     'structs',
-    'refs'
+    'refs',
+    'ref_max_width'
 )
 
 
@@ -98,6 +99,7 @@ class GeneralOptionsArgs:
     line_numbers: bool = field(default=False, metadata=mk_metdata(Persistence.PERSISTENT))
     shuffle: int = field(default=0, metadata=mk_metdata(Persistence.PERSISTENT))
     rich_query_editor: bool = field(default=True, metadata=mk_metdata(Persistence.PERSISTENT))
+    ref_max_width: int = field(default=40, metadata=mk_metdata(Persistence.PERSISTENT))
 
     # wordlist
     wlpagesize: int = field(default=25, metadata=mk_metdata(Persistence.PERSISTENT))
@@ -197,7 +199,7 @@ class Args(UserActionArgs):
     ml4ctx: str = field(default='0~0>0', metadata=mk_metdata())
     ml5ctx: str = field(default='0~0>0', metadata=mk_metdata())
 
-    freq_sort: str = field(default='', metadata=mk_metdata())
+    freq_sort: str = field(default='freq', metadata=mk_metdata())
     heading: int = field(default=0, metadata=mk_metdata())
     saveformat: str = field(default='txt', metadata=mk_metdata())
     simple_n: int = field(default=1, metadata=mk_metdata())
@@ -249,6 +251,7 @@ class Args(UserActionArgs):
     """
     # None means "not initialized" while '' means "user wants no refs"
     refs: Optional[str] = field(default=None, metadata=mk_metdata(to_js=comma_separated_to_js))
+    ref_max_width: Optional[int] = field(default=40, metadata=mk_metdata())
     hitlen: int = field(default=1, metadata=mk_metdata())
 
     subcnorm: str = field(default='tokens', metadata=mk_metdata())

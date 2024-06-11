@@ -611,6 +611,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         supportsTokenConnect:boolean;
         corpsWithKwic:Array<string>;
         viewMode:string; // TODO enum
+        refMaxWidth:number;
         attrViewMode:ViewOptions.AttrViewMode;
         lineSelMode:LineSelectionModes;
         cols:Array<{n:string; visible:boolean;}>;
@@ -846,6 +847,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                                     tokenNumber={primaryLang.tokenNumber}
                                     lineIdx={this.props.lineIdx}
                                     data={primaryLang.ref}
+                                    refMaxWidth={this.props.refMaxWidth}
                                     refsDetailClickHandler={this._refsDetailClickHandler}
                                     emptyRefValPlaceholder={this.props.emptyRefValPlaceholder} /> :
                             null}
@@ -863,6 +865,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                                         tokenNumber={alCorp.tokenNumber}
                                         lineIdx={this.props.lineIdx}
                                         data={alCorp.ref}
+                                        refMaxWidth={this.props.refMaxWidth}
                                         emptyRefValPlaceholder={this.props.emptyRefValPlaceholder}
                                         refsDetailClickHandler={this._refsDetailClickHandler} />
                                 </td>
@@ -946,6 +949,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                         groupTextColor={fgColor}
                         cols={props.corporaColumns}
                         viewMode={props.viewMode}
+                        refMaxWidth={props.refMaxWidth}
                         attrViewMode={props.attrViewMode}
                         baseCorpname={props.baseCorpname}
                         mainCorp={props.maincorp}

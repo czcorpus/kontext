@@ -1027,15 +1027,17 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 this.mapItems(
                     state,
                     k,
-                    (attrVal, i) => {
-                        if (block[i]) {
+                    (attrVal, _) => {
+                        // we can't use index _, order might not be the same
+                        const b = List.find(v => v.ident === attrVal.ident, block);
+                        if (b) {
                             return {
-                                ident: block[i].ident,
-                                value: block[i].v,
+                                ident: b.ident,
+                                value: b.v,
                                 selected: attrVal.selected,
                                 locked: attrVal.locked,
-                                numGrouped: block[i].numGrouped,
-                                availItems: block[i].availItems,
+                                numGrouped: b.numGrouped,
+                                availItems: b.availItems,
                                 extendedInfo: attrVal.extendedInfo
                             };
 
