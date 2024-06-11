@@ -20,7 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 {% extends "document.html" %}
 
-{% block title %}{{ "User profile"|_ }}{% endblock %}
+{% block title %}{{ translate("User profile") }}{% endblock %}
 
 {% block bodyonload %}
 __conf.CredentialsForm = {{ credentials_form|to_json }};
@@ -34,7 +34,7 @@ userProfilePage.init(__conf);
 
 {% block main %}
 <section>
-    <div class="bar"><h2>{{ "User"|_ }}</h2></div>
+    <div class="bar"><h2>{{ translate("User") }}</h2></div>
     <div id="user-administration-mount"></div>
 </section>
 {% endblock %}

@@ -18,7 +18,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #}
 {% extends "document.html" %}
-{% block title %}{{ page_title|default('', true)|shorten(80, True) }} ({{ "Concordance"|_ }}){% endblock %}
+{% block title %}{{ page_title|default('', true)|shorten(80, True) }} ({{ translate("Concordance") }}){% endblock %}
 
 
 {% block bodyonload %}
@@ -31,7 +31,7 @@ restoreConcPage.init(__conf);
 
 {% block main %}
 <section>
-    <div class="bar"><h2>{{ "Concordance regeneration"|_ }}</h2></div>
+    <div class="bar"><h2>{{ translate("Concordance regeneration") }}</h2></div>
     <div id="view-mount"></div>
 </section>
 {% endblock %}

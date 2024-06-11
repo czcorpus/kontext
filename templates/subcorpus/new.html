@@ -20,7 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 {% extends "document.html" %}
 
-{% block title %}KonText - {{ corpname }} - {{ 'Create Subcorpus'|_ }}{% endblock %}
+{% block title %}KonText - {{ corpname }} - {{ translate('Create Subcorpus') }}{% endblock %}
 
 {% block bodyonload %}
 __conf.textTypesData = {{ text_types_data|to_json }};
@@ -36,7 +36,7 @@ subcorpFormPage.init(__conf);
 
 {% block main %}
 <section>
-    <div class="bar"><h2>{{ 'New subcorpus'|_ }}</h2></div>
+    <div class="bar"><h2>{{ translate('New subcorpus') }}</h2></div>
     <div id="subcorp-form-mount"></div>
 </section>
 {% endblock %}
