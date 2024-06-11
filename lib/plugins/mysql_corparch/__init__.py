@@ -100,7 +100,10 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
         self._max_num_hints = int(max_num_hints)
         self._max_page_size = int(max_page_size)
         self._registry_lang = registry_lang
-        self._corpus_info_cache: Dict[str, CorpusInfo] = {}
+
+        # caching localized corpora info as this is widely used throughout
+        # the whole application
+        self._corpus_info_cache: Dict[Tuple[str, str], CorpusInfo] = {}
         self._keywords = None  # keyword (aka tags) database for corpora; None = not loaded yet
         self._colors = {}
         self._tt_desc_i18n = defaultdict(lambda: {})
@@ -287,13 +290,13 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
                     self._qs_providers[corpus_id].providers.append(row['provider'])
         return self._tc_providers[corpus_id], self._kc_providers[corpus_id], self._tl_providers[corpus_id], self._qs_providers[corpus_id]
 
-    async def _fetch_corpus_info(self, cursor: Cursor, corpus_id: str, user_lang: str) -> CorpusInfo:
-        if corpus_id not in self._corpus_info_cache:
+    async def _fetch_corpus_info(self, plugin_ctx: AbstractCorpusPluginCtx, cursor: Cursor, corpus_id: str) -> CorpusInfo:
+        cache_key = (corpus_id, plugin_ctx.user_lang)
+        if cache_key not in self._corpus_info_cache:
             row = await self._backend.load_corpus(cursor, corpus_id)
-            corp = self._corp_info_from_row(row, user_lang)
+            corp = self._corp_info_from_row(row, plugin_ctx.user_lang)
             if corp is not None:
                 corp.tagsets = await self._backend.load_corpus_tagsets(cursor, corpus_id)
-                self._corpus_info_cache[corpus_id] = corp
                 for art in await self._backend.load_corpus_articles(cursor, corpus_id):
                     if art['role'] == 'default':
                         corp.citation_info.default_ref = markdown(art['entry'])
@@ -302,7 +305,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
                     elif art['role'] == 'other':
                         corp.citation_info.other_bibliography = markdown(art['entry'])
                 if self._prefer_vlo_metadata:
-                    default_ref = await self._backend.load_corpus_as_source_info(cursor, corpus_id, user_lang)
+                    default_ref = await self._backend.load_corpus_as_source_info(cursor, corpus_id, plugin_ctx.user_lang)
                     if default_ref is not None:
                         corp.citation_info.default_ref = default_ref
                 if row['ttdesc_id'] not in self._tt_desc_i18n:
@@ -311,7 +314,21 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
                         self._tt_desc_i18n['en'][row['ttdesc_id']] = drow['text_en']
                 corp.simple_query_default_attrs = await self._backend.load_simple_query_default_attrs(
                     cursor, corpus_id)
-        return self._corpus_info_cache.get(corpus_id, None)
+
+                if plugin_ctx.user_lang is not None:
+                    full_corp_info = await self._localize_corpus_info(corp, lang_code=plugin_ctx.user_lang)
+                else:
+                    full_corp_info = corp
+                full_corp_info.manatee = await plugin_ctx.corpus_factory.get_info(corpus_id)
+                (
+                    full_corp_info.token_connect, full_corp_info.kwic_connect,
+                    full_corp_info.tokens_linking, full_corp_info.query_suggest
+                ) = await self._get_tckcqs_providers(cursor, corpus_id)
+                full_corp_info.metadata.interval_attrs = await self._backend.load_interval_attrs(cursor, corpus_id)
+                self._corpus_info_cache[cache_key] = corp
+            else:
+                return BrokenCorpusInfo(name=corpus_id)
+        return self._corpus_info_cache.get(cache_key, None)
 
     async def on_soft_reset(self):
         self._corpus_info_cache = {}
@@ -326,19 +343,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
                 # get rid of path-like corpus ID prefix
                 corp_name = corp_name.lower()
                 async with self._backend.cursor() as cursor:
-                    corp_info = await self._fetch_corpus_info(cursor, corp_name, plugin_ctx.user_lang)
-                    if corp_info is not None:
-                        if plugin_ctx.user_lang is not None:
-                            ans = await self._localize_corpus_info(corp_info, lang_code=plugin_ctx.user_lang)
-                        else:
-                            ans = corp_info
-                        ans.manatee = await plugin_ctx.corpus_factory.get_info(corp_name)
-                        ans.token_connect, ans.kwic_connect, ans.tokens_linking, ans.query_suggest = await self._get_tckcqs_providers(
-                            cursor, corp_name)
-                        ans.metadata.interval_attrs = await self._backend.load_interval_attrs(cursor, corp_name)
-
-                        return ans
-                return BrokenCorpusInfo(name=corp_name)
+                    return await self._fetch_corpus_info(plugin_ctx, cursor, corp_name)
             except TypeError as ex:
                 logging.getLogger(__name__).warning(
                     'Failed to fetch corpus info for {0}: {1}'.format(corp_name, ex))
@@ -373,7 +378,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
         ans = []
         for item in await plugins.runtime.USER_ITEMS.instance.get_user_items(plugin_ctx):
             tmp = item.to_dict()
-            corp_info = await self._fetch_corpus_info(cursor, item.main_corpus_id, plugin_ctx.user_lang)
+            corp_info = await self._fetch_corpus_info(plugin_ctx, cursor, item.main_corpus_id)
             if corp_info:
                 tmp['description'] = self._export_untranslated_label(
                     plugin_ctx, corp_info.description)
