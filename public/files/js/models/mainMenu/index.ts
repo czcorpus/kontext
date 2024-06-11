@@ -168,6 +168,7 @@ export interface MainMenuModelState {
     usesubcorp?:string;
     subcName?:string;
     foreignSubcorp?:boolean;
+    unfinishedCalculation:boolean;
 }
 
 interface MainMenuModelArgs {
@@ -176,6 +177,7 @@ interface MainMenuModelArgs {
     initialData:InitialMenuData;
     concArgs:ConcServerArgs;
     freqDefaultView:FreqResultViews;
+    unfinishedCalculation:boolean;
 }
 
 
@@ -189,7 +191,8 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
         pageModel,
         initialData,
         concArgs,
-        freqDefaultView
+        freqDefaultView,
+        unfinishedCalculation,
     }:MainMenuModelArgs) {
         const data = importMenuData(initialData.submenuItems);
         // here we have to make a kind of correction as traditionally, server
@@ -213,7 +216,8 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
                 humanCorpname: pageModel.getCorpusIdent().name,
                 usesubcorp: pageModel.getCorpusIdent().usesubcorp,
                 subcName: pageModel.getCorpusIdent().subcName,
-                foreignSubcorp: pageModel.getCorpusIdent().foreignSubcorp
+                foreignSubcorp: pageModel.getCorpusIdent().foreignSubcorp,
+                unfinishedCalculation,
             }
         );
         this.pageModel = pageModel;
@@ -378,7 +382,21 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
                 state.freqsPrevItems = srch.items;
                 srch.items = tmp;
             }
-        )
+        );
+
+        this.addActionHandler(
+            ConcActions.AsyncCalculationFailed,
+            (state, action) => {
+                state.unfinishedCalculation = false;
+            }
+        );
+
+        this.addActionHandler(
+            ConcActions.AsyncCalculationUpdated,
+            (state, action) => {
+                state.unfinishedCalculation = !action.payload.finished;
+            }
+        );
     }
 
     private findMenuItem(

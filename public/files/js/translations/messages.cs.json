@@ -243,6 +243,7 @@
         "global__save_form_line_from": "od",
         "global__save_form_line_to": "do",
         "global__advanced_options": "Pokročilé možnosti",
+        "global__menu_waiting_item": "čekám na dokončení výpočtu",
         "linesel__remove_selected_lines": "Odstranit vybrané řádky",
         "linesel__remove_all_but_selected_lines": "Ponechat pouze vybrané řádky",
         "linesel__clear_the_selection": "Zrušit označení řádků",

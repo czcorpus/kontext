@@ -433,7 +433,6 @@ async def view_conc(
 
     out['fast_adhoc_ipm'] = await plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(
         amodel.plugin_ctx, [amodel.args.corpname] + amodel.args.align)
-    out['running_calc'] = not out['finished']   # TODO running_calc is redundant
     out['chart_export_formats'] = []
     with plugins.runtime.CHART_EXPORT as ce:
         out['chart_export_formats'].extend(ce.get_supported_types())
