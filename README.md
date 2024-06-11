@@ -118,7 +118,6 @@ Please refer to our [Wiki](https://github.com/czcorpus/kontext/wiki/Development-
 * [LINDAT/CLARIAH-CZ](https://ufal.mff.cuni.cz/lindat-kontext)
 * [CLARIN-PL](https://kontext.clarin-pl.eu/)
 * [CLARIN-SI](https://www.clarin.si/kontext/)
-* [Інститут української](https://mova.institute/kontext/first_form)
 * [Serbski Institut](https://www.serbski-institut.de) (API version of KonText)
 
 ## How to cite KonText
