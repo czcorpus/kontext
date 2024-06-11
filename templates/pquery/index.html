@@ -23,7 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 {% block title %}
-KonText - {{ "Paradigmatic query"|_}}
+KonText - {{ translate("Paradigmatic query") }}
 {% endblock %}
 
 {% block bodyonload %}
@@ -40,7 +40,7 @@ pqueryPage.init(__conf);
 
 {% block main %}
 <section class="pquery">
-    <div class="bar"><h2>{{ "Paradigmatic query"|_ }}</h2><span id="topbar-help-mount"></span></div>
+    <div class="bar"><h2>{{ translate("Paradigmatic query") }}</h2><span id="topbar-help-mount"></span></div>
     <div id="pquery-form-mount"></div>
 </section>
 {% endblock %}

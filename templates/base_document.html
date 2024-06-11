@@ -172,7 +172,7 @@ __conf.UsesAppBar = {%if app_bar %}true{% else %}false{% endif %};
         {{ footer_bar }}
         {% if debug %}
         <div class="debug-warning">
-        {{ 'debugging mode'|_ }}
+        {{ translate('debugging mode') }}
         </div>
          {% endif %}
     {% else %}
@@ -182,11 +182,11 @@ __conf.UsesAppBar = {%if app_bar %}true{% else %}false{% endif %};
             {% endif %}
             {% if issue_reporting_action %}<span class="separ">|</span>{% endif %}
             <div>
-                <a href="https://www.github.com/czcorpus/kontext" target="_blank" rel="noopener">{{ "View on GitHub"|_ }}</a>
+                <a href="https://www.github.com/czcorpus/kontext" target="_blank" rel="noopener">{{ translate("View on GitHub") }}</a>
             </div>
             {% if lang_switch_ui and avail_languages|length > 0 %}
             <span class="separ">|</span>
-            <div id="switch-language-box">{{ "user interface languages"|_ }}:
+            <div id="switch-language-box">{{ translate("user interface languages") }}:
                 <form id="language-switch-form" action="{{ root_url }}user/switch_language" method="POST">
                     {% for lang in avail_languages %}
                         <button class="switch" type="submit" name="language" value="{{ lang[0] }}">{{ lang[1].get('label', lang[0]) }}</button>{% if not loop.last %}, {% endif %}
@@ -202,16 +202,16 @@ __conf.UsesAppBar = {%if app_bar %}true{% else %}false{% endif %};
             </div>
             <span class="separ">|</span>
             <div>
-                {{ "version"|_ }} <strong>{{ _version[1] }}</strong>
+                {{ translate("version") }} <strong>{{ _version[1] }}</strong>
             </div>
             <span class="separ">|</span>
             <div>
-                {{ "uses"|_ }} <a href="https://nlp.fi.muni.cz/trac/noske" target="_blank" rel="noopener">manatee-<span>{{ _version[0] }}</span></a>
+                {{ translate("uses") }} <a href="https://nlp.fi.muni.cz/trac/noske" target="_blank" rel="noopener">manatee-<span>{{ _version[0] }}</span></a>
             </div>
             {% if debug %}
             <span class="separ">|</span>
             <div class="debug-warning">
-            {{ 'debugging mode'|_ }}
+            {{ translate('debugging mode') }}
             </div>
             {% endif %}
         </div>

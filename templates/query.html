@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 {% block title %}
-KonText - {{ "query form"|_}}
+KonText - {{ translate("query form") }}
 {% endblock %}
 
 {% block bodyonload %}
@@ -47,7 +47,7 @@ queryPage.init(__conf);
 
 {% block main %}
 <section class="query">
-    <div class="bar"><h2>{{ "Search in the corpus"|_ }}</h2><span id="topbar-help-mount"></span></div>
+    <div class="bar"><h2>{{ translate("Search in the corpus") }}</h2><span id="topbar-help-mount"></span></div>
     <div id="query-form-mount"></div>
     <a id="download-link" style="display:none"></a>
 </section>

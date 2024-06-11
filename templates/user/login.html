@@ -19,7 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 {% extends "document.html" %}
 
 {% block title %}
-{{ "Login options"|_ }}
+{{ translate("Login options") }}
 {% endblock %}
 
 {% block bodyonload %}
@@ -29,12 +29,12 @@ loginPage.init(__conf);
 
 {% block main %}
 <section>
-    <div class="bar"><h2>{{ "Login options"|_ }}</h2></div>
+    <div class="bar"><h2>{{ translate("Login options") }}</h2></div>
     <p>
-        <a id="try-login" class="util-button">{{ "Sign in"|_ }}</a>
+        <a id="try-login" class="util-button">{{ translate("Sign in") }}</a>
     </p>
     <p>
-        <a id="go-to-query" class="util-button">{{ "Continue as anonymous user"|_ }}</a>
+        <a id="go-to-query" class="util-button">{{ translate("Continue as anonymous user") }}</a>
     </p>
 </section>
 {% endblock %}
