@@ -479,7 +479,8 @@ class Kwic:
             if item.get('class') == 'attr':
                 # TODO configurable delimiter
                 # a list is used for future compatibility
-                prev['posattrs'] = item['str'].strip('/').split('/')
+                # there is always one leading /, first split item is empty and excessive
+                prev['posattrs'] = item['str'].split('/')[1:]
             else:
                 ans.append(item)
             prev = item
