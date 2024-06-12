@@ -857,7 +857,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                     ...disabledMenuItems
                 ),
                 concArgs: this.getConcArgs(),
-                freqDefaultView: this.getConf<FreqResultViews>('FreqDefaultView')
+                freqDefaultView: this.getConf<FreqResultViews>('FreqDefaultView'),
+                unfinishedCalculation: this.getConf<boolean>('Unfinished') || false,
             });
 
             this.generalViewOptionsModel = new GeneralViewOptionsModel(

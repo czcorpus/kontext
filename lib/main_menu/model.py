@@ -296,16 +296,19 @@ class EventTriggeringItem(HideOnCustomCondItem):
     that keys with multiple values are not supported.
     """
 
-    def __init__(self, ident, label, message, key_code=None, key_mod=None, hint=None):
+    def __init__(self, ident, label, message, key_code=None, key_mod=None, hint=None, curr_conc=None):
         super(EventTriggeringItem, self).__init__(ident, label, None, hint)
         self._message = message
         self._key_code = key_code
         self._key_mod = key_mod
+        self._curr_conc = curr_conc
 
     def create(self, out_data, translate: Callable[[str], str]):
         ans = super(EventTriggeringItem, self).create(out_data, translate)
         ans['message'] = self._message
         ans['keyCode'] = self._key_code
         ans['keyMod'] = self._key_mod
+        if self._curr_conc is not None:
+            ans['currConc'] = self._curr_conc
         ans.pop('action')
         return ans

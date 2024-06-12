@@ -1384,7 +1384,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         state.kwicCorps = data.KWICCorps;
         state.numItemsInLockedGroups = data.num_lines_in_groups;
         state.pagination = data.pagination;
-        state.unfinishedCalculation = !!data.running_calc;
+        state.unfinishedCalculation = !data.finished;
         state.lineGroupIds = [];
         state.concId = data.conc_persistence_op_id;
         state.mergedAttrs = data.merged_attrs;

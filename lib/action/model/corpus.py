@@ -361,12 +361,12 @@ class CorpusActionModel(UserActionModel):
             event_name = 'MAIN_MENU_SHOW_SAVE_FORM'
             self._dynamic_menu_items.append(
                 EventTriggeringItem(MainMenu.SAVE, label, event_name, key_code=83, key_mod='shift',
-                                    hint=hint).mark_indirect())  # key = 's'
+                                    hint=hint, curr_conc=True).mark_indirect())  # key = 's'
 
         else:
             event_name = 'MAIN_MENU_DIRECT_SAVE'
             self._dynamic_menu_items.append(EventTriggeringItem(
-                MainMenu.SAVE, label, event_name, hint=hint).add_args(('saveformat', save_format)))
+                MainMenu.SAVE, label, event_name, hint=hint, curr_conc=True).add_args(('saveformat', save_format)))
 
     async def _determine_curr_corpus(self, form: RequestArgsProxy, is_api: bool):
         """

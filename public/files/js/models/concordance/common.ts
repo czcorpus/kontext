@@ -375,7 +375,6 @@ export interface AjaxConcResponse extends ConcQueryResponse {
     finished:boolean;
     fast_adhoc_ipm:boolean;
     pagination:ServerPagination;
-    running_calc:number; // TODO should be boolean
     user_owns_conc:boolean;
     result_relative_freq:number;
     result_shuffled:boolean;
