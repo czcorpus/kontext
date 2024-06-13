@@ -104,9 +104,9 @@ export enum PosAttrRole {
 export class TextChunk {
     className:string;
     token:Token;
-    openLink:{speechPath:string};
-    closeLink:{speechPath:string};
-    continued:boolean;
+    openLink?:{speechPath:string};
+    closeLink?:{speechPath:string};
+    continued?:boolean;
     showAudioPlayer:boolean;
     posAttrs:Array<string>; // array => multiple pos attrs per whole 'pseudo-position'
     displayPosAttrs:Array<string>;
