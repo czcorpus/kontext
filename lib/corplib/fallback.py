@@ -142,6 +142,10 @@ class EmptyCorpus(AbstractKCorpus):
     def get_structs(self) -> List[str]:
         return []
 
+    @property
+    def preflight_warn_ipm(self):
+        return 1_000_000
+
 
 class ErrorCorpus(EmptyCorpus):
     """
