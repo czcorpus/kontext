@@ -1504,13 +1504,13 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
     private findChunks(state:ConcordanceModelState, ...tokenIds:Array<number>):Array<TextChunk> {
         for (let i = 0; i < state.lines.length; i += 1) {
             for (let j = 0; j < state.lines[i].languages.length; j += 1) {
-                const ans = pipe(
+                const chunks = pipe(
                     tokenIds,
                     List.map(tokenId => ConclineSectionOps.findChunk(state.lines[i].languages[j], tokenId)),
-                    List.filter(v => v !== undefined)
+                    List.filter(chunk => chunk !== undefined)
                 );
-                if (!List.empty(ans)) {
-                    return ans;
+                if (!List.empty(chunks)) {
+                    return chunks;
                 }
             }
         }
