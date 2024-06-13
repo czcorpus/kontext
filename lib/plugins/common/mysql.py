@@ -19,12 +19,11 @@
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, Generator
+import logging
 
 from mysql.connector.aio import connect
 from mysql.connector import connect as connect_sync
 from mysql.connector.aio.abstracts import MySQLConnectionAbstract, MySQLCursorAbstract
-
-from action.plugin.ctx import AbstractBasePluginCtx
 
 
 @dataclass
@@ -94,15 +93,9 @@ class MySQLOps:
         self._retry_delay = retry_delay  # TODO has no effect now
         self._retry_attempts = retry_attempts  # TODO has no effect now
 
-    async def create_connection(self) -> MySQLConnectionAbstract:
-        return await connect(
-            user=self._conn_args.user, password=self._conn_args.password, host=self._conn_args.host,
-            database=self._conn_args.db, ssl_disabled=True, autocommit=True)
-
     @asynccontextmanager
     async def connection(self) -> Generator[MySQLConnectionAbstract, None, None]:
-        import logging
-        logging.getLogger(__name__).warning('-----------------------------___ NEW CONN')
+        logging.getLogger(__name__).warning('new ad-hoc mysql connection')
         async with await connect(
                 user=self._conn_args.user, password=self._conn_args.password, host=self._conn_args.host,
                 database=self._conn_args.db, ssl_disabled=True, autocommit=True) as conn:
@@ -113,11 +106,6 @@ class MySQLOps:
         async with self.connection() as conn:
             async with await conn.cursor(dictionary=dictionary) as cur:
                 yield cur
-
-    @asynccontextmanager
-    async def cursor_from_ctx(self, ctx: AbstractBasePluginCtx, dictionary=True) -> Generator[MySQLCursorAbstract, None, None]:
-        async with await ctx.request.ctx.db.cursor(dictionary=dictionary) as cur:
-            yield cur
 
     @contextmanager
     def connection_sync(self) -> Generator[MySQLConnectionAbstract, None, None]:
