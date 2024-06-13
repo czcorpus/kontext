@@ -38,13 +38,15 @@ async def import_settings():
     with plugins.runtime.INTEGRATION_DB as mysql_db, plugins.runtime.DB as kv_db:
         settings_keys = await kv_db.keys('settings:user:*')
         values = [(int(key.split(':')[-1]), json.dumps(await kv_db.get(key))) for key in settings_keys]
-        async with mysql_db.cursor() as cursor:
-            for row in values:
-                try:
-                    await cursor.execute('INSERT INTO kontext_settings (user_id, data) VALUES (%s, %s)', row)
-                except Exception as ex:
-                    print(f'Failed to insert data {row}: {ex}')
-            await cursor.connection.commit()
+        async with mysql_db.connection() as conn:
+            async with await conn.cursor() as cursor:
+                await conn.start_transaction()
+                for row in values:
+                    try:
+                        await cursor.execute('INSERT INTO kontext_settings (user_id, data) VALUES (%s, %s)', row)
+                    except Exception as ex:
+                        print(f'Failed to insert data {row}: {ex}')
+                await conn.commit()
 
         corpus_settings_keys = await kv_db.keys('corpus_settings:user:*')
         for key in corpus_settings_keys:
@@ -55,13 +57,16 @@ async def import_settings():
                 if corpus_id.startswith('omezeni/'):
                     corpus_id = corpus_id[len('omezeni/'):]
                 values.append((user_id, corpus_id, json.dumps(cs)))
-            async with mysql_db.cursor() as cursor:
-                for row in values:
-                    try:
-                        await cursor.execute('INSERT INTO kontext_corpus_settings (user_id, corpus_name, data) VALUES (%s, %s, %s)', row)
-                    except Exception as ex:
-                        print(f'Failed to insert data {row}: {ex}')
-                await cursor.connection.commit()
+            async with mysql_db.connection() as conn:
+                async with await conn.cursor() as cursor:
+                    await conn.start_transaction()
+                    for row in values:
+                        try:
+                            await cursor.execute(
+                                'INSERT INTO kontext_corpus_settings (user_id, corpus_name, data) VALUES (%s, %s, %s)', row)
+                        except Exception as ex:
+                            print(f'Failed to insert data {row}: {ex}')
+                    await conn.commit()
 
     print('Data imported')
 

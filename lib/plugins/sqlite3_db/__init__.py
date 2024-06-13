@@ -65,19 +65,22 @@ class DefaultDb(KeyValueStorage):
 
     async def _delete_expired(self, key):
         async with self.connection() as conn:
-            cursor = await conn.execute('SELECT expires FROM data WHERE key = ?', (key,))
-            ans = await cursor.fetchone()
-            if ans and -1 < ans[0] < time.time():
-                await cursor.execute('DELETE FROM data WHERE key = ?', (key,))
-                await conn.commit()
-            return None
+            async with await conn.cursor() as cursor:
+                conn.start_transaction()
+                await cursor.execute('SELECT expires FROM data WHERE key = ?', (key,))
+                ans = await cursor.fetchone()
+                if ans and -1 < ans[0] < time.time():
+                    await cursor.execute('DELETE FROM data WHERE key = ?', (key,))
+                    await conn.commit()
+                return None
 
     async def _load_raw_data(self, key):
         await self._delete_expired(key)
         async with self.connection() as conn:
-            cursor = await conn.execute('SELECT value, expires FROM data WHERE key = ?', (key,))
-            ans = await cursor.fetchone()
-            return ans if ans else None
+            async with await conn.cursor() as cursor:
+                await cursor.execute('SELECT value, expires FROM data WHERE key = ?', (key,))
+                ans = await cursor.fetchone()
+                return ans if ans else None
 
     async def _save_raw_data(self, path, data):
         async with self.connection() as conn:

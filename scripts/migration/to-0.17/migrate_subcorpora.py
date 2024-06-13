@@ -76,136 +76,138 @@ async def migrate_subcorpora(
     total_count, published_count = 0, 0
     published_hashes = []
     with plugins.runtime.INTEGRATION_DB as mysql_db:
-        async with mysql_db.cursor() as cursor:
-            for user_id in os.listdir(users_subcpath):
-                if user_id == 'published':
-                    continue
+        async with mysql_db.connection() as conn:
+            async with await conn.cursor() as cursor:
+                await conn.start_transaction()
+                for user_id in os.listdir(users_subcpath):
+                    if user_id == 'published':
+                        continue
 
-                user_path = os.path.join(users_subcpath, user_id)
-                if not os.path.isdir(user_path):
-                    print(f'Skipping non-directory entry: {user_path}')
-                    continue
-                for corpname in os.listdir(user_path):
-                    corp_path = os.path.join(user_path, corpname)
-                    subcorpora = [file.rsplit('.', 1)[0]
-                                  for file in os.listdir(corp_path) if file.endswith('.subc')]
-                    for subcname in subcorpora:
-                        subc_path = os.path.join(corp_path, f'{subcname}.subc')
-                        author_id = user_id
-                        created = datetime.datetime.fromtimestamp(os.path.getctime(subc_path))
-                        published = None
-                        public_description = None
+                    user_path = os.path.join(users_subcpath, user_id)
+                    if not os.path.isdir(user_path):
+                        print(f'Skipping non-directory entry: {user_path}')
+                        continue
+                    for corpname in os.listdir(user_path):
+                        corp_path = os.path.join(user_path, corpname)
+                        subcorpora = [file.rsplit('.', 1)[0]
+                                      for file in os.listdir(corp_path) if file.endswith('.subc')]
+                        for subcname in subcorpora:
+                            subc_path = os.path.join(corp_path, f'{subcname}.subc')
+                            author_id = user_id
+                            created = datetime.datetime.fromtimestamp(os.path.getctime(subc_path))
+                            published = None
+                            public_description = None
 
-                        pubfile_path = os.path.join(corp_path, f'{subcname}.pub')
-                        if os.path.islink(pubfile_path):
-                            link = os.path.join(corp_path, os.path.relpath(
-                                os.readlink(pubfile_path)))
-                            if not os.path.exists(link):
-                                print(f'linked file {link} does not exist - skipping')
-                                continue
-                            published = datetime.datetime.fromtimestamp(os.path.getctime(link))
-                            p_hash = os.path.basename(link).split('.')[0]
-                            metainfo_path = link.replace('.subc', '.name')
+                            pubfile_path = os.path.join(corp_path, f'{subcname}.pub')
+                            if os.path.islink(pubfile_path):
+                                link = os.path.join(corp_path, os.path.relpath(
+                                    os.readlink(pubfile_path)))
+                                if not os.path.exists(link):
+                                    print(f'linked file {link} does not exist - skipping')
+                                    continue
+                                published = datetime.datetime.fromtimestamp(os.path.getctime(link))
+                                p_hash = os.path.basename(link).split('.')[0]
+                                metainfo_path = link.replace('.subc', '.name')
 
-                            # for public corpora determine author_id, default set to 1
-                            if os.path.isfile(metainfo_path):
-                                with open(metainfo_path) as f:
-                                    try:
-                                        metadata = json.loads(f.readline())
-                                        f.readline()
-                                    except JSONDecodeError:
-                                        print('failed to find and decode JSON metadata')
-                                        metadata = {'author_id': default_user_id}
+                                # for public corpora determine author_id, default set to 1
+                                if os.path.isfile(metainfo_path):
+                                    with open(metainfo_path) as f:
+                                        try:
+                                            metadata = json.loads(f.readline())
+                                            f.readline()
+                                        except JSONDecodeError:
+                                            print('failed to find and decode JSON metadata')
+                                            metadata = {'author_id': default_user_id}
 
-                                    public_description = f.read()
-                                author_id = metadata['author_id']
-                                if author_id is None:
+                                        public_description = f.read()
+                                    author_id = metadata['author_id']
+                                    if author_id is None:
+                                        author_id = default_user_id
+                                else:
                                     author_id = default_user_id
+                                published_count += 1
+                                published_hashes.append(p_hash)
+                                subc_id = SubcorpusIdent(p_hash, corpname)
                             else:
-                                author_id = default_user_id
-                            published_count += 1
-                            published_hashes.append(p_hash)
-                            subc_id = SubcorpusIdent(p_hash, corpname)
-                        else:
-                            published = datetime.datetime.fromtimestamp(os.path.getctime(subc_path))
-                            subc_id = await create_permanent_subc_id(subcorpora_dir, subc_path, corpname)
+                                published = datetime.datetime.fromtimestamp(os.path.getctime(subc_path))
+                                subc_id = await create_permanent_subc_id(subcorpora_dir, subc_path, corpname)
 
-                        try:
-                            await cursor.execute(
-                                'INSERT INTO kontext_subcorpus (id, name, user_id, author_id, corpus_name, size, cql, '
-                                'within_cond, text_types, created, archived, published, public_description) '
-                                'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
-                                (subc_id.id, subcname, int(user_id), int(author_id), corpname,
-                                 0, None, None, None, created, None, published, public_description)
-                            )
-                        except IntegrityError as ex:
-                            print(f'failed to insert subcorpus [{subcname}] for user {user_id}, author: {author_id}: {ex}')
-                            if not await user_exists(int(user_id), user_table):
-                                print(
-                                    f'no such user ... going to insert using a backup user ID {default_user_id}')
+                            try:
                                 await cursor.execute(
                                     'INSERT INTO kontext_subcorpus (id, name, user_id, author_id, corpus_name, size, cql, '
                                     'within_cond, text_types, created, archived, published, public_description) '
                                     'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
-                                    (subc_id.id, subcname, int(default_user_id), int(default_user_id), corpname,
+                                    (subc_id.id, subcname, int(user_id), int(author_id), corpname,
                                      0, None, None, None, created, None, published, public_description)
                                 )
+                            except IntegrityError as ex:
+                                print(f'failed to insert subcorpus [{subcname}] for user {user_id}, author: {author_id}: {ex}')
+                                if not await user_exists(int(user_id), user_table):
+                                    print(
+                                        f'no such user ... going to insert using a backup user ID {default_user_id}')
+                                    await cursor.execute(
+                                        'INSERT INTO kontext_subcorpus (id, name, user_id, author_id, corpus_name, size, cql, '
+                                        'within_cond, text_types, created, archived, published, public_description) '
+                                        'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
+                                        (subc_id.id, subcname, int(default_user_id), int(default_user_id), corpname,
+                                         0, None, None, None, created, None, published, public_description)
+                                    )
 
-                        await ensure_subc_dir(subcorpora_dir, subc_id)
-                        shutil.copy2(subc_path, os.path.join(subcorpora_dir, subc_id.data_path))
-                        total_count += 1
+                            await ensure_subc_dir(subcorpora_dir, subc_id)
+                            shutil.copy2(subc_path, os.path.join(subcorpora_dir, subc_id.data_path))
+                            total_count += 1
 
-            published_dir = os.path.join(users_subcpath, 'published')
-            if os.path.isdir(published_dir):
-                for corpname in os.listdir(published_dir):
-                    p_hashes = [h.split('.')[0] for h in os.listdir(
-                        os.path.join(published_dir, corpname)) if h.endswith('name')]
-                    for p_hash in p_hashes:
-                        if p_hash in published_hashes:
-                            continue
-
-                        with open(os.path.join(published_dir, corpname, f'{p_hash}.name')) as f:
-                            line = f.readline()
-                            if not line:
+                published_dir = os.path.join(users_subcpath, 'published')
+                if os.path.isdir(published_dir):
+                    for corpname in os.listdir(published_dir):
+                        p_hashes = [h.split('.')[0] for h in os.listdir(
+                            os.path.join(published_dir, corpname)) if h.endswith('name')]
+                        for p_hash in p_hashes:
+                            if p_hash in published_hashes:
                                 continue
+
+                            with open(os.path.join(published_dir, corpname, f'{p_hash}.name')) as f:
+                                line = f.readline()
+                                if not line:
+                                    continue
+                                try:
+                                    metadata = json.loads(line)
+                                except:
+                                    print('failed to decode JSON subc. metadata - will use default values')
+                                    metadata = {'author_id': default_user_id, 'author_name': 'unknown'}
+                                f.readline()
+                                public_description = f.read()
+
+                            subc_path = os.path.join(published_dir, corpname, f'{p_hash}.subc')
+                            if not os.path.isfile(subc_path):
+                                continue
+
+                            subc_id = SubcorpusIdent(p_hash, corpname)
+                            published = datetime.datetime.fromtimestamp(os.path.getctime(subc_path))
+                            created = published
+                            user_id = default_user_id
+                            author_id = metadata['author_id']
+                            if author_id is None:
+                                author_id = default_user_id
+
                             try:
-                                metadata = json.loads(line)
-                            except:
-                                print('failed to decode JSON subc. metadata - will use default values')
-                                metadata = {'author_id': default_user_id, 'author_name': 'unknown'}
-                            f.readline()
-                            public_description = f.read()
+                                await cursor.execute(
+                                    'INSERT INTO kontext_subcorpus (id, name, user_id, author_id, corpus_name, size, cql, '
+                                    'within_cond, text_types, created, archived, published, public_description) '
+                                    'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
+                                    (subc_id.id, subcname, int(user_id), int(author_id), corpname,
+                                     0, None, None, None, created, None, published, public_description)
+                                )
+                            except IntegrityError as ex:
+                                print(
+                                    f'failed to insert published-only subcorpus [{subcname}] for user {user_id}, author: {author_id}: {ex}')
 
-                        subc_path = os.path.join(published_dir, corpname, f'{p_hash}.subc')
-                        if not os.path.isfile(subc_path):
-                            continue
+                            await ensure_subc_dir(subcorpora_dir, subc_id)
+                            shutil.copy2(subc_path, os.path.join(subcorpora_dir, subc_id.data_path))
+                            total_count += 1
+                            published_count += 1
 
-                        subc_id = SubcorpusIdent(p_hash, corpname)
-                        published = datetime.datetime.fromtimestamp(os.path.getctime(subc_path))
-                        created = published
-                        user_id = default_user_id
-                        author_id = metadata['author_id']
-                        if author_id is None:
-                            author_id = default_user_id
-
-                        try:
-                            await cursor.execute(
-                                'INSERT INTO kontext_subcorpus (id, name, user_id, author_id, corpus_name, size, cql, '
-                                'within_cond, text_types, created, archived, published, public_description) '
-                                'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
-                                (subc_id.id, subcname, int(user_id), int(author_id), corpname,
-                                 0, None, None, None, created, None, published, public_description)
-                            )
-                        except IntegrityError as ex:
-                            print(
-                                f'failed to insert published-only subcorpus [{subcname}] for user {user_id}, author: {author_id}: {ex}')
-
-                        await ensure_subc_dir(subcorpora_dir, subc_id)
-                        shutil.copy2(subc_path, os.path.join(subcorpora_dir, subc_id.data_path))
-                        total_count += 1
-                        published_count += 1
-
-            await cursor.connection.commit()
+                await conn.commit()
     return total_count, published_count
 
 

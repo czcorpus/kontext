@@ -21,6 +21,7 @@ import logging
 import re
 from collections import OrderedDict, defaultdict
 from typing import Any, Dict, Iterable, List, Optional, Tuple
+from mysql.connector.aio.abstracts import MySQLCursorAbstract
 
 import plugins
 import ujson as json
@@ -29,7 +30,6 @@ from action.krequest import KRequest
 from action.model.user import UserActionModel
 from action.plugin.ctx import AbstractCorpusPluginCtx, PluginCtx
 from action.response import KResponse
-from mysql.connector.aio.abstracts import MySQLCursorAbstract
 from corplib.abstract import SubcorpusIdent
 from plugin_types.corparch import (
     AbstractSearchableCorporaArchive, CorpusListItem)
