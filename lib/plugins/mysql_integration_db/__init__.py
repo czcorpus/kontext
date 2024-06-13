@@ -19,13 +19,13 @@
 import logging
 import time
 
-import aiomysql
-import pymysql.cursors
+from mysql.connector.aio.abstracts import MySQLConnectionAbstract, MySQLCursorAbstract
+from mysql.connector.abstracts import MySQLConnectionAbstract as SyncMySQLConnectionAbstract, MySQLCursorAbstract as SyncMySQLCursorAbstract
 from plugin_types.integration_db import IntegrationDatabase
 from plugins.common.mysql import MySQLOps
 
 
-class MySqlIntegrationDb(MySQLOps, IntegrationDatabase[aiomysql.Connection, aiomysql.Cursor, pymysql.Connection, pymysql.cursors.Cursor]):
+class MySqlIntegrationDb(MySQLOps, IntegrationDatabase[MySQLConnectionAbstract, MySQLCursorAbstract, SyncMySQLConnectionAbstract, SyncMySQLCursorAbstract]):
     """
     MySqlIntegrationDb is a variant of integration_db plug-in providing access
     to MySQL/MariaDB instances. It is recommended for:

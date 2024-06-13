@@ -34,7 +34,7 @@ from action.krequest import KRequest
 from action.model.corpus import CorpusActionModel
 from action.plugin.ctx import PluginCtx
 from action.response import KResponse
-from aiomysql import Cursor
+from mysql.connector.aio.abstracts import MySQLCursorAbstract
 from corplib.corpus import KCorpus
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.corparch.corpus import CorpusInfo
@@ -283,7 +283,7 @@ class MysqlLiveAttributes(CachedLiveAttributes):
 
         async with self.integ_db.cursor() as cursor:
             await cursor.execute(query_components.sql_template, query_components.where_values)
-            async for row in cursor:
+            for row in await cursor.fetchall():
                 data = dict(tuple(pair.split('=', 1)) for pair in row['data'].split('\n'))
                 for col_key in query_components.selected_attrs:
                     data_key = col_key if isinstance(col_key, str) else col_key.key()
@@ -351,7 +351,7 @@ class MysqlLiveAttributes(CachedLiveAttributes):
             return [StructAttrValuePair(*pair.split('=', 1)) for pair in (await cursor.fetchone())['data'].split('\n')]
 
     async def _find_attrs(
-            self, cursor: Cursor, corpus_id: str, search: StructAttr, values:
+            self, cursor: MySQLCursorAbstract, corpus_id: str, search: StructAttr, values:
             List[str], fill: List[StructAttr]):
         if len(values) == 0:
             await cursor.execute('SELECT 1 FROM dual WHERE false')
@@ -384,7 +384,7 @@ class MysqlLiveAttributes(CachedLiveAttributes):
         ans = []
         async with self.integ_db.cursor() as cursor:
             await self._find_attrs(cursor, corpus_id, bib_id, id_list, [bib_id, bib_label])
-            async for row in cursor:
+            for row in await cursor.fetchall():
                 data = dict(tuple(pair.split('=', 1)) for pair in row['data'].split('\n'))
                 ans.append(BibTitle(data[bib_id.key()], data[bib_label.key()]))
 
@@ -399,7 +399,7 @@ class MysqlLiveAttributes(CachedLiveAttributes):
             await self._find_attrs(
                 cursor=cursor, corpus_id=corpus_id, search=search_structattr, values=values,
                 fill=[search_structattr, *fill_structattrs])
-            async for row in cursor:
+            for row in await cursor.fetchall():
                 data: Dict[str, str] = dict(tuple(pair.split('=', 1))
                                             for pair in row['data'].split('\n'))
                 ans[data[search]] = {k: v for k, v in data.items() if not (k == search)}

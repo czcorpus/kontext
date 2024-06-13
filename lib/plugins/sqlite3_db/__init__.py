@@ -290,7 +290,7 @@ class DefaultDb(KeyValueStorage):
         pattern = pattern.replace('*', '%').replace('?', '_')
         async with self.connection() as conn:
             cursor = await conn.execute('SELECT key FROM data WHERE key LIKE ?', (pattern,))
-            return [row[0] async for row in cursor]
+            return [row[0] for row in await cursor.fetchall()]
 
 
 def create_instance(conf):

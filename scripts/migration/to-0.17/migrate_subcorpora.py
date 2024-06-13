@@ -37,7 +37,7 @@ import plugins
 import settings
 from action.plugin import initializer
 from corplib.abstract import SubcorpusIdent
-from pymysql.err import IntegrityError
+from mysql.connector.errors import IntegrityError
 from util import int2chash
 import hashlib
 
