@@ -218,7 +218,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
 
             full_data = []
             corpora = CorpusCache(corpus_factory)
-            rows = [item async for item in cursor]
+            rows = [item for item in await cursor.fetchall()]
             qdata_map = {}
             for item in rows:
                 stored = await self._query_persistence.open(item['query_id'])

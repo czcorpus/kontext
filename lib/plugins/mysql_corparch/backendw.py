@@ -24,7 +24,7 @@ from collections import OrderedDict, defaultdict
 from contextlib import asynccontextmanager
 
 import pytz
-from aiomysql.cursors import Cursor
+from mysql.connector.aio.abstracts import MySQLCursorAbstract
 from plugin_types.corparch.backend import DatabaseWriteBackend
 from plugin_types.corparch.backend.regkeys import (POS_COLS_MAP, REG_COLS_MAP,
                                                    REG_VAR_COLS_MAP,
@@ -40,7 +40,7 @@ from plugins.mysql_corparch.backend import (DFLT_CORP_TABLE,
                                             DFLT_USER_TABLE, Backend)
 
 
-class WriteBackend(DatabaseWriteBackend[Cursor]):
+class WriteBackend(DatabaseWriteBackend[MySQLCursorAbstract]):
     """
     This is an extended version of mysql backend used by ucnk scripts
     to import existing corpora.xml/registry files etc.
@@ -66,14 +66,14 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
         async with self._db.cursor() as cursor:
             yield cursor
 
-    async def remove_corpus(self, cursor: Cursor, corpus_id):
+    async def remove_corpus(self, cursor: MySQLCursorAbstract, corpus_id):
         # articles
         await cursor.execute(
             'SELECT a.id '
             'FROM kontext_article AS a '
             'LEFT JOIN kontext_corpus_article AS ca ON a.id = ca.article_id '
             'WHERE ca.corpus_name IS NULL')
-        for row3 in cursor.fetchall():
+        for row3 in await cursor.fetchall():
             await cursor.execute('DELETE FROM kontext_article WHERE id = %s', (row3['id'],))
 
         # misc. M:N stuff
@@ -96,11 +96,11 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
             'FROM kontext_ttdesc AS t '
             f'LEFT JOIN {self._corp_table} AS kc ON kc.ttdesc_id = t.id '
             'WHERE kc.ttdesc_id IS NULL')
-        for row4 in cursor.fetchall():
+        for row4 in await cursor.fetchall():
             await cursor.execute('DELETE FROM kontext_ttdesc WHERE id = %s', (row4['id'],))
 
     @staticmethod
-    async def _create_structattr_if_none(cursor: Cursor, corpus_id, name):
+    async def _create_structattr_if_none(cursor: MySQLCursorAbstract, corpus_id, name):
         """
         Create a structural attribute (e.g. "doc.author");
         if already present then do nothing.
@@ -129,7 +129,7 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
         return struct, attr
 
     @staticmethod
-    async def _find_article(cursor: Cursor, contents):
+    async def _find_article(cursor: MySQLCursorAbstract, contents):
         """
         Find an article with exactly same contents.
         """
@@ -139,7 +139,7 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
         return row[0] if row else None
 
     @staticmethod
-    async def _create_struct_if_none(cursor: Cursor, corpus_id, name):
+    async def _create_struct_if_none(cursor: MySQLCursorAbstract, corpus_id, name):
         """
         Create a structure (e.g. "doc");
         if already present then do nothing.
@@ -158,7 +158,7 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
                 await cursor.execute(
                     'INSERT INTO corpus_structure (corpus_name, name) VALUES (%s, %s)', (corpus_id, name))
 
-    async def save_corpus_config(self, cursor: Cursor, install_json, registry_conf, corp_size):
+    async def save_corpus_config(self, cursor: MySQLCursorAbstract, install_json, registry_conf, corp_size):
         t1 = datetime.datetime.now(
             tz=pytz.timezone('Europe/Prague')).strftime("%Y-%m-%dT%H:%M:%S%z")
         vals1 = (
@@ -255,7 +255,7 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
              spe_attr, bla_struct, bla_attr, bli_struct, bli_attr, install_json.metadata.database,
              int(install_json.metadata.featured), install_json.ident))
 
-    async def update_corpus_config(self, cursor: Cursor, install_json, registry_conf, corp_size):
+    async def update_corpus_config(self, cursor: MySQLCursorAbstract, install_json, registry_conf, corp_size):
         t1 = datetime.datetime.now(
             tz=pytz.timezone('Europe/Prague')).strftime("%Y-%m-%dT%H:%M:%S%z")
         # fetch and del. taghelper info to prevent foreign key problems
@@ -338,7 +338,7 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
             'SELECT CONCAT(structure_name, ".", name) AS name '
             'FROM corpus_structattr '
             'WHERE corpus_name = %s', (install_json.ident,))
-        curr_structattrs = set(row['name'] for row in cursor.fetchall())
+        curr_structattrs = set(row['name'] for row in await cursor.fetchall())
         new_structattrs = OrderedDict()
         for new_structattr in registry_conf.structs:
             for x in new_structattr.attributes:
@@ -353,7 +353,7 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
                     f'UPDATE {self._corp_table} SET {prop} = NULL WHERE name = %s', (install_json.ident,))
         # structures
         await cursor.execute('SELECT name FROM corpus_structure WHERE corpus_name = %s', (install_json.ident,))
-        curr_structs = set(row['name'] for row in cursor.fetchall())
+        curr_structs = set(row['name'] for row in await cursor.fetchall())
         new_structs = OrderedDict()
         for struct in registry_conf.structs:
             new_structs[struct.name] = struct
@@ -388,25 +388,25 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
         # restore taghelper rows
         await self.restore_taghelper_rows(cursor, install_json.ident, taghelper_rows)
 
-    async def save_corpus_article(self, cursor: Cursor, text):
+    async def save_corpus_article(self, cursor: MySQLCursorAbstract, text):
         await cursor.execute('INSERT INTO kontext_article (entry) VALUES (%s)', (text,))
         await cursor.execute('SELECT last_insert_id() AS last_id')
         return await cursor.fetchone()['last_id']
 
-    async def attach_corpus_article(self, cursor: Cursor, corpus_id, article_id, role):
+    async def attach_corpus_article(self, cursor: MySQLCursorAbstract, corpus_id, article_id, role):
         await cursor.execute(
             'INSERT INTO kontext_corpus_article (corpus_name, article_id, role) '
             'VALUES (%s, %s, %s)', (corpus_id, article_id, role))
 
     @staticmethod
-    async def _registry_table_exists(cursor: Cursor, corpus_id):
+    async def _registry_table_exists(cursor: MySQLCursorAbstract, corpus_id):
         await cursor.execute(
             'SELECT COUNT(*) AS cnt FROM registry_conf WHERE corpus_name = %s LIMIT 1', (corpus_id,))
         row = await cursor.fetchone()
         return row['cnt'] == 1 if row else False
 
     @staticmethod
-    async def _registry_variable_exists(cursor: Cursor, corpus_id, variant):
+    async def _registry_variable_exists(cursor: MySQLCursorAbstract, corpus_id, variant):
         if variant is not None:
             await cursor.execute(
                 'SELECT COUNT(*) AS cnt FROM registry_variable '
@@ -422,7 +422,7 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
     def normalize_raw_attrlist(s):
         return re.sub(r'\s+', '', s.replace('|', ','))
 
-    async def get_and_delete_taghelper_rows(self, cursor: Cursor, corpus_id):
+    async def get_and_delete_taghelper_rows(self, cursor: MySQLCursorAbstract, corpus_id):
         cols = ['corpus_name', 'pos_attr', 'feat_attr', 'tagset_type', 'tagset_name', 'widget_enabled', 'doc_url_local', 'doc_url_en']
         await cursor.execute(
             'SELECT {} FROM kontext_corpus_taghelper WHERE corpus_name = %s'.format(', '.join(cols)),
@@ -432,7 +432,7 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
         print(rows)
         return rows
 
-    async def restore_taghelper_rows(self, cursor: Cursor, corpus_id, rows):
+    async def restore_taghelper_rows(self, cursor: MySQLCursorAbstract, corpus_id, rows):
         cols = ['corpus_name', 'pos_attr', 'feat_attr', 'tagset_type', 'tagset_name', 'widget_enabled', 'doc_url_local',
                 'doc_url_en']
         for row in rows:
@@ -440,7 +440,7 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
                 'INSERT INTO kontext_corpus_taghelper ({}) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)'.format(', '.join(cols)),
                 tuple(row))
 
-    async def save_registry_table(self, cursor: Cursor, corpus_id, variant, values):
+    async def save_registry_table(self, cursor: MySQLCursorAbstract, corpus_id, variant, values):
         values = dict(values)
         await self._create_struct_if_none(cursor, corpus_id, values.get('DOCSTRUCTURE', None))
         async with self._db.cursor() as cursor:
@@ -492,7 +492,7 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
             await cursor.execute(sql, vals)
             return created
 
-    async def save_corpus_posattr(self, cursor: Cursor, corpus_id, name, position, values):
+    async def save_corpus_posattr(self, cursor: MySQLCursorAbstract, corpus_id, name, position, values):
         """
         """
 
@@ -516,7 +516,7 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
                 'Failed to save registry values: {0}.'.format(list(zip(cols, vals))))
             raise ex
 
-    async def update_corpus_posattr_references(self, cursor: Cursor, corpus_id, posattr_id, fromattr_id, mapto_id):
+    async def update_corpus_posattr_references(self, cursor: MySQLCursorAbstract, corpus_id, posattr_id, fromattr_id, mapto_id):
         """
         both fromattr_id and mapto_id can be None
         """
@@ -525,7 +525,7 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
             'WHERE corpus_name = %s AND name = %s',
             (fromattr_id, mapto_id, corpus_id, posattr_id))
 
-    async def save_corpus_alignments(self, cursor: Cursor, corpus_id, aligned_ids):
+    async def save_corpus_alignments(self, cursor: MySQLCursorAbstract, corpus_id, aligned_ids):
         for aid in aligned_ids:
             try:
                 await cursor.execute(
@@ -536,7 +536,7 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
                     'Failed to insert values {0}, {1}'.format(corpus_id, aid))
                 raise ex
 
-    async def save_corpus_structure(self, cursor: Cursor, corpus_id, name, position: int, values):
+    async def save_corpus_structure(self, cursor: MySQLCursorAbstract, corpus_id, name, position: int, values):
         base_cols = [STRUCT_COLS_MAP[k] for k, v in values if k in STRUCT_COLS_MAP]
         base_vals = [v for k, v in values if k in STRUCT_COLS_MAP]
 
@@ -561,7 +561,7 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
             await cursor.execute(sql, vals)
 
     @staticmethod
-    async def _structattr_exists(cursor: Cursor, corpus_id, struct_id, name):
+    async def _structattr_exists(cursor: MySQLCursorAbstract, corpus_id, struct_id, name):
         await cursor.execute(
             'SELECT COUNT(*) AS cnt FROM corpus_structattr '
             'WHERE corpus_name = %s AND structure_name = %s AND name = %s',
@@ -569,7 +569,7 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
         row = await cursor.fetchone()
         return row['cnt'] == 1 if row else False
 
-    async def save_corpus_structattr(self, cursor: Cursor, corpus_id, struct_id, name, position, values):
+    async def save_corpus_structattr(self, cursor: MySQLCursorAbstract, corpus_id, struct_id, name, position, values):
         """
         """
         vals = []
@@ -599,17 +599,17 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
                 'Failed to insert values {0}'.format(list(zip(cols, vals))))
             raise ex
 
-    async def save_subcorpattr(self, cursor: Cursor, corpus_id, struct_name, attr_name, idx):
+    async def save_subcorpattr(self, cursor: MySQLCursorAbstract, corpus_id, struct_name, attr_name, idx):
         await cursor.execute(
             'UPDATE corpus_structattr SET subcorpattrs_idx = %s '
             'WHERE corpus_name = %s AND structure_name = %s AND name = %s', (idx, corpus_id, struct_name, attr_name))
 
-    async def save_freqttattr(self, cursor: Cursor, corpus_id, struct_name, attr_name, idx):
+    async def save_freqttattr(self, cursor: MySQLCursorAbstract, corpus_id, struct_name, attr_name, idx):
         await cursor.execute(
             'UPDATE corpus_structattr SET freqttattrs_idx = %s '
             'WHERE corpus_name = %s AND structure_name = %s AND name = %s', (idx, corpus_id, struct_name, attr_name))
 
-    async def _find_structures_use(self, cursor: Cursor, corp_id: str):
+    async def _find_structures_use(self, cursor: MySQLCursorAbstract, corp_id: str):
         await cursor.execute(
             'SELECT sentence_struct, speech_segment_struct, speaker_id_struct, speech_overlap_struct,'
             f'bib_label_struct, bib_id_struct FROM {self._corp_table} WHERE name = %s', (corp_id,)
@@ -617,7 +617,7 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
         row = await cursor.fetchone()
         return {} if row is None else row
 
-    async def _find_structattr_use(self, cursor: Cursor, corp_id: str):
+    async def _find_structattr_use(self, cursor: MySQLCursorAbstract, corp_id: str):
         await cursor.execute(
             'SELECT '
             'CONCAT(speech_segment_attr, ".", speech_segment_struct) AS speech_segment_attr, '

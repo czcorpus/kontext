@@ -18,14 +18,18 @@
 
 import logging
 import time
+from contextlib import asynccontextmanager
+from contextvars import ContextVar
+from typing import Generator
+from mysql.connector.aio import connect
+from mysql.connector.aio.abstracts import MySQLConnectionAbstract, MySQLCursorAbstract
+from mysql.connector.abstracts import MySQLConnectionAbstract as SyncMySQLConnectionAbstract, MySQLCursorAbstract as SyncMySQLCursorAbstract
 
-import aiomysql
-import pymysql.cursors
 from plugin_types.integration_db import IntegrationDatabase
 from plugins.common.mysql import MySQLOps
 
 
-class MySqlIntegrationDb(MySQLOps, IntegrationDatabase[aiomysql.Connection, aiomysql.Cursor, pymysql.Connection, pymysql.cursors.Cursor]):
+class MySqlIntegrationDb(MySQLOps, IntegrationDatabase[MySQLConnectionAbstract, MySQLCursorAbstract, SyncMySQLConnectionAbstract, SyncMySQLCursorAbstract]):
     """
     MySqlIntegrationDb is a variant of integration_db plug-in providing access
     to MySQL/MariaDB instances. It is recommended for:
@@ -43,6 +47,7 @@ class MySqlIntegrationDb(MySQLOps, IntegrationDatabase[aiomysql.Connection, aiom
                  environment_wait_sec: int):
         super().__init__(host, database, user, password, pool_size, autocommit, retry_delay, retry_attempts)
         self._environment_wait_sec = environment_wait_sec
+        self._db_conn = ContextVar('database_connection', default=None)
 
     @property
     def is_active(self):
@@ -75,6 +80,31 @@ class MySqlIntegrationDb(MySQLOps, IntegrationDatabase[aiomysql.Connection, aiom
         return Exception(
             f'Unable to confirm integration environment within defined interval {self._environment_wait_sec}s.',
             'Please check table kontext_integration_env')
+
+    async def on_request(self):
+        curr = self._db_conn.get()
+        if not curr:
+            self._db_conn.set(await self.create_connection())
+
+    async def on_response(self):
+        curr = self._db_conn.get()
+        if curr:
+            await curr.close()
+
+    async def create_connection(self) -> MySQLConnectionAbstract:
+        return await connect(
+            user=self._conn_args.user, password=self._conn_args.password, host=self._conn_args.host,
+            database=self._conn_args.db, ssl_disabled=True, autocommit=True)
+
+    @asynccontextmanager
+    async def connection(self) -> Generator[MySQLConnectionAbstract, None, None]:
+        curr = self._db_conn.get()
+        if not curr:
+            raise RuntimeError('No database connection')
+        try:
+            yield curr
+        finally:
+            pass  # No need to close the connection as it is done by Sanic middleware
 
 
 def create_instance(conf):

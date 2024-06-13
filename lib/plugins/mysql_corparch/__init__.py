@@ -29,7 +29,7 @@ from action.krequest import KRequest
 from action.model.user import UserActionModel
 from action.plugin.ctx import AbstractCorpusPluginCtx, PluginCtx
 from action.response import KResponse
-from aiomysql.cursors import Cursor
+from mysql.connector.aio.abstracts import MySQLCursorAbstract
 from corplib.abstract import SubcorpusIdent
 from plugin_types.corparch import (
     AbstractSearchableCorporaArchive, CorpusListItem)
@@ -271,7 +271,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
         lang_key = self._get_iso639lang(lang)
         return self._keywords[lang_key]
 
-    async def _get_tckcqs_providers(self, cursor: Cursor, corpus_id):
+    async def _get_tckcqs_providers(self, cursor: MySQLCursorAbstract, corpus_id):
         if corpus_id not in self._tc_providers and corpus_id not in self._kc_providers:
             self._tc_providers[corpus_id] = TokenConnect()
             self._kc_providers[corpus_id] = KwicConnect()
@@ -290,7 +290,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
                     self._qs_providers[corpus_id].providers.append(row['provider'])
         return self._tc_providers[corpus_id], self._kc_providers[corpus_id], self._tl_providers[corpus_id], self._qs_providers[corpus_id]
 
-    async def _fetch_corpus_info(self, plugin_ctx: AbstractCorpusPluginCtx, cursor: Cursor, corpus_id: str) -> CorpusInfo:
+    async def _fetch_corpus_info(self, plugin_ctx: AbstractCorpusPluginCtx, cursor: MySQLCursorAbstract, corpus_id: str) -> CorpusInfo:
         cache_key = (corpus_id, plugin_ctx.user_lang)
         if cache_key not in self._corpus_info_cache:
             row = await self._backend.load_corpus(cursor, corpus_id)
@@ -374,7 +374,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
     def create_corplist_provider(self, plugin_ctx):
         return DefaultCorplistProvider(plugin_ctx, self, self._tag_prefix)
 
-    async def _export_favorite(self, cursor: Cursor, plugin_ctx):
+    async def _export_favorite(self, cursor: MySQLCursorAbstract, plugin_ctx):
         ans = []
         for item in await plugins.runtime.USER_ITEMS.instance.get_user_items(plugin_ctx):
             tmp = item.to_dict()
@@ -406,7 +406,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
     def export_actions():
         return bp
 
-    async def _export_featured(self, cursor: Cursor, plugin_ctx: PluginCtx):
+    async def _export_featured(self, cursor: MySQLCursorAbstract, plugin_ctx: PluginCtx):
         return [
             dict(r)
             for r in await self.backend.load_featured_corpora(cursor, plugin_ctx.user_id, plugin_ctx.user_lang)]

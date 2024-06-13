@@ -122,3 +122,20 @@ class IntegrationDatabase(abc.ABC, Generic[N, R, SN, SR]):
     @abc.abstractmethod
     def cursor_sync(self, dictionary=True) -> DbContextManager[SR]:
         pass
+
+    async def on_request(self):
+        """
+        The function is called by a Sanic 'request' middleware.
+        This is e.g. the right time to open a db connection
+        (but be aware of the scope of the connection -
+        see e.g. contextvars.ContextVar).
+        """
+        pass
+
+    async def on_response(self):
+        """
+        The function is called by a Sanic 'response' middleware.
+        This is typically the right time to close the database
+        connection.
+        """
+        pass

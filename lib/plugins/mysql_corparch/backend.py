@@ -24,7 +24,7 @@ that the backend also covers operations required by mysql_auth plug-in.
 from contextlib import asynccontextmanager
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
-from aiomysql.cursors import Cursor
+from mysql.connector.aio.abstracts import MySQLCursorAbstract
 from plugin_types.auth import CorpusAccess
 from plugin_types.corparch.backend import DatabaseBackend
 from plugin_types.corparch.backend.regkeys import (
@@ -161,11 +161,11 @@ class Backend(DatabaseBackend):
             return f'{corp_acc_sql} UNION {par_acc_sql}', corp_acc_args + par_acc_args
         return corp_acc_sql, corp_acc_args
 
-    async def contains_corpus(self, cursor: Cursor, corpus_id: str) -> bool:
+    async def contains_corpus(self, cursor: MySQLCursorAbstract, corpus_id: str) -> bool:
         await cursor.execute(f'SELECT name FROM {self._corp_table} WHERE name = %s', (corpus_id,))
         return (await cursor.fetchone()) is not None
 
-    async def load_corpus_articles(self, cursor: Cursor, corpus_id: str) -> Iterable[Dict[str, Any]]:
+    async def load_corpus_articles(self, cursor: MySQLCursorAbstract, corpus_id: str) -> Iterable[Dict[str, Any]]:
         await cursor.execute(
             'SELECT ca.role, a.entry '
             'FROM kontext_article AS a '
@@ -173,7 +173,7 @@ class Backend(DatabaseBackend):
             'WHERE ca.corpus_name = %s', (corpus_id,))
         return await cursor.fetchall()
 
-    async def load_corpus_as_source_info(self, cursor: Cursor, corpus_id: str, user_lang: str) -> Optional[str]:
+    async def load_corpus_as_source_info(self, cursor: MySQLCursorAbstract, corpus_id: str, user_lang: str) -> Optional[str]:
         lang = user_lang.split('_')[0]
         lang = lang if lang in ('en', 'cs') else 'en'
         await cursor.execute(
@@ -190,16 +190,16 @@ class Backend(DatabaseBackend):
             authors = '[unknown author]'
         return f"{authors}: {data['title']}"
 
-    async def load_all_keywords(self, cursor: Cursor) -> Iterable[Dict[str, str]]:
+    async def load_all_keywords(self, cursor: MySQLCursorAbstract) -> Iterable[Dict[str, str]]:
         await cursor.execute(
             'SELECT id, label_cs, label_en, color FROM kontext_keyword ORDER BY display_order')
         return await cursor.fetchall()
 
-    async def load_ttdesc(self, cursor: Cursor, desc_id) -> Iterable[Dict[str, str]]:
+    async def load_ttdesc(self, cursor: MySQLCursorAbstract, desc_id) -> Iterable[Dict[str, str]]:
         await cursor.execute('SELECT text_cs, text_en FROM kontext_ttdesc WHERE id = %s', (desc_id,))
         return await cursor.fetchall()
 
-    async def load_corpora_descriptions(self, cursor: Cursor, corp_ids: List[str], user_lang: str) -> Dict[str, str]:
+    async def load_corpora_descriptions(self, cursor: MySQLCursorAbstract, corp_ids: List[str], user_lang: str) -> Dict[str, str]:
         if len(corp_ids) == 0:
             return {}
         placeholders = ', '.join(['%s'] * len(corp_ids))
@@ -208,9 +208,9 @@ class Backend(DatabaseBackend):
             f'SELECT name AS corpname, {col} AS contents '
             f'FROM {self._corp_table} '
             f'WHERE name IN ({placeholders})', corp_ids)
-        return {r['corpname']: r['contents'] async for r in cursor}
+        return {r['corpname']: r['contents'] for r in await cursor.fetchall()}
 
-    async def load_corpus(self, cursor: Cursor, corp_id: str) -> Dict[str, Any]:
+    async def load_corpus(self, cursor: MySQLCursorAbstract, corp_id: str) -> Dict[str, Any]:
         await cursor.execute(
             'SELECT c.name as id, c.pid as pid, c.web, c.sentence_struct, c.locale AS collator_locale, '
             'IF (c.speaker_id_struct IS NOT NULL, CONCAT(c.speaker_id_struct, \'.\', c.speaker_id_attr), NULL) '
@@ -245,7 +245,7 @@ class Backend(DatabaseBackend):
         return await cursor.fetchone()
 
     async def list_corpora(
-            self, cursor: Cursor, user_id, substrs=None, keywords=None, min_size=0, max_size=None, requestable=False,
+            self, cursor: MySQLCursorAbstract, user_id, substrs=None, keywords=None, min_size=0, max_size=None, requestable=False,
             offset=0, limit=10000000000, favourites=()) -> Iterable[Dict[str, Any]]:
         where_cond1 = ['c.active = %s', 'c.requestable = %s']
         values_cond1 = [1, 1]
@@ -346,7 +346,7 @@ class Backend(DatabaseBackend):
         await cursor.execute(sql, where + [limit, offset])
         return await cursor.fetchall()
 
-    async def load_featured_corpora(self, cursor: Cursor, user_id, user_lang):
+    async def load_featured_corpora(self, cursor: MySQLCursorAbstract, user_id, user_lang):
         """
         note: we ignore requestable corpora here
         """
@@ -361,7 +361,7 @@ class Backend(DatabaseBackend):
             'WHERE c.active = 1 AND c.featured = 1 ORDER BY c.name', total_acc_args)
         return await cursor.fetchall()
 
-    async def load_registry_table(self, cursor: Cursor, corpus_id: str, variant: str) -> Dict[str, str]:
+    async def load_registry_table(self, cursor: MySQLCursorAbstract, corpus_id: str, variant: str) -> Dict[str, str]:
         cols = ([f'rc.{v} AS {k}' for k, v in REG_COLS_MAP.items()] +
                 [f'rv.{v} AS {k}' for k, v in REG_VAR_COLS_MAP.items()])
         if variant:
@@ -379,13 +379,13 @@ class Backend(DatabaseBackend):
         await cursor.execute(sql, vals)
         return await cursor.fetchone()
 
-    async def load_corpus_posattrs(self, cursor: Cursor, corpus_id: str) -> Iterable[Dict[str, Any]]:
+    async def load_corpus_posattrs(self, cursor: MySQLCursorAbstract, corpus_id: str) -> Iterable[Dict[str, Any]]:
         sql = 'SELECT {0} FROM corpus_posattr WHERE corpus_name = %s ORDER BY position'.format(
             ', '.join(['name', 'position'] + [f'`{v}` AS `{k}`' for k, v in POS_COLS_MAP.items()]))
         await cursor.execute(sql, (corpus_id,))
         return await cursor.fetchall()
 
-    async def load_corpus_posattr_references(self, cursor: Cursor, corpus_id: str, posattr_id: str) -> Tuple[str, str]:
+    async def load_corpus_posattr_references(self, cursor: MySQLCursorAbstract, corpus_id: str, posattr_id: str) -> Tuple[str, str]:
         await cursor.execute(
             'SELECT r2.name AS n1, r3.name AS n2 '
             'FROM corpus_posattr AS r1 '
@@ -395,21 +395,21 @@ class Backend(DatabaseBackend):
         ans = await cursor.fetchone()
         return (ans['n1'], ans['n2']) if ans is not None else (None, None)
 
-    async def load_corpus_alignments(self, cursor: Cursor, corpus_id: str) -> List[str]:
+    async def load_corpus_alignments(self, cursor: MySQLCursorAbstract, corpus_id: str) -> List[str]:
         await cursor.execute(
             'SELECT ca.corpus_name_2 AS id '
             'FROM corpus_alignment AS ca '
             'WHERE ca.corpus_name_1 = %s', (corpus_id,))
-        return [row['id'] async for row in cursor]
+        return [row['id'] for row in await cursor.fetchall()]
 
-    async def load_corpus_structures(self, cursor: Cursor, corpus_id: str) -> Iterable[Dict[str, Any]]:
+    async def load_corpus_structures(self, cursor: MySQLCursorAbstract, corpus_id: str) -> Iterable[Dict[str, Any]]:
         cols = ['name'] + [f'`{v}` AS `{k}`' for k, v in STRUCT_COLS_MAP.items()]
         sql = 'SELECT {0} FROM corpus_structure WHERE corpus_name = %s'.format(', '.join(cols))
         await cursor.execute(sql, (corpus_id,))
         return await cursor.fetchall()
 
     async def load_corpus_structattrs(
-            self, cursor: Cursor, corpus_id: str, structure_id: Optional[str] = None) -> Iterable[Dict[str, Any]]:
+            self, cursor: MySQLCursorAbstract, corpus_id: str, structure_id: Optional[str] = None) -> Iterable[Dict[str, Any]]:
         if structure_id:
             sql = (
                 'SELECT {0}, dt_format, structure_name, name '
@@ -422,29 +422,29 @@ class Backend(DatabaseBackend):
             await cursor.execute(sql, (corpus_id,))
         return await cursor.fetchall()
 
-    async def load_subcorpattrs(self, cursor: Cursor, corpus_id: str) -> List[str]:
+    async def load_subcorpattrs(self, cursor: MySQLCursorAbstract, corpus_id: str) -> List[str]:
         await cursor.execute(
             'SELECT cs.structure_name AS struct, cs.name AS structattr '
             'FROM corpus_structattr AS cs '
             'WHERE cs.subcorpattrs_idx > -1 AND cs.corpus_name = %s '
             'ORDER BY cs.subcorpattrs_idx', (corpus_id,))
-        return ['{0}.{1}'.format(x['struct'], x['structattr']) async for x in cursor]
+        return ['{0}.{1}'.format(x['struct'], x['structattr']) for x in await cursor.fetchall()]
 
-    async def load_freqttattrs(self, cursor: Cursor, corpus_id: str) -> List[str]:
+    async def load_freqttattrs(self, cursor: MySQLCursorAbstract, corpus_id: str) -> List[str]:
         await cursor.execute(
             'SELECT cs.structure_name AS struct, cs.name AS structattr '
             'FROM corpus_structattr AS cs '
             'WHERE cs.freqttattrs_idx > -1 AND cs.corpus_name = %s '
             'ORDER BY cs.freqttattrs_idx', (corpus_id,))
-        return ['{0}.{1}'.format(x['struct'], x['structattr']) async for x in cursor]
+        return ['{0}.{1}'.format(x['struct'], x['structattr']) for x in await cursor.fetchall()]
 
-    async def load_tckc_providers(self, cursor: Cursor, corpus_id: str) -> Iterable[Dict[str, Any]]:
+    async def load_tckc_providers(self, cursor: MySQLCursorAbstract, corpus_id: str) -> Iterable[Dict[str, Any]]:
         await cursor.execute(
             'SELECT provider, type, is_kwic_view FROM kontext_tckc_corpus WHERE corpus_name = %s ORDER BY display_order',
             (corpus_id,))
         return await cursor.fetchall()
 
-    async def corpus_access(self, cursor: Cursor, user_id: str, corpus_id: str) -> CorpusAccess:
+    async def corpus_access(self, cursor: MySQLCursorAbstract, user_id: str, corpus_id: str) -> CorpusAccess:
         total_acc_sql, total_acc_args = self._total_access_query(user_id)
         args: List[Any] = [user_id] + total_acc_args + [corpus_id]
         await cursor.execute(
@@ -460,7 +460,7 @@ class Backend(DatabaseBackend):
             return CorpusAccess(False, False, '')
         return CorpusAccess(False, True, row['variant'] if row['variant'] else '')
 
-    async def get_permitted_corpora(self, cursor: Cursor, user_id: str) -> List[str]:
+    async def get_permitted_corpora(self, cursor: MySQLCursorAbstract, user_id: str) -> List[str]:
         total_acc_sql, total_acc_args = self._total_access_query(user_id)
         await cursor.execute(
             'SELECT %s AS user_id, c.name AS corpus_id, IF (ucp.limited = 1, \'omezeni\', NULL) AS variant '
@@ -468,9 +468,9 @@ class Backend(DatabaseBackend):
             f' {total_acc_sql} '
             ') as ucp '
             f'JOIN {self._corp_table} AS c ON ucp.corpus_id = c.{self._corp_id_attr}', [user_id] + total_acc_args)
-        return [r['corpus_id'] for r in cursor.fetchall()]
+        return [r['corpus_id'] for r in await cursor.fetchall()]
 
-    async def load_corpus_tagsets(self, cursor: Cursor, corpus_id: str) -> List[TagsetInfo]:
+    async def load_corpus_tagsets(self, cursor: MySQLCursorAbstract, corpus_id: str) -> List[TagsetInfo]:
         await cursor.execute(
             'SELECT ct.corpus_name, ct.pos_attr, ct.feat_attr, t.tagset_type, ct.tagset_name, '
             'ct.kontext_widget_enabled, t.doc_url_local, t.doc_url_en, '
@@ -496,18 +496,18 @@ class Backend(DatabaseBackend):
                     if pattern_pos
                 ]
             )
-            async for row in cursor
+            for row in await cursor.fetchall()
         ]
 
-    async def load_interval_attrs(self, cursor: Cursor, corpus_id):
+    async def load_interval_attrs(self, cursor: MySQLCursorAbstract, corpus_id):
         await cursor.execute(
             'SELECT interval_struct, interval_attr, widget '
             'FROM kontext_interval_attr '
             'WHERE corpus_name = %s', (corpus_id,))
-        return [('{0}.{1}'.format(r['interval_struct'], r['interval_attr']), r['widget']) async for r in cursor]
+        return [('{0}.{1}'.format(r['interval_struct'], r['interval_attr']), r['widget']) for r in await cursor.fetchall()]
 
-    async def load_simple_query_default_attrs(self, cursor: Cursor, corpus_id: str) -> List[str]:
+    async def load_simple_query_default_attrs(self, cursor: MySQLCursorAbstract, corpus_id: str) -> List[str]:
         await cursor.execute(
             'SELECT pos_attr FROM kontext_simple_query_default_attrs WHERE corpus_name = %s',
             (corpus_id,))
-        return [r['pos_attr'] async for r in cursor]
+        return [r['pos_attr'] for r in await cursor.fetchall()]

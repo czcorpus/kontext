@@ -69,7 +69,7 @@ class Backend:
                 'ORDER BY fav.name, t.corpus_order ', (user_id,))
 
             ans = []
-            async for item in cursor:
+            for item in await cursor.fetchall():
                 item['corpora'] = [{'name': corp, 'id': corp}
                                    for corp in item['corpora'].split(',')]
                 item['size'] = int(item['sizes'].split(',')[0])

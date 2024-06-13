@@ -18,10 +18,12 @@
 
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import asdict, dataclass, field
-from typing import Any, Dict, Generator, Optional
+from typing import Any, Dict, Generator
+import logging
 
-import aiomysql
-import pymysql
+from mysql.connector.aio import connect
+from mysql.connector import connect as connect_sync
+from mysql.connector.aio.abstracts import MySQLConnectionAbstract, MySQLCursorAbstract
 
 
 @dataclass
@@ -73,10 +75,8 @@ class MySQLConf:
 
 class MySQLOps:
     """
-    A simple wrapper for pymysql/aiomysql
+    A simple wrapper for mysql.connector.aio
     """
-
-    _pool: Optional[aiomysql.Pool]
 
     _conn_args: ConnectionArgs
 
@@ -92,40 +92,32 @@ class MySQLOps:
         self._pool_args = PoolArgs(maxsize=pool_size)
         self._retry_delay = retry_delay  # TODO has no effect now
         self._retry_attempts = retry_attempts  # TODO has no effect now
-        self._pool = None
-
-    async def _init_pool(self):
-        if self._pool is None:
-            self._pool = await aiomysql.create_pool(**asdict(self._conn_args), **asdict(self._pool_args))
 
     @asynccontextmanager
-    async def connection(self) -> Generator[aiomysql.Connection, None, None]:
-        await self._init_pool()
-        async with self._pool.acquire() as connection:
-            yield connection
+    async def connection(self) -> Generator[MySQLConnectionAbstract, None, None]:
+        logging.getLogger(__name__).warning('new ad-hoc mysql connection')
+        async with await connect(
+                user=self._conn_args.user, password=self._conn_args.password, host=self._conn_args.host,
+                database=self._conn_args.db, ssl_disabled=True, autocommit=True) as conn:
+            yield conn
 
     @asynccontextmanager
-    async def cursor(self, dictionary=True) -> Generator[aiomysql.Cursor, None, None]:
-        async with self.connection() as connection:
-            if dictionary:
-                async with connection.cursor(aiomysql.DictCursor) as cursor:
-                    yield cursor
-            else:
-                async with connection.cursor() as cursor:
-                    yield cursor
+    async def cursor(self, dictionary=True) -> Generator[MySQLCursorAbstract, None, None]:
+        async with self.connection() as conn:
+            async with await conn.cursor(dictionary=dictionary) as cur:
+                yield cur
 
     @contextmanager
-    def connection_sync(self) -> Generator[pymysql.Connection, None, None]:
-        connection = pymysql.connect(**asdict(self._conn_args))
-        yield connection
-        connection.close()
+    def connection_sync(self) -> Generator[MySQLConnectionAbstract, None, None]:
+        with connect_sync(
+                user=self._conn_args.user, password=self._conn_args.password, host=self._conn_args.host,
+                database=self._conn_args.db, ssl_disabled=True) as conn:
+            yield conn
 
     @contextmanager
-    def cursor_sync(self, dictionary=True) -> Generator[pymysql.cursors.Cursor, None, None]:
-        with self.connection_sync() as connection:
-            if dictionary:
-                cursor = connection.cursor(pymysql.cursors.DictCursor)
-            else:
-                cursor = connection.cursor()
-            yield cursor
-            cursor.close()
+    def cursor_sync(self, dictionary=True) -> Generator[Any, None, None]:
+        with connect_sync(
+                user=self._conn_args.user, password=self._conn_args.password, host=self._conn_args.host,
+                database=self._conn_args.db, ssl_disabled=True) as conn:
+            with conn.cursor(dictionary=dictionary) as curr:
+                yield curr

@@ -22,7 +22,7 @@ from typing import Dict, List, Optional
 
 import plugins
 import ujson as json
-from pymysql.err import IntegrityError
+from mysql.connector.errors import IntegrityError
 from plugin_types.common import Serializable
 from plugin_types.settings_storage import AbstractSettingsStorage
 from plugins import inject

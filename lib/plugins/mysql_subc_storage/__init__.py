@@ -33,7 +33,7 @@ from plugin_types.subc_storage import AbstractSubcArchive, SubcArchiveException
 from plugins import inject
 from plugins.errors import PluginCompatibilityException
 from plugins.mysql_integration_db import MySqlIntegrationDb
-from pymysql.err import IntegrityError
+from mysql.connector.errors import IntegrityError
 from sanic import Sanic
 from util import AsyncBatchWriter
 
@@ -257,7 +257,7 @@ class MySQLSubcArchive(AbstractSubcArchive):
 
         async with self._db.cursor() as cursor:
             await cursor.execute(sql, (user_id,))
-            return [row['corpus_name'] async for row in cursor]
+            return [row['corpus_name'] for row in await cursor.fetchall()]
 
     async def list(self, user_id, filter_args, corpname=None, offset=0, limit=None, include_drafts=False):
         if (filter_args.archived_only and filter_args.active_only) or \
@@ -306,7 +306,7 @@ class MySQLSubcArchive(AbstractSubcArchive):
             WHERE {" AND ".join(where)} ORDER BY t1.id LIMIT %s OFFSET %s"""
         async with self._db.cursor() as cursor:
             await cursor.execute(sql, args)
-            return [_subc_from_row(row) async for row in cursor]
+            return [_subc_from_row(row) for row in await cursor.fetchall()]
 
     async def get_info(self, subc_id: str) -> Optional[SubcorpusRecord]:
         async with self._db.cursor() as cursor:
@@ -352,7 +352,7 @@ class MySQLSubcArchive(AbstractSubcArchive):
                 f"SELECT id, name FROM {self._bconf.subccorp_table} WHERE id IN ({wc})",
                 tuple(subc_ids)
             )
-            async for row in cursor:
+            for row in await cursor.fetchall():
                 ans[row['id']] = row['name']
             return ans
 
