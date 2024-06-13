@@ -85,7 +85,8 @@ class Archiver(object):
         i = 0
         try:
             async with self._to_db.connection() as connection:
-                async with connection.cursor() as cursor:
+                async with await connection.cursor() as cursor:
+                    await connection.start_transaction()
                     proc_keys = {}
                     while i < num_proc:
                         qitem = await self._from_db.list_pop(self._archive_queue_key)

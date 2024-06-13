@@ -109,7 +109,6 @@ class MySqlQueryHistory(AbstractQueryHistory):
                 'WHERE user_id = %s AND query_id = %s AND created = %s',
                 (new_name, user_id, query_id, created)
             )
-            await cursor.connection.commit()
             return cursor.rowcount > 0
 
     async def make_persistent(self, user_id, query_id, q_supertype, created, name) -> bool:
@@ -129,7 +128,6 @@ class MySqlQueryHistory(AbstractQueryHistory):
                 f'DELETE FROM {self.TABLE_NAME} WHERE user_id = %s AND query_id = %s AND created = %s',
                 (user_id, query_id, created)
             )
-            await cursor.connection.commit()
             return cursor.rowcount
 
     async def _is_paired_with_conc(self, data) -> bool:
@@ -348,7 +346,6 @@ class MySqlQueryHistory(AbstractQueryHistory):
                 f'DELETE FROM {self.TABLE_NAME} WHERE created < %s AND name IS NULL',
                 (int(datetime.utcnow().timestamp()) - self.ttl_days * 3600 * 24,)
             )
-            await cursor.connection.commit()
 
     async def export(self, plugin_ctx):
         """

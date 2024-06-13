@@ -50,8 +50,6 @@ class SettingsStorage(AbstractSettingsStorage):
                     ON DUPLICATE KEY UPDATE
                     data = VALUES(data)
                 ''', (user_id, corpus_id, json.dumps(data)))
-                await cursor.connection.commit()
-
         else:
             async with self._db.cursor() as cursor:
                 await cursor.execute('''
@@ -60,7 +58,6 @@ class SettingsStorage(AbstractSettingsStorage):
                     ON DUPLICATE KEY UPDATE
                     data = VALUES(data)
                 ''', (user_id, json.dumps(data)))
-                await cursor.connection.commit()
 
     async def _upgrade_general_settings(self, data: Dict[str, Serializable], user_id: int) -> Dict[str, Serializable]:
         corp_set = defaultdict(lambda: {})

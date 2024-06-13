@@ -86,21 +86,24 @@ class Backend:
             return await cursor.fetchone()
 
     async def insert_favitem(self, user_id: int, item: FavoriteItem):
-        async with self._db.cursor() as cursor:
-            await cursor.execute(
-                'INSERT INTO kontext_user_fav_item (name, subcorpus_id, subcorpus_orig_id, user_id) '
-                'VALUES (%s, %s, %s, %s) ', (item.name, item.subcorpus_id, item.subcorpus_name, user_id))
+        async with self._db.connection() as conn:
+            async with await conn.cursor() as cursor:
+                await cursor.execute(
+                    'INSERT INTO kontext_user_fav_item (name, subcorpus_id, subcorpus_orig_id, user_id) '
+                    'VALUES (%s, %s, %s, %s) ', (item.name, item.subcorpus_id, item.subcorpus_name, user_id))
 
-            favitem_id: int = cursor.lastrowid
-            await cursor.executemany(
-                'INSERT INTO kontext_corpus_user_fav_item (user_fav_corpus_id, corpus_name, corpus_order) '
-                'VALUES (%s, %s, %s) ', [(favitem_id, corp['id'], i) for i, corp in enumerate(item.corpora)])
-            await cursor.connection.commit()
-        item.ident = str(favitem_id)  # need to update new id
+                favitem_id: int = cursor.lastrowid
+                await cursor.executemany(
+                    'INSERT INTO kontext_corpus_user_fav_item (user_fav_corpus_id, corpus_name, corpus_order) '
+                    'VALUES (%s, %s, %s) ', [(favitem_id, corp['id'], i) for i, corp in enumerate(item.corpora)])
+                await conn.commit()
+            item.ident = str(favitem_id)  # need to update new id
 
     async def delete_favitem(self, item_id: int):
-        async with self._db.cursor() as cursor:
-            await cursor.execute(
-                'DELETE FROM kontext_corpus_user_fav_item WHERE user_fav_corpus_id = %s', (item_id,))
-            await cursor.execute('DELETE FROM kontext_user_fav_item WHERE id = %s', (item_id,))
-            await cursor.connection.commit()
+        async with self._db.connection() as conn:
+            async with await conn.cursor() as cursor:
+                await conn.start_transaction()
+                await cursor.execute(
+                    'DELETE FROM kontext_corpus_user_fav_item WHERE user_fav_corpus_id = %s', (item_id,))
+                await cursor.execute('DELETE FROM kontext_user_fav_item WHERE id = %s', (item_id,))
+                await conn.commit()
