@@ -167,7 +167,7 @@ class MySQLSubcArchive(AbstractSubcArchive):
         subcname = f'{corpname}-preflight'
         async with self._db.connection() as conn:
             async with await conn.cursor() as cursor:
-                await conn.start_transaction()
+                await self._db.begin_tx(cursor)
                 # Due to caching etc. we always have to perform test whether a preflight subc. exists
                 # (even if a consumer of this method tests it via corp_info.preflight_subcorpus, it may
                 # not be the most recent information).

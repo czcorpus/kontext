@@ -107,6 +107,12 @@ class MySQLOps:
             async with await conn.cursor(dictionary=dictionary) as cur:
                 yield cur
 
+    async def begin_tx(self, cursor):
+        await cursor.execute('START TRANSACTION')
+
+    def begin_tx_sync(self, cursor):
+        cursor.execute('START TRANSACTION')
+
     @contextmanager
     def connection_sync(self) -> Generator[MySQLConnectionAbstract, None, None]:
         with connect_sync(

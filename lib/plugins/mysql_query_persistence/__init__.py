@@ -174,12 +174,14 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
         returns:
         a dictionary containing operation data or None if nothing is found
         """
+        from mysql.connector.aio.connection import MySQLConnection
         try:
             data = await self.db.get(mk_key(data_id))
             if data is None:
                 async with self._archive.connection() as conn:
                     async with await conn.cursor() as cursor:
-                        await conn.start_transaction()
+                        logging.getLogger(__name__).warning('{}, {}'.format(conn, conn.__dict__))
+                        await self._archive.begin_tx(cursor)
                         await cursor.execute(
                             'SELECT data, created, num_access FROM kontext_conc_persistence WHERE id = %s LIMIT 1', (data_id,))
                         tmp = await cursor.fetchone()
@@ -238,7 +240,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
     async def archive(self, user_id, conc_id, revoke=False):
         async with self._archive.connection() as conn:
             async with await conn.cursor() as cursor:
-                await conn.start_transaction()
+                await self._archive.begin_tx(cursor)
                 await cursor.execute(
                     'SELECT id, data, created, num_access, last_access FROM kontext_conc_persistence WHERE id = %s LIMIT 1',
                     (conc_id,)

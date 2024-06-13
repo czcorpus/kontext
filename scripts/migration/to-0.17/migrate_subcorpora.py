@@ -78,7 +78,7 @@ async def migrate_subcorpora(
     with plugins.runtime.INTEGRATION_DB as mysql_db:
         async with mysql_db.connection() as conn:
             async with await conn.cursor() as cursor:
-                await conn.start_transaction()
+                await mysql_db.begin_tx(cursor)
                 for user_id in os.listdir(users_subcpath):
                     if user_id == 'published':
                         continue

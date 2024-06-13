@@ -102,7 +102,7 @@ class Backend:
     async def delete_favitem(self, item_id: int):
         async with self._db.connection() as conn:
             async with await conn.cursor() as cursor:
-                await conn.start_transaction()
+                await self._db.begin_tx(cursor)
                 await cursor.execute(
                     'DELETE FROM kontext_corpus_user_fav_item WHERE user_fav_corpus_id = %s', (item_id,))
                 await cursor.execute('DELETE FROM kontext_user_fav_item WHERE id = %s', (item_id,))

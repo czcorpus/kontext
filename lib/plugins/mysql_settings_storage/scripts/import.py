@@ -40,7 +40,7 @@ async def import_settings():
         values = [(int(key.split(':')[-1]), json.dumps(await kv_db.get(key))) for key in settings_keys]
         async with mysql_db.connection() as conn:
             async with await conn.cursor() as cursor:
-                await conn.start_transaction()
+                await mysql_db.begin_tx(cursor)
                 for row in values:
                     try:
                         await cursor.execute('INSERT INTO kontext_settings (user_id, data) VALUES (%s, %s)', row)
@@ -59,7 +59,7 @@ async def import_settings():
                 values.append((user_id, corpus_id, json.dumps(cs)))
             async with mysql_db.connection() as conn:
                 async with await conn.cursor() as cursor:
-                    await conn.start_transaction()
+                    await mysql_db.begin_tx(cursor)
                     for row in values:
                         try:
                             await cursor.execute(

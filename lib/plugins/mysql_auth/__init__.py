@@ -132,7 +132,7 @@ class MysqlAuthHandler(AbstractInternalAuth):
         """
         async with self.db.connection() as conn:
             async with await conn.cursor() as cursor:
-                await conn.start_transaction()
+                await self.db.begin_tx(cursor)
                 await cursor.execute('SELECT username FROM kontext_user WHERE id = %s', (user_id,))
                 row = await cursor.fetchone()
                 if row is not None:
@@ -307,7 +307,6 @@ class MysqlAuthHandler(AbstractInternalAuth):
         await token.load(self.db)
 
         async with self.db.connection() as conn:
-            await conn.start_transaction()
             try:
                 if token.is_stored():
                     curr = await self._find_user(token.username)
@@ -315,6 +314,7 @@ class MysqlAuthHandler(AbstractInternalAuth):
                         raise SignUpNeedsUpdateException()
 
                     async with await conn.cursor() as cursor:
+                        await self.db.begin_tx(cursor)
                         await cursor.execute(
                             'INSERT INTO kontext_user (username, firstname, lastname, pwd_hash, email, affiliation) '
                             'VALUES (%s, %s, %s, %s, %s, %s)',
