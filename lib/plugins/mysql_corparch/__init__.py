@@ -39,7 +39,8 @@ from plugin_types.corparch.corpus import (
     StructAttrInfo, TokenConnect, TokensLinking)
 from plugin_types.user_items import AbstractUserItems
 from plugins import inject
-from plugins.common.mysql import MySQLConf, MySQLOps
+from plugins.common.mysql import MySQLConf
+from plugins.common.mysql.adhocdb import AdhocDB
 from plugins.mysql_corparch.backend import Backend
 from plugins.mysql_corparch.corplist import (
     DefaultCorplistProvider, parse_query)
@@ -434,7 +435,7 @@ def create_instance(conf, user_items: AbstractUserItems, integ_db: MySqlIntegrat
         logging.getLogger(__name__).info(
             'mysql_user_items uses custom database configuration {}@{}'.format(
                 plugin_conf['mysql_user'], plugin_conf['mysql_host']))
-        db_backend = Backend(MySQLOps(**MySQLConf(plugin_conf).conn_dict))
+        db_backend = Backend(AdhocDB(**MySQLConf.from_conf(plugin_conf).conn_dict))
 
     return MySQLCorparch(
         db_backend=db_backend,

@@ -75,7 +75,9 @@ from plugin_types.query_persistence import AbstractQueryPersistence
 from plugin_types.query_persistence.common import (
     ID_KEY, PERSIST_LEVEL_KEY, QUERY_KEY, USER_ID_KEY, generate_idempotent_id)
 from plugins import inject
-from plugins.common.mysql import MySQLConf, MySQLOps
+from plugins.common.mysql import MySQLConf
+from plugins.common.mysql.adhocdb import AdhocDB
+from plugin_types.integration_db import DatabaseAdapter
 from plugins.mysql_integration_db import MySqlIntegrationDb
 
 from .archive import get_iso_datetime, is_archived
@@ -98,7 +100,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
             self,
             settings,
             db: KeyValueStorage,
-            sql_backend: MySQLOps,
+            sql_backend: DatabaseAdapter,
             auth: AbstractAuth):
         super().__init__(settings)
         plugin_conf = settings.get('plugins', 'query_persistence')
@@ -412,4 +414,4 @@ def create_instance(settings, db: KeyValueStorage, integration_db: MySqlIntegrat
         logging.getLogger(__name__).info(
             'mysql_query_persistence uses custom database configuration {}@{}'.format(
                 plugin_conf['mysql_user'], plugin_conf['mysql_host']))
-        return MySqlQueryPersistence(settings, db, MySQLOps(**MySQLConf(plugin_conf).conn_dict), auth)
+        return MySqlQueryPersistence(settings, db, AdhocDB(**MySQLConf.from_conf(plugin_conf).conn_dict), auth)

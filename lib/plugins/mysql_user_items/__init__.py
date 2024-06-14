@@ -24,7 +24,8 @@ from plugin_types.auth import AbstractAuth
 from plugin_types.user_items import (
     AbstractUserItems, FavoriteItem, UserItemException)
 from plugins import inject
-from plugins.common.mysql import MySQLConf, MySQLOps
+from plugins.common.mysql import MySQLConf
+from plugins.common.mysql.adhocdb import AdhocDB
 from plugins.mysql_integration_db import MySqlIntegrationDb
 from sanic.blueprints import Blueprint
 
@@ -153,5 +154,5 @@ def create_instance(settings, integ_db: MySqlIntegrationDb, auth: AbstractAuth):
         logging.getLogger(__name__).info(
             'mysql_user_items uses custom database configuration {}@{}'.format(
                 plugin_conf['mysql_user'], plugin_conf['mysql_host']))
-        db_backend = Backend(MySQLOps(**MySQLConf(plugin_conf).conn_dict).connection)
+        db_backend = Backend(AdhocDB(**MySQLConf.from_conf(plugin_conf).conn_dict))
     return MySQLUserItems(settings, db_backend, auth)

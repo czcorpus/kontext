@@ -23,7 +23,7 @@ A corparch database backend for MySQL/MariaDB.
 from typing import List
 
 from plugin_types.user_items import FavoriteItem
-from plugins.common.mysql import MySQLOps
+from plugin_types.integration_db import DatabaseAdapter
 
 DFLT_USER_TABLE = 'kontext_user'
 DFLT_CORP_TABLE = 'kontext_corpus'
@@ -38,7 +38,7 @@ class Backend:
 
     def __init__(
             self,
-            db: MySQLOps,
+            db: DatabaseAdapter,
             user_table: str = DFLT_USER_TABLE,
             corp_table: str = DFLT_CORP_TABLE,
             group_acc_table: str = DFLT_GROUP_ACC_TABLE,

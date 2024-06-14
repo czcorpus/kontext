@@ -20,24 +20,27 @@
 import datetime
 import logging
 import re
-from collections import OrderedDict, defaultdict
 from contextlib import asynccontextmanager
 
 import pytz
 from mysql.connector.aio.abstracts import MySQLCursorAbstract
 from plugin_types.corparch.backend import DatabaseWriteBackend
-from plugin_types.corparch.backend.regkeys import (POS_COLS_MAP, REG_COLS_MAP,
-                                                   REG_VAR_COLS_MAP,
-                                                   SATTR_COLS_MAP,
-                                                   STRUCT_COLS_MAP)
-from plugins.common.mysql import MySQLOps
-from plugins.mysql_corparch.backend import (DFLT_CORP_TABLE,
-                                            DFLT_GROUP_ACC_CORP_ATTR,
-                                            DFLT_GROUP_ACC_GROUP_ATTR,
-                                            DFLT_GROUP_ACC_TABLE,
-                                            DFLT_USER_ACC_CORP_ATTR,
-                                            DFLT_USER_ACC_TABLE,
-                                            DFLT_USER_TABLE, Backend)
+from plugin_types.corparch.backend.regkeys import (
+    POS_COLS_MAP,
+    REG_COLS_MAP,
+    REG_VAR_COLS_MAP,
+    SATTR_COLS_MAP,
+    STRUCT_COLS_MAP)
+from plugin_types.integration_db import DatabaseAdapter
+from plugins.mysql_corparch.backend import (
+    DFLT_CORP_TABLE,
+    DFLT_GROUP_ACC_CORP_ATTR,
+    DFLT_GROUP_ACC_GROUP_ATTR,
+    DFLT_GROUP_ACC_TABLE,
+    DFLT_USER_ACC_CORP_ATTR,
+    DFLT_USER_ACC_TABLE,
+    DFLT_USER_TABLE,
+    Backend)
 
 
 class WriteBackend(DatabaseWriteBackend[MySQLCursorAbstract]):
@@ -47,7 +50,7 @@ class WriteBackend(DatabaseWriteBackend[MySQLCursorAbstract]):
     """
 
     def __init__(
-            self, db: MySQLOps, ro_backend: Backend, user_table: str = DFLT_USER_TABLE, corp_table: str = DFLT_CORP_TABLE,
+            self, db: DatabaseAdapter, ro_backend: Backend, user_table: str = DFLT_USER_TABLE, corp_table: str = DFLT_CORP_TABLE,
             group_acc_table: str = DFLT_GROUP_ACC_TABLE, user_acc_table: str = DFLT_USER_ACC_TABLE,
             user_acc_corp_attr: str = DFLT_USER_ACC_CORP_ATTR, group_acc_corp_attr: str = DFLT_GROUP_ACC_CORP_ATTR,
             group_acc_group_attr: str = DFLT_GROUP_ACC_GROUP_ATTR):
