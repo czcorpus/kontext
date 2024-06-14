@@ -31,7 +31,7 @@ from plugin_types.corparch.backend.regkeys import (
     POS_COLS_MAP, REG_COLS_MAP, REG_VAR_COLS_MAP, SATTR_COLS_MAP,
     STRUCT_COLS_MAP)
 from plugin_types.corparch.corpus import PosCategoryItem, TagsetInfo
-from plugins.common.mysql import MySQLOps
+from plugin_types.integration_db import DatabaseAdapter
 
 
 class MySQLConfException(Exception):
@@ -59,7 +59,7 @@ class Backend(DatabaseBackend):
 
     def __init__(
         self,
-        db: MySQLOps,
+        db: DatabaseAdapter,
         user_table: str = DFLT_USER_TABLE,
         user_group_acc_attr: str = DFLT_USER_CORPLIST_ATTR,
         corp_table: str = DFLT_CORP_TABLE,

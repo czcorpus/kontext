@@ -38,33 +38,7 @@ class DbContextManager(AbstractContextManager, Generic[T]):
         pass
 
 
-class IntegrationDatabase(abc.ABC, Generic[N, R, SN, SR]):
-    """
-    Integration DB plugin allows sharing a single database connection pool across multiple plugins
-    which can be convenient in case KonText is integrated into an existing information system with
-    existing user accounts, corpora information, settings storage etc.
-
-    Even if it is not stated explicitly the interface is tailored for use with SQL databases
-    where terms like 'cursor', 'commit', 'rollback' are common. But in general, it should be possible
-    to wrap also some NoSQL databases if needed.
-
-    Also please note that "integration database" is not to be meant for a standalone KonText
-    installations. KonText itself (with default plug-ins) uses the DB (aka KeyValueStorage) plugin
-    for its operations. But if you have an existing information system and do not want redundant
-    information in KonText's db, the "integration_db" is the way to go.
-    """
-
-    @property
-    @abc.abstractmethod
-    def is_active(self):
-        """
-        Return true if the integration plug-in is active. I.e. it actually provides
-        access to an actual database.
-
-        Plug-in with optional support for integration_db should use this method
-        to decide whether to use integration_db or some custom connection of their own.
-        """
-        pass
+class DatabaseAdapter(abc.ABC, Generic[N, R, SN, SR]):
 
     @property
     @abc.abstractmethod
@@ -80,6 +54,88 @@ class IntegrationDatabase(abc.ABC, Generic[N, R, SN, SR]):
         """
         Provide a brief info about the database. This is mainly for administrators
         as it is typically written to the application log during KonText start.
+        """
+        pass
+
+
+    @abc.abstractmethod
+    async def connection(self) -> AsyncDbContextManager[N]:
+        """
+        Return an async connection to the integration database from pool.
+        Please note that it is important for this function not to return
+        a new connection each time it is called. Otherwise, functions
+        like commit_tx, rollback_tx won't likely work as expected.
+        """
+        pass
+
+    @abc.abstractmethod
+    async def cursor(self, dictionary=True) -> AsyncDbContextManager[R]:
+        """
+        Create a new async database cursor
+        """
+        pass
+
+    @abc.abstractmethod
+    async def begin_tx(self, cursor):
+        pass
+
+    @abc.abstractmethod
+    async def commit_tx(self):
+        """
+        Commit a transaction running within
+        the current database connection.
+        """
+        pass
+
+    @abc.abstractmethod
+    async def rollback_tx(self):
+        """
+        Rollback a transaction running within
+        the current database connection.
+        """
+        pass
+
+    @abc.abstractmethod
+    def begin_tx_sync(self, cursor):
+        pass
+
+    @abc.abstractmethod
+    def connection_sync(self) -> DbContextManager[SN]:
+        pass
+
+    @abc.abstractmethod
+    def cursor_sync(self, dictionary=True) -> DbContextManager[SR]:
+        pass
+
+
+class IntegrationDatabase(DatabaseAdapter[N, R, SN, SR]):
+    """
+    Integration DB plugin allows sharing a single database connection (or conn. pool) between
+    multiple plugins which can be convenient especially in case KonText is integrated into an existing
+    information system with existing user accounts, corpora information, settings storage, etc.
+
+    Although not explicitly stated, the interface is tailored for use with SQL databases.
+    where terms like 'cursor', 'commit', 'rollback' are common. But in general it should be possible
+    to wrap some NoSQL databases if needed.
+
+    Please also note that while the primary function of the plug-in is to allow integration of KonText
+    with existing SQL databases, it can also be used to create standalone KonText installations based
+    on MySQL/MariaDB.
+
+    It is expected that the plugin will is able to handle a per-request connection lifecycle.
+    KonText helps with this by calling on_request and on_response handlers to create and close
+    the connection.
+    """
+
+    @property
+    @abc.abstractmethod
+    def is_active(self):
+        """
+        Return true if the integration plug-in is active. I.e. it actually provides
+        access to an actual database.
+
+        Plug-in with optional support for integration_db should use this method
+        to decide whether to use integration_db or some custom connection of their own.
         """
         pass
 
@@ -99,36 +155,6 @@ class IntegrationDatabase(abc.ABC, Generic[N, R, SN, SR]):
         returns:
         if None then the environment is ready else provide an error for further processing
         """
-        pass
-
-    @abc.abstractmethod
-    def connection(self) -> AsyncDbContextManager[N]:
-        """
-        Return an async connection to the integration database from pool
-        """
-        pass
-
-    @abc.abstractmethod
-    def cursor(self, dictionary=True) -> AsyncDbContextManager[R]:
-        """
-        Create a new async database cursor
-        """
-        pass
-
-    @abc.abstractmethod
-    async def begin_tx(self, cursor):
-        pass
-
-    @abc.abstractmethod
-    def begin_tx_sync(self, cursor):
-        pass
-
-    @abc.abstractmethod
-    def connection_sync(self) -> DbContextManager[SN]:
-        pass
-
-    @abc.abstractmethod
-    def cursor_sync(self, dictionary=True) -> DbContextManager[SR]:
         pass
 
     async def on_request(self):

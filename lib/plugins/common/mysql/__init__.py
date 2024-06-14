@@ -75,7 +75,12 @@ class MySQLConf:
 
 class MySQLOps:
     """
-    A simple wrapper for mysql.connector.aio
+    A simple wrapper for mysql.connector.aio and mysql.connector (for sync variants).
+    In KonText, the class is mostly used by the MySQLIntegrationDb plugin.
+    As a standalone type, it is mostly useful for running various scripts and automatic
+    tasks on the worker server where we don't have to worry about effective
+    connection usage (for example, if a task runs once every 5 minutes, this means
+    no significant connection overhead).
     """
 
     _conn_args: ConnectionArgs
@@ -95,17 +100,37 @@ class MySQLOps:
 
     @asynccontextmanager
     async def connection(self) -> Generator[MySQLConnectionAbstract, None, None]:
-        logging.getLogger(__name__).warning('new ad-hoc mysql connection')
+        """
+        Create a new connection with lifecycle limited by the created context.
+        This is intended to be used in scripts and worker tasks as for the
+        web actions, this would make a huge connection overhead.
+        (MySQLIntegrationDb handles this for you).
+        """
+        logging.getLogger(__name__).info('opening a new ad-hoc mysql connection')
         async with await connect(
-                user=self._conn_args.user, password=self._conn_args.password, host=self._conn_args.host,
-                database=self._conn_args.db, ssl_disabled=True, autocommit=True) as conn:
+                user=self._conn_args.user,
+                password=self._conn_args.password,
+                host=self._conn_args.host,
+                database=self._conn_args.db,
+                ssl_disabled=True,
+                autocommit=True) as conn:
             yield conn
 
     @asynccontextmanager
     async def cursor(self, dictionary=True) -> Generator[MySQLCursorAbstract, None, None]:
+        """
+        Create a new connection and open a new cursor. Just like
+        in case of the connection() method, this is suitable for
+        scripts and worker tasks. For web actions/handlers, use
+        integration db plug-in which handles connections more
+        effectively.
+        """
         async with self.connection() as conn:
             async with await conn.cursor(dictionary=dictionary) as cur:
-                yield cur
+                try:
+                    yield cur
+                finally:
+                    cur.close()
 
     async def begin_tx(self, cursor):
         await cursor.execute('START TRANSACTION')
@@ -127,3 +152,7 @@ class MySQLOps:
                 database=self._conn_args.db, ssl_disabled=True) as conn:
             with conn.cursor(dictionary=dictionary) as curr:
                 yield curr
+
+    @property
+    def conn_args(self):
+        return self._conn_args

@@ -1,6 +1,6 @@
-# Copyright (c) 2021 Charles University, Faculty of Arts,
+# Copyright (c) 2024 Charles University in Prague, Faculty of Arts,
 #                    Institute of the Czech National Corpus
-# Copyright (c) 2021 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright (c) 2024 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -16,34 +16,18 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import logging
-import time
 from contextlib import asynccontextmanager, contextmanager
 from contextvars import ContextVar
 from typing import Generator, Optional
 from mysql.connector.aio import connect
-from mysql.connector.aio.abstracts import MySQLConnectionAbstract, MySQLCursorAbstract
-from mysql.connector.abstracts import MySQLConnectionAbstract as SyncMySQLConnectionAbstract, MySQLCursorAbstract as SyncMySQLCursorAbstract
+from mysql.connector.aio.abstracts import MySQLConnectionAbstract
 
-from plugin_types.integration_db import IntegrationDatabase, AsyncDbContextManager, R, DbContextManager, SN, SR
+from plugin_types.integration_db import AsyncDbContextManager, R, DbContextManager, SN, SR, DatabaseAdapter
 from plugins.common.mysql import MySQLOps
 
 
-class MySqlIntegrationDb(IntegrationDatabase[MySQLConnectionAbstract, MySQLCursorAbstract, SyncMySQLConnectionAbstract, SyncMySQLCursorAbstract]):
-    """
-    MySqlIntegrationDb is a variant of integration_db plug-in providing access
-    to MySQL/MariaDB instances. It is recommended for:
-     1) integration with existing MySQL/MariaDB information systems,
-     2) self-contained production installations for tens or more users
 
-    Please make sure scripts/schema.sql is applied to your database. Otherwise,
-    the plug-in fails to start. In case of a Dockerized installation, this
-    is done automatically.
-
-    The class keeps a single connection per request (via contextvars.ContextVar,
-    as the class itself has a single instance per web worker) so methods like
-    connection() which are context managers actually lie a bit as the connection
-    """
+class AdhocDB(DatabaseAdapter):
 
     def __init__(
             self, host, database, user, password, pool_size, autocommit, retry_delay,
@@ -66,27 +50,7 @@ class MySqlIntegrationDb(IntegrationDatabase[MySQLConnectionAbstract, MySQLCurso
 
     @property
     def info(self):
-        return f'{self._ops.conn_args.host}:{self._ops.conn_args.port}/{self._ops.conn_args.db}'
-
-    def wait_for_environment(self):
-        t0 = time.time()
-        logging.getLogger(__name__).info(
-            f'Going to wait {self._environment_wait_sec}s for integration environment')
-        while (time.time() - t0) < self._environment_wait_sec:
-            with self.cursor_sync() as cursor:
-                try:
-                    cursor.execute(
-                        'SELECT COUNT(*) as env_count FROM kontext_integration_env LIMIT 1')
-                    row = cursor.fetchone()
-                    if row and row['env_count'] == 1:
-                        return None
-                except Exception as ex:
-                    logging.getLogger(__name__).warning(
-                        f'Integration environment still not available. Reason: {ex}')
-            time.sleep(0.5)
-        return Exception(
-            f'Unable to confirm integration environment within defined interval {self._environment_wait_sec}s.',
-            'Please check table kontext_integration_env')
+        return f'{self._ops.conn_args.host}:{self._ops.conn_args.port}/{self._ops.conn_args.db} (adhoc)'
 
     async def on_request(self):
         curr = self._db_conn.get()
@@ -145,12 +109,3 @@ class MySqlIntegrationDb(IntegrationDatabase[MySQLConnectionAbstract, MySQLCurso
     async def rollback_tx(self):
         async with self.connection() as conn:
             await conn.rollback()
-
-
-def create_instance(conf):
-    pconf = conf.get('plugins', 'integration_db')
-    return MySqlIntegrationDb(
-        host=pconf['host'], database=pconf['db'], user=pconf['user'], password=pconf['passwd'],
-        pool_size=int(pconf['pool_size']), autocommit=True,
-        retry_delay=int(pconf['retry_delay']), retry_attempts=int(pconf['retry_attempts']),
-        environment_wait_sec=int(pconf['environment_wait_sec']))

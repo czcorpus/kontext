@@ -90,6 +90,9 @@ def create_instance(settings, integ_db: MySqlIntegrationDb, auth: AbstractAuth):
         logging.getLogger(__name__).info(
             'ucnk_user_items uses custom database configuration {}@{}'.format(
                 plugin_conf['mysql_user'], plugin_conf['mysql_host']))
-        db_backend = Backend(MySQLOps(**MySQLConf(plugin_conf).conn_dict).connection, user_table='user', corp_table='corpora', group_acc_table='corplist_corpus',
-                             user_acc_table='user_corpus', user_acc_corp_attr='corpus_id', group_acc_corp_attr='corpus_id', group_acc_group_attr='corplist_id')
+        db = MySQLOps(**MySQLConf.from_conf(plugin_conf).conn_dict)
+        db_backend = Backend(
+            db, user_table='user', corp_table='corpora', group_acc_table='corplist_corpus',
+            user_acc_table='user_corpus', user_acc_corp_attr='corpus_id', group_acc_corp_attr='corpus_id',
+            group_acc_group_attr='corplist_id')
     return MySQLUserItems(settings, db_backend, auth)
