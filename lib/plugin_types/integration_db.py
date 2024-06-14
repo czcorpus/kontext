@@ -116,6 +116,14 @@ class IntegrationDatabase(abc.ABC, Generic[N, R, SN, SR]):
         pass
 
     @abc.abstractmethod
+    async def begin_tx(self, cursor):
+        pass
+
+    @abc.abstractmethod
+    def begin_tx_sync(self, cursor):
+        pass
+
+    @abc.abstractmethod
     def connection_sync(self) -> DbContextManager[SN]:
         pass
 
