@@ -19,7 +19,7 @@
  */
 
 import { List, pipe } from 'cnc-tskit';
-import { KWICSection, MLPositionsData, TextChunk } from './common';
+import { KWICSection, MLPositionsData, TextChunk, textChunkMatchesLinkId } from './common';
 
 
 export class ConclineSectionOps {
@@ -57,7 +57,7 @@ export class ConclineSectionOps {
         return sect.left.concat(sect.kwic, sect.right);
     }
 
-    static findChunk(sect:KWICSection, tokenId:number):TextChunk {
-        return List.find(v => v.token.id === tokenId, ConclineSectionOps.getAllChunks(sect));
+    static findChunk(sect:KWICSection, linkId:string):TextChunk {
+        return List.find(v => textChunkMatchesLinkId(v, linkId), ConclineSectionOps.getAllChunks(sect));
     }
 }
