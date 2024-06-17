@@ -80,7 +80,7 @@ export class Actions {
     };
 
     static PlayAudioSegment:Action<{
-        chunksIds:Array<number>;
+        linkIds:Array<string>;
     }> = {
         name: 'CONCORDANCE_PLAY_AUDIO_SEGMENT'
     };
