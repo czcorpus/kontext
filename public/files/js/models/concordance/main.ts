@@ -137,7 +137,7 @@ export interface ConcordanceModelState {
 
     subcName:string;
 
-    playerAttachedChunk:number|null;
+    playerAttachedLink:string|null;
 
     pagination:ServerPagination;
 
@@ -263,7 +263,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 useSafeFont: lineViewProps.useSafeFont,
                 busyWaitSecs: 0,
                 supportsSyntaxView: lineViewProps.supportsSyntaxView,
-                playerAttachedChunk: null,
+                playerAttachedLink: null,
                 showAnonymousUserWarn: lineViewProps.anonymousUser,
                 supportsTokenConnect: lineViewProps.supportsTokenConnect,
                 supportsTokensLinking: lineViewProps.supportsTokensLinking,
@@ -343,7 +343,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 if (action.error) {
                     this.changeState(state => {
                         state.unfinishedCalculation = false;
-                        state.playerAttachedChunk = null;
+                        state.playerAttachedLink = null;
                     });
 
                 } else {
@@ -355,7 +355,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                             state.maincorp = action.payload.changeMaincorp;
                         }
                         state.unfinishedCalculation = false;
-                        state.playerAttachedChunk = null;
+                        state.playerAttachedLink = null;
                         this.reapplyTokenLinkHighlights(state);
                     });
                     this.pushHistoryState({
@@ -393,7 +393,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 this.changeState(state => {
                     state.forceScroll = window.scrollY;
                 });
-                this.playAudio(action.payload.chunksIds);
+                this.playAudio(action.payload.linkIds);
                 this.changeState(state => {
                     state.audioPlayerStatus = this.getAudioPlayerStatus()
                 });
@@ -1493,7 +1493,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
     private findActiveLineIdx(state:ConcordanceModelState):number {
         for (let i = 0; i < state.lines.length; i += 1) {
             for (let j = 0; j < state.lines[i].languages.length; j += 1) {
-                if (ConclineSectionOps.findChunk(state.lines[i].languages[j], state.playerAttachedChunk)) {
+                if (ConclineSectionOps.findChunk(state.lines[i].languages[j], state.playerAttachedLink)) {
                     return i;
                 }
             }
@@ -1501,11 +1501,11 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         return -1;
     }
 
-    private findChunks(state:ConcordanceModelState, ...tokenIds:Array<number>):Array<TextChunk> {
+    private findChunks(state:ConcordanceModelState, ...linkIds:Array<string>):Array<TextChunk> {
         for (let i = 0; i < state.lines.length; i += 1) {
             for (let j = 0; j < state.lines[i].languages.length; j += 1) {
                 const ans = pipe(
-                    tokenIds,
+                    linkIds,
                     List.map(c => ConclineSectionOps.findChunk(state.lines[i].languages[j], c)),
                     List.filter(v => v !== undefined)
                 );
@@ -1517,16 +1517,16 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         return [];
     }
 
-    private playAudio(tokenIds:Array<number>):void {
+    private playAudio(linkIds:Array<string>):void {
         this.setStopStatus(); // stop anything playing right now
-        const activeChunkId = List.last(tokenIds);
+        const activeChunkId = List.last(linkIds);
         this.changeState(state => {
-            state.playerAttachedChunk = activeChunkId;
+            state.playerAttachedLink = activeChunkId;
             // let's get an active line - there can be only one even if we play multiple chunks
             const activeLine = this.findActiveLineIdx(state);
             const fakeChangedLine = state.lines[activeLine];
             state.lines[activeLine] = fakeChangedLine
-            const playChunks = this.findChunks(state, ...tokenIds);
+            const playChunks = this.findChunks(state, ...linkIds);
             if (!List.empty(playChunks)) {
                 List.last(playChunks).showAudioPlayer = true
 
@@ -1534,7 +1534,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 throw new Error('No chunks to play');
             }
         });
-        const playChunks = this.findChunks(this.state, ...tokenIds);
+        const playChunks = this.findChunks(this.state, ...linkIds);
         if (!List.empty(playChunks)) {
             this.audioPlayer.start(
                 pipe(
@@ -1553,20 +1553,20 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
 
     private setStopStatus():void {
         this.audioPlayer.stop();
-        if (this.state.playerAttachedChunk) {
+        if (this.state.playerAttachedLink) {
             this.changeState(
                 state => {
                     const playingLineIdx = this.findActiveLineIdx(state);
                     const modLine = this.state.lines[playingLineIdx]; // TODO clone?
                     state.lines[playingLineIdx] = modLine;
-                    const playingChunk = this.findChunks(state, this.state.playerAttachedChunk)[0];
+                    const playingChunk = this.findChunks(state, this.state.playerAttachedLink)[0];
                     if (playingChunk) {
                         playingChunk.showAudioPlayer = false;
 
                     } else {
-                        throw new Error(`Failed to find playing chunk "${this.state.playerAttachedChunk}"`);
+                        throw new Error(`Failed to find playing chunk "${this.state.playerAttachedLink}"`);
                     }
-                    state.playerAttachedChunk = null;
+                    state.playerAttachedLink = null;
                 }
             );
         }

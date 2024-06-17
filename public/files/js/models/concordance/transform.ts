@@ -27,14 +27,15 @@ import { defaultBgHighlighted } from '../../views/theme/default';
 /**
  *
  * @param item
- * @param id
+ * @param tokenId
  * @param startWlIdx "start within-line idx"
  * @returns
  */
 function importTextChunk(
     item:ServerTextChunk,
     mainAttrIdx:number,
-    id:number,
+    tokenId:number,
+    linkId:string,
     startWlIdx:number,
     roles:Array<[string, number]>
 ):TextChunk {
@@ -64,14 +65,24 @@ function importTextChunk(
         return {
             className: item.class,
             token: {
-                id,
+                id: tokenId,
                 s: item.str,
                 hColor: null,
                 hIsBusy: false,
                 idx: startWlIdx
             },
-            openLink: item.open_link ? {speechPath: item.open_link.speech_path} : undefined,
-            closeLink: item.close_link ? {speechPath: item.close_link.speech_path} : undefined,
+            openLink: item.open_link ?
+                {
+                    speechPath: item.open_link.speech_path,
+                    linkId,
+                } :
+                undefined,
+            closeLink: item.close_link ?
+                {
+                    speechPath: item.close_link.speech_path,
+                    linkId,
+                } :
+                undefined,
             continued: item.continued,
             showAudioPlayer: false,
             posAttrs: posattrs,
@@ -85,14 +96,24 @@ function importTextChunk(
         return {
             className: item.class,
             token: {
-                id,
+                id: tokenId,
                 s: text,
                 hColor: null,
                 hIsBusy: false,
                 idx: startWlIdx
             },
-            openLink: item.open_link ? {speechPath: item.open_link.speech_path} : undefined,
-            closeLink: item.close_link ? {speechPath: item.close_link.speech_path} : undefined,
+            openLink: item.open_link ?
+                {
+                    speechPath: item.open_link.speech_path,
+                    linkId: `${tokenId}:op`
+                } :
+                undefined,
+            closeLink: item.close_link ?
+                {
+                    speechPath: item.close_link.speech_path,
+                    linkId: `${tokenId}:cl`
+                } :
+                undefined,
             continued: item.continued,
             showAudioPlayer: false,
             posAttrs: posattrs,
@@ -110,6 +131,13 @@ function nextWithinLineIdx(tc:Array<TextChunk>, currWlIdx:number) {
     return List.last(tc).token.idx + 1;
 }
 
+function numOfTokensInChunk(chk:Array<ServerTextChunk>):number {
+    return pipe(
+        chk,
+        List.filter(x => !x.class),
+        List.size()
+    );
+}
 
 /**
  *
@@ -122,39 +150,83 @@ export function importLines(
 ):Array<Line> {
 
     return List.reduce<ServerLineData, Array<Line>>(
-        (acc, item:ServerLineData, i:number) => {
+        (acc, item:ServerLineData, lineIdx:number) => {
             let line:Array<KWICSection> = [];
             let wlIdx = 0;
-            const leftText = List.map(
-                (v, j) => importTextChunk(
-                    v,
-                    mainAttrIdx,
-                    item.toknum + j - List.size(item.Left),
-                    wlIdx,
-                    merged_ctxattrs,
-                ),
-                item.Left
+            const {leftText} = List.reduce<
+                ServerTextChunk,
+                {idx:number; leftText: Array<TextChunk>}
+
+            >(
+                ({idx, leftText}, v, chunkIdx) => {
+                    const tokIdx = v.class ? idx : idx + 1;
+                    return {
+                        idx: tokIdx,
+                        leftText:  [
+                            ...leftText,
+                            importTextChunk(
+                                v,
+                                mainAttrIdx,
+                                item.toknum + tokIdx - numOfTokensInChunk(item.Left),
+                                `link:${lineIdx}:${chunkIdx}`,
+                                wlIdx,
+                                merged_ctxattrs,
+                            )
+                        ]
+                    };
+                },
+                {idx: 0, leftText: []},
+                item.Left,
+
             );
             wlIdx = nextWithinLineIdx(leftText, wlIdx);
-            const kwicText = List.map(
-                (v, j) => importTextChunk(
-                    v,
-                    mainAttrIdx,
-                    item.toknum + j,
-                    wlIdx,
-                    merged_attrs
-                ),
+            const {kwicText} = List.reduce<
+                ServerTextChunk,
+                {idx:number; kwicText: Array<TextChunk>}
+            >(
+                ({idx, kwicText}, v, j) => {
+                    const tokIdx = v.class ? idx : idx + 1;
+                    return {
+                        idx: tokIdx,
+                        kwicText: [
+                            ...kwicText,
+                            importTextChunk(
+                                v,
+                                mainAttrIdx,
+                                item.toknum + j,
+                                `link:${lineIdx}:${j}`,
+                                wlIdx,
+                                merged_attrs
+                            )
+                        ]
+                    }
+                },
+                {idx: 0, kwicText: []},
                 item.Kwic
             );
             wlIdx = nextWithinLineIdx(kwicText, wlIdx);
-            const rightText = List.map(
-                (v, j) => importTextChunk(
-                    v,
-                    mainAttrIdx,
-                    item.toknum + item.kwiclen + j,
-                    wlIdx,
-                    merged_ctxattrs
-                ),
+            const {rightText} = List.reduce<
+                ServerTextChunk,
+                {idx:number; rightText:Array<TextChunk>}
+            >(
+                ({idx, rightText}, v, j) => {
+                    const tokIdx = v.class ? idx : idx + 1;
+                    return {
+                        idx: tokIdx,
+                        rightText: [
+                            ...rightText,
+                            importTextChunk(
+                                v,
+                                mainAttrIdx,
+                                item.toknum + item.kwiclen + j,
+                                `link:${lineIdx}:${j}`,
+                                wlIdx,
+                                merged_ctxattrs
+                            )
+                        ]
+                    }
+                },
+                {idx: 0, rightText: []},
                 item.Right
             );
             const main_line = ConclineSectionOps.newKWICSection(
@@ -175,36 +247,78 @@ export function importLines(
                 List.map(
                     (align_item, k) => {
                         let wlIdx = 0;
-                        const leftText = List.map(
-                            (v, j) => importTextChunk(
-                                v,
-                                mainAttrIdx,
-                                align_item.toknum + j - List.size(align_item.Left),
-                                wlIdx,
-                                merged_ctxattrs
-                            ),
+                        const {leftText} = List.reduce<
+                            ServerTextChunk,
+                            {idx:number; leftText: Array<TextChunk>}
+                        >(
+                            ({idx, leftText}, v, j) => {
+                                const tokIdx = v.class ? idx : idx + 1;
+                                return {
+                                    idx: tokIdx,
+                                    leftText: [
+                                        ...leftText,
+                                        importTextChunk(
+                                            v,
+                                            mainAttrIdx,
+                                            align_item.toknum + j - numOfTokensInChunk(align_item.Left),
+                                            `link:${lineIdx}:${k}:${j}`,
+                                            wlIdx,
+                                            merged_ctxattrs
+                                        )
+                                    ]
+                                }
+                            },
+                            {idx: 0, leftText: []},
                             align_item.Left
                         );
                         wlIdx = nextWithinLineIdx(leftText, wlIdx);
-                        const kwicText = List.map(
-                            (v, j) => importTextChunk(
-                                v,
-                                mainAttrIdx,
-                                align_item.toknum + j,
-                                wlIdx,
-                                merged_attrs
-                            ),
+                        const {kwicText} = List.reduce<
+                            ServerTextChunk,
+                            {idx:number; kwicText: Array<TextChunk>}
+                        >(
+                            ({idx, kwicText}, v, j) => {
+                                const tokIdx = v.class ? idx : idx + 1;
+                                return {
+                                    idx: tokIdx,
+                                    kwicText: [
+                                        ...kwicText,
+                                        importTextChunk(
+                                            v,
+                                            mainAttrIdx,
+                                            align_item.toknum + j,
+                                            `link:${lineIdx}:${k}:${j}`,
+                                            wlIdx,
+                                            merged_attrs
+                                        )
+                                    ]
+                                }
+                            },
+                            {idx: 0, kwicText: []},
                             align_item.Kwic
                         );
                         wlIdx = nextWithinLineIdx(kwicText, wlIdx);
-                        const rightText = List.map(
-                            (v, j) => importTextChunk(
-                                v,
-                                mainAttrIdx,
-                                align_item.toknum + align_item.kwiclen + j,
-                                wlIdx,
-                                merged_ctxattrs
-                            ),
+                        const {rightText} = List.reduce<
+                            ServerTextChunk,
+                            {idx:number; rightText: Array<TextChunk>}
+                        >(
+                            ({idx, rightText}, v, j) => {
+                                const tokIdx = v.class ? idx : idx + 1;
+                                return {
+                                    idx: tokIdx,
+                                    rightText: [
+                                        ...rightText,
+                                        importTextChunk(
+                                            v,
+                                            mainAttrIdx,
+                                            align_item.toknum + align_item.kwiclen + j,
+                                            `link:${lineIdx}:${k}:${j}`,
+                                            wlIdx,
+                                            merged_ctxattrs
+                                        )
+                                    ]
+                                }
+                            },
+                            {idx: 0, rightText: []},
                             align_item.Right
                         );
                         return ConclineSectionOps.newKWICSection(
