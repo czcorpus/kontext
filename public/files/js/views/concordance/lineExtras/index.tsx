@@ -89,7 +89,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             dispatcher.dispatch<typeof Actions.PlayAudioSegment>({
                 name: Actions.PlayAudioSegment.name,
                 payload: {
-                    chunksIds: props.chunks.map(v => v.token.id)
+                    linkIds: List.map(
+                        x => x.openLink ? x.openLink.linkId : x.closeLink.linkId,
+                        props.chunks
+                    )
                 }
             });
         };
