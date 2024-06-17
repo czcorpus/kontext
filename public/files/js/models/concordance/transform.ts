@@ -159,7 +159,7 @@ export function importLines(
 
             >(
                 ({idx, leftText}, v, chunkIdx) => {
-                    const tokIdx = v.class ? idx : idx + 1;
+                    const tokIdx = v.class || chunkIdx === 0 ? idx : idx + 1;
                     return {
                         idx: tokIdx,
                         leftText:  [
@@ -184,8 +184,8 @@ export function importLines(
                 ServerTextChunk,
                 {idx:number; kwicText: Array<TextChunk>}
             >(
-                ({idx, kwicText}, v, j) => {
-                    const tokIdx = v.class ? idx : idx + 1;
+                ({idx, kwicText}, v, chunkIdx) => {
+                    const tokIdx = v.class || chunkIdx === 0 ? idx : idx + 1;
                     return {
                         idx: tokIdx,
                         kwicText: [
@@ -193,8 +193,8 @@ export function importLines(
                             importTextChunk(
                                 v,
                                 mainAttrIdx,
-                                item.toknum + j,
-                                `link:${lineIdx}:${j}`,
+                                item.toknum + chunkIdx,
+                                `link:${lineIdx}:${chunkIdx}`,
                                 wlIdx,
                                 merged_attrs
                             )
@@ -209,8 +209,8 @@ export function importLines(
                 ServerTextChunk,
                 {idx:number; rightText:Array<TextChunk>}
             >(
-                ({idx, rightText}, v, j) => {
-                    const tokIdx = v.class ? idx : idx + 1;
+                ({idx, rightText}, v, chunkIdx) => {
+                    const tokIdx = v.class || chunkIdx === 0 ? idx : idx + 1;
                     return {
                         idx: tokIdx,
                         rightText: [
@@ -218,8 +218,8 @@ export function importLines(
                             importTextChunk(
                                 v,
                                 mainAttrIdx,
-                                item.toknum + item.kwiclen + j,
-                                `link:${lineIdx}:${j}`,
+                                item.toknum + item.kwiclen + chunkIdx,
+                                `link:${lineIdx}:${chunkIdx}`,
                                 wlIdx,
                                 merged_ctxattrs
                             )
@@ -251,8 +251,8 @@ export function importLines(
                             ServerTextChunk,
                             {idx:number; leftText: Array<TextChunk>}
                         >(
-                            ({idx, leftText}, v, j) => {
-                                const tokIdx = v.class ? idx : idx + 1;
+                            ({idx, leftText}, v, chunkIdx) => {
+                                const tokIdx = v.class || chunkIdx === 0 ? idx : idx + 1;
                                 return {
                                     idx: tokIdx,
                                     leftText: [
@@ -260,8 +260,8 @@ export function importLines(
                                         importTextChunk(
                                             v,
                                             mainAttrIdx,
-                                            align_item.toknum + j - numOfTokensInChunk(align_item.Left),
-                                            `link:${lineIdx}:${k}:${j}`,
+                                            align_item.toknum + chunkIdx - numOfTokensInChunk(align_item.Left),
+                                            `link:${lineIdx}:${k}:${chunkIdx}`,
                                             wlIdx,
                                             merged_ctxattrs
                                         )
@@ -276,8 +276,8 @@ export function importLines(
                             ServerTextChunk,
                             {idx:number; kwicText: Array<TextChunk>}
                         >(
-                            ({idx, kwicText}, v, j) => {
-                                const tokIdx = v.class ? idx : idx + 1;
+                            ({idx, kwicText}, v, chunkIdx) => {
+                                const tokIdx = v.class || chunkIdx === 0 ? idx : idx + 1;
                                 return {
                                     idx: tokIdx,
                                     kwicText: [
@@ -285,8 +285,8 @@ export function importLines(
                                         importTextChunk(
                                             v,
                                             mainAttrIdx,
-                                            align_item.toknum + j,
-                                            `link:${lineIdx}:${k}:${j}`,
+                                            align_item.toknum + chunkIdx,
+                                            `link:${lineIdx}:${k}:${chunkIdx}`,
                                             wlIdx,
                                             merged_attrs
                                         )
@@ -301,8 +301,8 @@ export function importLines(
                             ServerTextChunk,
                             {idx:number; rightText: Array<TextChunk>}
                         >(
-                            ({idx, rightText}, v, j) => {
-                                const tokIdx = v.class ? idx : idx + 1;
+                            ({idx, rightText}, v, chunkIdx) => {
+                                const tokIdx = v.class || chunkIdx === 0 ? idx : idx + 1;
                                 return {
                                     idx: tokIdx,
                                     rightText: [
@@ -310,8 +310,8 @@ export function importLines(
                                         importTextChunk(
                                             v,
                                             mainAttrIdx,
-                                            align_item.toknum + align_item.kwiclen + j,
-                                            `link:${lineIdx}:${k}:${j}`,
+                                            align_item.toknum + align_item.kwiclen + chunkIdx,
+                                            `link:${lineIdx}:${k}:${chunkIdx}`,
                                             wlIdx,
                                             merged_ctxattrs
                                         )
@@ -336,6 +336,7 @@ export function importLines(
                 ),
                 List.concatr(line)
             );
+            console.log('line: ', line)
             return [
                 ...acc,
                 {
