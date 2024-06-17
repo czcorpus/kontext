@@ -1504,7 +1504,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
     private findChunks(state:ConcordanceModelState, ...linkIds:Array<string>):Array<TextChunk> {
         for (let i = 0; i < state.lines.length; i += 1) {
             for (let j = 0; j < state.lines[i].languages.length; j += 1) {
-                const ans = pipe(
+                const chunks = pipe(
                     linkIds,
                     List.map(c => ConclineSectionOps.findChunk(state.lines[i].languages[j], c)),
                     List.filter(v => v !== undefined)
