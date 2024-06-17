@@ -1509,8 +1509,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                     List.map(c => ConclineSectionOps.findChunk(state.lines[i].languages[j], c)),
                     List.filter(v => v !== undefined)
                 );
-                if (ans.length > 0) {
-                    return ans;
+                if (!List.empty(chunks)) {
+                    return chunks;
                 }
             }
         }

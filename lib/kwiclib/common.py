@@ -37,7 +37,7 @@ def pair(data: Union[Iterable[T], Iterator[T]]) -> Generator[Tuple[T, T], None, 
             break
 
 
-def split_chunk(pseudo_token: Tuple[str, str]):
+def split_chunk(pseudo_token: Tuple[str, str], next_cls: str) -> List[Tuple[str, str]]:
     """
     Because Manatee sometimes (based on selected attributes
     to be displayed) produces chunks like
@@ -46,12 +46,14 @@ def split_chunk(pseudo_token: Tuple[str, str]):
     ('This', '{class3}'), ('is', '{class3}'), ... etc.
     """
     pt, cls = pseudo_token
-    if cls == "strc":
+    if cls in ("strc", "attr") or next_cls == "attr":
         return [(pt, cls)]
+    # split string only if it's not `strc` or `attr`
+    # and if the next token is not attr
     return [(t, cls) for t in re.split(r'\s+', pt)]
 
 
-def tokens2strclass(tokens):
+def tokens2strclass(tokens) -> List[Dict[str, str]]:
     """
     Converts internal data structure produced by KwicLine and CorpRegion containing tokens and
     respective HTML classes into a more suitable form.
@@ -62,7 +64,9 @@ def tokens2strclass(tokens):
     returns:
     a list of dicts {'str': '[token]', 'class': '[classes]'}
     """
-    pairs = [y for x in [split_chunk(p) for p in pair(tokens)] for y in x]
+    pairs = list(pair(tokens))
+    pairs = [y for x in [split_chunk(p, pairs[i + 1][1] if i + 1 < len(pairs) else "")
+                         for i, p in enumerate(pairs)] for y in x]
     return [{'str': str_token, 'class': class_token.strip('{}')}
             for str_token, class_token in pairs]
 
