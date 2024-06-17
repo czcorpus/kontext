@@ -23,7 +23,7 @@ A corparch database backend for MySQL/MariaDB.
 from typing import List
 
 from plugin_types.user_items import FavoriteItem
-from plugins.common.mysql import MySQLOps
+from plugin_types.integration_db import DatabaseAdapter
 
 DFLT_USER_TABLE = 'kontext_user'
 DFLT_CORP_TABLE = 'kontext_corpus'
@@ -38,7 +38,7 @@ class Backend:
 
     def __init__(
             self,
-            db: MySQLOps,
+            db: DatabaseAdapter,
             user_table: str = DFLT_USER_TABLE,
             corp_table: str = DFLT_CORP_TABLE,
             group_acc_table: str = DFLT_GROUP_ACC_TABLE,
@@ -69,7 +69,7 @@ class Backend:
                 'ORDER BY fav.name, t.corpus_order ', (user_id,))
 
             ans = []
-            async for item in cursor:
+            for item in await cursor.fetchall():
                 item['corpora'] = [{'name': corp, 'id': corp}
                                    for corp in item['corpora'].split(',')]
                 item['size'] = int(item['sizes'].split(',')[0])
@@ -86,21 +86,24 @@ class Backend:
             return await cursor.fetchone()
 
     async def insert_favitem(self, user_id: int, item: FavoriteItem):
-        async with self._db.cursor() as cursor:
-            await cursor.execute(
-                'INSERT INTO kontext_user_fav_item (name, subcorpus_id, subcorpus_orig_id, user_id) '
-                'VALUES (%s, %s, %s, %s) ', (item.name, item.subcorpus_id, item.subcorpus_name, user_id))
+        async with self._db.connection() as conn:
+            async with await conn.cursor() as cursor:
+                await cursor.execute(
+                    'INSERT INTO kontext_user_fav_item (name, subcorpus_id, subcorpus_orig_id, user_id) '
+                    'VALUES (%s, %s, %s, %s) ', (item.name, item.subcorpus_id, item.subcorpus_name, user_id))
 
-            favitem_id: int = cursor.lastrowid
-            await cursor.executemany(
-                'INSERT INTO kontext_corpus_user_fav_item (user_fav_corpus_id, corpus_name, corpus_order) '
-                'VALUES (%s, %s, %s) ', [(favitem_id, corp['id'], i) for i, corp in enumerate(item.corpora)])
-            await cursor.connection.commit()
-        item.ident = str(favitem_id)  # need to update new id
+                favitem_id: int = cursor.lastrowid
+                await cursor.executemany(
+                    'INSERT INTO kontext_corpus_user_fav_item (user_fav_corpus_id, corpus_name, corpus_order) '
+                    'VALUES (%s, %s, %s) ', [(favitem_id, corp['id'], i) for i, corp in enumerate(item.corpora)])
+                await conn.commit()
+            item.ident = str(favitem_id)  # need to update new id
 
     async def delete_favitem(self, item_id: int):
-        async with self._db.cursor() as cursor:
-            await cursor.execute(
-                'DELETE FROM kontext_corpus_user_fav_item WHERE user_fav_corpus_id = %s', (item_id,))
-            await cursor.execute('DELETE FROM kontext_user_fav_item WHERE id = %s', (item_id,))
-            await cursor.connection.commit()
+        async with self._db.connection() as conn:
+            async with await conn.cursor() as cursor:
+                await self._db.begin_tx(cursor)
+                await cursor.execute(
+                    'DELETE FROM kontext_corpus_user_fav_item WHERE user_fav_corpus_id = %s', (item_id,))
+                await cursor.execute('DELETE FROM kontext_user_fav_item WHERE id = %s', (item_id,))
+                await conn.commit()

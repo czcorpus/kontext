@@ -101,17 +101,25 @@ export enum PosAttrRole {
     INTERNAL = 0b10,
 }
 
-export class TextChunk {
+export interface TextChunk {
     className:string;
     token:Token;
-    openLink?:{speechPath:string};
-    closeLink?:{speechPath:string};
+    openLink?:{speechPath:string, linkId: string};
+    closeLink?:{speechPath:string, linkId: string};
     continued?:boolean;
     showAudioPlayer:boolean;
     posAttrs:Array<string>; // array => multiple pos attrs per whole 'pseudo-position'
     displayPosAttrs:Array<string>;
     description?:Array<string>;
 }
+
+
+export function textChunkMatchesLinkId(tch:TextChunk, linkId:string) {
+    return tch.openLink && tch.openLink.linkId === linkId ||
+        tch.closeLink && tch.closeLink.linkId === linkId;
+}
+
+
 
 export interface Line {
     lineGroup:number|undefined;

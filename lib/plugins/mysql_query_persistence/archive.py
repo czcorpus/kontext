@@ -24,16 +24,16 @@ import datetime
 import logging
 
 import ujson as json
-from aiomysql import Cursor
+from mysql.connector.aio.abstracts import MySQLCursorAbstract
 from plugin_types.general_storage import KeyValueStorage
-from plugins.common.mysql import MySQLOps
+from plugin_types.integration_db import DatabaseAdapter
 
 
 def get_iso_datetime():
     return datetime.datetime.now().isoformat()
 
 
-async def is_archived(cursor: Cursor, conc_id):
+async def is_archived(cursor: MySQLCursorAbstract, conc_id):
     await cursor.execute(
         'SELECT id FROM kontext_conc_persistence WHERE id = %s LIMIT 1',
         (conc_id,)
@@ -47,7 +47,7 @@ class Archiver(object):
     from fast database (Redis) to a slow one (SQLite3)
     """
 
-    def __init__(self, from_db: KeyValueStorage, to_db: MySQLOps, archive_queue_key: str):
+    def __init__(self, from_db: KeyValueStorage, to_db: DatabaseAdapter, archive_queue_key: str):
         """
         arguments:
         from_db -- a Redis connection
@@ -55,7 +55,7 @@ class Archiver(object):
         archive_queue_key -- a Redis key used to access archive queue
         """
         self._from_db: KeyValueStorage = from_db
-        self._to_db: MySQLOps = to_db
+        self._to_db: DatabaseAdapter = to_db
         self._archive_queue_key = archive_queue_key
 
     async def _get_queue_size(self):
@@ -85,7 +85,8 @@ class Archiver(object):
         i = 0
         try:
             async with self._to_db.connection() as connection:
-                async with connection.cursor() as cursor:
+                async with await connection.cursor() as cursor:
+                    await self._to_db.begin_tx(cursor)
                     proc_keys = {}
                     while i < num_proc:
                         qitem = await self._from_db.list_pop(self._archive_queue_key)

@@ -39,7 +39,9 @@ from plugin_types.auth import (
 from plugin_types.auth.hash import (
     mk_pwd_hash, mk_pwd_hash_default, split_pwd_hash)
 from plugins import inject
-from plugins.common.mysql import MySQLConf, MySQLOps
+from plugins.common.mysql import MySQLConf
+from plugin_types.integration_db import DatabaseAdapter
+from plugins.common.mysql.adhocdb import AdhocDB
 from plugins.mysql_corparch.backend import Backend
 from plugins.mysql_integration_db import MySqlIntegrationDb
 
@@ -61,7 +63,7 @@ class MysqlAuthHandler(AbstractInternalAuth):
 
     def __init__(
             self,
-            db: MySQLOps,
+            db: DatabaseAdapter,
             corparch_backend,
             anonymous_user_id,
             case_sensitive_corpora_names: bool,
@@ -130,13 +132,14 @@ class MysqlAuthHandler(AbstractInternalAuth):
         user_id -- a database ID of a user
         password -- new password
         """
-        async with self.db.cursor() as cursor:
+        async with await self.db.cursor() as cursor:
+            await self.db.begin_tx(cursor)
             await cursor.execute('SELECT username FROM kontext_user WHERE id = %s', (user_id,))
             row = await cursor.fetchone()
             if row is not None:
                 await cursor.execute('UPDATE kontext_user SET pwd_hash = %s WHERE id = %s',
                                      (mk_pwd_hash_default(password), user_id))
-                await cursor.connection.commit()
+                await self.db.commit_tx()
             else:
                 raise AuthException(plugin_ctx.translate('User %s not found.') % user_id)
 
@@ -305,14 +308,14 @@ class MysqlAuthHandler(AbstractInternalAuth):
         await token.load(self.db)
 
         async with self.db.connection() as conn:
-            await conn.begin()
             try:
                 if token.is_stored():
                     curr = await self._find_user(token.username)
                     if curr:
                         raise SignUpNeedsUpdateException()
 
-                    async with conn.cursor() as cursor:
+                    async with await conn.cursor() as cursor:
+                        await self.db.begin_tx(cursor)
                         await cursor.execute(
                             'INSERT INTO kontext_user (username, firstname, lastname, pwd_hash, email, affiliation) '
                             'VALUES (%s, %s, %s, %s, %s, %s)',
@@ -353,11 +356,11 @@ def create_instance(conf, integ_db: MySqlIntegrationDb):
         logging.getLogger(__name__).info(f'mysql_auth uses integration_db[{integ_db.info}]')
         corparch_backend = Backend(integ_db, enable_parallel_acc=True)
     else:
-        dbx = MySQLOps(**MySQLConf(plugin_conf).conn_dict)
+        dbx = AdhocDB(**MySQLConf.from_conf(plugin_conf).conn_dict)
         logging.getLogger(__name__).info(
             'mysql_auth uses custom database configuration {}@{}'.format(
                 plugin_conf['mysql_user'], plugin_conf['mysql_host']))
-        corparch_backend = Backend(MySQLOps(**MySQLConf(plugin_conf).conn_dict))
+        corparch_backend = Backend(AdhocDB(**MySQLConf.from_conf(plugin_conf).conn_dict))
     return MysqlAuthHandler(
         db=dbx,
         corparch_backend=corparch_backend,

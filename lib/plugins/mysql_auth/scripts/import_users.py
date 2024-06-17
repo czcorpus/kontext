@@ -32,6 +32,7 @@ def import_user(data):
     with plugins.runtime.AUTH as auth:
         with auth.db.connection_sync() as conn:
             with conn.cursor() as cursor:
+                auth.db.begin_tx_sync(cursor)
                 data['pwd_hash'] = mk_pwd_hash_default(data['pwd']) if data['pwd'] else None
                 del data['pwd']
                 try:
