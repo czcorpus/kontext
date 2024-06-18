@@ -26,7 +26,7 @@ import logging
 import ujson as json
 from mysql.connector.aio.abstracts import MySQLCursorAbstract
 from plugin_types.general_storage import KeyValueStorage
-from plugin_types.integration_db import DatabaseAdapter
+from plugins.common.sqldb import DatabaseAdapter
 
 
 def get_iso_datetime():
@@ -41,7 +41,7 @@ async def is_archived(cursor: MySQLCursorAbstract, conc_id):
     return (await cursor.fetchone()) is not None
 
 
-class Archiver(object):
+class Archiver:
     """
     A class which actually performs the process of archiving records
     from fast database (Redis) to a slow one (SQLite3)

@@ -27,6 +27,8 @@ from plugin_types.common import Serializable
 from plugin_types.settings_storage import AbstractSettingsStorage
 from plugins import inject
 from plugins.mysql_integration_db import MySqlIntegrationDb
+from plugins.common.mysql.adhocdb import AdhocDB
+from plugins.common.mysql import MySQLConf
 
 
 class SettingsStorage(AbstractSettingsStorage):
@@ -110,13 +112,23 @@ class SettingsStorage(AbstractSettingsStorage):
     def get_excluded_users(self):
         return self._excluded_users
 
+    async def on_response(self):
+        if isinstance(self._db, AdhocDB):
+            await self._db.close()
+
 
 @inject(plugins.runtime.INTEGRATION_DB)
-def create_instance(conf, db: MySqlIntegrationDb):
+def create_instance(conf, integration_db: MySqlIntegrationDb):
     conf = conf.get('plugins', 'settings_storage')
     excluded_users = conf.get('excluded_users', None)
     if excluded_users is None:
         excluded_users = []
     else:
         excluded_users = [int(x) for x in excluded_users]
+    if integration_db.is_active and 'mysql_host' not in conf:
+        db = integration_db
+        logging.getLogger(__name__).info(
+            f'mysql_settings_storage uses integration_db[{integration_db.info}]')
+    else:
+        db = AdhocDB(MySQLConf.from_conf(conf))
     return SettingsStorage(db, excluded_users=excluded_users)

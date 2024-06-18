@@ -25,12 +25,19 @@ from mysql.connector.aio import connect
 from mysql.connector.aio.abstracts import MySQLConnectionAbstract, MySQLCursorAbstract
 from mysql.connector.abstracts import MySQLConnectionAbstract as SyncMySQLConnectionAbstract, MySQLCursorAbstract as SyncMySQLCursorAbstract
 
-from plugin_types.integration_db import IntegrationDatabase, AsyncDbContextManager, R, DbContextManager, SN, SR
-from plugins.common.mysql import MySQLOps
+from plugins.common.sqldb import AsyncDbContextManager, R, DbContextManager, SN, SR
+from plugins.common.mysql import MySQLOps, MySQLConf
+from plugin_types.integration_db import IntegrationDatabase
 
 
-class MySqlIntegrationDb(IntegrationDatabase[MySQLConnectionAbstract, MySQLCursorAbstract, SyncMySQLConnectionAbstract, SyncMySQLCursorAbstract]):
-    """
+class MySqlIntegrationDb(
+    IntegrationDatabase[
+        MySQLConnectionAbstract,
+        MySQLCursorAbstract,
+        SyncMySQLConnectionAbstract,
+        SyncMySQLCursorAbstract
+    ]):
+    """s
     MySqlIntegrationDb is a variant of integration_db plug-in providing access
     to MySQL/MariaDB instances. It is recommended for:
      1) integration with existing MySQL/MariaDB information systems,
@@ -46,13 +53,9 @@ class MySqlIntegrationDb(IntegrationDatabase[MySQLConnectionAbstract, MySQLCurso
     """
 
     def __init__(
-            self, host, database, user, password, pool_size, autocommit, retry_delay,
-            retry_attempts, environment_wait_sec: int
+            self, conn_args: MySQLConf, environment_wait_sec: int
     ):
-        self._ops = MySQLOps(
-            host, database, user, password, pool_size, autocommit, retry_delay,
-            retry_attempts
-        )
+        self._ops = MySQLOps(conn_args)
         self._environment_wait_sec = environment_wait_sec
         self._db_conn: ContextVar[Optional[MySQLConnectionAbstract]] = ContextVar('database_connection', default=None)
 
@@ -101,7 +104,7 @@ class MySqlIntegrationDb(IntegrationDatabase[MySQLConnectionAbstract, MySQLCurso
     async def create_connection(self) -> MySQLConnectionAbstract:
         return await connect(
             user=self._ops.conn_args.user, password=self._ops.conn_args.password, host=self._ops.conn_args.host,
-            database=self._ops.conn_args.db, ssl_disabled=True, autocommit=True)
+            database=self._ops.conn_args.database, ssl_disabled=True, autocommit=True)
 
     @asynccontextmanager
     async def connection(self) -> Generator[MySQLConnectionAbstract, None, None]:
@@ -135,9 +138,6 @@ class MySqlIntegrationDb(IntegrationDatabase[MySQLConnectionAbstract, MySQLCurso
     async def begin_tx(self, cursor):
         await self._ops.begin_tx(cursor)
 
-    def begin_tx_sync(self, cursor):
-        self._ops.begin_tx_sync(cursor)
-
     async def commit_tx(self):
         async with self.connection() as conn:
             await conn.commit()
@@ -146,11 +146,18 @@ class MySqlIntegrationDb(IntegrationDatabase[MySQLConnectionAbstract, MySQLCurso
         async with self.connection() as conn:
             await conn.rollback()
 
+    def begin_tx_sync(self, cursor):
+        self._ops.begin_tx_sync(cursor)
+
+    def commit_tx_sync(self, conn):
+        conn.commit()
+
+    def rollback_tx_sync(self, conn):
+        conn.rollback()
+
 
 def create_instance(conf):
     pconf = conf.get('plugins', 'integration_db')
     return MySqlIntegrationDb(
-        host=pconf['host'], database=pconf['db'], user=pconf['user'], password=pconf['passwd'],
-        pool_size=int(pconf['pool_size']), autocommit=True,
-        retry_delay=int(pconf['retry_delay']), retry_attempts=int(pconf['retry_attempts']),
+        MySQLConf.from_conf(pconf),
         environment_wait_sec=int(pconf['environment_wait_sec']))

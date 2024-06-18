@@ -20,6 +20,7 @@ import logging
 from contextlib import asynccontextmanager, contextmanager
 
 from plugin_types.integration_db import IntegrationDatabase
+from plugins.common.sqldb import SN, SR, R
 from plugins.errors import PluginCompatibilityException
 
 
@@ -41,25 +42,48 @@ class DefaultIntegrationDb(IntegrationDatabase[None, None, None, None]):
 
     @staticmethod
     def _err_msg():
-        logging.getLogger(__name__).warning('It looks like there is no concrete integration_db enabled '
-                                            'and one of the active plug-ins either requires it or assumes '
-                                            'incorrectly that a concrete instance is enabled.')
+        logging.getLogger(__name__).warning(
+            'It looks like there is no concrete integration_db enabled '
+            'and one of the active plug-ins either requires it or assumes '
+            'incorrectly that a concrete instance is enabled.')
         return 'DefaultIntegrationDb provides no true database integration'
 
     @asynccontextmanager
     async def connection(self):
         raise PluginCompatibilityException(self._err_msg())
+        yield
 
     @asynccontextmanager
     async def cursor(self, dictionary=True):
         raise PluginCompatibilityException(self._err_msg())
+        yield
 
     @contextmanager
     def connection_sync(self):
         raise PluginCompatibilityException(self._err_msg())
+        yield
 
     @contextmanager
     def cursor_sync(self, dictionary=True):
+        raise PluginCompatibilityException(self._err_msg())
+        yield
+
+    async def begin_tx(self, cursor: R):
+        raise PluginCompatibilityException(self._err_msg())
+
+    async def commit_tx(self):
+        raise PluginCompatibilityException(self._err_msg())
+
+    async def rollback_tx(self):
+        raise PluginCompatibilityException(self._err_msg())
+
+    def begin_tx_sync(self, cursor: SR):
+        raise PluginCompatibilityException(self._err_msg())
+
+    def commit_tx_sync(self, conn: SN):
+        raise PluginCompatibilityException(self._err_msg())
+
+    def rollback_tx_sync(self, conn: SN):
         raise PluginCompatibilityException(self._err_msg())
 
     @property

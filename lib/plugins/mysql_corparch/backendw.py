@@ -31,7 +31,7 @@ from plugin_types.corparch.backend.regkeys import (
     REG_VAR_COLS_MAP,
     SATTR_COLS_MAP,
     STRUCT_COLS_MAP)
-from plugin_types.integration_db import DatabaseAdapter
+from plugins.common.sqldb import DatabaseAdapter
 from plugins.mysql_corparch.backend import (
     DFLT_CORP_TABLE,
     DFLT_GROUP_ACC_CORP_ATTR,

@@ -27,30 +27,12 @@ from mysql.connector.aio.abstracts import MySQLConnectionAbstract, MySQLCursorAb
 
 
 @dataclass
-class ConnectionArgs:
-    db: str
-    user: str
-    password: str
-    autocommit: bool = False
-    host: str = field(default='localhost')
-    port: int = field(default=3306)
-
-
-@dataclass
-class PoolArgs:
-    minsize: int = field(default=1)
-    maxsize: int = field(default=10)
-    pool_recycle: float = field(default=-1.0)
-
-
-@dataclass
 class MySQLConf:
     database: str
     user: str
     password: str
-    pool_size: int
-    conn_retry_delay: int
-    conn_retry_attempts: int
+    retry_delay: int
+    retry_attempts: int
 
     host: str = field(default='localhost')
     port: int = field(default=3306)
@@ -58,45 +40,43 @@ class MySQLConf:
 
     @staticmethod
     def from_conf(conf: Dict[str, Any]) -> 'MySQLConf':
+        pref = 'mysql_' if any(x.startswith('mysql_') for x in conf.keys()) else ''
         return MySQLConf(
-            host=conf['mysql_host'],
-            database=conf['mysql_db'],
-            user=conf['mysql_user'],
-            password=conf['mysql_passwd'],
-            pool_size=conf['mysql_pool_size'],
-            conn_retry_delay=conf['mysql_retry_delay'],
-            conn_retry_attempts=conf['mysql_retry_attempts'],
+            host=conf[f'{pref}host'],
+            database=conf[f'{pref}db'],
+            user=conf[f'{pref}user'],
+            password=conf[f'{pref}passwd'],
+            retry_delay=conf[f'{pref}retry_delay'],
+            retry_attempts=conf[f'{pref}retry_attempts'],
         )
 
     @property
     def conn_dict(self) -> Dict[str, Any]:
         return asdict(self)
 
+    @property
+    def db(self):
+        return self.database
+
 
 class MySQLOps:
     """
     A simple wrapper for mysql.connector.aio and mysql.connector (for sync variants).
-    In KonText, the class is mostly used by the MySQLIntegrationDb plugin.
+    In KonText, the class is mostly used by the MySQLIntegrationDb plugin and mysql.AdhocDB.
     As a standalone type, it is mostly useful for running various scripts and automatic
     tasks on the worker server where we don't have to worry about effective
     connection usage (for example, if a task runs once every 5 minutes, this means
-    no significant connection overhead).
+    no significant connection overhead to always connect and disconnect).
     """
 
-    _conn_args: ConnectionArgs
-
-    _pool_args: PoolArgs
+    _conn_args: MySQLConf
 
     _retry_delay: int
 
     _retry_attempts: int
 
-    def __init__(self, host, database, user, password, pool_size, autocommit, retry_delay, retry_attempts):
-        self._conn_args = ConnectionArgs(
-            host=host, db=database, user=user, password=password, autocommit=autocommit)
-        self._pool_args = PoolArgs(maxsize=pool_size)
-        self._retry_delay = retry_delay  # TODO has no effect now
-        self._retry_attempts = retry_attempts  # TODO has no effect now
+    def __init__(self, conn_args):
+        self._conn_args = conn_args
 
     @asynccontextmanager
     async def connection(self) -> Generator[MySQLConnectionAbstract, None, None]:
@@ -111,6 +91,7 @@ class MySQLOps:
                 user=self._conn_args.user,
                 password=self._conn_args.password,
                 host=self._conn_args.host,
+                port=self._conn_args.port,
                 database=self._conn_args.db,
                 ssl_disabled=True,
                 autocommit=True) as conn:

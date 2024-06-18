@@ -100,12 +100,11 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
         # only general setting can be applied now because
         # we do not know final corpus name yet
         self._init_default_settings(options)
-
+        self._setup_user_paths()
+        self.cf = corplib.CorpusFactory(self.subcpath)
         try:
             options.update(await self._load_general_settings())
             self.args.map_args_to_attrs(options)
-            self._setup_user_paths()
-            self.cf = corplib.CorpusFactory(self.subcpath)
         except ValueError as ex:
             raise UserReadableException(ex)
         return req_args

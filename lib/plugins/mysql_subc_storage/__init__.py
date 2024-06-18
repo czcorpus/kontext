@@ -13,7 +13,6 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-
 import logging
 import os
 import struct
@@ -31,7 +30,8 @@ from plugin_types.auth import UserInfo
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.subc_storage import AbstractSubcArchive, SubcArchiveException
 from plugins import inject
-from plugins.errors import PluginCompatibilityException
+from plugins.common.mysql.adhocdb import AdhocDB
+from plugins.common.mysql import MySQLConf
 from plugins.mysql_integration_db import MySqlIntegrationDb
 from mysql.connector.errors import IntegrityError
 from sanic import Sanic
@@ -392,13 +392,18 @@ class MySQLSubcArchive(AbstractSubcArchive):
                 )
         return k_markdown(description)
 
+    async def on_response(self):
+        if isinstance(self._db, AdhocDB):
+            await self._db.close()
+
 
 @inject(plugins.runtime.CORPARCH, plugins.runtime.INTEGRATION_DB)
 def create_instance(conf, corparch: AbstractCorporaArchive, integ_db: MySqlIntegrationDb):
     plugin_conf = conf.get('plugins', 'subc_storage')
-    if integ_db.is_active:
-        logging.getLogger(__name__).info(f'mysql_subc_storage uses integration_db[{integ_db.info}]')
-        return MySQLSubcArchive(plugin_conf, corparch, integ_db, BackendConfig())
+    if integ_db.is_active and 'mysql_host' not in plugin_conf:
+        db = integ_db
+        logging.getLogger(__name__).info(
+            f'mysql_subc_storage uses integration_db[{integ_db.info}]')
     else:
-        raise PluginCompatibilityException(
-            'mysql_subc_storage works only with integration_db enabled')
+        db = AdhocDB(MySQLConf.from_conf(plugin_conf))
+    return MySQLSubcArchive(plugin_conf, corparch, db, BackendConfig())

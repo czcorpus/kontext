@@ -23,7 +23,8 @@ A corparch database backend for MySQL/MariaDB.
 from typing import List
 
 from plugin_types.user_items import FavoriteItem
-from plugin_types.integration_db import DatabaseAdapter
+from plugins.common.sqldb import DatabaseAdapter
+from plugins.common.mysql.adhocdb import AdhocDB
 
 DFLT_USER_TABLE = 'kontext_user'
 DFLT_CORP_TABLE = 'kontext_corpus'
@@ -107,3 +108,7 @@ class Backend:
                     'DELETE FROM kontext_corpus_user_fav_item WHERE user_fav_corpus_id = %s', (item_id,))
                 await cursor.execute('DELETE FROM kontext_user_fav_item WHERE id = %s', (item_id,))
                 await conn.commit()
+
+    async def close(self):
+        if isinstance(self._db, AdhocDB):
+            await self._db.close()

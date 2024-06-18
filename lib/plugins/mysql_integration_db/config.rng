@@ -19,9 +19,6 @@
             <element name="passwd">
                 <text />
             </element>
-            <element name="pool_size">
-                <data type="integer" />
-            </element>
             <element name="retry_delay">
                 <data type="integer" />
             </element>

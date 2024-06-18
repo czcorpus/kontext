@@ -46,11 +46,12 @@ def import_user(data):
                         cursor.execute(
                             'INSERT INTO kontext_user_access (user_id, corpus_name, limited) '
                             'VALUES (%s, %s, 0)', (user_id, corp))
-                    conn.commit()
+                    auth.db.commit_tx_sync(conn)
                     print(('Installed user {}'.format(data['username'])))
                     return 1
                 except Exception as ex:
                     print(ex)
+                    auth.db.rollback_tx_sync(conn)
                     return 0
 
 

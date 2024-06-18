@@ -18,7 +18,7 @@ import uuid
 
 from mysql.connector.aio.abstracts import MySQLConnectionAbstract
 from plugin_types.auth.sign_up import AbstractSignUpToken
-from plugin_types.integration_db import DatabaseAdapter
+from plugins.common.sqldb import DatabaseAdapter
 
 
 class SignUpToken(AbstractSignUpToken[MySQLConnectionAbstract]):

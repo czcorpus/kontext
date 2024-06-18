@@ -40,7 +40,7 @@ from plugin_types.auth.hash import (
     mk_pwd_hash, mk_pwd_hash_default, split_pwd_hash)
 from plugins import inject
 from plugins.common.mysql import MySQLConf
-from plugin_types.integration_db import DatabaseAdapter
+from plugins.common.sqldb import DatabaseAdapter
 from plugins.common.mysql.adhocdb import AdhocDB
 from plugins.mysql_corparch.backend import Backend
 from plugins.mysql_integration_db import MySqlIntegrationDb
@@ -343,6 +343,10 @@ class MysqlAuthHandler(AbstractInternalAuth):
             return token.user
         return None
 
+    async def on_response(self):
+        if isinstance(self.db, AdhocDB):
+            await self.db.close()
+
 
 @inject(plugins.runtime.INTEGRATION_DB)
 def create_instance(conf, integ_db: MySqlIntegrationDb):
@@ -356,11 +360,11 @@ def create_instance(conf, integ_db: MySqlIntegrationDb):
         logging.getLogger(__name__).info(f'mysql_auth uses integration_db[{integ_db.info}]')
         corparch_backend = Backend(integ_db, enable_parallel_acc=True)
     else:
-        dbx = AdhocDB(**MySQLConf.from_conf(plugin_conf).conn_dict)
+        dbx = AdhocDB(MySQLConf.from_conf(plugin_conf))
         logging.getLogger(__name__).info(
             'mysql_auth uses custom database configuration {}@{}'.format(
                 plugin_conf['mysql_user'], plugin_conf['mysql_host']))
-        corparch_backend = Backend(AdhocDB(**MySQLConf.from_conf(plugin_conf).conn_dict))
+        corparch_backend = Backend(dbx)
     return MysqlAuthHandler(
         db=dbx,
         corparch_backend=corparch_backend,
