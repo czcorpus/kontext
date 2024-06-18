@@ -31,7 +31,8 @@ from plugin_types.corparch.backend.regkeys import (
     POS_COLS_MAP, REG_COLS_MAP, REG_VAR_COLS_MAP, SATTR_COLS_MAP,
     STRUCT_COLS_MAP)
 from plugin_types.corparch.corpus import PosCategoryItem, TagsetInfo
-from plugin_types.integration_db import DatabaseAdapter
+from plugins.common.sqldb import DatabaseAdapter
+from plugins.common.mysql.adhocdb import AdhocDB
 
 
 class MySQLConfException(Exception):
@@ -511,3 +512,7 @@ class Backend(DatabaseBackend):
             'SELECT pos_attr FROM kontext_simple_query_default_attrs WHERE corpus_name = %s',
             (corpus_id,))
         return [r['pos_attr'] for r in await cursor.fetchall()]
+
+    async def close(self):
+        if isinstance(self._db, AdhocDB):
+            await self._db.close()

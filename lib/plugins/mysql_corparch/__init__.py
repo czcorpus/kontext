@@ -424,6 +424,9 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
                 max_page_size=self.max_page_size
             )
 
+    async def on_response(self):
+        await self.backend.close()
+
 
 @inject(plugins.runtime.USER_ITEMS, plugins.runtime.INTEGRATION_DB)
 def create_instance(conf, user_items: AbstractUserItems, integ_db: MySqlIntegrationDb):
@@ -435,7 +438,7 @@ def create_instance(conf, user_items: AbstractUserItems, integ_db: MySqlIntegrat
         logging.getLogger(__name__).info(
             'mysql_user_items uses custom database configuration {}@{}'.format(
                 plugin_conf['mysql_user'], plugin_conf['mysql_host']))
-        db_backend = Backend(AdhocDB(**MySQLConf.from_conf(plugin_conf).conn_dict))
+        db_backend = Backend(AdhocDB(MySQLConf.from_conf(plugin_conf)))
 
     return MySQLCorparch(
         db_backend=db_backend,

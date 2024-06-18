@@ -161,6 +161,9 @@ class DatabaseBackend(Generic[CursorType], abc.ABC):
     async def load_simple_query_default_attrs(self, cursor: CursorType, corpus_id: str) -> List[str]:
         raise NotImplementedError()
 
+    async def close(self):
+        pass
+
 
 class DatabaseWriteBackend(Generic[CursorType], abc.ABC):
 

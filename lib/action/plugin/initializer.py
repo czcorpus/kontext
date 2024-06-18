@@ -66,10 +66,14 @@ def init_plugin(name, module=None, optional=False):
         except ImportError as e:
             logging.getLogger(__name__).warning(
                 f'Plugin [{name}] configured but the following error occurred: {e}')
-        except (PluginException, Exception) as e:
+        except PluginException as e:
             logging.getLogger(__name__).critical(
                 'Failed to initiate plug-in %s: %s', name, e, exc_info=e)
-            raise e
+            raise e from e
+        except Exception as e:
+            logging.getLogger(__name__).critical(
+                'Failed to initiate plug-in %s: %s', name, e, exc_info=e)
+            raise PluginException(f'Failed to initiate plug-in {name} with error {e.__class__.__name__}: {e}') from e
     else:
         plugins.add_missing_plugin(name)
 

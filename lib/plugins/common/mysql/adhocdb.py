@@ -21,24 +21,28 @@ from contextvars import ContextVar
 from typing import Generator, Optional
 from mysql.connector.aio import connect
 from mysql.connector.aio.abstracts import MySQLConnectionAbstract
+import uuid
 
-from plugin_types.integration_db import AsyncDbContextManager, R, DbContextManager, SN, SR, DatabaseAdapter
-from plugins.common.mysql import MySQLOps
+from plugins.common.sqldb import AsyncDbContextManager, R, DbContextManager, SN, SR, DatabaseAdapter
+from plugins.common.mysql import MySQLOps, MySQLConf
 
 
 
 class AdhocDB(DatabaseAdapter):
+    """
+    AdhocDB provides a database connection for plug-ins and scripts in case IntegrationDB
+    is not a way to go (e.g. in systems relying on default and sqlite plugins with a single
+    plugin using MySQL backend).
 
-    def __init__(
-            self, host, database, user, password, pool_size, autocommit, retry_delay,
-            retry_attempts, environment_wait_sec: int
-    ):
-        self._ops = MySQLOps(
-            host, database, user, password, pool_size, autocommit, retry_delay,
-            retry_attempts
-        )
-        self._environment_wait_sec = environment_wait_sec
-        self._db_conn: ContextVar[Optional[MySQLConnectionAbstract]] = ContextVar('database_connection', default=None)
+    !!! Important note: due to the nature of the async environment, it is super-essential
+    that the close() method is called by a respective plug-in's on_response event handler.
+    That is the only way how to ensure that each opened connection is also closed.
+    """
+
+    def __init__(self, conn_args: MySQLConf):
+        self._ops = MySQLOps(conn_args)
+        self._db_conn: ContextVar[Optional[MySQLConnectionAbstract]] = ContextVar(
+            f'adhocdb_{uuid.uuid1().hex}', default=None)
 
     @property
     def is_active(self):
@@ -52,30 +56,21 @@ class AdhocDB(DatabaseAdapter):
     def info(self):
         return f'{self._ops.conn_args.host}:{self._ops.conn_args.port}/{self._ops.conn_args.db} (adhoc)'
 
-    async def on_request(self):
-        curr = self._db_conn.get()
-        if not curr:
-            self._db_conn.set(await self.create_connection())
-
-    async def on_response(self):
-        curr = self._db_conn.get()
-        if curr:
-            await curr.close()
-
     async def create_connection(self) -> MySQLConnectionAbstract:
         return await connect(
             user=self._ops.conn_args.user, password=self._ops.conn_args.password, host=self._ops.conn_args.host,
-            database=self._ops.conn_args.db, ssl_disabled=True, autocommit=True)
+            database=self._ops.conn_args.database, ssl_disabled=True, autocommit=True)
 
     @asynccontextmanager
     async def connection(self) -> Generator[MySQLConnectionAbstract, None, None]:
-        curr = self._db_conn.get()
-        if not curr:
-            raise RuntimeError('No database connection')
+        conn = self._db_conn.get()
+        if not conn:
+            conn = await self.create_connection()
+            self._db_conn.set(conn)
         try:
-            yield curr
+            yield conn
         finally:
-            pass  # No need to close the connection as it is done by Sanic middleware
+            pass  # No need to close the connection as it is done by close()
 
     @contextmanager
     def connection_sync(self) -> DbContextManager[SN]:
@@ -99,9 +94,6 @@ class AdhocDB(DatabaseAdapter):
     async def begin_tx(self, cursor):
         await self._ops.begin_tx(cursor)
 
-    def begin_tx_sync(self, cursor):
-        self._ops.begin_tx_sync(cursor)
-
     async def commit_tx(self):
         async with self.connection() as conn:
             await conn.commit()
@@ -109,3 +101,17 @@ class AdhocDB(DatabaseAdapter):
     async def rollback_tx(self):
         async with self.connection() as conn:
             await conn.rollback()
+
+    def begin_tx_sync(self, cursor):
+        self._ops.begin_tx_sync(cursor)
+
+    def commit_tx_sync(self, conn):
+        conn.commit()
+
+    def rollback_tx_sync(self, conn):
+        conn.rollback()
+
+    async def close(self):
+        conn = self._db_conn.get()
+        if conn:
+            await conn.close()
