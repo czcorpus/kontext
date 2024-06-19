@@ -336,7 +336,6 @@ export function importLines(
                 ),
                 List.concatr(line)
             );
-            console.log('line: ', line)
             return [
                 ...acc,
                 {
