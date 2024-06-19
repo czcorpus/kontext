@@ -4,7 +4,7 @@
         <css/>
         <logo>kontext-logo.svg</logo>
         <logo_mouseover>kontext-logo_s.svg</logo_mouseover>
-        <logo_href>http://localhost:5000</logo_href> <!-- change this according to your settings -->
+        <logo_href>/</logo_href> <!-- change this according to your settings -->
         <logo_inline_css>width: 200px</logo_inline_css>
         <fonts/>
         <favicon>favicon.ico</favicon>
