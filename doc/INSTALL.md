@@ -23,7 +23,7 @@
 
 ## Install KonText (Ubuntu)
 
-The easiest way to install KonText is to create an **LXC/LXD container** with Ubuntu 18.04 LTS
+The easiest way to install KonText is to create an **LXC/LXD container** with Ubuntu 22.04 LTS
 OS, clone KonText repository and run [scripts/install/install.py](../scripts/install/install.py)
 script that performs all the installation and configuration steps that are necessary to run KonText
 as a standalone server application.
