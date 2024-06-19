@@ -487,8 +487,10 @@ async def create_lazy_view(amodel: ConcActionModel, req: KRequest, resp: KRespon
 async def archive_concordance(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.QUERY_PERSISTENCE as qp:
         revoke = bool(int(req.args.get('revoke')))
-        cn, row = await qp.archive(amodel.session_get('user', 'id'),
-                                   req.args.get('code'), revoke=revoke)
+        cn, row = await qp.archive(
+            amodel.session_get('user', 'id'),
+            req.args.get('code'),
+            revoke=revoke)
     return dict(revoked=revoke, num_changes=cn, archived_conc=row)
 
 

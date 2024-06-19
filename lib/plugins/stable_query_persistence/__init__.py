@@ -33,11 +33,14 @@ import os
 import re
 import sqlite3
 import time
+import asyncio
+import aiosqlite
 
 import plugins
 import ujson as json
 from action.errors import ForbiddenException, NotFoundException
 from plugin_types.general_storage import KeyValueStorage
+from plugin_types.auth import AbstractAuth
 from plugin_types.query_persistence import AbstractQueryPersistence
 from plugin_types.query_persistence.common import (
     ID_KEY, QUERY_KEY, USER_ID_KEY, generate_idempotent_hex_id)
@@ -52,21 +55,34 @@ def mk_key(code):
 
 class StableQueryPersistence(AbstractQueryPersistence):
 
-    def __init__(self, db: KeyValueStorage, settings):
+    def __init__(self, db: KeyValueStorage, auth: AbstractAuth, settings):
         super().__init__(settings)
         self.db = db
+        self._auth = auth
         plugin_conf = settings.get('plugins', 'query_persistence')
         self._ttl_days = int(plugin_conf.get('ttl_days', DEFAULT_TTL_DAYS))
         self._archive_db_path = plugin_conf.get('archive_db_path')
-        self._archives = self._open_archives() if self._archive_db_path else []
+        self._archive_lock = asyncio.Lock()
         self._settings = settings
+
+    async def _mk_arch_table_if_none(self):
+        async with self._archive_lock:
+            async with aiosqlite.connect(self._archive_db_path) as db:
+                async with db.execute(
+                        "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'archive'") as cur:
+                    ans = await cur.fetchone()
+                    if ans[0] == 0:
+                        logging.getLogger(__name__).warning('stable_conc_persistence archive table not present -creating one')
+                        await db.execute(
+                            'CREATE TABLE archive (id text, data text NOT NULL, created integer NOT NULL, num_access integer ' +
+                            'NOT NULL DEFAULT 0, last_access integer, PRIMARY KEY (id))')
 
     @property
     def ttl(self):
         return self._ttl_days * 24 * 3600
 
     def is_valid_id(self, data_id):
-        # we intentionally accept non-hex chars here so we can accept also conc keys
+        # we intentionally accept non-hex chars here, so we can accept also conc keys
         # generated from default_conc_persistence and derived plug-ins.
         return bool(re.match(r'~[0-9a-zA-Z]+', data_id))
 
@@ -97,34 +113,26 @@ class StableQueryPersistence(AbstractQueryPersistence):
         The data are assumed to be public (as are URL parameters of a query).
 
         arguments:
-        data_id -- an unique ID of operation data
+        data_id -- a unique ID of operation data
 
         returns:
         a dictionary containing operation data or None if nothing is found
         """
         data = await self.db.get(mk_key(data_id))
         if data is None and self._archive_db_path is not None:
-            for arch_db in self._archives:
-                cursor = arch_db.cursor()
-                tmp = cursor.execute(
-                    'SELECT data, num_access FROM archive WHERE id = ?', (data_id,)).fetchone()
-                if tmp:
-                    data = json.loads(tmp[0])
+            async with self._archive_lock:
+                async with aiosqlite.connect(self._archive_db_path) as db:
+                    db.row_factory = aiosqlite.Row
+                    async with db.execute( 'SELECT data, num_access FROM archive WHERE id = ?', (data_id,)) as cur:
+                        tmp = await cur.fetchone()
+                        if tmp:
+                            data = json.loads(tmp[0])
                     if save_access:
-                        cursor.execute('UPDATE archive SET last_access = ?, num_access = num_access + 1 WHERE id = ?',
-                                       (int(round(time.time())), data_id))
-                        arch_db.commit()
-                    break
+                        await db.execute(
+                            'UPDATE archive SET last_access = ?, num_access = num_access + 1 WHERE id = ?',
+                            (int(round(time.time())), data_id))
+                        await db.commit()
         return data
-
-    def find_key_db(self, data_id):
-        for arch_db in self._archives:
-            cursor = arch_db.cursor()
-            tmp = cursor.execute(
-                'SELECT COUNT(*) FROM archive WHERE id = ?', (data_id,)).fetchone()
-            if tmp[0] > 0:
-                return arch_db
-        return None
 
     async def store(self, user_id, curr_data, prev_data=None):
         def records_differ(r1, r2):
@@ -146,79 +154,50 @@ class StableQueryPersistence(AbstractQueryPersistence):
 
         return latest_id
 
-    @property
-    def _latest_archive(self):
-        return self._archives[0]
-
     async def archive(self, user_id, conc_id, revoke=False):
-        archive_db = self.find_key_db(conc_id)
-        if archive_db:
-            cursor = archive_db.cursor()
-            cursor.execute(
+        async with self._archive_lock:
+            async with aiosqlite.connect(self._archive_db_path) as db:
+                db.row_factory = aiosqlite.Row
+                async with db.execute(
                 'SELECT id, data, created integer, num_access, last_access FROM archive WHERE id = ? LIMIT 1',
-                (conc_id,))
-            row = cursor.fetchone()
-            archived_rec = json.loads(row[1]) if row else None
-        else:
-            cursor = None
-            archived_rec = None
-
-        if revoke:
-            if archived_rec:
-                cursor.execute('DELETE FROM archive WHERE id = ?', (conc_id,))
-                ans = 1
-            else:
-                raise NotFoundException('Concordance {0} not archived'.format(conc_id))
-        else:
-            cursor = self._latest_archive.cursor()  # writing to the latest archive
-            data = await self.db.get(mk_key(conc_id))
-            if data is None and archived_rec is None:
-                raise NotFoundException('Concordance {0} not found'.format(conc_id))
-            elif archived_rec:
-                ans = 0
-            else:
-                stored_user_id = data.get('user_id', None)
-                if user_id != stored_user_id:
-                    raise ForbiddenException(
-                        'Cannot change status of a concordance belonging to another user')
-                curr_time = time.time()
-                cursor.execute(
-                    'INSERT OR IGNORE INTO archive (id, data, created, num_access) VALUES (?, ?, ?, ?)',
-                    (conc_id, json.dumps(data), curr_time, 0))
-                archived_rec = data
-                ans = 1
-        self._latest_archive.commit()
-        return ans, archived_rec
+                (conc_id,)) as cur:
+                    row = await cur.fetchone()
+                    archived_rec = json.loads(row[1]) if row else None
+                    if revoke:
+                        if archived_rec:
+                            await db.execute('DELETE FROM archive WHERE id = ?', (conc_id,))
+                            ans = 1
+                        else:
+                            raise NotFoundException('Concordance {0} not archived'.format(conc_id))
+                    else:
+                        data = await self.db.get(mk_key(conc_id))
+                        if data is None and archived_rec is None:
+                            raise NotFoundException('Concordance {0} not found'.format(conc_id))
+                        elif archived_rec:
+                            ans = 0
+                        else:
+                            stored_user_id = data.get('user_id', None)
+                            if user_id != stored_user_id:
+                                raise ForbiddenException(
+                                    'Cannot change status of a concordance belonging to another user')
+                            curr_time = time.time()
+                            await db.execute(
+                                'INSERT OR IGNORE INTO archive (id, data, created, num_access) VALUES (?, ?, ?, ?)',
+                                (conc_id, json.dumps(data), curr_time, 0))
+                            archived_rec = data
+                            ans = 1
+                    await db.commit()
+                    return ans, archived_rec
 
     async def is_archived(self, conc_id):
-        return self.find_key_db(conc_id) is not None
+        async with self._archive_lock:
+            async with aiosqlite.connect(self._archive_db_path) as db:
+                async with db.execute('SELECT COUNT(*) FROM archive WHERE id = ? LIMIT 1', (conc_id,)) as cur:
+                    ans = await cur.fetchone()
+                    return ans[0] > 0
 
     async def will_be_archived(self, plugin_ctx, conc_id: str):
-        return not (await self.is_archived(conc_id)) \
-            and self._settings.get('plugins', 'query_persistence').get('implicit_archiving', None) in ('true', '1', 1)\
-            and not self._auth.is_anonymous(plugin_ctx.user_id)
-
-    def export_tasks(self):
-        """
-        Export tasks for worker(s)
-        """
-        async def archive_concordance(num_proc, dry_run):
-            from . import archive
-            return await archive.run(conf=self._settings, num_proc=num_proc, dry_run=dry_run)
-        return archive_concordance,
-
-    def _open_archives(self):
-        root_dir = os.path.dirname(self._archive_db_path)
-        curr_file = os.path.basename(self._archive_db_path)
-        curr_db = sqlite3.connect(self._archive_db_path)
-        dbs = []
-        for item in os.listdir(root_dir):
-            if item != curr_file:
-                dbs.append((item, sqlite3.connect(os.path.join(root_dir, item))))
-        dbs = [(curr_file, curr_db)] + sorted(dbs, reverse=True)
-        logging.getLogger(__name__).info(
-            'using conc_persistence archives {0}'.format([x[0] for x in dbs]))
-        return [x[1] for x in dbs]
+        return False
 
     async def update(self, data, arch_enqueue=False):
         """
@@ -229,10 +208,10 @@ class StableQueryPersistence(AbstractQueryPersistence):
         if await self.db.exists(data_key):
             await self.db.set(data_key, data)
 
-        archive_db = self.find_key_db(data_id)
-        cursor = archive_db.cursor()
-        cursor.execute('UPDATE archive SET data = ? WHERE id = ?', (json.dumps(data), data_id))
-        archive_db.commit()
+        async with self._archive_lock:
+            async with aiosqlite.connect(self._archive_db_path) as db:
+                await db.execute('UPDATE archive SET data = ? WHERE id = ?', (json.dumps(data), data_id,))
+                await db.commit()
 
     async def clone_with_id(self, old_id: str, new_id: str):
         """
@@ -245,20 +224,15 @@ class StableQueryPersistence(AbstractQueryPersistence):
         # get original data
         original_data = await self.db.get(mk_key(old_id))
         if original_data is None:
-            archive_db = self.find_key_db(old_id)
-            cursor = archive_db.cursor()
-            cursor.execute(
-                'SELECT data '
-                'FROM kontext_conc_persistence '
-                'WHERE id = ? '
-                'LIMIT 1',
-                (old_id,)
-            )
-            row = await cursor.fetchone()
-            if row is None:
-                raise ValueError(f'Data for {old_id} not found')
-            original_data = json.loads(row[0])
-
+            async with self._archive_lock:
+                async with aiosqlite.connect(self._archive_db_path) as db:
+                    async with db.execute(
+                            'SELECT data FROM archive WHERE id = ? LIMIT 1',
+                            (old_id,)) as cursor:
+                        row = await cursor.fetchone()
+                        if row is None:
+                            raise ValueError(f'Data for {old_id} not found')
+                        original_data = json.loads(row[0])
         # set new values
         original_data[ID_KEY] = new_id
         await self.db.set(mk_key(new_id), original_data)
@@ -267,19 +241,21 @@ class StableQueryPersistence(AbstractQueryPersistence):
         """
         Check if ID already exists
         """
-        archive_db = self.find_key_db(id)
-        cursor = archive_db.cursor()
-        cursor.execute(
-            'SELECT * '
-            'FROM kontext_conc_persistence '
-            'WHERE id = ? '
-            'LIMIT 1',
-            (id,)
-        )
-        row = cursor.fetchone()
-        return row is not None or await self.db.exists(mk_key(id))
+        ex = await self.db.exists(mk_key(id))
+        if ex:
+            return True
+        async with self._archive_lock:
+            async with aiosqlite.connect(self._archive_db_path) as db:
+                async with db.execute(
+                        'SELECT COUNT(*) FROM archive WHERE id = ? LIMIT 1',
+                        (id,)) as cursor:
+                    row = await cursor.fetchone()
+                    return row[0] > 0
+
+    async def on_init(self):
+        await self._mk_arch_table_if_none()
 
 
-@inject(plugins.runtime.DB)
-def create_instance(settings, db: KeyValueStorage):
-    return StableQueryPersistence(db=db, settings=settings)
+@inject(plugins.runtime.DB, plugins.runtime.AUTH)
+def create_instance(settings, db: KeyValueStorage, auth: AbstractAuth):
+    return StableQueryPersistence(db=db, auth=auth, settings=settings)

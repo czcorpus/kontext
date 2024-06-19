@@ -142,11 +142,11 @@ class DefaultAuthHandler(AbstractInternalAuth):
 
     async def corpus_access(self, user_dict, corpus_name) -> CorpusAccess:
         if corpus_name == IMPLICIT_CORPUS:
-            return False, True, ''
+            return CorpusAccess(False, True, '')
         corpora = await self.db.get(mk_list_key(user_dict['id']), [])
         if corpus_name in corpora:
-            return False, True, self._variant_prefix(corpus_name)
-        return False, False, ''
+            return CorpusAccess(False, True, self._variant_prefix(corpus_name))
+        return CorpusAccess(False, False, '')
 
     async def permitted_corpora(self, user_dict) -> List[str]:
         corpora = await self.db.get(mk_list_key(user_dict['id']), [])
