@@ -19,7 +19,7 @@ import plugins
 import ujson as json
 from action.control import http_action
 from action.krequest import KRequest
-from action.model.corpus import CorpusActionModel
+from action.model.corpus import UserActionModel
 from action.response import KResponse
 from corplib.abstract import SubcorpusIdent
 from plugin_types.auth import AbstractAuth
@@ -69,8 +69,8 @@ def import_record(obj):
 
 
 @bp.route('/user/set_favorite_item', methods=['POST'])
-@http_action(return_type='json', access_level=2, action_model=CorpusActionModel)
-async def set_favorite_item(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
+@http_action(return_type='json', access_level=2, action_model=UserActionModel)
+async def set_favorite_item(amodel: UserActionModel, req: KRequest, resp: KResponse):
     """
     """
     corpora = []
@@ -101,8 +101,8 @@ async def set_favorite_item(amodel: CorpusActionModel, req: KRequest, resp: KRes
 
 
 @bp.route('/user/unset_favorite_item', methods=['POST'])
-@http_action(return_type='json', access_level=2, action_model=CorpusActionModel)
-async def unset_favorite_item(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
+@http_action(return_type='json', access_level=2, action_model=UserActionModel)
+async def unset_favorite_item(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.USER_ITEMS as uit:
         await uit.delete_user_item(amodel.plugin_ctx, req.form.get('id'))
         return dict(id=req.form.get('id'))
@@ -148,9 +148,12 @@ class UserItems(AbstractUserItems):
 
     async def add_user_item(self, plugin_ctx, item: FavoriteItem):
         if len(await self.get_user_items(plugin_ctx)) >= self.max_num_favorites:
-            raise UserItemException('Max. number of fav. items exceeded',
-                                    error_code='defaultCorparch__err001',
-                                    error_args={'maxNum': self.max_num_favorites})
+            raise UserItemException(
+                'Max. number of fav. items exceeded',
+                error_code='defaultCorparch__err001',
+                error_args={'maxNum': self.max_num_favorites})
+        corpora_id = ':'.join(x['id'] for x in item.corpora)
+        item.ident = f"{corpora_id}:{item.subcorpus_id if item.subcorpus_id else ''}"
         data = item.to_dict()
         data['subcorpus_orig_id'] = data['subcorpus_name']
         del data['subcorpus_name']

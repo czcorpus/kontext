@@ -208,6 +208,9 @@ async def server_init(app: Sanic, loop: asyncio.BaseEventLoop):
         app.ctx.soft_restart_token = ttf.read().strip()
         logging.getLogger(__name__).info(
             f'worker is attaching soft-restart token {app.ctx.soft_restart_token[:5]}...')
+    for p in plugins.runtime:
+        if hasattr(p.instance, 'on_init'):
+            await p.instance.on_init()
 
 
 @application.listener('after_server_start')
