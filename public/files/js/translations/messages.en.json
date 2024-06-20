@@ -243,6 +243,7 @@
         "global__save_form_line_from": "From",
         "global__save_form_line_to": "To",
         "global__advanced_options": "Advanced options",
+        "global__menu_waiting_item": "waiting for complete calculation",
         "linesel__remove_selected_lines": "Remove selected lines",
         "linesel__remove_all_but_selected_lines": "Keep only selected lines",
         "linesel__clear_the_selection": "Clear the selection",

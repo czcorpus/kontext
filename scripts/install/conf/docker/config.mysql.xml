@@ -4,7 +4,7 @@
         <css/>
         <logo>kontext-logo.svg</logo>
         <logo_mouseover>kontext-logo_s.svg</logo_mouseover>
-        <logo_href>http://localhost:5000</logo_href> <!-- change this according to your settings -->
+        <logo_href>/</logo_href> <!-- change this according to your settings -->
         <logo_inline_css>width: 200px</logo_inline_css>
         <fonts/>
         <favicon>favicon.ico</favicon>
@@ -122,7 +122,6 @@
             <db>kontext</db>
             <user>kontext</user>
             <passwd>kontext-secret</passwd>
-            <pool_size>3</pool_size>
             <retry_delay>2</retry_delay>
             <retry_attempts>5</retry_attempts>
             <environment_wait_sec>10</environment_wait_sec>

@@ -104,9 +104,9 @@ export enum PosAttrRole {
 export interface TextChunk {
     className:string;
     token:Token;
-    openLink:{speechPath:string, linkId: string};
-    closeLink:{speechPath:string, linkId: string};
-    continued:boolean;
+    openLink?:{speechPath:string, linkId: string};
+    closeLink?:{speechPath:string, linkId: string};
+    continued?:boolean;
     showAudioPlayer:boolean;
     posAttrs:Array<string>; // array => multiple pos attrs per whole 'pseudo-position'
     displayPosAttrs:Array<string>;
@@ -383,7 +383,6 @@ export interface AjaxConcResponse extends ConcQueryResponse {
     finished:boolean;
     fast_adhoc_ipm:boolean;
     pagination:ServerPagination;
-    running_calc:number; // TODO should be boolean
     user_owns_conc:boolean;
     result_relative_freq:number;
     result_shuffled:boolean;

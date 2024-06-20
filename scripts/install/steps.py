@@ -187,10 +187,10 @@ class SetupManatee(InstallationStep):
                                       cwd=src_working_dir, stdout=self.stdout)
 
         if not ucnk_manatee or not version_found:
-            if manatee_version == '2.223.6':
-                url = 'https://corpora.fi.muni.cz/noske/current/src/manatee-open-2.223.6.tar.gz'
+            if manatee_version == '2.225.8':
+                url = 'https://corpora.fi.muni.cz/noske/current/src/manatee-open-2.225.8.tar.gz'
             else:
-                url = f'http://corpora.fi.muni.cz/noske/src/manatee-open/manatee-open-{manatee_version}.tar.gz'
+                url = f'https://corpora.fi.muni.cz/noske/archive/src/manatee-open/manatee-open-{manatee_version}.tar.gz'
             # build manatee from source using patch
             subprocess.check_call(wget_cmd(url, self._ncc),
                                   cwd='/usr/local/src', stdout=self.stdout)

@@ -20,7 +20,6 @@
 
 import { Action } from 'kombo';
 import { DataSaveFormat } from '../../app/navigation/save';
-import * as Kontext from '../../types/kontext';
 import { PersistentQueryOperation } from '../query/replay/common';
 
 

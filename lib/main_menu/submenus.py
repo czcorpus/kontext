@@ -42,15 +42,15 @@ class ConcordanceDefault:
 
     sorting: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
-            MainMenu.CONCORDANCE('sorting'), 'Sorting', 'MAIN_MENU_SHOW_SORT', key_code=83).mark_indirect())
+            MainMenu.CONCORDANCE('sorting'), 'Sorting', 'MAIN_MENU_SHOW_SORT', key_code=83, curr_conc=True).mark_indirect())
 
     shuffle: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
-            MainMenu.CONCORDANCE('shuffle'), 'Shuffle', 'MAIN_MENU_APPLY_SHUFFLE'))
+            MainMenu.CONCORDANCE('shuffle'), 'Shuffle', 'MAIN_MENU_APPLY_SHUFFLE', curr_conc=True))
 
     sample: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
-            MainMenu.CONCORDANCE('sample'), 'Sample', 'MAIN_MENU_SHOW_SAMPLE', key_code=77).mark_indirect())
+            MainMenu.CONCORDANCE('sample'), 'Sample', 'MAIN_MENU_SHOW_SAMPLE', key_code=77, curr_conc=True).mark_indirect())
 
     # we need lazy evaluation for archive_conc (all the result args must be ready)
     archive_conc: Callable[[OutData], Optional[EventTriggeringItem]] = field(
@@ -155,28 +155,29 @@ class Filter:
     filter_pos: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
             # key = 'f'
-            MainMenu.FILTER('positive'), 'Positive', 'MAIN_MENU_SHOW_FILTER', key_code=70
+            MainMenu.FILTER('positive'), 'Positive', 'MAIN_MENU_SHOW_FILTER', key_code=70, curr_conc=True
         ).add_args(('pnfilter', 'p'))
         .mark_indirect()
     )
 
     filter_neg: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
-            MainMenu.FILTER('negative'), 'Negative', 'MAIN_MENU_SHOW_FILTER'
+            MainMenu.FILTER('negative'), 'Negative', 'MAIN_MENU_SHOW_FILTER', curr_conc=True
         ).add_args(('pnfilter', 'n'))
         .mark_indirect()
     )
 
     filter_subhits: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
-            MainMenu.FILTER('subhits'), 'Remove nested matches', 'MAIN_MENU_FILTER_APPLY_SUBHITS_REMOVE')
+            MainMenu.FILTER('subhits'), 'Remove nested matches', 'MAIN_MENU_FILTER_APPLY_SUBHITS_REMOVE', curr_conc=True)
     )
 
     filter_each_first_doc: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
             MainMenu.FILTER('each-first-doc'),
             'First hits in documents',
-            'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES_IN_DOCS'
+            'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES_IN_DOCS',
+            curr_conc=True,
         ).enable_if(lambda d: len(d.get('aligned_corpora', [])) == 0 and d.get('doc_struct', None))
     )
 
@@ -184,7 +185,8 @@ class Filter:
         default_factory=lambda: EventTriggeringItem(
             MainMenu.FILTER('each-first-sent'),
             'First hits in sentences',
-            'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES_IN_SENTENCES'
+            'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES_IN_SENTENCES',
+            curr_conc=True,
         ).enable_if(lambda d: bool(d.get('sentence_struct', None)))
     )
 
@@ -243,7 +245,7 @@ class Frequency:
     freq_custom: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
             MainMenu.FREQUENCY('custom'), 'Custom', 'MAIN_MENU_SHOW_FREQ_FORM',
-            key_code=70, key_mod='shift'  # key = 'f'
+            key_code=70, key_mod='shift', curr_conc=True  # key = 'f'
         ).mark_indirect()
     )
 
@@ -253,7 +255,7 @@ class Collocations:
     colloc_custom: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
             MainMenu.COLLOCATIONS('custom'), 'Custom',
-            'MAIN_MENU_SHOW_COLL_FORM', key_code=67, key_mod='shift'  # key = 'c'
+            'MAIN_MENU_SHOW_COLL_FORM', key_code=67, key_mod='shift', curr_conc=True  # key = 'c'
         ).mark_indirect()
     )
 

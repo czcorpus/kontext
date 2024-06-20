@@ -94,11 +94,11 @@ __conf.QuickSaveRowLimit = {{ quick_save_row_limit|to_json }};
 __conf.SimpleQueryDefaultAttrs = {{ simple_query_default_attrs|to_json }};
 __conf.MergedAttrs = {{ merged_attrs|to_json }};
 __conf.MergedCtxAttrs = {{ merged_ctxattrs|to_json }};
-{%if running_calc %}
+{%if finished %}
+__conf.Unfinished = false;
+{% else %}
 __conf.numLines = {{ Lines|length }};
 __conf.Unfinished = true;
-{% else %}
-__conf.Unfinished = false;
 {% endif %}
 viewPage.init(__conf);
 {% endblock %}

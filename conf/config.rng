@@ -708,7 +708,7 @@
                     <element name="integration_db">
                         <a:documentation>A plugin providing connection to an existing database KonText needs to
                         be integrated with. Typically - corparch, query_persistence, auth plug-ins may support
-                        integration db which allows configuring and utilizing a single connection (pool) instead
+                        integration db which allows configuring and utilizing a single connection instead
                         of using multiple similar connections and configurations.</a:documentation>
                         <ref name="plugin_common" />
                         <ref name="customPluginConfiguration" />

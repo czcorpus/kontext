@@ -433,7 +433,6 @@ async def view_conc(
 
     out['fast_adhoc_ipm'] = await plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(
         amodel.plugin_ctx, [amodel.args.corpname] + amodel.args.align)
-    out['running_calc'] = not out['finished']   # TODO running_calc is redundant
     out['chart_export_formats'] = []
     with plugins.runtime.CHART_EXPORT as ce:
         out['chart_export_formats'].extend(ce.get_supported_types())
@@ -488,8 +487,10 @@ async def create_lazy_view(amodel: ConcActionModel, req: KRequest, resp: KRespon
 async def archive_concordance(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.QUERY_PERSISTENCE as qp:
         revoke = bool(int(req.args.get('revoke')))
-        cn, row = await qp.archive(amodel.session_get('user', 'id'),
-                                   req.args.get('code'), revoke=revoke)
+        cn, row = await qp.archive(
+            amodel.session_get('user', 'id'),
+            req.args.get('code'),
+            revoke=revoke)
     return dict(revoked=revoke, num_changes=cn, archived_conc=row)
 
 

@@ -16,12 +16,12 @@ import datetime
 import hashlib
 import uuid
 
-from aiomysql import Connection
+from mysql.connector.aio.abstracts import MySQLConnectionAbstract
 from plugin_types.auth.sign_up import AbstractSignUpToken
-from plugins.common.mysql import MySQLOps
+from plugins.common.sqldb import DatabaseAdapter
 
 
-class SignUpToken(AbstractSignUpToken[Connection]):
+class SignUpToken(AbstractSignUpToken[MySQLConnectionAbstract]):
     """
     Note: the class methods do not handle transactions - it's up to the calling method
     """
@@ -42,7 +42,7 @@ class SignUpToken(AbstractSignUpToken[Connection]):
         self.ttl = ttl
         self.bound = False
 
-    async def save(self, db: MySQLOps):
+    async def save(self, db: DatabaseAdapter):
         async with db.cursor() as cursor:
             await cursor.execute(
                 'INSERT INTO kontext_sign_up_token '
@@ -52,7 +52,7 @@ class SignUpToken(AbstractSignUpToken[Connection]):
                  self.pwd_hash, self.email, self.affiliation))
             self.bound = True
 
-    async def load(self, db: MySQLOps):
+    async def load(self, db: DatabaseAdapter):
         async with db.cursor() as cursor:
             await cursor.execute(
                 'DELETE FROM kontext_sign_up_token '
@@ -75,12 +75,12 @@ class SignUpToken(AbstractSignUpToken[Connection]):
             self.email = row.get('email')
             self.affiliation = row.get('affiliation')
 
-    async def delete(self, db: MySQLOps):
+    async def delete(self, db: DatabaseAdapter):
         async with db.cursor() as cursor:
             await cursor.execute('DELETE FROM kontext_sign_up_token WHERE token_value = %s', (self.value,))
         self.bound = False
 
-    async def is_valid(self, db: MySQLOps):
+    async def is_valid(self, db: DatabaseAdapter):
         async with db.cursor() as cursor:
             await cursor.execute(
                 'SELECT value '

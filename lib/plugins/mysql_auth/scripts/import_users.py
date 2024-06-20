@@ -32,6 +32,7 @@ def import_user(data):
     with plugins.runtime.AUTH as auth:
         with auth.db.connection_sync() as conn:
             with conn.cursor() as cursor:
+                auth.db.begin_tx_sync(cursor)
                 data['pwd_hash'] = mk_pwd_hash_default(data['pwd']) if data['pwd'] else None
                 del data['pwd']
                 try:
@@ -45,11 +46,12 @@ def import_user(data):
                         cursor.execute(
                             'INSERT INTO kontext_user_access (user_id, corpus_name, limited) '
                             'VALUES (%s, %s, 0)', (user_id, corp))
-                    conn.commit()
+                    auth.db.commit_tx_sync(conn)
                     print(('Installed user {}'.format(data['username'])))
                     return 1
                 except Exception as ex:
                     print(ex)
+                    auth.db.rollback_tx_sync(conn)
                     return 0
 
 

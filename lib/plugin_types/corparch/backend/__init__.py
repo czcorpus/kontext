@@ -24,7 +24,6 @@ from typing import (
 from plugin_types.auth import CorpusAccess
 from plugin_types.corparch.corpus import TagsetInfo
 from plugin_types.corparch.install import InstallJson
-from plugin_types.corparch.registry import RegistryConf
 
 CursorType = TypeVar('CursorType')
 
@@ -162,6 +161,9 @@ class DatabaseBackend(Generic[CursorType], abc.ABC):
     async def load_simple_query_default_attrs(self, cursor: CursorType, corpus_id: str) -> List[str]:
         raise NotImplementedError()
 
+    async def close(self):
+        pass
+
 
 class DatabaseWriteBackend(Generic[CursorType], abc.ABC):
 
@@ -171,21 +173,6 @@ class DatabaseWriteBackend(Generic[CursorType], abc.ABC):
 
     @abc.abstractmethod
     async def remove_corpus(self, cursor: CursorType, corpus_id: str):
-        pass
-
-    @abc.abstractmethod
-    async def save_corpus_config(
-            self, cursor: CursorType, install_json: InstallJson, registry_conf: RegistryConf, corp_size: int):
-        pass
-
-    @abc.abstractmethod
-    async def update_corpus_config(
-            self, cursor: CursorType, install_json: InstallJson, registry_conf: RegistryConf, corp_size: int):
-        """
-        Update corpus configuration but do not rewrite existing non-empty values in database.
-        When dealing with attributes and structures, make sure new values are inserted and
-        no more valid items are removed from db.
-        """
         pass
 
     @abc.abstractmethod

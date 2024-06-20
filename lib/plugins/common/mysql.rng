@@ -18,9 +18,6 @@
         <element name="mysql_passwd">
             <text />
         </element>
-        <element name="mysql_pool_size">
-            <data type="positiveInteger" />
-        </element>
         <element name="mysql_retry_delay">
             <data type="positiveInteger" />
         </element>

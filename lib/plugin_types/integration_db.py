@@ -17,41 +17,22 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import abc
-from contextlib import AbstractAsyncContextManager, AbstractContextManager
-from typing import Generic, Optional, TypeVar
-
-N = TypeVar('N')
-R = TypeVar('R')
-SN = TypeVar('SN')
-SR = TypeVar('SR')
-
-T = TypeVar('T')
+from plugins.common.sqldb import DatabaseAdapter, N, R, SN, SR
+from typing import Optional
 
 
-class AsyncDbContextManager(AbstractAsyncContextManager, Generic[T]):
-    async def __aenter__(self) -> T:
-        pass
-
-
-class DbContextManager(AbstractContextManager, Generic[T]):
-    def __enter__(self) -> T:
-        pass
-
-
-class IntegrationDatabase(abc.ABC, Generic[N, R, SN, SR]):
+class IntegrationDatabase(DatabaseAdapter[N, R, SN, SR]):
     """
-    Integration DB plugin allows sharing a single database connection pool across multiple plugins
-    which can be convenient in case KonText is integrated into an existing information system with
-    existing user accounts, corpora information, settings storage etc.
+    Integration DB plugin allows sharing a single database connection within
+    a scope of an HTTP action handler (i.e. one connection per HTTP request).
 
-    Even if it is not stated explicitly the interface is tailored for use with SQL databases
-    where terms like 'cursor', 'commit', 'rollback' are common. But in general, it should be possible
-    to wrap also some NoSQL databases if needed.
+    Although not explicitly stated, the interface is tailored for use with SQL databases.
+    where terms like 'cursor', 'commit', 'rollback' are common. But in general it should be possible
+    to wrap some NoSQL databases if needed.
 
-    Also please note that "integration database" is not to be meant for a standalone KonText
-    installations. KonText itself (with default plug-ins) uses the DB (aka KeyValueStorage) plugin
-    for its operations. But if you have an existing information system and do not want redundant
-    information in KonText's db, the "integration_db" is the way to go.
+    Please also note that while the primary function of the plug-in is to allow integration of KonText
+    with existing SQL databases, it can also be used to create standalone KonText installations based
+    on MySQL/MariaDB.
     """
 
     @property
@@ -66,59 +47,39 @@ class IntegrationDatabase(abc.ABC, Generic[N, R, SN, SR]):
         """
         pass
 
-    @property
-    @abc.abstractmethod
-    def is_autocommit(self):
-        """
-        Return True if autocommit is enabled for the connection; else False
-        """
-        pass
-
-    @property
-    @abc.abstractmethod
-    def info(self) -> str:
-        """
-        Provide a brief info about the database. This is mainly for administrators
-        as it is typically written to the application log during KonText start.
-        """
-        pass
-
     @abc.abstractmethod
     def wait_for_environment(self) -> Optional[Exception]:
         """
-        This function is called each time KonText service is started
+        This function is called each time KonText service is started,
         and it should block the execution until either an internally
         defined/configured timeout has elapsed or some external condition
         allowing plug-in initialization has been fulfilled.
 
-        This can be e.g. used when KonText run within a Docker container and
+        This can be e.g. used when KonText run within a Docker container, and
         it has to wait for a database container to initialize. In such case
         it should e.g. try to select from a table to make sure there is a
         working connection along with database, tables and data.
 
         returns:
-        if None then the environment is ready else provide an error for further processing
+        if None then the environment is ready, else provide an error for further processing
         """
         pass
 
-    @abc.abstractmethod
-    def connection(self) -> AsyncDbContextManager[N]:
+    async def on_request(self):
         """
-        Return an async connection to the integration database from pool
-        """
-        pass
-
-    @abc.abstractmethod
-    def cursor(self, dictionary=True) -> AsyncDbContextManager[R]:
-        """
-        Create a new async database cursor
+        The function is called by the Sanic 'request' middleware.
+        This is the right place to open a db connection.
+        But please be aware of the scope of the connection. The plug-in
+        instance's scope is always "per-web worker", which means it is
+        shared among multiple action handlers running simultaneously.
+        So it is essential that the connection is scoped/isolated properly.
+        See e.g. Python's contextvars.ContextVar for a convenient solution.
         """
         pass
 
-    @abc.abstractmethod
-    def connection_sync(self) -> DbContextManager[SN]:
-        pass
-
-    @abc.abstractmethod
-    def cursor_sync(self, dictionary=True) -> DbContextManager[SR]:
+    async def on_response(self):
+        """
+        The function is called by the Sanic 'response' middleware.
+        This is the right place to close the connection.
+        """
         pass

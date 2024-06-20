@@ -123,7 +123,6 @@
             <db>kontext</db>
             <user>kontext</user>
             <passwd>kontext-secret</passwd>
-            <pool_size>3</pool_size>
             <retry_delay>2</retry_delay>
             <retry_attempts>5</retry_attempts>
             <environment_wait_sec>10</environment_wait_sec>

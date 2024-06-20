@@ -13,7 +13,6 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-
 import logging
 import os
 import struct
@@ -31,9 +30,10 @@ from plugin_types.auth import UserInfo
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.subc_storage import AbstractSubcArchive, SubcArchiveException
 from plugins import inject
-from plugins.errors import PluginCompatibilityException
+from plugins.common.mysql.adhocdb import AdhocDB
+from plugins.common.mysql import MySQLConf
 from plugins.mysql_integration_db import MySqlIntegrationDb
-from pymysql.err import IntegrityError
+from mysql.connector.errors import IntegrityError
 from sanic import Sanic
 from util import AsyncBatchWriter
 
@@ -121,35 +121,36 @@ class MySQLSubcArchive(AbstractSubcArchive):
             data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs],
             is_draft: bool = False,
     ):
-        async with self._db.cursor() as cursor:
-            if isinstance(data, CreateSubcorpusRawCQLArgs):
-                column, value = 'cql', data.cql
-            elif isinstance(data, CreateSubcorpusWithinArgs):
-                column, value = 'within_cond', json.dumps(data.within)
-            elif isinstance(data, CreateSubcorpusArgs):
-                column, value = 'text_types', json.dumps(data.text_types)
-            try:
-                await cursor.execute(
-                    f'INSERT INTO {self._bconf.subccorp_table} '
-                    f'(id, user_id, author_id, corpus_name, name, {column}, created, public_description, size, is_draft, aligned) '
-                    'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
-                    (ident, author['id'], author['id'], data.corpname, data.subcname, value, datetime.now(), public_description,
-                     size, 1 if is_draft else 0, json.dumps(data.aligned_corpora) if data.aligned_corpora else ''))
-                await cursor.connection.commit()
-            except IntegrityError as ex:
-                await cursor.execute(
-                    f'SELECT is_draft FROM {self._bconf.subccorp_table} WHERE id = %s AND author_id = %s',
-                    (ident, author['id']))
-                row = await cursor.fetchone()
-                if row['is_draft'] == 1:
+        async with self._db.connection() as conn:
+            async with await conn.cursor() as cursor:
+                if isinstance(data, CreateSubcorpusRawCQLArgs):
+                    column, value = 'cql', data.cql
+                elif isinstance(data, CreateSubcorpusWithinArgs):
+                    column, value = 'within_cond', json.dumps(data.within)
+                elif isinstance(data, CreateSubcorpusArgs):
+                    column, value = 'text_types', json.dumps(data.text_types)
+                try:
                     await cursor.execute(
-                        f'UPDATE {self._bconf.subccorp_table} '
-                        f'SET name = %s, {column} = %s, public_description = %s, size = %s, is_draft = 0, aligned = %s '
-                        'WHERE id = %s AND author_id = %s',
-                        (data.subcname, value, public_description, size, json.dumps(data.aligned_corpora) if data.aligned_corpora else '',
-                         ident, author['id']))
-                else:
-                    raise ex
+                        f'INSERT INTO {self._bconf.subccorp_table} '
+                        f'(id, user_id, author_id, corpus_name, name, {column}, created, public_description, size, is_draft, aligned) '
+                        'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
+                        (ident, author['id'], author['id'], data.corpname, data.subcname, value, datetime.now(), public_description,
+                         size, 1 if is_draft else 0, json.dumps(data.aligned_corpora) if data.aligned_corpora else ''))
+                    await conn.commit()
+                except IntegrityError as ex:
+                    await cursor.execute(
+                        f'SELECT is_draft FROM {self._bconf.subccorp_table} WHERE id = %s AND author_id = %s',
+                        (ident, author['id']))
+                    row = await cursor.fetchone()
+                    if row['is_draft'] == 1:
+                        await cursor.execute(
+                            f'UPDATE {self._bconf.subccorp_table} '
+                            f'SET name = %s, {column} = %s, public_description = %s, size = %s, is_draft = 0, aligned = %s '
+                            'WHERE id = %s AND author_id = %s',
+                            (data.subcname, value, public_description, size, json.dumps(data.aligned_corpora) if data.aligned_corpora else '',
+                             ident, author['id']))
+                    else:
+                        raise ex
 
     async def create_preflight(self, subc_root_dir, corpname):
         """
@@ -164,32 +165,33 @@ class MySQLSubcArchive(AbstractSubcArchive):
             await bw.write(struct.pack('<q', 0))
             await bw.write(struct.pack('<q', self.preflight_subcorpus_size))
         subcname = f'{corpname}-preflight'
-        async with self._db.cursor() as cursor:
-            await cursor.execute('START TRANSACTION')
-            # Due to caching etc. we always have to perform test whether a preflight subc. exists
-            # (even if a consumer of this method tests it via corp_info.preflight_subcorpus, it may
-            # not be the most recent information).
-            await cursor.execute(
-                f'SELECT id FROM kontext_preflight_subc WHERE corpus_name = %s LIMIT 1', corpname)
-            row = await cursor.fetchone()
-            if row:
-                await cursor.connection.rollback()
-                return row['id']
+        async with self._db.connection() as conn:
+            async with await conn.cursor() as cursor:
+                await self._db.begin_tx(cursor)
+                # Due to caching etc. we always have to perform test whether a preflight subc. exists
+                # (even if a consumer of this method tests it via corp_info.preflight_subcorpus, it may
+                # not be the most recent information).
+                await cursor.execute(
+                    f'SELECT id FROM kontext_preflight_subc WHERE corpus_name = %s LIMIT 1', corpname)
+                row = await cursor.fetchone()
+                if row:
+                    await cursor.connection.rollback()
+                    return row['id']
 
-            await cursor.execute(
-                f'INSERT INTO {self._bconf.subccorp_table} '
-                f'(id, user_id, author_id, corpus_name, name, created, size, is_draft, aligned) '
-                'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NULL)',
-                (subc_id.id, self.shared_subc_user_id, self.shared_subc_user_id, corpname, subcname, datetime.now(),
-                 self.preflight_subcorpus_size, 0))
-            await cursor.execute(
-                'INSERT INTO kontext_preflight_subc (id, corpus_name) '
-                'VALUES (%s, %s)',
-                (subc_id.id, corpname)
-            )
-            await cursor.connection.commit()
-        await Sanic.get_app('kontext').dispatch('kontext.internal.reset')
-        return subc_id.id
+                await cursor.execute(
+                    f'INSERT INTO {self._bconf.subccorp_table} '
+                    f'(id, user_id, author_id, corpus_name, name, created, size, is_draft, aligned) '
+                    'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NULL)',
+                    (subc_id.id, self.shared_subc_user_id, self.shared_subc_user_id, corpname, subcname, datetime.now(),
+                     self.preflight_subcorpus_size, 0))
+                await cursor.execute(
+                    'INSERT INTO kontext_preflight_subc (id, corpus_name) '
+                    'VALUES (%s, %s)',
+                    (subc_id.id, corpname)
+                )
+                await conn.commit()
+            await Sanic.get_app('kontext').dispatch('kontext.internal.reset')
+            return subc_id.id
 
     async def update_draft(
             self,
@@ -219,21 +221,22 @@ class MySQLSubcArchive(AbstractSubcArchive):
                  ident, author['id']))
 
     async def archive(self, user_id: int, corpname: str, subc_id: str) -> datetime:
-        async with self._db.cursor() as cursor:
-            await cursor.execute(
-                f'UPDATE {self._bconf.subccorp_table} SET archived = %s '
-                'WHERE user_id = %s AND corpus_name = %s AND id = %s',
-                (datetime.now(), user_id, corpname, subc_id)
-            )
-            await cursor.connection.commit()
+        async with self._db.connection() as conn:
+            async with await conn.cursor() as cursor:
+                await cursor.execute(
+                    f'UPDATE {self._bconf.subccorp_table} SET archived = %s '
+                    'WHERE user_id = %s AND corpus_name = %s AND id = %s',
+                    (datetime.now(), user_id, corpname, subc_id)
+                )
+                await conn.commit()
 
-            await cursor.execute(
-                f'SELECT archived FROM {self._bconf.subccorp_table} '
-                'WHERE user_id = %s AND corpus_name = %s AND id = %s',
-                (user_id, corpname, subc_id)
-            )
-            row = await cursor.fetchone()
-            return row['archived']
+                await cursor.execute(
+                    f'SELECT archived FROM {self._bconf.subccorp_table} '
+                    'WHERE user_id = %s AND corpus_name = %s AND id = %s',
+                    (user_id, corpname, subc_id)
+                )
+                row = await cursor.fetchone()
+                return row['archived']
 
     async def restore(self, user_id: int, corpname: str, subc_id: str):
         async with self._db.cursor() as cursor:
@@ -242,7 +245,6 @@ class MySQLSubcArchive(AbstractSubcArchive):
                 'WHERE user_id = %s AND corpus_name = %s AND id = %s',
                 (user_id, corpname, subc_id)
             )
-            await cursor.connection.commit()
 
     async def list_corpora(
             self,
@@ -257,7 +259,7 @@ class MySQLSubcArchive(AbstractSubcArchive):
 
         async with self._db.cursor() as cursor:
             await cursor.execute(sql, (user_id,))
-            return [row['corpus_name'] async for row in cursor]
+            return [row['corpus_name'] for row in await cursor.fetchall()]
 
     async def list(self, user_id, filter_args, corpname=None, offset=0, limit=None, include_drafts=False):
         if (filter_args.archived_only and filter_args.active_only) or \
@@ -306,7 +308,7 @@ class MySQLSubcArchive(AbstractSubcArchive):
             WHERE {" AND ".join(where)} ORDER BY t1.id LIMIT %s OFFSET %s"""
         async with self._db.cursor() as cursor:
             await cursor.execute(sql, args)
-            return [_subc_from_row(row) async for row in cursor]
+            return [_subc_from_row(row) for row in await cursor.fetchall()]
 
     async def get_info(self, subc_id: str) -> Optional[SubcorpusRecord]:
         async with self._db.cursor() as cursor:
@@ -352,7 +354,7 @@ class MySQLSubcArchive(AbstractSubcArchive):
                 f"SELECT id, name FROM {self._bconf.subccorp_table} WHERE id IN ({wc})",
                 tuple(subc_ids)
             )
-            async for row in cursor:
+            for row in await cursor.fetchall():
                 ans[row['id']] = row['name']
             return ans
 
@@ -378,7 +380,6 @@ class MySQLSubcArchive(AbstractSubcArchive):
                 'WHERE user_id = %s AND corpus_name = %s AND id = %s',
                 (datetime.now(), user_id, corpname, subc_id)
             )
-            await cursor.connection.commit()
 
     async def update_name_and_description(self, user_id: int, subc_id: str, subcname: str, description: str, preview_only: bool):
         if not preview_only:
@@ -389,16 +390,20 @@ class MySQLSubcArchive(AbstractSubcArchive):
                     'WHERE user_id = %s AND id = %s',
                     (subcname, description, user_id, subc_id)
                 )
-                await cursor.connection.commit()
         return k_markdown(description)
+
+    async def on_response(self):
+        if isinstance(self._db, AdhocDB):
+            await self._db.close()
 
 
 @inject(plugins.runtime.CORPARCH, plugins.runtime.INTEGRATION_DB)
 def create_instance(conf, corparch: AbstractCorporaArchive, integ_db: MySqlIntegrationDb):
     plugin_conf = conf.get('plugins', 'subc_storage')
-    if integ_db.is_active:
-        logging.getLogger(__name__).info(f'mysql_subc_storage uses integration_db[{integ_db.info}]')
-        return MySQLSubcArchive(plugin_conf, corparch, integ_db, BackendConfig())
+    if integ_db.is_active and 'mysql_host' not in plugin_conf:
+        db = integ_db
+        logging.getLogger(__name__).info(
+            f'mysql_subc_storage uses integration_db[{integ_db.info}]')
     else:
-        raise PluginCompatibilityException(
-            'mysql_subc_storage works only with integration_db enabled')
+        db = AdhocDB(MySQLConf.from_conf(plugin_conf))
+    return MySQLSubcArchive(plugin_conf, corparch, db, BackendConfig())

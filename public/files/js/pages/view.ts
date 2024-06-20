@@ -1081,7 +1081,7 @@ export class ViewPage {
                 speechSegment: lineViewProps.SpeechSegment,
                 speechAttrs: lineViewProps.SpeechAttrs,
                 speechOverlapAttr: lineViewProps.SpeechOverlapAttr,
-                speechOverlapVal: lineViewProps.SpeechOverlapVal
+                speechOverlapVal: lineViewProps.SpeechOverlapVal,
             },
             lineViewProps.WideCtxGlobals,
             tokenConnect

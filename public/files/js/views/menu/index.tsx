@@ -130,6 +130,26 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
         );
     };
 
+    // ----------------------------- <WaitingItem /> ----------------------
+
+    const WaitingItem:React.FC<{
+        data:{label:string};
+
+    }> = (props) => {
+
+        return (
+            <li className="disabled">
+                <span>
+                    {he.translate(props.data.label)}
+                    <img className="ajax-loader"
+                        style={{marginLeft: "0.5em"}}
+                        src={he.createStaticUrl('img/ajax-loader-bar.gif')}
+                        alt={he.translate('global__menu_waiting_item')}
+                        title={he.translate('global__menu_waiting_item')} />
+                </span>
+            </li>
+        );
+    };
 
     // ----------------------------- <DisabledItem /> ----------------------
 
@@ -187,6 +207,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
         label:string;
         items:Array<Kontext.SubmenuItem>;
         concArgs:ConcServerArgs;
+        unfinishedCalculation:boolean;
         closeActiveSubmenu:()=>void;
         handleMouseOver:()=>void;
         handleMouseOut:()=>void;
@@ -195,6 +216,9 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
         const createItem = (item:Kontext.SubmenuItem, key) => {
             if (item.disabled) {
                 return <DisabledItem key={key} data={item} />;
+
+            } else if (props.unfinishedCalculation && item.currConc) {
+                return <WaitingItem key={key} data={item} />;
 
             } else if (isEventTriggeringItem(item)) {
                 return <EventTriggeringItem key={key} data={item}
@@ -409,8 +433,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
                                     closeClickHandler={this._handleCloseClick}
                                     handleOkButtonClick={this._handleOkButtonClick}
                                     handleClearOnCloseCheckbox={this._handleClearOnCloseCheckbox}
-                                    clearOnCloseCheckboxStatus={this.props.removeFinishedOnSubmit}
-                                     />
+                                    clearOnCloseCheckboxStatus={this.props.removeFinishedOnSubmit} />
                             : null}
                     </li>
                 );
@@ -472,7 +495,8 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
                                         handleMouseOver={mouseOverHandler}
                                         handleMouseOut={mouseOutHandler}
                                         closeActiveSubmenu={this._closeActiveSubmenu}
-                                        concArgs={this.props.concArgs} />;
+                                        concArgs={this.props.concArgs}
+                                        unfinishedCalculation={this.props.unfinishedCalculation} />;
                         },
                         this.props.data
                     )}

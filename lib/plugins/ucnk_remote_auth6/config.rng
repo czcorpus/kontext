@@ -71,10 +71,6 @@
                 <element name="sync_passwd">
                     <text />
                 </element>
-                <element name="sync_pool_size">
-                    <a:documentation>1 should be OK in most cases</a:documentation>
-                    <data type="integer" />
-                </element>
                 <element name="sync_retry_delay">
                     <data type="integer" />
                 </element>

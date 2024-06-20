@@ -42,6 +42,8 @@ from plugin_types.query_persistence import AbstractQueryPersistence
 from plugin_types.subc_storage import AbstractSubcArchive
 from plugins import inject
 from plugins.mysql_integration_db import MySqlIntegrationDb
+from plugins.common.mysql.adhocdb import AdhocDB
+from plugins.common.mysql import MySQLConf
 
 
 class CorpusCache:
@@ -109,7 +111,6 @@ class MySqlQueryHistory(AbstractQueryHistory):
                 'WHERE user_id = %s AND query_id = %s AND created = %s',
                 (new_name, user_id, query_id, created)
             )
-            await cursor.connection.commit()
             return cursor.rowcount > 0
 
     async def make_persistent(self, user_id, query_id, q_supertype, created, name) -> bool:
@@ -129,7 +130,6 @@ class MySqlQueryHistory(AbstractQueryHistory):
                 f'DELETE FROM {self.TABLE_NAME} WHERE user_id = %s AND query_id = %s AND created = %s',
                 (user_id, query_id, created)
             )
-            await cursor.connection.commit()
             return cursor.rowcount
 
     async def _is_paired_with_conc(self, data) -> bool:
@@ -218,7 +218,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
 
             full_data = []
             corpora = CorpusCache(corpus_factory)
-            rows = [item async for item in cursor]
+            rows = [item for item in await cursor.fetchall()]
             qdata_map = {}
             for item in rows:
                 stored = await self._query_persistence.open(item['query_id'])
@@ -348,7 +348,6 @@ class MySqlQueryHistory(AbstractQueryHistory):
                 f'DELETE FROM {self.TABLE_NAME} WHERE created < %s AND name IS NULL',
                 (int(datetime.utcnow().timestamp()) - self.ttl_days * 3600 * 24,)
             )
-            await cursor.connection.commit()
 
     async def export(self, plugin_ctx):
         """
@@ -362,6 +361,10 @@ class MySqlQueryHistory(AbstractQueryHistory):
         """
         return self.delete_old_records,
 
+    async def on_response(self):
+        if isinstance(self._db, AdhocDB):
+            await self._db.close()
+
 
 @inject(
     plugins.runtime.INTEGRATION_DB,
@@ -370,10 +373,16 @@ class MySqlQueryHistory(AbstractQueryHistory):
     plugins.runtime.AUTH
 )
 def create_instance(
-        settings,
-        db: MySqlIntegrationDb,
+        conf,
+        integ_db: MySqlIntegrationDb,
         query_persistence: AbstractQueryPersistence,
         subc_archive: AbstractSubcArchive,
         auth: AbstractAuth
 ):
-    return MySqlQueryHistory(settings, db, query_persistence, subc_archive, auth)
+    plugin_conf = conf.get('plugins', 'auth')
+    if integ_db and integ_db.is_active and 'mysql_host' not in plugin_conf:
+        db = integ_db
+        logging.getLogger(__name__).info(f'mysql_query_history uses integration_db[{integ_db.info}]')
+    else:
+        db = AdhocDB(MySQLConf.from_conf(plugin_conf))
+    return MySqlQueryHistory(conf, db, query_persistence, subc_archive, auth)

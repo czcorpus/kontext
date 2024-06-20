@@ -243,6 +243,7 @@
         "global__save_form_line_from": "Od",
         "global__save_form_line_to": "Do",
         "global__advanced_options": "Advanced options UNTRANSLATED",
+        "global__menu_waiting_item": "waiting for complete calculation UNTRANSLATED",
         "linesel__remove_selected_lines": "Odstrani izbrane vrstice",
         "linesel__remove_all_but_selected_lines": "Obdrži samo izbrane vrstice",
         "linesel__clear_the_selection": "Počisti izbor",

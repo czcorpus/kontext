@@ -1384,7 +1384,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         state.kwicCorps = data.KWICCorps;
         state.numItemsInLockedGroups = data.num_lines_in_groups;
         state.pagination = data.pagination;
-        state.unfinishedCalculation = !!data.running_calc;
+        state.unfinishedCalculation = !data.finished;
         state.lineGroupIds = [];
         state.concId = data.conc_persistence_op_id;
         state.mergedAttrs = data.merged_attrs;
@@ -1504,13 +1504,13 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
     private findChunks(state:ConcordanceModelState, ...linkIds:Array<string>):Array<TextChunk> {
         for (let i = 0; i < state.lines.length; i += 1) {
             for (let j = 0; j < state.lines[i].languages.length; j += 1) {
-                const ans = pipe(
+                const chunks = pipe(
                     linkIds,
                     List.map(c => ConclineSectionOps.findChunk(state.lines[i].languages[j], c)),
                     List.filter(v => v !== undefined)
                 );
-                if (ans.length > 0) {
-                    return ans;
+                if (!List.empty(chunks)) {
+                    return chunks;
                 }
             }
         }

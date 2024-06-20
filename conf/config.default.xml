@@ -4,7 +4,7 @@
         <css/>
         <logo>kontext-logo.svg</logo>
         <logo_mouseover>kontext-logo_s.svg</logo_mouseover>
-        <logo_href>http://localhost:5000</logo_href> <!-- change this according to your settings -->
+        <logo_href>/</logo_href> <!-- change this according to your settings -->
         <logo_inline_css>width: 200px</logo_inline_css>
         <fonts/>
         <favicon>favicon.ico</favicon>
@@ -103,7 +103,7 @@
         <query_persistence>
             <module>default_query_persistence</module>
             <ttl_days>100</ttl_days>
-            <archive_dir>/var/local/corpora/query_persistence</archive_dir>
+            <archive_db_path>/var/local/corpora/query_persistence/archive.sqlite</archive_db_path>
             <reserved_ids_path></reserved_ids_path>
         </query_persistence>
         <corparch>
