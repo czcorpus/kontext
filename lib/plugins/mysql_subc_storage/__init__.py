@@ -122,7 +122,7 @@ class MySQLSubcArchive(AbstractSubcArchive):
             is_draft: bool = False,
     ):
         async with self._db.connection() as conn:
-            async with await conn.cursor() as cursor:
+            async with await conn.cursor(dictionary=True) as cursor:
                 if isinstance(data, CreateSubcorpusRawCQLArgs):
                     column, value = 'cql', data.cql
                 elif isinstance(data, CreateSubcorpusWithinArgs):
@@ -166,7 +166,7 @@ class MySQLSubcArchive(AbstractSubcArchive):
             await bw.write(struct.pack('<q', self.preflight_subcorpus_size))
         subcname = f'{corpname}-preflight'
         async with self._db.connection() as conn:
-            async with await conn.cursor() as cursor:
+            async with await conn.cursor(dictionary=True) as cursor:
                 await self._db.begin_tx(cursor)
                 # Due to caching etc. we always have to perform test whether a preflight subc. exists
                 # (even if a consumer of this method tests it via corp_info.preflight_subcorpus, it may
@@ -222,7 +222,7 @@ class MySQLSubcArchive(AbstractSubcArchive):
 
     async def archive(self, user_id: int, corpname: str, subc_id: str) -> datetime:
         async with self._db.connection() as conn:
-            async with await conn.cursor() as cursor:
+            async with await conn.cursor(dictionary=True) as cursor:
                 await cursor.execute(
                     f'UPDATE {self._bconf.subccorp_table} SET archived = %s '
                     'WHERE user_id = %s AND corpus_name = %s AND id = %s',
