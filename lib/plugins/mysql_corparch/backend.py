@@ -99,7 +99,7 @@ class Backend(DatabaseBackend):
 
     @asynccontextmanager
     async def cursor(self, dictionary=True):
-        async with self._db.cursor() as cursor:
+        async with self._db.cursor(dictionary=dictionary) as cursor:
             yield cursor
 
     def _corpus_access_query(self, user_id) -> Tuple[str, List[int]]:

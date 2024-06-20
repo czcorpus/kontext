@@ -181,7 +181,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
             data = await self.db.get(mk_key(data_id))
             if data is None:
                 async with self._archive.connection() as conn:
-                    async with await conn.cursor() as cursor:
+                    async with await conn.cursor(dictionary=True) as cursor:
                         logging.getLogger(__name__).warning('{}, {}'.format(conn, conn.__dict__))
                         await self._archive.begin_tx(cursor)
                         await cursor.execute(
@@ -241,7 +241,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
 
     async def archive(self, user_id, conc_id, revoke=False):
         async with self._archive.connection() as conn:
-            async with await conn.cursor() as cursor:
+            async with await conn.cursor(dictionary=True) as cursor:
                 await self._archive.begin_tx(cursor)
                 await cursor.execute(
                     'SELECT id, data, created, num_access, last_access FROM kontext_conc_persistence WHERE id = %s LIMIT 1',

@@ -38,7 +38,7 @@ def import_sqlite_db(db_path, chunk_size):
     cursor = ucnk_db.cursor()
     with plugins.runtime.INTEGRATION_DB as mysql_db:
         with mysql_db.connection_sync() as conn:
-            with conn.cursor() as cursor:
+            with conn.cursor(dictionary=True) as cursor:
                 cursor.execute(
                     'SELECT user_id, corpname, subcname, cql, timestamp FROM subc_archive')
                 while True:

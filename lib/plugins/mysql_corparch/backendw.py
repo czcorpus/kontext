@@ -66,7 +66,7 @@ class WriteBackend(DatabaseWriteBackend[MySQLCursorAbstract]):
 
     @asynccontextmanager
     async def cursor(self, dictionary=True):
-        async with self._db.cursor() as cursor:
+        async with self._db.cursor(dictionary=dictionary) as cursor:
             yield cursor
 
     async def remove_corpus(self, cursor: MySQLCursorAbstract, corpus_id):
