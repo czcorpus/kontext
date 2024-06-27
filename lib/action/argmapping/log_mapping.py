@@ -23,24 +23,35 @@ def query(request: KRequest):
     return dict(corpname=request.args.get('corpname'), align=request.args.getlist('align', []))
 
 
-def query_submit(request: KRequest):
-    if request.json and len(request.json.get('queries', [])) > 0:
-        queries = request.json.get('queries', [])
-        corpora = []
-        for q in queries:
-            corpora.append(q.get('corpname'))
-        q0 = queries[0]
-        parsed = q0.get('queryParsed', [])
-        return dict(
-            corpora=corpora,
-            qtype=q0.get('qtype'),
-            use_regexp=q0.get('use_regexp'),
-            qmcase=q0.get('qmcase'),
-            extended_query=any(p for p in parsed if p[1] is True),
-            uses_context=request.json.get('fc_lemword') or len(request.json.get('fc_pos', [])),
-            uses_tt=len(request.json.get('text_types', {})) > 0
-        )
-    return {}
+def mk_query_submit(log_queries: bool):
+    def query_submit(request: KRequest):
+        if request.json and len(request.json.get('queries', [])) > 0:
+            queries = request.json.get('queries', [])
+            corpora = []
+            for q in queries:
+                corpora.append(q.get('corpname'))
+            q0 = queries[0]
+            parsed = q0.get('queryParsed', [])
+            tt_size = len(request.json.get('text_types', {}))
+            ans = dict(
+                corpora=corpora,
+                qtype=q0.get('qtype'),
+                use_regexp=q0.get('use_regexp'),
+                qmcase=q0.get('qmcase'),
+                extended_query=any(p for p in parsed if p[1] is True),
+                uses_context=request.json.get('fc_lemword') or len(request.json.get('fc_pos', [])),
+                uses_tt=tt_size > 0
+            )
+            if log_queries:
+                ans['queries'] = [dict(q=item.get('query'), qtype=item.get('qtype')) for item in queries]
+                ans['tt_num_attrs'] = tt_size
+                ans['tt_num_selections'] = 0
+                for v in request.json.get('text_types', {}).values():
+                    if type(v) is list:
+                        ans['tt_num_selections'] += len(v)
+            return ans
+        return {}
+    return query_submit
 
 
 def view(request: KRequest):
