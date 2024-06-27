@@ -563,6 +563,12 @@
                             <a:documentation>Maximum number of log files (log rotation). Default is 10</a:documentation>
                             <data type="positiveInteger" />
                         </element>
+                        <optional>
+                            <element name="log_queries">
+                                <a:documentation>If true then user queries are logged.</a:documentation>
+                                <ref name="boolValues" />
+                            </element>
+                        </optional>
                     </interleave>
                 </choice>
             </element>

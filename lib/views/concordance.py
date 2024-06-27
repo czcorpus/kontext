@@ -181,7 +181,10 @@ async def preflight(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 
 @bp.route('/query_submit', methods=['POST'])
 @http_action(
-    mutates_result=True, action_log_mapper=log_mapping.query_submit, return_type='json', action_model=ConcActionModel)
+    mutates_result=True,
+    action_log_mapper=log_mapping.mk_query_submit(settings.get_bool('logging', 'log_queries', False)),
+    return_type='json',
+    action_model=ConcActionModel)
 async def query_submit(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 
     async def store_last_op(conc_ids: List[str], history_ts: Optional[int], _):
