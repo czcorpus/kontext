@@ -43,6 +43,7 @@ def mk_query_submit(log_queries: bool):
                 uses_tt=tt_size > 0
             )
             if log_queries:
+                ans['async_query'] = request.json.get('async', False)
                 ans['queries'] = [dict(q=item.get('query'), qtype=item.get('qtype')) for item in queries]
                 ans['tt_num_attrs'] = tt_size
                 ans['tt_num_selections'] = 0
