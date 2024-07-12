@@ -14,7 +14,9 @@ import ujson as json
 from plugin_types.query_suggest import AbstractBackend
 from plugins.common.http import HTTPRequester
 import plugins
+from corplib import KCorpus
 
+DEFAULT_LARGE_CORPUS_THRESHOLD = 500_000_000
 
 class CQLizerBackend(AbstractBackend):
 
@@ -27,9 +29,14 @@ class CQLizerBackend(AbstractBackend):
         else:
             self._requester = HTTPRequester('http://{}{}'.format(self._conf['server'], port_str))
 
+    def is_large_corpus(self, corp:KCorpus):
+        return corp.size >= self._conf.get('largeCorpusThreshold', DEFAULT_LARGE_CORPUS_THRESHOLD)
+
     async def find_suggestion(
             self, plugin_ctx, ui_lang, user_id, maincorp, corpora, subcorpus, value, value_type, value_subformat,
             query_type, p_attr, struct, s_attr):
+        if not self.is_large_corpus(maincorp):
+            return None
         if query_type == 'simple' and value_subformat != 'regexp':
             return None
         if query_type == 'simple' and value_subformat == 'regexp':
