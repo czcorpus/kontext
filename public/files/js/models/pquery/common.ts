@@ -145,8 +145,6 @@ export interface PqueryFormModelState {
     paramsVisible:boolean;
     posRangeNotSupported:boolean;  // for structural attributes pos range makes no sense
     compositionModeOn:boolean;
-    concPreflight:Kontext.PreflightConf|null;
-    suggestAltCorpVisible:boolean;
 }
 
 /**
@@ -165,8 +163,7 @@ export function newModelState(
     attrs:Array<Kontext.AttrItem>,
     structAttrs:Array<Kontext.AttrItem>,
     useRichQueryEditor:boolean,
-    defaultAttr:string,
-    concPreflight:Kontext.PreflightConf|null
+    defaultAttr:string
 ):PqueryFormModelState {
 
     return {
@@ -184,6 +181,7 @@ export function newModelState(
                         corpname,
                         qtype: 'advanced',
                         query: '',
+                        suggestions: null,
                         parsedAttrs: [],
                         focusedAttr: undefined,
                         rawAnchorIdx: 0,
@@ -227,9 +225,7 @@ export function newModelState(
         structAttrs,
         paramsVisible: true,
         posRangeNotSupported: defaultAttr.includes('.'),
-        compositionModeOn: false,
-        concPreflight,
-        suggestAltCorpVisible: false
+        compositionModeOn: false
     };
 }
 
@@ -259,6 +255,7 @@ export function splitFullQuery(
                         corpname,
                         qtype: 'advanced',
                         query: item.query,
+                        suggestions: null,
                         parsedAttrs: [],
                         focusedAttr: undefined,
                         rawAnchorIdx: 0,
@@ -331,6 +328,7 @@ export function joinPartialQueries(
         corpname,
         qtype: 'advanced',
         query: items.join(''),
+        suggestions: null,
         parsedAttrs: [],
         pqItems: [],
         focusedAttr: undefined,
@@ -383,6 +381,7 @@ function importQueries(pqueryForm:FreqIntersectionArgs, concQueries:ConcQueries)
                         corpname: query.corpname,
                         qtype: 'advanced',
                         query: query.query,
+                        suggestions: null,
                         parsedAttrs: [],
                         focusedAttr: null,
                         rawAnchorIdx: 0,
@@ -433,8 +432,7 @@ export function storedQueryToModel(
     concQueries:ConcQueries,
     attrs:Array<Kontext.AttrItem>,
     structAttrs:Array<Kontext.AttrItem>,
-    useRichQueryEditor:boolean,
-    concPreflight:Kontext.PreflightConf|null
+    useRichQueryEditor:boolean
 ):PqueryFormModelState {
     const queries = importQueries(sq, concQueries);
     return {
@@ -474,9 +472,7 @@ export function storedQueryToModel(
         structAttrs,
         paramsVisible: true,
         posRangeNotSupported: sq.attr.includes('.'),
-        compositionModeOn: false,
-        concPreflight,
-        suggestAltCorpVisible: false
+        compositionModeOn: false
     }
 }
 

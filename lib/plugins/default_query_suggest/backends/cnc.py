@@ -15,6 +15,9 @@
 import ujson as json
 from plugin_types.query_suggest import AbstractBackend
 from plugins.common.http import HTTPRequester
+from .couch import CouchDBBackend
+from plugins.default_query_suggest.formats.cnc_sublemma import (
+    CncSublemmaSuggestion, SuggestionLemmaData)
 
 
 class WordSimilarityBackend(AbstractBackend):
@@ -43,3 +46,18 @@ class WordSimilarityBackend(AbstractBackend):
             if is_found:
                 return [v['word'] for v in json.loads(ans)]
         return []
+
+
+class SublemmaSrchBackend(CouchDBBackend):
+
+    async def find_suggestion(
+            self, plugin_ctx, ui_lang, user_id, maincorp, corpora, subcorpus, value, value_type, value_subformat,
+            query_type, p_attr, struct, s_attr) -> CncSublemmaSuggestion:
+        if query_type == 'simple':
+            return await super().find_suggestion(
+                plugin_ctx, ui_lang, user_id, maincorp, corpora, subcorpus, value, value_type, value_subformat,
+                query_type, p_attr, struct, s_attr)
+        return CncSublemmaSuggestion(
+            attrs=(self._conf['lemma'], self._conf['sublemma'], self._conf.get('word')),
+            value=value.lower() if value else None,
+            data={})

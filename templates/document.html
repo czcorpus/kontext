@@ -30,7 +30,6 @@ __conf.anonymousUserConcLoginPrompt = {{ anonymous_user_conc_login_prompt|to_jso
 __conf.userFullname = {{ user_info.fullname|to_json }};
 __conf.userEmail = {{ user_info.email|to_json }};
 __conf.corpusIdent = {{ corpus_ident|to_json }};
-__conf.concPreflight = {{ conc_preflight|default(None, true)|to_json }};
 __conf.baseAttr = {{ base_attr|to_json }};
 __conf.currentArgs = {{ Globals|to_json }};
 __conf.concUrlTTLDays = {{ conc_url_ttl_days|to_json }};
@@ -49,6 +48,5 @@ __conf.canSendMail = {{ can_send_mail|to_json }};
 __conf.TextDirectionRTL = {{ righttoleft|default(false, true)|to_json }};
 __conf.InitialFreqLevel = {{ last_freq_level|default(1, true)|to_json }};
 __conf.maxDispersionResolution = {{ max_dispersion_resulution|default(0, true)|to_json }};
-__conf.PreflightTimeoutMs = {{ preflight_query_timeout_ms|to_json }};
 __conf.manateeIsCustomCNC = {{ manatee_is_custom_cnc|to_json }};
 {% endblock %}

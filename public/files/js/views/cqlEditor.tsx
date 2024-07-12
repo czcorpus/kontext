@@ -28,7 +28,7 @@ import { QueryFormModelState } from '../models/query/common';
 import { QueryFormModel } from '../models/query/common';
 import { Actions, QueryFormType } from '../models/query/actions';
 import { ContentEditable } from './query/contentEditable';
-import { AdvancedQuery, findTokenIdxByFocusIdx, SimpleQuery, strictEqualParsedQueries } from '../models/query/query';
+import { AdvancedQuery, findTokenIdxBySuggFocusIdx, SimpleQuery, strictEqualParsedQueries } from '../models/query/query';
 import { PqueryFormModel } from '../models/pquery/form';
 
 
@@ -240,7 +240,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         const leftIdx = parseInt(a.getAttribute('data-leftIdx'));
                         const queryObj = this.props.queries[this.props.sourceId];
                         if (queryObj.qtype === 'advanced') {
-                            const tokenIdx = findTokenIdxByFocusIdx(queryObj, leftIdx);
+                            const tokenIdx = findTokenIdxBySuggFocusIdx(queryObj, leftIdx);
                             dispatcher.dispatch<typeof Actions.ToggleQuerySuggestionWidget>({
                                 name: Actions.ToggleQuerySuggestionWidget.name,
                                 payload: {

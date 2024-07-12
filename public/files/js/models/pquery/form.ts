@@ -31,7 +31,7 @@ import { Actions as ATActions } from '../../models/asyncTask/actions';
 import { AdvancedQuery, AdvancedQuerySubmit } from '../query/query';
 import * as Kontext from '../../types/kontext';
 import * as TextTypes from '../../types/textTypes';
-import { ConcQueryResponse, PreflightResponse } from '../concordance/common';
+import { ConcQueryResponse } from '../concordance/common';
 import { catchError, concatMap, every, map, mergeMap, reduce, tap } from 'rxjs/operators';
 import { ConcQueryArgs, QueryContextArgs } from '../query/common';
 import {
@@ -87,14 +87,14 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                     state.isBusy = true;
                     state.calcProgress = 0;
 
-                    if (action.payload.useAltCorp) {
+                    if (action.payload.altCorp) {
                         state.queries = Dict.map(
                             (v, _) => ({
-                                ...v, corpname: state.concPreflight.alt_corp
+                                ...v, corpname: action.payload.altCorp
                             }),
                             state.queries
                         );
-                        state.corpname = state.concPreflight.alt_corp;
+                        state.corpname = action.payload.altCorp;
                         state.usesubcorp = undefined;
                     }
 
@@ -103,23 +103,16 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                 });
 
                 const partialQueries = this.partializeQueries(this.state);
-                this.submitForm(this.state, partialQueries, action.payload.useAltCorp).subscribe({
-                    next: ([task, showAlert]) => {
-                        if (showAlert) {
-                            this.dispatchSideEffect(
-                                Actions.SubmitQueryInterruptedWithPreflightAlert
-                            );
-
-                        } else {
-                            this.dispatchSideEffect(
-                                Actions.SubmitQueryDone,
-                                {
-                                    corpname: this.state.corpname,
-                                    usesubcorp: this.state.usesubcorp,
-                                    task
-                                },
-                            );
-                        }
+                this.submitForm(this.state, partialQueries, !!action.payload.altCorp).subscribe({
+                    next: (task) => {
+                        this.dispatchSideEffect(
+                            Actions.SubmitQueryDone,
+                            {
+                                corpname: this.state.corpname,
+                                usesubcorp: this.state.usesubcorp,
+                                task
+                            },
+                        );
                     },
                     error: (error:Error) => {
                         this.layoutModel.showMessage('error', error);
@@ -185,28 +178,6 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                         state.task = action.payload.task;
                     }
                 });
-            }
-        );
-
-        this.addActionHandler(
-            Actions.SubmitQueryInterruptedWithPreflightAlert,
-            action => {
-                this.changeState(state => {
-                    state.isBusy = false;
-                    state.concWait = Dict.map(() => 'none', state.concWait);
-                    state.suggestAltCorpVisible = true;
-                });
-            }
-        );
-
-        this.addActionHandler(
-            Actions.CloseSuggestAltCorp,
-            action => {
-                this.changeState(
-                    state => {
-                        state.suggestAltCorpVisible = false;
-                    }
-                );
             }
         );
 
@@ -695,7 +666,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
     private submitQueries(
         state:PqueryFormModelState,
         partialQueries:{[sourceId:string]:ParadigmaticPartialQuery}
-    ):Observable<[Kontext.AsyncTaskInfo<AsyncTaskArgs>, boolean]> {
+    ):Observable<Kontext.AsyncTaskInfo<AsyncTaskArgs>> {
         return forkJoin([
             rxOf(...pipe(
                 partialQueries,
@@ -794,31 +765,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                 }
             ),
             map(
-                fiResponse => tuple(fiResponse.task as Kontext.AsyncTaskInfo<AsyncTaskArgs>, false)
-            )
-        );
-    }
-
-    submitPreflight(
-        query:ParadigmaticPartialQuery,
-    ):Observable<boolean> {
-
-        return this.layoutModel.ajax$<PreflightResponse>(
-            HTTP.Method.POST,
-            this.layoutModel.createActionUrl(
-                'preflight',
-                {
-                    target_corpname: this.state.corpname,
-                    format: 'json'
-                }
-            ),
-            this.createConcSubmitArgs(this.state.concPreflight.subc, query, false),
-            {
-                contentType: 'application/json'
-            }
-        ).pipe(
-            map(
-                ans => ans.sizeIpm >= this.state.concPreflight.threshold_ipm
+                fiResponse => fiResponse.task as Kontext.AsyncTaskInfo<AsyncTaskArgs>
             )
         );
     }
@@ -827,20 +774,16 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
         state:PqueryFormModelState,
         partialQueries:{[sourceId:string]:ParadigmaticPartialQuery},
         usesAltCorpus:boolean
-    ):Observable<[Kontext.AsyncTaskInfo<AsyncTaskArgs>|null, boolean]> {
-        if (state.concPreflight && usesAltCorpus === undefined) {
+    ):Observable<Kontext.AsyncTaskInfo<AsyncTaskArgs>|null> {
+        if (usesAltCorpus === undefined) {
             return rxOf(...pipe(
                 partialQueries,
                 Dict.toEntries()
             )).pipe(
-                mergeMap(
-                    ([,q]) => this.submitPreflight(q)
-                ),
-                every(v => !v),
                 concatMap(
                     v => v ?
                         this.submitQueries(state, partialQueries) :
-                        rxOf(tuple(null, true))
+                        rxOf(null)
                 )
             );
 
@@ -949,18 +892,6 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             he: this.layoutModel.getComponentHelpers(),
             attrHelper: this.attrHelper,
             wrapRange: (startIdx, endIdx) => {
-                const matchingAttr = updateCurrAttrs ?
-                    undefined :
-                    List.find(
-                        attr => attr.rangeVal[0] === startIdx && attr.rangeVal[1] === endIdx,
-                        queryObj.parsedAttrs
-                    );
-                if (matchingAttr && matchingAttr.suggestions) {
-                    const activeSugg = List.find(s => s.isActive, matchingAttr.suggestions.data);
-                    return tuple(
-                        `<a class="sugg" data-type="sugg" data-leftIdx="${startIdx}" data-rightIdx="${endIdx}" data-providerId="${activeSugg.providerId}">`, '</a>'
-                    )
-                }
                 return tuple(null, null);
             }
         });
@@ -1106,6 +1037,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             corpname: state.corpname,
             qtype: 'advanced',
             query: '',
+            suggestions: null,
             queryHtml: '',
             rawAnchorIdx: 0,
             rawFocusIdx: 0,

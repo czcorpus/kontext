@@ -4,27 +4,39 @@
         "defaultTD__original_data": "Data",
         "defaultTD__failed_to_fetch_external_information": "Failed to load an information from a third party source",
         "defaultTD__plug_in_error_symbol_alt": "Plug-in error",
-        "defaultTD__shortened_notice": "The list is shortened due to large number of variants"
+        "defaultTD__shortened_notice": "The list is shortened due to large number of variants",
+        "defaultTD__exhaustiveQueryWarn": "This query can take a long time to complete. Using a smaller corpus can provide a much faster response.",
+        "defaultTD__exhaustiveQueryAltCorpLink_{corpname}": "Switch to {corpname}",
+        "defaultTD__recomm_corp_link_note": "recommended alternative"
     },
     "cs-CZ": {
         "defaultTD__unsupported_renderer": "Požadovaný zobrazovací modul nebyl nalezen",
         "defaultTD__original_data": "Data",
         "defaultTD__failed_to_fetch_external_information": "Nepodařilo se načíst informaci ze zdroje třetí strany",
         "defaultTD__plug_in_error_symbol_alt": "Chyba plug-inu",
-        "defaultTD__shortened_notice": "Výpis je zkrácen kvůli velkému množství variant"
+        "defaultTD__shortened_notice": "Výpis je zkrácen kvůli velkému množství variant",
+        "defaultTD__exhaustiveQueryWarn": "Vyhodnocení tohoto dotazu může trvat příliš dlouho. Použitím menšího korpusu lze dosáhnout výrazně lepší odezvy systému.",
+        "defaultTD__exhaustiveQueryAltCorpLink_{corpname}": "Přepnout do {corpname}",
+        "defaultTD__recomm_corp_link_note": "doporučená alternativa"
     },
     "szl": {
         "defaultTD__unsupported_renderer": "Required renderer module not found",
         "defaultTD__original_data": "Data",
         "defaultTD__failed_to_fetch_external_information": "Failed to load an information from a third party source",
         "defaultTD__plug_in_error_symbol_alt": "Plug-in error",
-        "defaultTD__shortened_notice": "The list is shortened due to large number of variants"
+        "defaultTD__shortened_notice": "The list is shortened due to large number of variants",
+        "defaultTD__exhaustiveQueryWarn": "This query can take a long time to complete. Using a smaller corpus can provide a much faster response. UNTRANSLATED",
+        "defaultTD__exhaustiveQueryAltCorpLink_{corpname}": "Switch to {corpname} UNTRANSLATED",
+        "defaultTD__recomm_corp_link_note": "recommended alternative UNTRANSLATED"
     },
     "sl-SI": {
         "defaultTD__unsupported_renderer": "Zahtevanega modula upodabljalnika ni bilo mogoče najti",
         "defaultTD__original_data": "Podatki",
         "defaultTD__failed_to_fetch_external_information": "Podatkov iz tujega vira ni bilo mogoče naložiti",
         "defaultTD__plug_in_error_symbol_alt": "Napaka vtičnika",
-        "defaultTD__shortened_notice": "Seznam je skrajšan zaradi velikega števila različic"
+        "defaultTD__shortened_notice": "Seznam je skrajšan zaradi velikega števila različic",
+        "defaultTD__exhaustiveQueryWarn": "This query can take a long time to complete. Using a smaller corpus can provide a much faster response. UNTRANSLATED",
+        "defaultTD__exhaustiveQueryAltCorpLink_{corpname}": "Switch to {corpname} UNTRANSLATED",
+        "defaultTD__recomm_corp_link_note": "recommended alternative UNTRANSLATED"
     }
 }

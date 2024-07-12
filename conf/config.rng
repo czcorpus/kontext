@@ -415,16 +415,6 @@
                             </oneOrMore>
                         </element>
                     </optional>
-                    <optional>
-                        <element name="preflight_query_timeout_ms">
-                            <a:documentation>
-                                For preflight queries, this speicifies how long KonText client-side waits
-                                for the query. In case it is not finished in the limit, the client will
-                                consider the query a &quot;long one&quot; and warn user accordingly.
-                            </a:documentation>
-                            <data type="nonNegativeInteger" />
-                        </element>
-                    </optional>
                 </interleave>
             </element>
             <element name="calc_backend">
