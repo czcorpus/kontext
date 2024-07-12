@@ -108,10 +108,6 @@ class MySQLSubcArchive(AbstractSubcArchive):
     def shared_subc_user_id(self) -> int:
         return int(self._conf['shared_subc_user_id'])
 
-    @property
-    def preflight_subcorpus_size(self) -> int:
-        return int(self._conf['preflight_subcorpus_size'])
-
     async def create(
             self,
             ident: str,
@@ -151,47 +147,6 @@ class MySQLSubcArchive(AbstractSubcArchive):
                              ident, author['id']))
                     else:
                         raise ex
-
-    async def create_preflight(self, subc_root_dir, corpname):
-        """
-        create a preflight subcorpus with fixed size, attached to a special
-        user.
-
-        Returns:
-            new ID of the subcorpus
-        """
-        subc_id = await create_new_subc_ident(subc_root_dir, corpname)
-        async with AsyncBatchWriter(os.path.join(subc_root_dir, subc_id.data_path), 'wb', 100) as bw:
-            await bw.write(struct.pack('<q', 0))
-            await bw.write(struct.pack('<q', self.preflight_subcorpus_size))
-        subcname = f'{corpname}-preflight'
-        async with self._db.connection() as conn:
-            async with await conn.cursor(dictionary=True) as cursor:
-                await self._db.begin_tx(cursor)
-                # Due to caching etc. we always have to perform test whether a preflight subc. exists
-                # (even if a consumer of this method tests it via corp_info.preflight_subcorpus, it may
-                # not be the most recent information).
-                await cursor.execute(
-                    f'SELECT id FROM kontext_preflight_subc WHERE corpus_name = %s LIMIT 1', corpname)
-                row = await cursor.fetchone()
-                if row:
-                    await cursor.connection.rollback()
-                    return row['id']
-
-                await cursor.execute(
-                    f'INSERT INTO {self._bconf.subccorp_table} '
-                    f'(id, user_id, author_id, corpus_name, name, created, size, is_draft, aligned) '
-                    'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NULL)',
-                    (subc_id.id, self.shared_subc_user_id, self.shared_subc_user_id, corpname, subcname, datetime.now(),
-                     self.preflight_subcorpus_size, 0))
-                await cursor.execute(
-                    'INSERT INTO kontext_preflight_subc (id, corpus_name) '
-                    'VALUES (%s, %s)',
-                    (subc_id.id, corpname)
-                )
-                await conn.commit()
-            await Sanic.get_app('kontext').dispatch('kontext.internal.reset')
-            return subc_id.id
 
     async def update_draft(
             self,

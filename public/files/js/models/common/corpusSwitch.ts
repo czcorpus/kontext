@@ -73,7 +73,6 @@ export interface CorpusSwitchResponse extends AjaxConcResponse {
     ShuffleConcByDefault:number;
     SubcorpTTStructure:ExportedSelection;
     SubcorpAligned:Array<string>;
-    concPreflight:Kontext.PreflightConf;
 }
 
 
@@ -194,7 +193,6 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
                             this.conf.setConf<number>('ShuffleConcByDefault', data.ShuffleConcByDefault);
                             this.conf.setConf<ExportedSelection>('SubcorpTTStructure', data.SubcorpTTStructure);
                             this.conf.setConf<Array<string>>('SubcorpAligned', data.SubcorpAligned);
-                            this.conf.setConf<Kontext.PreflightConf>('concPreflight', data.concPreflight);
                         }
                     )
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { DownloadType, PageModel } from '../app/page';
+import { PageModel } from '../app/page';
 import { KontextPage } from '../app/main';
 import * as Kontext from '../types/kontext';
 import { init as formViewInit } from '../views/pquery/form';
@@ -110,8 +110,7 @@ class ParadigmaticQueryPage {
                         ),
                         this.layoutModel.getConf('AttrList'),
                         Kontext.structsAndAttrsToStructAttrList(this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs')),
-                        this.layoutModel.getConf<boolean>('UseRichQueryEditor'),
-                        this.layoutModel.getConf<Kontext.PreflightConf>('concPreflight')
+                        this.layoutModel.getConf<boolean>('UseRichQueryEditor')
                     ) :
                     newModelState(
                         this.layoutModel.getCorpusIdent().id,
@@ -119,8 +118,7 @@ class ParadigmaticQueryPage {
                         this.layoutModel.getConf('AttrList'),
                         Kontext.structsAndAttrsToStructAttrList(this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs')),
                         this.layoutModel.getConf<boolean>('UseRichQueryEditor'),
-                        this.layoutModel.getConf<string>('DefaultAttr'),
-                        this.layoutModel.getConf<Kontext.PreflightConf>('concPreflight')
+                        this.layoutModel.getConf<string>('DefaultAttr')
                     ),
                 this.layoutModel,
                 attrHelper

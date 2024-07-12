@@ -68,7 +68,6 @@ export interface ParsedAttr {
     rangeVal:[number, number];
     rangeAttr:[number, number]|null; // if null then simplified form is expected (e.g. "foo")
     rangeAll:[number, number];
-    suggestions:TokenSuggestions|null;
 }
 
 export interface ParsedPQItem {
@@ -303,8 +302,7 @@ export interface ParsedPQItem {
                                         children,
                                         rangeVal: null,
                                         rangeAttr: tuple(curr.from, curr.to),
-                                        rangeAll: tuple(curr.from, curr.to),
-                                        suggestions: null
+                                        rangeAll: tuple(curr.from, curr.to)
                                     },
                                     parsedAttrs
                                 ),

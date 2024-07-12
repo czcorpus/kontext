@@ -36,7 +36,7 @@ import { debounceTime } from 'rxjs/operators';
 import * as PluginInterfaces from '../../types/plugins';
 import { Actions as CorpOptActions } from '../options/actions';
 import {
-    AdvancedQuery, advancedToSimpleQuery, AnyQuery, AnyQuerySubmit, findTokenIdxByFocusIdx,
+    AdvancedQuery, advancedToSimpleQuery, AnyQuery, AnyQuerySubmit, findTokenIdxBySuggFocusIdx,
     parseSimpleQuery, QueryType, runSimpleQueryParser, SimpleQuery, simpleToAdvancedQuery,
     TokenSuggestions } from './query';
 import { getApplyRules, highlightSyntax, ParsedAttr } from '../cqleditor/parser';
@@ -423,7 +423,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                             this.getTagsets(state)),
                         state.isAnonymousUser
                     );
-                })
+                });
             }
         );
 
@@ -461,6 +461,14 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                             ));
                         }
                     }
+
+                } else {
+                    this.changeState(state => {
+                        const queryObj = state.queries[action.payload.sourceId];
+                        if (queryObj.qtype === 'advanced' && queryObj.suggestions) {
+                            queryObj.suggestions = null;
+                        }
+                    });
                 }
             }
         );
@@ -752,7 +760,6 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                 });
             }
         );
-
         this.addActionSubtypeHandler(
             PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived,
             action => action.payload.formType === this.formType,
@@ -790,7 +797,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                     const queryObject = this.state.queries[action.payload.sourceId];
                     if (
                         (queryObject.qtype === 'simple' && List.some(v => this.someSuggestionIsNonEmpty(v.suggestions), queryObject.queryParsed)) ||
-                        (queryObject.qtype === 'advanced' && List.some(v => this.someSuggestionIsNonEmpty(v.suggestions), queryObject.parsedAttrs))
+                        (queryObject.qtype === 'advanced' && this.someSuggestionIsNonEmpty(queryObject.suggestions))
                      ) {
                         this.dispatchSideEffect<typeof QueryHintsActions.ForceHint>({
                             name: QueryHintsActions.ForceHint.name,
@@ -925,8 +932,14 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                                 valueEndIdx: q.position[1]
                             }),
                             queryObj.queryParsed
-                        ) : [];
-
+                        ) :
+                        [{
+                            value: queryObj.query,
+                            attrStartIdx: undefined,
+                            attrEndIdx: undefined,
+                            valueStartIdx: 0,
+                            valueEndIdx: queryObj.query.length
+                        }];
                 this.changeState(state => {
                     state.suggestionsLoading[sourceId] = {};
                 });
@@ -981,15 +994,16 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
 
     private clearSuggestionForPosition(state:QueryFormModelState, sourceId:string, position:number):void {
         const queryObj = state.queries[sourceId];
-        const tokIdx = findTokenIdxByFocusIdx(queryObj, position);
-        if (tokIdx === -1) {
-            throw new Error(`No valid token found at position ${position}`);
-        }
+
         if (queryObj.qtype === 'simple') {
+            const tokIdx = findTokenIdxBySuggFocusIdx(queryObj, position);
+            if (tokIdx === -1) {
+                throw new Error(`No valid token found at position ${position}`);
+            }
             queryObj.queryParsed[tokIdx].suggestions = null;
 
         } else {
-            queryObj.parsedAttrs[tokIdx].suggestions = null;
+            queryObj.suggestions = null;
         }
     }
 
@@ -1000,7 +1014,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         data:PluginInterfaces.QuerySuggest.SuggestionArgs & PluginInterfaces.QuerySuggest.SuggestionAnswer
     ) {
         const queryObj = state.queries[sourceId];
-        const tokIdx = findTokenIdxByFocusIdx(queryObj, position);
+        const tokIdx = findTokenIdxBySuggFocusIdx(queryObj, position);
         if (tokIdx < 0) {
             return true;
         }
@@ -1009,8 +1023,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                  queryObj.queryParsed[tokIdx].suggestions.timeReq <= data.timeReq;
 
         } else {
-            return queryObj.parsedAttrs[tokIdx].suggestions === null ||
-                queryObj.parsedAttrs[tokIdx].suggestions.timeReq <= data.timeReq;
+            return queryObj.suggestions === null ||
+                queryObj.suggestions.timeReq <= data.timeReq;
         }
     }
 
@@ -1104,18 +1118,6 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                 he: this.pageModel.getComponentHelpers(),
                 attrHelper: this.attrHelper,
                 wrapRange: (startIdx, endIdx) => {
-                    const matchingAttr = updateCurrAttrs ?
-                        undefined :
-                        List.find(
-                            attr => attr.rangeVal[0] === startIdx && attr.rangeVal[1] === endIdx,
-                            queryObj.parsedAttrs
-                        );
-                    if (matchingAttr && matchingAttr.suggestions) {
-                        const activeSugg = List.find(s => s.isActive, matchingAttr.suggestions.data);
-                        return tuple(
-                            `<a class="sugg" data-type="sugg" data-leftIdx="${startIdx}" data-rightIdx="${endIdx}" data-providerId="${activeSugg.providerId}">`, '</a>'
-                        )
-                    }
                     return tuple(null, null);
                 }
             });
@@ -1157,7 +1159,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             attrPosStart: data.attrStartIdx,
             attrPosEnd: data.attrEndIdx
         };
-        const tokIdx = findTokenIdxByFocusIdx(queryObj, position);
+        const tokIdx = findTokenIdxBySuggFocusIdx(queryObj, position);
         if (tokIdx < 0) {
             return; // the position is gone (user has edited the text meanwile)
         }
@@ -1170,13 +1172,13 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             this.rehighlightSimpleQuery(queryObj);
 
         } else if (this.someSuggestionIsNonEmpty(newSugg)) {
-            queryObj.parsedAttrs[tokIdx].suggestions = newSugg;
+            queryObj.suggestions = newSugg;
             this.reparseAdvancedQuery(state, sourceId, false);
         }
     }
 
     private getSuggestionTime(queryObj:AnyQuery, focusIdx:number):number {
-        const tokIdx = findTokenIdxByFocusIdx(queryObj, focusIdx);
+        const tokIdx = findTokenIdxBySuggFocusIdx(queryObj, focusIdx);
         if (tokIdx < 0) {
             return -1;
         }
@@ -1185,8 +1187,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                     queryObj.queryParsed[tokIdx].suggestions.timeReq : -1;
 
         } else {
-            return queryObj.parsedAttrs[tokIdx].suggestions ?
-                    queryObj.parsedAttrs[tokIdx].suggestions.timeReq : -1;
+            return queryObj.suggestions ?
+                    queryObj.suggestions.timeReq : -1;
         }
     }
 
@@ -1303,8 +1305,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         // We allow suggestions in case regexp mode is enabled but we interpret
         // the special characters as normal ones. I.e. only normal words will
         // trigger a non-empty response.
-        const queryOptsOk = queryObj.qtype === 'simple';
-        return this.state.suggestionsConfigured && !!srchWord.trim() && queryOptsOk;
+        return this.state.suggestionsConfigured && !!srchWord.trim();
     }
 
     protected validateQuery(query:string, queryType:QueryType):boolean {

@@ -28,7 +28,6 @@ import { init as alignedInit } from '../aligned';
 import { init as contextInit } from '../context';
 import { init as ttViewsInit } from '../../textTypes';
 import { init as quickSubcorpViewsInit } from '../../subcorp/quickSubcorp';
-import { init as commonInit} from './common';
 import * as Kontext from '../../../types/kontext';
 import * as TextTypes from '../../../types/textTypes';
 import * as PluginInterfaces from '../../../types/plugins';
@@ -130,7 +129,6 @@ export function init({
     const contextViews = contextInit(dispatcher, he, queryContextModel);
     const ttViews = ttViewsInit(dispatcher, he, textTypesModel);
     const quickSubcorpViews = quickSubcorpModel ? quickSubcorpViewsInit({ dispatcher, he, quickSubcorpModel }) : null;
-    const { AltCorpSuggestion } = commonInit(he);
     const layoutViews = he.getLayoutViews();
 
 
@@ -236,19 +234,6 @@ export function init({
             );
         }
 
-        const onAltCorpClose = () => {
-            dispatcher.dispatch(
-                Actions.CloseSuggestAltCorp
-            );
-        };
-
-        const onAltCorpSubmit = (useAltCorp: boolean) => {
-            dispatcher.dispatch<typeof Actions.QuerySubmit>({
-                name: Actions.QuerySubmit.name,
-                payload: {useAltCorp}
-            });
-        };
-
         const onShuffleToggle = (value:boolean) => {
             dispatcher.dispatch(
                 Actions.SetShuffle,
@@ -258,13 +243,6 @@ export function init({
 
         return (
             <S.QueryForm>
-                {props.suggestAltCorpVisible ?
-                    <AltCorpSuggestion
-                        altCorp={props.concPreflight.alt_corp}
-                        onClose={onAltCorpClose}
-                        onSubmit={onAltCorpSubmit} /> :
-                    null
-                }
                 <div onKeyDown={keyEventHandler}>
                     <div className="form primary-language">
                         {props.allowCorpusSelection ?

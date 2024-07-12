@@ -226,8 +226,6 @@ class   CorpusInfo:
     simple_query_default_attrs: List[str] = field(default_factory=list)
     part_of_ml_corpus: bool = False
     ml_position_filter: MLPositionFilter = MLPositionFilter.none
-    preflight_subcorpus: Optional[SubcorpusIdent] = None
-    alt_corp: Optional[str] = None
 
     def localized_desc(self, lang) -> str:
         if lang.split('_')[0] == 'cs':

@@ -222,20 +222,6 @@ class AbstractKCorpus(ABC):
 
     @property
     @abstractmethod
-    def preflight_warn_ipm(self) -> int:
-        """
-        Specify a rounded instances per million (i.p.m.) threshold at which
-        a preflight search query should be deemed a warning, indicating that
-        the resulting computation may be excessively lengthy.
-
-        In case the calculation cannot be performed due to corpus size
-        issues (e.g. size == 0), the 1,000,000 (i.e. all tokens match)
-        should be returned.
-        """
-        pass
-
-    @property
-    @abstractmethod
     def subcorpus_name(self) -> Optional[str]:
         pass
 

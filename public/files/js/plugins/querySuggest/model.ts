@@ -27,7 +27,8 @@ import { List, HTTP, Ident, Dict, pipe, id, tuple } from 'cnc-tskit';
 import { map, tap, concatMap, mergeMap, scan } from 'rxjs/operators';
 import { Actions as QueryActions } from '../../models/query/actions';
 import { cutLongResult, isBasicFrontend, isPosAttrPairRelFrontend, listAttrs1ToExtend,
-    mergeResults, isErrorFrontend, filterOutTrivialSuggestions, isCncExtendedSublemmaFrontend} from './frontends';
+    mergeResults, isErrorFrontend, filterOutTrivialSuggestions, isCncExtendedSublemmaFrontend,
+    isCncExhaustiveQueryInfoFrontend} from './frontends';
 import { AnyProviderInfo, supportsRequest } from './providers';
 import { Actions } from './actions';
 import { QuerySuggestion, QueryType } from '../../models/query/query';
@@ -111,6 +112,9 @@ export function isEmptyResponse<T>(v:QuerySuggestion<T>):boolean {
     } else if (isCncExtendedSublemmaFrontend(v)) {
         return Dict.empty(v.contents.data);
 
+    } else if (isCncExhaustiveQueryInfoFrontend(v)) {
+        return !v.contents;
+
     } else if (isErrorFrontend(v)) {
         return false;
     }
@@ -134,6 +138,7 @@ export class Model extends StatelessModel<ModelState> {
             QueryActions.QueryInputSetQType.name,
             (state, action) => {
                 const currArgs = state.suggestionArgs[action.payload.sourceId];
+                // // we generally cannot apply suggestions from one query type to another
                 if (currArgs) {
                     currArgs.queryType = action.payload.queryType;
                 }
@@ -166,8 +171,8 @@ export class Model extends StatelessModel<ModelState> {
             }
         );
 
-        this.addActionHandler<typeof PluginInterfaces.QuerySuggest.Actions.AskSuggestions>(
-            PluginInterfaces.QuerySuggest.Actions.AskSuggestions.name,
+        this.addActionHandler(
+            PluginInterfaces.QuerySuggest.Actions.AskSuggestions,
             (state, action) => {
                 if (isValidQuery(action.payload) && someSupportRequest(state.providers, action.payload)) {
                     state.isBusy = true;
