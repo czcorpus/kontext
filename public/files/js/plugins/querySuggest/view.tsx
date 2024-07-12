@@ -325,10 +325,16 @@ export function init(
 
         return <S.ExhaustiveQueryInfo>
             <p>{he.translate('defaultTD__exhaustiveQueryWarn')}</p>
-
-            <p><a onClick={handler}>{he.translate('defaultTD__exhaustiveQueryAltCorpLink_{corpname}', {corpname: props.altCorpus})}</a>
-            {'\u00a0'}
-            ({he.translate('defaultTD__recomm_corp_link_note')})</p>
+            {props.altCorpus ?
+                <>
+                    <p>
+                        <a onClick={handler}>{he.translate('defaultTD__exhaustiveQueryAltCorpLink_{corpname}', {corpname: props.altCorpus})}</a>
+                        {'\u00a0'}
+                        ({he.translate('defaultTD__recomm_corp_link_note')})
+                    </p>
+                </> :
+                null
+            }
         </S.ExhaustiveQueryInfo>;
 
     };

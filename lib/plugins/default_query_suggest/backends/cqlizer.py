@@ -58,5 +58,5 @@ class CQLizerBackend(AbstractBackend):
                             'SELECT alt_corpus_name FROM kontext_alt_corpus WHERE corpus_name = %s',
                             (maincorp.corpname,))
                         row = await cursor.fetchone()
-                        data['alt_corpus'] = row[0]
+                        data['alt_corpus'] = None if row is None else row[0]
             return data
