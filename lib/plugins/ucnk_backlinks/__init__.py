@@ -52,7 +52,7 @@ async def col_lemma(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     cl = req.args.get('cl')
     if not cl:
         raise UserReadableException('Missing parameter "cl"')
-    if amodel.args.corpname not in ('syn_v11', ):
+    if amodel.args.corpname not in ('syn_v11', , 'syn_12'):
         raise UserReadableException('Function not supported in {}'.format(amodel.args.corpname))
     pf = req.args.get('p')
     if not pf:
