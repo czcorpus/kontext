@@ -189,8 +189,7 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
 
         } else if (isCncExhaustiveQueryInfoFrontend(dr)) {
             return createElement(this.views.exhaustiveQuery, {
-                yes: dr.contents.yes,
-                no: dr.contents.no,
+                problematic: dr.contents.problematic,
                 altCorpus: dr.contents.alt_corpus,
                 isShortened: dr.isShortened,
                 itemClickHandler: value => itemClickHandler(dr.providerId, value)

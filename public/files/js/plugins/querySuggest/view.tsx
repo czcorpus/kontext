@@ -63,8 +63,7 @@ export interface CncExtendedSublemmaRendererProps {
 }
 
 export interface CncExhaustiveQueryInfoRendererProps {
-    yes:number;
-    no:number;
+    problematic:boolean;
     altCorpus:string;
     isShortened:boolean;
     itemClickHandler:(value:CncExhaustiveQueryInfoFrontendClickPayload)=>void;
