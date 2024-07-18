@@ -106,6 +106,7 @@ class Backend(DatabaseBackend):
         """
         Query to get corpora user has access to. It accepts 2 `user_id` arguments
         """
+        custom_acc_sql, custom_acc_args = self.custom_access_subquery(user_id)
         return (
             f'''
                 SELECT
@@ -121,16 +122,18 @@ class Backend(DatabaseBackend):
                 WHERE g_acc.{self._group_acc_group_attr} = (
                     SELECT {self._user_table}.{self._user_group_acc_attr}
                     FROM {self._user_table}
-                    WHERE {self._user_table}.id = %s
-                )
+                    WHERE {self._user_table}.id = %s )
+                UNION
+                {custom_acc_sql}
                 ''',
-            [user_id, user_id]
+            [user_id, user_id] + custom_acc_args
         )
 
     def _parallel_access_query(self, user_id) -> Tuple[str, List[int]]:
         """
         Query to get parallel corpora user has access to. It accepts 2 `user_id` arguments.
         """
+        custom_subquery, custom_args = self.custom_parallel_access_subquery(user_id)
         return (
             f'''
                 SELECT
@@ -151,8 +154,10 @@ class Backend(DatabaseBackend):
                     FROM {self._user_table} AS user
                     WHERE user.id = %s
                 )
+                UNION
+                {custom_subquery}
                 ''',
-            [user_id, user_id]
+            [user_id, user_id] + custom_args
         )
 
     def _total_access_query(self, user_id) -> Tuple[str, List[int]]:
@@ -161,6 +166,12 @@ class Backend(DatabaseBackend):
             par_acc_sql, par_acc_args = self._parallel_access_query(user_id)
             return f'{corp_acc_sql} UNION {par_acc_sql}', corp_acc_args + par_acc_args
         return corp_acc_sql, corp_acc_args
+
+    def custom_access_subquery(self, user_id):
+        return "SELECT 1, 1 WHERE 0", []
+
+    def custom_parallel_access_subquery(self, user_id):
+        return "SELECT 1, 1 WHERE 0", []
 
     async def contains_corpus(self, cursor: MySQLCursorAbstract, corpus_id: str) -> bool:
         await cursor.execute(f'SELECT name FROM {self._corp_table} WHERE name = %s', (corpus_id,))

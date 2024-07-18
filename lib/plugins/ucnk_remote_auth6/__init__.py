@@ -50,7 +50,7 @@ from plugin_types.corparch.backend import DatabaseBackend
 from plugin_types.integration_db import IntegrationDatabase
 from plugins import inject
 from plugins.mysql_corparch.backend import Backend
-from sanic import Sanic
+
 
 IMPLICIT_CORPUS = 'susanne'
 
