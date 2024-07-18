@@ -127,8 +127,7 @@ export interface CncExtendedSublemmaFrontendClickHandler {
 // ------------------------
 
 export interface CncExhaustiveQueryInfoFrontend extends QuerySuggestion<{
-    yes:number;
-    no:number;
+    problematic:boolean;
     alt_corpus:string;
 }> {
     isActive:boolean;

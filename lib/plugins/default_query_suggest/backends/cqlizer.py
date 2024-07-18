@@ -50,7 +50,7 @@ class CQLizerBackend(AbstractBackend):
         if not is_found:
             return None
         data = json.loads(resp)
-        if data['yes'] > data['no']:
+        if data.get('problematic', False):
             with plugins.runtime.INTEGRATION_DB as db:
                 async with db.connection() as conn:
                     async with await conn.cursor() as cursor:
