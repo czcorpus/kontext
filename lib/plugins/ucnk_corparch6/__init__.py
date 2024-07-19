@@ -49,12 +49,11 @@ from plugin_types.integration_db import IntegrationDatabase
 from plugin_types.user_items import AbstractUserItems
 from plugins import inject
 from plugins.mysql_corparch import MySQLCorparch
-from plugins.mysql_corparch.backend import Backend
+from plugins.ucnk_remote_auth6.backend import UCNKBackend
 from plugins.mysql_corparch.corplist import parse_query
 from sanic import Blueprint
 
 bp = Blueprint('ucnk_corparch6')
-
 
 DEFAULT_LANG = 'en'
 
@@ -115,7 +114,7 @@ class UcnkCorpArch6(MySQLCorparch):
 
     def __init__(
             self,
-            db_backend: Backend,
+            db_backend: UCNKBackend,
             auth: AbstractAuth,
             user_items: AbstractUserItems,
             tag_prefix,
@@ -236,7 +235,7 @@ class UcnkCorpArch6(MySQLCorparch):
 
 @inject(plugins.runtime.USER_ITEMS, plugins.runtime.AUTH, plugins.runtime.INTEGRATION_DB)
 def create_instance(conf, user_items: AbstractUserItems, auth: AbstractAuth, cnc_db: IntegrationDatabase):
-    db_backend = Backend(
+    db_backend = UCNKBackend(
         cnc_db, user_table='user', user_group_acc_attr='corplist', corp_table='corpora', corp_id_attr='id',
         group_acc_table='corplist_corpus', group_acc_group_attr='corplist_id', group_acc_corp_attr='corpus_id',
         user_acc_table='user_corpus', user_acc_corp_attr='corpus_id',

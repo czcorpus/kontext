@@ -30,7 +30,6 @@ from action.krequest import KRequest
 from action.model.user import UserActionModel
 from action.plugin.ctx import AbstractCorpusPluginCtx, PluginCtx
 from action.response import KResponse
-from corplib.abstract import SubcorpusIdent
 from plugin_types.corparch import (
     AbstractSearchableCorporaArchive, CorpusListItem)
 from plugin_types.corparch.backend import DatabaseBackend
