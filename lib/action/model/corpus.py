@@ -599,7 +599,6 @@ class CorpusActionModel(UserActionModel):
             'global', 'shuffle_min_result_warning', 100000)
 
         result['has_subcmixer'] = plugins.runtime.SUBCMIXER.exists
-        result['use_conc_toolbar'] = settings.get_bool('global', 'use_conc_toolbar')
         with plugins.runtime.QUERY_PERSISTENCE as qp:
             result['conc_url_ttl_days'] = qp.get_conc_ttl_days(self.session_get('user', 'id'))
 

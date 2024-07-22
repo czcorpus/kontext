@@ -567,6 +567,7 @@
         "concview__op_result_has_groups": "The result has attached user-defined line groups. Click the icon to access them.",
         "concview__unparseable_token": "Unparseable token",
         "concview__permalink_toggle_lable": "Archive",
+        "concview__share_concordance_link": "Share concordance link",
         "concRestore__please_wait_msg": "Please wait. A source concordance is being prepared.",
         "concRestore__conc_ready": "The source concordance is ready. Now the required operation is being processed.",
         "concRestore__result_link": "In case you are not redirected to a result page in a few minutes at most, please try to use the following link",

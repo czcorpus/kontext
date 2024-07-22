@@ -81,7 +81,6 @@ export interface ConcordanceDashboardProps {
         NumItemsInLockedGroups:number;
         KWICCorps:Array<string>;
         canSendEmail:boolean;
-        ShowConcToolbar:boolean;
         anonymousUserConcLoginPrompt:boolean;
     };
     kwicConnectView:PluginInterfaces.KwicConnect.WidgetWiew;
@@ -276,6 +275,74 @@ export function init({
 
     const LineSelectionOps = BoundWithProps<LineSelectionOpsProps, LineSelectionModelState>(_LineSelectionOps, lineSelectionModel);
 
+    // ------------------------- <ShareConcordanceWidget /> ----------------
+
+    const ShareConcordanceWidget:React.FC<{
+        url:string;
+
+    }> = (props) => {
+
+        const handleClick = () => {
+            dispatcher.dispatch(
+                Actions.CopyConcordanceLink
+            );
+        };
+
+        const handleCloseClick = () => {
+            dispatcher.dispatch(
+                Actions.ShareConcordanceLink
+            );
+        };
+
+        return (
+            <layoutViews.ModalOverlay onCloseKey={handleCloseClick}>
+                    <layoutViews.CloseableFrame
+                                onCloseClick={handleCloseClick}
+                                label={he.translate('concview__share_concordance_link')}>
+                <S.ShareConcordanceWidget>
+                    <div className="link">
+                        <input className="share-link" type="text" readOnly={true}
+                            style={{width: '30em'}}
+                            onClick={(e)=> (e.target as HTMLInputElement).select()} value={props.url} />
+                        <span className="copy-icon">
+                            <a onClick={handleClick}>
+                                <layoutViews.ImgWithMouseover
+                                    src={he.createStaticUrl('img/copy-icon.svg')}
+                                    src2={he.createStaticUrl('img/copy-icon_s.svg')}
+                                    alt={he.translate('global__copy_to_clipboard')}
+                                    style={{width: '1.5em'}} />
+                            </a>
+                        </span>
+                    </div>
+                </S.ShareConcordanceWidget>
+                </layoutViews.CloseableFrame>
+            </layoutViews.ModalOverlay>
+        );
+    };
+
+
+    // ------------------------- <ShareConcordance /> ----------------------
+
+    const ShareConcordance:React.FC<{
+    }> = (props) => {
+
+        const handleClick = () => {
+            dispatcher.dispatch(
+                Actions.ShareConcordanceLink
+            );
+        };
+
+        return (
+            <S.ShareConcordance onClick={handleClick}>
+                <layoutViews.ImgWithMouseover
+                    htmlClass="share"
+                    src={he.createStaticUrl('img/share.svg')}
+                    alt={he.translate('freq__share_chart')}
+                    title={he.translate('freq__share_chart')} />
+            </S.ShareConcordance>
+        );
+    }
+
 
     // ------------------------- <ConcSummary /> ---------------------------
 
@@ -418,65 +485,24 @@ export function init({
 
     const BoundConcSummary = Bound<ConcSummaryModelState>(ConcSummary, concSummaryModel)
 
-    // ------------------------- <ConcOptions /> ---------------------------
-
-    class ConcOptions extends React.Component<{
-        viewMode:ViewOptions.AttrViewMode;
-    },
-    {
-        currViewAttrs:Array<string>;
-    }> {
-
-        private modelSubscription:Subscription;
-
-        constructor(props) {
-            super(props);
-            this._modelChangeHandler = this._modelChangeHandler.bind(this);
-            this.state = {
-                currViewAttrs: lineViewModel.getViewAttrs()
-            };
-        }
-
-        _modelChangeHandler() {
-            this.setState({currViewAttrs: lineViewModel.getViewAttrs()});
-        }
-
-        componentDidMount() {
-            this.modelSubscription = lineViewModel.addListener(this._modelChangeHandler);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
-        render() {
-            return (
-                <div className="conc-toolbar">
-                </div>
-            );
-        }
-    }
-
 
     // ------------------------- <ConcToolbarWrapper /> ---------------------------
 
     interface ConcToolbarWrapperProps {
-        showConcToolbar:boolean;
         canSendEmail:boolean;
         viewMode:ViewOptions.AttrViewMode;
         lineSelOpsVisible:boolean;
         numLinesInLockedGroups:number;
+        sortIdx:Array<{page:number; label:string}>;
     }
 
     const _ConcToolbarWrapper:React.FC<ConcToolbarWrapperProps & LineSelectionModelState> = (props) => (
-        <div className="toolbar-level">
+        <S.ConcToolbarWrapper>
             <LineSelectionOps
                     visible={props.lineSelOpsVisible}
                     numLinesInLockedGroups={props.numLinesInLockedGroups} />
-            {props.showConcToolbar ?
-                <ConcOptions viewMode={props.viewMode} />
-                : null}
-        </div>
+            <paginationViews.Paginator SortIdx={props.sortIdx} />
+        </S.ConcToolbarWrapper>
     );
 
     const ConcToolbarWrapper = BoundWithProps<ConcToolbarWrapperProps, LineSelectionModelState>(_ConcToolbarWrapper, lineSelectionModel);
@@ -587,14 +613,16 @@ export function init({
                     <S.ConcTopBar>
                         <div className="info-level">
                             <BoundConcSummary />
-                            <paginationViews.Paginator {...this.props} />
+                            <ShareConcordance />
+                            {this.props.shareLinkProps !== null ?
+                                <ShareConcordanceWidget url={this.props.shareLinkProps.url} /> : null}
                         </div>
                         <ConcToolbarWrapper
                                 lineSelOpsVisible={this.props.lineSelOptionsVisible}
                                 canSendEmail={this.props.canSendEmail}
-                                showConcToolbar={this.props.ShowConcToolbar}
                                 numLinesInLockedGroups={this.props.numItemsInLockedGroups}
-                                viewMode={this.props.attrViewMode} />
+                                viewMode={this.props.attrViewMode}
+                                sortIdx={this.props.SortIdx} />
                         {this.props.showAnonymousUserWarn && this.props.anonymousUserConcLoginPrompt ?
                             <AnonymousUserLoginPopup onCloseClick={this._handleAnonymousUserWarning} /> : null}
                     </S.ConcTopBar>
@@ -654,7 +682,6 @@ export function init({
                         NumItemsInLockedGroups={this.props.concViewProps.NumItemsInLockedGroups}
                         KWICCorps={this.props.concViewProps.KWICCorps}
                         canSendEmail={this.props.concViewProps.canSendEmail}
-                        ShowConcToolbar={this.props.concViewProps.ShowConcToolbar}
                         anonymousUserConcLoginPrompt={this.props.concViewProps.anonymousUserConcLoginPrompt} />
                 </S.ConcordanceDashboard>
             );

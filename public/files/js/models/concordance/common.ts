@@ -516,12 +516,6 @@ export interface ViewConfiguration {
     FastAdHocIpm:boolean;
 
     /**
-     * If true then a concordance toolbar providing
-     * some useful options is shown.
-     */
-    ShowConcToolbar:boolean;
-
-    /**
      * A structural attribute identifying a speaker (e.g. 'sp.num').
      * If null then the corpus is not considered to be spoken.
      */

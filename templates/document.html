@@ -39,7 +39,6 @@ __conf.ttIntervalChars = {{ interval_chars|default([], true)|to_json }};
 __conf.structsAndAttrs = {{ structs_and_attrs|default({}, true)|to_json }};
 __conf.sentenceStruct = {{ sentence_struct|default(None, true)|to_json }};
 __conf.docStruct = {{ doc_struct|default(None, true)|to_json }};
-__conf.ShowConcToolbar = {{ use_conc_toolbar|to_json }};
 __conf.queryOverview = {{ query_overview|default([], true)|to_json }};
 __conf.numQueryOps = {%if query_overview is defined %}{{ query_overview|length }}{% else %}0{% endif %};
 __conf.ShuffleMinResultWarning = {{ shuffle_min_result_warning|to_json }};
