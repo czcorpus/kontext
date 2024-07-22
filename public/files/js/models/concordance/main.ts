@@ -22,6 +22,7 @@ import { ExtractPayload, IFullActionControl, StatefulModel } from 'kombo';
 import { throwError, Observable, interval, Subscription, forkJoin } from 'rxjs';
 import { tap, map, concatMap } from 'rxjs/operators';
 import { List, pipe, HTTP, tuple, Dict, Rx } from 'cnc-tskit';
+import * as copy from 'copy-to-clipboard';
 
 import * as ViewOptions from '../../types/viewOptions';
 import { PageModel } from '../../app/page';
@@ -31,7 +32,8 @@ import { ConcSaveModel } from './save';
 import { Actions as ViewOptionsActions } from '../options/actions';
 import { CorpColumn, ViewConfiguration, AudioPlayerActions, AjaxConcResponse,
     ServerPagination, ServerLineData, LineGroupId, attachColorsToIds,
-    mapIdToIdWithColors, Line, TextChunk, PaginationActions, ConcViewMode, HighlightWords, ConcQueryResponse, KWICSection} from './common';
+    mapIdToIdWithColors, Line, TextChunk, PaginationActions, ConcViewMode,
+    HighlightWords, ConcQueryResponse, KWICSection} from './common';
 import { Actions, ConcGroupChangePayload,
     PublishLineSelectionPayload } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
@@ -204,6 +206,8 @@ export interface ConcordanceModelState {
     }>;
 
     textDirectionRTL:boolean;
+
+    shareLinkProps:{url:string}|null;
 }
 
 
@@ -284,6 +288,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 mergedCtxAttrs: lineViewProps.mergedAttrs,
                 tokenLinks: List.map(_ => ({}), lineViewProps.CorporaColumns),
                 textDirectionRTL: layoutModel.getConf<boolean>('TextDirectionRTL'),
+                shareLinkProps:null
             }
         );
         this.layoutModel = layoutModel;
@@ -996,6 +1001,41 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 });
             },
         );
+
+        this.addActionHandler(
+            Actions.ShareConcordanceLink,
+            action => {
+                this.changeState(
+                    state => {
+                        if (state.shareLinkProps === null) {
+                            state.shareLinkProps = {
+                                url: this.layoutModel.createActionUrl(
+                                    '/view',
+                                    {q: state.concId}
+                                )
+                            }
+
+                        } else {
+                            state.shareLinkProps = null;
+                        }
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            Actions.CopyConcordanceLink,
+            action => {
+                copy(this.layoutModel.createActionUrl(
+                    '/view',
+                    {q: this.state.concId}
+                ));
+                this.layoutModel.showMessage(
+                    'info',
+                    this.layoutModel.translate('global__link_copied_to_clipboard')
+                );
+            }
+        )
     }
 
     private highlightTokenLink(

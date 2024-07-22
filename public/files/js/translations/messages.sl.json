@@ -587,6 +587,7 @@
         "concview__op_result_has_groups": "The result has attached user-defined line groups. Click the icon to access them. UNTRANSLATED",
         "concview__unparseable_token": "Unparseable token UNTRANSLATED",
         "concview__permalink_toggle_lable": "Archive UNTRANSLATED",
+        "concview__share_concordance_link": "Share concordance link UNTRANSLATED",
         "concRestore__please_wait_msg": "Prosimo, počakajte. Izvorne konkordance so v pripravi.",
         "concRestore__conc_ready": "Izvorne konkordance so pripravljene. Zahtevana operacija je v obdelavi.",
         "concRestore__result_link": "Če v nekaj minutah niste preusmerjeni na stran z rezultati, poskusite uporabiti naslednjo povezavo",

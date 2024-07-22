@@ -118,6 +118,20 @@ const ConcVerticalBar = styled.div`
     }
 `;
 
+export const ShareConcordance = styled.a`
+    margin: 0;
+    padding: 0;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    color: ${theme.colorLogoBlue};
+
+    img {
+        width: 0.8em;
+        margin-right: 0.3em;
+    }
+`;
+
 // ----------------- <ConcSummary /> ------------------
 
 export const ConcSummary = styled.div`
@@ -163,6 +177,20 @@ export const ConcSummary = styled.div`
         margin-right: 0.3em;
         margin-left: 0.1em;
     }
+
+    .transient {
+        display: flex;
+        vertical-align: center;
+        height: 1em;
+        margin-right: 0.2em;
+
+        img {
+            display: block;
+            width: 1em;
+            height: 1em;
+        }
+    }
+
 `;
 
 // ----------- <ConcTopBar /> -----------------------
@@ -190,23 +218,27 @@ export const ConcTopBar = styled(ConcVerticalBar)`
         vertical-align: middle;
     }
 
-    .toolbar-level {
+`;
 
-        padding: 0.4em 1em;
-        clear: both;
+// ---------------- <ConcToolbarWrapper /> --------------
 
-        .conc-toolbar {
-            display: inline-block;
-        }
+export const ConcToolbarWrapper = styled.div`
+
+    display: flex;
+    align-items: center;
+    padding: 0.4em 1em;
+
+    .ktx-pagination {
+
     }
-
 `;
 
 // -------- <LineSelectionOps /> -------------------
 
 export const LineSelectionOps = styled.div`
 
-    display: inline-block;
+    flex-grow: 1;
+    display: flex;
 
     .lines-selection {
         white-space: nowrap;
@@ -261,4 +293,22 @@ export const ConclinesWrapper = styled.div`
             margin: 2em;
         }
     }
+`;
+
+// ---------------- <ShareConcordanceWidget /> ------------
+
+export const ShareConcordanceWidget = styled.div`
+
+    h4 {
+        margin: 0 0 0.4em 0;
+    }
+
+    .link {
+        display: flex;
+    }
+
+    .copy-icon {
+        margin-left: 0.2em;
+    }
+
 `;

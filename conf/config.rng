@@ -302,11 +302,6 @@
                             <text />
                         </element>
                     </optional>
-                    <element name="use_conc_toolbar">
-                        <a:documentation>If true then a special toolbar allowing easier setting of
-                        common concordance view options is shown</a:documentation>
-                        <ref name="boolValues" />
-                    </element>
                     <element name="anonymous_user_conc_login_prompt">
                         <a:documentation>If true then for anonymous user, on concordance page a prompt to log-in always appears</a:documentation>
                         <ref name="boolValues" />

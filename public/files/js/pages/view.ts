@@ -990,7 +990,6 @@ export class ViewPage {
             Unfinished: this.layoutModel.getConf<boolean>('Unfinished'),
             FastAdHocIpm: this.layoutModel.getConf<boolean>('FastAdHocIpm'),
             canSendEmail: this.layoutModel.getConf<boolean>('canSendMail'),
-            ShowConcToolbar: this.layoutModel.getConf<boolean>('ShowConcToolbar'),
             SpeakerIdAttr: this.layoutModel.getConf<[string, string]>('SpeakerIdAttr'),
             SpeechSegment: this.layoutModel.getConf<[string, string]>('SpeechSegment'),
             SpeechOverlapAttr: this.layoutModel.getConf<[string, string]>('SpeechOverlapAttr'),

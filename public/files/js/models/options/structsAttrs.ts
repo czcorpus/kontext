@@ -53,7 +53,6 @@ export interface CorpusViewOptionsModelState {
     structAttrs:ViewOptions.AvailStructAttrs;
     selectAllStruct:boolean,
     fixedAttr:string|null;
-    showConcToolbar:boolean;
     refList:Array<ViewOptions.RefDesc>;
     refAttrs:{[key:string]:Array<ViewOptions.RefAttrDesc>};
     selectAllRef:boolean;
@@ -94,7 +93,6 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                 structAttrs: {},
                 selectAllStruct: false,
                 fixedAttr: null,
-                showConcToolbar: false,
                 refList: [],
                 refAttrs: {},
                 selectAllRef: false,
@@ -143,7 +141,6 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                                         CurrStructAttrs: data.curr_structattrs,
                                         AvailRefs: data.Availrefs,
                                         AttrVmode: data.attr_vmode,
-                                        ShowConcToolbar: data.use_conc_toolbar,
                                         BaseViewAttr: data.base_viewattr,
                                         QueryHintEnabled: data.qs_enabled
                                     }
@@ -741,7 +738,6 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
         state.fixedAttr = data.FixedAttr;
         state.attrVmode = data.AttrVmode;
         state.hasLoadedData = true;
-        state.showConcToolbar = data.ShowConcToolbar;
         state.baseViewAttr = data.BaseViewAttr;
         state.qsEnabled = data.QueryHintEnabled;
     }

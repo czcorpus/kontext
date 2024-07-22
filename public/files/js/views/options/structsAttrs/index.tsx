@@ -100,7 +100,6 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
 
     const AttributesTweaks:React.FC<{
         attrsVmode:ViewOptions.AttrViewMode;
-        showConcToolbar:boolean;
 
     }> = (props) => {
 
@@ -152,7 +151,6 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
         baseViewAttr:string;
         hasSelectAll:boolean;
         attrsVmode:ViewOptions.AttrViewMode;
-        showConcToolbar:boolean;
 
     }> = (props) => {
 
@@ -222,7 +220,7 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
                 <h2 className="label">
                     {helpers.translate('options__attr_apply_header')}
                 </h2>
-                <AttributesTweaks attrsVmode={props.attrsVmode} showConcToolbar={props.showConcToolbar} />
+                <AttributesTweaks attrsVmode={props.attrsVmode} />
             </S.AttributesCheckboxes>
         );
     };
@@ -513,7 +511,6 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
         basePosAttr:string;
         availStructs:Array<ViewOptions.StructDesc>;
         hasSelectAllAttrs:boolean;
-        showConcToolbar:boolean;
         attrsVmode:ViewOptions.AttrViewMode;
         structAttrs:ViewOptions.AvailStructAttrs;
         hasSelectAllStruct:boolean;
@@ -562,8 +559,7 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
                                 basePosAttr={props.basePosAttr}
                                 baseViewAttr={props.baseViewAttr}
                                 hasSelectAll={props.hasSelectAllAttrs}
-                                attrsVmode={props.attrsVmode}
-                                showConcToolbar={props.showConcToolbar} />
+                                attrsVmode={props.attrsVmode} />
 
                             <StructsAndAttrsCheckboxes
                                 availStructs={props.availStructs}
@@ -622,7 +618,6 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
                     hasSelectAllRefs={props.selectAllRef}
                     hasLoadedData={props.hasLoadedData}
                     attrsVmode={props.attrVmode}
-                    showConcToolbar={props.showConcToolbar}
                     isWaiting={props.isBusy}
                     userIsAnonymous={props.userIsAnonymous}
                     textDirectionRTL={props.textDirectionRTL}
