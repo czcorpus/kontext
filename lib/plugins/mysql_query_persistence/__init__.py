@@ -312,9 +312,13 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
         Export tasks for async queue worker(s)
         """
         async def archive_concordance(num_proc: int, dry_run: bool):
-            from . import archive
-            return await archive.run(from_db=self.db, to_db=self._archive, archive_queue_key=self._archive_queue_key,
-                                     dry_run=dry_run, num_proc=num_proc)
+            try:
+                from . import archive
+                await plugins.runtime.INTEGRATION_DB.instance.on_request()
+                return await archive.run(from_db=self.db, to_db=self._archive, archive_queue_key=self._archive_queue_key,
+                                         dry_run=dry_run, num_proc=num_proc)
+            finally:
+                await plugins.runtime.INTEGRATION_DB.instance.on_response()
         return archive_concordance,
 
     async def update(self, data, arch_enqueue=False):
