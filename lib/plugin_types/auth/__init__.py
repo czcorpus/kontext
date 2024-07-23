@@ -126,6 +126,9 @@ class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
             email=None,
             api_key=None)
 
+    def anonymous_user_id(self):
+        return self._anonymous_id
+
     def is_anonymous(self, user_id: int) -> bool:
         return user_id == self._anonymous_id
 

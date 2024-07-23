@@ -13,9 +13,6 @@
             <element name="anonymous_user_ttl_days">
                 <data type="positiveInteger" />
             </element>
-            <element name="archive_queue_key">
-                <text />
-            </element>
             <optional>
                 <externalRef href="../common/mysql.rng" />
             </optional>
@@ -41,6 +38,14 @@
                     <a:documentation>
                         A filesystem path to a file containing list of regexp patterns
                         (one per line) with forbidden IDs for persistent queries.
+                    </a:documentation>
+                    <text />
+                </element>
+            </optional>
+            <optional>
+                <element name="cleanup_status_key">
+                    <a:documentation>
+                    A custom name for Redis entry holding information about archive cleanup
                     </a:documentation>
                     <text />
                 </element>

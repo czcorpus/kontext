@@ -115,3 +115,12 @@ class AdhocDB(DatabaseAdapter):
         conn = self._db_conn.get()
         if conn:
             await conn.close()
+
+    async def on_aio_task_enter(self):
+        conn = await self.create_connection()
+        self._db_conn.set(conn)
+
+    async def on_aio_task_exit(self):
+        curr = self._db_conn.get()
+        if curr:
+            await curr.close()

@@ -116,6 +116,9 @@ def setup_logger(conf) -> Optional[logging.handlers.QueueListener]:
     handler.setFormatter(KontextLogFormatter())
     logger.addHandler(handler)
     logger.setLevel(logging.INFO if not settings.is_debug_mode() else logging.DEBUG)
+    if settings.is_debug_mode():
+        logging.getLogger('sanic').setLevel(logging.INFO)
+        logging.getLogger('mysql.connector').setLevel(logging.INFO)
     return listener
 
 

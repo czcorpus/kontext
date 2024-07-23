@@ -45,25 +45,6 @@ export const ExpandableSectionLabel = styled.h2`
     }
 `;
 
-// ---------------- <SaveHintParagraph /> -----------------------------------
-
-export const SaveHintParagraph = styled.p`
-
-    width: 30em;
-    white-space: initial;
-    color: ${theme.colorDefaultText};
-
-    .icon {
-        display: inline-block;
-        vertical-align: middle;
-        margin-right: 0.4em;
-
-        img {
-            width: 1.2em;
-        }
-    }
-`;
-
 
 // ---------------- <PoSFilter /> ----------------------------------------
 

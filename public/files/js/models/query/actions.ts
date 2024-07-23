@@ -603,32 +603,6 @@ export class Actions {
         name: 'QUERY_SAVE_AS_FORM_SUBMIT_DONE'
     };
 
-    static GetConcArchivedStatus: Action<{
-    }> = {
-        name: 'QUERY_GET_CONC_ARCHIVED_STATUS'
-    };
-
-    static GetConcArchivedStatusDone: Action<{
-        isArchived:boolean;
-        willBeArchived:boolean;
-    }> = {
-        name: 'QUERY_GET_CONC_ARCHIVED_STATUS_DONE'
-    };
-
-    static MakeConcordancePermanent: Action<{
-        revoke:boolean;
-    }> = {
-        name: 'QUERY_MAKE_CONCORDANCE_PERMANENT'
-    };
-
-    static MakeConcordancePermanentDone: Action<{
-        willBeArchived:boolean;
-        isArchived:boolean;
-
-    }> = {
-        name: 'QUERY_MAKE_CONCORDANCE_PERMANENT_DONE'
-    };
-
     static CopyPermalinkToClipboard:Action<{
         url:string;
     }> = {

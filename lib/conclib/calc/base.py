@@ -114,7 +114,7 @@ class GeneralWorker:
         return ans_conc
 
 
-class TaskRegistration(GeneralWorker):
+class ConcRegistration(GeneralWorker):
 
     def __init__(self, task_id: str):
         super().__init__(task_id=task_id)

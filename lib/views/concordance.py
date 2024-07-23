@@ -419,16 +419,6 @@ async def archive_concordance(amodel: UserActionModel, req: KRequest, resp: KRes
     return dict(revoked=revoke, num_changes=cn, archived_conc=row)
 
 
-@bp.route('/get_stored_conc_archived_status')
-@http_action(access_level=2, return_type='json', action_model=UserActionModel)
-async def get_stored_conc_archived_status(amodel: UserActionModel, req: KRequest, resp: KResponse):
-    with plugins.runtime.QUERY_PERSISTENCE as qp:
-        return {
-            'is_archived': await qp.is_archived(req.args.get('code')),
-            'will_be_archived': await qp.will_be_archived(amodel.plugin_ctx, req.args.get('code'))
-        }
-
-
 @bp.route('/query_id_available', ['GET'])
 @http_action(access_level=2, return_type='json', action_model=UserActionModel)
 async def query_id_available(amodel: UserActionModel, req: KRequest, resp: KResponse):
@@ -451,8 +441,6 @@ async def create_query_id(amodel: UserActionModel, req: KRequest, resp: KRespons
         if reserved:
             raise ValueError(req.translate('ID {} is not available').format(new_id))
         await qp.clone_with_id(old_id, new_id)
-        if await qp.is_archived(old_id):
-            await qp.archive(amodel.session_get('user', 'id'), new_id)
     return dict(id=new_id, ok=True)
 
 

@@ -65,9 +65,10 @@ PARTITION BY RANGE (UNIX_TIMESTAMP(created)) (
 
 import logging
 import re
+import datetime
+import ujson as json
 
 import plugins
-import ujson as json
 from action.errors import ForbiddenException, NotFoundException
 from plugin_types.auth import AbstractAuth
 from plugin_types.general_storage import KeyValueStorage
@@ -79,8 +80,7 @@ from plugins.common.mysql import MySQLConf
 from plugins.common.mysql.adhocdb import AdhocDB
 from plugins.common.sqldb import DatabaseAdapter
 from plugins.mysql_integration_db import MySqlIntegrationDb
-
-from .archive import get_iso_datetime, is_archived
+from . import cleanup
 
 
 def mk_key(code):
@@ -94,7 +94,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
 
     DEFAULT_TTL_DAYS = 100
 
-    DEFAULT_ANONYMOUS_USER_TTL_DAYS = 7
+    DEFAULT_ANONYMOUS_REC_ARCHIVE_MIN_DAYS = 720
 
     def __init__(
             self,
@@ -106,17 +106,13 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
         plugin_conf = settings.get('plugins', 'query_persistence')
         ttl_days = int(plugin_conf.get('ttl_days', MySqlQueryPersistence.DEFAULT_TTL_DAYS))
         self._ttl_days = ttl_days
-        self._anonymous_user_ttl_days = int(plugin_conf.get(
-            'anonymous_user_ttl_days', MySqlQueryPersistence.DEFAULT_ANONYMOUS_USER_TTL_DAYS))
-        self._archive_queue_key = plugin_conf['archive_queue_key']
         self.db = db
         self._auth = auth
         self._archive = sql_backend
         self._settings = settings
+        self._cleanup_status_key = plugin_conf.get('cleanup_status_key', 'conc_persistence_cleanup_status')
 
     def _get_ttl_for(self, user_id):
-        if self._auth.is_anonymous(user_id):
-            return self.anonymous_user_ttl
         return self.ttl
 
     def _get_persist_level_for(self, user_id):
@@ -129,10 +125,6 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
     def ttl(self):
         return self._ttl_days * 24 * 3600
 
-    @property
-    def anonymous_user_ttl(self):
-        return self._anonymous_user_ttl_days * 24 * 3600
-
     def is_valid_id(self, data_id):
         """
         Returns True if data_id is a valid data identifier else False is returned
@@ -143,8 +135,6 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
         return bool(re.match(r'~[0-9a-zA-Z]+', data_id))
 
     def get_conc_ttl_days(self, user_id):
-        if self._auth.is_anonymous(user_id):
-            return self.anonymous_user_ttl
         return self._ttl_days
 
     async def _find_used_corpora(self, query_id):
@@ -176,7 +166,6 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
         returns:
         a dictionary containing operation data or None if nothing is found
         """
-        from mysql.connector.aio.connection import MySQLConnection
         try:
             data = await self.db.get(mk_key(data_id))
             if data is None:
@@ -194,7 +183,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
                                     'UPDATE kontext_conc_persistence '
                                     'SET last_access = %s, num_access = num_access + 1 '
                                     'WHERE id = %s AND created = %s',
-                                    (get_iso_datetime(), data_id, tmp['created'].isoformat())
+                                    (datetime.datetime.now().isoformat(), data_id, tmp['created'].isoformat())
                                 )
                                 await conn.commit()
             return data
@@ -231,95 +220,49 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
             data_key = mk_key(data_id)
             await self.db.set(data_key, curr_data)
             await self.db.set_ttl(data_key, self._get_ttl_for(user_id))
-            if not self._auth.is_anonymous(user_id):
-                await self.db.list_append(self._archive_queue_key, dict(key=data_key))
             latest_id = curr_data[ID_KEY]
         else:
             latest_id = prev_data[ID_KEY]
 
         return latest_id
 
-    async def archive(self, user_id, conc_id, revoke=False):
-        async with self._archive.connection() as conn:
-            async with await conn.cursor(dictionary=True) as cursor:
-                await self._archive.begin_tx(cursor)
-                await cursor.execute(
-                    'SELECT id, data, created, num_access, last_access FROM kontext_conc_persistence WHERE id = %s LIMIT 1',
-                    (conc_id,)
-                )
-                row = await cursor.fetchone()
-                archived_rec = json.loads(row['data']) if row is not None else None
-
-                if revoke:
-                    if archived_rec:
-                        await cursor.execute('DELETE FROM kontext_conc_persistence WHERE id = %s', (conc_id,))
-                        ans = 1
-                    if await self.will_be_archived(None, conc_id):
-                        data_key = mk_key(conc_id)
-                        await self.db.list_append(self._archive_queue_key, dict(key=data_key, revoke=True))
-                        ans = 1
-                    if ans == 0:
-                        raise NotFoundException(
-                            'Archive revoke error - concordance {0} not archived'.format(conc_id))
-                else:
+    async def archive(self, user_id, conc_id):
+        await self._archive.on_aio_task_enter()
+        try:
+            async with self._archive.connection() as conn:
+                async with await conn.cursor(dictionary=True) as cursor:
+                    await self._archive.begin_tx(cursor)
                     data = await self.db.get(mk_key(conc_id))
-                    if data is None and archived_rec is None:
+                    if data is None:
                         raise NotFoundException(
                             'Archive store error - concordance {0} not found'.format(conc_id))
-                    elif archived_rec:
-                        ans = 0
-                    else:
-                        will_be_archived = await self.will_be_archived(None, conc_id)
-                        archived_rec = data
-                        if will_be_archived is not None:
-                            data_key = mk_key(conc_id)
-                            await self.db.list_append(self._archive_queue_key, dict(key=data_key, revoke=will_be_archived))
-                            ans = 1
-                        else:
-                            stored_user_id = data.get('user_id', None)
-                            if user_id != stored_user_id:
-                                raise ForbiddenException(
-                                    'Cannot change status of a concordance belonging to another user')
-                            await cursor.execute(
-                                'INSERT IGNORE INTO kontext_conc_persistence (id, data, created, num_access) '
-                                'VALUES (%s, %s, %s, %s)',
-                                (conc_id, json.dumps(data), get_iso_datetime(), 0))
-                            ans = 1
-                await conn.commit()
-            return ans, archived_rec
-
-    async def is_archived(self, conc_id):
-        async with self._archive.cursor() as cursor:
-            return await is_archived(cursor, conc_id)
-
-    async def will_be_archived(self, plugin_ctx, conc_id: str):
-        """
-        Please note that this operation is a bit costly (O(n)) due to need for
-        sequential searching in items to be archived
-        """
-        waiting_items = await self.db.list_get(self._archive_queue_key)
-        ident_prefix = 'concordance:'
-        for rec in reversed(waiting_items):
-            ident = rec.get('key')
-            if ident and ident.startswith(ident_prefix):
-                id = ident[len(ident_prefix):]
-                if id == conc_id:
-                    return not rec.get('revoke')
-        return None
+                    stored_user_id = data.get('user_id', None)
+                    if user_id != stored_user_id:
+                        raise ForbiddenException(
+                            'Cannot change status of a concordance belonging to another user')
+                    await cursor.execute(
+                        'INSERT IGNORE INTO kontext_conc_persistence (id, data, created, num_access) '
+                        'VALUES (%s, %s, %s, %s)',
+                        (conc_id, json.dumps(data), datetime.datetime.now().isoformat(), 0))
+                    await conn.commit()
+                return data
+        finally:
+            await self._archive.on_aio_task_exit()
 
     def export_tasks(self):
         """
         Export tasks for async queue worker(s)
         """
-        async def archive_concordance(num_proc: int, dry_run: bool):
-            try:
-                from . import archive
-                await plugins.runtime.INTEGRATION_DB.instance.on_request()
-                return await archive.run(from_db=self.db, to_db=self._archive, archive_queue_key=self._archive_queue_key,
-                                         dry_run=dry_run, num_proc=num_proc)
-            finally:
-                await plugins.runtime.INTEGRATION_DB.instance.on_response()
-        return archive_concordance,
+        async def cleanup_archive(num_proc: int, dry_run: bool):
+            return await cleanup.run(
+                db=self._archive,
+                kvdb=self.db,
+                dry_run=dry_run,
+                num_proc=num_proc,
+                status_key=self._cleanup_status_key,
+            anonymous_user_id=self._auth.anonymous_user_id(),
+            anonymous_rec_max_age_days=self.DEFAULT_ANONYMOUS_REC_ARCHIVE_MIN_DAYS)
+        return cleanup_archive,
 
     async def update(self, data, arch_enqueue=False):
         """
@@ -329,8 +272,6 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
         data_key = mk_key(data_id)
         if await self.db.exists(data_key):
             await self.db.set(data_key, data)
-            if arch_enqueue:
-                await self.db.list_append(self._archive_queue_key, dict(key=data_key))
         async with self._archive.connection() as conn:
             async with await conn.cursor() as cursor:
                 await cursor.execute(

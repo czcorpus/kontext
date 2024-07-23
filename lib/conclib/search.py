@@ -22,6 +22,7 @@ import asyncio
 import logging
 import os
 from typing import List, Optional, Tuple, Union
+import uuid
 
 import aiofiles.os
 import bgcalc
@@ -30,7 +31,7 @@ import settings
 from conclib.calc import (
     check_result, del_silent, extract_manatee_error, find_cached_conc_base,
     wait_for_conc)
-from conclib.calc.base import GeneralWorker
+from conclib.calc.base import GeneralWorker, ConcRegistration
 from conclib.common import KConc
 from conclib.empty import InitialConc
 from conclib.errors import ConcCalculationStatusException
@@ -39,30 +40,33 @@ from corplib.corpus import AbstractKCorpus
 from plugin_types.conc_cache import ConcCacheStatus
 
 TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
-CONC_REGISTER_TASK_LIMIT = 5  # task itself should be super-fast
 CONC_REGISTER_WAIT_LIMIT = 20  # client may be forced to wait loger due to other tasks
 CONC_BG_SYNC_ALIGNED_CORP_THRESHOLD = 50000000
 CONC_BG_SYNC_SINGLE_CORP_THRESHOLD = 2000000000
 
 
-async def _get_async_conc(corp, user_id, q, corp_cache_key, cutoff, minsize) -> KConc:
+async def _get_async_conc(corp: AbstractKCorpus, user_id, q, cutoff, minsize) -> KConc:
     """
     """
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
-    status = await cache_map.get_calc_status(corp_cache_key, q, cutoff)
+    status = await cache_map.get_calc_status(corp.cache_key, q, cutoff)
     if not status or status.error:
         worker = bgcalc.calc_backend_client(settings)
-        ans = await worker.send_task(
-            'conc_register', object.__class__,
-            (user_id, corp.portable_ident, corp_cache_key, q, cutoff, TASK_TIME_LIMIT),
-            time_limit=CONC_REGISTER_TASK_LIMIT)
-        await ans.get(timeout=CONC_REGISTER_WAIT_LIMIT)
+        conc_task_id = str(uuid.uuid1().hex.encode())
+        task = ConcRegistration(task_id=conc_task_id)
+        reg_args = await task.run(corp.portable_ident, corp.cache_key, q, cutoff)
+        if not reg_args.get('already_running', False):
+            worker.send_task_sync(
+                'conc_calculate', object.__class__,
+                args=(reg_args, user_id, corp.portable_ident, corp.cache_key, q, cutoff),
+                soft_time_limit=TASK_TIME_LIMIT)
+
     conc_avail = await wait_for_conc(
-        cache_map=cache_map, corp_cache_key=corp_cache_key, q=q, cutoff=cutoff, minsize=minsize)
+        cache_map=cache_map, corp_cache_key=corp.cache_key, q=q, cutoff=cutoff, minsize=minsize)
     if conc_avail:
-        return PyConc(corp, 'l', await cache_map.readable_cache_path(corp_cache_key, q, cutoff))
+        return PyConc(corp, 'l', await cache_map.readable_cache_path(corp.cache_key, q, cutoff))
     else:
-        return InitialConc(corp, await cache_map.readable_cache_path(corp_cache_key, q, cutoff))
+        return InitialConc(corp, await cache_map.readable_cache_path(corp.cache_key, q, cutoff))
 
 
 async def get_bg_conc(
@@ -230,9 +234,7 @@ async def get_conc(
             calc_from = 1
             # use Manatee asynchronous conc. calculation (= show 1st page once it's avail.)
             if asnc and len(q) == 1:
-                conc = await _get_async_conc(
-                    corp=corp, user_id=user_id, q=q, corp_cache_key=corp.cache_key,
-                    cutoff=cutoff, minsize=minsize)
+                conc = await _get_async_conc(corp=corp, user_id=user_id, q=q, cutoff=cutoff, minsize=minsize)
             # do the calc here and return (OK for small to mid-sized corpora without alignments)
             else:
                 conc = await _get_sync_conc(
