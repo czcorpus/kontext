@@ -166,7 +166,11 @@ async def create_subcorpus(
         subcorpus_id: SubcorpusIdent,
         path: str
 ):
-    return await general.create_subcorpus(user_id, specification, subcorpus_id, path)
+    try:
+        await plugins.runtime.INTEGRATION_DB.instance.on_request()
+        return await general.create_subcorpus(user_id, specification, subcorpus_id, path)
+    finally:
+        await plugins.runtime.INTEGRATION_DB.instance.on_response()
 
 
 # ----------------------------- PLUG-IN TASKS ---------------------------------
