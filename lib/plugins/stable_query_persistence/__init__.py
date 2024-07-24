@@ -29,9 +29,7 @@ not supported).
 """
 
 import logging
-import os
 import re
-import sqlite3
 import time
 import asyncio
 import aiosqlite
@@ -43,7 +41,7 @@ from plugin_types.general_storage import KeyValueStorage
 from plugin_types.auth import AbstractAuth
 from plugin_types.query_persistence import AbstractQueryPersistence
 from plugin_types.query_persistence.common import (
-    ID_KEY, QUERY_KEY, USER_ID_KEY, generate_idempotent_hex_id)
+    ID_KEY, QUERY_KEY, USER_ID_KEY, generate_idempotent_id)
 from plugins import inject
 
 DEFAULT_TTL_DAYS = 7
@@ -142,7 +140,7 @@ class StableQueryPersistence(AbstractQueryPersistence):
         if prev_data is None or records_differ(curr_data, prev_data):
             if prev_data is not None:
                 curr_data['prev_id'] = prev_data[ID_KEY]
-            data_id = generate_idempotent_hex_id(curr_data)
+            data_id = generate_idempotent_id(curr_data)
             curr_data[ID_KEY] = data_id
             curr_data[USER_ID_KEY] = user_id
             data_key = mk_key(data_id)
@@ -154,7 +152,7 @@ class StableQueryPersistence(AbstractQueryPersistence):
 
         return latest_id
 
-    async def archive(self, user_id, conc_id, revoke=False):
+    async def archive(self, user_id, conc_id):
         async with self._archive_lock:
             async with aiosqlite.connect(self._archive_db_path) as db:
                 data = await self.db.get(mk_key(conc_id))
@@ -168,7 +166,7 @@ class StableQueryPersistence(AbstractQueryPersistence):
                 await db.execute(
                     'INSERT OR IGNORE INTO archive (id, data, created, num_access) VALUES (?, ?, ?, ?)',
                     (conc_id, json.dumps(data), curr_time, 0))
-            await db.commit()
+                await db.commit()
             return data
 
 
