@@ -26,7 +26,6 @@ import { QuerySaveAsFormModel, QuerySaveAsFormModelState } from '../../../models
 import { Actions } from '../../../models/query/actions';
 import { Actions as MainMenuActions } from '../../../models/mainMenu/actions';
 import { Actions as ConcActions } from '../../../models/concordance/actions';
-import { SaveHintParagraph as Style_SaveHintParagraph } from '../style';
 import * as S from './style';
 
 
@@ -43,15 +42,6 @@ export function init(
         const handleCloseEvent = () => {
             dispatcher.dispatch<typeof MainMenuActions.ClearActiveItem>({
                 name: MainMenuActions.ClearActiveItem.name
-            });
-        }
-
-        const handleArchivingStatus = (evt) => {
-            dispatcher.dispatch<typeof ConcActions.MakeConcPermanent>({
-                name: ConcActions.MakeConcPermanent.name,
-                payload: {
-                    revoke: hasFlagArchived
-                }
             });
         }
 
