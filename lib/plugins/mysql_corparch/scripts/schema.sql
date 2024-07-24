@@ -32,6 +32,7 @@ CREATE TABLE kontext_corpus (
   size bigint(20) NOT NULL DEFAULT '0',
   group_name varchar(255) NOT NULL,
   version int(11) NOT NULL DEFAULT '1',
+  created_by_id int(11),
   created varchar(25),
   updated varchar(25),
   active int(11) NOT NULL,
