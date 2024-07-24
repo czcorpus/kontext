@@ -68,7 +68,7 @@ class GetUserInfo(TypedDict):
 
 
 class CorpusAccess(NamedTuple):
-    is_owner: bool
+    is_author: bool
     has_read_access: bool
     corpus_variant: str
 
@@ -145,7 +145,7 @@ class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
     @abc.abstractmethod
     async def corpus_access(self, user_dict: UserInfo, corpus_name: str) -> CorpusAccess:
         """
-        Return a 3-tuple (is owner, has read access, corpus variant)
+        Return a 3-tuple (is author, has read access, corpus variant)
         """
 
     @abc.abstractmethod
