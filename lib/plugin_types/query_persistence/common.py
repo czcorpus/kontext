@@ -57,15 +57,17 @@ def generate_uniq_id(_) -> str:
     return _encode_to_az(uuid.uuid1().int)
 
 
-def generate_idempotent_hex_id(data: Dict[str, Any]) -> str:
-    tmp = _to_json(data)
-    if tmp:
-        return hashlib.md5(tmp.encode('utf-8')).hexdigest()
-    else:
-        return generate_uniq_id(data)
-
-
 def generate_idempotent_id(data: Dict[str, Any]) -> str:
+    """
+    Based on `data` contents, generate a checksum/hash representing the data.
+    This ensures that the same record will always have the same ID.
+
+    In case empty data is provided, a unique ID is returned.
+    """
+    data = data.copy()  # shallow copy is ok here
+    # We don't want any existing ID nor user ID to affect generated hash
+    data.pop(ID_KEY, None)
+    data.pop(USER_ID_KEY, None)
     tmp = _to_json(data)
     if tmp:
         return _encode_to_az(int('0x' + hashlib.md5(tmp.encode('utf-8')).hexdigest(), 16))
