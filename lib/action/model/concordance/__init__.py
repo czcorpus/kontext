@@ -24,6 +24,7 @@ from collections import OrderedDict
 from typing import Any, Dict, List, Optional, Tuple, Union
 import asyncio
 import logging
+from sanic import Sanic
 
 import conclib
 import plugins
@@ -308,6 +309,7 @@ class ConcActionModel(CorpusActionModel):
             ID of the stored operation (or the current ID of nothing was stored),
             UNIX timestamp of stored history item (or None)
         """
+        application = Sanic.get_app('kontext')
         with plugins.runtime.QUERY_PERSISTENCE as qp:
             prev_data = self._active_q_data if self._active_q_data is not None else {}
             use_history, curr_data = self.export_query_data()
@@ -317,8 +319,9 @@ class ConcActionModel(CorpusActionModel):
 
             # archive the concordance, it may take a bit longer, so we
             # do this as a non-blocking operation
-            task = asyncio.create_task(self._archive_conc(user_id, qp_store_id))
-            task.add_done_callback(lambda r: None)  # we need this to ensure completion
+            task = application.add_task(self._archive_conc(user_id, qp_store_id))
+            task.add_done_callback(lambda r: logging.getLogger(__name__).debug(
+                f'finished archiving of conc {qp_store_id}'))
 
             history_ts = await self._save_query_to_history(ans[0], curr_data) if use_history else None
             lines_groups = prev_data.get('lines_groups', self._lines_groups.serialize())
@@ -333,8 +336,9 @@ class ConcActionModel(CorpusActionModel):
                 qp_store_id = await qp.store(self.session_get('user', 'id'), curr_data=curr, prev_data=prev)
                 # archive the concordance, it may take a bit longer, so we
                 # do this as a non-blocking operation
-                task = asyncio.create_task(self._archive_conc(user_id, qp_store_id))
-                task.add_done_callback(lambda r: None)  # we need this to ensure completion
+                task = application.add_task(self._archive_conc(user_id, qp_store_id))
+                task.add_done_callback(lambda r: logging.getLogger(__name__).debug(
+                    f'finished archiving of conc {qp_store_id}'))
                 ans.append(qp_store_id)
             return ans, history_ts
 
