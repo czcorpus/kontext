@@ -1011,7 +1011,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                             state.shareLinkProps = {
                                 url: this.layoutModel.createActionUrl(
                                     '/view',
-                                    {q: state.concId}
+                                    {q: '~' + state.concId}
                                 )
                             }
 
