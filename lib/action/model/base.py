@@ -100,7 +100,6 @@ class BaseActionModel(AbstractPageModel):
         result['locale'] = self._req.ui_lang
         result['messages'] = []
         result['uses_corp_instance'] = False
-        result['use_conc_toolbar'] = False
         result['shuffle_min_result_warning'] = 0
         result['multilevel_freq_dist_max_levels'] = 0
         if action_props.page_model is None:
@@ -126,7 +125,6 @@ class BaseActionModel(AbstractPageModel):
         result['issue_reporting_action'] = None
         result['help_links'] = {}
         result['_version'] = None
-        result['preflight_query_timeout_ms'] = settings.get_int('global', 'preflight_query_timeout_ms', 0)
         return result
 
     def init_menu(self, result):

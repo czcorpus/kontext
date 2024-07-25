@@ -579,4 +579,12 @@ export class Actions {
     static DehighlightTokens:Action<{dehighlights:Array<HighlightInfo>}> = {
         name: 'CONCORDANCE_DEHIGHLIGHT_TOKEN_BY_ID'
     };
+
+    static ShareConcordanceLink:Action<{}> = {
+        name: 'CONCORDANCE_SHARE_CONCORDANCE_LINK'
+    };
+
+    static CopyConcordanceLink:Action<{}> = {
+        name: 'CONCORDANCE_COPY_CONCORDANCE_LINK'
+    };
 }

@@ -29,9 +29,7 @@ not supported).
 """
 
 import logging
-import os
 import re
-import sqlite3
 import time
 import asyncio
 import aiosqlite
@@ -43,7 +41,7 @@ from plugin_types.general_storage import KeyValueStorage
 from plugin_types.auth import AbstractAuth
 from plugin_types.query_persistence import AbstractQueryPersistence
 from plugin_types.query_persistence.common import (
-    ID_KEY, QUERY_KEY, USER_ID_KEY, generate_idempotent_hex_id)
+    ID_KEY, QUERY_KEY, USER_ID_KEY, generate_idempotent_id)
 from plugins import inject
 
 DEFAULT_TTL_DAYS = 7
@@ -142,7 +140,7 @@ class StableQueryPersistence(AbstractQueryPersistence):
         if prev_data is None or records_differ(curr_data, prev_data):
             if prev_data is not None:
                 curr_data['prev_id'] = prev_data[ID_KEY]
-            data_id = generate_idempotent_hex_id(curr_data)
+            data_id = generate_idempotent_id(curr_data)
             curr_data[ID_KEY] = data_id
             curr_data[USER_ID_KEY] = user_id
             data_key = mk_key(data_id)
@@ -154,50 +152,23 @@ class StableQueryPersistence(AbstractQueryPersistence):
 
         return latest_id
 
-    async def archive(self, user_id, conc_id, revoke=False):
+    async def archive(self, user_id, conc_id):
         async with self._archive_lock:
             async with aiosqlite.connect(self._archive_db_path) as db:
-                db.row_factory = aiosqlite.Row
-                async with db.execute(
-                'SELECT id, data, created integer, num_access, last_access FROM archive WHERE id = ? LIMIT 1',
-                (conc_id,)) as cur:
-                    row = await cur.fetchone()
-                    archived_rec = json.loads(row[1]) if row else None
-                    if revoke:
-                        if archived_rec:
-                            await db.execute('DELETE FROM archive WHERE id = ?', (conc_id,))
-                            ans = 1
-                        else:
-                            raise NotFoundException('Concordance {0} not archived'.format(conc_id))
-                    else:
-                        data = await self.db.get(mk_key(conc_id))
-                        if data is None and archived_rec is None:
-                            raise NotFoundException('Concordance {0} not found'.format(conc_id))
-                        elif archived_rec:
-                            ans = 0
-                        else:
-                            stored_user_id = data.get('user_id', None)
-                            if user_id != stored_user_id:
-                                raise ForbiddenException(
-                                    'Cannot change status of a concordance belonging to another user')
-                            curr_time = time.time()
-                            await db.execute(
-                                'INSERT OR IGNORE INTO archive (id, data, created, num_access) VALUES (?, ?, ?, ?)',
-                                (conc_id, json.dumps(data), curr_time, 0))
-                            archived_rec = data
-                            ans = 1
-                    await db.commit()
-                    return ans, archived_rec
+                data = await self.db.get(mk_key(conc_id))
+                if data is None:
+                    raise NotFoundException('Concordance {0} not found'.format(conc_id))
+                stored_user_id = data.get('user_id', None)
+                if user_id != stored_user_id:
+                    raise ForbiddenException(
+                        'Cannot change status of a concordance belonging to another user')
+                curr_time = time.time()
+                await db.execute(
+                    'INSERT OR IGNORE INTO archive (id, data, created, num_access) VALUES (?, ?, ?, ?)',
+                    (conc_id, json.dumps(data), curr_time, 0))
+                await db.commit()
+            return data
 
-    async def is_archived(self, conc_id):
-        async with self._archive_lock:
-            async with aiosqlite.connect(self._archive_db_path) as db:
-                async with db.execute('SELECT COUNT(*) FROM archive WHERE id = ? LIMIT 1', (conc_id,)) as cur:
-                    ans = await cur.fetchone()
-                    return ans[0] > 0
-
-    async def will_be_archived(self, plugin_ctx, conc_id: str):
-        return False
 
     async def update(self, data, arch_enqueue=False):
         """

@@ -17,12 +17,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import hashlib
 import os
 import re
 import urllib.parse
 from collections import OrderedDict
 from typing import Any, Dict, List, Optional, Tuple, Union
+import asyncio
+import logging
 
 import conclib
 import plugins
@@ -290,6 +291,13 @@ class ConcActionModel(CorpusActionModel):
                     new_ids, _ = await self._store_conc_params()
                     self._active_q_data = await qp.open(new_ids[-1])
 
+    async def _archive_conc(self, user_id, conc_id):
+        with plugins.runtime.QUERY_PERSISTENCE as qp:
+            try:
+                await qp.archive(user_id, conc_id)
+            except Exception as ex:
+                logging.getLogger(__name__).error('Failed to archive concordance {}: {}'.format(conc_id, ex))
+
     async def _store_conc_params(self) -> Tuple[List[str], Optional[int]]:
         """
         Stores concordance operation if the query_persistence plugin is installed
@@ -303,8 +311,15 @@ class ConcActionModel(CorpusActionModel):
         with plugins.runtime.QUERY_PERSISTENCE as qp:
             prev_data = self._active_q_data if self._active_q_data is not None else {}
             use_history, curr_data = self.export_query_data()
-            ans = [await qp.store(self.session_get('user', 'id'),
-                                  curr_data=curr_data, prev_data=self._active_q_data)]
+            user_id = self.session_get('user', 'id')
+            qp_store_id = await qp.store(user_id, curr_data=curr_data, prev_data=self._active_q_data)
+            ans = [qp_store_id]
+
+            # archive the concordance, it may take a bit longer, so we
+            # do this as a non-blocking operation
+            task = asyncio.create_task(self._archive_conc(user_id, qp_store_id))
+            task.add_done_callback(lambda r: None)  # we need this to ensure completion
+
             history_ts = await self._save_query_to_history(ans[0], curr_data) if use_history else None
             lines_groups = prev_data.get('lines_groups', self._lines_groups.serialize())
             for q_idx, op in self._auto_generated_conc_ops:
@@ -315,7 +330,12 @@ class ConcActionModel(CorpusActionModel):
                             q=getattr(self.args, 'q')[:q_idx + 1],
                             corpora=self.get_current_aligned_corpora(), usesubcorp=self.args.usesubcorp,
                             lastop_form=op.to_dict(), user_id=self.session_get('user', 'id'))
-                ans.append(await qp.store(self.session_get('user', 'id'), curr_data=curr, prev_data=prev))
+                qp_store_id = await qp.store(self.session_get('user', 'id'), curr_data=curr, prev_data=prev)
+                # archive the concordance, it may take a bit longer, so we
+                # do this as a non-blocking operation
+                task = asyncio.create_task(self._archive_conc(user_id, qp_store_id))
+                task.add_done_callback(lambda r: None)  # we need this to ensure completion
+                ans.append(qp_store_id)
             return ans, history_ts
 
     def select_current_aligned_corpora(self, active_only: bool) -> List[str]:
@@ -667,16 +687,6 @@ class ConcActionModel(CorpusActionModel):
                 args.append((k, val))
         args.append(('next', return_action))
         raise ImmediateRedirectException(self._req.create_url('restore_conc', args))
-
-    @property
-    def preflight_id(self) -> Optional[str]:
-        """
-        Return an identifier for storing both preflight and regular query
-        under the same key for further analysis and processing.
-        """
-        if len(self.args.q) > 0:
-            return hashlib.sha1(self.args.q[0].encode('utf-8')).hexdigest()
-        return None
 
 
 class ConcPluginCtx(CorpusPluginCtx):

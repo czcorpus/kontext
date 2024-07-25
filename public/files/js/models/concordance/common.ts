@@ -362,12 +362,6 @@ export interface ConcQueryResponse extends Kontext.AjaxResponse {
     size:number;
 }
 
-export interface PreflightResponse extends Kontext.AjaxResponse {
-    sizeIpm:number;
-    preflightId:string;
-    isLargeCorpus:boolean;
-}
-
 /**
  * AjaxConcResponse defines a server response when
  * providing a concordance.
@@ -520,12 +514,6 @@ export interface ViewConfiguration {
      * (due to the liveattrs plugin).
      */
     FastAdHocIpm:boolean;
-
-    /**
-     * If true then a concordance toolbar providing
-     * some useful options is shown.
-     */
-    ShowConcToolbar:boolean;
 
     /**
      * A structural attribute identifying a speaker (e.g. 'sp.num').

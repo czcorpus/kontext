@@ -83,3 +83,24 @@ class IntegrationDatabase(DatabaseAdapter[N, R, SN, SR]):
         This is the right place to close the connection.
         """
         pass
+
+    async def on_aio_task_enter(self):
+        """
+        This is called by KonText each time it is about to create
+        a new asyncio task. In such case, any existing database connection
+        cannot be relied on. Calling this gives the backend a chance
+        to create a new connection within the current context.
+
+        See also on_aio_task_exit()
+        """
+        pass
+
+    async def on_aio_task_exit(self):
+        """
+        This is called by KonText each time an existing asyncio task
+        is about to finish. This gives the backend a chance to clean up
+        (close) the database connection.
+
+        See also on_aio_task_enter()
+        """
+        pass

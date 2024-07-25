@@ -30,7 +30,7 @@ import { DataSaveFormat } from '../../app/navigation/save';
 export class Actions {
 
     static SubmitQuery:Action<{
-        useAltCorp?:boolean;
+        altCorp?:string;
     }> = {
         name: 'PQUERY_SUBMIT_QUERY'
     };
@@ -42,10 +42,6 @@ export class Actions {
 
     }> = {
         name: 'PQUERY_SUBMIT_QUERY_DONE'
-    };
-
-    static SubmitQueryInterruptedWithPreflightAlert:Action<{}> = {
-        name: 'PQUERY_SUBMIT_QUERY_INTERRUPTED_WITH_PREFLIGHT_ALERT'
     };
 
     static CloseSuggestAltCorp:Action<{}> = {

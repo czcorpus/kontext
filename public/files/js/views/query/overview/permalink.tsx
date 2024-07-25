@@ -26,7 +26,6 @@ import { QuerySaveAsFormModel, QuerySaveAsFormModelState } from '../../../models
 import { Actions } from '../../../models/query/actions';
 import { Actions as MainMenuActions } from '../../../models/mainMenu/actions';
 import { Actions as ConcActions } from '../../../models/concordance/actions';
-import { SaveHintParagraph as Style_SaveHintParagraph } from '../style';
 import * as S from './style';
 
 
@@ -39,20 +38,10 @@ export function init(
     const PersistentConcordanceForm:React.FC<QuerySaveAsFormModelState> = (props) => {
 
         const layoutViews = he.getLayoutViews();
-        const hasFlagArchived = !!(props.concIsArchived || props.willBeArchived);
 
         const handleCloseEvent = () => {
             dispatcher.dispatch<typeof MainMenuActions.ClearActiveItem>({
                 name: MainMenuActions.ClearActiveItem.name
-            });
-        }
-
-        const handleArchivingStatus = (evt) => {
-            dispatcher.dispatch<typeof ConcActions.MakeConcPermanent>({
-                name: ConcActions.MakeConcPermanent.name,
-                payload: {
-                    revoke: hasFlagArchived
-                }
             });
         }
 
@@ -99,21 +88,11 @@ export function init(
                     {props.isBusy ?
                         <layoutViews.AjaxLoaderImage /> :
                         <S.PersistentConcordanceForm>
-
-                            <Style_SaveHintParagraph>
-                                <layoutViews.StatusIcon status="info" inline={true} htmlClass="icon" />
-                                {hasFlagArchived ?
-                                    he.translate('concview__permanent_link_is_archived') + ':' :
-                                    he.translate('concview__permanent_link_hint_{ttl}', {ttl: props.concTTLDays})
-                                }
-                            </Style_SaveHintParagraph>
                             <div className="input-row">
                                 <input type="text" readOnly={true}
-                                        disabled={!props.concIsArchived}
                                         value={createPermanentUrl()}
-                                        className={hasFlagArchived ? 'link archived' : 'link'}
-                                        onClick={e => hasFlagArchived ?
-                                                        (e.target as HTMLInputElement).select() : null} />
+                                        className="link archived"
+                                        onClick={e => (e.target as HTMLInputElement).select()} />
                                 <a onClick={handleCopyToClipboard}>
                                     <layoutViews.ImgWithMouseover
                                             src={he.createStaticUrl('img/copy-icon.svg')}
@@ -121,17 +100,6 @@ export function init(
                                             alt={he.translate('global__copy_to_clipboard')}
                                             style={{width: '1.8em', marginLeft: '0.3em'}} />
                                 </a>
-                            </div>
-                            <div className="archive-toggle">
-                                <label htmlFor="permalink-status">
-                                    {he.translate('concview__permalink_toggle_lable')}:
-                                </label>
-                                <div style={{fontSize: '1.5em', display: 'flex', alignItems: 'center'}}>
-                                    <layoutViews.ToggleSwitch
-                                        id="permalink-status"
-                                        onChange={handleArchivingStatus}
-                                        checked={hasFlagArchived} />
-                                </div>
                             </div>
                             <S.AdvancedOptions>
                                 <S.AdvancedModeSwitch>

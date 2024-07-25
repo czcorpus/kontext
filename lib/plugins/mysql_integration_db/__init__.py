@@ -101,6 +101,15 @@ class MySqlIntegrationDb(
         if curr:
             await curr.close()
 
+
+    async def on_aio_task_enter(self):
+        self._db_conn.set(await self.create_connection())
+
+    async def on_aio_task_exit(self):
+        curr = self._db_conn.get()
+        if curr:
+            await curr.close()
+
     async def create_connection(self) -> MySQLConnectionAbstract:
         return await connect(
             user=self._ops.conn_args.user, password=self._ops.conn_args.password, host=self._ops.conn_args.host,

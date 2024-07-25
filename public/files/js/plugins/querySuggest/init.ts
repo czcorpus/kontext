@@ -26,13 +26,17 @@ import * as PluginInterfaces from '../../types/plugins';
 import { init as initView, SuggestionsViews } from './view';
 import { isEmptyResponse, Model } from './model';
 import {
-    isBasicFrontend, isPosAttrPairRelFrontend, isErrorFrontend, isPosAttrPairRelClickPayload, KnownRenderers, isCncExtendedSublemmaFrontendClickPayload, isCncExtendedSublemmaFrontend,
-     } from './frontends';
+    isBasicFrontend, isPosAttrPairRelFrontend, isErrorFrontend, isPosAttrPairRelClickPayload,
+    KnownRenderers, isCncExtendedSublemmaFrontendClickPayload, isCncExtendedSublemmaFrontend,
+    isCncExhaustiveQueryInfoFrontend,
+    isCncExhaustiveQueryInfoFrontendClickPayload,
+} from './frontends';
 import { AnyProviderInfo, isEnabledFor } from './providers';
 import { AnyQuery, QuerySuggestion } from '../../models/query/query';
 import { IPluginApi } from '../../types/plugins/common';
 import { QueryFormType } from '../../models/query/actions';
 import { QueryValueSubformat } from '../../types/plugins/querySuggest';
+import { Actions as GlobalActions } from '../../models/common/actions';
 
 
 /**
@@ -144,6 +148,16 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
                 query.qmcase = true;
             }
 
+        } else if (provInfo.rendererId === KnownRenderers.EXHAUSTIVE_QUERY_EVAL &&
+                isCncExhaustiveQueryInfoFrontendClickPayload(value)) {
+            this.pluginApi.dispatcher().dispatch<typeof GlobalActions.SwitchCorpus>({
+                name: GlobalActions.SwitchCorpus.name,
+                payload: {
+                    corpora: [value.corpname],
+                    subcorpus: null
+                }
+            });
+
         } else {
             throw new Error(`Failed to apply click operation with renderer ${provInfo.rendererId} and data ${JSON.stringify(value)}`);
         }
@@ -169,6 +183,14 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
         } else if (isCncExtendedSublemmaFrontend(dr)) {
             return createElement(this.views.cncExtendedSublemma, {
                 ...dr.contents,
+                isShortened: dr.isShortened,
+                itemClickHandler: value => itemClickHandler(dr.providerId, value)
+            });
+
+        } else if (isCncExhaustiveQueryInfoFrontend(dr)) {
+            return createElement(this.views.exhaustiveQuery, {
+                problematic: dr.contents.problematic,
+                altCorpus: dr.contents.alt_corpus,
                 isShortened: dr.isShortened,
                 itemClickHandler: value => itemClickHandler(dr.providerId, value)
             });

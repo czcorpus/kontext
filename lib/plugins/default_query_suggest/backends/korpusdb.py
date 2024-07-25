@@ -24,7 +24,7 @@ class KorpusDBBackend(AbstractBackend):
     def __init__(self, conf, ident):
         super().__init__(ident)
         self._conf = conf
-        port_str = '' if self._conf.get('port', 80) else ':{}'.format(self._conf.get('port'))
+        port_str = ':{}'.format(self._conf.get('port')) if self._conf.get('port') else ''
         if self._conf['ssl']:
             self._requester = HTTPRequester('https://{}{}'.format(self._conf['server'], port_str))
         else:
@@ -66,6 +66,7 @@ class KorpusDBBackend(AbstractBackend):
         }
 
         resp, is_found = await self._requester.request(
+            plugin_ctx.http_client,
             'POST',
             self.API_PATH,
             {},

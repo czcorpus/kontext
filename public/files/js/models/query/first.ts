@@ -22,8 +22,7 @@
 
 import { IFullActionControl } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
-import { AjaxTimeoutError } from 'rxjs/ajax';
-import { tap, map, concatMap, reduce, catchError } from 'rxjs/operators';
+import { tap, map, concatMap, reduce } from 'rxjs/operators';
 import { Dict, tuple, List, pipe, HTTP, Rx } from 'cnc-tskit';
 
 import * as Kontext from '../../types/kontext';
@@ -39,7 +38,7 @@ import { Actions as GlobalActions } from '../common/actions';
 import { Actions as QuickSubcorpActions } from '../subcorp/actions';
 import { IUnregistrable } from '../common/common';
 import * as PluginInterfaces from '../../types/plugins';
-import { ConcQueryResponse, ConcServerArgs, PreflightResponse } from '../concordance/common';
+import { ConcQueryResponse, ConcServerArgs } from '../concordance/common';
 import { AdvancedQuery, advancedToSimpleQuery, AnyQuery, AnyQuerySubmit, parseSimpleQuery, isAdvancedQuery,
     QueryType, SimpleQuery, simpleToAdvancedQuery} from './query';
 import { ajaxErrorMapped } from '../../app/navigation';
@@ -200,6 +199,7 @@ function importUserQueries(
                         corpname: corpus,
                         qtype: 'advanced',
                         query,
+                        suggestions: null,
                         queryHtml,
                         rawAnchorIdx: 0,
                         rawFocusIdx: 0,
@@ -569,17 +569,11 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                             if (err !== null) {
                                 throw err;
                             }
-                            return this.state.concPreflight && action.payload.useAltCorp === undefined ?
-                                this.submitPreflight(
-                                    contextData,
-                                    ttSelections,
-                                    this.state.concPreflight
-                                ) :
-                                rxOf({
-                                    contextData,
-                                    ttSelections,
-                                    preflightAlert: false,
-                                });
+                            return rxOf({
+                                contextData,
+                                ttSelections,
+                                preflightAlert: false,
+                            });
                         }
                     ),
                     concatMap(
@@ -1096,51 +1090,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 format: retJson ? 'json' : undefined,
                 ...args
             }
-        );
-    }
-
-    submitPreflight(
-        contextData:QueryContextArgs,
-        ttSelections:TextTypes.ExportedSelection,
-        preflightSubc:Kontext.PreflightConf
-    ):Observable<{
-        contextData:QueryContextArgs;
-        ttSelections:TextTypes.ExportedSelection;
-        preflightAlert:boolean;
-    }> {
-
-        return this.pageModel.ajax$<PreflightResponse>(
-            HTTP.Method.POST,
-            this.pageModel.createActionUrl(
-                'preflight',
-                {
-                    target_corpname: List.head(this.state.corpora),
-                    format: 'json'
-                }
-            ),
-            this.createPreflightArgs(contextData, ttSelections, preflightSubc),
-            {
-                contentType: 'application/json',
-                timeout: this.pageModel.getConf('PreflightTimeoutMs') || 0
-            }
-        ).pipe(
-            catchError(
-                err => {
-                    if (err instanceof AjaxTimeoutError) {
-                        return rxOf({
-                            sizeIpm: preflightSubc.threshold_ipm + 1
-                        });
-                    }
-                    throw err;
-                }
-            ),
-            map(
-                ans => ({
-                    contextData,
-                    ttSelections,
-                    preflightAlert: ans.sizeIpm >= preflightSubc.threshold_ipm
-                })
-            )
         );
     }
 

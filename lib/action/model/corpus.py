@@ -52,11 +52,6 @@ from texttypes.model import TextTypes
 
 T = TypeVar('T')
 
-
-PREFLIGHT_MIN_LARGE_CORPUS = 500_000_000
-"""Specifies a minimum size of a corpus to be used along with preflight queries"""
-
-
 async def empty_query_store(s, uh, res):
     pass
 
@@ -515,14 +510,6 @@ class CorpusActionModel(UserActionModel):
         result['sentence_struct'] = corp_info.sentence_struct
         result['doc_struct'] = self.corp.get_conf('DOCSTRUCTURE')
         result['simple_query_default_attrs'] = corp_info.simple_query_default_attrs
-        if corp_info.preflight_subcorpus:
-            result['conc_preflight'] = dict(
-                corpname=corp_info.preflight_subcorpus.corpus_name,
-                subc=corp_info.preflight_subcorpus.id,
-                threshold_ipm=self.corp.preflight_warn_ipm,
-                alt_corp=corp_info.alt_corp)
-        else:
-            result['conc_preflight'] = None
         poslist = []
         for tagset in corp_info.tagsets:
             if tagset.ident == corp_info.default_tagset:
@@ -612,7 +599,6 @@ class CorpusActionModel(UserActionModel):
             'global', 'shuffle_min_result_warning', 100000)
 
         result['has_subcmixer'] = plugins.runtime.SUBCMIXER.exists
-        result['use_conc_toolbar'] = settings.get_bool('global', 'use_conc_toolbar')
         with plugins.runtime.QUERY_PERSISTENCE as qp:
             result['conc_url_ttl_days'] = qp.get_conc_ttl_days(self.session_get('user', 'id'))
 
@@ -719,10 +705,6 @@ class CorpusActionModel(UserActionModel):
                 tpl_out['Wposlist_' +
                         al] = [{'n': self._req.translate(x.pos), 'v': x.pattern} for x in poslist]
                 tpl_out['input_languages'][al] = corp_info.metadata.default_virt_keyboard if corp_info.metadata.default_virt_keyboard else corp_info.collator_locale
-
-    async def create_preflight_subcorpus(self) -> str:
-        with plugins.runtime.SUBC_STORAGE as sc:
-            return await sc.create_preflight(self.subcpath, self.corp.corpname)
 
 
 class CorpusPluginCtx(UserPluginCtx, AbstractCorpusPluginCtx):

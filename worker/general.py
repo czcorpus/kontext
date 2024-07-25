@@ -120,7 +120,7 @@ async def _compile_frq(corp: KCorpus, attr, logfile):
 # ----------------------------- CONCORDANCE -----------------------------------
 
 
-async def conc_register(self, user_id, corpus_ident: Union[str, SubcorpusRecord], corp_cache_key, query, cutoff, time_limit, worker):
+async def conc_archive(self, user_id, corpus_ident: Union[str, SubcorpusRecord], corp_cache_key, query, cutoff, time_limit, worker):
     """
     Register concordance calculation and initiate the calculation.
 
@@ -134,7 +134,7 @@ async def conc_register(self, user_id, corpus_ident: Union[str, SubcorpusRecord]
     returns:
     a dict(cachefile=..., pidfile=..., stored_pidfile=...)
     """
-    task = conclib.calc.base.TaskRegistration(task_id=self.request.id)
+    task = conclib.calc.base.ConcRegistration(task_id=self.request.id)
     initial_args = await task.run(corpus_ident, corp_cache_key, query, cutoff)
     if not initial_args['already_running']:   # we are first trying to calc this
         worker.send_task_sync(

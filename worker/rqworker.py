@@ -1,6 +1,7 @@
 # Copyright (c) 2020 Charles University in Prague, Faculty of Arts,
 #                    Institute of the Czech National Corpus
 # Copyright (c) 2020 Martin Zimandl <martin.zimandl@gmail.com>
+# Copyright (c) 2020 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -167,10 +168,10 @@ async def create_subcorpus(
         path: str
 ):
     try:
-        await plugins.runtime.INTEGRATION_DB.instance.on_request()
+        await plugins.runtime.INTEGRATION_DB.instance.on_aio_task_enter()
         return await general.create_subcorpus(user_id, specification, subcorpus_id, path)
     finally:
-        await plugins.runtime.INTEGRATION_DB.instance.on_response()
+        await plugins.runtime.INTEGRATION_DB.instance.on_aio_task_exit()
 
 
 # ----------------------------- PLUG-IN TASKS ---------------------------------

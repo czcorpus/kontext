@@ -77,7 +77,6 @@ export interface PageData {
     StructAttrs:{[attr:string]:Array<string>};
     CurrStructAttrs:Array<string>;
     AvailRefs:Array<{n:string; sel:string; label:string}>;
-    ShowConcToolbar:boolean;
     BaseViewAttr:string;
     QueryHintEnabled:boolean;
 }

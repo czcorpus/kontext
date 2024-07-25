@@ -105,3 +105,16 @@ class CncExtendedSublemmaFrontend(AbstractFrontend[CncSublemmaSuggestion, CncSub
         response = super().export_data(data_norm, value, ui_lang)
         response.contents = data
         return response
+
+
+class CQLizerFrontend(AbstractFrontend):
+
+    def __init__(self, conf):
+        super().__init__(conf, 'exhaustiveQuery')
+        self.on_item_click = conf.get('onItemClick', None)
+        self.is_active = True
+
+    def export_data(self, data: Any, value, ui_lang):
+        response = super().export_data(data, value, ui_lang)
+        response.contents = data
+        return response

@@ -32,7 +32,6 @@
         <conc_line_max_group_num>99</conc_line_max_group_num>
         <action_path_prefix/>
         <static_files_prefix>/files</static_files_prefix>
-        <use_conc_toolbar>0</use_conc_toolbar>
         <anonymous_user_conc_login_prompt>0</anonymous_user_conc_login_prompt>
         <conc_dashboard_modules>
             <item>freqs</item>
@@ -99,7 +98,6 @@
             <module>mysql_query_persistence</module>
             <ttl_days>100</ttl_days>
             <anonymous_user_ttl_days>7</anonymous_user_ttl_days>
-            <archive_queue_key>arch</archive_queue_key>
             <implicit_archiving>true</implicit_archiving>
         </query_persistence>
         <corparch>

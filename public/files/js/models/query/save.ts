@@ -31,7 +31,6 @@ import * as copy from 'copy-to-clipboard';
 
 interface IsArchivedResponse extends Kontext.AjaxResponse {
     is_archived:boolean;
-    will_be_archived:boolean;
 }
 
 interface MakePermanentResponse extends Kontext.AjaxResponse {
@@ -45,8 +44,6 @@ export interface QuerySaveAsFormModelState {
     isBusy:boolean;
     isValidated:boolean;
     concTTLDays:number;
-    concIsArchived:boolean;
-    willBeArchived:boolean;
     userQueryId:string;
     userQueryIdMsg:Array<string>;
     userQueryIdValid:boolean;
@@ -82,8 +79,6 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                 queryId,
                 isValidated: false,
                 concTTLDays,
-                concIsArchived: false,
-                willBeArchived: false,
                 userQueryId: '',
                 userQueryIdMsg: [],
                 userQueryIdValid: true,
@@ -181,112 +176,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
         this.addActionHandler(
             ConcActions.AddedNewOperation,
             (state, action) => {
-                state.concIsArchived = false;
-                state.willBeArchived = false;
                 state.queryId = action.payload?.concId;
-            }
-        );
-
-        this.addActionHandler(
-            Actions.GetConcArchivedStatus,
-            (state, action) => {
-                state.isBusy = true;
-            },
-            (state, action, dispatch) => {
-                this.loadStatus(state.queryId, dispatch).subscribe({
-                    next: data => {
-                        dispatch<typeof Actions.GetConcArchivedStatusDone>({
-                            name: Actions.GetConcArchivedStatusDone.name,
-                            payload: {
-                                willBeArchived: data.will_be_archived,
-                                isArchived: data.is_archived
-                            }
-                        });
-
-                    },
-                    error: error => {
-                        dispatch<typeof Actions.GetConcArchivedStatusDone>({
-                            name: Actions.GetConcArchivedStatusDone.name,
-                            error
-                        });
-                    }
-                });
-            }
-        );
-
-        this.addActionHandler(
-            Actions.GetConcArchivedStatusDone,
-            (state, action) => {
-                state.isBusy = false;
-                state.concIsArchived = action.payload.isArchived;
-                state.willBeArchived = action.payload.willBeArchived;
-            }
-        );
-
-        this.addActionHandler(
-            Actions.MakeConcordancePermanent,
-            (state, action) => {
-                state.isBusy = true;
-            },
-            (state, action, dispatch) => {
-                this.layoutModel.ajax$<MakePermanentResponse>(
-                    HTTP.Method.POST,
-                    this.layoutModel.createActionUrl(
-                        'archive_concordance',
-                        {
-                            code: state.queryId,
-                            revoke: action.payload.revoke
-                        }
-                    ),
-                    {}
-
-                ).pipe(
-                    concatMap(_ => this.loadStatus(state.queryId, dispatch))
-
-                ).subscribe({
-                    next: data => {
-                        dispatch<typeof Actions.MakeConcordancePermanentDone>({
-                            name: Actions.MakeConcordancePermanentDone.name,
-                            payload: {
-                                willBeArchived: data.will_be_archived,
-                                isArchived: data.is_archived
-                            }
-                        });
-
-                    },
-                    error: error => {
-                        dispatch<typeof Actions.MakeConcordancePermanentDone>({
-                            name: Actions.MakeConcordancePermanentDone.name,
-                            error
-                        });
-                    }
-                });
-            }
-        );
-
-        this.addActionHandler(
-            Actions.MakeConcordancePermanentDone,
-            (state, action) => {
-                state.isBusy = false;
-                if (action.error) {
-                    this.layoutModel.showMessage('error', action.error);
-
-                } else {
-                    state.concIsArchived = action.payload.isArchived;
-                    state.willBeArchived = action.payload.willBeArchived;
-                    if (!action.payload.isArchived && !action.payload.willBeArchived) {
-                        this.layoutModel.showMessage(
-                            'info',
-                            this.layoutModel.translate('concview__make_conc_link_permanent_revoked')
-                        );
-
-                    } else {
-                        this.layoutModel.showMessage(
-                            'info',
-                            this.layoutModel.translate('concview__make_conc_link_permanent_done')
-                        );
-                    }
-                }
             }
         );
 
@@ -374,15 +264,6 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
             (state, action) => {
                 state.advancedMode = action.payload.value;
             }
-        );
-    }
-
-    private loadStatus(queryId:string, dispatch:SEDispatcher):Observable<IsArchivedResponse> {
-        return this.layoutModel.ajax$<IsArchivedResponse>(
-            HTTP.Method.GET,
-            this.layoutModel.createActionUrl('get_stored_conc_archived_status'),
-            {code: queryId}
-
         );
     }
 

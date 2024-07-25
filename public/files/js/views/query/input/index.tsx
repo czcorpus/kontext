@@ -20,7 +20,7 @@
  */
 
 import * as React from 'react';
-import { IActionDispatcher, BoundWithProps, Bound } from 'kombo';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Dict, Keyboard, List, pipe, tuple } from 'cnc-tskit';
 
 import { init as keyboardInit } from '../virtualKeyboard';
@@ -1143,8 +1143,8 @@ export function init({
         render() {
             const queryObj = this.props.queries[this.props.sourceId];
             const sugg = queryObj.qtype === 'simple' ?
-                queryObj.queryParsed[this.props.suggestionsVisible[this.props.sourceId]] :
-                queryObj.parsedAttrs[this.props.suggestionsVisible[this.props.sourceId]];
+                queryObj.queryParsed[this.props.suggestionsVisible[this.props.sourceId]]?.suggestions :
+                queryObj.suggestions;
             const suggestionsLoading = !Dict.every(
                 item => item === false,
                 this.props.suggestionsLoading[this.props.sourceId]
@@ -1173,10 +1173,10 @@ export function init({
                                 : null
                             }
                             {
-                                !this.props.historyVisible[this.props.sourceId] && sugg !== undefined ?
+                                !this.props.historyVisible[this.props.sourceId] && !!sugg ?
                                     <SuggestionsWidget
                                         qsuggPlugin={this.props.qsuggPlugin}
-                                        data={sugg.suggestions}
+                                        data={sugg}
                                         formType={this.props.formType}
                                         sourceId={this.props.sourceId}
                                         handleItemClick={this.handleSuggestionItemClick} />

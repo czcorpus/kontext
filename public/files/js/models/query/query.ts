@@ -52,6 +52,7 @@ export interface AdvancedQuery {
     qtype:'advanced';
     query:string;
     parsedAttrs:Array<ParsedAttr>;
+    suggestions:TokenSuggestions|null;
     focusedAttr:ParsedAttr|undefined;
     rawAnchorIdx:number;
     rawFocusIdx:number;
@@ -147,22 +148,15 @@ export interface AdvancedQuerySubmit {
 export type AnyQuerySubmit = SimpleQuerySubmit|AdvancedQuerySubmit;
 
 
-export function findTokenIdxByFocusIdx(q:AnyQuery, focusIdx:number):number {
+export function findTokenIdxBySuggFocusIdx(q:AnyQuery, focusIdx:number):number {
     if (q.qtype === 'simple') {
         for (let i = 0; i < q.queryParsed.length; i++) {
             if (q.queryParsed[i].position[0] <= focusIdx && focusIdx <= q.queryParsed[i].position[1]) {
                 return i;
             }
         }
-
-    } else {
-        for (let i = 0; i < q.parsedAttrs.length; i++) {
-            if (q.parsedAttrs[i].rangeAll[0] <= focusIdx && focusIdx <= q.parsedAttrs[i].rangeAll[1]) {
-                return i;
-            }
-        }
     }
-    return -1;
+    return 0;
 }
 
 /**
@@ -181,6 +175,7 @@ export function simpleToAdvancedQuery(q:SimpleQuery, defaultAttr:string):Advance
         qtype: 'advanced',
         query,
         parsedAttrs,
+        suggestions: null,
         focusedAttr: undefined,
         rawAnchorIdx: query.length,
         rawFocusIdx: query.length,

@@ -30,7 +30,6 @@ from action.krequest import KRequest
 from action.model.user import UserActionModel
 from action.plugin.ctx import AbstractCorpusPluginCtx, PluginCtx
 from action.response import KResponse
-from corplib.abstract import SubcorpusIdent
 from plugin_types.corparch import (
     AbstractSearchableCorporaArchive, CorpusListItem)
 from plugin_types.corparch.backend import DatabaseBackend
@@ -175,11 +174,6 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
             ans.manatee.name = row['name']
             ans.part_of_ml_corpus = row['part_of_ml_corpus']
             ans.ml_position_filter = MLPositionFilter(row['ml_position_filter'])
-            if row['preflight_subc']:
-                ans.preflight_subcorpus = SubcorpusIdent(
-                    id=row['preflight_subc'], corpus_name=row['preflight_corpus'])
-            if row['alt_corp']:
-                ans.alt_corp = row['alt_corp']
             return ans
         return None
 

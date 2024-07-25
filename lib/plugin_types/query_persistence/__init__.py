@@ -33,6 +33,7 @@ else:
 
 from action.argmapping.conc.base import ConcFormArgs
 from action.plugin.ctx import PluginCtx
+from plugins.common.sqldb import DatabaseAdapter
 from plugin_types.query_persistence.error import QueryPersistenceRecNotFound
 
 ConcFormArgsFactory = Callable[
@@ -127,46 +128,28 @@ class AbstractQueryPersistence(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def archive(self, user_id: int, conc_id: str, revoke: bool = False) -> Tuple[int, Dict[str, Any]]:
+    async def archive(self, user_id: int, conc_id: str) -> Dict[str, Any]:
         """
-        Make the concordance record persistent. For implementations which
-        archive concordances automatically this can be just an empty
-        function.
+        Make the concordance record persistent.
 
-        !!! Important note: it is up to this method to decide
-        whether the user user_id is permitted to change
-        the concordance identified by conc_id !!!
+        !!! Important requirements:
+
+        1) It is expected the concordance parameters are available via
+        key-value (Redis) storage already (this should be ensured by KonText)
+
+        2) The method is run within an asyncio task so in case a sql backend
+        is used (which is very likely), on_aio_task_enter(), on_aio_task_exit()
+        should be called.
+
+        3) it is up to this method to decide whether the user user_id is permitted
+        to change the concordance identified by conc_id
 
         arguments:
         user_id -- user who wants to perform the operation
         conc_id -- an identifier of the concordance
 
         returns:
-        a 2-tuple:
-         0: number of updates performed (typically - 0 for no need to update anything, 1 - written archive item
-         1: respective data row
-        """
-
-    @abc.abstractmethod
-    async def is_archived(self, conc_id: str) -> bool:
-        """
-        arguments:
-            conc_id -- a concordance hash
-
-        returns:
-            True if the concordance is archived else False
-        """
-
-    @abc.abstractmethod
-    async def will_be_archived(self, plugin_ctx: Any, conc_id: str) -> Optional[bool]:
-        """
-        returns:
-            True if the concordance will be archived
-            False if it is scheduled to be revoked
-            None in other cases (i.e. if it's not queued at all)
-
-        TODO: maybe we should consider a better return type as the bool makes
-              this a bit confusing (False => is already stored and will be revoked ?!)
+        archive data row
         """
 
     @staticmethod
@@ -303,25 +286,6 @@ class AbstractQueryPersistence(abc.ABC):
         ans = await self.map_pipeline_ops(plugin_ctx, last_id, map_fn)
         logging.getLogger(__name__).debug('load pipeline ops: {}'.format(ans))
         return ans
-
-    async def update_preflight_stats(
-            self,
-            plugin_ctx: PluginCtx,
-            preflight_id: str,
-            corpus: str,
-            subc_id: str,
-            query_cql: Optional[str],
-            has_checked_tt: Optional[bool],
-            estimated_size: Optional[int],
-            actual_size: Optional[int]):
-        """
-        Store information about preflight request accuracy.
-        In case preflight_id and corpus are the same, the method
-        should update other values. E.g.
-        1st call: (foo, syn2020, afac, [word="foo"], False, 2500, None) will create a record without actual_size
-        2nd call: (foo, syn2020, afac, None,         None,  None, 4100) will update existing record with actual_size
-        """
-        pass
 
     async def id_reserved(self, id: str) -> bool:
         """

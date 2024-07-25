@@ -25,13 +25,6 @@ from corplib.abstract import AbstractKCorpus
 from corplib.subcorpus import SubcorpusIdent
 from manatee import Corpus
 
-PREFLIGHT_THRESHOLD_FREQ = 10_000_000
-"""
-Specifies a minimum preflight frequency  we consider
-too computationally demanding which leads to a message
-asking user to consider a smaller alternative corpus.
-"""
-
 
 class KCorpus(AbstractKCorpus):
     """
@@ -150,12 +143,6 @@ class KCorpus(AbstractKCorpus):
 
     def compile_docf(self, attr, doc_attr):
         return self._corp.compile_docf(attr, doc_attr)
-
-    @property
-    def preflight_warn_ipm(self):
-        if self.corp.size() > 0:
-            return round(PREFLIGHT_THRESHOLD_FREQ / self.corp.size() * 1_000_000)
-        return 1_000_000
 
     @property
     def subcorpus_id(self):

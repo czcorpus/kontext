@@ -132,7 +132,7 @@ class MysqlAuthHandler(AbstractInternalAuth):
         user_id -- a database ID of a user
         password -- new password
         """
-        async with await self.db.cursor() as cursor:
+        async with self.db.cursor() as cursor:
             await self.db.begin_tx(cursor)
             await cursor.execute('SELECT username FROM kontext_user WHERE id = %s', (user_id,))
             row = await cursor.fetchone()
