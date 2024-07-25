@@ -171,7 +171,6 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
             if data is None:
                 async with self._archive.connection() as conn:
                     async with await conn.cursor(dictionary=True) as cursor:
-                        logging.getLogger(__name__).warning('{}, {}'.format(conn, conn.__dict__))
                         await self._archive.begin_tx(cursor)
                         await cursor.execute(
                             'SELECT data, created, num_access FROM kontext_conc_persistence WHERE id = %s LIMIT 1', (data_id,))
