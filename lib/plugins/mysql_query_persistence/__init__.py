@@ -1,6 +1,7 @@
 # Copyright (c) 2020 Charles University in Prague, Faculty of Arts,
 #                    Institute of the Czech National Corpus
 # Copyright (c) 2020 Martin Zimandl <martin.zimandl@gmail.com>
+# Copyright (c) 2023 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -27,49 +28,15 @@ produces the same conc ID).
 
 The plug-in is able to connect either via its own configuration (see config.rng) or via
 an integration_db plugin.
-
-
-How to create the required data table:
-
-CREATE TABLE kontext_conc_persistence (
-    id VARCHAR(191) PRIMARY KEY,
-    data JSON NOT NULL,
-    created TIMESTAMP NOT NULL,
-    num_access INT NOT NULL DEFAULT 0,
-    last_access TIMESTAMP
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-
-Possible modifications in case the number of records is large:
-
-ALTER TABLE `kontext_conc_persistence`
-ENGINE='Aria';
-
-ALTER TABLE `kontext_conc_persistence`
-ADD PRIMARY KEY `id_created` (`id`, `created`),
-DROP INDEX `PRIMARY`;
-
-ALTER TABLE kontext_conc_persistence
-PARTITION BY RANGE (UNIX_TIMESTAMP(created)) (
-    PARTITION `to_2016` VALUES LESS THAN (UNIX_TIMESTAMP('2016-12-31 23:59:59')),
-    PARTITION `to_2019` VALUES LESS THAN (UNIX_TIMESTAMP('2019-12-31 23:59:59')),
-    PARTITION `to_2022` VALUES LESS THAN (UNIX_TIMESTAMP('2022-12-31 23:59:59')),
-    PARTITION `to_2025` VALUES LESS THAN (UNIX_TIMESTAMP('2025-12-31 23:59:59')),
-    PARTITION `to_2028` VALUES LESS THAN (UNIX_TIMESTAMP('2028-12-31 23:59:59')),
-    PARTITION `to_2031` VALUES LESS THAN (UNIX_TIMESTAMP('2031-12-31 23:59:59')),
-    PARTITION `to_2034` VALUES LESS THAN (UNIX_TIMESTAMP('2034-12-31 23:59:59')),
-    PARTITION `to_2037` VALUES LESS THAN (UNIX_TIMESTAMP('2037-12-31 23:59:59')),
-    PARTITION `the_rest` VALUES LESS THAN MAXVALUE
-)
-
 """
 
 import logging
 import re
 import datetime
 import ujson as json
+from mysql.connector.errors import IntegrityError
 
 import plugins
-from action.errors import ForbiddenException, NotFoundException
 from plugin_types.auth import AbstractAuth
 from plugin_types.general_storage import KeyValueStorage
 from plugin_types.query_persistence import AbstractQueryPersistence
@@ -80,7 +47,7 @@ from plugins.common.mysql import MySQLConf
 from plugins.common.mysql.adhocdb import AdhocDB
 from plugins.common.sqldb import DatabaseAdapter
 from plugins.mysql_integration_db import MySqlIntegrationDb
-from . import cleanup
+from plugin_types.query_persistence.error import QueryPersistenceRecNotFound
 
 
 def mk_key(code):
@@ -92,9 +59,9 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
     This class stores user's queries in their internal form (see Kontext.q attribute).
     """
 
-    DEFAULT_TTL_DAYS = 100
+    DEFAULT_TTL_DAYS = 14
 
-    DEFAULT_ANONYMOUS_REC_ARCHIVE_MIN_DAYS = 720
+    DEFAULT_ARCH_NON_PERMANENT_MAX_AGE_DAYS = 720
 
     def __init__(
             self,
@@ -104,16 +71,13 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
             auth: AbstractAuth):
         super().__init__(settings)
         plugin_conf = settings.get('plugins', 'query_persistence')
-        ttl_days = int(plugin_conf.get('ttl_days', MySqlQueryPersistence.DEFAULT_TTL_DAYS))
-        self._ttl_days = ttl_days
+        self._ttl_days = int(plugin_conf.get('ttl_days', self.DEFAULT_TTL_DAYS))
         self.db = db
         self._auth = auth
         self._archive = sql_backend
         self._settings = settings
-        self._cleanup_status_key = plugin_conf.get('cleanup_status_key', 'conc_persistence_cleanup_status')
-
-    def _get_ttl_for(self, user_id):
-        return self.ttl
+        self._archive_non_permanent_max_age_days = plugin_conf.get(
+            'archive_non_permanent_max_age_days', self.DEFAULT_ARCH_NON_PERMANENT_MAX_AGE_DAYS)
 
     def _get_persist_level_for(self, user_id):
         if self._auth.is_anonymous(user_id):
@@ -218,52 +182,52 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
             curr_data[USER_ID_KEY] = user_id
             data_key = mk_key(data_id)
             await self.db.set(data_key, curr_data)
-            await self.db.set_ttl(data_key, self._get_ttl_for(user_id))
+            await self.db.set_ttl(data_key, self.ttl)
+            await self.archive(data_id, False)
             latest_id = curr_data[ID_KEY]
         else:
             latest_id = prev_data[ID_KEY]
 
         return latest_id
 
-    async def archive(self, user_id, conc_id):
-        await self._archive.on_aio_task_enter()
-        try:
-            async with self._archive.connection() as conn:
-                async with await conn.cursor(dictionary=True) as cursor:
-                    await self._archive.begin_tx(cursor)
-                    data = await self.db.get(mk_key(conc_id))
-                    if data is None:
-                        raise NotFoundException(
-                            'Archive store error - concordance {0} not found'.format(conc_id))
-                    stored_user_id = data.get('user_id', None)
-                    if user_id != stored_user_id:
-                        raise ForbiddenException(
-                            'Cannot change status of a concordance belonging to another user')
-                    await cursor.execute(
-                        'INSERT IGNORE INTO kontext_conc_persistence (id, data, created, num_access) '
-                        'VALUES (%s, %s, %s, %s)',
-                        (conc_id, json.dumps(data), datetime.datetime.now().isoformat(), 0))
-                    await conn.commit()
-                return data
-        finally:
-            await self._archive.on_aio_task_exit()
+    async def archive(self, conc_id, explicit):
+        data_key = conc_id
+        hard_limit = 100
+        async with self._archive.connection() as conn:
+            while data_key is not None and hard_limit > 0:  # hard_limit prevents ending up in infinite loops of 'prev_id'
+                data = await self.db.get(mk_key(conc_id))
+                if data:
+                    async with await conn.cursor() as cursor:
+                        try:
+                            await cursor.execute(
+                                "INSERT INTO kontext_conc_persistence (id, data, created) VALUES (%s, %s, NOW())",
+                                (data_key, json.dumps(data)))
+                        except IntegrityError as err:
+                            logging.getLogger(__name__).warning(f'failed to archive {data_key}: {err} (ignored)')
+                            pass  # key already in db
+                else:
+                    async with await conn.cursor() as cursor:
+                        await cursor.execute('SELECT id FROM kontext_conc_persistence WHERE id = %s LIMIT 1', (data_key,))
+                        r = await cursor.fetchone()
+                        if r is None:
+                            raise QueryPersistenceRecNotFound(f'record {data_key} not found neither in cache nor in archive')
+                data_key = data.get('prev_id', None)
+                hard_limit -= 1
+
+
+    async def clear_old_archive_records(self):
+        now = datetime.datetime.now()
+        min_age = now - datetime.timedelta(days=self._archive_non_permanent_max_age_days)
+        min_age_sql = min_age.strftime('%Y-%m-%dT%H:%M:%S.%f')
+        async with self._archive.connection() as conn:
+            async with await conn.cursor() as cursor:
+                await cursor.execute(
+                    "DELETE FROM kontext_query_persistence WHERE permanent = 0 AND created < %s", min_age_sql)
 
     def export_tasks(self):
-        """
-        Export tasks for async queue worker(s)
-        """
-        async def cleanup_archive(num_proc: int, dry_run: bool):
-            return await cleanup.run(
-                db=self._archive,
-                kvdb=self.db,
-                dry_run=dry_run,
-                num_proc=num_proc,
-                status_key=self._cleanup_status_key,
-            anonymous_user_id=self._auth.anonymous_user_id(),
-            anonymous_rec_max_age_days=self.DEFAULT_ANONYMOUS_REC_ARCHIVE_MIN_DAYS)
-        return cleanup_archive,
+        return (self.clear_old_archive_records,)
 
-    async def update(self, data, arch_enqueue=False):
+    async def update(self, data):
         """
         Update stored data by data['id'].
         """

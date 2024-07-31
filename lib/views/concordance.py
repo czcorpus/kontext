@@ -407,18 +407,6 @@ async def create_lazy_view(amodel: ConcActionModel, req: KRequest, resp: KRespon
     return await view_conc(amodel, req, resp, 2, req.session_get('user', 'id'))
 
 
-@bp.route('/archive_concordance', ['POST'])
-@http_action(access_level=2, return_type='json', action_model=UserActionModel)
-async def archive_concordance(amodel: UserActionModel, req: KRequest, resp: KResponse):
-    with plugins.runtime.QUERY_PERSISTENCE as qp:
-        revoke = bool(int(req.args.get('revoke')))
-        cn, row = await qp.archive(
-            amodel.session_get('user', 'id'),
-            req.args.get('code'),
-            revoke=revoke)
-    return dict(revoked=revoke, num_changes=cn, archived_conc=row)
-
-
 @bp.route('/query_id_available', ['GET'])
 @http_action(access_level=2, return_type='json', action_model=UserActionModel)
 async def query_id_available(amodel: UserActionModel, req: KRequest, resp: KResponse):
@@ -546,10 +534,10 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 @http_action(access_level=2, return_type='json', action_model=UserActionModel)
 async def save_query(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.QUERY_HISTORY as qh, plugins.runtime.QUERY_PERSISTENCE as qp:
-        _, data = await qp.archive(amodel.session_get('user', 'id'), req.json['query_id'])
+        _, data = await qp.archive(req.json['query_id'])
         if qp.stored_form_type(data) == 'pquery':
             for conc_id in data.get('form', {}).get('conc_ids', []):
-                cn, _ = await qp.archive(amodel.session_get('user', 'id'), conc_id)
+                cn, _ = await qp.archive(conc_id, True)
 
         hsave = await qh.make_persistent(
             amodel.session_get('user', 'id'),
@@ -607,12 +595,18 @@ async def normalize_conc_form_args_arch(amodel: ConcActionModel, req: KRequest, 
             curr_author_id = data.get('user_id')
             if amodel.is_anonymous_id(curr_author_id) or curr_author_id is None:
                 data['user_id'] = author_id
-                await qp.update(data, arch_enqueue=True)
+                await qp.update(data)
             prev_id = data.get('prev_id')
             hard_limit -= 1
     logging.getLogger(__name__).debug('normalizing query chain {}, with author_id {}'.format(
         ' -> '.join(chain), author_id))
     return dict(author_id=author_id)
+
+@bp.route('/permanent_link', ['POST'])
+@http_action(return_type='json', action_model=ConcActionModel)
+async def permanent_link(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    with plugins.runtime.QUERY_PERSISTENCE as qp:
+        await qp.archive(req.args.get('conc_id'), True)
 
 
 @bp.route('/concdesc_json')
