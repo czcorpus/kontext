@@ -1003,6 +1003,28 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         );
 
         this.addActionHandler(
+            MainMenuActions.MakeConcLinkPersistent,
+            action => {
+                this.layoutModel.ajax$(
+                    HTTP.Method.POST,
+                    this.layoutModel.createActionUrl(
+                        '/permanent_link',
+                        {
+                            conc_id: this.state.concId,
+                            corpname: this.state.baseCorpname
+                        }
+                    ),
+                    {}
+
+                ).subscribe({
+                    error: err => {
+                        this.layoutModel.showMessage('error', err);
+                    }
+                });
+            }
+        );
+
+        this.addActionHandler(
             Actions.ShareConcordanceLink,
             action => {
                 this.changeState(
@@ -1020,6 +1042,22 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         }
                     }
                 );
+                this.layoutModel.ajax$(
+                    HTTP.Method.POST,
+                    this.layoutModel.createActionUrl(
+                        '/permanent_link',
+                        {
+                            conc_id: this.state.concId,
+                            corpname: this.state.baseCorpname
+                        }
+                    ),
+                    {}
+
+                ).subscribe({
+                    error: err => {
+                        this.layoutModel.showMessage('error', err);
+                    }
+                });
             }
         );
 

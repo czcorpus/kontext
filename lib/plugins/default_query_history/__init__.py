@@ -110,7 +110,7 @@ class QueryHistory(AbstractQueryHistory):
         if last_match_idx > -1:
             data[last_match_idx]['name'] = name
             await self.db.list_set(k, last_match_idx, data[last_match_idx])
-            await self._query_persistence.archive(user_id, query_id)
+            await self._query_persistence.archive(query_id, True)
         else:
             ts = self._current_timestamp()
             item = dict(created=ts, query_id=query_id, name=name, q_supertype=q_supertype)

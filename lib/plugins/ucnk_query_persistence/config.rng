@@ -19,6 +19,9 @@
             <element name="archive_non_permanent_max_age_days">
                 <data type="positiveInteger" />
             </element>
+            <element name="archive_queue_key">
+                <text />
+            </element>
             <optional>
                 <element name="reserved_ids_path">
                     <a:documentation>
