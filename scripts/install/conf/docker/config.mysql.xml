@@ -98,7 +98,7 @@
             <module>mysql_query_persistence</module>
             <ttl_days>100</ttl_days>
             <anonymous_user_ttl_days>7</anonymous_user_ttl_days>
-            <implicit_archiving>true</implicit_archiving>
+            <archive_queue_key>arch</archive_queue_key>
         </query_persistence>
         <corparch>
             <module>mysql_corparch</module>

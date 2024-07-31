@@ -115,7 +115,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
 
     async def make_persistent(self, user_id, query_id, q_supertype, created, name) -> bool:
         if await self._update_name(user_id, query_id, created, name):
-            await self._query_persistence.archive(user_id, query_id)
+            await self._query_persistence.archive(query_id, True)
         else:
             c = await self.store(user_id, query_id, q_supertype)
             await self._update_name(user_id, query_id, c, name)

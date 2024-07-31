@@ -118,34 +118,26 @@ class AbstractQueryPersistence(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def update(self, data: Dict, arch_enqueue: bool = False):
+    async def update(self, data: Dict):
         """
         Update data stored in key-value database with id `data['id']`. If applicable,
         it should also try to update an archive item to prevent possible inconsistencies.
-
-        If arch_enqueue is set to True then the method should set the item to be archived
-        (no matter what is actual status of item's archiving).
         """
 
     @abc.abstractmethod
-    async def archive(self, user_id: int, conc_id: str) -> Dict[str, Any]:
+    async def archive(self, conc_id: str, explicit: bool) -> Dict[str, Any]:
         """
         Make the concordance record persistent.
 
-        !!! Important requirements:
+        Important requirements:
 
-        1) It is expected the concordance parameters are available via
+        1) It should be OK to call the function multiple times without any
+        side effects.
+
+        2) It is expected the concordance parameters are available via
         key-value (Redis) storage already (this should be ensured by KonText)
 
-        2) The method is run within an asyncio task so in case a sql backend
-        is used (which is very likely), on_aio_task_enter(), on_aio_task_exit()
-        should be called.
-
-        3) it is up to this method to decide whether the user user_id is permitted
-        to change the concordance identified by conc_id
-
         arguments:
-        user_id -- user who wants to perform the operation
         conc_id -- an identifier of the concordance
 
         returns:

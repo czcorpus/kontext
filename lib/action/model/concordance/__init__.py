@@ -24,6 +24,7 @@ from collections import OrderedDict
 from typing import Any, Dict, List, Optional, Tuple, Union
 import asyncio
 import logging
+from sanic import Sanic
 
 import conclib
 import plugins
@@ -291,13 +292,6 @@ class ConcActionModel(CorpusActionModel):
                     new_ids, _ = await self._store_conc_params()
                     self._active_q_data = await qp.open(new_ids[-1])
 
-    async def _archive_conc(self, user_id, conc_id):
-        with plugins.runtime.QUERY_PERSISTENCE as qp:
-            try:
-                await qp.archive(user_id, conc_id)
-            except Exception as ex:
-                logging.getLogger(__name__).error('Failed to archive concordance {}: {}'.format(conc_id, ex))
-
     async def _store_conc_params(self) -> Tuple[List[str], Optional[int]]:
         """
         Stores concordance operation if the query_persistence plugin is installed
@@ -308,17 +302,13 @@ class ConcActionModel(CorpusActionModel):
             ID of the stored operation (or the current ID of nothing was stored),
             UNIX timestamp of stored history item (or None)
         """
+        application = Sanic.get_app('kontext')
         with plugins.runtime.QUERY_PERSISTENCE as qp:
             prev_data = self._active_q_data if self._active_q_data is not None else {}
             use_history, curr_data = self.export_query_data()
             user_id = self.session_get('user', 'id')
             qp_store_id = await qp.store(user_id, curr_data=curr_data, prev_data=self._active_q_data)
             ans = [qp_store_id]
-
-            # archive the concordance, it may take a bit longer, so we
-            # do this as a non-blocking operation
-            task = asyncio.create_task(self._archive_conc(user_id, qp_store_id))
-            task.add_done_callback(lambda r: None)  # we need this to ensure completion
 
             history_ts = await self._save_query_to_history(ans[0], curr_data) if use_history else None
             lines_groups = prev_data.get('lines_groups', self._lines_groups.serialize())
@@ -331,10 +321,6 @@ class ConcActionModel(CorpusActionModel):
                             corpora=self.get_current_aligned_corpora(), usesubcorp=self.args.usesubcorp,
                             lastop_form=op.to_dict(), user_id=self.session_get('user', 'id'))
                 qp_store_id = await qp.store(self.session_get('user', 'id'), curr_data=curr, prev_data=prev)
-                # archive the concordance, it may take a bit longer, so we
-                # do this as a non-blocking operation
-                task = asyncio.create_task(self._archive_conc(user_id, qp_store_id))
-                task.add_done_callback(lambda r: None)  # we need this to ensure completion
                 ans.append(qp_store_id)
             return ans, history_ts
 

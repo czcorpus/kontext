@@ -189,7 +189,7 @@ class Backend(DatabaseBackend):
         lang = user_lang.split('_')[0]
         lang = lang if lang in ('en', 'cs') else 'en'
         await cursor.execute(
-            f'SELECT IFNULL(com.title_{lang}, com.title_en) AS title, com.authors '
+            f'SELECT IFNULL(com.desc_{lang}, com.desc_en) AS title, com.authors '
             'FROM vlo_metadata_common AS com '
             'JOIN vlo_metadata_corpus AS cor ON com.corpus_metadata_id = cor.id '
             'WHERE cor.corpus_name = %s AND com.deleted = FALSE', (corpus_id,))

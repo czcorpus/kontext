@@ -152,16 +152,12 @@ class StableQueryPersistence(AbstractQueryPersistence):
 
         return latest_id
 
-    async def archive(self, user_id, conc_id):
+    async def archive(self, conc_id, explicit):
         async with self._archive_lock:
             async with aiosqlite.connect(self._archive_db_path) as db:
                 data = await self.db.get(mk_key(conc_id))
                 if data is None:
                     raise NotFoundException('Concordance {0} not found'.format(conc_id))
-                stored_user_id = data.get('user_id', None)
-                if user_id != stored_user_id:
-                    raise ForbiddenException(
-                        'Cannot change status of a concordance belonging to another user')
                 curr_time = time.time()
                 await db.execute(
                     'INSERT OR IGNORE INTO archive (id, data, created, num_access) VALUES (?, ?, ?, ?)',
@@ -170,7 +166,7 @@ class StableQueryPersistence(AbstractQueryPersistence):
             return data
 
 
-    async def update(self, data, arch_enqueue=False):
+    async def update(self, data):
         """
         Update stored data by data['id']. Used only for internal data correction!
         """
