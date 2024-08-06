@@ -305,7 +305,7 @@ class PyConc(manatee.Concordance):
         norms = manatee.NumVector()
         self.pycorp.freq_dist(self.RS(), crit, limit, words, freqs, norms)
         if len(freqs) == 0:
-            return FreqData(Head=[], Items=[], SkippedEmpty=False, NoRelSorting=True)
+            return FreqData(Head=[], Items=[], SkippedEmpty=False, NoRelSorting=True, Size=0)
 
         # for structural attrs, we intentionally rewrite norms as filled in by Corpus.freq_dist()
         # because of "hard to explain" metrics they lead to
@@ -367,7 +367,7 @@ class PyConc(manatee.Concordance):
             if sortkey not in ('freq', 'rel'):
                 sortkey = 'freq'
             lines = sorted(lines, key=lambda v: getattr(v, sortkey), reverse=True)
-        return FreqData(Head=head, Items=lines, SkippedEmpty=has_empty_item, NoRelSorting=bool(rel_mode))
+        return FreqData(Head=head, Items=lines, SkippedEmpty=has_empty_item, NoRelSorting=bool(rel_mode), Size=len(lines))
 
     def xdistribution(self, xrange: List[int], amplitude: int) -> Tuple[List[int], List[int]]:
         begs = manatee.IntVector(xrange)

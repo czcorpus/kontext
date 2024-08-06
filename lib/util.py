@@ -49,30 +49,3 @@ def int2chash(hex_num: int, length: int) -> str:
         ans.append(_KEY_ALPHABET[p])
         hex_num = int(hex_num / len(_KEY_ALPHABET))
     return ''.join([str(x) for x in ans])
-
-
-class AsyncBatchWriter(AbstractAsyncContextManager):
-    def __init__(self, filename: str, mode: str, batch_size: int):
-        self.filename = filename
-        self.mode = mode
-        self.f = None
-        self.batch_size = batch_size
-        self.lines = []
-
-    async def write(self, data: str):
-        self.lines.append(data)
-        if len(self.lines) > self.batch_size:
-            await self.flush()
-
-    async def flush(self):
-        await self.f.writelines(self.lines)
-        self.lines = []
-
-    async def __aenter__(self):
-        self.f = await aiofiles.open(self.filename, self.mode).__aenter__()
-        return self
-
-    async def __aexit__(self, *exc):
-        await self.flush()
-        self.f.close()
-        return False

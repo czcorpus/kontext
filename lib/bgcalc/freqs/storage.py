@@ -24,13 +24,11 @@ except ImportError:
 from dataclasses import dataclass
 from typing import List, Optional, Tuple, Union
 
-import aiofiles.os
 import settings
 import ujson as json
 from bgcalc.freqs.types import FreqCalcArgs, FreqCalcResult
 from conclib.freq import FreqData, FreqItem
 from dataclasses_json import dataclass_json
-from util import AsyncBatchWriter
 
 
 def _cache_dir_path(args: FreqCalcArgs) -> str:
@@ -89,21 +87,25 @@ class CommonMetadata:
     conc_size: int
 
 
-async def find_cached_result(args: FreqCalcArgs) -> Tuple[Optional[FreqCalcResult], str]:
+def find_cached_result(args: FreqCalcArgs) -> Tuple[Optional[FreqCalcResult], str]:
     cache_path = _cache_file_path(args)
-    if await aiofiles.os.path.exists(cache_path):
-        async with aiofiles.open(cache_path, 'r') as fr:
-            common_md = CommonMetadata.from_dict(json.loads(await fr.readline()))
+    if os.path.exists(cache_path):
+        with open(cache_path, 'r') as fr:
+            common_md = CommonMetadata.from_dict(json.loads(fr.readline()))
             data = FreqCalcResult(freqs=[], conc_size=common_md.conc_size)
             blocks = common_md.num_blocks
-
+            first_line = args.fpage * (args.pagesize - 1)
+            last_line = first_line + args.pagesize - 1
             for _ in range(blocks):
-                block_md = BlockMetadata.from_dict(json.loads(await fr.readline()))
+                block_md = BlockMetadata.from_dict(json.loads(fr.readline()))
                 freq = FreqData(
                     Head=block_md.head, Items=[], SkippedEmpty=block_md.skipped_empty,
-                    NoRelSorting=block_md.no_rel_sorting)
-                for _ in range(block_md.size):
-                    freq.Items.append(FreqItem.from_dict(json.loads(await fr.readline())))
+                    NoRelSorting=block_md.no_rel_sorting, Size=block_md.size)
+                for i in range(block_md.size):
+                    raw_line = fr.readline()
+                    if i < first_line or i > last_line:
+                        continue
+                    freq.Items.append(FreqItem.from_dict(json.loads(raw_line)))
                 data.freqs.append(freq)
         return data, cache_path
     return None, cache_path
@@ -117,25 +119,25 @@ def stored_to_fs(func):
     """
     @wraps(func)
     async def wrapper(args: FreqCalcArgs) -> FreqCalcResult:
-        data, cache_path = await find_cached_result(args)
+        data, cache_path = find_cached_result(args)
         if data is None:
             cache_dir = _cache_dir_path(args)
-            if not await aiofiles.os.path.isdir(cache_dir):
-                await aiofiles.os.makedirs(cache_dir)
+            if not os.path.isdir(cache_dir):
+                os.makedirs(cache_dir)
                 os.chmod(cache_dir, 0o775)
 
             data: FreqCalcResult = await func(args)
-            async with AsyncBatchWriter(cache_path, 'w', 100) as bw:
+            with open(cache_path, 'w') as bw:
                 common_md = CommonMetadata(num_blocks=len(data.freqs), conc_size=data.conc_size)
-                await bw.write(json.dumps(common_md.to_dict()) + '\n')
+                bw.write(json.dumps(common_md.to_dict()) + '\n')
                 for freq in data.freqs:
                     block_md = BlockMetadata(
                         head=[_Head(**x) for x in freq.Head],
                         skipped_empty=freq.SkippedEmpty,
                         no_rel_sorting=freq.NoRelSorting,
                         size=len(freq.Items))
-                    await bw.write(json.dumps(block_md.to_dict()) + '\n')
+                    bw.write(json.dumps(block_md.to_dict()) + '\n')
                     for item in freq.Items:
-                        await bw.write(json.dumps(item.to_dict()) + '\n')
+                        bw.write(json.dumps(item.to_dict()) + '\n')
         return data
     return wrapper
