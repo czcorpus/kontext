@@ -19,7 +19,7 @@
  */
 
 import { IFullActionControl, StatefulModel } from 'kombo';
-import { Observable, throwError } from 'rxjs';
+import { Observable, throwError, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 
 import * as Kontext from '../../../types/kontext';
@@ -92,6 +92,10 @@ export interface LineSelectionModelState {
     renameLabelDialogVisible:boolean;
 
     isLeavingPage:boolean;
+
+    srcGroupNum:Kontext.FormValue<string>;
+
+    dstGroupNum:Kontext.FormValue<string>;
 }
 
 export interface LineSelectionModelArgs {
@@ -165,7 +169,9 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
                 'view',
                 layoutModel.getConcArgs()
             ),
-            renameLabelDialogVisible: false
+            renameLabelDialogVisible: false,
+            srcGroupNum: Kontext.newFormValue('', true),
+            dstGroupNum: Kontext.newFormValue('', false)
         };
         LineSelectionModel.registerQuery(initState, clStorage, query);
         super(
@@ -197,6 +203,40 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
                         );
                     }
                 });
+            }
+        );
+
+        this.addActionHandler(
+            Actions.LineSelectionRnSetSrcGroup,
+            action => {
+                this.changeState(
+                    state => {
+                        state.srcGroupNum = Kontext.updateFormValue(
+                            state.srcGroupNum,
+                            {
+                                value: action.payload.value,
+                                isInvalid: false
+                            }
+                        )
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            Actions.LineSelectionRnSetDstGroup,
+            action => {
+                this.changeState(
+                    state => {
+                        state.dstGroupNum = Kontext.updateFormValue(
+                            state.dstGroupNum,
+                            {
+                                value: action.payload.value,
+                                isInvalid: false
+                            }
+                        )
+                    }
+                );
             }
         );
 
@@ -389,12 +429,13 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
                     state.isBusy = true;
                 });
                 this.renameLineGroup(
-                    this.state,
-                    action.payload.srcGroupNum,
-                    action.payload.dstGroupNum
+                    this.state
 
                 ).subscribe({
                     next: resp => {
+                        const prevId = parseInt(this.state.srcGroupNum.value);
+                        const newId = Number.isNaN(parseInt(this.state.dstGroupNum.value)) ?
+                            -1 : parseInt(this.state.dstGroupNum.value);
                         this.dispatchSideEffect(
                             Actions.RenameSelectionGroupDone,
                             {
@@ -405,8 +446,8 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
                                     v => v,
                                     mapIdToIdWithColors
                                 ),
-                                prevId: action.payload.srcGroupNum,
-                                newId: action.payload.dstGroupNum
+                                prevId,
+                                newId
                             }
                         );
 
@@ -669,14 +710,15 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
             this.layoutModel.translate('linesel__current_sel_not_saved_confirm') : null;
     }
 
-    private validateGroupId(state:LineSelectionModelState, value:number|undefined):boolean {
+    private validateGroupId(state:LineSelectionModelState, value:string|number|undefined):boolean {
         if (value === undefined) {
             return true;
         }
+        const nValue = typeof value === 'string' ? parseInt(value) : value;
         if (this.clStorage.actualData(state).mode === 'groups') {
-            return value >= 1 && value <= state.maxGroupId;
+            return nValue >= 1 && nValue <= state.maxGroupId;
         }
-        return value === ConcLinesStorage.DEFAULT_GROUP_ID;
+        return nValue === ConcLinesStorage.DEFAULT_GROUP_ID;
     }
 
     private selectLine(state:LineSelectionModelState, value:number, tokenNumber:number,
@@ -699,21 +741,104 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
         this.clStorage.clear(state, state.queryHash);
     }
 
-    private renameLineGroup(state:LineSelectionModelState, srcGroupNum:number,
-            dstGroupNum:number):Observable<AjaxLineGroupRenameResponse> {
-        if (!this.validateGroupId(state, srcGroupNum) ||
-                !this.validateGroupId(state, dstGroupNum)) {
-            return throwError(new Error(this.layoutModel.translate(
-                    'linesel__error_group_name_please_use{max_group}',
-                    {max_group: state.maxGroupId})));
+    private renameLineGroup(state:LineSelectionModelState):Observable<AjaxLineGroupRenameResponse> {
+        const errResp = {
+            Q: [],
+            conc_persistence_op_id: '',
+            lines_groups_numbers: [],
+            num_lines_in_groups: 0,
+            user_owns_conc: false,
+            messages: []
+        };
+        if (!this.validateGroupId(state, state.srcGroupNum.value)) {
+            return pipe(
+                rxOf(errResp),
+                tap(
+                    _ => {
+                        this.changeState(
+                            state => {
+                                state.srcGroupNum.isInvalid = true;
+                            }
+                        )
+                    }
+                ),
+                map(
+                    v => {
+                        throw new Error(
+                            this.layoutModel.translate(
+                                'linesel__error_group_name_please_use{max_group}',
+                                {max_group: state.maxGroupId}
+                            )
+                        );
+                    }
+                )
+            );
 
-        } else if (!srcGroupNum) {
-            return throwError(new Error(this.layoutModel.translate('linesel__group_missing')));
+        } else if (state.dstGroupNum.value && !this.validateGroupId(state, state.dstGroupNum.value)) {
+            return pipe(
+                rxOf(errResp),
+                tap(
+                    _ => {
+                        this.changeState(
+                            state => {
+                                state.dstGroupNum.isInvalid = true;
+                            }
+                        )
+                    }
+                ),
+                map(
+                    v => {
+                        throw new Error(
+                            this.layoutModel.translate(
+                                'linesel__error_group_name_please_use{max_group}',
+                                {max_group: state.maxGroupId}
+                            )
+                        );
+                    }
+                )
+            );
 
-        } else if (!List.some(v => v.id === srcGroupNum, state.currentGroupIds)) {
-            return throwError(new Error(this.layoutModel.translate(
-                    'linesel__group_does_not_exist_{group}',
-                    {group: srcGroupNum})));
+        } else if (!state.srcGroupNum.value) {
+            return pipe(
+                rxOf(errResp),
+                tap(
+                    _ => {
+                        this.changeState(
+                            state => {
+                                state.srcGroupNum.isInvalid = true;
+                            }
+                        )
+                    }
+                ),
+                map(
+                    v =>  {
+                        throw new Error(this.layoutModel.translate('linesel__group_missing'));
+                    }
+                )
+            );
+
+        } else if (!List.some(v => v.id === parseInt(state.srcGroupNum.value), state.currentGroupIds)) {
+            return pipe(
+                rxOf(errResp),
+                tap(
+                    _ => {
+                        this.changeState(
+                            state => {
+                                state.srcGroupNum.isInvalid = true;
+                            }
+                        )
+                    }
+                ),
+                map(
+                    v => {
+                        throw new Error(
+                            this.layoutModel.translate(
+                                'linesel__group_does_not_exist_{group}',
+                                {group: state.srcGroupNum.value})
+                        )
+                    }
+                )
+            );
 
         } else {
             return this.layoutModel.ajax$<AjaxConcResponse>(
@@ -723,8 +848,8 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
                     this.layoutModel.getConcArgs()
                 ),
                 {
-                    'from_num': srcGroupNum,
-                    'to_num': dstGroupNum
+                    'from_num': state.srcGroupNum.value,
+                    'to_num': state.dstGroupNum.value
                 }
             ).pipe(
                 tap(data => {

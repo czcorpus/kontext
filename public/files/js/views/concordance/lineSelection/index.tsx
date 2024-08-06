@@ -165,75 +165,69 @@ export function init(
 
     // ----------------------------- <RenameLabelPanel /> ------------------------------
 
-
-    class RenameLabelPanel extends React.Component<{
+    const RenameLabelPanel:React.FC<{
+        srcGroup:Kontext.FormValue<string>;
+        dstGroup:Kontext.FormValue<string>;
+        isBusy:boolean;
         handleCancel:()=>void;
-    },
-    {
-        srcGroupNum:string;
-        dstGroupNum:string;
-        waiting:boolean;
-    }> {
+    }> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._handleConfirmClick = this._handleConfirmClick.bind(this);
-            this._handleSrcInputChange = this._handleSrcInputChange.bind(this);
-            this._handleDstInputChange = this._handleDstInputChange.bind(this);
-            this.state = {
-                srcGroupNum: '',
-                dstGroupNum: '',
-                waiting: false
-            };
-        }
-
-        _handleConfirmClick() {
-            this.setState({...this.state});
-            dispatcher.dispatch<typeof Actions.RenameSelectionGroup>({
-                name: Actions.RenameSelectionGroup.name,
-                payload: {
-                    srcGroupNum: Number(this.state.srcGroupNum),
-                    dstGroupNum: this.state.dstGroupNum ? Number(this.state.dstGroupNum) : -1
-                }
-            });
-        }
-
-        _handleSrcInputChange(evt) {
-            this.setState({
-                ...this.state,
-                srcGroupNum: evt.target.value ? evt.target.value : null,
-            });
-        }
-
-        _handleDstInputChange(evt) {
-            this.setState({
-                ...this.state,
-                dstGroupNum: evt.target.value ? evt.target.value : null
-            });
-        }
-
-        render() {
-            return (
-                <fieldset>
-                    <legend>{he.translate('linesel__rename_drop_heading')}</legend>
-                    <label>{he.translate('linesel__old_label_name')}:</label>
-                    {'\u00A0'}#<input type="text" style={{width: '2em'}} onChange={this._handleSrcInputChange} />
-                    <span className="arrow">{'\u00A0\u21E8\u00A0'}</span>
-                    <label>{he.translate('linesel__new_label_name')}:</label>
-                    {'\u00A0'}#<input type="text" style={{width: '2em'}} onChange={this._handleDstInputChange} />
-                    <ul className="note">
-                        <li>{he.translate('linesel__if_empty_lab_then_remove')}</li>
-                        <li>{he.translate('linesel__if_existing_lab_then_merge')}</li>
-                    </ul>
-                    {this.state.waiting ?
-                        <img className="ajax-loader-bar" src={he.createStaticUrl('img/ajax-loader-bar.gif')}
-                                title={he.translate('global__loading')} />
-                        : <button className="ok" type="button" onClick={this._handleConfirmClick}>{he.translate('global__ok')}</button>
-                    }
-                    <button type="button" onClick={this.props.handleCancel}>{he.translate('global__cancel')}</button>
-                </fieldset>
+        const handleConfirmClick = () => {
+            dispatcher.dispatch(
+                Actions.RenameSelectionGroup
             );
         }
+
+        const handleSrcInputChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch(
+                Actions.LineSelectionRnSetSrcGroup,
+                {
+                    value: evt.target.value
+                }
+            );
+        }
+
+        const handleDstInputChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch(
+                Actions.LineSelectionRnSetDstGroup,
+                {
+                    value: evt.target.value
+                }
+            );
+        }
+
+        return (
+            <S.RenameLabelPanelFieldset>
+                <legend>{he.translate('linesel__rename_drop_heading')}</legend>
+                <div className="rename-command">
+                    <label>{he.translate('linesel__old_label_name')}:</label>
+                    <span className="group-hash">#</span>
+                    <layoutViews.ValidatedItem invalid={props.srcGroup.isInvalid}>
+                        <input type="text" style={{width: '2em'}} value={props.srcGroup.value} onChange={handleSrcInputChange} />
+                    </layoutViews.ValidatedItem>
+                    <span className="arrow">{'\u00A0\u21E8\u00A0'}</span>
+                    <label>{he.translate('linesel__new_label_name')}:</label>
+                    <span className="group-hash">#</span>
+                    <layoutViews.ValidatedItem invalid={props.dstGroup.isInvalid}>
+                        <input type="text" style={{width: '2em'}} value={props.dstGroup.value} onChange={handleDstInputChange} />
+                    </layoutViews.ValidatedItem>
+                </div>
+                <ul className="note">
+                    <li>{he.translate('linesel__if_empty_lab_then_remove')}</li>
+                    <li>{he.translate('linesel__if_existing_lab_then_merge')}</li>
+                </ul>
+                {props.isBusy ?
+                    <img className="ajax-loader-bar" src={he.createStaticUrl('img/ajax-loader-bar.gif')}
+                            title={he.translate('global__loading')} />
+                    : <button className="util-button" type="button" onClick={handleConfirmClick}>
+                            {he.translate('global__ok')}
+                    </button>
+                }
+                <button type="button" className="util-button cancel" onClick={props.handleCancel}>
+                    {he.translate('global__cancel')}
+                </button>
+            </S.RenameLabelPanelFieldset>
+        );
     }
 
     // ----------------------------- <ActionSwitch /> ------------------------------
@@ -322,42 +316,34 @@ export function init(
 
     // ----------------------------- <LockedLineGroupsMenu /> ------------------------------
 
-    class _LockedLineGroupsMenu extends React.Component<LockedLineGroupsMenuProps & LineSelectionModelState> {
+    const _LockedLineGroupsMenu:React.FC<LockedLineGroupsMenuProps & LineSelectionModelState> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._actionSwitchHandler = this._actionSwitchHandler.bind(this);
-            this._handleEmailDialogButton = this._handleEmailDialogButton.bind(this);
-            this._emailChangeHandler = this._emailChangeHandler.bind(this);
-            this._handleDialogShowClick = this._handleDialogShowClick.bind(this);
-        }
-
-        _actionSwitchHandler(evt) {
+        const actionSwitchHandler = (evt) => {
             switch (evt.target.value) {
                 case 'edit-groups':
-                    dispatcher.dispatch<typeof Actions.UnlockLineSelection>({
-                        name: Actions.UnlockLineSelection.name
-                    });
+                    dispatcher.dispatch(
+                        Actions.UnlockLineSelection
+                    );
                     break;
                 case 'sort-groups':
-                    dispatcher.dispatch<typeof Actions.SortLineSelection>({
-                        name: Actions.SortLineSelection.name
-                    });
+                    dispatcher.dispatch(
+                        Actions.SortLineSelection
+                    );
                     break;
                 case 'clear-groups':
-                    dispatcher.dispatch<typeof Actions.LineSelectionResetOnServer>({
-                        name: Actions.LineSelectionResetOnServer.name
-                    });
+                    dispatcher.dispatch(
+                        Actions.LineSelectionResetOnServer
+                    );
                     break;
                 case 'remove-other-lines':
-                    dispatcher.dispatch<typeof Actions.RemoveLinesNotInGroups>({
-                        name: Actions.RemoveLinesNotInGroups.name
-                    });
+                    dispatcher.dispatch(
+                        Actions.RemoveLinesNotInGroups
+                    );
                     break;
                 case 'rename-group-label':
-                    dispatcher.dispatch<typeof Actions.ToggleLineGroupRenameForm>({
-                        name: Actions.ToggleLineGroupRenameForm.name
-                    });
+                    dispatcher.dispatch(
+                        Actions.ToggleLineGroupRenameForm
+                    );
                     break;
                 case 'go-to-first-selection':
                     dispatcher.dispatch(Actions.SwitchFirstSelectPage);
@@ -365,63 +351,72 @@ export function init(
             }
         }
 
-        _handleEmailDialogButton(evt:React.FormEvent<{value:string}>) {
+        const handleEmailDialogButton = (evt:React.FormEvent<{value:string}>) => {
             if (evt.currentTarget.value === 'cancel') {
-                dispatcher.dispatch<typeof Actions.ClearUserCredentials>({
-                    name: Actions.ClearUserCredentials.name,
-                    payload: {}
-                });
+                dispatcher.dispatch(
+                    Actions.ClearUserCredentials,
+                );
 
             } else if (evt.currentTarget.value === 'send') {
-                dispatcher.dispatch<typeof Actions.SendLineSelectionToEmail>({
-                    name: Actions.SendLineSelectionToEmail.name,
-                    payload: {
-                        email: this.props.emailDialogCredentials.email
+                dispatcher.dispatch(
+                    Actions.SendLineSelectionToEmail,
+                    {
+                        email: props.emailDialogCredentials.email
                     }
-                })
+                )
             }
-        }
+        };
 
-        _emailChangeHandler(evt:React.ChangeEvent<{value:string}>) {
-            dispatcher.dispatch<typeof Actions.ChangeEmail>({
-                name: Actions.ChangeEmail.name,
-                payload: {
+        const emailChangeHandler = (evt:React.ChangeEvent<{value:string}>) => {
+            dispatcher.dispatch(
+                Actions.ChangeEmail,
+                {
                     email: evt.target.value
                 }
-            });
+            );
+        };
+
+        const handleDialogShowClick = (evt:React.MouseEvent<{}>) => {
+            dispatcher.dispatch(
+                UserActions.UserInfoRequested
+            );
+        };
+
+        const handleRenameCancel = () => {
+            dispatcher.dispatch(
+                Actions.ToggleLineGroupRenameForm
+            );
+        };
+
+        const handleSrcInputChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch(
+                Actions.LineSelectionRnSetSrcGroup,
+                {
+                    value: evt.target.value
+                }
+            );
         }
 
-        _handleDialogShowClick(evt:React.MouseEvent<{}>) {
-            dispatcher.dispatch<typeof UserActions.UserInfoRequested>({
-                name: UserActions.UserInfoRequested.name
-            });
-        }
+        return (
+            <S.LockedLineGroupsMenu>
+                {props.renameLabelDialogVisible ?
+                    <RenameLabelPanel
+                        srcGroup={props.srcGroupNum}
+                        dstGroup={props.dstGroupNum}
+                        isBusy={props.isBusy}
+                        handleCancel={handleRenameCancel} /> :
+                    <ActionSwitch waiting={props.isBusy} changeHandler={actionSwitchHandler} />}
+                <ChartView {...props} />
 
-        _handleRenameCancel() {
-            dispatcher.dispatch<typeof Actions.ToggleLineGroupRenameForm>({
-                name: Actions.ToggleLineGroupRenameForm.name
-            });
-        }
-
-        render() {
-            return (
-                <S.LockedLineGroupsMenu>
-                    {this.props.renameLabelDialogVisible ?
-                        <RenameLabelPanel handleCancel={this._handleRenameCancel} /> :
-                        <ActionSwitch waiting={this.props.isBusy} changeHandler={this._actionSwitchHandler} />}
-
-                    <ChartView {...this.props} />
-
-                    <SelectionLinkAndTools
-                            lastCheckpointUrl={this.props.lastCheckpointUrl}
-                            emailDialogCredentials={this.props.emailDialogCredentials}
-                            canSendEmail={this.props.canSendEmail}
-                            handleEmailDialogButton={this._handleEmailDialogButton}
-                            handleDialogShowClick={this._handleDialogShowClick}
-                            emailChangeHandler={this._emailChangeHandler} />
-                </S.LockedLineGroupsMenu>
-            )
-        }
+                <SelectionLinkAndTools
+                        lastCheckpointUrl={props.lastCheckpointUrl}
+                        emailDialogCredentials={props.emailDialogCredentials}
+                        canSendEmail={props.canSendEmail}
+                        handleEmailDialogButton={handleEmailDialogButton}
+                        handleDialogShowClick={handleDialogShowClick}
+                        emailChangeHandler={emailChangeHandler} />
+            </S.LockedLineGroupsMenu>
+        )
     }
 
     const LockedLineGroupsMenu = BoundWithProps<LockedLineGroupsMenuProps, LineSelectionModelState>(
