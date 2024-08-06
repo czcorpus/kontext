@@ -498,18 +498,18 @@ export function init(
         return (
             <FadeInFrame opacity={calcOpacity()}>
                 <div className={'message ' + props.messageType}>
-                    <div className="button-box">
-                        <a className="close-icon">
-                            <img src={he.createStaticUrl('img/close-icon.svg')}
-                                onClick={handleCloseClick} />
-                        </a>
-                    </div>
                     <div className="icon-box">
                         <img className="icon" alt="message"
                                 src={ typeIconMap[props.messageType] } />
                     </div>
                     <div className="message-text">
                         <span>{props.messageText}</span>
+                    </div>
+                    <div className="button-box">
+                        <a className="close-icon">
+                            <img src={he.createStaticUrl('img/close-icon.svg')}
+                                onClick={handleCloseClick} />
+                        </a>
                     </div>
                 </div>
             </FadeInFrame>
