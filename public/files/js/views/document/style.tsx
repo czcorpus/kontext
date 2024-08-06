@@ -822,9 +822,13 @@ export const MessagesDiv = styled.div`
 
     display: block;
     position: fixed;
-    left: 50%;
-    top: 7em;
+    right: 0;
+    top: 0;
+    padding-top: 1em;
+    padding-right: 1em;
+    padding-left: 1em;
     z-index: 10000;
+    background-color: RGBA(100, 100, 100, 0.5);
 
     .message {
         background-color: #FEFEFE;
@@ -833,10 +837,15 @@ export const MessagesDiv = styled.div`
         box-shadow: 2px 2px 3px #aaa;
         color: ${theme.colorDefaultText};
         font-weight: 700;
-        margin: 5pt;
-        padding: 0.4em 0.4em 0.4em 1em;
-        position: relative;
-        left: -50%;
+        margin-bottom: 0.7em;
+        padding: 1.3em 0.8em;
+        display: flex;
+        align-items: center;
+    }
+
+    .message-text {
+        padding-left: 1.2em;
+        padding-right: 1.2em;
     }
 
     .message.info {
@@ -844,10 +853,7 @@ export const MessagesDiv = styled.div`
     }
 
     .icon-box {
-        position: absolute;
         padding: 0;
-        top: 50%;
-        margin-top: -0.8em;
     }
 
     .icon-box .icon {
@@ -858,18 +864,7 @@ export const MessagesDiv = styled.div`
         padding: 0;
     }
 
-    .message-text {
-        margin-top: 1em;
-        margin-bottom: 1em;
-        margin-left: 3em;
-        margin-right: 3em;
-    }
-
     .button-box {
-        position: absolute;
-        top: 50%;
-        right: 1em;
-        margin-top: -0.5em;
     }
 
     .button-box .close-icon {
