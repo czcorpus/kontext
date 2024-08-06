@@ -37,7 +37,6 @@ from plugin_types.subcmixer import AbstractSubcMixer
 from plugin_types.subcmixer.error import (
     ResultNotFoundException, SubcMixerException)
 from sanic.blueprints import Blueprint
-from util import AsyncBatchWriter
 
 bp = Blueprint('masm_subcmixer', url_prefix='subcorpus')
 
@@ -79,10 +78,10 @@ async def subcmixer_create_subcorpus(amodel: CorpusActionModel, req: KRequest, r
         struct_idxs = sorted(attr.str2id(sid) for sid in struct_ids)
 
         subc_id = await create_new_subc_ident(amodel.subcpath, amodel.corp.corpname)
-        async with AsyncBatchWriter(os.path.join(amodel.subcpath, subc_id.data_path), 'wb', 100) as bw:
+        with open(os.path.join(amodel.subcpath, subc_id.data_path), 'wb') as bw:
             for idx in struct_idxs:
-                await bw.write(struct.pack('<q', mstruct.beg(idx)))
-                await bw.write(struct.pack('<q', mstruct.end(idx)))
+                bw.write(struct.pack('<q', mstruct.beg(idx)))
+                bw.write(struct.pack('<q', mstruct.end(idx)))
         subc = await amodel.cf.get_corpus(subc_id)
         author = amodel.plugin_ctx.user_dict
         specification = CreateSubcorpusArgs(

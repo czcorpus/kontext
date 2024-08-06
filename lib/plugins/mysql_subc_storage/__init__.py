@@ -14,8 +14,6 @@
 # GNU General Public License for more details.
 
 import logging
-import os
-import struct
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
@@ -24,7 +22,6 @@ import plugins
 import ujson as json
 from action.argmapping.subcorpus import (
     CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs)
-from corplib.abstract import create_new_subc_ident
 from corplib.subcorpus import SubcorpusRecord
 from plugin_types.auth import UserInfo
 from plugin_types.corparch import AbstractCorporaArchive
@@ -34,8 +31,6 @@ from plugins.common.mysql.adhocdb import AdhocDB
 from plugins.common.mysql import MySQLConf
 from plugins.mysql_integration_db import MySqlIntegrationDb
 from mysql.connector.errors import IntegrityError
-from sanic import Sanic
-from util import AsyncBatchWriter
 
 try:
     from markdown import markdown

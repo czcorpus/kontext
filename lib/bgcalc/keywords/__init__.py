@@ -32,7 +32,6 @@ from corplib.corpus import KCorpus
 from corplib.abstract import AbstractKCorpus
 from dataclasses_json import dataclass_json
 from manatee import Keyword  # TODO wrap this out
-from util import AsyncBatchWriter
 
 CNC_SCORE_TYPES = ('logL', 'chi2', 'din')
 
@@ -119,10 +118,10 @@ def cached(f):
             ans = await f(corp, ref_corp, args, max_items)
             # ans = sorted(ans, key=lambda x: x[1], reverse=True)
             num_lines = len(ans)
-            async with AsyncBatchWriter(path, 'w', 100) as bw:
-                await bw.write(json.dumps(dict(total=num_lines)) + '\n')
+            with open(path, 'w') as bw:
+                bw.write(json.dumps(dict(total=num_lines)) + '\n')
                 for item in ans:
-                    await bw.write(item.to_json() + '\n')
+                    bw.write(item.to_json() + '\n')
             return ans[:max_items]
 
     return wrapper
