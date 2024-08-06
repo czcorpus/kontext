@@ -323,6 +323,18 @@ export class Actions {
         name: 'CONCORDANCE_RESULT_CLOSE_SAVE_FORM'
     };
 
+    static LineSelectionRnSetSrcGroup:Action<{
+        value:string;
+    }> = {
+        name: 'LINE_SELECTION_RN_SET_SRC_GROUP'
+    };
+
+    static LineSelectionRnSetDstGroup:Action<{
+        value:string;
+    }> = {
+        name: 'LINE_SELECTION_RN_SET_DST_GROUP'
+    };
+
     static SelectLine:Action<{
         value:number;
         tokenNumber:number;
@@ -355,8 +367,6 @@ export class Actions {
     };
 
     static RenameSelectionGroup:Action<{
-        srcGroupNum:number;
-        dstGroupNum:number;
     }> = {
         name: 'LINE_SELECTION_GROUP_RENAME'
     };
