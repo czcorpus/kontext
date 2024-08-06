@@ -125,7 +125,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
         The data are assumed to be public (as are URL parameters of a query).
 
         arguments:
-        data_id -- an unique ID of operation data
+        data_id -- a unique ID of operation data
 
         returns:
         a dictionary containing operation data or None if nothing is found
