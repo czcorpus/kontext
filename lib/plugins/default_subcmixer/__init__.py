@@ -32,7 +32,6 @@ from plugin_types.subcmixer.error import (
     ResultNotFoundException, SubcMixerException)
 from plugins import inject
 from sanic.blueprints import Blueprint
-from util import AsyncBatchWriter
 
 from .category_tree import CategoryExpression, CategoryTree
 from .database import Database
@@ -74,10 +73,10 @@ async def subcmixer_create_subcorpus(amodel: CorpusActionModel, req: KRequest, r
         struct_indices = sorted([int(x) for x in req.form.get('ids').split(',')])
         id_attr = req.form.get('idAttr').split('.')
         attr = amodel.corp.get_struct(id_attr[0])
-        async with AsyncBatchWriter(os.path.join(amodel.subcpath, subc_id.data_path), 'wb', 100) as bw:
+        with open(os.path.join(amodel.subcpath, subc_id.data_path), 'wb') as bw:
             for idx in struct_indices:
-                await bw.write(struct.pack('<q', attr.beg(idx)))
-                await bw.write(struct.pack('<q', attr.end(idx)))
+                bw.write(struct.pack('<q', attr.beg(idx)))
+                bw.write(struct.pack('<q', attr.end(idx)))
         return dict(status=True)
 
 

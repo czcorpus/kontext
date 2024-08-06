@@ -227,7 +227,7 @@ async def calculate_freqs(args: FreqCalcArgs):
         raise CalcArgsAssertionError(
             'multi-block frequency calculation does not support pagination')
 
-    calc_result, p = await find_cached_result(args)
+    calc_result, p = find_cached_result(args)
     if calc_result is None:
         worker = bgcalc.calc_backend_client(settings)
         res = await worker.send_task(
@@ -236,7 +236,7 @@ async def calculate_freqs(args: FreqCalcArgs):
         tmp_result: Union[None, Exception, FreqCalcResult] = await res.get()
 
         if tmp_result is None:
-            raise BgCalcError('Failed to get result')
+            raise BgCalcError('Failed to get freqs result')
         elif isinstance(tmp_result, Exception):
             raise tmp_result
         calc_result = tmp_result
@@ -244,14 +244,13 @@ async def calculate_freqs(args: FreqCalcArgs):
     fstart = (args.fpage - 1) * args.fmaxitems
     ans = []
     for i, freq_block in enumerate(calc_result.freqs):
-        total_length = len(freq_block.Items)
         items_per_page = args.fmaxitems
         fend = args.fmaxitems * args.fpage + 1
-        lastpage = 1 if total_length < fend else 0
+        lastpage = 1 if freq_block.Size < fend else 0
         ans.append(dict(
-            Total=total_length,
-            TotalPages=int(math.ceil(total_length / float(items_per_page))),
-            Items=[asdict(item) for item in freq_block.Items[fstart:fend - 1]],
+            Total=freq_block.Size,
+            TotalPages=int(math.ceil(freq_block.Size / float(items_per_page))),
+            Items=[asdict(item) for item in freq_block.Items],
             Head=freq_block.Head,
             SkippedEmpty=freq_block.SkippedEmpty,
             NoRelSorting=freq_block.NoRelSorting,
