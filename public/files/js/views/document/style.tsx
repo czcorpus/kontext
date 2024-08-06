@@ -824,6 +824,7 @@ export const MessagesDiv = styled.div`
     position: fixed;
     right: 0;
     top: 0;
+    max-width: 40em;
     padding-top: 1em;
     padding-right: 1em;
     padding-left: 1em;
@@ -846,6 +847,7 @@ export const MessagesDiv = styled.div`
     .message-text {
         padding-left: 1.2em;
         padding-right: 1.2em;
+        flex-grow: 1;
     }
 
     .message.info {
@@ -868,7 +870,6 @@ export const MessagesDiv = styled.div`
     }
 
     .button-box .close-icon {
-        display: block;
     }
 
     .button-box .close-icon img {
