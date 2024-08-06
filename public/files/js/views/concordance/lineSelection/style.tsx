@@ -33,10 +33,6 @@ export const LockedLineGroupsMenu = styled.div`
             padding-right: 0.6em;
         }
 
-        button.ok {
-            margin-right: 0.4em;
-        }
-
         input.email {
             margin-right: 0.6em;
         }
@@ -176,4 +172,30 @@ export const SelectionLinkAndToolsFieldset = styled.fieldset`
         }
     }
 
+`;
+
+// ------------------- <RenameLabelPanelFieldset /> ----------------------------------
+
+
+export const RenameLabelPanelFieldset = styled.fieldset`
+
+    legend {
+        margin-bottom: 1em;
+    }
+
+    .group-hash {
+        font-size: 1.2em;
+        color: ${theme.colorLogoPink};
+        padding-left: 0.7em;
+        padding-right: 0.3em;
+    }
+
+    .rename-command {
+        display: flex;
+        align-items: center;
+    }
+
+    .util-button.cancel {
+        margin-left: 0.7em;
+    }
 `;
