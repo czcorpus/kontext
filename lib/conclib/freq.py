@@ -33,10 +33,10 @@ class FreqItem:
 @dataclass
 class FreqData:
     Head: List[Dict[str, Any]]
-    Items: List[FreqItem]
     Size: int   # we need this as Items contain only the current page
     SkippedEmpty: bool
     NoRelSorting: bool
+    Items: List[FreqItem]
 
 
 @dataclass

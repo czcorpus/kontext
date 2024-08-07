@@ -16,20 +16,17 @@ import hashlib
 import os
 from functools import wraps
 
-try:
-    from typing import TypedDict
-except ImportError:
-    from typing_extensions import TypedDict
-
 from dataclasses import dataclass
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union, TypedDict, Callable, Coroutine
 
 import settings
 import ujson as json
 from bgcalc.freqs.types import FreqCalcArgs, FreqCalcResult
+from bgcalc.errors import BgCalcError
 from conclib.freq import FreqData, FreqItem
 from dataclasses_json import dataclass_json
 
+MAX_DATA_LEN_DIRECT_PROVIDING = 500
 
 def _cache_dir_path(args: FreqCalcArgs) -> str:
     return os.path.join(settings.get('corpora', 'freqs_cache_dir'), args.corpname)
@@ -94,7 +91,7 @@ def find_cached_result(args: FreqCalcArgs) -> Tuple[Optional[FreqCalcResult], st
             common_md = CommonMetadata.from_dict(json.loads(fr.readline()))
             data = FreqCalcResult(freqs=[], conc_size=common_md.conc_size)
             blocks = common_md.num_blocks
-            first_line = args.fpage * (args.pagesize - 1)
+            first_line = (args.fpage - 1) * args.pagesize
             last_line = first_line + args.pagesize - 1
             for _ in range(blocks):
                 block_md = BlockMetadata.from_dict(json.loads(fr.readline()))
@@ -103,15 +100,17 @@ def find_cached_result(args: FreqCalcArgs) -> Tuple[Optional[FreqCalcResult], st
                     NoRelSorting=block_md.no_rel_sorting, Size=block_md.size)
                 for i in range(block_md.size):
                     raw_line = fr.readline()
-                    if i < first_line or i > last_line:
+                    if i < first_line:
                         continue
+                    if i > last_line:
+                        break
                     freq.Items.append(FreqItem.from_dict(json.loads(raw_line)))
                 data.freqs.append(freq)
         return data, cache_path
     return None, cache_path
 
 
-def stored_to_fs(func):
+def stored_to_fs(func: Callable[[FreqCalcArgs], Coroutine[None, None, FreqCalcResult]]):
     """
     A decorator for storing freq merge results (as CSV files). Please note that this is not just
     caching but rather an essential part of the query processing. Without this decorator, KonText
@@ -130,14 +129,23 @@ def stored_to_fs(func):
             with open(cache_path, 'w') as bw:
                 common_md = CommonMetadata(num_blocks=len(data.freqs), conc_size=data.conc_size)
                 bw.write(json.dumps(common_md.to_dict()) + '\n')
-                for freq in data.freqs:
+                max_len = 0
+                if data.freqs is None:
+                    raise BgCalcError('FreqCalcResult instance does not provide direct data')
+                for block in data.freqs:
+                    data_len = len(block.Items)
+                    if data_len > max_len:
+                        max_len = data_len
                     block_md = BlockMetadata(
-                        head=[_Head(**x) for x in freq.Head],
-                        skipped_empty=freq.SkippedEmpty,
-                        no_rel_sorting=freq.NoRelSorting,
-                        size=len(freq.Items))
+                        head=[_Head(**x) for x in block.Head],
+                        skipped_empty=block.SkippedEmpty,
+                        no_rel_sorting=block.NoRelSorting,
+                        size=data_len)
                     bw.write(json.dumps(block_md.to_dict()) + '\n')
-                    for item in freq.Items:
+                    for item in block.Items:
                         bw.write(json.dumps(item.to_dict()) + '\n')
+                if data_len >= MAX_DATA_LEN_DIRECT_PROVIDING:
+                    data.data_path = cache_path
+                    data.freqs = None
         return data
     return wrapper
