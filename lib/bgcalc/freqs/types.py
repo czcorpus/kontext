@@ -43,9 +43,23 @@ class FreqCalcArgs:
 
 @dataclass
 class FreqCalcResult:
-    freqs: List[FreqData]
-    conc_size: int
+    """
+    FreqCalcResult provides frequency distribution data based
+    on multiple criteria where each criterion has its own
+    entry in the `freqs` attribute.
+    Note: we've stopped using multi-block data but to avoid rewriting
+    the types we still keep the structure.
 
+    The class is designed to provide the data either directly (`freqs` property)
+    or indirectly (`DataPath`) when passing information about
+    larger results (e.g. between worker and web server)
+    """
+    conc_size: int
+    freqs: Optional[List[FreqData]]
+    data_path: Optional[str] = None  # data_path and freqs should be mutually exclusive
+
+    def contains_direct_data(self):
+        return self.freqs is not None
 
 @dataclass
 class Freq2DCalcArgs:

@@ -204,7 +204,7 @@ async def _freqs(
         cutoff=0,
         flimit=flimit,
         fcrit=fcrit,
-        freq_sort=freq_sort,
+        freq_sort=freq_sort if freq_sort else 'freq',  # making sure it is always set for consistent caching
         rel_mode=rel_mode,
         collator_locale=corp_info.collator_locale,
         fmaxitems=amodel.args.fmaxitems,
