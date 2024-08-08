@@ -14,19 +14,19 @@
 
 import hashlib
 import os
-from functools import wraps
-
 from dataclasses import dataclass
-from typing import List, Optional, Tuple, Union, TypedDict, Callable, Coroutine
+from functools import wraps
+from typing import Callable, Coroutine, List, Optional, Tuple, TypedDict, Union
 
 import settings
 import ujson as json
-from bgcalc.freqs.types import FreqCalcArgs, FreqCalcResult
 from bgcalc.errors import BgCalcError
+from bgcalc.freqs.types import FreqCalcArgs, FreqCalcResult
 from conclib.freq import FreqData, FreqItem
 from dataclasses_json import dataclass_json
 
 MAX_DATA_LEN_DIRECT_PROVIDING = 500
+
 
 def _cache_dir_path(args: FreqCalcArgs) -> str:
     return os.path.join(settings.get('corpora', 'freqs_cache_dir'), args.corpname)
@@ -91,8 +91,8 @@ def find_cached_result(args: FreqCalcArgs) -> Tuple[Optional[FreqCalcResult], st
             common_md = CommonMetadata.from_dict(json.loads(fr.readline()))
             data = FreqCalcResult(freqs=[], conc_size=common_md.conc_size)
             blocks = common_md.num_blocks
-            first_line = (args.fpage - 1) * args.pagesize
-            last_line = first_line + args.pagesize - 1
+            first_line = (args.fpage - 1) * args.fmaxitems
+            last_line = first_line + args.fmaxitems - 1
             for _ in range(blocks):
                 block_md = BlockMetadata.from_dict(json.loads(fr.readline()))
                 freq = FreqData(

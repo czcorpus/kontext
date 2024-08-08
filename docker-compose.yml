@@ -63,7 +63,7 @@ services:
       - redisdata:/data
     healthcheck:
       test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
-      interval: 1s
+      interval: 10s
       timeout: 10s
       retries: 5
 
