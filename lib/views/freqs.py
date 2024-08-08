@@ -14,6 +14,7 @@
 # GNU General Public License for more details.
 
 
+import asyncio
 import logging
 import re
 import sys
@@ -483,8 +484,8 @@ async def export_freqct(amodel: UserActionModel, req: KRequest, resp: KResponse)
 @dataclass
 class SavefreqArgs:
     fcrit: List[str]
+    freq_sort: List[str]
     flimit: IntOpt = 0
-    freq_sort: StrOpt = ''
     saveformat: StrOpt = 'txt'
     from_line: IntOpt = 1
     to_line: IntOpt = field(default_factory=lambda: sys.maxsize)
@@ -504,9 +505,20 @@ async def savefreq(amodel: ConcActionModel, req: KRequest[SavefreqArgs], resp: K
     amodel.args.fmaxitems = req.mapped_args.to_line - req.mapped_args.from_line + 1
 
     # following piece of sh.t has hidden parameter dependencies
-    result = await _freqs(
-        amodel, req, fcrit=req.mapped_args.fcrit, flimit=req.mapped_args.flimit,
-        freq_sort=req.mapped_args.freq_sort, fcrit_async=())
+    # also we need to get frequencies one by one, so they are sorted as on UI
+    data = await asyncio.gather(*(
+        _freqs(amodel, req, fcrit=(fcrit,), flimit=req.mapped_args.flimit,
+               freq_sort=freq_sort, fcrit_async=())
+        for fcrit, freq_sort in zip(req.mapped_args.fcrit, req.mapped_args.freq_sort)
+    ))
+
+    result = None
+    for item in data:
+        if result is None:
+            result = item
+        else:
+            result['fcrit'].extend(item['fcrit'])
+            result['Blocks'].extend(item['Blocks'])
 
     def mkfilename(suffix): return f'{amodel.args.corpname}-freq-distrib.{suffix}'
     with plugins.runtime.EXPORT as export:
