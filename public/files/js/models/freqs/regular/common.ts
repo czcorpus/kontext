@@ -194,7 +194,7 @@ export interface MulticritFreqServerArgs extends ConcServerArgs {
     fpage:number;
     fmaxitems?:number;
     freqlevel:number;
-    freq_sort:string;
+    freq_sort:Array<string>;
     freq_type:BasicFreqModuleType;
     fcrit:Array<string>;
 }

@@ -700,7 +700,11 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             ...this.pageModel.getConcArgs(),
             fcrit: Dict.keys(state.data),
             flimit: state.flimit,
-            freq_sort: 'freq',
+            freq_sort: pipe(
+                state.data,
+                Dict.keys(),
+                List.map(fcrit => state.sortColumn[fcrit]),
+            ),
             freq_type: state.freqType,
             fpage: 1,
             freqlevel: 1,
