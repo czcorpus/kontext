@@ -1066,7 +1066,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             action => {
                 copy(this.layoutModel.createActionUrl(
                     '/view',
-                    {q: this.state.concId}
+                    {q: `~${this.state.concId}`}
                 ));
                 this.layoutModel.showMessage(
                     'info',
