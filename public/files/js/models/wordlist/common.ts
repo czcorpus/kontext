@@ -51,6 +51,8 @@ export interface WordlistSaveArgs {
     saveformat:DataSaveFormat;
     colheaders:number;
     heading:number;
+    wlsort:string;
+    reverse:number;
 }
 
 export type ResultData = {
