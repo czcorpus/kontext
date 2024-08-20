@@ -166,6 +166,15 @@ export class CollFormModel extends StatelessModel<CollFormModelState> {
             }
         );
 
+        // need to update form state
+        // necessary for saving results as sorted in UI
+        this.addActionHandler<typeof Actions.ResultSortByColumn>(
+            Actions.ResultSortByColumn.name,
+            (state, action) => {
+                state.csortfn = action.payload.sortFn;
+            }
+        );
+
         this.addActionHandler<typeof Actions.FormSubmit>(
             Actions.FormSubmit.name,
             (state, action) => {
