@@ -1,4 +1,4 @@
-# This dockerfile produces the image czcorpus/kontext-manatee:2.223.6-jammy
+# This dockerfile produces the image czcorpus/kontext-manatee:2.225.8-jammy
 FROM ubuntu:jammy
 SHELL ["/bin/bash", "--login", "-c"]
 WORKDIR /opt/kontext
@@ -6,8 +6,8 @@ COPY ./scripts/install/steps.py ./scripts/install/*.patch ./scripts/install/
 
 RUN apt-get update && apt-get install -y git autoconf-archive swig libpcre++ locales python3 python3-dev wget build-essential libltdl-dev libpcre3-dev bison \
   && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && dpkg-reconfigure --frontend=noninteractive locales \
-  && python3 scripts/install/steps.py SetupManatee --ucnk --step-args 2.223.6 scripts/install/ucnk-manatee-2.223.6.patch 0 \
-  && rm -r /usr/local/src/manatee-open-2.223.6 \
+  && python3 scripts/install/steps.py SetupManatee --ucnk --step-args 2.225.8 0 \
+  && rm -r /usr/local/src/manatee-open-2.225.8 \
   && apt-get -y remove python3-dev build-essential libltdl-dev libpcre3-dev ocaml-base-nox git autoconf-archive bison \
     # for some reason, the installation of Manatee produces incorrect target path /usr/local/local/lib/...
   && if [[ -d /usr/local/local/lib/python3.10/dist-packages ]]; then mv /usr/local/local/lib/python3.10/dist-packages/* /usr/local/lib/python3.10/dist-packages/; fi \

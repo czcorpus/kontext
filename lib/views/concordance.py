@@ -124,10 +124,12 @@ async def query(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     await amodel.export_subcorpora_list(out)
     resp.set_result(out)
 
+
 @bp.route('/query_submit', methods=['POST'])
 @http_action(
     mutates_result=True,
-    action_log_mapper=log_mapping.mk_query_submit(settings.get_bool('logging', 'log_queries', False)),
+    action_log_mapper=log_mapping.mk_query_submit(
+        settings.get_bool('logging', 'log_queries', False)),
     return_type='json',
     action_model=ConcActionModel)
 async def query_submit(amodel: ConcActionModel, req: KRequest, resp: KResponse):
@@ -601,6 +603,7 @@ async def normalize_conc_form_args_arch(amodel: ConcActionModel, req: KRequest, 
     logging.getLogger(__name__).debug('normalizing query chain {}, with author_id {}'.format(
         ' -> '.join(chain), author_id))
     return dict(author_id=author_id)
+
 
 @bp.route('/permanent_link', ['POST'])
 @http_action(return_type='json', action_model=ConcActionModel)

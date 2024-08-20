@@ -20,7 +20,7 @@ provides some additional helper methods.
 """
 
 import os
-from typing import Any, DefaultDict, Dict, Optional, Union
+from typing import Any, DefaultDict, Dict, Union
 
 import ujson as json
 from lxml import etree
