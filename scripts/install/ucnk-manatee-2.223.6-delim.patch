@@ -1,0 +1,11 @@
+--- concord/concget.cc  2024-08-15 14:49:19.219393444 +0200
++++ concord/concget.cc  2024-08-15 14:07:02.292370448 +0200
+@@ -326,7 +326,7 @@
+
+ void get_corp_text (PAvec &attrs, string currtags, Position fpos, Position tpos,
+                     vector<string> &strs, vector<string> &tags,
+-                    char posdelim = ' ', char attrdelim = '/')
++                    char posdelim = ' ', char attrdelim = '\x1F')
+ {
+     if (fpos >= tpos || attrs.empty()) return;
+     TextIterator *wordi = attrs[0]->textat (fpos);

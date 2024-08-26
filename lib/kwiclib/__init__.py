@@ -477,10 +477,10 @@ class Kwic:
         ans = []
         for item in tokens:
             if item.get('class') == 'attr':
-                # TODO configurable delimiter
+                # there is always one leading `attr_delimiter`
+                attr_delimiter = item['str'][0]
                 # a list is used for future compatibility
-                # there is always one leading /, first split item is empty and excessive
-                prev['posattrs'] = item['str'].split('/')[1:]
+                prev['posattrs'] = item['str'][1:].split(attr_delimiter)
             else:
                 ans.append(item)
             prev = item

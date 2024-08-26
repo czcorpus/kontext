@@ -167,7 +167,7 @@ class SetupManatee(InstallationStep):
     def abort(self):
         pass
 
-    def run(self, manatee_version: str, patch_path: str = None, make_symlinks: bool = True, ucnk_manatee: bool = False):
+    def run(self, manatee_version: str, patch_paths: List[str], make_symlinks: bool = True, ucnk_manatee: bool = False):
         # install manatee with ucnk patch
         print('Installing Manatee-Open...')
         src_working_dir = f'/usr/local/src/manatee-open-{manatee_version}'
@@ -197,7 +197,7 @@ class SetupManatee(InstallationStep):
             subprocess.check_call(
                 ['tar', 'xzvf', f'manatee-open-{manatee_version}.tar.gz'], cwd='/usr/local/src', stdout=self.stdout)
 
-            if patch_path is not None:
+            for patch_path in patch_paths:
                 if os.path.isfile(os.path.join(self.kontext_path, patch_path)):
                     subprocess.check_call(['cp', os.path.join(self.kontext_path, patch_path), './'],
                                           cwd=src_working_dir, stdout=self.stdout)
@@ -365,7 +365,7 @@ if __name__ == '__main__':
         obj.run()
     elif args.step_name == 'SetupManatee':
         obj = SetupManatee(*init_step_args, True)
-        obj.run(args.step_args[0], args.step_args[1], bool(int(args.step_args[2])), args.ucnk)
+        obj.run(args.step_args[0], args.step_args[1:-1], bool(int(args.step_args[-1])), args.ucnk)
     else:
         raise Exception(f'Unknown action: {args.step_name}')
 
