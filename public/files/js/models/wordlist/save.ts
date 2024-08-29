@@ -22,7 +22,7 @@ import { concatMap, scan } from 'rxjs/operators';
 
 import * as Kontext from '../../types/kontext';
 import { PageModel, SaveLinkHandler } from '../../app/page';
-import { IFullActionControl, StatelessModel } from 'kombo';
+import { Action, IFullActionControl, StatelessModel } from 'kombo';
 import { Actions } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { WordlistSaveArgs, WordlistSubmitArgs } from './common';
@@ -100,8 +100,8 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.WordlistSaveSetIncludeHeading>(
-            Actions.WordlistSaveSetIncludeHeading.name,
+        this.addActionHandler(
+            Actions.WordlistSaveSetIncludeHeading,
             (state, action) => {
                 state.includeHeading = action.payload.value;
             }
@@ -137,21 +137,21 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
                         return Dict.hasValue(false, syncData) ? syncData : null;
                     }
                 ).pipe(
-                    scan(
+                    scan<Action<{}>, {form:WordlistSubmitArgs|undefined, result:typeof Actions.WordlistResultSaveArgs.payload|undefined}>(
                         (acc, action) => {
-                            switch (action.name) {
-                                case Actions.WordlistFormSubmitReady.name:
-                                    acc['form'] = action.payload;
-                                    break;
-                                case Actions.WordlistResultSaveArgs.name:
-                                    acc['result'] = action.payload;
-                                    break;
+                            if (Actions.isWordlistFormSubmitReady(action)) {
+                                if (action.payload !== undefined) {
+                                    acc.form = action.payload.args;
+                                }
+
+                            } else if (Actions.isWordlistResultSaveArgs(action)) {
+                                acc.result = action.payload;
                             }
                             return acc;
                         },
-                        {}
+                        {form:undefined, result:undefined}
                     ),
-                    concatMap<{form: WordlistSubmitArgs, result: typeof Actions.WordlistResultSaveArgs.payload}, Observable<{}>>(
+                    concatMap(
                         args => {
                             return this.submit(state, args.form, args.result);
                         }
@@ -202,21 +202,19 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
                         return Dict.hasValue(false, syncData) ? syncData : null;
                     }
                 ).pipe(
-                    scan(
+                    scan<Action<{}>, {form:WordlistSubmitArgs|undefined, result:typeof Actions.WordlistResultSaveArgs.payload|undefined}>(
                         (acc, action) => {
-                            switch (action.name) {
-                                case Actions.WordlistFormSubmitReady.name:
-                                    acc['form'] = action.payload;
-                                    break;
-                                case Actions.WordlistResultSaveArgs.name:
-                                    acc['result'] = action.payload;
-                                    break;
+                            if (Actions.isWordlistFormSubmitReady(action)) {
+                                acc.form = action.payload.args;
+
+                            } else if (Actions.isWordlistResultSaveArgs(action)) {
+                                acc.result = action.payload;
                             }
                             return acc;
                         },
-                        {}
+                        {form: undefined, result: undefined}
                     ),
-                    concatMap<{form: WordlistSubmitArgs, result: typeof Actions.WordlistResultSaveArgs.payload}, Observable<{}>>(
+                    concatMap(
                         args => {
                             if (window.confirm(this.layoutModel.translate(
                                     'global__quicksave_limit_warning_{format}{lines}',
