@@ -1,0 +1,36 @@
+services:
+  mariadb:
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.mariadb
+    environment:
+      - MYSQL_PASSWORD
+      - MYSQL_USER
+      - MYSQL_ROOT_PASSWORD
+    volumes:
+      - mdbdata:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - databases
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--su-mysql", "--connect"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  kontext-dev:
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+  rq-worker:
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+volumes:
+  mdbdata: {}
+
+networks:
+  databases: {}

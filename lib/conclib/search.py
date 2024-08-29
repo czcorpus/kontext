@@ -52,8 +52,7 @@ async def _get_async_conc(corp: AbstractKCorpus, user_id, q, cutoff, minsize) ->
     status = await cache_map.get_calc_status(corp.cache_key, q, cutoff)
     if not status or status.error:
         worker = bgcalc.calc_backend_client(settings)
-        conc_task_id = str(uuid.uuid1().hex.encode())
-        task = ConcRegistration(task_id=conc_task_id)
+        task = ConcRegistration(task_id=None)  # task ID will be filled by worker
         reg_args = await task.run(corp.portable_ident, corp.cache_key, q, cutoff)
         if not reg_args.get('already_running', False):
             worker.send_task_sync(

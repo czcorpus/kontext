@@ -18,7 +18,7 @@ CREATE TABLE kontext_subcorpus (
     CONSTRAINT kontext_subcorpus_corpus_name_fk FOREIGN KEY (corpus_name) REFERENCES kontext_corpus(name),
     CONSTRAINT kontext_subcorpus_user_id_fk FOREIGN KEY (user_id) REFERENCES kontext_user(id),
     CONSTRAINT kontext_subcorpus_author_id_fk FOREIGN KEY (author_id) REFERENCES kontext_user(id)
-);
+) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
 -- for CNC, use:
 -- CONSTRAINT kontext_kontext_subcorpus_corpus_name_fk FOREIGN KEY (corpus_name) REFERENCES corpora(name),

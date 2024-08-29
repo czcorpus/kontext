@@ -26,7 +26,7 @@ import subprocess
 KONTEXT_PATH = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..'))
 KONTEXT_INSTALL_CONF = os.environ.get('KONTEXT_INSTALL_CONF', 'config.default.xml')
 SCHEDULER_INSTALL_CONF = os.environ.get('SCHEDULER_INSTALL_CONF', 'rq-schedule-conf.sample.json')
-MANATEE_VER = '2.223.6'
+MANATEE_VER = '2.225.8'
 
 REQUIREMENTS = [
     'python3-pip',
@@ -60,7 +60,7 @@ REQUIREMENTS = [
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser('Kontext instalation script')
     argparser.add_argument('--ucnk', action='store_true', default=False, help='Use UCNK sources')
-    argparser.add_argument('--patch', dest='patch_path', action='store',
+    argparser.add_argument('--patch', dest='patch_paths', action='append',
                            default=None, help='Path to UCNK Manatee patch')
     argparser.add_argument('--manatee-version', dest='manatee_version',
                            action='store', default=MANATEE_VER, help='Set Manatee version')
@@ -99,7 +99,7 @@ if __name__ == "__main__":
     steps.SetupBgCalc(KONTEXT_PATH, stdout, stderr).run()
     steps.SetupNginx(KONTEXT_PATH, stdout, stderr).run()
     steps.SetupManatee(KONTEXT_PATH, stdout, stderr, args.no_cert_check).run(
-        args.manatee_version, args.patch_path, ucnk_manatee=args.ucnk)
+        args.manatee_version, args.patch_paths, ucnk_manatee=args.ucnk)
     steps.SetupKontext(
         kontext_path=KONTEXT_PATH, kontext_conf=KONTEXT_INSTALL_CONF,
         scheduler_conf=SCHEDULER_INSTALL_CONF,  stdout=stdout, stderr=stderr).run()

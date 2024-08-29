@@ -116,7 +116,7 @@ class GeneralWorker:
 
 class ConcRegistration(GeneralWorker):
 
-    def __init__(self, task_id: str):
+    def __init__(self, task_id: Optional[str]):
         super().__init__(task_id=task_id)
 
     async def run(
