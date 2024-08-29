@@ -38,6 +38,13 @@ export class Actions {
         name: 'WORDLIST_RESULT_RELOAD'
     };
 
+    static WordlistResultSaveArgs:Action<{
+        wlsort:string;
+        reverse:boolean;
+    }> = {
+        name: 'WORDLIST_RESULT_SAVE_ARGS'
+    };
+
     static WordlistFormSubmitReady:Action<{
         args:WordlistSubmitArgs;
     }> = {

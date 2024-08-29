@@ -16,15 +16,15 @@
 from dataclasses import asdict, dataclass
 
 import plugins
-from action.argmapping.analytics import (CollFormArgs, CTFreqFormArgs,
-                                         FreqFormArgs)
-from action.control import http_action
 from action.argmapping.action import IntOpt
+from action.argmapping.analytics import (
+    CollFormArgs, CTFreqFormArgs, FreqFormArgs)
+from action.control import http_action
 from action.krequest import KRequest
 from action.model.concordance import ConcActionModel
 from action.response import KResponse
-from bgcalc.coll_calc import (CalculateCollsResult, CollCalcArgs,
-                              calculate_colls)
+from bgcalc.coll_calc import (
+    CalculateCollsResult, CollCalcArgs, calculate_colls)
 from conclib.calc import require_existing_conc
 from conclib.errors import ConcNotFoundException
 from main_menu import MainMenu
@@ -108,6 +108,7 @@ class SavecollArgs:
     saveformat: str = 'txt'
     heading: int = 0
     colheaders: int = 0
+    csortfn: str = ''
 
 
 @bp.route('/savecoll')
@@ -117,6 +118,7 @@ async def savecoll(amodel: ConcActionModel, req: KRequest[SavecollArgs], resp: K
     """
     save collocations
     """
+    amodel.args.csortfn = req.mapped_args.csortfn
     try:
         await require_existing_conc(amodel.corp, tuple(amodel.args.q), amodel.args.cutoff)
         from_line = req.mapped_args.from_line

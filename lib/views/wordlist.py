@@ -259,8 +259,8 @@ async def savewl(amodel: WordlistActionModel, req: KRequest[WordlistSaveFormArgs
         args.to_line = amodel.corp.size
     num_lines = args.to_line - args.from_line + 1
     total, data = await require_existing_wordlist(
-        form=amodel.curr_wlform_args, reverse=False, offset=args.from_line, limit=num_lines,
-        wlsort='', collator_locale=(await amodel.get_corpus_info(amodel.corp.corpname)).collator_locale)
+        form=amodel.curr_wlform_args, reverse=args.reverse == 1, offset=args.from_line - 1, limit=num_lines,
+        wlsort=args.wlsort, collator_locale=(await amodel.get_corpus_info(amodel.corp.corpname)).collator_locale)
 
     def mkfilename(suffix): return f'{amodel.args.corpname}-word-list.{suffix}'
     with plugins.runtime.EXPORT as export:

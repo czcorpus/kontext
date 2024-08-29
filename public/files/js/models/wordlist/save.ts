@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 import { Observable, of as rxOf } from 'rxjs';
-import { concatMap } from 'rxjs/operators';
+import { concatMap, scan } from 'rxjs/operators';
 
 import * as Kontext from '../../types/kontext';
 import { PageModel, SaveLinkHandler } from '../../app/page';
@@ -27,6 +27,7 @@ import { Actions } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { WordlistSaveArgs, WordlistSubmitArgs } from './common';
 import { DataSaveFormat } from '../../app/navigation/save';
+import { Dict } from 'cnc-tskit';
 
 
 export interface WordlistSaveModelArgs {
@@ -122,26 +123,47 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
                 }
             },
             (state, action, dispatch) => {
-                this.waitForAction({}, (action, syncData) => {
-                    if (action.name === Actions.WordlistFormSubmitReady.name) {
-                        return null;
-                    }
-                    return syncData;
-                }).pipe(
-                    concatMap(
-                        action => {
-                            const payload = (action as typeof Actions.WordlistFormSubmitReady).payload;
-                            return this.submit(state, payload.args, state.queryId);
+                this.waitForAction(
+                    {form: false, result: false},
+                    (action, syncData) => {
+                        switch (action.name) {
+                            case Actions.WordlistFormSubmitReady.name:
+                                syncData.form = true;
+                                break;
+                            case Actions.WordlistResultSaveArgs.name:
+                                syncData.result = true;
+                                break;
                         }
-                    )
-                ).subscribe(
-                    data => {
+                        return Dict.hasValue(false, syncData) ? syncData : null;
+                    }
+                ).pipe(
+                    scan(
+                        (acc, action) => {
+                            switch (action.name) {
+                                case Actions.WordlistFormSubmitReady.name:
+                                    acc['form'] = action.payload;
+                                    break;
+                                case Actions.WordlistResultSaveArgs.name:
+                                    acc['result'] = action.payload;
+                                    break;
+                            }
+                            return acc;
+                        },
+                        {}
+                    ),
+                    concatMap<{form: WordlistSubmitArgs, result: typeof Actions.WordlistResultSaveArgs.payload}, Observable<{}>>(
+                        args => {
+                            return this.submit(state, args.form, args.result);
+                        }
+                    ),
+                ).subscribe({
+                    next: data => {
 
                     },
-                    err => {
+                    error: err => {
                         this.layoutModel.showMessage('error', err);
                     }
-                );
+                });
             }
         );
 
@@ -166,32 +188,53 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
                 state.toLine.value = '';
             },
             (state, action, dispatch) => {
-                this.waitForAction({}, (action, syncData) => {
-                    if (action.name === Actions.WordlistFormSubmitReady.name) {
-                        return null;
+                this.waitForAction(
+                    {form: false, result: false},
+                    (action, syncData) => {
+                        switch (action.name) {
+                            case Actions.WordlistFormSubmitReady.name:
+                                syncData.form = true;
+                                break;
+                            case Actions.WordlistResultSaveArgs.name:
+                                syncData.result = true;
+                                break;
+                        }
+                        return Dict.hasValue(false, syncData) ? syncData : null;
                     }
-                    return syncData;
-                }).pipe(
-                    concatMap(
-                        wAction => {
-                            const payload = (wAction as typeof Actions.WordlistFormSubmitReady).payload;
+                ).pipe(
+                    scan(
+                        (acc, action) => {
+                            switch (action.name) {
+                                case Actions.WordlistFormSubmitReady.name:
+                                    acc['form'] = action.payload;
+                                    break;
+                                case Actions.WordlistResultSaveArgs.name:
+                                    acc['result'] = action.payload;
+                                    break;
+                            }
+                            return acc;
+                        },
+                        {}
+                    ),
+                    concatMap<{form: WordlistSubmitArgs, result: typeof Actions.WordlistResultSaveArgs.payload}, Observable<{}>>(
+                        args => {
                             if (window.confirm(this.layoutModel.translate(
                                     'global__quicksave_limit_warning_{format}{lines}',
                                     {format: action.payload.saveformat, lines: state.quickSaveRowLimit}))) {
-                                return this.submit(state, payload.args, state.queryId);
+                                return this.submit(state, args.form, args.result);
 
                             } else {
                                 return rxOf({});
                             }
                         }
-                    )
-                ).subscribe(
-                    data => {
+                    ),
+                ).subscribe({
+                    next: data => {
                     },
-                    err => {
+                    error: err => {
                         this.layoutModel.showMessage('error', err);
                     }
-                );
+                });
             }
         );
     }
@@ -207,14 +250,16 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
         }
     }
 
-    private submit(state:WordlistSaveModelState, args:WordlistSubmitArgs, queryId:string):Observable<{}> {
+    private submit(state:WordlistSaveModelState, formArgs:WordlistSubmitArgs, resultArgs: typeof Actions.WordlistResultSaveArgs.payload):Observable<{}> {
         const submitArgs:WordlistSaveArgs = {
             q: `~${state.queryId}`,
             from_line: 1,
             to_line: state.toLine ? parseInt(state.toLine.value) : null,
             saveformat: state.saveFormat,
             colheaders: state.includeColHeaders ? 1 : 0,
-            heading: state.includeHeading ? 1 : 0
+            heading: state.includeHeading ? 1 : 0,
+            wlsort: resultArgs.wlsort,
+            reverse: resultArgs.reverse ? 1 : 0,
         };
         if (isNaN(submitArgs.to_line)) {submitArgs.to_line = null}
         if (state.saveFormat === 'csv' || state.saveFormat === 'xlsx') {
