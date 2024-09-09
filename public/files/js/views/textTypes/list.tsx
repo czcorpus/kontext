@@ -213,7 +213,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                             type="checkbox"
                             className="attr-selector user-selected"
                             value={props.attrObj.name}
-                            checked={props.attrObj.negative}
+                            checked={props.attrObj.excludeSelection}
                             disabled={sectionLocked}
                             onChange={negativeSelectionClickHandler}
                         />

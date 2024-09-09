@@ -200,7 +200,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             action => {
                 this.changeState(state => {
                     const attrIdx = this.getAttributeIdx(state, action.payload.attrName);
-                    state.attributes[attrIdx].negative = action.payload.checked;
+                    state.attributes[attrIdx].excludeSelection = action.payload.checked;
                 });
                 this.notifySelectionChange();
             }
@@ -1024,7 +1024,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 const trueAttr = attrSel.name !== bibLabelAttr ?
                         attrSel.name : bibIdAttr;
                 if (TTSelOps.hasUserChanges(attrSel, includeSubcorpDefinition)) {
-                    ans[trueAttr] = TTSelOps.exportSelections(attrSel, lockedOnesOnly, includeSubcorpDefinition);
+                    ans[attrSel.excludeSelection ? `!${trueAttr}` : trueAttr] = TTSelOps.exportSelections(attrSel, lockedOnesOnly, includeSubcorpDefinition);
                 }
             },
             attributes
@@ -1107,7 +1107,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                     name: srchAttr.name,
                     values: [...srchAttr.values],
                     definesSubcorpus: srchAttr.definesSubcorpus,
-                    negative: false,
+                    excludeSelection: false,
                     type: 'full',
                     metaInfo: null,
                 } :

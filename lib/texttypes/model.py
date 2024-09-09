@@ -75,19 +75,27 @@ class TextTypeCollector:
                 for a in self._attr_producer_fn(self._src_obj)]
         structs = collections.defaultdict(list)
         for sa, v in scas:
+            # we encode exclusion as ! prefix of struct.attr name in selection dict
+            excludeSelection = sa[0] == "!"
+            if excludeSelection:
+                sa = sa[1:]
+
             s, a = sa.split('.')
             if type(v) is list:
                 expr_items = []
                 for v1 in v:
-                    expr_items.append(f'{a}="{escape_attr_val(v1)}"')
+                    expr_items.append(f'{a}{"!=" if excludeSelection else "="}"{escape_attr_val(v1)}"')
                 if len(expr_items) > 0:
-                    query = f'({" | ".join(expr_items)})'
+                    if excludeSelection:
+                        query = f'({" & ".join(expr_items)})'
+                    else:
+                        query = f'({" | ".join(expr_items)})'
                 else:
                     query = None
             elif type(v) is dict and 'regexp' in v:
-                query = f'{a}="{v["regexp"]}"'
+                query = f'{a}{"!=" if excludeSelection else "="}"{v["regexp"]}"'
             else:
-                query = f'{a}="{v}"'
+                query = f'{a}{"!=" if excludeSelection else "="}"{v}"'
 
             if query is not None:  # TODO: is the following encoding change always OK?
                 structs[s].append(query)
