@@ -100,6 +100,7 @@ export interface FullAttributeSelection extends BaseAttributeSelection {
     isInterval:boolean;
     isNumeric:boolean;
     values:Array<AttributeValue>;
+    negative:boolean;
     type:'full';
 }
 
@@ -115,6 +116,7 @@ export interface TextInputAttributeSelection extends BaseAttributeSelection {
     autoCompleteHints:Array<AutoCompleteItem>;
     values:Array<AttributeValue>; // it supports appending values via a single text input
     textFieldValue:string;
+    negative:boolean;
     type:'text';
 }
 
@@ -127,6 +129,7 @@ export interface RegexpAttributeSelection extends BaseAttributeSelection {
     textFieldValue:string;
     textFieldDecoded:string;
     isLocked:boolean;
+    negative:boolean;
     type:'regexp';
 }
 

@@ -190,6 +190,7 @@ function createTextInputAttributeSelection(
             ),
             definesSubcorpus,
             textFieldValue: '',
+            negative: false,
             type: 'text',
             metaInfo: null,
         };
@@ -208,6 +209,7 @@ function createTextInputAttributeSelection(
         values: [],
         definesSubcorpus,
         textFieldValue: '',
+        negative: false,
         type: 'text',
         metaInfo: null,
     };
@@ -245,6 +247,7 @@ function createFullAttributeSelection(
         },
         values,
         definesSubcorpus,
+        negative: false,
         type: 'full',
         metaInfo: null,
     };
@@ -267,6 +270,7 @@ function createRegexpAttributeSelection(
         textFieldDecoded: Strings.shortenText(sel.regexp, 50, '\u2026'),
         isLocked: definesSubcorpus,
         definesSubcorpus,
+        negative: false,
         type: 'regexp',
         metaInfo: null,
     };

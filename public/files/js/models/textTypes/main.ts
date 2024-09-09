@@ -195,6 +195,18 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         }
 
         this.addActionSubtypeHandler(
+            Actions.NegativeSelectionClicked,
+            _ => !this.readonlyMode,
+            action => {
+                this.changeState(state => {
+                    const attrIdx = this.getAttributeIdx(state, action.payload.attrName);
+                    state.attributes[attrIdx].negative = action.payload.checked;
+                });
+                this.notifySelectionChange();
+            }
+        );
+
+        this.addActionSubtypeHandler(
             Actions.ValueCheckboxClicked,
             _ => !this.readonlyMode,
             action => {
@@ -1095,6 +1107,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                     name: srchAttr.name,
                     values: [...srchAttr.values],
                     definesSubcorpus: srchAttr.definesSubcorpus,
+                    negative: false,
                     type: 'full',
                     metaInfo: null,
                 } :

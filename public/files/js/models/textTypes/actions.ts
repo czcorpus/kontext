@@ -55,6 +55,13 @@ export class Actions {
         name: 'TT_SELECTION_CHANGED'
     };
 
+    static NegativeSelectionClicked:Action<{
+        checked:boolean;
+        attrName:string;
+    }> = {
+        name: 'TT_NEGATIVE_SELECTION_CLICKED'
+    };
+
     static ValueCheckboxClicked:Action<{
         attrName:string;
         itemIdx:number;

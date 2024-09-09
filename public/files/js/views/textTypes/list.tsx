@@ -194,9 +194,32 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
             }
         }
 
+        const negativeSelectionClickHandler = (e) => {
+            dispatcher.dispatch<typeof Actions.NegativeSelectionClicked>({
+                name: Actions.NegativeSelectionClicked.name,
+                payload: {
+                    attrName: e.target.value,
+                    checked: e.target.checked,
+                }
+            });
+        }
+
         const renderListOfCheckBoxes = () => {
+            const sectionLocked = List.every(v => v.locked, props.attrObj.values);
             return (
                 <S.FullListContainer>
+                    <label className={sectionLocked ? 'locked' : null}>
+                        <input
+                            type="checkbox"
+                            className="attr-selector user-selected"
+                            value={props.attrObj.name}
+                            checked={props.attrObj.negative}
+                            disabled={sectionLocked}
+                            onChange={negativeSelectionClickHandler}
+                        />
+                        {he.translate('query__tt_negative_selection')}
+                    </label>
+                    <hr/>
                     <tbody>
                     {List.map(
                         (item, i) => (
