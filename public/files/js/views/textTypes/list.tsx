@@ -208,47 +208,51 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
             const sectionLocked = List.every(v => v.locked, props.attrObj.values);
             return (
                 <S.FullListContainer>
-                    <label className={sectionLocked ? 'locked' : null}>
-                        <input
-                            type="checkbox"
-                            className="attr-selector user-selected"
-                            value={props.attrObj.name}
-                            checked={props.attrObj.excludeSelection}
-                            disabled={sectionLocked}
-                            onChange={negativeSelectionClickHandler}
-                        />
-                        {he.translate('query__tt_negative_selection')}
-                    </label>
-                    <hr/>
                     <tbody>
-                    {List.map(
-                        (item, i) => (
-                            <tr key={item.value + String(i)}>
-                                <td><commonViews.CheckBoxItem
-                                        itemIdx={i}
-                                        itemName={props.attrObj.name}
-                                        itemValue={item.value}
-                                        itemIsSelected={item.selected}
-                                        itemIsLocked={item.locked}
-                                            /></td>
-                                <td className="num">
-                                    {item.availItems > -1 ?
-                                        he.formatNumber(item.availItems || 0) :
-                                        '??'
+                        <tr>
+                            <td colSpan={3}>
+                                <label className={sectionLocked ? 'locked' : null}>
+                                    <input
+                                        type="checkbox"
+                                        className="attr-selector user-selected"
+                                        value={props.attrObj.name}
+                                        checked={props.attrObj.excludeSelection}
+                                        disabled={sectionLocked}
+                                        onChange={negativeSelectionClickHandler}
+                                    />
+                                    {he.translate('query__tt_negative_selection')}
+                                </label>
+                                <hr/>
+                            </td>
+                        </tr>
+                        {List.map(
+                            (item, i) => (
+                                <tr key={item.value + String(i)}>
+                                    <td><commonViews.CheckBoxItem
+                                            itemIdx={i}
+                                            itemName={props.attrObj.name}
+                                            itemValue={item.value}
+                                            itemIsSelected={item.selected}
+                                            itemIsLocked={item.locked}
+                                                /></td>
+                                    <td className="num">
+                                        {item.availItems > -1 ?
+                                            he.formatNumber(item.availItems || 0) :
+                                            '??'
+                                        }
+                                    </td>
+                                    <td className="extended-info">
+                                    {props.hasExtendedInfo ?
+                                        <commonViews.ExtendedInfoButton ident={item.ident} attrName={props.attrObj.name}
+                                                isBusy={props.isBusy}
+                                                numGrouped={item.numGrouped} containsExtendedInfo={!!item.extendedInfo} />
+                                        : null
                                     }
-                                </td>
-                                <td className="extended-info">
-                                {props.hasExtendedInfo ?
-                                    <commonViews.ExtendedInfoButton ident={item.ident} attrName={props.attrObj.name}
-                                            isBusy={props.isBusy}
-                                            numGrouped={item.numGrouped} containsExtendedInfo={!!item.extendedInfo} />
-                                    : null
-                                }
-                                </td>
-                            </tr>
-                        ),
-                        props.attrObj.values
-                    )}
+                                    </td>
+                                </tr>
+                            ),
+                            props.attrObj.values
+                        )}
                     </tbody>
                 </S.FullListContainer>
             );
