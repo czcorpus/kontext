@@ -149,6 +149,12 @@ export class Actions {
         name: 'VIEW_OPTIONS_TOGGLE_ATTRIBUTE'
     };
 
+    static UnsetAttributesAndSave:Action<{
+        attrs:Array<string>;
+    }> = {
+        name: 'VIEW_OPTIONS_UNSET_ATTRIBUTES_AND_SAVE'
+    };
+
     static ToggleAllAttributes:Action<{}> = {
         name: 'VIEW_OPTIONS_TOGGLE_ALL_ATTRIBUTES'
     };

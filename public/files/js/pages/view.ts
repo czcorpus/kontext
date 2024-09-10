@@ -1008,6 +1008,7 @@ export class ViewPage {
             ),
             mergedAttrs: this.layoutModel.getConf<Array<[string, number]>>('MergedAttrs'),
             mergedCtxAttrs: this.layoutModel.getConf<Array<[string, number]>>('MergedCtxAttrs'),
+            alignCommonPosAttrs: this.layoutModel.getConf<Array<string>>('AlignCommonPosAttrs'),
         };
 
         this.viewModels = new ViewPageModels();
