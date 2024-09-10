@@ -113,22 +113,17 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
         );
         this.layoutModel = layoutModel;
 
-        this.addActionHandler<typeof MainMenuActions.ShowAttrsViewOptions>(
-            MainMenuActions.ShowAttrsViewOptions.name,
+        this.addActionHandler(
+            Actions.LoadDataInBackground,
             (state, action) => {
-                state.isBusy = true;
+                if (!state.hasLoadedData) {
+                    state.isBusy = true;
+                }
             },
             (state, action, dispatch) => {
                 if (!state.hasLoadedData) {
-                    this.waitForActionWithTimeout(20000, {}, (action , syncData) => {
-                        return null;
-
-                    }).pipe(
-                        concatMap(
-                            (v) => this.loadData(state)
-                        )
-                    ).subscribe(
-                        (data:ViewOptions.LoadOptionsResponse) => {
+                    this.loadData(state).subscribe({
+                        next: (data:ViewOptions.LoadOptionsResponse) => {
                             dispatch<typeof Actions.LoadDataDone>({
                                 name: Actions.LoadDataDone.name,
                                 payload: {
@@ -147,14 +142,60 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                                 }
                             });
                         },
-                        (err:Error) => {
+                        error: (err:Error) => {
                             this.layoutModel.showMessage('error', err);
                             dispatch<typeof Actions.LoadDataDone>({
                                 name: Actions.LoadDataDone.name,
                                 error: err
                             });
                         }
-                    );
+                    });
+                }
+            }
+        );
+
+        this.addActionHandler<typeof MainMenuActions.ShowAttrsViewOptions>(
+            MainMenuActions.ShowAttrsViewOptions.name,
+            (state, action) => {
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
+                if (!state.hasLoadedData) {
+                    this.waitForActionWithTimeout(20000, {}, (action , syncData) => {
+                        return null;
+
+                    }).pipe(
+                        concatMap(
+                            (v) => this.loadData(state)
+                        )
+                    ).subscribe({
+                        next: (data:ViewOptions.LoadOptionsResponse) => {
+                            dispatch<typeof Actions.LoadDataDone>({
+                                name: Actions.LoadDataDone.name,
+                                payload: {
+                                    data: {
+                                        AttrList: data.AttrList,
+                                        FixedAttr: data.fixed_attr,
+                                        CurrentAttrs: data.CurrentAttrs,
+                                        AvailStructs: data.Availstructs,
+                                        StructAttrs: data.structattrs,
+                                        CurrStructAttrs: data.curr_structattrs,
+                                        AvailRefs: data.Availrefs,
+                                        AttrVmode: data.attr_vmode,
+                                        BaseViewAttr: data.base_viewattr,
+                                        QueryHintEnabled: data.qs_enabled
+                                    }
+                                }
+                            });
+                        },
+                        error: (err:Error) => {
+                            this.layoutModel.showMessage('error', err);
+                            dispatch<typeof Actions.LoadDataDone>({
+                                name: Actions.LoadDataDone.name,
+                                error: err
+                            });
+                        }
+                    });
 
                 } else {
                     dispatch<typeof Actions.DataReady>({

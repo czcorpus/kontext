@@ -558,6 +558,15 @@ export function init({
         attrs:Array<string>;
     }> = ({attrs}) => {
 
+        React.useEffect(
+            () => {
+                dispatcher.dispatch(
+                    ViewOptionsActions.LoadDataInBackground
+                )
+            },
+            []
+        );
+
         const onCloseClick = () => {
             dispatcher.dispatch(
                 Actions.CloseAlignAttrsMismatchModal
