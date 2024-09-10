@@ -95,17 +95,6 @@ export interface MainViews {
 }
 
 
-function posAttrsCompatibleWithAllAlignedCorpora(attrs:Array<string>, sharedAttrs:Array<string>):boolean {
-    return pipe(
-        attrs,
-        List.map(
-            attr => !!List.find(v => v === attr, sharedAttrs)
-        ),
-        List.every(v => v)
-    )
-}
-
-
 export function init({
     dispatcher, he, CorparchWidget, queryModel,
     textTypesModel, quickSubcorpModel, queryHintModel, withinBuilderModel, virtualKeyboardModel,
@@ -337,13 +326,6 @@ export function init({
                                 </>
                             }
                         </div>
-                        {posAttrsCompatibleWithAllAlignedCorpora(props.concViewPosAttrs, props.alignCommonPosAttrs) ?
-                            null :
-                            <div className="warning note">
-                                <layoutViews.StatusIcon status="warning" inline={true} />
-                                {he.translate('query__current_posattrs_not_covered_by_all_aligned_corpora')}
-                            </div>
-                        }
                     </div>
                 </div>
                 {quickSubcorpViews && props.quickSubcorpVisible ?

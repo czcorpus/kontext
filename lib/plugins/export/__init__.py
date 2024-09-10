@@ -69,7 +69,7 @@ class AbstractConcExportMixin(object):
                 posattrs = ['/'.join(item.get('posattrs', []))
                             ] if len(merged_attrs) == 2 else item.get('posattrs', [])
                 # there can be tokens containing `/` like `km/h`
-                # manatee also uses `/` as separator of attrs
+                # and stock version Manatee also uses `/` as separator of attrs
                 # in this case there will be more items in `item.possattrs` after splitting the attr string
                 # we can not confidently assign values to its requested attributes
                 if len(merged_attrs) - 1 != len(posattrs):

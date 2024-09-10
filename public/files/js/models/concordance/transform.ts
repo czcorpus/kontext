@@ -45,7 +45,7 @@ function importTextChunk(
         item.posattrs || [];
 
     // there can be tokens containing `/` like `km/h`
-    // manatee also uses `/` as separator of attrs
+    // and stock version of Manatee-open also uses `/` as separator of attrs
     // in this case there will be more items in `item.possattrs` after splitting the attr string
     // we can not confidently assign values to its requested attributes
     const description = (posattrs.length !== roles.length - 1 && item.class !== 'strc') ?

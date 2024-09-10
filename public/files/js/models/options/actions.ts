@@ -127,6 +127,11 @@ export class Actions {
         return a.name === Actions.GeneralSubmitDone.name;
     }
 
+    static LoadDataInBackground:Action<{
+    }> = {
+        name: 'VIEW_OPTIONS_LOAD_DATA_IN_BACKGROUND'
+    }
+
     static LoadDataDone:Action<{
         data:ViewOptions.PageData;
     }> = {
@@ -147,6 +152,12 @@ export class Actions {
         idx:number;
     }> = {
         name: 'VIEW_OPTIONS_TOGGLE_ATTRIBUTE'
+    };
+
+    static UnsetAttributesAndSave:Action<{
+        attrs:Array<string>;
+    }> = {
+        name: 'VIEW_OPTIONS_UNSET_ATTRIBUTES_AND_SAVE'
     };
 
     static ToggleAllAttributes:Action<{}> = {

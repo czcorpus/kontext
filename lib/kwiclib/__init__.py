@@ -530,7 +530,6 @@ class Kwic:
         filter_out_speech_tag = (
             args.speech_segment and args.speech_segment[0] not in args.structs and
             speech_struct_attr_name in all_structs)
-
         i = args.fromline
         while kl.nextline():
             linegroup = kl.get_linegroup()
