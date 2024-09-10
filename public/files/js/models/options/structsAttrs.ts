@@ -193,6 +193,23 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
             }
         );
 
+        this.addActionHandler(
+            Actions.UnsetAttributesAndSave,
+            (state, action) => {
+                state.attrList = List.map(
+                    item => ({
+                        ...item,
+                        selected: List.findIndex(x => x === item.n, action.payload.attrs) > - 1 ?
+                            false : item.selected
+                    }),
+                    state.attrList
+                )
+            },
+            (state, action, dispatch) => {
+                this.saveSettings(state, dispatch);
+            }
+        );
+
         this.addActionHandler<typeof Actions.ToggleAttribute>(
             Actions.ToggleAttribute.name,
             (state, action) => {

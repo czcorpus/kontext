@@ -27,7 +27,7 @@ import * as copy from 'copy-to-clipboard';
 import * as ViewOptions from '../../types/viewOptions';
 import { PageModel } from '../../app/page';
 import { ConclineSectionOps } from './line';
-import { AudioPlayer, PlayerStatus} from './media';
+import { AudioPlayer, PlayerStatus } from './media';
 import { ConcSaveModel } from './save';
 import { Actions as ViewOptionsActions } from '../options/actions';
 import { CorpColumn, ViewConfiguration, AudioPlayerActions, AjaxConcResponse,
@@ -197,6 +197,10 @@ export interface ConcordanceModelState {
 
     mergedCtxAttrs:Array<[string, number]>;
 
+    alignCommonPosAttrs:Array<string>;
+
+    alignAttrsMismatchModalVisible:boolean;
+
     tokenLinks:Array<{
         [tokenId:string]:{
             color:string;
@@ -286,6 +290,15 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 audioPlayerStatus: null,
                 mergedAttrs: lineViewProps.mergedAttrs,
                 mergedCtxAttrs: lineViewProps.mergedAttrs,
+                alignCommonPosAttrs: lineViewProps.alignCommonPosAttrs,
+                alignAttrsMismatchModalVisible: !pipe(
+                    lineViewProps.mergedAttrs,
+                    List.filter(
+                        ([item, _]) => List.findIndex(
+                            item2 => item === item2, lineViewProps.alignCommonPosAttrs) === -1
+                    ),
+                    List.empty()
+                ),
                 tokenLinks: List.map(_ => ({}), lineViewProps.CorporaColumns),
                 textDirectionRTL: layoutModel.getConf<boolean>('TextDirectionRTL'),
                 shareLinkProps:null
@@ -675,7 +688,11 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                                     queryChainSize: List.size(resp.query_overview)
                                 }
                             });
-                            this.emitChange();
+                            this.changeState(
+                                state => {
+                                    this.reevaluateAlignAttrsMismatch(state);
+                                }
+                            )
                         },
                         error: err => {
                             this.layoutModel.showMessage('error', err);
@@ -1073,7 +1090,21 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                     this.layoutModel.translate('global__link_copied_to_clipboard')
                 );
             }
-        )
+        );
+
+        this.addActionHandler(
+            [
+                Actions.CloseAlignAttrsMismatchModal,
+                ViewOptionsActions.UnsetAttributesAndSave
+            ],
+            action => {
+                this.changeState(
+                    state => {
+                        state.alignAttrsMismatchModalVisible = false;
+                    }
+                );
+            }
+        );
     }
 
     private highlightTokenLink(
@@ -1114,6 +1145,17 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                     }
                 }
             )
+        );
+    }
+
+    private reevaluateAlignAttrsMismatch(state:ConcordanceModelState) {
+        state.alignAttrsMismatchModalVisible = !pipe(
+            state.mergedAttrs,
+            List.filter(
+                ([item, _]) => List.findIndex(
+                    item2 => item === item2, state.alignCommonPosAttrs) === -1
+            ),
+            List.empty()
         );
     }
 
