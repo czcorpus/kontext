@@ -18,6 +18,7 @@ from typing import List
 
 @dataclass(frozen=True)
 class StructAttr:
+    exclude: bool
     struct: str
     attr: str
 
@@ -29,7 +30,9 @@ class StructAttr:
 
     @staticmethod
     def get(v) -> 'StructAttr':
-        return StructAttr(*v.split('.'))
+        if v[0] == "!":
+            return StructAttr(True, *v[1:].split('.'))
+        return StructAttr(False, *v.split('.'))
 
 
 @dataclass(frozen=True)

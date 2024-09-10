@@ -60,12 +60,17 @@ class AttrArgs(object):
         returns:
         a SQL WHERE expression in conjunctive normal form
         """
-        def cmp_operator(val):
+        def cmp_operator(val, exclude):
+            if exclude:
+                return 'NOT LIKE' if '%' in val else '!='    
             return 'LIKE' if '%' in val else '='
 
         where = []
         sql_values = []
         for key, values in self.data.items():
+            exclude = key[0] == '!'
+            if exclude:
+                key = key[1:]
             key = key.replace('.', '_')
             if self._autocomplete_attr == self._bib_label and key == self._bib_id:
                 continue
@@ -93,7 +98,7 @@ class AttrArgs(object):
                 sql_values.append(self.import_value(values))
 
             if len(cnf_item) > 0:
-                where.append('({})'.format(' OR '.join(cnf_item)))
+                where.append('({})'.format((' AND ' if exclude else ' OR ').join(cnf_item)))
 
         where.append(f'{item_prefix}.corpus_id = ?')
         sql_values.append(corpus_id)

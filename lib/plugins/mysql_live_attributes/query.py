@@ -27,7 +27,7 @@ class AttrArgs:
     """
     Stores a multi-value dictionary and allows an export
     to SQL WHERE expression as used by the plugin.
-    E.g.: attributes = { 'key1' : ['value1_1', 'value1_2'], 'key2' : ['value2_1'] }
+    E.g.: attributes = { 'key1' : ['value1_1', 'value1_2'], '!key2' : ['value2_1'] }
     leads to the following SQL "component": (key1 = ? OR key1 = ?) AND (key2 = ?)
     and attached values: ('value1_1', 'value1_2', 'value2_1')
     """
@@ -45,7 +45,9 @@ class AttrArgs:
             return ''  # important! - cannot use None here as it is converted to NULL within database
         return value
 
-    def cmp_operator(self, val: str) -> str:
+    def cmp_operator(self, val: str, exclude: bool) -> str:
+        if exclude:
+            return 'NOT LIKE' if '%' in val else '!='    
         return 'LIKE' if '%' in val else '='
 
     def export_subquery(self, corpus_name: str) -> Tuple[str, List[str]]:
@@ -62,16 +64,16 @@ class AttrArgs:
                 bib_label_items, bib_label_values = [], []
                 for value in values:
                     if len(value) == 0 or value[0] != '@':
-                        general_items.append(f'value {self.cmp_operator(value)} %s')
+                        general_items.append(f'value {self.cmp_operator(value, key.exclude)} %s')
                         general_values.append(self.import_value(value))
                     else:
-                        bib_label_items.append(f'value {self.cmp_operator(value[1:])} %s')
+                        bib_label_items.append(f'value {self.cmp_operator(value[1:], key.exclude)} %s')
                         bib_label_values.append(self.import_value(value[1:]))
                 if general_items:
-                    cnf_item.append(f'({WHERE_STRUCTATTR} AND ({" OR ".join(general_items)}))')
+                    cnf_item.append(f'({WHERE_STRUCTATTR} AND ({(" AND " if key.exclude else " OR ").join(general_items)}))')
                     sql_values.extend(key.values() + general_values)
                 if bib_label_items:
-                    cnf_item.append(f'({WHERE_STRUCTATTR} AND ({" OR ".join(bib_label_items)}))')
+                    cnf_item.append(f'({WHERE_STRUCTATTR} AND ({(" AND " if key.exclude else " OR ").join(bib_label_items)}))')
                     sql_values.extend(self.bib_label.values() + bib_label_values)
 
             elif is_range_argument(values):
@@ -79,7 +81,10 @@ class AttrArgs:
 
             # values is of type str
             else:
-                cnf_item.append(f'({WHERE_STRUCTATTR} AND LOWER(value) LIKE LOWER(%s))')
+                if key.exclude:
+                    cnf_item.append(f'({WHERE_STRUCTATTR} AND LOWER(value) NOT LIKE LOWER(%s))')
+                else:
+                    cnf_item.append(f'({WHERE_STRUCTATTR} AND LOWER(value) LIKE LOWER(%s))')
                 sql_values.extend(key.values() + [self.import_value(values)])
 
             if len(cnf_item) > 0:
