@@ -127,6 +127,11 @@ export class Actions {
         return a.name === Actions.GeneralSubmitDone.name;
     }
 
+    static LoadDataInBackground:Action<{
+    }> = {
+        name: 'VIEW_OPTIONS_LOAD_DATA_IN_BACKGROUND'
+    }
+
     static LoadDataDone:Action<{
         data:ViewOptions.PageData;
     }> = {
