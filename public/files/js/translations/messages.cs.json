@@ -460,7 +460,6 @@
         "query__interpretation_note": "Pokud jste zamýšleli něco jiného, zkuste změnit výchozí atribut nebo použijte pokročilý dotaz.",
         "query__interpretation_qs_note": "V případě, že vám nevyhovuje upřesnění parametrů některých slov, můžete se vrátit k výchozí interpretaci pomocí tlačítka níže.",
         "query__help": "Nápověda - dotazovací formulář",
-        "query__current_posattrs_not_covered_by_all_aligned_corpora": "Aktuální nastavení zobrazení pozičních atributů není kompatibilní se zvolenými zarovnanými korpusy.",
         "query__altcorp_heading": "Alternativní korpus",
         "query__altcorp_suggested_{alt_corpus}": "Zadaný dotaz se bude pravděpodobně vyhodnocovat příliš dlouho a může být i předčasně ukončen. Důvodem je příliš rozsáhlá výsledná konkordance, se kterou pak musí KonText ve všech dalších krocích pracovat. Zvažte prosím, zda by nestačilo jako alternativu pro tento dotaz použít menší korpus \u0022{alt_corpus}\u0022, kde vlastní dotaz i všechny následné operace budou mnohem rychlejší.",
         "query__subc_aligned_controls_disabled_explain": "Používáte subkorpus vytvořený s ohledem na zarovnání s dalšími korpusy. V takovém případě není možné zarovnané korpusy přidávat ani odebírat.",

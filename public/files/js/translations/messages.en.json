@@ -460,7 +460,6 @@
         "query__interpretation_note": "In case this is not what you expect to be searched, please try to change default search attribute or use an advanced query.",
         "query__interpretation_qs_note": "If you don't want to apply the extended specification of one or more words, please use the button below to return to the default interpretation.",
         "query__help": "Help - query form",
-        "query__current_posattrs_not_covered_by_all_aligned_corpora": "The current positional attribute display preferences are not compatible with the currently selected aligned corpora.",
         "query__altcorp_heading": "Alternative corpus",
         "query__altcorp_suggested_{alt_corpus}": "The entered query is likely to demand a considerable amount of time for evaluation and could be interrupted before completion. To improve the efficiency of your query and subsequent operations, please consider using the \"{alt_corpus}\" corpus as an alternative, as its smaller size ensures a much quicker processing time.",
         "query__subc_aligned_controls_disabled_explain": "You are using a subcorpus created with respect to other corpora alignment. In such case, aligned corpora cannot be added or removed.",
