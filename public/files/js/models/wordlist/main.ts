@@ -27,6 +27,7 @@ import * as Kontext from '../../types/kontext';
 import { validateGzNumber } from '../base';
 import { PageModel } from '../../app/page';
 import { Actions } from './actions';
+import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { ResultItem, IndexedResultItem, HeadingItem, ResultData, WordlistSubmitArgs } from './common';
 import { ConcQueryArgs } from '../query/common';
 import { ConcQueryResponse } from '../concordance/common';
@@ -350,6 +351,22 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                     dispatch
                 );
             }
+        );
+
+        this.addActionHandler(
+            Actions.WordlistSaveFormSubmit.name,
+            null,
+            (state, action, dispatch) => {
+                dispatch<typeof Actions.WordlistResultSaveArgs>({
+                    name: Actions.WordlistResultSaveArgs.name,
+                    payload: {
+                        wlsort: state.wlsort,
+                        reverse: state.reverse,
+                    }
+                });
+            }
+        ).sideEffectAlsoOn(
+            MainMenuActions.DirectSave.name,
         );
     }
 

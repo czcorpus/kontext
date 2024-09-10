@@ -38,11 +38,26 @@ export class Actions {
         name: 'WORDLIST_RESULT_RELOAD'
     };
 
+    static WordlistResultSaveArgs:Action<{
+        wlsort:string;
+        reverse:boolean;
+    }> = {
+        name: 'WORDLIST_RESULT_SAVE_ARGS'
+    };
+
+    static isWordlistResultSaveArgs(a:Action):a is typeof Actions.WordlistResultSaveArgs {
+        return a.name == Actions.WordlistResultSaveArgs.name
+    }
+
     static WordlistFormSubmitReady:Action<{
         args:WordlistSubmitArgs;
     }> = {
         name: 'WORDLIST_FORM_SUBMIT_READY'
     };
+
+    static isWordlistFormSubmitReady(a:Action):a is typeof Actions.WordlistFormSubmitReady {
+        return a.name == Actions.WordlistFormSubmitReady.name
+    }
 
     static WordlistFormSubmit:Action<{
     }> = {

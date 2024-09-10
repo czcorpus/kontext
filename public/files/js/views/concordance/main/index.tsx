@@ -20,8 +20,7 @@
 
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps, IModel, Bound } from 'kombo';
-import { Subscription } from 'rxjs';
-import { tuple } from 'cnc-tskit';
+import { List, pipe, tuple } from 'cnc-tskit';
 
 import * as Kontext from '../../../types/kontext';
 import * as ViewOptions from '../../../types/viewOptions';
@@ -45,8 +44,8 @@ import { UsageTipsModel } from '../../../models/usageTips';
 import { MainMenuModelState } from '../../../models/mainMenu';
 import { Actions } from '../../../models/concordance/actions';
 import { LineSelectionModes } from '../../../models/concordance/common';
+import { Actions as ViewOptionsActions } from '../../../models/options/actions';
 import { Actions as UserActions } from '../../../models/user/actions';
-import * as S2 from '../style';
 import * as S from './style';
 
 
@@ -553,25 +552,76 @@ export function init({
         </layoutViews.ModalOverlay>
     );
 
+    // ------------------------- <AttrMismatchModal /> --------------------
+
+    const AttrMismatchModal:React.FC<{
+        attrs:Array<string>;
+    }> = ({attrs}) => {
+
+        React.useEffect(
+            () => {
+                dispatcher.dispatch(
+                    ViewOptionsActions.LoadDataInBackground
+                )
+            },
+            []
+        );
+
+        const onCloseClick = () => {
+            dispatcher.dispatch(
+                Actions.CloseAlignAttrsMismatchModal
+            );
+        };
+
+        const onOKClick = () => {
+            dispatcher.dispatch(
+                ViewOptionsActions.UnsetAttributesAndSave,
+                {
+                    attrs
+                }
+            )
+        };
+
+        return (
+            <layoutViews.ModalOverlay onCloseKey={onCloseClick}>
+                <layoutViews.CloseableFrame onCloseClick={onCloseClick}
+                        label={he.translate('concview__attr_selection_problem')}>
+                    <S.AttrMismatchModalContents>
+                        <p>
+                            {he.translate('concview__attr_sel_mismatch_desc')}:
+                        </p>
+                        <p className="attr-list">
+                            <strong>{attrs.join(', ')}</strong>
+                        </p>
+
+                        <p>{he.translate('concview__attr_sel_mismatch_question')}</p>
+                        <p className="buttons">
+                            <button type="button" className="util-button" onClick={onOKClick}>
+                                {he.translate('global__ok')}
+                            </button>
+                            <button type="button" className="util-button cancel" onClick={onCloseClick}>
+                                {he.translate('global__cancel')}
+                            </button>
+                        </p>
+                    </S.AttrMismatchModalContents>
+                </layoutViews.CloseableFrame>
+            </layoutViews.ModalOverlay>
+        );
+    };
+
     // ------------------------- <ConcordanceView /> ---------------------------
 
-    class ConcordanceView extends React.PureComponent<
-            ConcordanceDashboardProps['concViewProps'] & ConcordanceModelState> {
+    const ConcordanceView:React.FC<
+            ConcordanceDashboardProps['concViewProps'] & ConcordanceModelState> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._handleDetailCloseClick = this._handleDetailCloseClick.bind(this);
-            this._handleAnonymousUserWarning = this._handleAnonymousUserWarning.bind(this);
-            this._handleSyntaxBoxClose = this._handleSyntaxBoxClose.bind(this);
-        }
 
-        _handleSyntaxBoxClose() {
+        const handleSyntaxBoxClose = () => {
             dispatcher.dispatch<typeof Actions.CloseSyntaxView>({
                 name: Actions.CloseSyntaxView.name
             });
-        }
+        };
 
-        _handleDetailCloseClick() {
+        const handleDetailCloseClick = () => {
             dispatcher.dispatch<typeof Actions.AudioPlayerClickControl>({
                 name: Actions.AudioPlayerClickControl.name,
                 payload: {
@@ -582,71 +632,82 @@ export function init({
             dispatcher.dispatch<typeof Actions.ResetDetail>({
                 name: Actions.ResetDetail.name
             });
-        }
+        };
 
-        _handleAnonymousUserWarning() {
+        const handleAnonymousUserWarning = () => {
             dispatcher.dispatch<typeof Actions.HideAnonymousUserWarning>({
                 name: Actions.HideAnonymousUserWarning.name
-            })
-        }
+            });
+        };
 
-        _handleRefsDetailCloseClick() {
+        const handleRefsDetailCloseClick = () => {
             dispatcher.dispatch<typeof Actions.RefResetDetail>({
                 name: Actions.RefResetDetail.name,
                 payload: {}
             });
-        }
+        };
 
-        render() {
-            return (
-                <S.ConcordanceView>
-                    {this.props.syntaxViewVisible ?
-                        <SyntaxViewPane onCloseClick={this._handleSyntaxBoxClose} /> : null}
-                    {this.props.kwicDetailVisible ?
-                        <concDetailViews.ConcordanceDetail
-                                closeClickHandler={this._handleDetailCloseClick}
-                                textDirectionRTL={this.props.textDirectionRTL}/>
-                        : null}
-                    {this.props.refDetailVisible ?
-                        <concDetailViews.RefDetail closeClickHandler={this._handleRefsDetailCloseClick} />
-                        : null}
-                    <S.ConcTopBar>
-                        <div className="info-level">
-                            <BoundConcSummary />
-                            <ShareConcordance />
-                            {this.props.shareLinkProps !== null ?
-                                <ShareConcordanceWidget url={this.props.shareLinkProps.url} /> : null}
-                        </div>
-                        <ConcToolbarWrapper
-                                lineSelOpsVisible={this.props.lineSelOptionsVisible}
-                                canSendEmail={this.props.canSendEmail}
-                                numLinesInLockedGroups={this.props.numItemsInLockedGroups}
-                                viewMode={this.props.attrViewMode}
-                                sortIdx={this.props.SortIdx} />
-                        {this.props.showAnonymousUserWarn && this.props.anonymousUserConcLoginPrompt ?
-                            <AnonymousUserLoginPopup onCloseClick={this._handleAnonymousUserWarning} /> : null}
-                    </S.ConcTopBar>
-                    <S.ConclinesWrapper>
-                        {this.props.lines.length === 0 && this.props.unfinishedCalculation ?
-                            <div className="no-data">
-                                <p>{he.translate('concview__waiting_for_data')}</p>
-                                <p>({he.translate('concview__waiting_elapsed_time')}:{'\u00a0'}{secs2hms(this.props.busyWaitSecs)})</p>
-                                <p><layoutViews.AjaxLoaderImage /></p>
-                            </div> :
-                            <linesViews.ConcLines {...this.props} />
-                        }
-                    </S.ConclinesWrapper>
-                    <S.ConcBottomBar>
-                        <div className="info-level">
-                            <div style={{flexGrow: 3}} />
-                            <paginationViews.Paginator {...this.props} />
-                        </div>
-                    </S.ConcBottomBar>
-                    {this.props.saveFormVisible ? <concSaveViews.ConcSaveForm /> : null}
-                </S.ConcordanceView>
+        const alignNonMatchingAttrs = () => {
+            return pipe(
+                props.mergedAttrs,
+                List.filter(
+                    ([item, _]) => List.findIndex(
+                        item2 => item === item2, props.alignCommonPosAttrs) === -1
+                ),
+                List.map(([item, _]) => item)
             );
-        }
-    }
+        };
+
+        return (
+            <S.ConcordanceView>
+                {props.alignAttrsMismatchModalVisible ?
+                    <AttrMismatchModal attrs={alignNonMatchingAttrs()}  /> : null}
+                {props.syntaxViewVisible ?
+                    <SyntaxViewPane onCloseClick={handleSyntaxBoxClose} /> : null}
+                {props.kwicDetailVisible ?
+                    <concDetailViews.ConcordanceDetail
+                            closeClickHandler={handleDetailCloseClick}
+                            textDirectionRTL={props.textDirectionRTL}/>
+                    : null}
+                {props.refDetailVisible ?
+                    <concDetailViews.RefDetail closeClickHandler={handleRefsDetailCloseClick} />
+                    : null}
+                <S.ConcTopBar>
+                    <div className="info-level">
+                        <BoundConcSummary />
+                        <ShareConcordance />
+                        {props.shareLinkProps !== null ?
+                            <ShareConcordanceWidget url={props.shareLinkProps.url} /> : null}
+                    </div>
+                    <ConcToolbarWrapper
+                            lineSelOpsVisible={props.lineSelOptionsVisible}
+                            canSendEmail={props.canSendEmail}
+                            numLinesInLockedGroups={props.numItemsInLockedGroups}
+                            viewMode={props.attrViewMode}
+                            sortIdx={props.SortIdx} />
+                    {props.showAnonymousUserWarn && props.anonymousUserConcLoginPrompt ?
+                        <AnonymousUserLoginPopup onCloseClick={handleAnonymousUserWarning} /> : null}
+                </S.ConcTopBar>
+                <S.ConclinesWrapper>
+                    {props.lines.length === 0 && props.unfinishedCalculation ?
+                        <div className="no-data">
+                            <p>{he.translate('concview__waiting_for_data')}</p>
+                            <p>({he.translate('concview__waiting_elapsed_time')}:{'\u00a0'}{secs2hms(props.busyWaitSecs)})</p>
+                            <p><layoutViews.AjaxLoaderImage /></p>
+                        </div> :
+                        <linesViews.ConcLines {...props} />
+                    }
+                </S.ConclinesWrapper>
+                <S.ConcBottomBar>
+                    <div className="info-level">
+                        <div style={{flexGrow: 3}} />
+                        <paginationViews.Paginator {...props} />
+                    </div>
+                </S.ConcBottomBar>
+                {props.saveFormVisible ? <concSaveViews.ConcSaveForm /> : null}
+            </S.ConcordanceView>
+        );
+    };
 
 
     const BoundConcordanceView = BoundWithProps<ConcordanceDashboardProps['concViewProps'],

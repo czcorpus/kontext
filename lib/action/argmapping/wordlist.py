@@ -77,3 +77,5 @@ class WordlistSaveFormArgs:
     saveformat: str = 'txt'
     colheaders: int = 0
     heading: int = 0
+    wlsort: str = ''
+    reverse: int = 0

@@ -597,4 +597,8 @@ export class Actions {
     static CopyConcordanceLink:Action<{}> = {
         name: 'CONCORDANCE_COPY_CONCORDANCE_LINK'
     };
+
+    static CloseAlignAttrsMismatchModal:Action<{}> = {
+        name: 'CONCORDANCE_CLOSE_ALIGN_ATTRS_MISMATCH_MODAL'
+    };
 }

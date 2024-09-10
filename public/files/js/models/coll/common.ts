@@ -60,6 +60,7 @@ export interface CollSaveServerArgs extends CollServerArgs {
     heading:boolean;
     from_line:number;
     to_line:number;
+    csortfn:string;
 }
 
 export interface HistoryState {

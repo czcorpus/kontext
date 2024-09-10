@@ -312,3 +312,23 @@ export const ShareConcordanceWidget = styled.div`
     }
 
 `;
+
+// ---------------- <AttrMismatchModalContents /> --------------
+
+export const AttrMismatchModalContents = styled.div`
+
+    .attr-list {
+        text-align: center;
+        font-size: 130%;
+    }
+
+    button[type=button] {
+        margin-right: 1em;
+    }
+
+    .buttons {
+        padding-top: 1em;
+    }
+
+
+`;
