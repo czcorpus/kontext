@@ -39,6 +39,28 @@ from strings import escape_attr_val
 from .cache import TextTypesCache
 from .norms import CachedStructNormsCalc
 
+from dataclasses import dataclass
+from typing import List
+
+
+@dataclass(frozen=True)
+class StructAttr:
+    exclude: bool
+    struct: str
+    attr: str
+
+    def values(self) -> List[str]:
+        return [self.struct, self.attr]
+
+    def key(self, separator: str = '.') -> str:
+        return f'{self.struct}{separator}{self.attr}'
+
+    @staticmethod
+    def get(v) -> 'StructAttr':
+        if v[0] == "!":
+            return StructAttr(True, *v[1:].split('.'))
+        return StructAttr(False, *v.split('.'))
+
 
 class TextTypeCollector:
 
@@ -74,31 +96,23 @@ class TextTypeCollector:
         scas = [(a, self._access_fn(self._src_obj, a))
                 for a in self._attr_producer_fn(self._src_obj)]
         structs = collections.defaultdict(list)
-        for sa, v in scas:
-            # we encode exclusion as ! prefix of struct.attr name in selection dict
-            excludeSelection = sa[0] == "!"
-            if excludeSelection:
-                sa = sa[1:]
-
-            s, a = sa.split('.')
+        for struct_attr, v in scas:
+            sa = StructAttr.get(struct_attr)
             if type(v) is list:
                 expr_items = []
                 for v1 in v:
-                    expr_items.append(f'{a}{"!=" if excludeSelection else "="}"{escape_attr_val(v1)}"')
+                    expr_items.append(f'{sa.attr}{"!=" if sa.exclude else "="}"{escape_attr_val(v1)}"')
                 if len(expr_items) > 0:
-                    if excludeSelection:
-                        query = f'({" & ".join(expr_items)})'
-                    else:
-                        query = f'({" | ".join(expr_items)})'
+                    query = f'({(" & " if sa.exclude else " | ").join(expr_items)})'
                 else:
                     query = None
             elif type(v) is dict and 'regexp' in v:
-                query = f'{a}{"!=" if excludeSelection else "="}"{v["regexp"]}"'
+                query = f'{sa.attr}{"!=" if sa.exclude else "="}"{v["regexp"]}"'
             else:
-                query = f'{a}{"!=" if excludeSelection else "="}"{v}"'
+                query = f'{sa.attr}{"!=" if sa.exclude else "="}"{v}"'
 
             if query is not None:  # TODO: is the following encoding change always OK?
-                structs[s].append(query)
+                structs[sa.struct].append(query)
 
         return [(sname, ' & '.join(subquery)) for sname, subquery in structs.items()]
 

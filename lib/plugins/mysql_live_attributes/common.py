@@ -13,26 +13,6 @@
 # GNU General Public License for more details.
 
 from dataclasses import dataclass
-from typing import List
-
-
-@dataclass(frozen=True)
-class StructAttr:
-    exclude: bool
-    struct: str
-    attr: str
-
-    def values(self) -> List[str]:
-        return [self.struct, self.attr]
-
-    def key(self) -> str:
-        return f'{self.struct}.{self.attr}'
-
-    @staticmethod
-    def get(v) -> 'StructAttr':
-        if v[0] == "!":
-            return StructAttr(True, *v[1:].split('.'))
-        return StructAttr(False, *v.split('.'))
 
 
 @dataclass(frozen=True)

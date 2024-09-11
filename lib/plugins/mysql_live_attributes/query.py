@@ -15,7 +15,8 @@
 from dataclasses import dataclass
 from typing import Any, Dict, List, Set, Tuple, Union
 
-from .common import StructAttr
+from texttypes.model import StructAttr
+
 
 
 def is_range_argument(item) -> bool:

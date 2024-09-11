@@ -26,6 +26,7 @@ from itertools import chain
 from typing import Any, Dict, List, Optional, Set, Union
 
 import l10n
+from texttypes.model import StructAttr
 import plugins
 import strings
 import ujson as json
@@ -48,7 +49,7 @@ from plugins.mysql_integration_db import MySqlIntegrationDb
 from sanic.blueprints import Blueprint
 
 from . import query
-from .common import AttrValueKey, StructAttr
+from .common import AttrValueKey
 
 bp = Blueprint('mysql_live_attributes')
 
