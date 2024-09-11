@@ -811,6 +811,10 @@ export function init(
                             Dict.keys(),
                             List.map(v => {
                                 const data = props.concSelectedTextTypes[v];
+                                const exclude = v[0] === "!";
+                                if (exclude) {
+                                    v = v.slice(1)
+                                }
                                 const getValues = () => {
                                     if (Array.isArray(data)) {
                                         return data;

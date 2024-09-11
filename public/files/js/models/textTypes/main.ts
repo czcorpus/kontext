@@ -766,6 +766,10 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             pipe(
                 checkedItems,
                 Dict.forEach((checkedOfAttr, k) => {
+                    const exclude = k[0] === '!';
+                    if (exclude) {
+                        k = k.slice(1);
+                    }
                     const checkedOfAttrNorm = Array.isArray(checkedOfAttr) ?
                              checkedOfAttr : [checkedOfAttr];
                     const attrIdx = state.attributes.findIndex(
@@ -776,6 +780,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                         return;
                     }
                     let attr = state.attributes[attrIdx];
+                    attr.excludeSelection = exclude;
                     // now we must distinguish 4 cases:
                     // [structattr box is configured as bibliography list] x
                     // [structattr box is a list of items or a text input box]

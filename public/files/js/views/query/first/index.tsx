@@ -376,7 +376,7 @@ export function init({
 
     const SelectedTextTypesLite:React.FC<TextTypesModelState> = (props) => {
 
-        function renderValues(position:number, name:string, values:Array<TextTypes.AttributeValue>) {
+        function renderValues(position:number, name:string, values:Array<TextTypes.AttributeValue>, exclude:boolean) {
             const selValues = pipe(
                 values,
                 List.filter(v => v.selected),
@@ -385,7 +385,7 @@ export function init({
             return <span>
                 {position > 0 ? ', ' : ''}
                 <strong>{name}</strong>
-                {'\u00a0\u2208\u00a0{'}
+                {exclude ? '\u00a0\u2209\u00a0{' : '\u00a0\u2208\u00a0{'}
                 {List.join(i => <span key={`j${i}`}>, </span>, shortenValues(selValues))}
                 {'}'}
                 <br />
@@ -395,24 +395,24 @@ export function init({
         function renderSelections(sel:TextTypes.AnyTTSelection, i:number) {
             switch (sel.type) {
                 case 'full':
-                    return renderValues(i, sel.name, sel.values);
+                    return renderValues(i, sel.name, sel.values, sel.excludeSelection);
                 case 'regexp':
                     return <span>
                         {i > 0 ? ', ' : ''}
                         <strong>{sel.name}</strong>
-                        {'\u00a0\u2208\u00a0'}
+                        {sel.excludeSelection ? '\u00a0\u2209\u00a0' : '\u00a0\u2208\u00a0'}
                         {'{' + sel.textFieldDecoded + '}'}
                         <br />
                     </span>;
                 case 'text':
                     if (!List.empty(sel.values)) {
-                        return renderValues(i, sel.name, sel.values);
+                        return renderValues(i, sel.name, sel.values, sel.excludeSelection);
                     }
                     return <span>{sel.textFieldValue}</span>;
             }
         }
 
-        if (props.hasSelectedItems) {
+        if (props.hasSelectedItems) {            
             return (
                 <SC.SelectedTextTypesLite className="specify-text-types">
                     <SQ.ExpandableSectionLabel>

@@ -121,12 +121,16 @@ export function init({
         const renderTextTypesSel = (item:TTSelectionStep) => List.map(
             (attrName, i) => {
                 const attr = item.values[attrName];
+                const exclusion = attrName[0] === "!";
+                if (exclusion) {
+                    attrName = attrName.slice(1);
+                }
                 if (attr.type === 'default') {
                     return (
                         <span key={i}>
                             {i > 0 ? ', ' : ''}
                             <strong>{attrName}</strong>
-                            {'\u00a0\u2208\u00a0'}
+                            {exclusion ? '\u00a0\u2209\u00a0' : '\u00a0\u2208\u00a0'}
                             {'{' + shortenValues(attr.selections, ', ') + '}'}
                             <br />
                         </span>
@@ -137,7 +141,7 @@ export function init({
                         <span key={i}>
                             {i > 0 ? ', ' : ''}
                             <strong>{attrName}</strong>
-                            {'\u00a0\u2208\u00a0'}
+                            {exclusion ? '\u00a0\u2209\u00a0' : '\u00a0\u2208\u00a0'}
                             {'{' + attr.decodedValue + '}'}
                             <br />
                         </span>
