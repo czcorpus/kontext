@@ -105,7 +105,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                         onChange={clickHandler}
                         disabled={props.itemIsLocked}
                     />
-                    {props.itemIsLocked ?
+                    {props.itemIsLocked && props.itemIsSelected ?
                         <input type="hidden" value={props.itemValue} /> : null }
                     {props.itemValue}
                 </label>

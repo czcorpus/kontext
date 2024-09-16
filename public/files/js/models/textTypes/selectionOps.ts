@@ -109,16 +109,16 @@ export class TTSelOps {
         );
     }
 
-    static attachItemList(sel:TextTypes.AnyTTSelection, items:Array<string>):TextTypes.AnyTTSelection {
-        if (sel.type === 'regexp') {
-            return sel;
+    static attachItemList(attr:TextTypes.AnyTTSelection, items:Array<string>):TextTypes.AnyTTSelection {
+        if (attr.type === 'regexp') {
+            return attr;
 
         } else {
             let values:Array<TextTypes.AttributeValue>;
-            if (!List.empty(sel.values)) {
+            if (!List.empty(attr.values)) {
                 values = List.filter(
-                    (item:TextTypes.AttributeValue) => items.indexOf(item.ident) > -1,
-                    sel.values
+                    (item:TextTypes.AttributeValue) => attr.excludeSelection && item.selected || items.indexOf(item.ident) > -1,
+                    attr.values
                 );
 
             } else {
@@ -134,7 +134,7 @@ export class TTSelOps {
                 );
             }
             return {
-                ...sel,
+                ...attr,
                 values
             };
 

@@ -1055,11 +1055,15 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                                 locked: attrVal.locked,
                                 numGrouped: b.numGrouped,
                                 availItems: b.availItems,
-                                extendedInfo: attrVal.extendedInfo
+                                extendedInfo: attrVal.extendedInfo,
                             };
 
                         } else {
-                            return null;
+                            // this handles excluded items
+                            return {
+                                ...attrVal,
+                                availItems: 0,
+                            }
                         }
                     }
                 );
@@ -1112,7 +1116,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                     name: srchAttr.name,
                     values: [...srchAttr.values],
                     definesSubcorpus: srchAttr.definesSubcorpus,
-                    excludeSelection: false,
+                    excludeSelection: srchAttr.excludeSelection,
                     type: 'full',
                     metaInfo: null,
                 } :
