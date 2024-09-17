@@ -194,7 +194,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
             }
         }
 
-        const negativeSelectionClickHandler = (e) => {
+        const excludeSelectionClickHandler = (e) => {
             dispatcher.dispatch<typeof Actions.NegativeSelectionClicked>({
                 name: Actions.NegativeSelectionClicked.name,
                 payload: {
@@ -207,7 +207,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
         const renderListOfCheckBoxes = () => {
             const sectionLocked = List.every(v => v.locked, props.attrObj.values);
             return (
-                <S.FullListContainer>
+                <S.FullListContainer width="100%">
                     <tbody>
                         <tr>
                             <td colSpan={3}>
@@ -218,7 +218,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                                         value={props.attrObj.name}
                                         checked={props.attrObj.excludeSelection}
                                         disabled={sectionLocked}
-                                        onChange={negativeSelectionClickHandler}
+                                        onChange={excludeSelectionClickHandler}
                                     />
                                     {he.translate('query__tt_negative_selection')}
                                 </label>
