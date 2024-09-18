@@ -142,7 +142,7 @@ class TreeGenerator {
     }
 
 
-    generate(data:Array<srcData.Data>, zone:string, tree:string, target:HTMLElement, expanded:boolean):void {
+    generate(data:Array<srcData.Data>, zone:string, tree:string, target:HTMLElement, expanded:boolean):{fullWidth:boolean} {
         const nodes = data[0].zones[zone].trees[tree].nodes;
         const nodeMap = this.generateNodeMap(nodes, tree);
         const tokens:Sentence = List.filter(
@@ -156,6 +156,9 @@ class TreeGenerator {
         const edges = this.generateEdges(nodeMap);
         this.d3Draw(tokens, nodeMap, edges, target, rowCount, expanded);
         this.onOverflow(this.params.width, this.params.height); // using to fit data properly
+        return {
+            fullWidth: this.params.width >= this.params.maxWidth,
+        };
     }
 
     private importSentence(data:srcData.Data, nodes:Array<srcData.Node>):Sentence {
@@ -504,7 +507,7 @@ class TreeGenerator {
 
 
 export interface TreeGeneratorFn {
-    (data:Array<srcData.Data>, zone:string, tree:string, target:HTMLElement, expanded:boolean, options:Options):void;
+    (data:Array<srcData.Data>, zone:string, tree:string, target:HTMLElement, expanded:boolean, options:Options):{fullWidth:boolean};
 }
 
 
@@ -528,7 +531,7 @@ export function createGenerator(
         options:Options,
     ) => {
         const gen = new TreeGenerator(options, componentHelpers, detailAttrOrders);
-        gen.generate(data, zone, tree, target, expanded);
+        return gen.generate(data, zone, tree, target, expanded);
     }
 }
 

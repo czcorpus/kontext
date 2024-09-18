@@ -47,14 +47,14 @@ export function init(
         });
     };
 
-    const fitHandler = (e) => {
+    const extendGraphHandler = (e) => {
         dispatcher.dispatch<typeof Actions.ToggleExpanded>({
             name: Actions.ToggleExpanded.name,
             payload: {}
         });
     };
 
-    function renderTree(state:SyntaxTreeModelState, target:HTMLElement):void {
+    function renderTree(state:SyntaxTreeModelState, target:HTMLElement):{fullWidth:boolean} {
         while (target.firstChild) {
             target.removeChild(target.firstChild);
         }
@@ -79,7 +79,7 @@ export function init(
         treexFrame.id = 'treex-frame';
         target.appendChild(treexFrame);
 
-        createGenerator(
+        return createGenerator(
             he,
             state.detailAttrOrders
         ).call(
@@ -116,11 +116,17 @@ export function init(
 
     const SyntaxViewPane:React.FC<SyntaxTreeModelState> = (props) => {
         const renderElm = React.useRef(null);
+        const [sizeBtnVisible, changeState] = React.useState(false);
 
         React.useEffect(
             () => {
                 if (props.data) {
-                    renderTree(props, renderElm.current)
+                    const renderedInfo = renderTree(props, renderElm.current);
+                    if (renderedInfo.fullWidth) {
+                        if (sizeBtnVisible !== true) changeState(true);
+                    } else {
+                        if (sizeBtnVisible !== false) changeState(false);
+                    }
                 }
             }
         );
@@ -130,8 +136,19 @@ export function init(
                 <div ref={renderElm}>
                     {props.data ? null : <layoutViews.AjaxLoaderImage />}
                 </div>
-                <hr/>
-                <button type='button' onClick={fitHandler}>{props.expanded ? 'Fit graph to window' : 'Expand graph'}</button>
+                {
+                    sizeBtnVisible ?
+                        <>
+                            <hr/>
+                            <button type='button' onClick={extendGraphHandler}>
+                                {props.expanded ?
+                                    he.translate('syntaxViewer2__fit_to_view_button') :
+                                    he.translate('syntaxViewer2__expand_button')
+                                }
+                            </button>
+                        </> :
+                        null
+                }
             </div>
         );
     }
