@@ -20,7 +20,7 @@ import aiocsv
 import aiofiles
 import ujson as json
 from openpyxl import Workbook
-from plugins.masm_live_attributes.doclist import DocListItem
+from ..doclist import DocListItem
 from templating import Type2XML
 
 

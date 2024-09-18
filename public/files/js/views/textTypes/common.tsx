@@ -38,6 +38,7 @@ export interface CheckBoxItemProps {
     itemIdx:number;
     itemIsSelected:boolean;
     itemIsLocked:boolean;
+    isNegativeSelection:boolean;
 }
 
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):{
@@ -95,8 +96,19 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                 });
             }
 
+            const htmlClasses = [];
+            if (props.itemIsLocked) {
+                htmlClasses.push('locked');
+            }
+            if (props.isNegativeSelection) {
+                htmlClasses.push('negative-sel');
+            }
+            if (props.itemIsSelected) {
+                htmlClasses.push('selected');
+            }
+
             return (
-                <label className={props.itemIsLocked ? 'locked' : null}>
+                <label className={htmlClasses.join(' ')}>
                     <input
                         type="checkbox"
                         value={props.itemValue}
@@ -105,7 +117,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                         onChange={clickHandler}
                         disabled={props.itemIsLocked}
                     />
-                    {props.itemIsLocked ?
+                    {props.itemIsLocked && props.itemIsSelected ?
                         <input type="hidden" value={props.itemValue} /> : null }
                     {props.itemValue}
                 </label>

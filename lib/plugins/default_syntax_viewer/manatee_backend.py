@@ -244,7 +244,7 @@ class TreeNode(object):
             idx: node order in the list (zero based)
             data: a dict containing detailed information about the node
             node_labels: a list of labels for the nodes
-            word (str): a "word" value of the node (i.e. the actual word the node represents)
+            word (str): a "word" value of the node (i.e. the actual word dthe node represents)
             sentence_word: a word used to construct a flat sentence
             parent (int): parent node
             hidden: if True then client should not render the node (this applies mainly for root)

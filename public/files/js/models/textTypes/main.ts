@@ -195,6 +195,18 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         }
 
         this.addActionSubtypeHandler(
+            Actions.NegativeSelectionClicked,
+            _ => !this.readonlyMode,
+            action => {
+                this.changeState(state => {
+                    const attrIdx = this.getAttributeIdx(state, action.payload.attrName);
+                    state.attributes[attrIdx].excludeSelection = action.payload.checked;
+                });
+                this.notifySelectionChange();
+            }
+        );
+
+        this.addActionSubtypeHandler(
             Actions.ValueCheckboxClicked,
             _ => !this.readonlyMode,
             action => {
@@ -204,17 +216,6 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                         action.payload.attrName,
                         action.payload.itemIdx
                     );
-                });
-                this.notifySelectionChange();
-            }
-        );
-
-        this.addActionSubtypeHandler(
-            Actions.SelectAllClicked,
-            _ => !this.readonlyMode,
-            action => {
-                this.changeState(state => {
-                    this.applySelectAll(state, action.payload.attrName);
                 });
                 this.notifySelectionChange();
             }
@@ -754,6 +755,10 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             pipe(
                 checkedItems,
                 Dict.forEach((checkedOfAttr, k) => {
+                    const exclude = k[0] === '!';
+                    if (exclude) {
+                        k = k.slice(1);
+                    }
                     const checkedOfAttrNorm = Array.isArray(checkedOfAttr) ?
                              checkedOfAttr : [checkedOfAttr];
                     const attrIdx = state.attributes.findIndex(
@@ -764,6 +769,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                         return;
                     }
                     let attr = state.attributes[attrIdx];
+                    attr.excludeSelection = exclude;
                     // now we must distinguish 4 cases:
                     // [structattr box is configured as bibliography list] x
                     // [structattr box is a list of items or a text input box]
@@ -949,23 +955,6 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             });
     }
 
-    private applySelectAll(state:TextTypesModelState, ident:string) {
-        const attrIdx = this.getAttributeIdx(state, ident);
-        const item = state.attributes[attrIdx];
-        if (TTSelOps.containsFullList(item)) {
-            state.selectAll[ident] = !state.selectAll[ident];
-            const newVal = state.selectAll[ident];
-            state.attributes[attrIdx] = TTSelOps.mapValues(
-                item,
-                item => ({
-                    ...item,
-                    selected: newVal,
-                })
-            );
-            state.hasSelectedItems = TextTypesModel.findHasSelectedItems(state.attributes);
-        }
-    }
-
     canUndoState():boolean {
         return this.state.selectionHistory.length > 1;
     }
@@ -1012,7 +1001,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 const trueAttr = attrSel.name !== bibLabelAttr ?
                         attrSel.name : bibIdAttr;
                 if (TTSelOps.hasUserChanges(attrSel, includeSubcorpDefinition)) {
-                    ans[trueAttr] = TTSelOps.exportSelections(attrSel, lockedOnesOnly, includeSubcorpDefinition);
+                    ans[attrSel.excludeSelection ? `!${trueAttr}` : trueAttr] = TTSelOps.exportSelections(attrSel, lockedOnesOnly, includeSubcorpDefinition);
                 }
             },
             attributes
@@ -1038,11 +1027,15 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                                 locked: attrVal.locked,
                                 numGrouped: b.numGrouped,
                                 availItems: b.availItems,
-                                extendedInfo: attrVal.extendedInfo
+                                extendedInfo: attrVal.extendedInfo,
                             };
 
                         } else {
-                            return null;
+                            // this handles excluded items
+                            return {
+                                ...attrVal,
+                                availItems: 0,
+                            }
                         }
                     }
                 );
@@ -1095,6 +1088,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                     name: srchAttr.name,
                     values: [...srchAttr.values],
                     definesSubcorpus: srchAttr.definesSubcorpus,
+                    excludeSelection: srchAttr.excludeSelection,
                     type: 'full',
                     metaInfo: null,
                 } :

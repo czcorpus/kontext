@@ -103,6 +103,7 @@ export const TextTypesPanel = styled.div`
     }
 `;
 
+
 // ----------- <TableTextTypeAttribute /> ----------------------------
 
 export const TableTextTypeAttribute = styled.div`
@@ -132,38 +133,8 @@ export const TableTextTypeAttribute = styled.div`
         height: 1.4em;
     }
 
-    .ValueSelector {
-        display: block;
-        overflow-x: hidden;
-        overflow-y: auto;
-        width: 100%;
-        max-height: 300px;
-    }
-
     .excluded {
         display: none;
-    }
-
-    .ValueSelector ul.auto-complete {
-        position: absolute;
-        list-style-type: none;
-        max-height: 15em;
-        overflow-y: auto;
-        overflow-x: hidden;
-        margin: 0;
-        padding: 0;
-        background-color: #FFFFFF;
-        box-shadow: ${theme.portalBoxShadow};
-        border: 1px solid ${theme.colorDefaultGreen};
-
-        li {
-            padding: 0.3em 0.7em;
-            margin: 0;
-
-            a {
-                text-decoration: none;
-            }
-        }
     }
 
     .metadata {
@@ -227,6 +198,77 @@ export const TableTextTypeAttribute = styled.div`
     }
 `;
 
+// ------------ <ValueSelector /> ----------------------------------
+
+
+export const ValueSelector = styled.div`
+
+    display: block;
+    overflow-x: hidden;
+    overflow-y: auto;
+    width: 100%;
+    max-height: 300px;
+
+    .ul.auto-complete {
+        position: absolute;
+        list-style-type: none;
+        max-height: 15em;
+        overflow-y: auto;
+        overflow-x: hidden;
+        margin: 0;
+        padding: 0;
+        background-color: #FFFFFF;
+        box-shadow: ${theme.portalBoxShadow};
+        border: 1px solid ${theme.colorDefaultGreen};
+
+        li {
+            padding: 0.3em 0.7em;
+            margin: 0;
+
+            a {
+                text-decoration: none;
+            }
+        }
+    }
+
+    .negative-sel.selected {
+        text-decoration: line-through;
+    }
+`;
+
+// ----------- <TableTextTypeFooter /> -------------------------------
+
+export const TableTextTypeFooter = styled.div`
+    background-color: ${theme.colorDataTableFooter};
+    padding: 0.4em 1em;
+    overflow: hidden;
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+
+    label {
+        color: ${theme.colorLogoBlue};
+        cursor: pointer;
+    }
+
+    label.locked {
+        color: ${theme.colorLightText};
+        cursor: auto;
+    }
+
+    .select-mode {
+        float: right;
+    }
+
+    ${TableTextTypeAttribute}.locked > & {
+        background-color: ${theme.colorLockedAttrsBgColor};
+    }
+
+    .toggle-switch {
+        margin-left: 0.2em;
+    }
+`;
+
 // ----------- <AttribName /> ----------------------------
 
 export const AttribName = styled.div`
@@ -268,27 +310,6 @@ export const AttribName = styled.div`
 
     h3.focused {
         color: ${theme.colorLogoPink};
-    }
-
-    ${TableTextTypeAttribute}.locked > & {
-        background-color: ${theme.colorLockedAttrsBgColor};
-    }
-`;
-
-// ----------- <LastLine /> ----------------------------
-
-export const LastLine = styled.div`
-
-    background-color: ${theme.colorDataTableFooter};
-    padding: 0.4em;
-    overflow: hidden;
-
-    label.select-all {
-        color: ${theme.colorLogoBlue};
-    }
-
-    .select-mode {
-        float: right;
     }
 
     ${TableTextTypeAttribute}.locked > & {
@@ -367,4 +388,10 @@ export const CalendarDaysSelector = styled.div`
         font-size: 0.9em;
         padding-right: 1em;
     }
+`;
+
+// -------------- <RawInputMultiValueContainer /> --------------------
+
+export const RawInputMultiValueContainer = styled.div`
+
 `;
