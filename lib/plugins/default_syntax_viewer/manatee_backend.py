@@ -443,7 +443,8 @@ class ManateeBackend(SearchBackend):
 
         data = []
         for i in range(0, len(in_data), 4):
-            parsed_m = expand_multivals([import_raw_val(x) for x in in_data[i + 2].split('/')])
+            attr_delim = in_data[i + 2][0]
+            parsed_m = expand_multivals([import_raw_val(x) for x in in_data[i + 2].split(attr_delim)])
             for j, parsed in enumerate(parsed_m):
                 if len(parsed) > len(tree_attrs):
                     item = dict(list(zip(tree_attrs, len(tree_attrs) * [None])))
