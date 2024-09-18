@@ -130,7 +130,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                         widget={props.widget}
                         hasExtendedInfo={props.hasExtendedInfo}
                         isBusy={props.isBusy}
-                        hasSelectedItems={TTSelOps.hasUserChanges(props.attrObj, true)} />;
+                        hasSelectedItems={TTSelOps.hasUserChanges(props.attrObj, true)}
+                        isNegativeSelection={props.attrObj.excludeSelection} />;
 
             } else if (props.attrObj.type === 'regexp') {
                 if (props.widget.widget === 'days') {
@@ -153,14 +154,15 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                         hasExtendedInfo={props.hasExtendedInfo}
                         textInputPlaceholder={props.textInputPlaceholder}
                         isBusy={props.isBusy}
-                        isAutoCompleteActive={props.isAutocompleteActive} />;
+                        isAutoCompleteActive={props.isAutocompleteActive}
+                        isNegativeSelection={props.attrObj.excludeSelection} />;
             }
         }
 
         return (
-            <div className="ValueSelector">
+            <S.ValueSelector>
                 {renderSelector()}
-            </div>
+            </S.ValueSelector>
         );
     };
 
@@ -243,9 +245,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                         <layoutViews.ToggleSwitch
                             htmlClass="toggle-switch"
                             checked={props.attrObj.excludeSelection}
+                            disabled={sectionLocked}
                             onChange={excludeSelectionClickHandler} />
                         <label className={sectionLocked ? 'locked' : null}
-                                onClick={() => excludeSelectionClickHandler(!props.attrObj.excludeSelection)}>
+                                onClick={() => sectionLocked ?
+                                    undefined :
+                                    excludeSelectionClickHandler(!props.attrObj.excludeSelection)}>
                             {he.translate('query__tt_negative_selection')}:{'\u00a0'}
                         </label>
                     </> :

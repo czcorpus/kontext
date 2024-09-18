@@ -26,13 +26,12 @@ import sqlite3
 from collections import OrderedDict, defaultdict
 from functools import partial
 from typing import Any, Dict, Iterable, List
+import os.path
 
-import ujson as json
-from action.krequest import KRequest
-from action.response import KResponse
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.general_storage import KeyValueStorage
-from sanic import Blueprint
+from plugin_types.live_attributes.doclist import DocListItem, mk_cache_key
+from plugin_types.live_attributes.doclist.writer import export_csv, export_jsonl, export_xlsx, export_xml
 
 try:
     from unidecode import unidecode
@@ -45,56 +44,23 @@ except ImportError:
 import l10n
 import plugins
 import strings
-from action.control import http_action
-from action.model.corpus import CorpusActionModel
 from action.plugin.ctx import PluginCtx
-from plugin_types.live_attributes import (AttrValue, AttrValuesResponse,
-                                          BibTitle, CachedLiveAttributes,
-                                          StructAttrValuePair, cached)
+from plugin_types.live_attributes import (
+    AttrValue, AttrValuesResponse, BibTitle, CachedLiveAttributes, StructAttrValuePair, cached)
 from plugins import inject
 
 from . import query
 
-bp = Blueprint('sqlite_live_attributes')
-
-
-@bp.route('/filter_attributes', methods=['POST'])
-@http_action(return_type='json', action_model=CorpusActionModel)
-async def filter_attributes(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
-    attrs = json.loads(req.form.get('attrs', '{}'))
-    aligned = json.loads(req.form.get('aligned', '[]'))
-    with plugins.runtime.LIVE_ATTRIBUTES as lattr:
-        return await lattr.get_attr_values(amodel.plugin_ctx, corpus=amodel.corp, attr_map=attrs,
-                                           aligned_corpora=aligned)
-
-
-@bp.route('/attr_val_autocomplete', methods=['POST'])
-@http_action(return_type='json', action_model=CorpusActionModel)
-async def attr_val_autocomplete(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
-    attrs = json.loads(req.form.get('attrs', '{}'))
-    attrs[req.form.get('patternAttr')] = '%{}%'.format(req.form.get('pattern'))
-    aligned = json.loads(req.form.get('aligned', '[]'))
-    with plugins.runtime.LIVE_ATTRIBUTES as lattr:
-        return await lattr.get_attr_values(amodel.plugin_ctx, corpus=amodel.corp, attr_map=attrs,
-                                           aligned_corpora=aligned,
-                                           autocomplete_attr=req.form.get('patternAttr'))
-
-
-@bp.route('/fill_attrs', methods=['POST'])
-@http_action(return_type='json', action_model=CorpusActionModel)
-async def fill_attrs(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
-    search = req.json['search']
-    values = req.json['values']
-    fill = req.json['fill']
-
-    with plugins.runtime.LIVE_ATTRIBUTES as lattr:
-        return await lattr.fill_attrs(corpus_id=amodel.corp.corpname, search=search, values=values, fill=fill)
-
 
 class LiveAttributes(CachedLiveAttributes):
 
-    def __init__(self, corparch: AbstractCorporaArchive, db: KeyValueStorage, max_attr_list_size: int, empty_val_placeholder: Any,
-                 max_attr_visible_chars):
+    def __init__(
+            self,
+            corparch: AbstractCorporaArchive,
+            db: KeyValueStorage,
+            max_attr_list_size: int,
+            empty_val_placeholder: Any,
+            max_attr_visible_chars):
         super().__init__(db)
         self.corparch = corparch
         self.kvdb = db
@@ -103,10 +69,6 @@ class LiveAttributes(CachedLiveAttributes):
         self.databases = {}
         self.shorten_value = partial(strings.shorten, nice=True)
         self._max_attr_visible_chars = max_attr_visible_chars
-
-    @staticmethod
-    def export_actions():
-        return bp
 
     async def db(self, plugin_ctx: PluginCtx, corpname):
         """
@@ -249,8 +211,11 @@ class LiveAttributes(CachedLiveAttributes):
 
         # add bibliography column if required
         bib_label = self.import_key(corpus_info.metadata.label_attr)
+        bib_id = self.import_key(corpus_info.metadata.id_attr)
         if bib_label:
             srch_attrs.add(bib_label)
+        if bib_id:
+            srch_attrs.add(bib_id)
         # always include number of positions column
         srch_attrs.add('poscount')
         # if in autocomplete mode then always expand list of the target column
@@ -263,12 +228,13 @@ class LiveAttributes(CachedLiveAttributes):
             if query.is_range_argument(v):
                 expand_attrs.add(self.import_key(k))
 
-        query_builder = query.QueryBuilder(corpus_info=corpus_info,
-                                           attr_map=attr_map,
-                                           srch_attrs=srch_attrs,
-                                           aligned_corpora=aligned_corpora,
-                                           autocomplete_attr=self.import_key(autocomplete_attr),
-                                           empty_val_placeholder=self.empty_val_placeholder)
+        query_builder = query.QueryBuilder(
+            corpus_info=corpus_info,
+            attr_map=attr_map,
+            srch_attrs=srch_attrs,
+            aligned_corpora=aligned_corpora,
+            autocomplete_attr=self.import_key(autocomplete_attr),
+            empty_val_placeholder=self.empty_val_placeholder)
         data_iterator = query.DataIterator(
             await self.db(plugin_ctx, corpus.corpname), query_builder)
 
@@ -282,12 +248,11 @@ class LiveAttributes(CachedLiveAttributes):
         tmp_ans = defaultdict(lambda: defaultdict(lambda: 0))
         shorten_val = partial(self.shorten_value,
                               length=self.calc_max_attr_val_visible_chars(corpus_info))
-        bib_id = self.import_key(corpus_info.metadata.id_attr)
 
         # here we iterate through [(row1, key1), (row1, key2),..., (row1, keyM), (row2, key1), (row2, key2),...]
         for row, col_key in data_iterator:
             if type(ans[col_key]) is set:
-                val_ident = row[bib_id] if col_key == bib_label else row[col_key]
+                val_ident = row[bib_id] if bib_id and col_key == bib_label else row[col_key]
                 attr_val = (shorten_val(str(row[col_key])),
                             val_ident, row[col_key], 1)  # 1 = grouping
                 tmp_ans[col_key][attr_val] += row['poscount']
@@ -302,10 +267,12 @@ class LiveAttributes(CachedLiveAttributes):
         # where num_grouped_items is initialized to 1
         if corpus_info.metadata.group_duplicates:
             self._group_bib_items(ans, bib_label)
-        return self._export_attr_values(data=ans, aligned_corpora=aligned_corpora,
-                                        expand_attrs=expand_attrs,
-                                        collator_locale=corpus_info.collator_locale,
-                                        max_attr_list_size=self.max_attr_list_size if limit_lists else None)
+        return self._export_attr_values(
+            data=ans,
+            aligned_corpora=aligned_corpora,
+            expand_attrs=expand_attrs,
+            collator_locale=corpus_info.collator_locale,
+            max_attr_list_size=self.max_attr_list_size if limit_lists else None)
 
     def _export_attr_values(self, data, aligned_corpora, expand_attrs, collator_locale, max_attr_list_size):
         values = {}
@@ -349,6 +316,50 @@ class LiveAttributes(CachedLiveAttributes):
 
     async def fill_attrs(self, plugin_ctx, corpus_id: str, search: str, values: List[str], fill: List[str]) -> Dict[str, Dict[str, str]]:
         raise NotImplementedError()
+
+    def _mk_doclist_cache_file_path(self, attr_map, aligned_corpora, view_attrs, save_format: str) -> str:
+        file_path = '{}.{}'.format(mk_cache_key(attr_map, aligned_corpora, view_attrs), save_format)
+        return os.path.join(self._doclist_cache_dir, file_path)
+
+    async def document_list(
+            self,
+            plugin_ctx,
+            corpus_id,
+            view_attrs,
+            attr_map,
+            aligned_corpora,
+            save_format: str):
+        q = 'SELECT {} FROM item WHERE corpus_id = ?'.format(', '.join(view_attrs))
+        data = []  # TODO!
+
+        file = self._mk_doclist_cache_file_path(
+            attr_map, aligned_corpora, view_attrs, save_format)
+        if save_format == 'csv':
+            for i, item in enumerate(data):
+                data[i] = DocListItem.from_dict(item)
+            await export_csv(data, file)
+            return file, 'text/csv'
+        if save_format == 'jsonl':
+            for i, item in enumerate(data):
+                data[i] = DocListItem.from_dict(item)
+            await export_jsonl(data, file)
+            return file, 'application/jsonl'
+        if save_format == 'xml':
+            await export_xml(data, file)
+            return file, 'application/xml'
+        if save_format == 'xlsx':
+            for i, item in enumerate(data):
+                data[i] = DocListItem.from_dict(item)
+            await export_xlsx(data, file)
+            return file, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+
+    async def num_matching_documents(
+            self,
+            plugin_ctx,
+            corpus_id,
+            attr_map,
+            aligned_corpora):
+        pass
 
 
 @inject(plugins.runtime.CORPARCH, plugins.runtime.DB)

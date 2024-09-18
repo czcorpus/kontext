@@ -36,6 +36,7 @@ export interface FullListContainerProps {
     hasExtendedInfo:boolean;
     hasSelectedItems:boolean;
     widget:{widget:WidgetView; active:boolean};
+    isNegativeSelection:boolean;
     isBusy:boolean;
 }
 
@@ -207,6 +208,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                                             itemValue={item.value}
                                             itemIsSelected={item.selected}
                                             itemIsLocked={item.locked}
+                                            isNegativeSelection={props.isNegativeSelection}
                                                 /></td>
                                     <td className="num">
                                         {item.availItems > -1 ?

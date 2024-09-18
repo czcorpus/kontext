@@ -22,89 +22,16 @@ import urllib.parse
 from urllib.parse import urljoin
 from typing import Any, List
 
-import aiofiles
 import plugins
-import ujson as json
-from action.control import http_action
-from action.krequest import KRequest
-from action.model.corpus import CorpusActionModel
-from action.response import KResponse
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.live_attributes import (
     AbstractLiveAttributes, AttrValuesResponse, BibTitle, LiveAttrsException)
-from sanic.blueprints import Blueprint
 
-from .doclist import DocListItem, mk_cache_key
-from .doclist.writer import export_csv, export_jsonl, export_xlsx, export_xml
+from plugin_types.live_attributes.doclist import DocListItem, mk_cache_key
+from plugin_types.live_attributes.doclist.writer import export_csv, export_jsonl, export_xlsx, export_xml
 
-bp = Blueprint('masm_live_attributes')
+
 UNLIMITED_LIST_PLACEHOLDER = 1_000_000
-
-
-@bp.route('/filter_attributes', methods=['POST'])
-@http_action(return_type='json', action_model=CorpusActionModel)
-async def filter_attributes(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
-    attrs = json.loads(req.form.get('attrs', '{}'))
-    aligned = json.loads(req.form.get('aligned', '[]'))
-    with plugins.runtime.LIVE_ATTRIBUTES as lattr:
-        return await lattr.get_attr_values(
-            amodel.plugin_ctx, corpus=amodel.corp, attr_map=attrs,
-            aligned_corpora=aligned)
-
-
-@bp.route('/attr_val_autocomplete', methods=['POST'])
-@http_action(return_type='json', action_model=CorpusActionModel)
-async def attr_val_autocomplete(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
-    attrs = json.loads(req.form.get('attrs', '{}'))
-    pattern_attr = req.form.get('patternAttr')
-    with plugins.runtime.CORPARCH as ca:
-        corpus_info = await ca.get_corpus_info(amodel.plugin_ctx, amodel.corp.corpname)
-    attrs[pattern_attr] = '%{}%'.format(req.form.get('pattern'))
-    if pattern_attr == corpus_info.metadata.label_attr:
-        attrs[corpus_info.metadata.id_attr] = []
-    aligned = json.loads(req.form.get('aligned', '[]'))
-    with plugins.runtime.LIVE_ATTRIBUTES as lattr:
-        return await lattr.get_attr_values(
-            amodel.plugin_ctx, corpus=amodel.corp, attr_map=attrs,
-            aligned_corpora=aligned, autocomplete_attr=req.form.get('patternAttr'))
-
-
-@bp.route('/fill_attrs', methods=['POST'])
-@http_action(return_type='json', action_model=CorpusActionModel)
-async def fill_attrs(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
-    search = req.json['search']
-    values = req.json['values']
-    fill = req.json['fill']
-
-    with plugins.runtime.LIVE_ATTRIBUTES as lattr:
-        return await lattr.fill_attrs(corpus_id=amodel.corp.corpname, search=search, values=values, fill=fill)
-
-
-@bp.route('/num_matching_documents', methods=['POST'])
-@http_action(return_type='json', action_model=CorpusActionModel)
-async def num_matching_documents(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
-    with plugins.runtime.LIVE_ATTRIBUTES as lattr:
-        nm = await lattr.num_matching_documents(
-            amodel.plugin_ctx, amodel.args.corpname, req.json['lattrs'], req.json['laligned'])
-        return dict(num_documents=nm)
-
-
-@bp.route('/save_document_list', methods=['POST'])
-@http_action(return_type='plain', action_model=CorpusActionModel)
-async def save_document_list(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
-    attrs = req.json.get('lattrs', {})
-    aligned = req.json.get('laligned', [])
-    save_format = req.args.get('save_format')
-    with plugins.runtime.LIVE_ATTRIBUTES as lattr:
-        nm, ttype = await lattr.document_list(
-            amodel.plugin_ctx, amodel.args.corpname, req.args.getlist('lattr'), attrs, aligned, save_format)
-        resp.set_header('Content-Type', ttype)
-        file_size = await aiofiles.os.path.getsize(nm)
-        resp.set_header('Content-Length', str(file_size))
-        resp.set_header(
-            'Content-Disposition', f'attachment; filename="document-list-{amodel.args.corpname}.{save_format}"')
-        with open(nm, 'rb') as fr:
-            return fr.read()
 
 
 async def proc_masm_response(resp) -> Any:
@@ -117,10 +44,6 @@ async def proc_masm_response(resp) -> Any:
 class MasmLiveAttributes(AbstractLiveAttributes):
 
     corparch: AbstractCorporaArchive
-
-    @staticmethod
-    def export_actions():
-        return bp
 
     def __init__(
             self,

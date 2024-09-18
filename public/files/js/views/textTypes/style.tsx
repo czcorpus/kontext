@@ -133,38 +133,8 @@ export const TableTextTypeAttribute = styled.div`
         height: 1.4em;
     }
 
-    .ValueSelector {
-        display: block;
-        overflow-x: hidden;
-        overflow-y: auto;
-        width: 100%;
-        max-height: 300px;
-    }
-
     .excluded {
         display: none;
-    }
-
-    .ValueSelector ul.auto-complete {
-        position: absolute;
-        list-style-type: none;
-        max-height: 15em;
-        overflow-y: auto;
-        overflow-x: hidden;
-        margin: 0;
-        padding: 0;
-        background-color: #FFFFFF;
-        box-shadow: ${theme.portalBoxShadow};
-        border: 1px solid ${theme.colorDefaultGreen};
-
-        li {
-            padding: 0.3em 0.7em;
-            margin: 0;
-
-            a {
-                text-decoration: none;
-            }
-        }
     }
 
     .metadata {
@@ -228,6 +198,44 @@ export const TableTextTypeAttribute = styled.div`
     }
 `;
 
+// ------------ <ValueSelector /> ----------------------------------
+
+
+export const ValueSelector = styled.div`
+
+    display: block;
+    overflow-x: hidden;
+    overflow-y: auto;
+    width: 100%;
+    max-height: 300px;
+
+    .ul.auto-complete {
+        position: absolute;
+        list-style-type: none;
+        max-height: 15em;
+        overflow-y: auto;
+        overflow-x: hidden;
+        margin: 0;
+        padding: 0;
+        background-color: #FFFFFF;
+        box-shadow: ${theme.portalBoxShadow};
+        border: 1px solid ${theme.colorDefaultGreen};
+
+        li {
+            padding: 0.3em 0.7em;
+            margin: 0;
+
+            a {
+                text-decoration: none;
+            }
+        }
+    }
+
+    .negative-sel.selected {
+        text-decoration: line-through;
+    }
+`;
+
 // ----------- <TableTextTypeFooter /> -------------------------------
 
 export const TableTextTypeFooter = styled.div`
@@ -241,6 +249,11 @@ export const TableTextTypeFooter = styled.div`
     label {
         color: ${theme.colorLogoBlue};
         cursor: pointer;
+    }
+
+    label.locked {
+        color: ${theme.colorLightText};
+        cursor: auto;
     }
 
     .select-mode {
@@ -375,4 +388,10 @@ export const CalendarDaysSelector = styled.div`
         font-size: 0.9em;
         padding-right: 1em;
     }
+`;
+
+// -------------- <RawInputMultiValueContainer /> --------------------
+
+export const RawInputMultiValueContainer = styled.div`
+
 `;

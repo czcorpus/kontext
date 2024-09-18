@@ -85,6 +85,7 @@ from views.tools import bp as tools_bp
 from views.user import bp as user_bp
 from views.websocket import bp as websocket_bp
 from views.wordlist import bp as wordlist_bp
+from views.tt_select import bp as tt_select_bp
 
 # we ensure that the application's locale is always the same
 locale.setlocale(locale.LC_ALL, 'en_US.utf-8')
@@ -158,6 +159,7 @@ application.blueprint(tools_bp)
 application.blueprint(subcorpus_bp)
 application.blueprint(fcs_common_bp)
 application.blueprint(fcs_v1_bp)
+application.blueprint(tt_select_bp)
 if settings.get_bool('global', 'enabled_websockets'):
     application.blueprint(websocket_bp)
 setup_plugins()
