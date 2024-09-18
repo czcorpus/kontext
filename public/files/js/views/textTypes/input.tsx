@@ -229,16 +229,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
             });
         };
 
-        const excludeSelectionClickHandler = (e) => {
-            dispatcher.dispatch<typeof Actions.NegativeSelectionClicked>({
-                name: Actions.NegativeSelectionClicked.name,
-                payload: {
-                    attrName: e.target.value,
-                    checked: e.target.checked,
-                }
-            });
-        }
-
         const renderCheckboxes = () => {
             return List.map(
                 (item, i) => (
@@ -272,22 +262,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
             <div>
                 <S.FullListContainer width="100%">
                     <tbody>
-                        <tr>
-                            <td colSpan={2}>
-                                <label className={sectionLocked ? 'locked' : null}>
-                                    <input
-                                        type="checkbox"
-                                        className="attr-selector user-selected"
-                                        value={props.attrObj.name}
-                                        checked={props.attrObj.excludeSelection}
-                                        disabled={sectionLocked}
-                                        onChange={excludeSelectionClickHandler}
-                                    />
-                                    {he.translate('query__tt_negative_selection')}
-                                </label>
-                                <hr/>
-                            </td>
-                        </tr>
                         {renderCheckboxes()}
                     </tbody>
                 </S.FullListContainer>

@@ -316,7 +316,7 @@
         "query__tt_search_by_value": "Search by value... UNTRANSLATED",
         "query__tt_exact_value": "Exact value... UNTRANSLATED",
         "query__tt_regexp_value_label": "Regular expression UNTRANSLATED",
-        "query__tt_negative_selection": "Exclude selection UNTRANSLATED",
+        "query__tt_negative_selection": "Negative selection UNTRANSLATED",
         "query__span_from": "ôd",
         "query__span_to": "do",
         "query__include_kwic": "Użyj tyż KWIC",

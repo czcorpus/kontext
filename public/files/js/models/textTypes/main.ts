@@ -222,17 +222,6 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         );
 
         this.addActionSubtypeHandler(
-            Actions.SelectAllClicked,
-            _ => !this.readonlyMode,
-            action => {
-                this.changeState(state => {
-                    this.applySelectAll(state, action.payload.attrName);
-                });
-                this.notifySelectionChange();
-            }
-        );
-
-        this.addActionSubtypeHandler(
             Actions.RangeButtonClicked,
             _ => !this.readonlyMode,
             action => {
@@ -964,23 +953,6 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                     this.pluginApi.showMessage('error', error);
                 }
             });
-    }
-
-    private applySelectAll(state:TextTypesModelState, ident:string) {
-        const attrIdx = this.getAttributeIdx(state, ident);
-        const item = state.attributes[attrIdx];
-        if (TTSelOps.containsFullList(item)) {
-            state.selectAll[ident] = !state.selectAll[ident];
-            const newVal = state.selectAll[ident];
-            state.attributes[attrIdx] = TTSelOps.mapValues(
-                item,
-                item => ({
-                    ...item,
-                    selected: newVal,
-                })
-            );
-            state.hasSelectedItems = TextTypesModel.findHasSelectedItems(state.attributes);
-        }
     }
 
     canUndoState():boolean {

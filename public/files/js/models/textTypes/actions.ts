@@ -69,12 +69,6 @@ export class Actions {
         name: 'TT_VALUE_CHECKBOX_CLICKED'
     };
 
-    static SelectAllClicked:Action<{
-        attrName:string;
-    }> = {
-        name: 'TT_SELECT_ALL_CHECKBOX_CLICKED'
-    };
-
     static RangeButtonClicked:Action<{
         attrName:string;
         fromVal:number;

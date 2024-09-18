@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { List, Dict, pipe } from 'cnc-tskit';
+import { List, Dict, pipe, tuple } from 'cnc-tskit';
 import { IActionDispatcher, IModel, BoundWithProps } from 'kombo';
 
 import * as PluginInterfaces from '../../types/plugins';
@@ -182,6 +182,79 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         );
     }
 
+    // ---------------------------- <TableTextTypeFooter /> ------------------------------
+
+    const TableTextTypeFooter:React.FC<{
+        attrObj:TextTypes.AnyTTSelection;
+        widget:{widget:WidgetView; active:boolean};
+
+    }> = (props) => {
+
+        const excludeSelectionClickHandler = (checked:boolean) => {
+            dispatcher.dispatch<typeof Actions.NegativeSelectionClicked>({
+                name: Actions.NegativeSelectionClicked.name,
+                payload: {
+                    attrName: props.attrObj.name,
+                    checked
+                }
+            });
+        };
+
+        const renderModeSwitch = () => (
+            <select className="select-mode" onChange={intervalModeSwitchHandler}
+                    value={props.widget.active ? 'r' : 'i'}>
+                <option value="i">{he.translate('query__tt_select_individual')}</option>
+                <option value="r">{he.translate('query__tt_select_range')}</option>
+            </select>
+        );
+
+        const intervalModeSwitchHandler = () => {
+            dispatcher.dispatch<typeof Actions.ToggleRangeMode>({
+                name: Actions.ToggleRangeMode.name,
+                payload: {
+                    attrName: props.attrObj.name
+                }
+            });
+        };
+
+        const [sectionLocked, someItemsSelected]  = (() => {
+            switch (props.attrObj.type) {
+                case 'full':
+                case 'text':
+                    return tuple(
+                        !List.empty(props.attrObj.values) && List.every(v => v.locked, props.attrObj.values),
+                        List.some(v => v.selected, props.attrObj.values)
+                    );
+                default:
+                    return tuple(false, false);
+            }
+        })();
+
+        return (
+            <S.TableTextTypeFooter>
+            {
+                props.attrObj.type === 'full' && !TTSelOps.isLocked(props.attrObj) && props.widget.widget ?
+                    renderModeSwitch() :
+                    null
+            }
+            {
+                someItemsSelected ?
+                    <>
+                        <layoutViews.ToggleSwitch
+                            htmlClass="toggle-switch"
+                            checked={props.attrObj.excludeSelection}
+                            onChange={excludeSelectionClickHandler} />
+                        <label className={sectionLocked ? 'locked' : null}
+                                onClick={() => excludeSelectionClickHandler(!props.attrObj.excludeSelection)}>
+                            {he.translate('query__tt_negative_selection')}:{'\u00a0'}
+                        </label>
+                    </> :
+                    null
+            }
+            </S.TableTextTypeFooter>
+        );
+    };
+
     // ----------------------------- <TableTextTypeAttribute /> --------------------------
 
     const TableTextTypeAttribute:React.FC<{
@@ -197,53 +270,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     }> = (props) => {
 
-        const renderModeSwitch = () => (
-            <select className="select-mode" onChange={intervalModeSwitchHandler}
-                    value={props.widget.active ? 'r' : 'i'}>
-                <option value="i">{he.translate('query__tt_select_individual')}</option>
-                <option value="r">{he.translate('query__tt_select_range')}</option>
-            </select>
-        );
 
-        const selectAllHandler = () => {
-            dispatcher.dispatch<typeof Actions.SelectAllClicked>({
-                name: Actions.SelectAllClicked.name,
-                payload: {
-                    attrName: props.attrObj.name
-                }
-            });
-        };
-
-        const intervalModeSwitchHandler = () => {
-            dispatcher.dispatch<typeof Actions.ToggleRangeMode>({
-                name: Actions.ToggleRangeMode.name,
-                payload: {
-                    attrName: props.attrObj.name
-                }
-            });
-        };
-
-        const renderSelectAll = () => (
-            <label className="select-all" style={{display: 'inline-block'}}>
-                    <input type="checkbox" className="select-all" onClick={selectAllHandler} />
-                        {he.translate('global__select_all')}
-            </label>
-        );
-
-        const renderFooter = () => {
-            if (props.attrObj.type === 'full' && !TTSelOps.isLocked(props.attrObj) && props.widget.widget) {
-                if (props.widget.active) {
-                    return renderModeSwitch();
-
-                } else {
-                    return <>
-                        {renderSelectAll()}
-                        {renderModeSwitch()}
-                    </>;
-                }
-            }
-            return null;
-        }
 
         const renderMetaInfo = () => {
             if (props.metaInfo) {
@@ -335,9 +362,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                         <div className="metadata">
                             {renderMetaInfo()}
                         </div>
-                        <S.LastLine>
-                            {renderFooter()}
-                        </S.LastLine>
+                        <TableTextTypeFooter
+                            attrObj={props.attrObj}
+                            widget={props.widget} />
                     </>)
                 }
             </S.TableTextTypeAttribute>

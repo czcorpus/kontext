@@ -316,7 +316,7 @@
         "query__tt_search_by_value": "Search by value...",
         "query__tt_exact_value": "Exact value...",
         "query__tt_regexp_value_label": "Regular expression",
-        "query__tt_negative_selection": "Exclude selection",
+        "query__tt_negative_selection": "Negative selection",
         "query__span_from": "From",
         "query__span_to": "To",
         "query__include_kwic": "Include KWIC",

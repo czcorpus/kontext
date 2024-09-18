@@ -103,6 +103,7 @@ export const TextTypesPanel = styled.div`
     }
 `;
 
+
 // ----------- <TableTextTypeAttribute /> ----------------------------
 
 export const TableTextTypeAttribute = styled.div`
@@ -227,6 +228,34 @@ export const TableTextTypeAttribute = styled.div`
     }
 `;
 
+// ----------- <TableTextTypeFooter /> -------------------------------
+
+export const TableTextTypeFooter = styled.div`
+    background-color: ${theme.colorDataTableFooter};
+    padding: 0.4em 1em;
+    overflow: hidden;
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+
+    label {
+        color: ${theme.colorLogoBlue};
+        cursor: pointer;
+    }
+
+    .select-mode {
+        float: right;
+    }
+
+    ${TableTextTypeAttribute}.locked > & {
+        background-color: ${theme.colorLockedAttrsBgColor};
+    }
+
+    .toggle-switch {
+        margin-left: 0.2em;
+    }
+`;
+
 // ----------- <AttribName /> ----------------------------
 
 export const AttribName = styled.div`
@@ -268,27 +297,6 @@ export const AttribName = styled.div`
 
     h3.focused {
         color: ${theme.colorLogoPink};
-    }
-
-    ${TableTextTypeAttribute}.locked > & {
-        background-color: ${theme.colorLockedAttrsBgColor};
-    }
-`;
-
-// ----------- <LastLine /> ----------------------------
-
-export const LastLine = styled.div`
-
-    background-color: ${theme.colorDataTableFooter};
-    padding: 0.4em;
-    overflow: hidden;
-
-    label.select-all {
-        color: ${theme.colorLogoBlue};
-    }
-
-    .select-mode {
-        float: right;
     }
 
     ${TableTextTypeAttribute}.locked > & {

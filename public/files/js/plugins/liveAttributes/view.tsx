@@ -544,9 +544,9 @@ export function init({
                                     </div>
                                 </S.CustomizedDataRows>
                                 <div className="hidden-values" />
-                                <TTS.LastLine>
+                                <TTS.TableTextTypeFooter>
                                     {'\u00a0'}
-                                </TTS.LastLine>
+                                </TTS.TableTextTypeFooter>
                             </>
                         }
                     </TTS.TableTextTypeAttribute>
