@@ -47,6 +47,12 @@ export function init(
         });
     };
 
+    const fitHandler = (e) => {
+        dispatcher.dispatch<typeof Actions.ToggleExpanded>({
+            name: Actions.ToggleExpanded.name,
+            payload: {}
+        });
+    };
 
     function renderTree(state:SyntaxTreeModelState, target:HTMLElement):void {
         while (target.firstChild) {
@@ -71,7 +77,6 @@ export function init(
         }
         const treexFrame = window.document.createElement('div');
         treexFrame.id = 'treex-frame';
-        treexFrame.style.width = '90%';
         target.appendChild(treexFrame);
 
         createGenerator(
@@ -83,13 +88,14 @@ export function init(
             'cs',
             'default',
             treexFrame,
+            state.expanded,
             {
                 width: null, // = auto
                 height: null, // = auto
                 paddingTop: 20,
                 paddingBottom: 50,
                 paddingLeft: 20,
-                paddingRight: 20,
+                paddingRight: 50,
                 onOverflow: (width:number, height:number) => {
                     const viewBox = document.querySelector('.tooltip-box .syntax-tree-frame') as HTMLElement;
                     if (viewBox) {
@@ -124,6 +130,8 @@ export function init(
                 <div ref={renderElm}>
                     {props.data ? null : <layoutViews.AjaxLoaderImage />}
                 </div>
+                <hr/>
+                <button type='button' onClick={fitHandler}>{props.expanded ? 'Fit graph to window' : 'Expand graph'}</button>
             </div>
         );
     }

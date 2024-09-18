@@ -44,6 +44,7 @@ export interface SyntaxTreeModelState extends PluginInterfaces.SyntaxViewer.Base
     data:Array<srcData.Data>;
     detailAttrOrders:DetailAttrOrders;
     windowSize:[number, number];
+    expanded:boolean;
 }
 
 /**
@@ -69,7 +70,8 @@ export class SyntaxTreeModel extends StatefulModel<SyntaxTreeModelState> {
                 targetHTMLElementID: null,
                 detailAttrOrders: pluginApi.getConf<ServerExportedData>('pluginData').
                     syntax_viewer.detail_attr_orders || {},
-                windowSize: [window.innerWidth, window.innerHeight]
+                windowSize: [window.innerWidth, window.innerHeight],
+                expanded: false,
             }
         );
         this.pluginApi = pluginApi;
@@ -94,9 +96,20 @@ export class SyntaxTreeModel extends StatefulModel<SyntaxTreeModelState> {
                     state => {
                         state.windowSize = [action.payload.width, action.payload.height];
                     }
-                )
+                );
             }
-        )
+        );
+
+        this.addActionHandler(
+            Actions.ToggleExpanded,
+            action => {
+                this.changeState(
+                    state => {
+                        state.expanded = !state.expanded;
+                    }
+                );
+            }
+        );
 
         this.addActionHandler(
             ConcActions.ShowSyntaxView,
