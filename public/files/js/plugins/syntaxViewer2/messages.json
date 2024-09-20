@@ -1,11 +1,17 @@
 {
     "en-US": {
-        "syntaxViewer2__click_to_see_details": "Click to see details"
+        "syntaxViewer2__click_to_see_details": "Click to see details",
+        "syntaxViewer2__fit_to_view_button": "Fit graph to view",
+        "syntaxViewer2__expand_button": "Extend graph"
     },
     "cs-CZ": {
-        "syntaxViewer2__click_to_see_details": "Klikněte pro zobrazení detailů"
+        "syntaxViewer2__click_to_see_details": "Klikněte pro zobrazení detailů",
+        "syntaxViewer2__fit_to_view_button": "Přizpůsobit graf oknu",
+        "syntaxViewer2__expand_button": "Roztáhnout graf"
 	},
     "szl": {
-        "syntaxViewer2__click_to_see_details": "Kliknij, żeby ôbejzdrzeć szczegōły"
+        "syntaxViewer2__click_to_see_details": "Kliknij, żeby ôbejzdrzeć szczegōły",
+        "syntaxViewer2__fit_to_view_button": "Fit graph to view UNTRANSLATED",
+        "syntaxViewer2__expand_button": "Extend graph UNTRANSLATED"
     }
 }

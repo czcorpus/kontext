@@ -35,4 +35,9 @@ export class Actions {
     }> = {
         name: 'SYNTAX_VIEWER_AREA_RESIZED'
     }
+
+    static ToggleExpanded:Action<{
+    }> = {
+        name: 'SYNTAX_VIEWER_TOGGLE_EXPANDED'
+    }
 }
