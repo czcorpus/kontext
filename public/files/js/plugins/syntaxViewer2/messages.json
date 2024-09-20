@@ -1,17 +1,17 @@
 {
     "en-US": {
         "syntaxViewer2__click_to_see_details": "Click to see details",
-        "syntaxViewer2__fit_to_view_button": "Fit graph to view",
-        "syntaxViewer2__expand_button": "Extend graph"
+        "syntaxViewer2__fit_to_view_button": "adjust to window size",
+        "syntaxViewer2__expand_button": "stretch to width"
     },
     "cs-CZ": {
         "syntaxViewer2__click_to_see_details": "Klikněte pro zobrazení detailů",
-        "syntaxViewer2__fit_to_view_button": "Přizpůsobit graf oknu",
-        "syntaxViewer2__expand_button": "Roztáhnout graf"
+        "syntaxViewer2__fit_to_view_button": "přizpůsobit velikosti okna",
+        "syntaxViewer2__expand_button": "roztáhnout do šířky"
 	},
     "szl": {
         "syntaxViewer2__click_to_see_details": "Kliknij, żeby ôbejzdrzeć szczegōły",
-        "syntaxViewer2__fit_to_view_button": "Fit graph to view UNTRANSLATED",
-        "syntaxViewer2__expand_button": "Extend graph UNTRANSLATED"
+        "syntaxViewer2__fit_to_view_button": "adjust to window size UNTRANSLATED",
+        "syntaxViewer2__expand_button": "stretch to width UNTRANSLATED"
     }
 }
