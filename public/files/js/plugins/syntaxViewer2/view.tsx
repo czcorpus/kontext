@@ -140,7 +140,7 @@ export function init(
                     sizeBtnVisible ?
                         <>
                             <hr/>
-                            <button type='button' onClick={extendGraphHandler}>
+                            <button type="button" className="util-button" onClick={extendGraphHandler}>
                                 {props.expanded ?
                                     he.translate('syntaxViewer2__fit_to_view_button') :
                                     he.translate('syntaxViewer2__expand_button')
