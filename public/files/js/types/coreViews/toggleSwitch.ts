@@ -22,6 +22,7 @@ export interface Props {
     onChange?:(checked?:boolean)=>void;
     checked?:boolean;
     disabled?:boolean;
+    htmlClass?:string;
     id?:string;
 }
 

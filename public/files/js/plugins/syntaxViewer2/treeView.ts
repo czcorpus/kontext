@@ -142,7 +142,7 @@ class TreeGenerator {
     }
 
 
-    generate(data:Array<srcData.Data>, zone:string, tree:string, target:HTMLElement):void {
+    generate(data:Array<srcData.Data>, zone:string, tree:string, target:HTMLElement, expanded:boolean):{fullWidth:boolean} {
         const nodes = data[0].zones[zone].trees[tree].nodes;
         const nodeMap = this.generateNodeMap(nodes, tree);
         const tokens:Sentence = List.filter(
@@ -151,11 +151,14 @@ class TreeGenerator {
         );
         const rowCount = nodes[0].labels.length;
 
-        this.calcViewSize(tokens, nodeMap, rowCount);
+        this.calcViewSize(tokens, nodeMap, rowCount, expanded);
         this.generateNodeCoords(tokens, nodeMap);
         const edges = this.generateEdges(nodeMap);
-        this.d3Draw(tokens, nodeMap, edges, target, rowCount);
+        this.d3Draw(tokens, nodeMap, edges, target, rowCount, expanded);
         this.onOverflow(this.params.width, this.params.height); // using to fit data properly
+        return {
+            fullWidth: this.params.width >= this.params.maxWidth,
+        };
     }
 
     private importSentence(data:srcData.Data, nodes:Array<srcData.Node>):Sentence {
@@ -174,11 +177,13 @@ class TreeGenerator {
      * Calculate all the required drawing parameters
      * (widht/height if set to auto, y-step, x-step)
      */
-    private calcViewSize(tokens:Sentence, nodeMap:TreeNodeMap, rowCount:number):void {
+    private calcViewSize(tokens:Sentence, nodeMap:TreeNodeMap, rowCount:number, expanded:boolean):void {
         const maxDepth = Object.keys(nodeMap).map(k => nodeMap[k].depth).reduce((p, c) => c > p ? c : p, 0);
 
         if (!this.params.width) {
-            this.params.width = Math.min(this.params.maxWidth, tokens.length * TreeGenerator.NODE_DIV_WIDTH);
+            this.params.width = expanded ?
+                tokens.length * TreeGenerator.NODE_DIV_WIDTH :
+                Math.min(this.params.maxWidth, tokens.length * TreeGenerator.NODE_DIV_WIDTH);
         }
         if (!this.params.height) {
             this.params.height = (maxDepth + 1) * TreeGenerator.NODE_DIV_ROW_HEIGHT +
@@ -450,7 +455,7 @@ class TreeGenerator {
             });
     }
 
-    private d3Draw(tokens:Sentence, nodeMap:TreeNodeMap, edges:Array<Edge>, target:HTMLElement, rowCount:number):void {
+    private d3Draw(tokens:Sentence, nodeMap:TreeNodeMap, edges:Array<Edge>, target:HTMLElement, rowCount:number, expanded:boolean):void {
         const wrapper = d3.select<HTMLElement, srcData.Token>(target);
 
         const sentDiv = wrapper
@@ -458,8 +463,12 @@ class TreeGenerator {
             .classed('sentence', true);
         this.renderLinearSentence(tokens, sentDiv);
 
-        const svg = d3
-            .select(target)
+        let svgTarget = wrapper;
+        if (expanded) {
+            svgTarget = wrapper.append('div').style('overflow', 'auto');     
+        }
+
+        const svg = svgTarget
             .append('svg')
             .attr('width', this.params.width)
             .attr('height', this.params.height);
@@ -498,7 +507,7 @@ class TreeGenerator {
 
 
 export interface TreeGeneratorFn {
-    (data:Array<srcData.Data>, zone:string, tree:string, target:HTMLElement, options:Options):void;
+    (data:Array<srcData.Data>, zone:string, tree:string, target:HTMLElement, expanded:boolean, options:Options):{fullWidth:boolean};
 }
 
 
@@ -518,10 +527,11 @@ export function createGenerator(
         zone:string,
         tree:string,
         target:HTMLElement,
-        options:Options
+        expanded:boolean,
+        options:Options,
     ) => {
         const gen = new TreeGenerator(options, componentHelpers, detailAttrOrders);
-        gen.generate(data, zone, tree, target);
+        return gen.generate(data, zone, tree, target, expanded);
     }
 }
 
@@ -534,6 +544,7 @@ export function generate(
     zone:string,
     tree:string,
     target:HTMLElement,
+    expanded:boolean,
     options:Options
 ) {
     const helpers = {
@@ -565,6 +576,6 @@ export function generate(
         getLocale: () => 'en_US'
     };
     const gen = new TreeGenerator(options, helpers, {});
-    gen.generate(data, zone, tree, target);
+    gen.generate(data, zone, tree, target, expanded);
 }
 

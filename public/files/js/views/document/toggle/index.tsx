@@ -62,10 +62,15 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.ToggleSwitc
         };
 
         const imgClass = !!props.checked ? `on ${inMotionTo || ''}`: `off ${inMotionTo || ''}`;
-
+        const htmlClasses = ['ToggleSwitch'];
+        if (props.disabled) {
+            htmlClasses.push('disabled');
+        }
+        if (props.htmlClass) {
+            htmlClasses.push(props.htmlClass);
+        }
         return (
-            <S.ToggleSwitch onKeyDown={keyHandler} tabIndex={props.disabled ? -1 : 0}
-                    className={props.disabled ? "ToggleSwitch disabled" : "ToggleSwitch"}>
+            <S.ToggleSwitch className={htmlClasses.join(' ')} onKeyDown={keyHandler} tabIndex={props.disabled ? -1 : 0}>
                 <span className="toggle-img" onClick={props.disabled ? null : clickHandler}>
                     <a role="checkbox" aria-checked={!!props.checked} className={imgClass}/>
                 </span>

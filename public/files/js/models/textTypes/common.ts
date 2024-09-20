@@ -164,7 +164,8 @@ const textTypeValueIsSelected = (data:TextTypes.ExportedSelection, attr:string, 
 function createTextInputAttributeSelection(
     sel:TextTypes.AnyExportedTTSelection|undefined,
     attrItem:BlockLine,
-    definesSubcorpus:boolean
+    definesSubcorpus:boolean,
+    excludeSelection:boolean,
 ):TextTypes.TextInputAttributeSelection {
     if (Array.isArray(sel)) {
         return {
@@ -190,6 +191,7 @@ function createTextInputAttributeSelection(
             ),
             definesSubcorpus,
             textFieldValue: '',
+            excludeSelection,
             type: 'text',
             metaInfo: null,
         };
@@ -208,6 +210,7 @@ function createTextInputAttributeSelection(
         values: [],
         definesSubcorpus,
         textFieldValue: '',
+        excludeSelection,
         type: 'text',
         metaInfo: null,
     };
@@ -216,14 +219,15 @@ function createTextInputAttributeSelection(
 function createFullAttributeSelection(
     selectedItems:TextTypes.ExportedSelection,
     attrItem:BlockLine,
-    definesSubcorpus:boolean
+    definesSubcorpus:boolean,
+    excludeSelection:boolean,
 ):TextTypes.FullAttributeSelection {
 
     const values:Array<TextTypes.AttributeValue> = List.map(
         valItem => ({
             value: valItem.v,
             ident: valItem.v, // TODO what about bib items?
-            selected: textTypeValueIsSelected(selectedItems, attrItem.name, valItem.v),
+            selected: textTypeValueIsSelected(selectedItems, excludeSelection ? `!${attrItem.name}` : attrItem.name, valItem.v),
             locked: definesSubcorpus,
             availItems:valItem.xcnt,
             // TODO here we expect that initial data
@@ -245,6 +249,7 @@ function createFullAttributeSelection(
         },
         values,
         definesSubcorpus,
+        excludeSelection,
         type: 'full',
         metaInfo: null,
     };
@@ -253,7 +258,8 @@ function createFullAttributeSelection(
 function createRegexpAttributeSelection(
     sel:TextTypes.ExportedRegexpSelection,
     attrItem:BlockLine,
-    definesSubcorpus:boolean
+    definesSubcorpus:boolean,
+    excludeSelection:boolean,
 ):TextTypes.RegexpAttributeSelection {
     return {
         name: attrItem.name,
@@ -267,6 +273,7 @@ function createRegexpAttributeSelection(
         textFieldDecoded: Strings.shortenText(sel.regexp, 50, '\u2026'),
         isLocked: definesSubcorpus,
         definesSubcorpus,
+        excludeSelection,
         type: 'regexp',
         metaInfo: null,
     };
@@ -294,14 +301,15 @@ export function importInitialTTData(
     if (mergedBlocks.length > 0) {
         return List.map(
             (attrItem:BlockLine) => {
+                const excludeSelection = Dict.hasKey(`!${attrItem.name}`, selectedItems);
                 const attrInSubc = subcorpStructure ?
                     Dict.hasKey(attrItem.name, subcorpStructure) : false;
 
                 if (isRegexpGeneratingWidgetView(attrItem.widget)) {
-                    const sel = nSelectedItems[attrItem.name] || {regexp: ''};
+                    const sel = nSelectedItems[attrItem.name] || nSelectedItems[`!${attrItem.name}`] || {regexp: ''};
                     if (TextTypes.isExportedRegexpSelection(sel)) {
                         return createRegexpAttributeSelection(
-                            sel, attrItem, attrInSubc);
+                            sel, attrItem, attrInSubc, excludeSelection);
 
                     } else {
                         throw new Error(`failed to decode regexp attr. data for ${attrItem.name}`);
@@ -309,16 +317,18 @@ export function importInitialTTData(
 
                 } else if (attrItem.textboxlength) {
                     return createTextInputAttributeSelection(
-                        nSelectedItems[attrItem.name],
+                        nSelectedItems[attrItem.name] || nSelectedItems[`!${attrItem.name}`],
                         attrItem,
-                        attrInSubc
+                        attrInSubc,
+                        excludeSelection,
                     );
 
                 } else {
                     return createFullAttributeSelection(
                         nSelectedItems,
                         attrItem,
-                        attrInSubc
+                        attrInSubc,
+                        excludeSelection,
                     )
                 }
             },

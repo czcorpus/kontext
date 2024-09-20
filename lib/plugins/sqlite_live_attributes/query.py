@@ -13,11 +13,14 @@
 # GNU General Public License for more details.
 
 
+from texttypes.model import StructAttr
+
+
 def is_range_argument(item):
     return type(item) is dict and 'from' in item and 'to' in item
 
 
-class AttrArgs(object):
+class AttrArgs:
     """
     Stores a multi-value dictionary and allows an export
     to SQL WHERE expression as used by the plugin.
@@ -60,47 +63,49 @@ class AttrArgs(object):
         returns:
         a SQL WHERE expression in conjunctive normal form
         """
-        def cmp_operator(val):
+        def cmp_operator(val, exclude):
+            if exclude:
+                return 'NOT LIKE' if '%' in val else '!='
             return 'LIKE' if '%' in val else '='
 
         where = []
         sql_values = []
         for key, values in self.data.items():
-            key = key.replace('.', '_')
-            if self._autocomplete_attr == self._bib_label and key == self._bib_id:
+            sa = StructAttr.get(key)
+            if self._autocomplete_attr == self._bib_label and sa.key('_') == self._bib_id:
                 continue
             cnf_item = []
             if type(values) in (list, tuple):
                 for value in values:
                     if len(value) == 0 or value[0] != '@':
-                        cnf_item.append(f'{item_prefix}.{key} {cmp_operator(value)} ?')
+                        cnf_item.append(f'{item_prefix}.{sa.key("_")} {cmp_operator(value, sa.exclude)} ?')
                         sql_values.append(self.import_value(value))
                     else:
                         cnf_item.append(
-                            f'{item_prefix}.{self._bib_label} {cmp_operator(value[1:])} ?')
+                            f'{item_prefix}.{self._bib_label} {cmp_operator(value[1:], sa.exclude)} ?')
                         sql_values.append(self.import_value(value[1:]))
 
             elif is_range_argument(values):
                 pass  # a range query  TODO
 
             elif type(values) is str:
-                cnf_item.append(f'{item_prefix}.{key} LIKE ?')
+                cnf_item.append(f'{item_prefix}.{sa.key("_")} {"NOT LIKE" if sa.exclude else "LIKE"} ?')
                 sql_values.append(self.import_value(values))
 
             else:
                 cnf_item.append(
-                    f'ktx_lower({item_prefix}.{key}) {cmp_operator(values)} ktx_lower(?)')
+                    f'ktx_lower({item_prefix}.{sa.key("_")}) {cmp_operator(values, sa.exclude)} ktx_lower(?)')
                 sql_values.append(self.import_value(values))
 
             if len(cnf_item) > 0:
-                where.append('({})'.format(' OR '.join(cnf_item)))
+                where.append('({})'.format((' AND ' if sa.exclude else ' OR ').join(cnf_item)))
 
         where.append(f'{item_prefix}.corpus_id = ?')
         sql_values.append(corpus_id)
         return ' AND '.join(where), sql_values
 
 
-class QueryComponents(object):
+class QueryComponents:
 
     def __init__(self, sql_template, selected_attrs, hidden_attrs, where_values):
         self.sql_template = sql_template
@@ -113,7 +118,7 @@ class QueryComponents(object):
                 f'selected_attrs: {self.selected_attrs}, where: {self.where_values}')
 
 
-class QueryBuilder(object):
+class QueryBuilder:
 
     def __init__(self, corpus_info, attr_map, srch_attrs, aligned_corpora, autocomplete_attr, empty_val_placeholder):
         self._corpus_info = corpus_info
@@ -164,7 +169,7 @@ class QueryBuilder(object):
         return tmp
 
 
-class DataIterator(object):
+class DataIterator:
     """
     This object represents an iterator which
     goes through cartesian product of all the selected

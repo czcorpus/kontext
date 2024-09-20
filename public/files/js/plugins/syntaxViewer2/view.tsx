@@ -47,8 +47,14 @@ export function init(
         });
     };
 
+    const extendGraphHandler = (e) => {
+        dispatcher.dispatch<typeof Actions.ToggleExpanded>({
+            name: Actions.ToggleExpanded.name,
+            payload: {}
+        });
+    };
 
-    function renderTree(state:SyntaxTreeModelState, target:HTMLElement):void {
+    function renderTree(state:SyntaxTreeModelState, target:HTMLElement):{fullWidth:boolean} {
         while (target.firstChild) {
             target.removeChild(target.firstChild);
         }
@@ -71,10 +77,9 @@ export function init(
         }
         const treexFrame = window.document.createElement('div');
         treexFrame.id = 'treex-frame';
-        treexFrame.style.width = '90%';
         target.appendChild(treexFrame);
 
-        createGenerator(
+        return createGenerator(
             he,
             state.detailAttrOrders
         ).call(
@@ -83,13 +88,14 @@ export function init(
             'cs',
             'default',
             treexFrame,
+            state.expanded,
             {
                 width: null, // = auto
                 height: null, // = auto
                 paddingTop: 20,
                 paddingBottom: 50,
                 paddingLeft: 20,
-                paddingRight: 20,
+                paddingRight: 50,
                 onOverflow: (width:number, height:number) => {
                     const viewBox = document.querySelector('.tooltip-box .syntax-tree-frame') as HTMLElement;
                     if (viewBox) {
@@ -110,11 +116,17 @@ export function init(
 
     const SyntaxViewPane:React.FC<SyntaxTreeModelState> = (props) => {
         const renderElm = React.useRef(null);
+        const [sizeBtnVisible, changeState] = React.useState(false);
 
         React.useEffect(
             () => {
                 if (props.data) {
-                    renderTree(props, renderElm.current)
+                    const renderedInfo = renderTree(props, renderElm.current);
+                    if (renderedInfo.fullWidth) {
+                        if (sizeBtnVisible !== true) changeState(true);
+                    } else {
+                        if (sizeBtnVisible !== false) changeState(false);
+                    }
                 }
             }
         );
@@ -124,6 +136,19 @@ export function init(
                 <div ref={renderElm}>
                     {props.data ? null : <layoutViews.AjaxLoaderImage />}
                 </div>
+                {
+                    sizeBtnVisible ?
+                        <>
+                            <hr/>
+                            <button type="button" className="util-button" onClick={extendGraphHandler}>
+                                {props.expanded ?
+                                    he.translate('syntaxViewer2__fit_to_view_button') :
+                                    he.translate('syntaxViewer2__expand_button')
+                                }
+                            </button>
+                        </> :
+                        null
+                }
             </div>
         );
     }

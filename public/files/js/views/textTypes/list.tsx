@@ -36,6 +36,7 @@ export interface FullListContainerProps {
     hasExtendedInfo:boolean;
     hasSelectedItems:boolean;
     widget:{widget:WidgetView; active:boolean};
+    isNegativeSelection:boolean;
     isBusy:boolean;
 }
 
@@ -196,36 +197,37 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
 
         const renderListOfCheckBoxes = () => {
             return (
-                <S.FullListContainer>
+                <S.FullListContainer width="100%">
                     <tbody>
-                    {List.map(
-                        (item, i) => (
-                            <tr key={item.value + String(i)}>
-                                <td><commonViews.CheckBoxItem
-                                        itemIdx={i}
-                                        itemName={props.attrObj.name}
-                                        itemValue={item.value}
-                                        itemIsSelected={item.selected}
-                                        itemIsLocked={item.locked}
-                                            /></td>
-                                <td className="num">
-                                    {item.availItems > -1 ?
-                                        he.formatNumber(item.availItems || 0) :
-                                        '??'
+                        {List.map(
+                            (item, i) => (
+                                <tr key={item.value + String(i)}>
+                                    <td><commonViews.CheckBoxItem
+                                            itemIdx={i}
+                                            itemName={props.attrObj.name}
+                                            itemValue={item.value}
+                                            itemIsSelected={item.selected}
+                                            itemIsLocked={item.locked}
+                                            isNegativeSelection={props.isNegativeSelection}
+                                                /></td>
+                                    <td className="num">
+                                        {item.availItems > -1 ?
+                                            he.formatNumber(item.availItems || 0) :
+                                            '??'
+                                        }
+                                    </td>
+                                    <td className="extended-info">
+                                    {props.hasExtendedInfo ?
+                                        <commonViews.ExtendedInfoButton ident={item.ident} attrName={props.attrObj.name}
+                                                isBusy={props.isBusy}
+                                                numGrouped={item.numGrouped} containsExtendedInfo={!!item.extendedInfo} />
+                                        : null
                                     }
-                                </td>
-                                <td className="extended-info">
-                                {props.hasExtendedInfo ?
-                                    <commonViews.ExtendedInfoButton ident={item.ident} attrName={props.attrObj.name}
-                                            isBusy={props.isBusy}
-                                            numGrouped={item.numGrouped} containsExtendedInfo={!!item.extendedInfo} />
-                                    : null
-                                }
-                                </td>
-                            </tr>
-                        ),
-                        props.attrObj.values
-                    )}
+                                    </td>
+                                </tr>
+                            ),
+                            props.attrObj.values
+                        )}
                     </tbody>
                 </S.FullListContainer>
             );

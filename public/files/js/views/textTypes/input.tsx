@@ -37,6 +37,7 @@ export interface RawInputMultiValueContainerProps {
     textInputPlaceholder:string;
     isBusy:boolean;
     isAutoCompleteActive:boolean;
+    isNegativeSelection:boolean;
 
 }
 
@@ -240,6 +241,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                                     itemValue={item.value}
                                     itemIsSelected={item.selected}
                                     itemIsLocked={item.locked}
+                                    isNegativeSelection={props.isNegativeSelection}
                                         />
                         </td>
                         <td>
@@ -257,19 +259,22 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
             );
         };
 
+        const sectionLocked = !List.empty(props.attrObj.values) && List.every(v => v.locked, props.attrObj.values);
         return (
-            <div>
-                <table>
+            <S.RawInputMultiValueContainer>
+                <S.FullListContainer width="100%">
                     <tbody>
                         {renderCheckboxes()}
                     </tbody>
-                </table>
-                <RawInputContainer attrObj={props.attrObj}
-                        customInputName={null}
-                        customAutoCompleteHintClickHandler={handleAutoCompleteHintClick}
-                        textInputPlaceholder={props.textInputPlaceholder}
-                        isAutoCompleteActive={props.isAutoCompleteActive} />
-            </div>
+                </S.FullListContainer>
+                { sectionLocked ? null :
+                    <RawInputContainer attrObj={props.attrObj}
+                            customInputName={null}
+                            customAutoCompleteHintClickHandler={handleAutoCompleteHintClick}
+                            textInputPlaceholder={props.textInputPlaceholder}
+                            isAutoCompleteActive={props.isAutoCompleteActive} />
+                }
+            </S.RawInputMultiValueContainer>
         );
     };
 

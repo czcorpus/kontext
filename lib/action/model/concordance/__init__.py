@@ -628,15 +628,22 @@ class ConcActionModel(CorpusActionModel):
             niceargs = []
             prev_val = ''
             prev_other = ''
+            exclude = False
             for i, arg_i in enumerate(args):
                 if i % 2:
                     tmparg = arg_i.strip('\\').replace('(?i)', '')
                     if tmparg != prev_val or '|' not in prev_other:
-                        niceargs.append(tmparg)
+                        if exclude:
+                            exclude = False
+                            niceargs.append(f'!{tmparg}')
+                        else:
+                            niceargs.append(tmparg)
                     prev_val = tmparg
                 else:
                     if arg_i.startswith('within'):
                         niceargs.append('within')
+                    if '!=' in arg_i:
+                        exclude = True
                     prev_other = arg_i
             return ', '.join(niceargs)
         # o,  a,    u1,   u2,   s,           opid
