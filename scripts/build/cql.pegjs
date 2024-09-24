@@ -131,13 +131,13 @@ NO_RG_ESCAPED =
 // ---------------- Regular expression with balanced parentheses --------
 
 RegExp =
-    QUOT RegExpRaw QUOT / QUOT QUOT
+    QUOT RegExpRaw ("|" RegExpRaw?)* QUOT / QUOT QUOT
 
 RegExpRaw =
     (RgLook / RgGrouped / RgSimple)+
 
 RgGrouped =
-    LPAREN _ RegExpRaw _ RPAREN
+    LPAREN _ RegExpRaw ("|" RegExpRaw?)*  _ RPAREN
 
 RgSimple =
     (RgRange / RgChar / RgAlt / RgPosixClass)+
@@ -154,10 +154,42 @@ RgLookOperator =
 
 
 RgAlt =
-    LBRACKET (RgChar / DASH)+ RBRACKET
+    LBRACKET RG_CARET? RgAltVal+ RBRACKET
+
+RgAltVal =
+    AnyLetter "-" AnyLetter /
+    RgChar /
+    "|" /
+    QUOT /
+    LBRACE /
+    RBRACE /
+    LPAREN /
+    RPAREN /
+    DASH
 
 RgChar =
-    RG_ESCAPED / AnyLetter / RG_OP / RG_NON_LETTER / RG_NON_SPEC / RG_AMP / RG_UNICODE_PROP
+    RG_ESCAPED /
+    RG_REPEAT /
+    RG_QM /
+    RG_ANY /
+    AnyLetter /
+    RG_OP /
+    RG_NON_LETTER /
+    RG_NON_SPEC /
+    RG_AMP /
+    RG_UNICODE_PROP
+
+RG_CARET =
+     "^"
+
+RG_QM =
+    "?"
+
+RG_ANY =
+    "."
+
+RG_REPEAT =
+    [*+]
 
 RG_OP =
     [,\-_\^\$ ] / [0-9\?\*\+\.\|]
