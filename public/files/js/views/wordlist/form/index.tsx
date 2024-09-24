@@ -28,8 +28,7 @@ import * as PluginInterfaces from '../../../types/plugins';
 import { Actions } from '../../../models/wordlist/actions';
 import { FileTarget, WlnumsTypes } from '../../../models/wordlist/common';
 import * as S from './style';
-import * as SC from '../../query/style';
-
+import * as theme from '../../theme/default';
 
 export interface WordlistFormViewArgs {
     dispatcher:IActionDispatcher;
@@ -359,12 +358,12 @@ export function init({
         return (
             <S.FieldsetOutputOptions aria-labelledby="wlform-output-options">
 
-                <SC.ExpandableSectionLabel id="wlform-output-options" >
+                <theme.ExpandableSectionLabel id="wlform-output-options" >
                     <layoutViews.ExpandButton isExpanded={props.formVisible} onClick={props.handleClick} />
                         <a onClick={props.handleClick}>
                             {he.translate('wordlist__out_opts_fieldset_legend')}
                         </a>
-                </SC.ExpandableSectionLabel>
+                </theme.ExpandableSectionLabel>
                 {props.formVisible ?
                     <div className="contents">
                         <FrequencyFigures wlnums={props.wlnums} />
@@ -419,13 +418,13 @@ export function init({
     }> = (props) => {
         return (
             <S.FieldsetFilterOptions>
-                <SC.ExpandableSectionLabel id="wlform-filter-options">
+                <theme.ExpandableSectionLabel id="wlform-filter-options">
                     <layoutViews.ExpandButton isExpanded={props.formVisible} onClick={props.handleClick} />
                         <a onClick={props.handleClick}>
                             {he.translate('wordlist__filter_opts_fieldset_legend')}
                         </a>
                     {!props.formVisible ? <FilterWordCount pfilterWords={props.pfilterWords} nfilterWords={props.nfilterWords} /> : null}
-                </SC.ExpandableSectionLabel>
+                </theme.ExpandableSectionLabel>
                 {props.formVisible ?
                     <div className="contents">
                         <FilterFile label={he.translate('wordlist__pfilter_label')} target="pfilter"

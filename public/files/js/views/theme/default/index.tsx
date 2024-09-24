@@ -19,7 +19,7 @@
  */
 
 import styled, { css } from 'styled-components';
-import {keyframes} from 'styled-components';
+import { keyframes } from 'styled-components';
 import backgroundSrc from '../../../../img/groovepaper2.jpg';
 
 export function preloadImages(...images) {
@@ -226,4 +226,28 @@ export const textNoHighlight = css`
     border-radius: ${borderRadiusDefault};
     display: inline-block;
     padding: 0 0.3em 0 0.3em;
+`;
+
+// ---------------- <ExpandableSectionLabel /> -----------------------------------
+
+export const ExpandableSectionLabel = styled.h2`
+    margin: 0 0 0.4em 0;
+    padding: 0.2em;
+    font-size: 1.05em;
+    font-weight: normal;
+
+    .ExpandButton {
+        margin-right: 0.7em;
+    }
+
+    a,
+    span {
+        font-weight: normal;
+        color: ${colorLogoBlue};
+        text-decoration: none;
+    }
+
+    a:hover {
+        text-decoration: underline;
+    }
 `;

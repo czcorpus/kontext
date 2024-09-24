@@ -42,7 +42,7 @@ import { TTSelOps } from '../../../models/textTypes/selectionOps';
 import { Actions as HelpActions } from '../../../models/help/actions';
 import * as S from './style';
 import * as SC from '../input/style';
-import * as SQ from '../style';
+import * as theme from '../../theme/default';
 import { QueryHelpModel, QueryHelpModelState } from '../../../models/help/queryHelp';
 import { SearchHistoryModel } from '../../../models/searchHistory';
 import { QuickSubcorpModel } from '../../../models/subcorp/quickSubcorp';
@@ -394,13 +394,13 @@ export function init({
             }
         }
 
-        if (props.hasSelectedItems) {            
+        if (props.hasSelectedItems) {
             return (
                 <SC.SelectedTextTypesLite className="specify-text-types">
-                    <SQ.ExpandableSectionLabel>
+                    <theme.ExpandableSectionLabel>
                         <layoutViews.ExpandButton isExpanded={props.hasSelectedItems} />
                         <span>{he.translate('query__chosen_texts')}</span>
-                    </SQ.ExpandableSectionLabel>
+                    </theme.ExpandableSectionLabel>
                     <div className="contents">
                         <ul>
                             {pipe(

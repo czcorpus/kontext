@@ -39,7 +39,7 @@ import { QueryType, TokenSuggestions } from '../../../models/query/query';
 import { init as queryStructureInit } from '../structure';
 import { init as shViewInit } from '../../searchHistory/simple';
 import * as S from './style';
-import * as SC from '../style';
+import * as theme from '../../theme/default';
 import { SearchHistoryModel } from '../../../models/searchHistory';
 
 
@@ -185,7 +185,7 @@ export function init({
         return (
             <S.AdvancedFormFieldset className={htmlClasses.join(' ')}
                     role="group" aria-labelledby={props.uniqId}>
-                <SC.ExpandableSectionLabel id={props.uniqId}>
+                <theme.ExpandableSectionLabel id={props.uniqId}>
                     <layoutViews.ExpandButton isExpanded={!props.formDisabled && props.formVisible} onClick={props.handleClick} />
                     <a onClick={props.formDisabled ? null : props.handleClick}>{props.title}</a>
                     {!props.formDisabled && props.formVisible ? null : props.closedStateHint}
@@ -193,7 +193,7 @@ export function init({
                         null :
                         <AdvancedFormFieldsetDesc html={props.closedStateDesc} />
                     }
-                </SC.ExpandableSectionLabel>
+                </theme.ExpandableSectionLabel>
                 {!props.formDisabled && props.formVisible ?
                     <div className="contents">
                         {props.children}

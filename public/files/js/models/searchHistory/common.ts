@@ -133,6 +133,20 @@ export function isConcQueryHistoryItem(item:QueryHistoryItem):item is ConcQueryH
     return item.q_supertype === 'conc';
 }
 
+export interface GetHistoryArgs {
+    offset:number;
+    limit:number;
+    query_supertype:Kontext.QuerySupertype;
+    corpname:string;
+    archived_only:boolean;
+    fsPosattrName?:string;
+    fsPosattrValue?:string;
+    fsStructureName?:string;
+    fsStructattrName?:string;
+    fsStructattrValue?:string;
+    fsAnyPropertyValue?:string;
+}
+
 export interface GetHistoryResponse extends Kontext.AjaxResponse {
     data:Array<QueryHistoryItem>;
     limit:number;
@@ -164,5 +178,15 @@ export interface SearchHistoryModelState {
     hasMoreItems:boolean;
     archivedOnly:boolean;
     currentItem:number;
+    supportsFulltext:boolean;
+    fsQueryCQLProps:boolean;
+    fsPosattrName:string;
+    fsPosattrValue:string;
+    fsStructureName:string;
+    fsStructattrName:string;
+    fsStructattrValue:string;
+    fsAnyPropertyValue:string;
+    extendedSearchVisible:boolean;
+
 }
 

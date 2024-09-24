@@ -30,6 +30,7 @@ import { Actions as GlobalActions } from '../../../models/common/actions';
 import { AnyQuery } from '../../../models/query/query';
 import * as S from './style';
 import * as SC from '../style';
+import * as theme from '../../theme/default';
 
 
 export interface AlignedModuleArgs {
@@ -295,7 +296,7 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
 
         return (
             <S.AlignedCorpora className={props.sectionVisible ? '' : ' closed'} role="group" aria-labelledby="parallel-corpora-forms">
-                <SC.ExpandableSectionLabel id="parallel-corpora-forms">
+                <theme.ExpandableSectionLabel id="parallel-corpora-forms">
                     <layoutViews.ExpandButton isExpanded={props.sectionVisible} onClick={handleVisibilityChange} />
                     <a onClick={handleVisibilityChange}>
                         {he.translate('query__aligned_corpora_hd')}
@@ -306,7 +307,7 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                         }
                     </a>
 
-                </SC.ExpandableSectionLabel>
+                </theme.ExpandableSectionLabel>
                 {props.sectionVisible ?
                     <>
                         {List.map(
@@ -368,10 +369,10 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
         if (props.alignedCorpora.length > 0) {
             return (
                 <S.AlignedCorporaLite>
-                    <SC.ExpandableSectionLabel>
+                    <theme.ExpandableSectionLabel>
                         <layoutViews.ExpandButton isExpanded={props.alignedCorpora.length > 0} />
                         <span>{he.translate('query__aligned_corpora_hd')}</span>
-                    </SC.ExpandableSectionLabel>
+                    </theme.ExpandableSectionLabel>
                     <div className="contents">
                         <table className="parallel-queries">
                             <tbody>
