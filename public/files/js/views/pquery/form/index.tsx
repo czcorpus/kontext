@@ -28,7 +28,7 @@ import { PqueryFormModel } from '../../../models/pquery/form';
 import { Actions } from '../../../models/pquery/actions';
 import * as S from './style';
 import * as QS from '../../query/input/style';
-import * as SC from '../../query/style';
+import * as theme from '../../theme/default';
 import { Dict, List, Maths, pipe } from 'cnc-tskit';
 import { ConcStatus, ExpressionRoleType, PqueryAlignTypes,
     PqueryFormModelState } from '../../../models/pquery/common';
@@ -131,7 +131,7 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
         return (
             <QS.AdvancedFormFieldset className={htmlClasses.join(' ')}
                     role="group" aria-labelledby={props.uniqId}>
-                <SC.ExpandableSectionLabel id={props.uniqId}>
+                <theme.ExpandableSectionLabel id={props.uniqId}>
                     <layoutViews.ExpandButton isExpanded={props.formVisible} onClick={props.handleClick} />
                         <a onClick={props.handleClick}>{props.title}</a>
                     {props.formVisible ? null : props.closedStateHint}
@@ -139,7 +139,7 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
                         null :
                         <AdvancedFormFieldsetDesc html={props.closedStateDesc} />
                     }
-                </SC.ExpandableSectionLabel>
+                </theme.ExpandableSectionLabel>
                 {props.formVisible ?
                     <div className="contents">
                         {props.children}

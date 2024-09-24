@@ -116,4 +116,57 @@ export class Actions {
     }> = {
         name: 'QUERY_HISTORY_REMOVE_ITEM_FROM_LIST_DONE'
     };
+
+    static ToggleAdvancedSearch:Action<{
+    }> = {
+        name: 'QUERY_HISTORY_TOGGLE_ADVANCED_SEARCH'
+    };
+
+    static SetFsPosattrName:Action<{
+        value:string;
+    }> = {
+        name: 'QUERY_HISTORY_SET_FS_POSATTR_NAME'
+    };
+
+    static SetFsPosattrValue:Action<{
+        value:string;
+    }> = {
+        name: 'QUERY_HISTORY_SET_FS_POSATTR_VALUE'
+    };
+
+    static SetFsStructureName:Action<{
+        value:string;
+    }> = {
+        name: 'QUERY_HISTORY_SET_FS_STRUCTURE_NAME'
+    };
+
+    static SetFsStructattrName:Action<{
+        value:string;
+    }> = {
+        name: 'QUERY_HISTORY_SET_FS_STRUCTATTR_NAME'
+    };
+
+    static SetFsStructattrValue:Action<{
+        value:string;
+    }> = {
+        name: 'QUERY_HISTORY_SET_FS_STRUCTATTR_VALUE'
+    };
+
+    static SetFsAnyPropertyValue:Action<{
+        value:string;
+    }> = {
+        name: 'QUERY_HISTORY_SET_FS_ANY_PROPERTY_VALUE'
+    };
+
+    static SetFsAdvancedQuery:Action<{
+        value:boolean;
+    }> = {
+        name: 'QUERY_HISTORY_SET_FS_ADVANCED_QUERY'
+    };
+
+    static SubmitExtendedSearch:Action<{
+    }> = {
+        name: 'QUERY_HISTORY_SUBMIT_EXTENDED_SEARCH'
+    };
+
 }

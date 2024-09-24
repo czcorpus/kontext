@@ -28,7 +28,7 @@ user.
 """
 
 import abc
-from typing import Optional
+from typing import Optional, Dict, Any, List
 
 
 class AbstractQueryHistory(abc.ABC):
@@ -107,3 +107,10 @@ class AbstractQueryHistory(abc.ABC):
         offset -- where to start the list (starts from zero)
         limit -- how many rows will be selected
         """
+
+    def supports_fulltext_search(self):
+        return False
+
+    async def fulltext_search(
+            self, plugin_ctx, user_id, filter: Dict[str, Any]) -> List[Any]:
+        return []

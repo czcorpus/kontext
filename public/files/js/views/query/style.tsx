@@ -21,30 +21,6 @@
 import styled from 'styled-components';
 import * as theme from '../theme/default';
 
-// ---------------- <ExpandableSectionLabel /> -----------------------------------
-
-export const ExpandableSectionLabel = styled.h2`
-    margin: 0 0 0.4em 0;
-    padding: 0.2em;
-    font-size: 1.05em;
-    font-weight: normal;
-
-    .ExpandButton {
-        margin-right: 0.7em;
-    }
-
-    a,
-    span {
-        font-weight: normal;
-        color: ${theme.colorLogoBlue};
-        text-decoration: none;
-    }
-
-    a:hover {
-        text-decoration: underline;
-    }
-`;
-
 
 // ---------------- <PoSFilter /> ----------------------------------------
 

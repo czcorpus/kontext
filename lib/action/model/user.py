@@ -447,6 +447,9 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
         await self.attach_plugin_exports(result, direct=False)
         result['_version'] = (corplib.manatee_version(), settings.get('global', '__version__'))
 
+        with plugins.runtime.QUERY_HISTORY as qh:
+            result['supports_query_history_fulltext'] = qh.supports_fulltext_search()
+
         if self.user_is_anonymous():
             disabled_set = set(self.disabled_menu_items)
             self.disabled_menu_items = tuple(disabled_set.union(
