@@ -578,6 +578,10 @@ export interface ParsedPQItem {
             case 'NNUMBER':
             case 'DASH':
             case 'RG_OP':
+            case 'RG_CARET':
+            case 'RG_QM':
+            case 'RG_ANY':
+            case 'RG_REPEAT':
             case 'RG_ESCAPED':
             case 'NO_RG_SPEC':
             case 'NO_RG_ESCAPED':
