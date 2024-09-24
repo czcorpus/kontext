@@ -292,7 +292,7 @@ export const FilterForm = styled.div`
 
     margin-bottom: 2.3em;
 
-    fieldset {
+    fieldset.basic {
         display: flex;
         flex-wrap: nowrap;
         align-items: center;
@@ -345,4 +345,27 @@ export const ArchivedOnlyCheckbox = styled.span`
 
 export const SearchKindSelector = styled.select`
     margin-left: 0.2em;
+`;
+
+// ---------------------- <FulltextBlock /> ----------------------------
+
+export const FulltextBlock = styled.div`
+    margin-top: 0.7em;
+
+    .button {
+        display: flex;
+        flex-direction: row-reverse;
+    }
+`;
+
+// ---------------------- <FulltextFieldset /> -------------------------
+
+export const FulltextFieldset = styled.fieldset`
+
+    .prop-query {
+        display: flex;
+        align-items: center;
+        padding: 0.3em 0;
+
+    }
 `;

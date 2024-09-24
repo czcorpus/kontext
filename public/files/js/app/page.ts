@@ -872,7 +872,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                 this,
                 0,
                 this.getNestedConf<number>('pluginData', 'query_history', 'page_num_records'),
-                this.getNestedConf<number>('pluginData', 'query_history', 'page_num_records')
+                this.getNestedConf<number>('pluginData', 'query_history', 'page_num_records'),
+                this.getConf<boolean>('supportsQueryHistoryFulltext')
             );
 
             const qhViews = initQueryHistoryViews({

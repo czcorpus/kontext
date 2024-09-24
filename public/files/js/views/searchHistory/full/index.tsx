@@ -30,6 +30,7 @@ import * as S from './style';
 import { SearchHistoryModelState, ConcQueryHistoryItem,
     QueryHistoryItem } from '../../../models/searchHistory/common';
 import { SearchHistoryModel } from '../../../models/searchHistory';
+import { init as fulltextViewInit } from './fulltext';
 import gearIcon from '../../../../img/config-icon.svg';
 import gearIconS from '../../../../img/config-icon_s.svg';
 
@@ -41,10 +42,15 @@ export interface HistoryViews {
 }
 
 
-export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
-            queryHistoryModel:SearchHistoryModel):HistoryViews {
+export function init(
+    dispatcher:IActionDispatcher,
+    he:Kontext.ComponentHelpers,
+    queryHistoryModel:SearchHistoryModel
+):HistoryViews {
 
     const layoutViews = he.getLayoutViews();
+    const FulltextFieldset = fulltextViewInit(dispatcher, he, queryHistoryModel);
+
 
     const supertypeToHuman = (qSupertype:Kontext.QuerySupertype) => {
         switch (qSupertype) {
@@ -148,11 +154,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         currentCorpusOnly:boolean;
         querySupertype:Kontext.QuerySupertype;
         archivedOnly:boolean;
+        supportsFulltext:boolean;
 
     }> = (props) => {
+
         return (
             <S.FilterForm>
-                <fieldset>
+                <fieldset className="basic">
                     <legend>
                         {he.translate('qhistory__filter_legend')}
                     </legend>
@@ -169,6 +177,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         <ArchivedOnlyCheckbox value={props.archivedOnly} />
                     </label>
                 </fieldset>
+                {props.supportsFulltext ?
+                    <FulltextFieldset /> :
+                    null
+                }
             </S.FilterForm>
         );
     };
@@ -751,7 +763,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         corpname={props.corpname}
                         querySupertype={props.querySupertype}
                         currentCorpusOnly={props.currentCorpusOnly}
-                        archivedOnly={props.archivedOnly} />
+                        archivedOnly={props.archivedOnly}
+                        supportsFulltext={props.supportsFulltext} />
                 {props.data.length === 0 && props.isBusy ?
                     <div className="loader"><layoutViews.AjaxLoaderImage /></div> :
                     <DataTable data={props.data} offset={props.offset}

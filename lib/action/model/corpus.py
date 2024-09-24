@@ -606,6 +606,7 @@ class CorpusActionModel(UserActionModel):
         for k in asdict(self.args):
             if k not in result:
                 result[k] = getattr(self.args, k)
+
         return result
 
     def get_struct_opts(self) -> str:

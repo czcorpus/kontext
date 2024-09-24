@@ -34,7 +34,8 @@ import {
     SaveItemResponse,
     SearchHistoryModelState,
     QueryHistoryItem,
-    isConcQueryHistoryItem } from './common';
+    isConcQueryHistoryItem,
+    GetHistoryArgs} from './common';
 
 
 
@@ -66,7 +67,8 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         pageModel:PageModel,
         offset:number,
         limit:number,
-        pageSize:number
+        pageSize:number,
+        supportsFulltext:boolean
     ) {
         super(
             dispatcher,
@@ -83,6 +85,15 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                 hasMoreItems: true, // TODO this should be based on initial data (n+1 items)
                 archivedOnly: false,
                 currentItem: 0,
+                supportsFulltext,
+                fsPosattrName: 'word',
+                fsPosattrValue: '',
+                fsStructureName: '',
+                fsStructattrName: '',
+                fsStructattrValue: '',
+                fsAnyPropertyValue: '',
+                fsQueryCQLProps: true,
+                extendedSearchVisible: false
             }
         );
         this.pageModel = pageModel;
@@ -261,6 +272,113 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                     }
                 });
             }
+        );
+
+        this.addActionHandler(
+            Actions.ToggleAdvancedSearch,
+            action => {
+                this.changeState(
+                    state => {
+                        state.extendedSearchVisible = !state.extendedSearchVisible;
+                    }
+                )
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SetFsPosattrName,
+            action => {
+                this.changeState(
+                    state => {
+                        state.fsPosattrName = action.payload.value;
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SetFsPosattrValue,
+            action => {
+                this.changeState(
+                    state => {
+                        state.fsPosattrValue = action.payload.value;
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SetFsStructureName,
+            action => {
+                this.changeState(
+                    state => {
+                        state.fsStructureName = action.payload.value;
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SetFsStructattrName,
+            action => {
+                this.changeState(
+                    state => {
+                        state.fsStructattrName = action.payload.value;
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SetFsStructattrValue,
+            action => {
+                this.changeState(
+                    state => {
+                        state.fsStructattrValue = action.payload.value;
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SetFsAnyPropertyValue,
+            action => {
+                this.changeState(
+                    state => {
+                        state.fsAnyPropertyValue = action.payload.value
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SetFsAdvancedQuery,
+            action => {
+                this.changeState(
+                    state => {
+                        state.fsQueryCQLProps = action.payload.value
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SubmitExtendedSearch,
+            action => {
+                this.loadData().subscribe({
+                    next: () => {
+                        this.changeState(state => {
+                            state.isBusy = false
+                        });
+                    },
+                    error: (err) => {
+                        this.changeState(state => {
+                            state.isBusy = false
+                        });
+                        this.pageModel.showMessage('error', err);
+                    },
+                });
+            }
         )
     }
 
@@ -283,34 +401,49 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
     }
 
     private performLoadAction(widgetMode: boolean = false): void {
-        this.loadData(widgetMode).subscribe({
-            next: () => {
-                this.changeState(state => {
-                    state.isBusy = false
-                });
-            },
-            error: (err) => {
-                this.changeState(state => {
-                    state.isBusy = false
-                });
-                this.pageModel.showMessage('error', err);
-            },
-        });
+        if (!this.state.extendedSearchVisible) {
+            this.loadData(widgetMode).subscribe({
+                next: () => {
+                    this.changeState(state => {
+                        state.isBusy = false
+                    });
+                },
+                error: (err) => {
+                    this.changeState(state => {
+                        state.isBusy = false
+                    });
+                    this.pageModel.showMessage('error', err);
+                },
+            });
+        }
     }
 
     private loadData(widgetMode:boolean=false): Observable<GetHistoryResponse> {
         // widget mode loads all history for all corpora
+        const args:GetHistoryArgs = {
+            offset: this.state.offset,
+            limit: this.state.limit + 1,
+            query_supertype: this.state.querySupertype,
+            corpname: !widgetMode && this.state.currentCorpusOnly ?
+                this.pageModel.getCorpusIdent().id : undefined,
+            archived_only: !widgetMode && this.state.archivedOnly
+        };
+        if (this.state.extendedSearchVisible) {
+            if (this.state.fsQueryCQLProps) {
+                args.fsPosattrName = this.state.fsPosattrName;
+                args.fsPosattrValue = this.state.fsPosattrValue;
+                args.fsStructattrName = this.state.fsStructattrName;
+                args.fsStructattrValue = this.state.fsStructattrValue;
+                args.fsStructureName = this.state.fsStructureName;
+
+            } else {
+                args.fsAnyPropertyValue = this.state.fsAnyPropertyValue;
+            }
+        }
         return this.pageModel.ajax$<GetHistoryResponse>(
             HTTP.Method.GET,
             this.pageModel.createActionUrl('user/ajax_query_history'),
-            {
-                offset: this.state.offset,
-                limit: this.state.limit + 1,
-                query_supertype: this.state.querySupertype,
-                corpname: !widgetMode && this.state.currentCorpusOnly ?
-                    this.pageModel.getCorpusIdent().id : undefined,
-                archived_only: !widgetMode && this.state.archivedOnly
-            }
+            args
 
         ).pipe(
             tap(data => {
