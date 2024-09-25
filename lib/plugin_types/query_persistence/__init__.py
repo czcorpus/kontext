@@ -137,6 +137,10 @@ class AbstractQueryPersistence(abc.ABC):
         2) It is expected the concordance parameters are available via
         key-value (Redis) storage already (this should be ensured by KonText)
 
+        3) In case the query to be archived contains a reference to a previous
+        query (e.g. from a filter query to the initial search), it must be archived
+        too up until the first/initial query.
+
         arguments:
         conc_id -- an identifier of the concordance
 
