@@ -536,10 +536,10 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 @http_action(access_level=2, return_type='json', action_model=UserActionModel)
 async def save_query(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.QUERY_HISTORY as qh, plugins.runtime.QUERY_PERSISTENCE as qp:
-        _, data = await qp.archive(req.json['query_id'])
+        data = await qp.archive(req.json['query_id'], True)
         if qp.stored_form_type(data) == 'pquery':
             for conc_id in data.get('form', {}).get('conc_ids', []):
-                cn, _ = await qp.archive(conc_id, True)
+                await qp.archive(conc_id, True)
 
         hsave = await qh.make_persistent(
             amodel.session_get('user', 'id'),

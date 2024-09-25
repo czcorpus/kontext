@@ -191,29 +191,33 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
         return latest_id
 
     async def archive(self, conc_id, explicit):
-        data_key = conc_id
+        curr_conc_id = conc_id
         hard_limit = 100
+        i = 0
+        first_data = None
         async with self._archive.connection() as conn:
-            while data_key is not None and hard_limit > 0:  # hard_limit prevents ending up in infinite loops of 'prev_id'
-                data = await self.db.get(mk_key(conc_id))
+            while curr_conc_id is not None and i < hard_limit:  # hard_limit prevents ending up in infinite loops of 'prev_id'
+                data = await self.db.get(mk_key(curr_conc_id))
+                if i == 0:
+                    first_data = data
                 if data:
                     async with await conn.cursor() as cursor:
                         try:
                             await cursor.execute(
-                                "INSERT INTO kontext_conc_persistence (id, data, created) VALUES (%s, %s, NOW())",
-                                (data_key, json.dumps(data)))
+                                "INSERT INTO kontext_conc_persistence (id, data, created, last_access) VALUES (%s, %s, NOW(), NULL)",
+                                (curr_conc_id, json.dumps(data)))
                         except IntegrityError as err:
-                            logging.getLogger(__name__).warning(f'failed to archive {data_key}: {err} (ignored)')
+                            logging.getLogger(__name__).warning(f'failed to archive {curr_conc_id}: {err} (ignored)')
                             pass  # key already in db
                 else:
                     async with await conn.cursor() as cursor:
-                        await cursor.execute('SELECT id FROM kontext_conc_persistence WHERE id = %s LIMIT 1', (data_key,))
+                        await cursor.execute('SELECT id FROM kontext_conc_persistence WHERE id = %s LIMIT 1', (curr_conc_id,))
                         r = await cursor.fetchone()
                         if r is None:
-                            raise QueryPersistenceRecNotFound(f'record {data_key} not found neither in cache nor in archive')
-                data_key = data.get('prev_id', None)
-                hard_limit -= 1
-
+                            raise QueryPersistenceRecNotFound(f'record {curr_conc_id} not found neither in cache nor in archive')
+                curr_conc_id = data.get('prev_id', None)
+                i += 1
+        return first_data
 
     async def clear_old_archive_records(self):
         now = datetime.datetime.now()

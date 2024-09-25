@@ -224,7 +224,8 @@ export function init(
             this._handleExpandClick = this._handleExpandClick.bind(this);
         }
 
-        _handleExpandClick() {
+        _handleExpandClick(e) {
+            e.stopPropagation();
             this.setState({expanded: !this.state.expanded});
         }
 
@@ -657,9 +658,12 @@ export function init(
                     </span>
                 </div>
                 {renderQuery()}
-                <DataRowActions toolbarVisible={toolbarVisible}
-                        nameEditorVisible={nameEditorVisible}
-                        data={data} />
+                {data.q_supertype !== 'conc' || data.form_type !== 'filter' ?
+                    <DataRowActions toolbarVisible={toolbarVisible}
+                            nameEditorVisible={nameEditorVisible}
+                            data={data} /> :
+                    null
+                }
             </S.DataRowLi>
         );
     };
