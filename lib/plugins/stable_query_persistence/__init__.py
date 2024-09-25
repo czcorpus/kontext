@@ -154,16 +154,24 @@ class StableQueryPersistence(AbstractQueryPersistence):
 
     async def archive(self, conc_id, explicit):
         async with self._archive_lock:
+            curr_conc_id = conc_id
+            hard_limit = 100
+            i = 0
+            first_data = None
             async with aiosqlite.connect(self._archive_db_path) as db:
-                data = await self.db.get(mk_key(conc_id))
-                if data is None:
-                    raise NotFoundException('Concordance {0} not found'.format(conc_id))
-                curr_time = time.time()
-                await db.execute(
-                    'INSERT OR IGNORE INTO archive (id, data, created, num_access) VALUES (?, ?, ?, ?)',
-                    (conc_id, json.dumps(data), curr_time, 0))
-                await db.commit()
-            return data
+                data = await self.db.get(mk_key(curr_conc_id))
+                while curr_conc_id is not None and i < hard_limit:  # hard_limit prevents ending up in infinite loops of 'prev_id'
+                    if i == 0:
+                        first_data = data
+                    if data is None:
+                        raise NotFoundException('Concordance {0} not found'.format(conc_id))
+                    curr_time = time.time()
+                    await db.execute(
+                        'INSERT OR IGNORE INTO archive (id, data, created, num_access) VALUES (?, ?, ?, ?)',
+                        (conc_id, json.dumps(data), curr_time, 0))
+                    await db.commit()
+                    curr_conc_id = data.get('prev_id', None)
+            return first_data
 
 
     async def update(self, data):
