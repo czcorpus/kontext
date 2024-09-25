@@ -200,7 +200,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
                     async with await conn.cursor() as cursor:
                         try:
                             await cursor.execute(
-                                "INSERT INTO kontext_conc_persistence (id, data, created) VALUES (%s, %s, NOW())",
+                                "INSERT INTO kontext_conc_persistence (id, data, created, last_access) VALUES (%s, %s, NOW(), NULL)",
                                 (data_key, json.dumps(data)))
                         except IntegrityError as err:
                             logging.getLogger(__name__).warning(f'failed to archive {data_key}: {err} (ignored)')

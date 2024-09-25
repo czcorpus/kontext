@@ -224,7 +224,8 @@ export function init(
             this._handleExpandClick = this._handleExpandClick.bind(this);
         }
 
-        _handleExpandClick() {
+        _handleExpandClick(e) {
+            e.stopPropagation();
             this.setState({expanded: !this.state.expanded});
         }
 
