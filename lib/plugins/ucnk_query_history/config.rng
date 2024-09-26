@@ -13,6 +13,11 @@
             <element name="ttl_days">
                 <data type="positiveInteger" />
             </element>
+            <optional>
+                <element name="fulltext_deleting_queue">
+                    <text />
+                </element>
+            </optional>
             <element name="fulltext_service_url">
                 <text />
             </element>
