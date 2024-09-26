@@ -58,20 +58,22 @@ class UcnkQueryHistory(MySqlQueryHistory):
         now - ttl  > created
         """
         # TODO remove also named but unpaired history entries
-        async with self._db.cursor() as cursor:
-            logging.getLogger(__name__).warning(f'SELECT id FROM {self.TABLE_NAME} WHERE created < %s AND name IS NULL')
-            await cursor.execute(
-                #f'SELECT query_id, user_id, created FROM {self.TABLE_NAME} WHERE created < %s AND name IS NULL',
-                f'SELECT query_id, user_id, created FROM {self.TABLE_NAME} WHERE name IS NULL',
-                #   (int(datetime.utcnow().timestamp()) - self.ttl_days * 3600 * 24,)
-            )
-            for row in await cursor.fetchall():
-                logging.getLogger(__name__).warning('>>>> row to del: {}'.format(row))
+        async with self._db.connection() as conn:
+            async with await conn.cursor() as cursor:
+                await self._db.begin_tx(cursor)
+                logging.getLogger(__name__).warning(f'SELECT id FROM {self.TABLE_NAME} WHERE created < %s AND name IS NULL')
                 await cursor.execute(
-                    f'DELETE FROM {self.TABLE_NAME} WHERE id = %s',
-                    (int(datetime.utcnow().timestamp()) - self.ttl_days * 3600 * 24,))
-                await self._kvdb.list_append(self._del_queue_key, row)
-
+                    # TODO !!!
+                    #f'SELECT query_id, user_id, created FROM {self.TABLE_NAME} WHERE created < %s AND name IS NULL',
+                    f'SELECT query_id, user_id, created FROM {self.TABLE_NAME} WHERE name IS NULL',
+                    #   (int(datetime.utcnow().timestamp()) - self.ttl_days * 3600 * 24,)
+                )
+                for row in await cursor.fetchall():
+                    await cursor.execute(
+                        f'DELETE FROM {self.TABLE_NAME} WHERE id = %s',
+                        (int(datetime.utcnow().timestamp()) - self.ttl_days * 3600 * 24,))
+                    await self._kvdb.list_append(self._del_queue_key, row)
+                await conn.commit()
 
 
 @inject(
