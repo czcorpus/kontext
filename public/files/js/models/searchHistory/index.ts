@@ -150,7 +150,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             [Actions.ToggleQueryHistoryWidget, MainMenuActions.ShowQueryHistory],
             action => {
                 this.changeState(state => {
-                    state.isBusy = true
+                    state.isBusy = true;
                 });
                 if (this.isToggleWidgetAction(action)) {
                     this.performLoadAction(true);
@@ -415,6 +415,13 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                     this.pageModel.showMessage('error', err);
                 },
             });
+
+        } else {
+            this.changeState(
+                state => {
+                    state.isBusy = false;
+                }
+            );
         }
     }
 
