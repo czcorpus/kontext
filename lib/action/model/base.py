@@ -125,6 +125,7 @@ class BaseActionModel(AbstractPageModel):
         result['issue_reporting_action'] = None
         result['help_links'] = {}
         result['_version'] = None
+        result['supports_query_history_fulltext'] = False
         return result
 
     def init_menu(self, result):

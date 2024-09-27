@@ -14,8 +14,16 @@
                 <data type="positiveInteger" />
             </element>
             <optional>
-                <element name="fulltext_deleting_queue">
+                <element name="fulltext_deleting_channel">
                     <text />
+                </element>
+                <a:documentation>A Redis PUBSUB channel through which KonText sends requests
+                to delete items. The receiver is the Camus service. Both application must use
+                    the same name for the channel.</a:documentation>
+            </optional>
+            <optional>
+                <element name="fulltext_num_delete_per_check">
+                    <data type="positiveInteger" />
                 </element>
             </optional>
             <element name="fulltext_service_url">

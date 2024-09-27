@@ -268,8 +268,13 @@ class KeyValueStorage(abc.ABC):
         """
         return self
 
-    async def subscribe_task(self, channel_id: str, handler: Callable[[str], Awaitable[bool]]):
+    async def subscribe_channel(self, channel_id: str, handler: Callable[[str], Awaitable[bool]]):
+        """
+
+        Returns:
+
+        """
         raise NotImplementedError
 
-    async def publish(self, channel_id: str, msg: str):
+    async def publish_channel(self, channel_id: str, msg: str):
         raise NotImplementedError

@@ -18,7 +18,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
+import ujson as json
 
 import plugins
 from plugin_types.query_persistence import AbstractQueryPersistence
@@ -33,6 +34,10 @@ from plugins.common.mysql import MySQLConf
 
 
 class UcnkQueryHistory(MySqlQueryHistory):
+    """
+    UcnkQueryHistory is a modified version of MySqlQueryHistory containing
+    fulltext search in queries using an external service (Camus).
+    """
 
     def __init__(
             self,
@@ -44,8 +49,12 @@ class UcnkQueryHistory(MySqlQueryHistory):
             auth: AbstractAuth):
         super().__init__(conf, db, query_persistence, subc_archive, auth)
         self._kvdb = kvdb
-        self._del_queue_key = conf.get('plugins', 'query_history').get(
-            'fulltext_deleting_queue', 'query_history_fulltext_del')
+        self._del_channel = conf.get('plugins', 'query_history').get(
+            'fulltext_deleting_channel', 'query_history_fulltext_del_channel'
+        )
+        self._del_chunk_size = int(conf.get('plugins', 'query_history').get(
+            'fulltext_num_delete_per_check', '500')
+        )
 
     def supports_fulltext_search(self):
         return True
@@ -54,26 +63,24 @@ class UcnkQueryHistory(MySqlQueryHistory):
         """
         Deletes records older than ttl_days. Named records are
         kept intact.
-        now - created > ttl
-        now - ttl  > created
         """
-        # TODO remove also named but unpaired history entries
         async with self._db.connection() as conn:
-            async with await conn.cursor() as cursor:
+            async with await conn.cursor(dictionary=True) as cursor:
                 await self._db.begin_tx(cursor)
-                logging.getLogger(__name__).warning(f'SELECT id FROM {self.TABLE_NAME} WHERE created < %s AND name IS NULL')
-                await cursor.execute(
-                    # TODO !!!
-                    #f'SELECT query_id, user_id, created FROM {self.TABLE_NAME} WHERE created < %s AND name IS NULL',
-                    f'SELECT query_id, user_id, created FROM {self.TABLE_NAME} WHERE name IS NULL',
-                    #   (int(datetime.utcnow().timestamp()) - self.ttl_days * 3600 * 24,)
-                )
-                for row in await cursor.fetchall():
+                try:
                     await cursor.execute(
-                        f'DELETE FROM {self.TABLE_NAME} WHERE id = %s',
-                        (int(datetime.utcnow().timestamp()) - self.ttl_days * 3600 * 24,))
-                    await self._kvdb.list_append(self._del_queue_key, row)
-                await conn.commit()
+                        f'SELECT query_id, user_id, created FROM {self.TABLE_NAME} WHERE created < %s AND name IS NULL LIMIT %s',
+                        (int(datetime.now(tz=timezone.utc).timestamp()) - self.ttl_days * 3600 * 24, self._del_chunk_size)
+                    )
+                    for row in await cursor.fetchall():
+                        await cursor.execute(
+                            f'DELETE FROM {self.TABLE_NAME} WHERE query_id = %s AND user_id = %s AND created = %s',
+                            (row['query_id'], row['user_id'], row['created']))
+                        await self._kvdb.publish_channel(self._del_channel, json.dumps(row))
+                    await conn.commit_tx()
+                except Exception as ex:
+                    await conn.rollback_tx()
+                    raise ex
 
 
 @inject(

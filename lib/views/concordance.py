@@ -124,16 +124,6 @@ async def query(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     await amodel.export_subcorpora_list(out)
     resp.set_result(out)
 
-@bp.route('/test', methods=['GET'])
-@http_action(
-    mutates_result=False,
-    return_type='json',
-    action_model=UserActionModel)
-async def devel_test(amodel: ConcActionModel, req: KRequest, resp: KResponse):
-    with plugins.runtime.QUERY_HISTORY as qh:
-        await qh.delete_old_records()
-    return dict(test=True)
-
 
 @bp.route('/query_submit', methods=['POST'])
 @http_action(

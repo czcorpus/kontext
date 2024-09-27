@@ -227,7 +227,7 @@ async def run_receiver(app: Sanic, loop: asyncio.BaseEventLoop):
             return False  # returns if receiver should stop
 
         with plugins.runtime.DB as db:
-            await db.subscribe_task(SIGNAL_CHANNEL_ID, signal_handler)
+            await db.subscribe_channel(SIGNAL_CHANNEL_ID, signal_handler)
             logging.getLogger(__name__).debug(
                 "Worker `%s` subscribed to `%s`", app.m.pid, SIGNAL_CHANNEL_ID)
 
@@ -238,7 +238,7 @@ async def run_receiver(app: Sanic, loop: asyncio.BaseEventLoop):
     try:
         receiver.result()
     except NotImplementedError:
-        logging.info("DB subscribe_task not implemented, crossworker signal handler disabled")
+        logging.info("DB subscribe_channel not implemented, crossworker signal handler disabled")
     except Exception as e:
         logging.error("Error while running receiver", exc_info=e)
     app.ctx.receiver = receiver
@@ -319,7 +319,7 @@ async def soft_reset(req):
     logging.getLogger(__name__).warning("expected = {}".format(application.ctx.soft_restart_token))
     if req.args.get('key') == application.ctx.soft_restart_token:
         with plugins.runtime.DB as db:
-            await db.publish(SIGNAL_CHANNEL_ID, 'kontext.internal.reset')
+            await db.publish_channel(SIGNAL_CHANNEL_ID, 'kontext.internal.reset')
         return json(dict(ok=True))
     else:
         raise NotFound()
@@ -328,7 +328,7 @@ async def soft_reset(req):
 async def sigusr1_handler():
     logging.getLogger(__name__).warning('Caught signal SIGUSR1')
     with plugins.runtime.DB as db:
-        await db.publish(SIGNAL_CHANNEL_ID, 'kontext.internal.reset')
+        await db.publish_channel(SIGNAL_CHANNEL_ID, 'kontext.internal.reset')
 
 
 def get_locale(request: Request) -> str:
@@ -387,7 +387,7 @@ if __name__ == '__main__':
 
     if args.soft_reset:
         with plugins.runtime.DB as db:
-            asyncio.run(db.publish(SIGNAL_CHANNEL_ID, 'kontext.internal.reset'))
+            asyncio.run(db.publish_channel(SIGNAL_CHANNEL_ID, 'kontext.internal.reset'))
             print('Soft reset signal published')
         sys.exit(0)
 
