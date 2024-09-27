@@ -269,7 +269,7 @@ class RedisDb(KeyValueStorage):
     async def keys(self, pattern: str = '*'):
         return [key.decode() for key in await self._redis.keys(pattern)]
 
-    async def subscribe_task(self, channel_id: str, handler: Callable[[str], Awaitable[bool]]):
+    async def subscribe_channel(self, channel_id: str, handler: Callable[[str], Awaitable[bool]]):
         psub = self._redis.pubsub()
         async with psub as channel:
             await channel.subscribe(channel_id)
@@ -289,7 +289,7 @@ class RedisDb(KeyValueStorage):
             await channel.unsubscribe(channel_id)
         await psub.close()
 
-    async def publish(self, channel_id: str, msg: str):
+    async def publish_channel(self, channel_id: str, msg: str):
         await self._redis.publish(channel_id, msg)
 
 
