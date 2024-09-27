@@ -131,13 +131,13 @@ NO_RG_ESCAPED =
 // ---------------- Regular expression with balanced parentheses --------
 
 RegExp =
-    QUOT RegExpRaw ("|" RegExpRaw?)* QUOT / QUOT QUOT
+    QUOT RegExpRaw (BINOR RegExpRaw?)* QUOT / QUOT QUOT
 
 RegExpRaw =
     (RgLook / RgGrouped / RgSimple)+
 
 RgGrouped =
-    LPAREN _ RegExpRaw ("|" RegExpRaw?)*  _ RPAREN
+    LPAREN _ RegExpRaw (BINOR RegExpRaw?)*  _ RPAREN
 
 RgSimple =
     (RgRange / RgChar / RgAlt / RgPosixClass)+
@@ -157,9 +157,9 @@ RgAlt =
     LBRACKET RG_CARET? RgAltVal+ RBRACKET
 
 RgAltVal =
-    AnyLetter "-" AnyLetter /
+    AnyLetter DASH AnyLetter /
     RgChar /
-    "|" /
+    BINOR /
     QUOT /
     LBRACE /
     RBRACE /
