@@ -19,9 +19,11 @@
 
 import logging
 from datetime import datetime, timezone
+from urllib.parse import urljoin
 import ujson as json
 
 import plugins
+from action.argmapping.user import FullSearchArgs
 from plugin_types.query_persistence import AbstractQueryPersistence
 from plugin_types.subc_storage import AbstractSubcArchive
 from plugin_types.auth import AbstractAuth
@@ -55,6 +57,9 @@ class UcnkQueryHistory(MySqlQueryHistory):
         self._del_chunk_size = int(conf.get('plugins', 'query_history').get(
             'fulltext_num_delete_per_check', '500')
         )
+        self._fulltext_service_url = conf.get('plugins', 'query_history').get(
+            'fulltext_service_url', None
+        )
 
     def supports_fulltext_search(self):
         return True
@@ -81,6 +86,29 @@ class UcnkQueryHistory(MySqlQueryHistory):
                 except Exception as ex:
                     await conn.rollback_tx()
                     raise ex
+    
+    def generate_query_string(self, full_search_args: FullSearchArgs):
+        parts = []
+        if full_search_args.posattr_name:
+            parts.append(f'pos_attr_names:{full_search_args.posattr_name}')
+        if full_search_args.posattr_value:
+            parts.append(f'pos_attr_values:{full_search_args.posattr_value}')
+        if full_search_args.structattr_name:
+            parts.append(f'struct_attr_names:{full_search_args.structattr_name}')
+        if full_search_args.structattr_value:
+            parts.append(f'struct_attr_values:{full_search_args.structattr_value}')
+        return ' '.join(parts)
+
+    async def get_user_queries(
+            self, plugin_ctx, user_id, corpus_factory, from_date=None, to_date=None, q_supertype=None, corpname=None,
+            archived_only=False, offset=0, limit=None, full_search_args=None):
+        
+        data = await super().get_user_queries(plugin_ctx, user_id, corpus_factory, from_date, to_date, q_supertype, corpname, archived_only, offset, limit, full_search_args)
+        if full_search_args is not None:
+            q = self.generate_query_string(full_search_args)
+            async with plugin_ctx.request.ctx.http_client.get(urljoin(self._fulltext_service_url, f'/indexer/search') + f'?q={q}') as resp:
+                ids = [hit['id'] for hit in (await resp.json())['hits']]
+        return data
 
 
 @inject(

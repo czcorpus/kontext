@@ -50,7 +50,8 @@ class NullQueryHistory(AbstractQueryHistory):
             corpname=None,
             archived_only=False,
             offset=0,
-            limit=None
+            limit=None,
+            full_search_args=None,
     ):
         return []
 
