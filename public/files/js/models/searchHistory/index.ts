@@ -94,7 +94,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                 fsAnyPropertyValue: '',
                 fsQueryCQLProps: true,
                 extendedSearchVisible: false,
-                fsUseSubcorp: '',
+                fsSubcorpus: '',
                 fsWlAttr: '',
                 fsWlPat: '',
                 fsWlNFilter: '',
@@ -372,7 +372,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             action => {
                 this.changeState(
                     state => {
-                        state.fsUseSubcorp = action.payload.value
+                        state.fsSubcorpus = action.payload.value
                     }
                 );
             }
@@ -493,18 +493,39 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             query_supertype: this.state.querySupertype,
             corpname: !widgetMode && this.state.currentCorpusOnly ?
                 this.pageModel.getCorpusIdent().id : undefined,
-            archived_only: !widgetMode && this.state.archivedOnly
+            archived_only: !widgetMode && this.state.archivedOnly,
+            extended_search: this.state.extendedSearchVisible,
         };
         if (this.state.extendedSearchVisible) {
-            if (this.state.fsQueryCQLProps) {
-                args.fsPosattrName = this.state.fsPosattrName;
-                args.fsPosattrValue = this.state.fsPosattrValue;
-                args.fsStructattrName = this.state.fsStructattrName;
-                args.fsStructattrValue = this.state.fsStructattrValue;
-                args.fsStructureName = this.state.fsStructureName;
-
-            } else {
-                args.fsAnyPropertyValue = this.state.fsAnyPropertyValue;
+            switch (this.state.querySupertype) {
+                case 'conc':
+                case 'pquery':
+                    if (this.state.fsQueryCQLProps) {
+                        args.fsPosattrName = this.state.fsPosattrName;
+                        args.fsPosattrValue = this.state.fsPosattrValue;
+                        args.fsStructattrName = this.state.fsStructattrName;
+                        args.fsStructattrValue = this.state.fsStructattrValue;
+                        args.fsStructureName = this.state.fsStructureName;
+        
+                    } else {
+                        args.fsAnyPropertyValue = this.state.fsAnyPropertyValue;
+                    }
+                    break;
+                case 'wlist':
+                    if (this.state.fsQueryCQLProps) {
+                        args.fsSubcorpus = this.state.fsSubcorpus;
+                        args.fsWlpat = this.state.fsWlPat;
+                        args.fsWlattr = this.state.fsWlAttr;
+                        args.fsWlPfilter = this.state.fsWlPFilter;
+                        args.fsWlNfilter = this.state.fsWlNFilter;
+        
+                    } else {
+                        args.fsAnyPropertyValue = this.state.fsAnyPropertyValue;
+                    }
+                    break;
+                case 'kwords':
+                    args.fsAnyPropertyValue = this.state.fsAnyPropertyValue;
+                    break;
             }
         }
         return this.pageModel.ajax$<GetHistoryResponse>(

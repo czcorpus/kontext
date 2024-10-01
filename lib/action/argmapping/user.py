@@ -16,7 +16,14 @@ from dataclasses import dataclass
 
 @dataclass
 class FullSearchArgs:
+    any_property_value: str
     posattr_name: str
     posattr_value: str
+    structure_name: str
     structattr_name: str
     structattr_value: str
+    subcorpus: str
+    wl_pat: str
+    wl_attr: str
+    wl_pfilter: str
+    wl_nfilter: str

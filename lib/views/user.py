@@ -221,10 +221,17 @@ async def ajax_query_history(amodel: UserActionModel, req: KRequest, resp: KResp
     archived_only = bool(int(req.args.get('archived_only', '0')))
 
     full_search_args = FullSearchArgs(
+        req.args.get('fsAnyPropertyValue', None),
         req.args.get('fsPosattrName', None),
         req.args.get('fsPosattrValue', None),
+        req.args.get('fsStructureName', None),
         req.args.get('fsStructattrName', None),
         req.args.get('fsStructattrValue', None),
+        req.args.get('fsSubcorpus', None),
+        req.args.get('fsWlpat', None),
+        req.args.get('fsWattr', None),
+        req.args.get('fsWlPfilter', None),
+        req.args.get('fsWlNfilter', None),
     )
 
     rows = await _load_query_history(

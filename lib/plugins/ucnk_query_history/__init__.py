@@ -87,16 +87,38 @@ class UcnkQueryHistory(MySqlQueryHistory):
                     await conn.rollback_tx()
                     raise ex
     
-    def generate_query_string(self, full_search_args: FullSearchArgs):
+    def generate_query_string(self, full_search_args: FullSearchArgs, q_supertype: str, user_id: int) -> str:
         parts = []
-        if full_search_args.posattr_name:
-            parts.append(f'pos_attr_names:{full_search_args.posattr_name}')
-        if full_search_args.posattr_value:
-            parts.append(f'pos_attr_values:{full_search_args.posattr_value}')
-        if full_search_args.structattr_name:
-            parts.append(f'struct_attr_names:{full_search_args.structattr_name}')
-        if full_search_args.structattr_value:
-            parts.append(f'struct_attr_values:{full_search_args.structattr_value}')
+        if full_search_args.any_property_value is not None:
+            parts.append(full_search_args.any_property_value)
+
+        else:
+            if q_supertype in ('conc', 'kwords'):
+                if full_search_args.posattr_name:
+                    parts.append(f'pos_attr_names:{full_search_args.posattr_name}')
+                if full_search_args.posattr_value:
+                    parts.append(f'pos_attr_values:{full_search_args.posattr_value}')
+                if full_search_args.structattr_name:
+                    parts.append(f'struct_attr_names:{full_search_args.structattr_name}')
+                if full_search_args.structattr_value:
+                    parts.append(f'struct_attr_values:{full_search_args.structattr_value}')
+
+            elif q_supertype == 'wlist':
+                if full_search_args.subcorpus:
+                    parts.append(f'subcorpus:{full_search_args.subcorpus}')
+                if full_search_args.wl_pat:
+                    parts.append(f'raw_query:{full_search_args.wl_pat}')
+                if full_search_args.wl_attr:
+                    parts.append(f'pos_attr_names:{full_search_args.wl_attr}')
+                if full_search_args.wl_pfilter:
+                    parts.append(f'pfilter_words:{full_search_args.wl_pfilter}')
+                if full_search_args.wl_nfilter:
+                    parts.append(f'nfilter_words:{full_search_args.wl_nfilter}')
+        
+        if q_supertype:
+            parts.append(f'query_supertype:{q_supertype}')
+        
+        parts.append(f'user_id:{user_id}')
         return ' '.join(parts)
 
     async def get_user_queries(
@@ -105,9 +127,10 @@ class UcnkQueryHistory(MySqlQueryHistory):
         
         data = await super().get_user_queries(plugin_ctx, user_id, corpus_factory, from_date, to_date, q_supertype, corpname, archived_only, offset, limit, full_search_args)
         if full_search_args is not None:
-            q = self.generate_query_string(full_search_args)
+            q = self.generate_query_string(full_search_args, q_supertype, user_id)
             async with plugin_ctx.request.ctx.http_client.get(urljoin(self._fulltext_service_url, f'/indexer/search') + f'?q={q}') as resp:
                 ids = [hit['id'] for hit in (await resp.json())['hits']]
+                logging.debug(ids)
         return data
 
 

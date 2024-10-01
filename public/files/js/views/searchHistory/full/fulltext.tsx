@@ -78,7 +78,7 @@ export function init(
                     return <extendedSearchForms.WListForm
                         fsAnyPropertyValue={props.fsAnyPropertyValue}
                         fsQueryCQLProps={props.fsQueryCQLProps}
-                        usesubcorp={props.fsUseSubcorp}
+                        usesubcorp={props.fsSubcorpus}
                         wlattr={props.fsWlAttr}
                         wlpat={props.fsWlPat}
                         nfilter={props.fsWlNFilter}
