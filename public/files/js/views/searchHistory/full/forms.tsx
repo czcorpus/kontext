@@ -45,7 +45,13 @@ export interface ExtendedSearchForms {
         fsAnyPropertyValue:string;
     }>;
     WListForm:React.FC<{
+        fsQueryCQLProps:boolean;
         fsAnyPropertyValue:string;
+        usesubcorp:string;
+        wlattr:string;
+        wlpat:string;
+        pfilter:string;
+        nfilter:string;
     }>;
     KWordsForm:React.FC<{
         fsAnyPropertyValue:string;
@@ -61,7 +67,29 @@ export function init(
     he:Kontext.ComponentHelpers,
 ):ExtendedSearchForms {
 
-    const layoutViews = he.getLayoutViews();
+    // -------------------- <AnyPropertyValue /> -----------------------
+
+    const AnyPropertyValue:React.FC<{
+        value:string;
+    }> = (props) => {
+
+        const handleValueChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch(
+                Actions.SetFsAnyPropertyValue,
+                {
+                    value: evt.target.value
+                }
+            );
+        };
+
+        return (
+            <div className="prop-query">
+                <label>{he.translate('qhistory__query_contains')}</label>
+                {'\u00a0'}
+                <input type="text" value={props.value} onChange={handleValueChange} />
+            </div>
+        );
+    };
 
     // -------------------- <UsedPosattrs /> --------------------------
 
@@ -164,30 +192,6 @@ export function init(
         );
     };
 
-    // -------------------- <AnyPropertyValue /> -----------------------
-
-    const AnyPropertyValue:React.FC<{
-        value:string;
-    }> = (props) => {
-
-        const handleValueChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
-            dispatcher.dispatch(
-                Actions.SetFsAnyPropertyValue,
-                {
-                    value: evt.target.value
-                }
-            );
-        };
-
-        return (
-            <div className="prop-query">
-                <label>{he.translate('qhistory__query_contains')}</label>
-                {'\u00a0'}
-                <input type="text" value={props.value} onChange={handleValueChange} />
-            </div>
-        );
-    };
-
     // -------------------- <QueryType /> --------------------------------
 
     const QueryCQLProps:React.FC<{
@@ -264,11 +268,96 @@ export function init(
     // -------------------- <WListForm /> -------------------------
 
     const WListForm:React.FC<{
+        fsQueryCQLProps:boolean;
         fsAnyPropertyValue:string;
+        usesubcorp:string;
+        wlattr:string;
+        wlpat:string;
+        pfilter:string;
+        nfilter:string;
     }> = (props) => {
         
+        const handleSubcorpChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch(
+                Actions.SetFsSubcorpus,
+                {
+                    value: evt.target.value
+                }
+            );
+        };
+
+        const handleWlpatChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch(
+                Actions.SetFsWlpat,
+                {
+                    value: evt.target.value
+                }
+            );
+        };
+
+        const handleWlattrChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch(
+                Actions.SetFsWlattr,
+                {
+                    value: evt.target.value
+                }
+            );
+        };
+
+        const handleNFilterChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch(
+                Actions.SetFsNFilter,
+                {
+                    value: evt.target.value
+                }
+            );
+        };
+
+        const handlePFilterChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch(
+                Actions.SetFsPFilter,
+                {
+                    value: evt.target.value
+                }
+            );
+        };
+    
         return <S.FulltextFieldset>
-            <AnyPropertyValue value={props.fsAnyPropertyValue} />
+            <QueryCQLProps isAdvancedQuery={props.fsQueryCQLProps} />
+            {props.fsQueryCQLProps ?
+                <>
+                    <div className="prop-query">
+                        <label>{he.translate('qhistory__used_subcorpus')}</label>
+                        {'\u00a0'}
+                        <input type="text" value={props.usesubcorp} onChange={handleSubcorpChange} />
+                    </div>
+
+                    <div className="prop-query">
+                        <label>{he.translate('qhistory__used_wlattr')}</label>
+                        {'\u00a0'}
+                        <input type="text" value={props.wlattr} onChange={handleWlattrChange} />
+                    </div>
+
+                    <div className="prop-query">
+                        <label>{he.translate('qhistory__used_wlpat')}</label>
+                        {'\u00a0'}
+                        <input type="text" value={props.wlpat} onChange={handleWlpatChange} />
+                    </div>
+                    
+                    <div className="prop-query">
+                        <label>{he.translate('qhistory__used_pfilter')}</label>
+                        {'\u00a0'}
+                        <input type="text" value={props.pfilter} onChange={handlePFilterChange} />
+                    </div>
+                    
+                    <div className="prop-query">
+                        <label>{he.translate('qhistory__used_nfilter')}</label>
+                        {'\u00a0'}
+                        <input type="text" value={props.nfilter} onChange={handleNFilterChange} />
+                    </div>
+                </> :
+                <AnyPropertyValue value={props.fsAnyPropertyValue} />
+            }
         </S.FulltextFieldset>
     }
 

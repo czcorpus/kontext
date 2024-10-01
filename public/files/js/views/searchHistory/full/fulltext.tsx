@@ -76,7 +76,13 @@ export function init(
                         fsStructattrValue={props.fsStructattrValue} />
                 case 'wlist':
                     return <extendedSearchForms.WListForm
-                        fsAnyPropertyValue={props.fsAnyPropertyValue} />
+                        fsAnyPropertyValue={props.fsAnyPropertyValue}
+                        fsQueryCQLProps={props.fsQueryCQLProps}
+                        usesubcorp={props.fsUseSubcorp}
+                        wlattr={props.fsWlAttr}
+                        wlpat={props.fsWlPat}
+                        nfilter={props.fsWlNFilter}
+                        pfilter={props.fsWlPFilter} />
                 case 'kwords':
                     return <extendedSearchForms.KWordsForm
                         fsAnyPropertyValue={props.fsAnyPropertyValue} />

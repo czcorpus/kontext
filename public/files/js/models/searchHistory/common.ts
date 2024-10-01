@@ -187,6 +187,10 @@ export interface SearchHistoryModelState {
     fsStructattrValue:string;
     fsAnyPropertyValue:string;
     extendedSearchVisible:boolean;
-
+    fsUseSubcorp:string;
+    fsWlAttr:string;
+    fsWlPat:string;
+    fsWlPFilter:string;
+    fsWlNFilter:string;
 }
 

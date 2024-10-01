@@ -164,6 +164,36 @@ export class Actions {
         name: 'QUERY_HISTORY_SET_FS_ADVANCED_QUERY'
     };
 
+    static SetFsSubcorpus:Action<{
+        value:string;
+    }> = {
+        name: 'QUERY_HISTORY_SET_FS_SUBCORPUS'
+    };
+
+    static SetFsWlpat:Action<{
+        value:string;
+    }> = {
+        name: 'QUERY_HISTORY_SET_FS_WLPAT'
+    };
+
+    static SetFsWlattr:Action<{
+        value:string;
+    }> = {
+        name: 'QUERY_HISTORY_SET_FS_WLATTR'
+    };
+
+    static SetFsPFilter:Action<{
+        value:string;
+    }> = {
+        name: 'QUERY_HISTORY_SET_FS_PFILTER'
+    };
+
+    static SetFsNFilter:Action<{
+        value:string;
+    }> = {
+        name: 'QUERY_HISTORY_SET_FS_NFILTER'
+    };
+
     static SubmitExtendedSearch:Action<{
     }> = {
         name: 'QUERY_HISTORY_SUBMIT_EXTENDED_SEARCH'

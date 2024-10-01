@@ -93,7 +93,12 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                 fsStructattrValue: '',
                 fsAnyPropertyValue: '',
                 fsQueryCQLProps: true,
-                extendedSearchVisible: false
+                extendedSearchVisible: false,
+                fsUseSubcorp: '',
+                fsWlAttr: '',
+                fsWlPat: '',
+                fsWlNFilter: '',
+                fsWlPFilter: '',
             }
         );
         this.pageModel = pageModel;
@@ -357,6 +362,61 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                 this.changeState(
                     state => {
                         state.fsQueryCQLProps = action.payload.value
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SetFsSubcorpus,
+            action => {
+                this.changeState(
+                    state => {
+                        state.fsUseSubcorp = action.payload.value
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SetFsWlpat,
+            action => {
+                this.changeState(
+                    state => {
+                        state.fsWlPat = action.payload.value
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SetFsWlattr,
+            action => {
+                this.changeState(
+                    state => {
+                        state.fsWlAttr = action.payload.value
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SetFsPFilter,
+            action => {
+                this.changeState(
+                    state => {
+                        state.fsWlPFilter = action.payload.value
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SetFsNFilter,
+            action => {
+                this.changeState(
+                    state => {
+                        state.fsWlNFilter = action.payload.value
                     }
                 );
             }
