@@ -20,13 +20,13 @@
 
 import * as React from 'react';
 import { Bound, IActionDispatcher } from 'kombo';
-import { Keyboard, Dict, pipe, List } from 'cnc-tskit';
 import * as Kontext from '../../../types/kontext';
 import { SearchHistoryModel } from '../../../models/searchHistory';
 import * as S from './style';
 import * as theme from '../../theme/default';
 import { Actions } from '../../../models/searchHistory/actions';
 import { SearchHistoryModelState } from '../../../models/searchHistory/common';
+import { init as extendedSearchFormInit } from './forms';
 
 
 export function init(
@@ -36,154 +36,7 @@ export function init(
 ):React.ComponentClass<{}> {
 
     const layoutViews = he.getLayoutViews();
-
-    // -------------------- <UsedPosattrs /> --------------------------
-
-    const UsedPosattrs:React.FC<{
-        attr:string;
-        value:string;
-    }> = (props) => {
-
-        const handleAttrChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
-            dispatcher.dispatch(
-                Actions.SetFsPosattrName,
-                {
-                    value: evt.target.value
-                }
-            );
-        };
-
-        const handleValueChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
-            dispatcher.dispatch(
-                Actions.SetFsPosattrValue,
-                {
-                    value: evt.target.value
-                }
-            );
-        };
-
-        return (
-            <div className="prop-query">
-                <label>{he.translate('qhistory__used_posattrs_label')}</label>
-                {'\u00a0'}
-                <input type="text" value={props.attr} onChange={handleAttrChange} />
-                {'\u00a0'}
-                {he.translate('qhistory__used_property_value')}
-                {'\u00a0'}
-                <input type="text" value={props.value} onChange={handleValueChange} />
-            </div>
-        );
-    };
-
-    // -------------------- <UsedStructures /> --------------------------
-
-    const UsedStructures:React.FC<{
-        attr:string;
-    }> = (props) => {
-
-        const handleAttrChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
-            dispatcher.dispatch(
-                Actions.SetFsStructureName,
-                {
-                    value: evt.target.value
-                }
-            );
-        };
-
-        return (
-            <div className="prop-query">
-                <label>{he.translate('qhistory__used_structures_label')}</label>
-                {'\u00a0'}
-                <input type="text" value={props.attr} onChange={handleAttrChange} />
-            </div>
-        );
-    };
-
-    // -------------------- <UsedStructattrs /> --------------------------
-
-    const UsedStructattrs:React.FC<{
-        attr:string;
-        value:string;
-    }> = (props) => {
-
-        const handleAttrChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
-            dispatcher.dispatch(
-                Actions.SetFsStructattrName,
-                {
-                    value: evt.target.value
-                }
-            );
-        };
-
-        const handleValueChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
-            dispatcher.dispatch(
-                Actions.SetFsStructattrValue,
-                {
-                    value: evt.target.value
-                }
-            );
-        };
-
-        return (
-            <div className="prop-query">
-                <label>{he.translate('qhistory__used_structattrs_label')}</label>
-                {'\u00a0'}
-                <input type="text" value={props.attr} onChange={handleAttrChange} />
-                {'\u00a0'}
-                {he.translate('qhistory__used_property_value')}
-                {'\u00a0'}
-                <input type="text" value={props.value} onChange={handleValueChange} />
-            </div>
-
-        );
-    };
-
-    // -------------------- <AnyPropertyValue /> -----------------------
-
-    const AnyPropertyValue:React.FC<{
-        value:string;
-    }> = (props) => {
-
-        const handleValueChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
-            dispatcher.dispatch(
-                Actions.SetFsAnyPropertyValue,
-                {
-                    value: evt.target.value
-                }
-            );
-        };
-
-        return (
-            <div className="prop-query">
-                <label>{he.translate('qhistory__query_contains')}</label>
-                {'\u00a0'}
-                <input type="text" value={props.value} onChange={handleValueChange} />
-            </div>
-        );
-    };
-
-    // -------------------- <QueryType /> --------------------------------
-
-    const QueryCQLProps:React.FC<{
-        isAdvancedQuery:boolean;
-    }> = (props) => {
-
-        const handleClick = (evt:React.ChangeEvent<HTMLInputElement>) => {
-            dispatcher.dispatch(
-                Actions.SetFsAdvancedQuery,
-                {
-                    value: !props.isAdvancedQuery
-                }
-            )
-        }
-
-        return (
-            <div className="prop-query">
-                <label htmlFor="searchHistory_QueryCQLProps">{he.translate('qhistory__query_cql_props')}:</label>{'\u00a0'}
-                <input id="searchHistory_QueryCQLProps" type="checkbox" checked={props.isAdvancedQuery} onChange={handleClick} />
-            </div>
-        )
-    };
+    const extendedSearchForms = extendedSearchFormInit(dispatcher, he);
 
     // -------------------- <FulltextFieldset /> -------------------------
 
@@ -201,8 +54,37 @@ export function init(
             );
         };
 
-        const shouldSeeCQLProps = (props.querySupertype === 'conc'  ||
-                props.querySupertype === 'pquery') && props.fsQueryCQLProps;
+        const renderExtendedForm = () => {
+            switch (props.querySupertype) {
+                case 'conc':
+                    return <extendedSearchForms.ConcForm
+                        fsQueryCQLProps={props.fsQueryCQLProps}
+                        fsAnyPropertyValue={props.fsAnyPropertyValue}
+                        fsPosattrName={props.fsPosattrName}
+                        fsPosattrValue={props.fsPosattrValue}
+                        fsStructureName={props.fsStructureName}
+                        fsStructattrName={props.fsStructattrName}
+                        fsStructattrValue={props.fsStructattrValue} />
+                case 'pquery':
+                    return <extendedSearchForms.PQueryForm
+                        fsQueryCQLProps={props.fsQueryCQLProps}
+                        fsAnyPropertyValue={props.fsAnyPropertyValue}
+                        fsPosattrName={props.fsPosattrName}
+                        fsPosattrValue={props.fsPosattrValue}
+                        fsStructureName={props.fsStructureName}
+                        fsStructattrName={props.fsStructattrName}
+                        fsStructattrValue={props.fsStructattrValue} />
+                case 'wlist':
+                    return <extendedSearchForms.WListForm
+                        fsAnyPropertyValue={props.fsAnyPropertyValue} />
+                case 'kwords':
+                    return <extendedSearchForms.KWordsForm
+                        fsAnyPropertyValue={props.fsAnyPropertyValue} />
+                default:
+                    return <extendedSearchForms.AnyForm
+                        fsAnyPropertyValue={props.fsAnyPropertyValue} />
+            }
+        }
 
         return (
             <S.FulltextBlock>
@@ -212,20 +94,7 @@ export function init(
                 </theme.ExpandableSectionLabel>
                 {props.extendedSearchVisible ?
                     <>
-                        <S.FulltextFieldset>
-                            {props.querySupertype === 'conc' || props.querySupertype === 'pquery' ?
-                                <QueryCQLProps isAdvancedQuery={props.fsQueryCQLProps} /> :
-                                null
-                            }
-                            {shouldSeeCQLProps ?
-                                <>
-                                    <UsedPosattrs attr={props.fsPosattrName} value={props.fsPosattrValue} />
-                                    <UsedStructures attr={props.fsStructureName} />
-                                    <UsedStructattrs attr={props.fsStructattrName} value={props.fsStructattrValue} />
-                                </> :
-                                <AnyPropertyValue value={props.fsAnyPropertyValue} />
-                            }
-                        </S.FulltextFieldset>
+                        {renderExtendedForm()}
                         <div className="button">
                             <button type="button" className="util-button"
                                     onClick={handleClickSearch}>
@@ -235,7 +104,7 @@ export function init(
                     </> :
                     null
                 }
-            </S.FulltextBlock>
+            </S.FulltextBlock>       
         )
     }
 
