@@ -1,9 +1,6 @@
 import asyncio
-from contextlib import AbstractAsyncContextManager
 from functools import partial, wraps
 from typing import AsyncIterator, TypeVar
-
-import aiofiles
 
 T = TypeVar('T')
 

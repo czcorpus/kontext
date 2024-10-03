@@ -30,6 +30,8 @@ user.
 import abc
 from typing import Optional, Dict, Any, List
 
+from action.argmapping.user import FullSearchArgs
+
 
 class AbstractQueryHistory(abc.ABC):
 
@@ -92,7 +94,7 @@ class AbstractQueryHistory(abc.ABC):
     @abc.abstractmethod
     async def get_user_queries(
             self, plugin_ctx, user_id, corpus_factory, from_date=None, to_date=None, q_supertype=None, corpname=None,
-            archived_only=False, offset=0, limit=None):
+            archived_only=False, offset=0, limit=None, full_search_args=None):
         """
         Returns list of queries of a specific user.
 

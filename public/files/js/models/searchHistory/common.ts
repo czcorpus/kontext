@@ -139,11 +139,17 @@ export interface GetHistoryArgs {
     query_supertype:Kontext.QuerySupertype;
     corpname:string;
     archived_only:boolean;
+    extended_search:boolean;
     fsPosattrName?:string;
     fsPosattrValue?:string;
     fsStructureName?:string;
     fsStructattrName?:string;
     fsStructattrValue?:string;
+    fsSubcorpus?:string;
+    fsWlpat?:string;
+    fsWlattr?:string;
+    fsWlPfilter?:string;
+    fsWlNfilter?:string;
     fsAnyPropertyValue?:string;
 }
 
@@ -187,6 +193,10 @@ export interface SearchHistoryModelState {
     fsStructattrValue:string;
     fsAnyPropertyValue:string;
     extendedSearchVisible:boolean;
-
+    fsSubcorpus:string;
+    fsWlAttr:string;
+    fsWlPat:string;
+    fsWlPFilter:string;
+    fsWlNFilter:string;
 }
 

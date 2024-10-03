@@ -93,7 +93,12 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                 fsStructattrValue: '',
                 fsAnyPropertyValue: '',
                 fsQueryCQLProps: true,
-                extendedSearchVisible: false
+                extendedSearchVisible: false,
+                fsSubcorpus: '',
+                fsWlAttr: '',
+                fsWlPat: '',
+                fsWlNFilter: '',
+                fsWlPFilter: '',
             }
         );
         this.pageModel = pageModel;
@@ -363,6 +368,61 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         );
 
         this.addActionHandler(
+            Actions.SetFsSubcorpus,
+            action => {
+                this.changeState(
+                    state => {
+                        state.fsSubcorpus = action.payload.value
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SetFsWlpat,
+            action => {
+                this.changeState(
+                    state => {
+                        state.fsWlPat = action.payload.value
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SetFsWlattr,
+            action => {
+                this.changeState(
+                    state => {
+                        state.fsWlAttr = action.payload.value
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SetFsPFilter,
+            action => {
+                this.changeState(
+                    state => {
+                        state.fsWlPFilter = action.payload.value
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SetFsNFilter,
+            action => {
+                this.changeState(
+                    state => {
+                        state.fsWlNFilter = action.payload.value
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
             Actions.SubmitExtendedSearch,
             action => {
                 this.loadData().subscribe({
@@ -433,18 +493,47 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             query_supertype: this.state.querySupertype,
             corpname: !widgetMode && this.state.currentCorpusOnly ?
                 this.pageModel.getCorpusIdent().id : undefined,
-            archived_only: !widgetMode && this.state.archivedOnly
+            archived_only: !widgetMode && this.state.archivedOnly,
+            extended_search: this.state.extendedSearchVisible,
         };
         if (this.state.extendedSearchVisible) {
-            if (this.state.fsQueryCQLProps) {
-                args.fsPosattrName = this.state.fsPosattrName;
-                args.fsPosattrValue = this.state.fsPosattrValue;
-                args.fsStructattrName = this.state.fsStructattrName;
-                args.fsStructattrValue = this.state.fsStructattrValue;
-                args.fsStructureName = this.state.fsStructureName;
-
-            } else {
-                args.fsAnyPropertyValue = this.state.fsAnyPropertyValue;
+            switch (this.state.querySupertype) {
+                case 'conc':
+                case 'pquery':
+                    if (this.state.fsQueryCQLProps) {
+                        args.fsPosattrName = this.state.fsPosattrName;
+                        args.fsPosattrValue = this.state.fsPosattrValue;
+                        args.fsStructattrName = this.state.fsStructattrName;
+                        args.fsStructattrValue = this.state.fsStructattrValue;
+                        args.fsStructureName = this.state.fsStructureName;
+        
+                    } else {
+                        args.fsAnyPropertyValue = this.state.fsAnyPropertyValue;
+                    }
+                    break;
+                case 'wlist':
+                    if (this.state.fsQueryCQLProps) {
+                        args.fsSubcorpus = this.state.fsSubcorpus;
+                        args.fsWlpat = this.state.fsWlPat;
+                        args.fsWlattr = this.state.fsWlAttr;
+                        args.fsWlPfilter = this.state.fsWlPFilter;
+                        args.fsWlNfilter = this.state.fsWlNFilter;
+        
+                    } else {
+                        args.fsAnyPropertyValue = this.state.fsAnyPropertyValue;
+                    }
+                    break;
+                case 'kwords':
+                    if (this.state.fsQueryCQLProps) {
+                        args.fsSubcorpus = this.state.fsSubcorpus;
+                        args.fsPosattrName = this.state.fsPosattrName;
+                    } else {
+                        args.fsAnyPropertyValue = this.state.fsAnyPropertyValue;
+                    }
+                    break;
+                default:
+                    args.fsAnyPropertyValue = this.state.fsAnyPropertyValue;
+                    break;
             }
         }
         return this.pageModel.ajax$<GetHistoryResponse>(
