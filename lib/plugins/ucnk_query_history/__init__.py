@@ -19,6 +19,7 @@
 
 import logging
 from datetime import datetime, timezone
+from typing import Dict, List, Tuple
 from urllib.parse import urljoin
 import ujson as json
 
@@ -29,7 +30,7 @@ from plugin_types.subc_storage import AbstractSubcArchive
 from plugin_types.auth import AbstractAuth
 from plugin_types.general_storage import KeyValueStorage
 from plugins import inject
-from plugins.mysql_query_history import MySqlQueryHistory
+from plugins.mysql_query_history import CorpusCache, MySqlQueryHistory
 from plugins.mysql_integration_db import MySqlIntegrationDb
 from plugins.common.mysql.adhocdb import AdhocDB
 from plugins.common.mysql import MySQLConf
@@ -87,51 +88,73 @@ class UcnkQueryHistory(MySqlQueryHistory):
                     await conn.rollback_tx()
                     raise ex
     
-    def generate_query_string(self, full_search_args: FullSearchArgs, q_supertype: str, user_id: int) -> str:
-        parts = []
-        if full_search_args.any_property_value is not None:
-            parts.append(full_search_args.any_property_value)
+    def generate_query_string(self, q_supertype: str, user_id: int, corpname: str, full_search_args: FullSearchArgs) -> str:
+        parts = [f'+user_id:{user_id}']
+        if q_supertype:
+            parts.append(f'+query_supertype:{q_supertype}')
+        
+        if corpname:
+            parts.append(f'+corpora:{corpname}')
+
+        if full_search_args.any_property_value:
+            parts.append(f'+{full_search_args.any_property_value}')
 
         else:
             if q_supertype in ('conc', 'kwords'):
                 if full_search_args.posattr_name:
-                    parts.append(f'pos_attr_names:{full_search_args.posattr_name}')
+                    parts.append(f'+pos_attr_names:{full_search_args.posattr_name}')
                 if full_search_args.posattr_value:
-                    parts.append(f'pos_attr_values:{full_search_args.posattr_value}')
+                    parts.append(f'+pos_attr_values:{full_search_args.posattr_value}')
                 if full_search_args.structattr_name:
-                    parts.append(f'struct_attr_names:{full_search_args.structattr_name}')
+                    parts.append(f'+struct_attr_names:{full_search_args.structattr_name}')
                 if full_search_args.structattr_value:
-                    parts.append(f'struct_attr_values:{full_search_args.structattr_value}')
+                    parts.append(f'+struct_attr_values:{full_search_args.structattr_value}')
 
             elif q_supertype == 'wlist':
                 if full_search_args.subcorpus:
-                    parts.append(f'subcorpus:{full_search_args.subcorpus}')
+                    parts.append(f'+subcorpus:{full_search_args.subcorpus}')
                 if full_search_args.wl_pat:
-                    parts.append(f'raw_query:{full_search_args.wl_pat}')
+                    parts.append(f'+raw_query:{full_search_args.wl_pat}')
                 if full_search_args.wl_attr:
-                    parts.append(f'pos_attr_names:{full_search_args.wl_attr}')
+                    parts.append(f'+pos_attr_names:{full_search_args.wl_attr}')
                 if full_search_args.wl_pfilter:
-                    parts.append(f'pfilter_words:{full_search_args.wl_pfilter}')
+                    parts.append(f'+pfilter_words:{full_search_args.wl_pfilter}')
                 if full_search_args.wl_nfilter:
-                    parts.append(f'nfilter_words:{full_search_args.wl_nfilter}')
-        
-        if q_supertype:
-            parts.append(f'query_supertype:{q_supertype}')
-        
-        parts.append(f'user_id:{user_id}')
+                    parts.append(f'+nfilter_words:{full_search_args.wl_nfilter}')
+
         return ' '.join(parts)
 
     async def get_user_queries(
             self, plugin_ctx, user_id, corpus_factory, from_date=None, to_date=None, q_supertype=None, corpname=None,
             archived_only=False, offset=0, limit=None, full_search_args=None):
         
-        data = await super().get_user_queries(plugin_ctx, user_id, corpus_factory, from_date, to_date, q_supertype, corpname, archived_only, offset, limit, full_search_args)
-        if full_search_args is not None:
-            q = self.generate_query_string(full_search_args, q_supertype, user_id)
-            async with plugin_ctx.request.ctx.http_client.get(urljoin(self._fulltext_service_url, f'/indexer/search') + f'?q={q}') as resp:
-                ids = [hit['id'] for hit in (await resp.json())['hits']]
-                logging.debug(ids)
-        return data
+        if full_search_args is None:
+            return await super().get_user_queries(plugin_ctx, user_id, corpus_factory, from_date, to_date, q_supertype, corpname, archived_only, offset, limit)
+
+        q = self.generate_query_string(q_supertype, user_id, corpname, full_search_args)
+        async with plugin_ctx.request.ctx.http_client.get(urljoin(self._fulltext_service_url, f'/indexer/search') + f'?q={q}') as resp:
+            index_data = await resp.json()
+            logging.debug(index_data['hits'])
+            return await self.get_user_queries_from_ids(plugin_ctx, corpus_factory, user_id, index_data['hits'])
+
+    async def get_user_queries_from_ids(self, plugin_ctx, corpus_factory, user_id, queries):
+        async with self._db.cursor() as cursor:
+            await cursor.execute(f'''
+                WITH q(id) AS ( VALUES {', '.join('(%s)' for _ in queries)} )
+                SELECT query_id, created, name, q_supertype
+                FROM q
+                JOIN {self.TABLE_NAME} as t ON q.id = t.query_id
+                WHERE user_id = %s
+                GROUP BY query_id
+            ''', [*(q['id'] for q in queries), user_id])
+
+            rows = [item for item in await cursor.fetchall()]
+            full_data = await self._process_rows(plugin_ctx, corpus_factory, rows)
+            
+        for i, item in enumerate(full_data):
+            item['idx'] = i
+
+        return full_data
 
 
 @inject(

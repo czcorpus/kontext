@@ -27,3 +27,6 @@ class FullSearchArgs:
     wl_attr: str
     wl_pfilter: str
     wl_nfilter: str
+
+    def empty(self) -> bool:
+        return all(v is None for v in self.__dict__.values())

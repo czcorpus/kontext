@@ -526,6 +526,9 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                 case 'kwords':
                     args.fsAnyPropertyValue = this.state.fsAnyPropertyValue;
                     break;
+                default:
+                    args.fsAnyPropertyValue = this.state.fsAnyPropertyValue;
+                    break;
             }
         }
         return this.pageModel.ajax$<GetHistoryResponse>(

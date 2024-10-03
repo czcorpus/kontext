@@ -237,7 +237,7 @@ async def ajax_query_history(amodel: UserActionModel, req: KRequest, resp: KResp
     rows = await _load_query_history(
         amodel=amodel, q_supertype=query_supertype, corpname=corpname, from_date=None,
         user_id=req.session_get('user', 'id'), to_date=None, archived_only=archived_only, offset=offset,
-        limit=limit, full_search_args=full_search_args)
+        limit=limit, full_search_args=None if full_search_args.empty() else full_search_args)
     return dict(
         data=rows,
         from_date=None,
