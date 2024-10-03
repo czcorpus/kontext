@@ -95,12 +95,15 @@ class UcnkQueryHistory(MySqlQueryHistory):
         
         if corpname:
             parts.append(f'+corpora:{corpname}')
+        
+        if full_search_args.subcorpus:
+            parts.append(f'+subcorpus:{full_search_args.subcorpus}')
 
         if full_search_args.any_property_value:
             parts.append(f'+{full_search_args.any_property_value}')
 
         else:
-            if q_supertype in ('conc', 'kwords'):
+            if q_supertype in ('conc', 'pquery'):
                 if full_search_args.posattr_name:
                     parts.append(f'+pos_attr_names:{full_search_args.posattr_name}')
                 if full_search_args.posattr_value:
@@ -111,8 +114,6 @@ class UcnkQueryHistory(MySqlQueryHistory):
                     parts.append(f'+struct_attr_values:{full_search_args.structattr_value}')
 
             elif q_supertype == 'wlist':
-                if full_search_args.subcorpus:
-                    parts.append(f'+subcorpus:{full_search_args.subcorpus}')
                 if full_search_args.wl_pat:
                     parts.append(f'+raw_query:{full_search_args.wl_pat}')
                 if full_search_args.wl_attr:
@@ -121,6 +122,10 @@ class UcnkQueryHistory(MySqlQueryHistory):
                     parts.append(f'+pfilter_words:{full_search_args.wl_pfilter}')
                 if full_search_args.wl_nfilter:
                     parts.append(f'+nfilter_words:{full_search_args.wl_nfilter}')
+            
+            elif q_supertype == 'kwords':
+                if full_search_args.wl_attr:
+                    parts.append(f'+pos_attr_names:{full_search_args.posattr_name}')
 
         return ' '.join(parts)
 

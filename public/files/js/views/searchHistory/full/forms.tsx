@@ -34,6 +34,7 @@ export interface ExtendedSearchForms {
         fsStructattrName:string;
         fsStructattrValue:string;
         fsAnyPropertyValue:string;
+        fsSubcorpus:string;
     }>;
     PQueryForm:React.FC<{
         fsQueryCQLProps:boolean;
@@ -43,11 +44,12 @@ export interface ExtendedSearchForms {
         fsStructattrName:string;
         fsStructattrValue:string;
         fsAnyPropertyValue:string;
+        fsSubcorpus:string;
     }>;
     WListForm:React.FC<{
         fsQueryCQLProps:boolean;
         fsAnyPropertyValue:string;
-        usesubcorp:string;
+        fsSubcorpus:string;
         wlattr:string;
         wlpat:string;
         pfilter:string;
@@ -55,6 +57,9 @@ export interface ExtendedSearchForms {
     }>;
     KWordsForm:React.FC<{
         fsAnyPropertyValue:string;
+        fsQueryCQLProps:boolean;
+        fsSubcorpus:string;
+        fsPosattrName:string;
     }>;
     AnyForm:React.FC<{
         fsAnyPropertyValue:string;
@@ -192,6 +197,30 @@ export function init(
         );
     };
 
+    // -------------------- <UsedSubcorpus /> --------------------------
+
+    const UsedSubcorpus:React.FC<{
+        value:string;
+    }> = (props) => {
+
+        const handleValueChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch(
+                Actions.SetFsSubcorpus,
+                {
+                    value: evt.target.value
+                }
+            );
+        };
+
+        return (
+            <div className="prop-query">
+                <label>{he.translate('qhistory__used_subcorpus')}</label>
+                {'\u00a0'}
+                <input type="text" value={props.value} onChange={handleValueChange} />
+            </div>
+        );
+    };
+
     // -------------------- <QueryType /> --------------------------------
 
     const QueryCQLProps:React.FC<{
@@ -225,12 +254,14 @@ export function init(
         fsStructattrName:string;
         fsStructattrValue:string;
         fsAnyPropertyValue:string;
+        fsSubcorpus:string;
     }> = (props) => {
         
         return <S.FulltextFieldset>
             <QueryCQLProps isAdvancedQuery={props.fsQueryCQLProps} />
             {props.fsQueryCQLProps ?
                 <>
+                    <UsedSubcorpus value={props.fsSubcorpus} />
                     <UsedPosattrs attr={props.fsPosattrName} value={props.fsPosattrValue} />
                     <UsedStructures attr={props.fsStructureName} />
                     <UsedStructattrs attr={props.fsStructattrName} value={props.fsStructattrValue} />
@@ -250,12 +281,14 @@ export function init(
         fsStructattrName:string;
         fsStructattrValue:string;
         fsAnyPropertyValue:string;
+        fsSubcorpus:string;
     }> = (props) => {
         
         return <S.FulltextFieldset>
             <QueryCQLProps isAdvancedQuery={props.fsQueryCQLProps} />
             {props.fsQueryCQLProps ?
                 <>
+                    <UsedSubcorpus value={props.fsSubcorpus} />
                     <UsedPosattrs attr={props.fsPosattrName} value={props.fsPosattrValue} />
                     <UsedStructures attr={props.fsStructureName} />
                     <UsedStructattrs attr={props.fsStructattrName} value={props.fsStructattrValue} />
@@ -270,21 +303,12 @@ export function init(
     const WListForm:React.FC<{
         fsQueryCQLProps:boolean;
         fsAnyPropertyValue:string;
-        usesubcorp:string;
+        fsSubcorpus:string;
         wlattr:string;
         wlpat:string;
         pfilter:string;
         nfilter:string;
     }> = (props) => {
-        
-        const handleSubcorpChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
-            dispatcher.dispatch(
-                Actions.SetFsSubcorpus,
-                {
-                    value: evt.target.value
-                }
-            );
-        };
 
         const handleWlpatChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
             dispatcher.dispatch(
@@ -326,12 +350,7 @@ export function init(
             <QueryCQLProps isAdvancedQuery={props.fsQueryCQLProps} />
             {props.fsQueryCQLProps ?
                 <>
-                    <div className="prop-query">
-                        <label>{he.translate('qhistory__used_subcorpus')}</label>
-                        {'\u00a0'}
-                        <input type="text" value={props.usesubcorp} onChange={handleSubcorpChange} />
-                    </div>
-
+                    <UsedSubcorpus value={props.fsSubcorpus} />
                     <div className="prop-query">
                         <label>{he.translate('qhistory__used_wlattr')}</label>
                         {'\u00a0'}
@@ -365,10 +384,33 @@ export function init(
 
     const KWordsForm:React.FC<{
         fsAnyPropertyValue:string;
+        fsQueryCQLProps:boolean;
+        fsSubcorpus:string;
+        fsPosattrName:string;
     }> = (props) => {
+
+        const handleAttrChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch(
+                Actions.SetFsPosattrName,
+                {
+                    value: evt.target.value
+                }
+            );
+        };
         
         return <S.FulltextFieldset>
-            <AnyPropertyValue value={props.fsAnyPropertyValue} />
+            <QueryCQLProps isAdvancedQuery={props.fsQueryCQLProps} />
+            {props.fsQueryCQLProps ?
+                <>
+                    <UsedSubcorpus value={props.fsSubcorpus} />
+                    <div className="prop-query">
+                        <label>{he.translate('qhistory__used_posattrs_label')}</label>
+                        {'\u00a0'}
+                        <input type="text" value={props.fsPosattrName} onChange={handleAttrChange} />
+                    </div>
+                </> :
+                <AnyPropertyValue value={props.fsAnyPropertyValue} />
+            }
         </S.FulltextFieldset>
     }
 

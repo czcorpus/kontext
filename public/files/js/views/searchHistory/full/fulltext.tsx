@@ -60,6 +60,7 @@ export function init(
                     return <extendedSearchForms.ConcForm
                         fsQueryCQLProps={props.fsQueryCQLProps}
                         fsAnyPropertyValue={props.fsAnyPropertyValue}
+                        fsSubcorpus={props.fsSubcorpus}
                         fsPosattrName={props.fsPosattrName}
                         fsPosattrValue={props.fsPosattrValue}
                         fsStructureName={props.fsStructureName}
@@ -69,6 +70,7 @@ export function init(
                     return <extendedSearchForms.PQueryForm
                         fsQueryCQLProps={props.fsQueryCQLProps}
                         fsAnyPropertyValue={props.fsAnyPropertyValue}
+                        fsSubcorpus={props.fsSubcorpus}
                         fsPosattrName={props.fsPosattrName}
                         fsPosattrValue={props.fsPosattrValue}
                         fsStructureName={props.fsStructureName}
@@ -78,14 +80,17 @@ export function init(
                     return <extendedSearchForms.WListForm
                         fsAnyPropertyValue={props.fsAnyPropertyValue}
                         fsQueryCQLProps={props.fsQueryCQLProps}
-                        usesubcorp={props.fsSubcorpus}
+                        fsSubcorpus={props.fsSubcorpus}
                         wlattr={props.fsWlAttr}
                         wlpat={props.fsWlPat}
                         nfilter={props.fsWlNFilter}
                         pfilter={props.fsWlPFilter} />
                 case 'kwords':
                     return <extendedSearchForms.KWordsForm
-                        fsAnyPropertyValue={props.fsAnyPropertyValue} />
+                        fsAnyPropertyValue={props.fsAnyPropertyValue}
+                        fsQueryCQLProps={props.fsQueryCQLProps}
+                        fsSubcorpus={props.fsSubcorpus}
+                        fsPosattrName={props.fsPosattrName} />
                 default:
                     return <extendedSearchForms.AnyForm
                         fsAnyPropertyValue={props.fsAnyPropertyValue} />

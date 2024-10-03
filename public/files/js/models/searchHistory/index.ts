@@ -524,7 +524,12 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                     }
                     break;
                 case 'kwords':
-                    args.fsAnyPropertyValue = this.state.fsAnyPropertyValue;
+                    if (this.state.fsQueryCQLProps) {
+                        args.fsSubcorpus = this.state.fsSubcorpus;
+                        args.fsPosattrName = this.state.fsPosattrName;
+                    } else {
+                        args.fsAnyPropertyValue = this.state.fsAnyPropertyValue;
+                    }
                     break;
                 default:
                     args.fsAnyPropertyValue = this.state.fsAnyPropertyValue;
