@@ -506,7 +506,8 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                         args.fsStructattrName = this.state.fsStructattrName;
                         args.fsStructattrValue = this.state.fsStructattrValue;
                         args.fsStructureName = this.state.fsStructureName;
-        
+                        args.fsSubcorpus = this.state.fsSubcorpus;
+
                     } else {
                         args.fsAnyPropertyValue = this.state.fsAnyPropertyValue;
                     }
@@ -518,7 +519,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                         args.fsWlattr = this.state.fsWlAttr;
                         args.fsWlPfilter = this.state.fsWlPFilter;
                         args.fsWlNfilter = this.state.fsWlNFilter;
-        
+
                     } else {
                         args.fsAnyPropertyValue = this.state.fsAnyPropertyValue;
                     }

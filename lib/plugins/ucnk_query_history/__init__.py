@@ -19,7 +19,7 @@
 
 import logging
 from datetime import datetime, timezone
-from typing import Dict, List, Tuple
+from urllib.parse import quote
 from urllib.parse import urljoin
 import ujson as json
 
@@ -30,7 +30,7 @@ from plugin_types.subc_storage import AbstractSubcArchive
 from plugin_types.auth import AbstractAuth
 from plugin_types.general_storage import KeyValueStorage
 from plugins import inject
-from plugins.mysql_query_history import CorpusCache, MySqlQueryHistory
+from plugins.mysql_query_history import MySqlQueryHistory
 from plugins.mysql_integration_db import MySqlIntegrationDb
 from plugins.common.mysql.adhocdb import AdhocDB
 from plugins.common.mysql import MySQLConf
@@ -87,20 +87,26 @@ class UcnkQueryHistory(MySqlQueryHistory):
                 except Exception as ex:
                     await conn.rollback_tx()
                     raise ex
-    
-    def generate_query_string(self, q_supertype: str, user_id: int, corpname: str, full_search_args: FullSearchArgs) -> str:
+
+    @staticmethod
+    def generate_query_string(
+            q_supertype: str,
+            user_id: int,
+            corpname: str,
+            full_search_args: FullSearchArgs
+    ) -> str:
         parts = [f'+user_id:{user_id}']
         if q_supertype:
             parts.append(f'+query_supertype:{q_supertype}')
-        
+
         if corpname:
             parts.append(f'+corpora:{corpname}')
-        
+
         if full_search_args.subcorpus:
             parts.append(f'+subcorpus:{full_search_args.subcorpus}')
 
         if full_search_args.any_property_value:
-            parts.append(f'+{full_search_args.any_property_value}')
+            parts.append(f'+_all:{full_search_args.any_property_value}')
 
         else:
             if q_supertype in ('conc', 'pquery'):
@@ -122,27 +128,30 @@ class UcnkQueryHistory(MySqlQueryHistory):
                     parts.append(f'+pfilter_words:{full_search_args.wl_pfilter}')
                 if full_search_args.wl_nfilter:
                     parts.append(f'+nfilter_words:{full_search_args.wl_nfilter}')
-            
+
             elif q_supertype == 'kwords':
                 if full_search_args.wl_attr:
                     parts.append(f'+pos_attr_names:{full_search_args.posattr_name}')
 
-        return ' '.join(parts)
+        return quote(' '.join(parts))
 
     async def get_user_queries(
             self, plugin_ctx, user_id, corpus_factory, from_date=None, to_date=None, q_supertype=None, corpname=None,
             archived_only=False, offset=0, limit=None, full_search_args=None):
-        
+
         if full_search_args is None:
             return await super().get_user_queries(plugin_ctx, user_id, corpus_factory, from_date, to_date, q_supertype, corpname, archived_only, offset, limit)
 
         q = self.generate_query_string(q_supertype, user_id, corpname, full_search_args)
-        async with plugin_ctx.request.ctx.http_client.get(urljoin(self._fulltext_service_url, f'/indexer/search') + f'?q={q}') as resp:
+        async with plugin_ctx.request.ctx.http_client.get(
+                urljoin(self._fulltext_service_url, f'/indexer/search') + f'?q={q}') as resp:
             index_data = await resp.json()
             logging.debug(index_data['hits'])
             return await self.get_user_queries_from_ids(plugin_ctx, corpus_factory, user_id, index_data['hits'])
 
     async def get_user_queries_from_ids(self, plugin_ctx, corpus_factory, user_id, queries):
+        if len(queries) == 0:
+            return []
         async with self._db.cursor() as cursor:
             await cursor.execute(f'''
                 WITH q(id) AS ( VALUES {', '.join('(%s)' for _ in queries)} )
@@ -155,7 +164,7 @@ class UcnkQueryHistory(MySqlQueryHistory):
 
             rows = [item for item in await cursor.fetchall()]
             full_data = await self._process_rows(plugin_ctx, corpus_factory, rows)
-            
+
         for i, item in enumerate(full_data):
             item['idx'] = i
 
