@@ -93,7 +93,7 @@ export function init(
                         fsPosattrName={props.fsPosattrName} />
                 default:
                     return <extendedSearchForms.AnyForm
-                        fsAnyPropertyValue={props.fsAnyPropertyValue} />
+                            fsAnyPropertyValue={props.fsAnyPropertyValue} />
             }
         }
 
@@ -115,7 +115,7 @@ export function init(
                     </> :
                     null
                 }
-            </S.FulltextBlock>       
+            </S.FulltextBlock>
         )
     }
 

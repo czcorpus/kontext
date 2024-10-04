@@ -498,6 +498,7 @@
         "qhistory__used_wlpat": "Výraz",
         "qhistory__used_pfilter": "Slova pozitivního filtru",
         "qhistory__used_nfilter": "Slova negativního filtru",
+        "qhistory__any_search_note": "Pro podrobnější výběr parametrů zvolte ve filtru konkrétní typ dotazu.",
         "concview__invalid_page_num_err": "Neplatné číslo stránky",
         "concview__click_for_details": "Klikněte pro zobrazení detailů",
         "concview__sort_jump_to": "Přejít na",

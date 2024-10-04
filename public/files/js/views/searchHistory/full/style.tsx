@@ -362,6 +362,8 @@ export const FulltextBlock = styled.div`
 
 export const FulltextFieldset = styled.fieldset`
 
+    padding-left: 1em;
+
     .prop-query {
         display: flex;
         align-items: center;

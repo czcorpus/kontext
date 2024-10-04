@@ -256,7 +256,7 @@ export function init(
         fsAnyPropertyValue:string;
         fsSubcorpus:string;
     }> = (props) => {
-        
+
         return <S.FulltextFieldset>
             <QueryCQLProps isAdvancedQuery={props.fsQueryCQLProps} />
             {props.fsQueryCQLProps ?
@@ -283,7 +283,7 @@ export function init(
         fsAnyPropertyValue:string;
         fsSubcorpus:string;
     }> = (props) => {
-        
+
         return <S.FulltextFieldset>
             <QueryCQLProps isAdvancedQuery={props.fsQueryCQLProps} />
             {props.fsQueryCQLProps ?
@@ -345,7 +345,7 @@ export function init(
                 }
             );
         };
-    
+
         return <S.FulltextFieldset>
             <QueryCQLProps isAdvancedQuery={props.fsQueryCQLProps} />
             {props.fsQueryCQLProps ?
@@ -362,13 +362,13 @@ export function init(
                         {'\u00a0'}
                         <input type="text" value={props.wlpat} onChange={handleWlpatChange} />
                     </div>
-                    
+
                     <div className="prop-query">
                         <label>{he.translate('qhistory__used_pfilter')}</label>
                         {'\u00a0'}
                         <input type="text" value={props.pfilter} onChange={handlePFilterChange} />
                     </div>
-                    
+
                     <div className="prop-query">
                         <label>{he.translate('qhistory__used_nfilter')}</label>
                         {'\u00a0'}
@@ -397,7 +397,7 @@ export function init(
                 }
             );
         };
-        
+
         return <S.FulltextFieldset>
             <QueryCQLProps isAdvancedQuery={props.fsQueryCQLProps} />
             {props.fsQueryCQLProps ?
@@ -419,10 +419,13 @@ export function init(
     const AnyForm:React.FC<{
         fsAnyPropertyValue:string;
     }> = (props) => {
-        
-        return <S.FulltextFieldset>
-            <AnyPropertyValue value={props.fsAnyPropertyValue} />
-        </S.FulltextFieldset>
+
+        return (
+            <S.FulltextFieldset>
+                <AnyPropertyValue value={props.fsAnyPropertyValue} />
+                <p className="note">({he.translate('qhistory__any_search_note')})</p>
+            </S.FulltextFieldset>
+        )
     }
 
     return {

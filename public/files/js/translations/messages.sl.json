@@ -948,6 +948,7 @@
         "qhistory__used_wlpat": "Pattern UNTRANSLATED",
         "qhistory__used_pfilter": "Positive filter words UNTRANSLATED",
         "qhistory__used_nfilter": "Negative filter words UNTRANSLATED",
+        "qhistory__any_search_note": "For a more detailed selection of parameters, select a specific query type in the filter. UNTRANSLATED",
         "wordlist__pfilter_label": "Positive filter words UNTRANSLATED",
         "wordlist__nfilter_label": "Negative filter words UNTRANSLATED",
         "wordlist__positive_{pcount}": "positive {pcount, plural, one{# word} other{# words}} UNTRANSLATED",
