@@ -5,7 +5,7 @@
     <start>
         <element name="query_persistence">
             <element name="module">
-                <value>mysql_query_persistence</value>
+                <value>ucnk_query_persistence</value>
             </element>
             <element name="ttl_days">
                 <data type="positiveInteger" />
