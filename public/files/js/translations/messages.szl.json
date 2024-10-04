@@ -497,6 +497,7 @@
         "qhistory__used_wlpat": "Pattern UNTRANSLATED",
         "qhistory__used_pfilter": "Positive filter words UNTRANSLATED",
         "qhistory__used_nfilter": "Negative filter words UNTRANSLATED",
+        "qhistory__any_search_note": "For a more detailed selection of parameters, select a specific query type in the filter. UNTRANSLATED",
         "concview__invalid_page_num_err": "Niynŏleżyn numer strōny",
         "concview__click_for_details": "Kliknij, żeby ôbejzdrzeć szczegōły",
         "concview__sort_jump_to": "Skocz do",
