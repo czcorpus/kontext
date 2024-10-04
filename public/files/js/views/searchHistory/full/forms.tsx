@@ -127,9 +127,11 @@ export function init(
                 {'\u00a0'}
                 <input type="text" value={props.attr} onChange={handleAttrChange} />
                 {'\u00a0'}
+                <span className="optional">(</span>
                 {he.translate('qhistory__used_property_value')}
                 {'\u00a0'}
                 <input type="text" value={props.value} onChange={handleValueChange} />
+                <span className="optional">)</span>
             </div>
         );
     };
@@ -189,9 +191,11 @@ export function init(
                 {'\u00a0'}
                 <input type="text" value={props.attr} onChange={handleAttrChange} />
                 {'\u00a0'}
+                <span className="optional">(</span>
                 {he.translate('qhistory__used_property_value')}
                 {'\u00a0'}
                 <input type="text" value={props.value} onChange={handleValueChange} />
+                <span className="optional">)</span>
             </div>
 
         );

@@ -369,5 +369,8 @@ export const FulltextFieldset = styled.fieldset`
         align-items: center;
         padding: 0.3em 0;
 
+        .optional {
+            font-size: 1.6em;
+        }
     }
 `;
