@@ -57,7 +57,7 @@ def make_bleve_field(field: str, values_string: str) -> str:
     values = []
     for v in values_string.split(" "):
         if v:
-            values.append(re.escape(v))
+            values.append(re.escape(v.lower()))
     if len(values) > 0:
         return f'{field}:/.*({"|".join(values)}).*/'
     return ''
