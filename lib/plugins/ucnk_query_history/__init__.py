@@ -19,6 +19,7 @@
 
 import logging
 from datetime import datetime, timezone
+import re
 from urllib.parse import quote
 from urllib.parse import urljoin
 import ujson as json
@@ -34,6 +35,32 @@ from plugins.mysql_query_history import MySqlQueryHistory
 from plugins.mysql_integration_db import MySqlIntegrationDb
 from plugins.common.mysql.adhocdb import AdhocDB
 from plugins.common.mysql import MySQLConf
+
+
+def escape_bleve_chars(s: str) -> str:
+    """
+    According to documentation the characters are
+    "+-=&|><!(){}[]^\"~*?:\\/ "
+    (note: there is empty space)
+    """
+
+    for ch in '\\+-=&|><!(){}[]^"~*?:/':
+        s = s.replace(ch, f'\\{ch}')
+    return s
+
+
+def make_bleve_field(field: str, values_string: str) -> str:
+    """
+    Builds bleve field query using regex
+    spaces serve as OR in regex
+    """
+    values = []
+    for v in values_string.split(" "):
+        if v:
+            values.append(re.escape(v))
+    if len(values) > 0:
+        return f'{field}:/.*({"|".join(values)}).*/'
+    return ''
 
 
 class UcnkQueryHistory(MySqlQueryHistory):
@@ -100,38 +127,38 @@ class UcnkQueryHistory(MySqlQueryHistory):
             parts.append(f'+query_supertype:{q_supertype}')
 
         if corpname:
-            parts.append(f'+corpora:{corpname}')
+            parts.append(f'+corpora:{escape_bleve_chars(corpname)}')
 
         if full_search_args.subcorpus:
-            parts.append(f'+subcorpus:{full_search_args.subcorpus}')
+            parts.append(make_bleve_field('+subcorpus', full_search_args.subcorpus))
 
         if full_search_args.any_property_value:
-            parts.append(f'+_all:{full_search_args.any_property_value}')
+            parts.append(make_bleve_field('+_all', full_search_args.any_property_value))
 
         else:
             if q_supertype in ('conc', 'pquery'):
                 if full_search_args.posattr_name:
-                    parts.append(f'+pos_attr_names:{full_search_args.posattr_name}')
+                    parts.append(make_bleve_field('+pos_attr_names', full_search_args.posattr_name))
                 if full_search_args.posattr_value:
-                    parts.append(f'+pos_attr_values:{full_search_args.posattr_value}')
+                    parts.append(make_bleve_field('+pos_attr_values', full_search_args.posattr_value))
                 if full_search_args.structattr_name:
-                    parts.append(f'+struct_attr_names:{full_search_args.structattr_name}')
+                    parts.append(make_bleve_field('+struct_attr_names', full_search_args.structattr_name))
                 if full_search_args.structattr_value:
-                    parts.append(f'+struct_attr_values:{full_search_args.structattr_value}')
+                    parts.append(make_bleve_field('+struct_attr_values', full_search_args.structattr_value))
 
             elif q_supertype == 'wlist':
                 if full_search_args.wl_pat:
-                    parts.append(f'+raw_query:{full_search_args.wl_pat}')
+                    parts.append(make_bleve_field('+raw_query', full_search_args.wl_pat))
                 if full_search_args.wl_attr:
-                    parts.append(f'+pos_attr_names:{full_search_args.wl_attr}')
+                    parts.append(make_bleve_field('+pos_attr_names', full_search_args.wl_attr))
                 if full_search_args.wl_pfilter:
-                    parts.append(f'+pfilter_words:{full_search_args.wl_pfilter}')
+                    parts.append(make_bleve_field('+pfilter_words', full_search_args.wl_pfilter))
                 if full_search_args.wl_nfilter:
-                    parts.append(f'+nfilter_words:{full_search_args.wl_nfilter}')
+                    parts.append(make_bleve_field('+nfilter_words', full_search_args.wl_nfilter))
 
             elif q_supertype == 'kwords':
                 if full_search_args.wl_attr:
-                    parts.append(f'+pos_attr_names:{full_search_args.posattr_name}')
+                    parts.append(make_bleve_field('+pos_attr_names', full_search_args.posattr_name))
 
         return quote(' '.join(parts))
 
