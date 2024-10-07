@@ -60,7 +60,6 @@ async def form(amodel: KeywordsActionModel, req: KRequest, _: KResponse):
                 wlpat='.*',
                 score_type='din'))
     await amodel.export_subcorpora_list(out)
-    amodel.export_form_args(out)
 
     # initial reference corpus data
     if amodel.curr_kwform_args.ref_corpname:
@@ -89,6 +88,10 @@ async def form(amodel: KeywordsActionModel, req: KRequest, _: KResponse):
         'n': n,
         'multisep': amodel.corp.get_conf(f'{n}.MULTISEP'),
     } for n in cattrs]
+
+    if not amodel.curr_kwform_args.wlattr:
+        amodel.curr_kwform_args.wlattr = cattrs[0]
+    amodel.export_form_args(out)
     return out
 
 
