@@ -113,15 +113,15 @@ class KeywordsActionModel(CorpusActionModel):
         self._add_save_menu_item(
             'CSV', save_format='csv',
             hint=self._req.translate(
-                f'Saves at most {self.KEYWORDS_QUICK_SAVE_MAX_LINES} items. Use "Custom" for more options.'))
+                'Saves at most {0} items. Use "Custom" for more options.').format(self.KEYWORDS_QUICK_SAVE_MAX_LINES))
         self._add_save_menu_item(
             'XLSX', save_format='xlsx',
             hint=self._req.translate(
-                f'Saves at most {self.KEYWORDS_QUICK_SAVE_MAX_LINES} items. Use "Custom" for more options.'))
+                'Saves at most {0} items. Use "Custom" for more options.').format(self.KEYWORDS_QUICK_SAVE_MAX_LINES))
         self._add_save_menu_item(
             'XML', save_format='xml',
             hint=self._req.translate(
-                f'Saves at most {self.KEYWORDS_QUICK_SAVE_MAX_LINES} items. Use "Custom" for more options.'))
+                'Saves at most {0} items. Use "Custom" for more options.').format(self.KEYWORDS_QUICK_SAVE_MAX_LINES))
         self._add_save_menu_item(self._req.translate('Custom'))
 
 

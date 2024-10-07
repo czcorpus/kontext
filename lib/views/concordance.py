@@ -318,16 +318,16 @@ async def view_conc(
             amodel.CONC_QUICK_SAVE_MAX_LINES))
     amodel.add_save_menu_item(
         'XLSX', save_format='xlsx',
-        hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
-            amodel.CONC_QUICK_SAVE_MAX_LINES)))
+        hint=req.translate('Saves at most {0} items. Use "Custom" for more options.').format(
+            amodel.CONC_QUICK_SAVE_MAX_LINES))
     amodel.add_save_menu_item(
         'XML', save_format='xml',
-        hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
-            amodel.CONC_QUICK_SAVE_MAX_LINES)))
+        hint=req.translate('Saves at most {0} items. Use "Custom" for more options.').format(
+            amodel.CONC_QUICK_SAVE_MAX_LINES))
     amodel.add_save_menu_item(
         'TXT', save_format='txt',
-        hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
-            amodel.CONC_QUICK_SAVE_MAX_LINES)))
+        hint=req.translate('Saves at most {0} items. Use "Custom" for more options.').format(
+            amodel.CONC_QUICK_SAVE_MAX_LINES))
     amodel.add_save_menu_item(req.translate('Custom'))
 
     # unlike 'globals' 'widectx_globals' stores full structs+structattrs information
