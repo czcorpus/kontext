@@ -173,13 +173,13 @@ class UcnkQueryHistory(MySqlQueryHistory):
             return []
         async with self._db.cursor() as cursor:
             await cursor.execute(f'''
-                WITH q(sort, id) AS ( VALUES {', '.join('(%s, %s)' for _ in queries)} )
+                WITH q(sort, created, id) AS ( VALUES {', '.join('(%s, %s, %s)' for _ in queries)} )
                 SELECT q.sort, t.query_id, t.created, t.name, t.q_supertype
                 FROM q
-                JOIN {self.TABLE_NAME} AS t ON q.id = t.query_id
+                JOIN {self.TABLE_NAME} AS t ON q.id = t.query_id AND q.created = t.created
                 WHERE user_id = %s
                 ORDER BY q.sort ASC, t.created DESC
-            ''', [*(x for i, q in enumerate(queries) for x in (i, q['id'])), user_id])
+            ''', [*(x for i, q in enumerate(queries) for x in (i, *(q['id'].split("-")[1:]))), user_id])
 
             rows = [item for item in await cursor.fetchall()]
             full_data = await self._process_rows(plugin_ctx, corpus_factory, rows)
