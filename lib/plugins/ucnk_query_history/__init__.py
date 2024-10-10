@@ -169,28 +169,20 @@ class UcnkQueryHistory(MySqlQueryHistory):
         async with plugin_ctx.request.ctx.http_client.get(
                 urljoin(self._fulltext_service_url, f'/indexer/search') + f'?q={q}') as resp:
             index_data = await resp.json()
-            logging.debug(index_data['hits'])
-            return await self.get_user_queries_from_ids(plugin_ctx, corpus_factory, user_id, index_data['hits'])
 
-    async def get_user_queries_from_ids(self, plugin_ctx, corpus_factory, user_id, queries):
-        if len(queries) == 0:
-            return []
-        async with self._db.cursor() as cursor:
-            await cursor.execute(f'''
-                WITH q(sort, created, id) AS ( VALUES {', '.join('(%s, %s, %s)' for _ in queries)} )
-                SELECT q.sort, t.query_id, t.created, t.name, t.q_supertype
-                FROM q
-                JOIN {self.TABLE_NAME} AS t ON q.id = t.query_id AND q.created = t.created
-                WHERE user_id = %s
-                ORDER BY q.sort ASC, t.created DESC
-            ''', [*(x for i, q in enumerate(queries) for x in (i, *(q['id'].split("/")[1:]))), user_id])
-
-            rows = [item for item in await cursor.fetchall()]
-            full_data = await self._process_rows(plugin_ctx, corpus_factory, rows)
-
+        rows = []
+        for hit in index_data['hits']:
+            user_id, created, query_id, *_ = hit['id'].split('/')
+            rows.append({
+                'query_id': query_id,
+                'created': int(created),
+                'q_supertype': hit['fields']['query_supertype'],
+                'name': hit['fields']['name'],
+            })
+        
+        full_data = await self._process_rows(plugin_ctx, corpus_factory, rows)
         for i, item in enumerate(full_data):
             item['idx'] = i
-
         return full_data
 
 
