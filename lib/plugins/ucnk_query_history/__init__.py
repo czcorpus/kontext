@@ -112,9 +112,13 @@ class UcnkQueryHistory(MySqlQueryHistory):
             q_supertype: str,
             user_id: int,
             corpname: str,
+            archived_only: bool,
             full_search_args: FullSearchArgs
     ) -> str:
         parts = [f'+user_id:{user_id}']
+        if archived_only:
+            parts.append('+name:/.*/')
+
         if q_supertype:
             parts.append(make_bleve_field('query_supertype', q_supertype))
 
@@ -161,7 +165,7 @@ class UcnkQueryHistory(MySqlQueryHistory):
         if full_search_args is None:
             return await super().get_user_queries(plugin_ctx, user_id, corpus_factory, from_date, to_date, q_supertype, corpname, archived_only, offset, limit)
 
-        q = self.generate_query_string(q_supertype, user_id, corpname, full_search_args)
+        q = self.generate_query_string(q_supertype, user_id, corpname, archived_only, full_search_args)
         async with plugin_ctx.request.ctx.http_client.get(
                 urljoin(self._fulltext_service_url, f'/indexer/search') + f'?q={q}') as resp:
             index_data = await resp.json()
@@ -179,7 +183,7 @@ class UcnkQueryHistory(MySqlQueryHistory):
                 JOIN {self.TABLE_NAME} AS t ON q.id = t.query_id AND q.created = t.created
                 WHERE user_id = %s
                 ORDER BY q.sort ASC, t.created DESC
-            ''', [*(x for i, q in enumerate(queries) for x in (i, *(q['id'].split("-")[1:]))), user_id])
+            ''', [*(x for i, q in enumerate(queries) for x in (i, *(q['id'].split("/")[1:]))), user_id])
 
             rows = [item for item in await cursor.fetchall()]
             full_data = await self._process_rows(plugin_ctx, corpus_factory, rows)

@@ -30,7 +30,7 @@ configuration.
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Tuple
 
 import plugins
@@ -93,7 +93,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
         self._page_num_records = int(conf.get('plugins', 'query_history')['page_num_records'])
 
     async def store(self, user_id, query_id, q_supertype):
-        created = int(datetime.utcnow().timestamp())
+        created = int(datetime.now(timezone.utc).timestamp())
         corpora = (await self._query_persistence.open(query_id))['corpora']
         async with self._db.cursor() as cursor:
             await cursor.executemany(
