@@ -19,8 +19,8 @@
 
 import logging
 from datetime import datetime, timezone
-from urllib.parse import quote
-from urllib.parse import urljoin
+from typing import Optional
+from urllib.parse import urljoin, urlencode
 import ujson as json
 
 import plugins
@@ -113,7 +113,7 @@ class UcnkQueryHistory(MySqlQueryHistory):
             user_id: int,
             corpname: str,
             archived_only: bool,
-            full_search_args: FullSearchArgs
+            full_search_args: Optional[FullSearchArgs]
     ) -> str:
         parts = [f'+user_id:{user_id}']
         if archived_only:
@@ -125,49 +125,54 @@ class UcnkQueryHistory(MySqlQueryHistory):
         if corpname:
             parts.append(make_bleve_field('corpora', corpname))
 
-        if full_search_args.subcorpus:
-            parts.append(make_bleve_field('subcorpus', full_search_args.subcorpus))
+        if full_search_args is not None:
+            if full_search_args.subcorpus:
+                parts.append(make_bleve_field('subcorpus', full_search_args.subcorpus))
 
-        if full_search_args.any_property_value:
-            parts.append(make_bleve_field('_all', full_search_args.any_property_value))
+            if full_search_args.any_property_value:
+                parts.append(make_bleve_field('_all', full_search_args.any_property_value))
 
-        else:
-            if q_supertype in ('conc', 'pquery'):
-                if full_search_args.posattr_name:
-                    parts.append(make_bleve_field('pos_attr_names', full_search_args.posattr_name))
-                if full_search_args.posattr_value:
-                    parts.append(make_bleve_field('pos_attr_values', full_search_args.posattr_value))
-                if full_search_args.structattr_name:
-                    parts.append(make_bleve_field('struct_attr_names', full_search_args.structattr_name))
-                if full_search_args.structattr_value:
-                    parts.append(make_bleve_field('struct_attr_values', full_search_args.structattr_value))
+            else:
+                if q_supertype in ('conc', 'pquery'):
+                    if full_search_args.posattr_name:
+                        parts.append(make_bleve_field('pos_attr_names', full_search_args.posattr_name))
+                    if full_search_args.posattr_value:
+                        parts.append(make_bleve_field('pos_attr_values', full_search_args.posattr_value))
+                    if full_search_args.structattr_name:
+                        parts.append(make_bleve_field('struct_attr_names', full_search_args.structattr_name))
+                    if full_search_args.structattr_value:
+                        parts.append(make_bleve_field('struct_attr_values', full_search_args.structattr_value))
 
-            elif q_supertype == 'wlist':
-                if full_search_args.wl_pat:
-                    parts.append(make_bleve_field('raw_query', full_search_args.wl_pat))
-                if full_search_args.wl_attr:
-                    parts.append(make_bleve_field('pos_attr_names', full_search_args.wl_attr))
-                if full_search_args.wl_pfilter:
-                    parts.append(make_bleve_field('pfilter_words', full_search_args.wl_pfilter))
-                if full_search_args.wl_nfilter:
-                    parts.append(make_bleve_field('nfilter_words', full_search_args.wl_nfilter))
+                elif q_supertype == 'wlist':
+                    if full_search_args.wl_pat:
+                        parts.append(make_bleve_field('raw_query', full_search_args.wl_pat))
+                    if full_search_args.wl_attr:
+                        parts.append(make_bleve_field('pos_attr_names', full_search_args.wl_attr))
+                    if full_search_args.wl_pfilter:
+                        parts.append(make_bleve_field('pfilter_words', full_search_args.wl_pfilter))
+                    if full_search_args.wl_nfilter:
+                        parts.append(make_bleve_field('nfilter_words', full_search_args.wl_nfilter))
 
-            elif q_supertype == 'kwords':
-                if full_search_args.wl_attr:
-                    parts.append(make_bleve_field('pos_attr_names', full_search_args.posattr_name))
+                elif q_supertype == 'kwords':
+                    if full_search_args.wl_attr:
+                        parts.append(make_bleve_field('pos_attr_names', full_search_args.posattr_name))
 
-        return quote(' '.join(parts))
+        return ' '.join(parts)
 
     async def get_user_queries(
             self, plugin_ctx, user_id, corpus_factory, from_date=None, to_date=None, q_supertype=None, corpname=None,
             archived_only=False, offset=0, limit=None, full_search_args=None):
 
-        if full_search_args is None:
-            return await super().get_user_queries(plugin_ctx, user_id, corpus_factory, from_date, to_date, q_supertype, corpname, archived_only, offset, limit)
+        params = {
+            'q': self.generate_query_string(q_supertype, user_id, corpname, archived_only, full_search_args),
+            'order': '-created' if full_search_args is None else '-_score,-created',
+            'limit': limit,
+            'fields': 'query_supertype,name',
+        }
 
-        q = self.generate_query_string(q_supertype, user_id, corpname, archived_only, full_search_args)
-        async with plugin_ctx.request.ctx.http_client.get(
-                urljoin(self._fulltext_service_url, f'/indexer/search') + f'?q={q}') as resp:
+        url_query = urlencode(list(params.items()))
+        url = urljoin(self._fulltext_service_url, f'/indexer/search?{url_query}')
+        async with plugin_ctx.request.ctx.http_client.get(url) as resp:
             index_data = await resp.json()
 
         rows = []
