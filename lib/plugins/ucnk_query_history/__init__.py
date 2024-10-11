@@ -32,6 +32,7 @@ from plugin_types.general_storage import KeyValueStorage
 from plugins import inject
 from plugins.mysql_query_history import MySqlQueryHistory
 from plugins.mysql_integration_db import MySqlIntegrationDb
+from plugins.ucnk_query_persistence import UCNKQueryPersistence
 from plugins.common.mysql.adhocdb import AdhocDB
 from plugins.common.mysql import MySQLConf
 
@@ -83,6 +84,24 @@ class UcnkQueryHistory(MySqlQueryHistory):
 
     def supports_fulltext_search(self):
         return True
+
+    async def store(self, user_id, query_id, q_supertype):
+        created = await super().store(user_id, query_id, q_supertype)
+        if isinstance(self._query_persistence, UCNKQueryPersistence):
+            await self._query_persistence.queue_history(conc_id=query_id, user_id=user_id, created=created)
+        return created
+
+    async def make_persistent(self, user_id, query_id, q_supertype, created, name) -> bool:
+        done = await super().make_persistent(user_id, query_id, q_supertype, created, name)
+        if isinstance(self._query_persistence, UCNKQueryPersistence):
+            await self._query_persistence.queue_history(conc_id=query_id, user_id=user_id, created=created, name=name)
+        return done
+
+    async def make_transient(self, user_id, query_id, created, name) -> bool:
+        done = await super().make_transient(user_id, query_id, created, name)
+        if isinstance(self._query_persistence, UCNKQueryPersistence):
+            await self._query_persistence.queue_history(conc_id=query_id, user_id=user_id, created=created)
+        return done
 
     async def delete_old_records(self):
         """
@@ -162,6 +181,9 @@ class UcnkQueryHistory(MySqlQueryHistory):
     async def get_user_queries(
             self, plugin_ctx, user_id, corpus_factory, from_date=None, to_date=None, q_supertype=None, corpname=None,
             archived_only=False, offset=0, limit=None, full_search_args=None):
+
+        if full_search_args is None:
+            return await super().get_user_queries(plugin_ctx, user_id, corpus_factory, from_date, to_date, q_supertype, corpname, archived_only, offset, limit, full_search_args)
 
         params = {
             'q': self.generate_query_string(q_supertype, user_id, corpname, archived_only, full_search_args),
