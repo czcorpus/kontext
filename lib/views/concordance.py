@@ -542,6 +542,7 @@ async def save_query(amodel: UserActionModel, req: KRequest, resp: KResponse):
                 await qp.archive(conc_id, True)
 
         hsave = await qh.make_persistent(
+            amodel.plugin_ctx,
             amodel.session_get('user', 'id'),
             req.json['query_id'],
             qp.stored_query_supertype(data),

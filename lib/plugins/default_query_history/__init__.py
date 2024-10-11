@@ -98,7 +98,7 @@ class QueryHistory(AbstractQueryHistory):
             await self._delete_old_records(user_id)
         return ts
 
-    async def make_persistent(self, user_id, query_id, q_supertype, created, name):
+    async def make_persistent(self, plugin_ctx, user_id, query_id, q_supertype, created, name):
         k = self._mk_key(user_id)
         data = await self.db.list_get(k)
         last_match_idx = -1
@@ -117,7 +117,7 @@ class QueryHistory(AbstractQueryHistory):
             await self.db.list_append(self._mk_key(user_id), item)
         return True
 
-    async def make_transient(self, user_id, query_id, created, name):
+    async def make_transient(self, plugin_ctx, user_id, query_id, created, name):
         k = self._mk_key(user_id)
         data = await self.db.list_get(k)
         for i, item in enumerate(data):

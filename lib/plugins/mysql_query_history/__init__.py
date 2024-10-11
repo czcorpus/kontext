@@ -113,7 +113,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
             )
             return cursor.rowcount > 0
 
-    async def make_persistent(self, user_id, query_id, q_supertype, created, name) -> bool:
+    async def make_persistent(self, plugin_ctx, user_id, query_id, q_supertype, created, name) -> bool:
         if await self._update_name(user_id, query_id, created, name):
             await self._query_persistence.archive(query_id, True)
         else:

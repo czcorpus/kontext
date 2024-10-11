@@ -91,16 +91,14 @@ class UcnkQueryHistory(MySqlQueryHistory):
             await self._query_persistence.queue_history(conc_id=query_id, user_id=user_id, created=created)
         return created
 
-    async def make_persistent(self, user_id, query_id, q_supertype, created, name) -> bool:
-        done = await super().make_persistent(user_id, query_id, q_supertype, created, name)
-        if isinstance(self._query_persistence, UCNKQueryPersistence):
-            await self._query_persistence.queue_history(conc_id=query_id, user_id=user_id, created=created, name=name)
+    async def make_persistent(self, plugin_ctx, user_id, query_id, q_supertype, created, name) -> bool:
+        done = await super().make_persistent(plugin_ctx, user_id, query_id, q_supertype, created, name)
+        await self.update_indexed_name(plugin_ctx, query_id, user_id, created, name)
         return done
 
-    async def make_transient(self, user_id, query_id, created, name) -> bool:
-        done = await super().make_transient(user_id, query_id, created, name)
-        if isinstance(self._query_persistence, UCNKQueryPersistence):
-            await self._query_persistence.queue_history(conc_id=query_id, user_id=user_id, created=created)
+    async def make_transient(self, plugin_ctx, user_id, query_id, created, name) -> bool:
+        done = await super().make_transient(plugin_ctx, user_id, query_id, created, name)
+        await self.update_indexed_name(plugin_ctx, query_id, user_id, created)
         return done
 
     async def delete_old_records(self):
@@ -211,6 +209,21 @@ class UcnkQueryHistory(MySqlQueryHistory):
         for i, item in enumerate(full_data):
             item['idx'] = i
         return full_data
+    
+    async def update_indexed_name(self, plugin_ctx, query_id, user_id, created, new_name = ""):
+        params = {
+            'queryId': query_id,
+            'userId': user_id,
+            'created': created,
+            'name': new_name,
+        }
+
+        url_query = urlencode(list(params.items()))
+        url = urljoin(self._fulltext_service_url, f'/indexer/update?{url_query}')
+        async with plugin_ctx.request.ctx.http_client.get(url) as resp:
+            if not resp.ok:
+                data = await resp.json()
+                raise Exception(f'Failed to update query name: {data}')
 
 
 @inject(
