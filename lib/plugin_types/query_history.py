@@ -53,7 +53,7 @@ class AbstractQueryHistory(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def make_persistent(self, user_id: int, query_id: str, q_supertype: str, created: Optional[int], name: str):
+    async def make_persistent(self, plugin_ctx, user_id: int, query_id: str, q_supertype: str, created: Optional[int], name: str):
         """
         Finds (if implemented) a specific query history
         record based on its respective concordance record.
@@ -68,14 +68,14 @@ class AbstractQueryHistory(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def make_transient(self, user_id: int, query_id: str, created: int, name: str):
+    async def make_transient(self, plugin_ctx, user_id: int, query_id: str, created: int, name: str):
         """
         Remove name from the history item and let it be
         removed once it gets too old
         """
 
     @abc.abstractmethod
-    async def delete(self, user_id, query_id, created):
+    async def delete(self, plugin_ctx, user_id, query_id, created):
         """
         Delete a named query from history.
 

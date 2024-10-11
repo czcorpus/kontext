@@ -30,7 +30,7 @@ configuration.
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Tuple
 
 import plugins
@@ -93,7 +93,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
         self._page_num_records = int(conf.get('plugins', 'query_history')['page_num_records'])
 
     async def store(self, user_id, query_id, q_supertype):
-        created = int(datetime.utcnow().timestamp())
+        created = int(datetime.now(timezone.utc).timestamp())
         corpora = (await self._query_persistence.open(query_id))['corpora']
         async with self._db.cursor() as cursor:
             await cursor.executemany(
@@ -113,7 +113,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
             )
             return cursor.rowcount > 0
 
-    async def make_persistent(self, user_id, query_id, q_supertype, created, name) -> bool:
+    async def make_persistent(self, plugin_ctx, user_id, query_id, q_supertype, created, name) -> bool:
         if await self._update_name(user_id, query_id, created, name):
             await self._query_persistence.archive(query_id, True)
         else:
@@ -121,10 +121,10 @@ class MySqlQueryHistory(AbstractQueryHistory):
             await self._update_name(user_id, query_id, c, name)
         return True
 
-    async def make_transient(self, user_id, query_id, created, name) -> bool:
+    async def make_transient(self, plugin_ctx, user_id, query_id, created, name) -> bool:
         return await self._update_name(user_id, query_id, created, None)
 
-    async def delete(self, user_id, query_id, created):
+    async def delete(self, plugin_ctx, user_id, query_id, created):
         async with self._db.cursor() as cursor:
             await cursor.execute(
                 f'DELETE FROM {self.TABLE_NAME} WHERE user_id = %s AND query_id = %s AND created = %s',

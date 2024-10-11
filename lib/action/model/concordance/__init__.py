@@ -22,8 +22,6 @@ import re
 import urllib.parse
 from collections import OrderedDict
 from typing import Any, Dict, List, Optional, Tuple, Union
-import asyncio
-import logging
 from sanic import Sanic
 
 import conclib
@@ -302,7 +300,6 @@ class ConcActionModel(CorpusActionModel):
             ID of the stored operation (or the current ID of nothing was stored),
             UNIX timestamp of stored history item (or None)
         """
-        application = Sanic.get_app('kontext')
         with plugins.runtime.QUERY_PERSISTENCE as qp:
             prev_data = self._active_q_data if self._active_q_data is not None else {}
             use_history, curr_data = self.export_query_data()
