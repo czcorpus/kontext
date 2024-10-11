@@ -75,7 +75,7 @@ class AbstractQueryHistory(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def delete(self, user_id, query_id, created):
+    async def delete(self, plugin_ctx, user_id, query_id, created):
         """
         Delete a named query from history.
 

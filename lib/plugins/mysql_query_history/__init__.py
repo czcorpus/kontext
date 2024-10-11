@@ -121,10 +121,10 @@ class MySqlQueryHistory(AbstractQueryHistory):
             await self._update_name(user_id, query_id, c, name)
         return True
 
-    async def make_transient(self, user_id, query_id, created, name) -> bool:
+    async def make_transient(self, plugin_ctx, user_id, query_id, created, name) -> bool:
         return await self._update_name(user_id, query_id, created, None)
 
-    async def delete(self, user_id, query_id, created):
+    async def delete(self, plugin_ctx, user_id, query_id, created):
         async with self._db.cursor() as cursor:
             await cursor.execute(
                 f'DELETE FROM {self.TABLE_NAME} WHERE user_id = %s AND query_id = %s AND created = %s',

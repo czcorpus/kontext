@@ -560,6 +560,7 @@ async def unsave_query(amodel: UserActionModel, req: KRequest, resp: KResponse):
     # not want to keep the query in their history
     with plugins.runtime.QUERY_HISTORY as qh:
         ans = await qh.make_transient(
+            amodel.plugin_ctx,
             amodel.session_get('user', 'id'),
             req.json['query_id'],
             req.json['created'],
@@ -574,6 +575,7 @@ async def delete_query(amodel: UserActionModel, req: KRequest, resp: KResponse):
     # remove query from history (respective results are kept)
     with plugins.runtime.QUERY_HISTORY as qh:
         ans = await qh.delete(
+            amodel.plugin_ctx,
             amodel.session_get('user', 'id'),
             req.json['query_id'],
             int(req.json['created'])

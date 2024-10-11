@@ -38,7 +38,7 @@ class NullQueryHistory(AbstractQueryHistory):
     async def make_transient(self, plugin_ctx, user_id, query_id, created, name) -> bool:
         return True
 
-    async def delete(self, user_id, query_id, created):
+    async def delete(self, plugin_ctx, user_id, query_id, created):
         return 0
 
     async def get_user_queries(

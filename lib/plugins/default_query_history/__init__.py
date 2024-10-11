@@ -127,7 +127,7 @@ class QueryHistory(AbstractQueryHistory):
                 return True
         return False
 
-    async def delete(self, user_id, query_id, created):
+    async def delete(self, plugin_ctx, user_id, query_id, created):
         k = self._mk_key(user_id)
         data = await self.db.list_get(k)
         await self.db.remove(k)
