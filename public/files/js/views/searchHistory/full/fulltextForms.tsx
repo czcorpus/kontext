@@ -21,7 +21,6 @@
 import * as React from 'react';
 import { IActionDispatcher } from 'kombo';
 import * as Kontext from '../../../types/kontext';
-import * as S from './style';
 import { Actions } from '../../../models/searchHistory/actions';
 
 
@@ -261,7 +260,7 @@ export function init(
         fsSubcorpus:string;
     }> = (props) => {
 
-        return <S.FulltextFieldset>
+        return <>
             <QueryCQLProps isAdvancedQuery={props.fsQueryCQLProps} />
             {props.fsQueryCQLProps ?
                 <>
@@ -272,7 +271,7 @@ export function init(
                 </> :
                 <AnyPropertyValue value={props.fsAnyPropertyValue} />
             }
-        </S.FulltextFieldset>
+        </>
     }
 
     // -------------------- <PQueryForm /> -------------------------
@@ -288,7 +287,7 @@ export function init(
         fsSubcorpus:string;
     }> = (props) => {
 
-        return <S.FulltextFieldset>
+        return <>
             <QueryCQLProps isAdvancedQuery={props.fsQueryCQLProps} />
             {props.fsQueryCQLProps ?
                 <>
@@ -299,7 +298,7 @@ export function init(
                 </> :
                 <AnyPropertyValue value={props.fsAnyPropertyValue} />
             }
-        </S.FulltextFieldset>
+        </>
     }
 
     // -------------------- <WListForm /> -------------------------
@@ -350,7 +349,7 @@ export function init(
             );
         };
 
-        return <S.FulltextFieldset>
+        return <>
             <QueryCQLProps isAdvancedQuery={props.fsQueryCQLProps} />
             {props.fsQueryCQLProps ?
                 <>
@@ -381,7 +380,7 @@ export function init(
                 </> :
                 <AnyPropertyValue value={props.fsAnyPropertyValue} />
             }
-        </S.FulltextFieldset>
+        </>
     }
 
     // -------------------- <KWordsForm /> -------------------------
@@ -402,7 +401,7 @@ export function init(
             );
         };
 
-        return <S.FulltextFieldset>
+        return <>
             <QueryCQLProps isAdvancedQuery={props.fsQueryCQLProps} />
             {props.fsQueryCQLProps ?
                 <>
@@ -415,7 +414,7 @@ export function init(
                 </> :
                 <AnyPropertyValue value={props.fsAnyPropertyValue} />
             }
-        </S.FulltextFieldset>
+        </>
     }
 
     // -------------------- <AnyForm /> -------------------------
@@ -425,10 +424,10 @@ export function init(
     }> = (props) => {
 
         return (
-            <S.FulltextFieldset>
+            <>
                 <AnyPropertyValue value={props.fsAnyPropertyValue} />
                 <p className="note">({he.translate('qhistory__any_search_note')})</p>
-            </S.FulltextFieldset>
+            </>
         )
     }
 
