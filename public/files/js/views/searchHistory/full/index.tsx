@@ -30,7 +30,7 @@ import * as S from './style';
 import { SearchHistoryModelState, ConcQueryHistoryItem,
     QueryHistoryItem } from '../../../models/searchHistory/common';
 import { SearchHistoryModel } from '../../../models/searchHistory';
-import { init as fulltextViewInit } from './fulltext';
+import { init as fieldsetInit } from './fieldsets';
 import gearIcon from '../../../../img/config-icon.svg';
 import gearIconS from '../../../../img/config-icon_s.svg';
 
@@ -49,8 +49,7 @@ export function init(
 ):HistoryViews {
 
     const layoutViews = he.getLayoutViews();
-    const FulltextFieldset = fulltextViewInit(dispatcher, he, queryHistoryModel);
-
+    const fieldsets = fieldsetInit(dispatcher, he, queryHistoryModel);
 
     const supertypeToHuman = (qSupertype:Kontext.QuerySupertype) => {
         switch (qSupertype) {
@@ -70,83 +69,7 @@ export function init(
             he.translate('query__qt_advanced') :
             he.translate('query__qt_simple');
     };
-
-    // -------------------- <QueryTypeSelector /> ------------------------
-
-    const SearchKindSelector:React.FC<{
-        value:Kontext.QuerySupertype;
-
-    }> = (props) => {
-
-        const handleChange = (evt) => {
-            dispatcher.dispatch<typeof Actions.HistorySetQuerySupertype>({
-                name: Actions.HistorySetQuerySupertype.name,
-                payload: {
-                    value: evt.target.value
-                }
-            });
-        };
-
-        return (
-            <S.SearchKindSelector value={props.value} onChange={handleChange}>
-                <option value="">
-                    {he.translate('qhistory__qs_any')}
-                </option>
-                {List.map(
-                    v => <option key={v} value={v}>{supertypeToHuman(v)}</option>,
-                    ['conc', 'pquery', 'wlist', 'kwords'] as Array<Kontext.QuerySupertype>
-                )}
-            </S.SearchKindSelector>
-        );
-    };
-
-    // -------------------- <CurrentCorpCheckbox /> ------------------------
-
-    const CurrentCorpCheckbox:React.FC<{
-        value:boolean;
-
-    }> = (props) => {
-
-        const handleChange = () => {
-            dispatcher.dispatch<typeof Actions.HistorySetCurrentCorpusOnly>({
-                name: Actions.HistorySetCurrentCorpusOnly.name,
-                payload: {
-                    value: !props.value
-                }
-            });
-        };
-        return (
-            <S.CurrentCorpCheckbox>
-                 <input type="checkbox" checked={props.value} onChange={handleChange}
-                        style={{verticalAlign: 'middle'}} />
-            </S.CurrentCorpCheckbox>
-        );
-    };
-
-    // -------------------- <ArchivedOnlyCheckbox /> ------------------------
-
-    const ArchivedOnlyCheckbox:React.FC<{
-        value:boolean;
-
-    }> = (props) => {
-        const handleChange = () => {
-            dispatcher.dispatch<typeof Actions.HistorySetArchivedOnly>({
-                name: Actions.HistorySetArchivedOnly.name,
-                payload: {
-                    value: !props.value
-                }
-            });
-        };
-
-        return (
-            <S.ArchivedOnlyCheckbox>
-               <input type="checkbox" checked={props.value} onChange={handleChange}
-                        style={{verticalAlign: 'middle'}} />
-            </S.ArchivedOnlyCheckbox>
-        )
-    }
-
-
+    
     // -------------------- <FilterForm /> ------------------------
 
     const FilterForm:React.FC<{
@@ -155,34 +78,37 @@ export function init(
         querySupertype:Kontext.QuerySupertype;
         archivedOnly:boolean;
         supportsFulltext:boolean;
+        searchFormView:string;
 
     }> = (props) => {
 
-        return (
+        const handleChangeSearchFormView = (id:string) => {
+            dispatcher.dispatch(
+                Actions.ChangeSearchForm,
+                {value: id},
+            );
+        };
+
+        const items = [{id: 'quick', label: he.translate('qhistory__quick_search')}];
+        if (props.supportsFulltext) {
+            items.push({id: 'extended', label: he.translate('qhistory__extended_search')});
+        }
+
+        return <layoutViews.TabView
+                className="SortFormSelector"
+                defaultId={props.searchFormView}
+                callback={handleChangeSearchFormView}
+                items={items} >
+
             <S.FilterForm>
-                <fieldset className="basic">
-                    <legend>
-                        {he.translate('qhistory__filter_legend')}
-                    </legend>
-                    <label>
-                        {he.translate('qhistory__curr_corp_only_label_{corpus}', {corpus: props.corpname})}:
-                        <CurrentCorpCheckbox value={props.currentCorpusOnly} />
-                    </label>
-                    <label>
-                        {he.translate('qhistory__query_supertype_sel')}:
-                        <SearchKindSelector value={props.querySupertype} />
-                    </label>
-                    <label>
-                        {he.translate('qhistory__checkbox_archived_only')}:
-                        <ArchivedOnlyCheckbox value={props.archivedOnly} />
-                    </label>
-                </fieldset>
-                {props.supportsFulltext ?
-                    <FulltextFieldset /> :
-                    null
-                }
+                <fieldsets.BasicFieldset />
             </S.FilterForm>
-        );
+
+            <S.FilterForm>
+                <fieldsets.BasicFieldset />
+                <fieldsets.ExtendedFieldset />
+            </S.FilterForm>
+        </layoutViews.TabView>
     };
 
     // -------------------- <AlignedQueryInfo /> ------------------------
@@ -768,7 +694,8 @@ export function init(
                         querySupertype={props.querySupertype}
                         currentCorpusOnly={props.currentCorpusOnly}
                         archivedOnly={props.archivedOnly}
-                        supportsFulltext={props.supportsFulltext} />
+                        supportsFulltext={props.supportsFulltext}
+                        searchFormView={props.searchFormView} />
                 {props.data.length === 0 && props.isBusy ?
                     <div className="loader"><layoutViews.AjaxLoaderImage /></div> :
                     <DataTable data={props.data} offset={props.offset}

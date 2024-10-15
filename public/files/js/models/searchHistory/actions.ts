@@ -117,9 +117,10 @@ export class Actions {
         name: 'QUERY_HISTORY_REMOVE_ITEM_FROM_LIST_DONE'
     };
 
-    static ToggleAdvancedSearch:Action<{
+    static ChangeSearchForm:Action<{
+        value:string;
     }> = {
-        name: 'QUERY_HISTORY_TOGGLE_ADVANCED_SEARCH'
+        name: 'QUERY_HISTORY_CHANGE_SEARCH_FORM'
     };
 
     static SetFsPosattrName:Action<{

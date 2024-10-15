@@ -288,7 +288,7 @@ export const SaveItemForm = styled.div`
 
 // ---------------------- <FilterForm /> --------------------------------
 
-export const FilterForm = styled.div`
+export const FilterForm = styled.form`
 
     margin-bottom: 2.3em;
 
@@ -307,9 +307,31 @@ export const FilterForm = styled.div`
         label {
             white-space: nowrap;
         }
-
     }
+    
+    fieldset.advanced {
+        border: 1px solid ${theme.colorLightFrame};
+        border-radius: ${theme.borderRadiusDefault};
+        padding: ${theme.defaultFieldsetPadding};
 
+        label:not(first-child) {
+            margin-left: 1em;
+        }
+
+        .prop-query {
+            display: flex;
+            align-items: center;
+            padding: 0.3em 0;
+
+            .optional {
+                font-size: 1.6em;
+            }
+        }
+        
+        button {
+            float: right;
+        }
+    }
 `;
 
 // ---------------------- <RowToolbar /> ------------------------------
@@ -345,32 +367,4 @@ export const ArchivedOnlyCheckbox = styled.span`
 
 export const SearchKindSelector = styled.select`
     margin-left: 0.2em;
-`;
-
-// ---------------------- <FulltextBlock /> ----------------------------
-
-export const FulltextBlock = styled.div`
-    margin-top: 0.7em;
-
-    .button {
-        display: flex;
-        flex-direction: row-reverse;
-    }
-`;
-
-// ---------------------- <FulltextFieldset /> -------------------------
-
-export const FulltextFieldset = styled.fieldset`
-
-    padding-left: 1em;
-
-    .prop-query {
-        display: flex;
-        align-items: center;
-        padding: 0.3em 0;
-
-        .optional {
-            font-size: 1.6em;
-        }
-    }
 `;

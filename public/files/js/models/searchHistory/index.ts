@@ -86,6 +86,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                 archivedOnly: false,
                 currentItem: 0,
                 supportsFulltext,
+                searchFormView: 'quick',
                 fsPosattrName: 'word',
                 fsPosattrValue: '',
                 fsStructureName: '',
@@ -93,7 +94,6 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                 fsStructattrValue: '',
                 fsAnyPropertyValue: '',
                 fsQueryCQLProps: true,
-                extendedSearchVisible: false,
                 fsSubcorpus: '',
                 fsWlAttr: '',
                 fsWlPat: '',
@@ -112,10 +112,12 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             Actions.HistorySetCurrentCorpusOnly,
             action => {
                 this.changeState(state => {
-                    state.isBusy = true;
+                    state.isBusy = !this.isAdvancedSearch();
                     state.currentCorpusOnly = action.payload.value;
                 });
-                this.performLoadAction();
+                if (!this.isAdvancedSearch()) {
+                    this.performLoadAction();
+                }
             }
         );
 
@@ -123,10 +125,12 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             Actions.HistorySetArchivedOnly,
             action => {
                 this.changeState(state => {
-                    state.isBusy = true;
+                    state.isBusy = !this.isAdvancedSearch();
                     state.archivedOnly = action.payload.value;
                 });
-                this.performLoadAction();
+                if (!this.isAdvancedSearch()) {
+                    this.performLoadAction();
+                }
             }
         );
 
@@ -134,9 +138,12 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             Actions.HistorySetQuerySupertype,
             action => {
                 this.changeState(state => {
+                    state.isBusy = !this.isAdvancedSearch();
                     state.querySupertype = action.payload.value;
                 });
-                this.performLoadAction();
+                if (!this.isAdvancedSearch()) {
+                    this.performLoadAction();
+                }
             }
         );
 
@@ -280,11 +287,11 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         );
 
         this.addActionHandler(
-            Actions.ToggleAdvancedSearch,
+            Actions.ChangeSearchForm,
             action => {
                 this.changeState(
                     state => {
-                        state.extendedSearchVisible = !state.extendedSearchVisible;
+                        state.searchFormView = action.payload.value;
                     }
                 )
             }
@@ -425,19 +432,10 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         this.addActionHandler(
             Actions.SubmitExtendedSearch,
             action => {
-                this.loadData().subscribe({
-                    next: () => {
-                        this.changeState(state => {
-                            state.isBusy = false
-                        });
-                    },
-                    error: (err) => {
-                        this.changeState(state => {
-                            state.isBusy = false
-                        });
-                        this.pageModel.showMessage('error', err);
-                    },
+                this.changeState(state => {
+                    state.isBusy = true;
                 });
+                this.performLoadAction();
             }
         )
     }
@@ -461,28 +459,19 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
     }
 
     private performLoadAction(widgetMode: boolean = false): void {
-        if (!this.state.extendedSearchVisible) {
-            this.loadData(widgetMode).subscribe({
-                next: () => {
-                    this.changeState(state => {
-                        state.isBusy = false
-                    });
-                },
-                error: (err) => {
-                    this.changeState(state => {
-                        state.isBusy = false
-                    });
-                    this.pageModel.showMessage('error', err);
-                },
-            });
-
-        } else {
-            this.changeState(
-                state => {
-                    state.isBusy = false;
-                }
-            );
-        }
+        this.loadData(widgetMode).subscribe({
+            next: () => {
+                this.changeState(state => {
+                    state.isBusy = false
+                });
+            },
+            error: (err) => {
+                this.changeState(state => {
+                    state.isBusy = false
+                });
+                this.pageModel.showMessage('error', err);
+            },
+        });
     }
 
     private loadData(widgetMode:boolean=false): Observable<GetHistoryResponse> {
@@ -494,9 +483,8 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             corpname: !widgetMode && this.state.currentCorpusOnly ?
                 this.pageModel.getCorpusIdent().id : undefined,
             archived_only: !widgetMode && this.state.archivedOnly,
-            extended_search: this.state.extendedSearchVisible,
         };
-        if (this.state.extendedSearchVisible) {
+        if (!widgetMode && this.isAdvancedSearch()) {
             switch (this.state.querySupertype) {
                 case 'conc':
                 case 'pquery':
@@ -640,5 +628,9 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                     this.pageModel.translate('query__save_as_item_removed')
             )
         );
+    }
+
+    private isAdvancedSearch():boolean {
+        return this.state.searchFormView === 'advanced';
     }
 }

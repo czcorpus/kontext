@@ -139,7 +139,6 @@ export interface GetHistoryArgs {
     query_supertype:Kontext.QuerySupertype;
     corpname:string;
     archived_only:boolean;
-    extended_search:boolean;
     fsPosattrName?:string;
     fsPosattrValue?:string;
     fsStructureName?:string;
@@ -185,6 +184,7 @@ export interface SearchHistoryModelState {
     archivedOnly:boolean;
     currentItem:number;
     supportsFulltext:boolean;
+    searchFormView:string;
     fsQueryCQLProps:boolean;
     fsPosattrName:string;
     fsPosattrValue:string;
@@ -192,7 +192,6 @@ export interface SearchHistoryModelState {
     fsStructattrName:string;
     fsStructattrValue:string;
     fsAnyPropertyValue:string;
-    extendedSearchVisible:boolean;
     fsSubcorpus:string;
     fsWlAttr:string;
     fsWlPat:string;
