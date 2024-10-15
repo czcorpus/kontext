@@ -155,9 +155,6 @@ class UcnkQueryHistory(MySqlQueryHistory):
         if q_supertype:
             parts.append(make_bleve_field('query_supertype', q_supertype))
 
-        if corpname:
-            parts.append(make_bleve_field('corpora', corpname))
-
         if full_search_args is not None:
             if full_search_args.subcorpus:
                 parts.append(make_bleve_field('subcorpus', full_search_args.subcorpus))
@@ -166,6 +163,9 @@ class UcnkQueryHistory(MySqlQueryHistory):
                 parts.append(make_bleve_field('_all', full_search_args.any_property_value))
 
             else:
+                if full_search_args.corpus:
+                    parts.append(make_bleve_field('corpora', full_search_args.corpus))
+
                 if q_supertype in ('conc', 'pquery'):
                     if full_search_args.posattr_name:
                         parts.append(make_bleve_field('pos_attr_names', full_search_args.posattr_name))
@@ -189,6 +189,10 @@ class UcnkQueryHistory(MySqlQueryHistory):
                 elif q_supertype == 'kwords':
                     if full_search_args.wl_attr:
                         parts.append(make_bleve_field('pos_attr_names', full_search_args.posattr_name))
+
+        else:
+            if corpname:
+                parts.append(make_bleve_field('corpora', corpname))
 
         return ' '.join(parts)
 

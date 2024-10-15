@@ -22,6 +22,7 @@ class FullSearchArgs:
     structure_name: str
     structattr_name: str
     structattr_value: str
+    corpus: str
     subcorpus: str
     wl_pat: str
     wl_attr: str
