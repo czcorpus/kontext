@@ -666,6 +666,7 @@ export function init(
         dataLength:number;
         hasMoreItems:boolean;
         modelIsBusy:boolean;
+        searched:boolean;
 
     }> = (props) => {
         if (props.dataLength > 0) {
@@ -677,7 +678,11 @@ export function init(
             }
 
         } else {
-            return <NoDataBlock />;
+            if (props.searched) {
+                return <NoDataBlock />;
+            } else {
+                return null;
+            }
         }
     };
 
@@ -689,6 +694,7 @@ export function init(
         modelIsBusy:boolean;
         itemsToolbars:Array<[boolean, boolean]>;
         data:Array<QueryHistoryItem>;
+        searched:boolean;
 
     }> = (props) => {
         return (
@@ -709,7 +715,7 @@ export function init(
                     )}
                 </ul>
                 <DataTableFooter dataLength={props.data.length} modelIsBusy={props.modelIsBusy}
-                        hasMoreItems={props.hasMoreItems} />
+                        hasMoreItems={props.hasMoreItems} searched={props.searched} />
             </div>
         );
     };
@@ -731,7 +737,8 @@ export function init(
                     <DataTable data={props.data} offset={props.offset}
                             modelIsBusy={props.isBusy}
                             hasMoreItems={props.hasMoreItems}
-                            itemsToolbars={props.itemsToolbars} />
+                            itemsToolbars={props.itemsToolbars}
+                            searched={props.searched} />
                 }
             </S.RecentQueriesPageList>
         );

@@ -139,6 +139,7 @@ export interface GetHistoryArgs {
     query_supertype:Kontext.QuerySupertype;
     corpname:string;
     archived_only:boolean;
+    extended_search:boolean;
     fsPosattrName?:string;
     fsPosattrValue?:string;
     fsStructureName?:string;
@@ -172,6 +173,7 @@ export interface WidgetProps {
 }
 
 export interface SearchHistoryModelState {
+    searched:boolean;
     corpname:string;
     data:Array<QueryHistoryItem>;
     itemsToolbars:Array<[boolean, boolean]>;

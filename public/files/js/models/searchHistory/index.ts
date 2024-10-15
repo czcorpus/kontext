@@ -73,6 +73,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         super(
             dispatcher,
             {
+                searched: false,
                 corpname: pageModel.getCorpusIdent().id,
                 data: [],
                 itemsToolbars: [],
@@ -113,10 +114,10 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             Actions.HistorySetCurrentCorpusOnly,
             action => {
                 this.changeState(state => {
-                    state.isBusy = !this.isAdvancedSearch();
+                    state.isBusy = !this.isExtendedSearch();
                     state.currentCorpusOnly = action.payload.value;
                 });
-                if (!this.isAdvancedSearch()) {
+                if (!this.isExtendedSearch()) {
                     this.performLoadAction();
                 }
             }
@@ -126,10 +127,10 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             Actions.HistorySetArchivedOnly,
             action => {
                 this.changeState(state => {
-                    state.isBusy = !this.isAdvancedSearch();
+                    state.isBusy = !this.isExtendedSearch();
                     state.archivedOnly = action.payload.value;
                 });
-                if (!this.isAdvancedSearch()) {
+                if (!this.isExtendedSearch()) {
                     this.performLoadAction();
                 }
             }
@@ -139,10 +140,10 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             Actions.HistorySetQuerySupertype,
             action => {
                 this.changeState(state => {
-                    state.isBusy = !this.isAdvancedSearch();
+                    state.isBusy = !this.isExtendedSearch();
                     state.querySupertype = action.payload.value;
                 });
-                if (!this.isAdvancedSearch()) {
+                if (!this.isExtendedSearch()) {
                     this.performLoadAction();
                 }
             }
@@ -292,9 +293,15 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             action => {
                 this.changeState(
                     state => {
+                        state.searched = false;
                         state.searchFormView = action.payload.value;
+                        state.data = [];
+                        state.isBusy = action.payload.value === 'quick';
                     }
-                )
+                );
+                if (action.payload.value === 'quick') {
+                    this.performLoadAction();
+                }
             }
         );
 
@@ -474,12 +481,14 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         this.loadData(widgetMode).subscribe({
             next: () => {
                 this.changeState(state => {
-                    state.isBusy = false
+                    state.isBusy = false;
+                    state.searched = true;
                 });
             },
             error: (err) => {
                 this.changeState(state => {
-                    state.isBusy = false
+                    state.isBusy = false;
+                    state.searched = true;
                 });
                 this.pageModel.showMessage('error', err);
             },
@@ -495,9 +504,9 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             corpname: !widgetMode && this.state.currentCorpusOnly ?
                 this.pageModel.getCorpusIdent().id : undefined,
             archived_only: !widgetMode && this.state.archivedOnly,
+            extended_search: !widgetMode && this.isExtendedSearch(),
         };
-        if (!widgetMode && this.isAdvancedSearch()) {
-
+        if (!widgetMode && this.isExtendedSearch()) {
             switch (this.state.querySupertype) {
                 case 'conc':
                 case 'pquery':
@@ -655,7 +664,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         );
     }
 
-    private isAdvancedSearch():boolean {
+    private isExtendedSearch():boolean {
         return this.state.searchFormView === 'extended';
     }
 }
