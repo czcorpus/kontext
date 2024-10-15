@@ -127,6 +127,10 @@ export function init(
                             <srchFields.BasicFields corpusSel={false} />
                             <srchFields.ExtendedFields />
                         </div>
+                        {!props.querySupertype ?
+                            <p className="note">({he.translate('qhistory__any_search_note')})</p> :
+                            null
+                        }
                         <button type="button" className="util-button" onClick={handleClickSearch}>
                             {he.translate('qhistory__search_button')}
                         </button>
