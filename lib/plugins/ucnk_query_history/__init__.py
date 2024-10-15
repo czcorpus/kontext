@@ -144,9 +144,8 @@ class UcnkQueryHistory(MySqlQueryHistory):
     def _generate_query_string(
             q_supertype: str,
             user_id: int,
-            corpname: str,
             archived_only: bool,
-            full_search_args: Optional[FullSearchArgs]
+            full_search_args: FullSearchArgs
     ) -> str:
         parts = [f'+user_id:{user_id}']
         if archived_only:
@@ -155,44 +154,39 @@ class UcnkQueryHistory(MySqlQueryHistory):
         if q_supertype:
             parts.append(make_bleve_field('query_supertype', q_supertype))
 
-        if full_search_args is not None:
-            if full_search_args.subcorpus:
-                parts.append(make_bleve_field('subcorpus', full_search_args.subcorpus))
+        if full_search_args.corpus:
+                parts.append(make_bleve_field('corpora', full_search_args.corpus))
+    
+        if full_search_args.subcorpus:
+            parts.append(make_bleve_field('subcorpus', full_search_args.subcorpus))
 
-            if full_search_args.any_property_value:
-                parts.append(make_bleve_field('_all', full_search_args.any_property_value))
-
-            else:
-                if full_search_args.corpus:
-                    parts.append(make_bleve_field('corpora', full_search_args.corpus))
-
-                if q_supertype in ('conc', 'pquery'):
-                    if full_search_args.posattr_name:
-                        parts.append(make_bleve_field('pos_attr_names', full_search_args.posattr_name))
-                    if full_search_args.posattr_value:
-                        parts.append(make_bleve_field('pos_attr_values', full_search_args.posattr_value))
-                    if full_search_args.structattr_name:
-                        parts.append(make_bleve_field('struct_attr_names', full_search_args.structattr_name))
-                    if full_search_args.structattr_value:
-                        parts.append(make_bleve_field('struct_attr_values', full_search_args.structattr_value))
-
-                elif q_supertype == 'wlist':
-                    if full_search_args.wl_pat:
-                        parts.append(make_bleve_field('raw_query', full_search_args.wl_pat))
-                    if full_search_args.wl_attr:
-                        parts.append(make_bleve_field('pos_attr_names', full_search_args.wl_attr))
-                    if full_search_args.wl_pfilter:
-                        parts.append(make_bleve_field('pfilter_words', full_search_args.wl_pfilter))
-                    if full_search_args.wl_nfilter:
-                        parts.append(make_bleve_field('nfilter_words', full_search_args.wl_nfilter))
-
-                elif q_supertype == 'kwords':
-                    if full_search_args.wl_attr:
-                        parts.append(make_bleve_field('pos_attr_names', full_search_args.posattr_name))
+        if full_search_args.any_property_value:
+            parts.append(make_bleve_field('_all', full_search_args.any_property_value))
 
         else:
-            if corpname:
-                parts.append(make_bleve_field('corpora', corpname))
+            if q_supertype in ('conc', 'pquery'):
+                if full_search_args.posattr_name:
+                    parts.append(make_bleve_field('pos_attr_names', full_search_args.posattr_name))
+                if full_search_args.posattr_value:
+                    parts.append(make_bleve_field('pos_attr_values', full_search_args.posattr_value))
+                if full_search_args.structattr_name:
+                    parts.append(make_bleve_field('struct_attr_names', full_search_args.structattr_name))
+                if full_search_args.structattr_value:
+                    parts.append(make_bleve_field('struct_attr_values', full_search_args.structattr_value))
+
+            elif q_supertype == 'wlist':
+                if full_search_args.wl_pat:
+                    parts.append(make_bleve_field('raw_query', full_search_args.wl_pat))
+                if full_search_args.wl_attr:
+                    parts.append(make_bleve_field('pos_attr_names', full_search_args.wl_attr))
+                if full_search_args.wl_pfilter:
+                    parts.append(make_bleve_field('pfilter_words', full_search_args.wl_pfilter))
+                if full_search_args.wl_nfilter:
+                    parts.append(make_bleve_field('nfilter_words', full_search_args.wl_nfilter))
+
+            elif q_supertype == 'kwords':
+                if full_search_args.wl_attr:
+                    parts.append(make_bleve_field('pos_attr_names', full_search_args.posattr_name))
 
         return ' '.join(parts)
 
@@ -204,8 +198,8 @@ class UcnkQueryHistory(MySqlQueryHistory):
             return await super().get_user_queries(plugin_ctx, user_id, corpus_factory, from_date, to_date, q_supertype, corpname, archived_only, offset, limit, full_search_args)
 
         params = {
-            'q': self._generate_query_string(q_supertype, user_id, corpname, archived_only, full_search_args),
-            'order': '-created' if full_search_args is None else '-_score,-created',
+            'q': self._generate_query_string(q_supertype, user_id, archived_only, full_search_args),
+            'order': '-_score,-created',
             'limit': limit,
             'fields': 'query_supertype,name',
         }
