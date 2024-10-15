@@ -53,7 +53,7 @@ class QueryHistory(AbstractQueryHistory):
     # we define a 10% chance that on write there will be a check for old records
     PROB_DELETE_OLD_RECORDS = 0.1
 
-    DEFAULT_TTL_DAYS = 10
+    DEFAULT_PRESERVE_AMOUNT = 100
 
     def __init__(self, conf, db: KeyValueStorage, query_persistence: AbstractQueryPersistence, auth: AbstractAuth):
         """
@@ -61,14 +61,14 @@ class QueryHistory(AbstractQueryHistory):
         conf -- the 'settings' module (or some compatible object)
         db -- default_db history backend
         """
-        tmp = conf.get('plugins', 'query_history').get('ttl_days', None)
+        tmp = conf.get('plugins', 'query_history').get('preserve_amount', None)
         if tmp:
-            self.ttl_days = int(tmp)
+            self.preserve_amount = int(tmp)
         else:
-            self.ttl_days = self.DEFAULT_TTL_DAYS
+            self.preserve_amount = self.DEFAULT_PRESERVE_AMOUNT
             logging.getLogger(__name__).warning(
-                'QueryHistory - ttl_days not set, using default value {0} day(s) for query history records'.format(
-                    self.ttl_days))
+                'QueryHistory - preserve_amount not set, using default value {0} for query history records'.format(
+                    self.preserve_amount))
         self.db = db
         self._query_persistence: AbstractQueryPersistence = query_persistence
         self._auth: AbstractAuth = auth
@@ -350,15 +350,15 @@ class QueryHistory(AbstractQueryHistory):
 
     async def _delete_old_records(self, user_id):
         """
-        Deletes records older than ttl_days. Named records are
-        kept intact.
+        Preserve only preserve_amount of newest records.
+        Named records are kept intact.
         """
         data_key = self._mk_key(user_id)
-        curr_data = await self.db.list_get(data_key)
+        curr_data = sorted(await self.db.list_get(data_key), key=lambda x: x.get('created', 0), reverse=True)
         tmp_key = self._mk_tmp_key(user_id)
         await self.db.remove(tmp_key)
-        curr_time = time.time()
         new_list = []
+        preserved_history = 0
         for item in curr_data:
             if item.get('name', None) is not None:
                 if await self._is_paired_with_conc(item):
@@ -367,8 +367,13 @@ class QueryHistory(AbstractQueryHistory):
                     logging.getLogger(__name__).warning(
                         'Removed unpaired named query {0} of concordance {1}.'.format(item['name'],
                                                                                       item['query_id']))
-            elif int(curr_time - item.get('created', 0)) / 86400 < self.ttl_days:
+            else:
                 new_list.append(item)
+                preserved_history += 1
+            
+            if preserved_history >= self.preserve_amount:
+                break
+    
         for item in new_list:
             await self.db.list_append(tmp_key, item)
         await self.db.rename(tmp_key, data_key)

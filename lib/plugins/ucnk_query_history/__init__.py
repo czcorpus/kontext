@@ -18,7 +18,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
-from datetime import datetime, timezone
 from typing import Optional
 from urllib.parse import urljoin, urlencode
 import ujson as json
@@ -108,16 +107,28 @@ class UcnkQueryHistory(MySqlQueryHistory):
 
     async def delete_old_records(self):
         """
-        Deletes records older than ttl_days. Named records are
-        kept intact.
+        Preserve only preserve_amount of newest records.
+        Named records are kept intact.
         """
+        logging.debug("running history cleanup")
         async with self._db.connection() as conn:
             async with await conn.cursor(dictionary=True) as cursor:
                 await self._db.begin_tx(cursor)
                 try:
                     await cursor.execute(
-                        f'SELECT query_id, user_id, created FROM {self.TABLE_NAME} WHERE created < %s AND name IS NULL LIMIT %s',
-                        (int(datetime.now(tz=timezone.utc).timestamp()) - self.ttl_days * 3600 * 24, self._del_chunk_size)
+                        f'''
+                        SELECT user_id, created, query_id
+                        FROM (
+                            SELECT user_id, created, query_id,
+                            ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created DESC) AS row_num
+                            FROM {self.TABLE_NAME}
+                            WHERE name is NULL
+                        ) AS tmp
+                        WHERE row_num > %s
+                        ORDER BY created
+                        LIMIT %s
+                        ''',
+                        (self.preserve_amount, self._del_chunk_size)
                     )
                     for row in await cursor.fetchall():
                         await cursor.execute(

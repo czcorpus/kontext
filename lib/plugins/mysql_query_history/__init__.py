@@ -62,7 +62,7 @@ class CorpusCache:
 
 class MySqlQueryHistory(AbstractQueryHistory):
 
-    DEFAULT_TTL_DAYS = 10
+    DEFAULT_PRESERVE_AMOUNT = 100
 
     TABLE_NAME = 'kontext_query_history'
 
@@ -78,14 +78,14 @@ class MySqlQueryHistory(AbstractQueryHistory):
         conf -- the 'settings' module (or some compatible object)
         db -- default_db history backend
         """
-        tmp = conf.get('plugins', 'query_history').get('ttl_days', None)
+        tmp = conf.get('plugins', 'query_history').get('preserve_amount', None)
         if tmp:
-            self.ttl_days = int(tmp)
+            self.preserve_amount = int(tmp)
         else:
-            self.ttl_days = self.DEFAULT_TTL_DAYS
+            self.preserve_amount = self.DEFAULT_PRESERVE_AMOUNT
             logging.getLogger(__name__).warning(
-                'QueryHistory - ttl_days not set, using default value {0} day(s) for query history records'.format(
-                    self.ttl_days))
+                'QueryHistory - preserve_amount not set, using default value {0} for query history records'.format(
+                    self.preserve_amount))
         self._db = db
         self._query_persistence = query_persistence
         self._subc_archive = subc_archive
@@ -341,16 +341,26 @@ class MySqlQueryHistory(AbstractQueryHistory):
 
     async def delete_old_records(self):
         """
-        Deletes records older than ttl_days. Named records are
-        kept intact.
-        now - created > ttl
-        now - ttl  > created
+        Preserve only preserve_amount of newest records.
+        Named records are kept intact.
         """
         # TODO remove also named but unpaired history entries
         async with self._db.cursor() as cursor:
             await cursor.execute(
-                f'DELETE FROM {self.TABLE_NAME} WHERE created < %s AND name IS NULL',
-                (int(datetime.utcnow().timestamp()) - self.ttl_days * 3600 * 24,)
+                f'''
+                DELETE FROM {self.TABLE_NAME}
+                WHERE CONCAT(user_id, '/', created, '/', query_id) IN (
+                    SELECT CONCAT(user_id, '/', created, '/', query_id) AS id
+                    FROM (
+                        SELECT user_id, created, query_id,
+                        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created DESC) AS row_num
+                        FROM {self.TABLE_NAME}
+                        WHERE name is NULL
+                    ) AS tmp
+                    WHERE row_num > %s
+                )
+                '''
+                (self.preserve_amount,)
             )
 
     async def export(self, plugin_ctx):
