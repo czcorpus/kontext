@@ -144,6 +144,7 @@ export interface GetHistoryArgs {
     fsStructureName?:string;
     fsStructattrName?:string;
     fsStructattrValue?:string;
+    fsCorpus?:string;
     fsSubcorpus?:string;
     fsWlpat?:string;
     fsWlattr?:string;
@@ -184,7 +185,7 @@ export interface SearchHistoryModelState {
     archivedOnly:boolean;
     currentItem:number;
     supportsFulltext:boolean;
-    searchFormView:string;
+    searchFormView:'extended'|'quick';
     fsQueryCQLProps:boolean;
     fsPosattrName:string;
     fsPosattrValue:string;
@@ -192,6 +193,7 @@ export interface SearchHistoryModelState {
     fsStructattrName:string;
     fsStructattrValue:string;
     fsAnyPropertyValue:string;
+    fsCorpus:string;
     fsSubcorpus:string;
     fsWlAttr:string;
     fsWlPat:string;

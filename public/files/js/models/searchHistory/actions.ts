@@ -118,7 +118,7 @@ export class Actions {
     };
 
     static ChangeSearchForm:Action<{
-        value:string;
+        value:'extended'|'quick';
     }> = {
         name: 'QUERY_HISTORY_CHANGE_SEARCH_FORM'
     };
@@ -169,6 +169,12 @@ export class Actions {
         value:string;
     }> = {
         name: 'QUERY_HISTORY_SET_FS_SUBCORPUS'
+    };
+
+    static SetFsCorpus:Action<{
+        value:string;
+    }> = {
+        name: 'QUERY_HISTORY_SET_FS_CORPUS'
     };
 
     static SetFsWlpat:Action<{

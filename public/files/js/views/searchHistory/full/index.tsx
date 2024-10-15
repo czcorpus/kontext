@@ -30,7 +30,7 @@ import * as S from './style';
 import { SearchHistoryModelState, ConcQueryHistoryItem,
     QueryHistoryItem } from '../../../models/searchHistory/common';
 import { SearchHistoryModel } from '../../../models/searchHistory';
-import { init as fieldsetInit } from './fieldsets';
+import { init as fieldsViewInit } from './srchFields';
 import gearIcon from '../../../../img/config-icon.svg';
 import gearIconS from '../../../../img/config-icon_s.svg';
 
@@ -49,7 +49,7 @@ export function init(
 ):HistoryViews {
 
     const layoutViews = he.getLayoutViews();
-    const fieldsets = fieldsetInit(dispatcher, he, queryHistoryModel);
+    const srchFields = fieldsViewInit(dispatcher, he, queryHistoryModel);
 
     const supertypeToHuman = (qSupertype:Kontext.QuerySupertype) => {
         switch (qSupertype) {
@@ -69,7 +69,7 @@ export function init(
             he.translate('query__qt_advanced') :
             he.translate('query__qt_simple');
     };
-    
+
     // -------------------- <FilterForm /> ------------------------
 
     const FilterForm:React.FC<{
@@ -94,21 +94,47 @@ export function init(
             items.push({id: 'extended', label: he.translate('qhistory__extended_search')});
         }
 
-        return <layoutViews.TabView
-                className="SortFormSelector"
-                defaultId={props.searchFormView}
-                callback={handleChangeSearchFormView}
-                items={items} >
+        const handleClickSearch = () => {
+            dispatcher.dispatch(
+                Actions.SubmitExtendedSearch
+            );
+        };
 
-            <S.FilterForm>
-                <fieldsets.BasicFieldset />
-            </S.FilterForm>
+        return (
+            <layoutViews.TabView
+                    className="SortFormSelector"
+                    defaultId={props.searchFormView}
+                    callback={handleChangeSearchFormView}
+                    items={items}>
 
-            <S.FilterForm>
-                <fieldsets.BasicFieldset />
-                <fieldsets.ExtendedFieldset />
-            </S.FilterForm>
-        </layoutViews.TabView>
+                <S.FilterForm>
+                    <fieldset className="basic">
+                        <legend>
+                            {he.translate('qhistory__filter_legend')}
+                        </legend>
+                        <div className="grid-inputs">
+                            <srchFields.BasicFields corpusSel={true} />
+                        </div>
+                    </fieldset>
+                </S.FilterForm>
+
+                <S.FilterForm>
+                    <fieldset className="advanced">
+                        <legend>
+                            {he.translate('qhistory__search_legend')}
+                        </legend>
+                        <div className="grid-inputs">
+                            <srchFields.BasicFields corpusSel={false} />
+                            <srchFields.ExtendedFields />
+                        </div>
+                        <button type="button" className="util-button" onClick={handleClickSearch}>
+                            {he.translate('qhistory__search_button')}
+                        </button>
+                    </fieldset>
+                </S.FilterForm>
+
+            </layoutViews.TabView>
+        );
     };
 
     // -------------------- <AlignedQueryInfo /> ------------------------

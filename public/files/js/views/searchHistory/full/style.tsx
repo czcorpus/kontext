@@ -308,29 +308,41 @@ export const FilterForm = styled.form`
             white-space: nowrap;
         }
     }
-    
+
+    .grid-inputs {
+        display: grid;
+        grid-template-columns: auto auto auto auto;
+        gap: 1rem;
+        align-items: center;
+        width: max-content;
+
+        input[type=text] {
+            height: 1.2em;
+        }
+    }
+
     fieldset.advanced {
         border: 1px solid ${theme.colorLightFrame};
         border-radius: ${theme.borderRadiusDefault};
         padding: ${theme.defaultFieldsetPadding};
 
-        label:not(first-child) {
-            margin-left: 1em;
+        .advanced-fields {
+            margin-top: 1em;
         }
 
-        .prop-query {
-            display: flex;
-            align-items: center;
-            padding: 0.3em 0;
-
-            .optional {
-                font-size: 1.6em;
-            }
-        }
-        
         button {
             float: right;
         }
+    }
+
+    .prop-query {
+        padding-bottom: 1.1em;
+        display: flex;
+        align-items: center;
+    }
+
+    .util-button {
+        margin-top: 1em;
     }
 `;
 
@@ -352,19 +364,34 @@ export const RemoveFromHistoryButton = styled.button`
 // ---------------------- <CurrentCorpCheckbox /> ----------------------
 
 export const CurrentCorpCheckbox = styled.span`
-    margin-left: 0.2em;
+    margin: 0;
+
+    input {
+        margin: 0;
+        padding: 0;
+    }
 `;
 
 
 // ---------------------- <ArchivedOnlyCheckbox /> ----------------------
 
 export const ArchivedOnlyCheckbox = styled.span`
-    margin-left: 0.2em;
+    margin: 0;
+
+    input {
+        margin: 0;
+        padding: 0;
+    }
 `;
 
 
 // ---------------------- <SearchKindSelector /> ----------------------
 
 export const SearchKindSelector = styled.select`
-    margin-left: 0.2em;
+    margin: 0;
+
+    input {
+        margin: 0;
+        padding: 0;
+    }
 `;

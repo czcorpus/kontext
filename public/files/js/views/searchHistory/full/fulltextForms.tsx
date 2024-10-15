@@ -33,6 +33,7 @@ export interface ExtendedSearchForms {
         fsStructattrName:string;
         fsStructattrValue:string;
         fsAnyPropertyValue:string;
+        fsCorpus:string;
         fsSubcorpus:string;
     }>;
     PQueryForm:React.FC<{
@@ -43,11 +44,13 @@ export interface ExtendedSearchForms {
         fsStructattrName:string;
         fsStructattrValue:string;
         fsAnyPropertyValue:string;
+        fsCorpus:string;
         fsSubcorpus:string;
     }>;
     WListForm:React.FC<{
         fsQueryCQLProps:boolean;
         fsAnyPropertyValue:string;
+        fsCorpus:string;
         fsSubcorpus:string;
         wlattr:string;
         wlpat:string;
@@ -57,11 +60,14 @@ export interface ExtendedSearchForms {
     KWordsForm:React.FC<{
         fsAnyPropertyValue:string;
         fsQueryCQLProps:boolean;
+        fsCorpus:string;
         fsSubcorpus:string;
         fsPosattrName:string;
     }>;
     AnyForm:React.FC<{
         fsAnyPropertyValue:string;
+        fsCorpus:string;
+        fsSubcorpus:string;
     }>;
 }
 
@@ -86,12 +92,18 @@ export function init(
             );
         };
 
+        const inputStyle:React.CSSProperties = {
+            width: '20em',
+            height: '1.6em',
+            gridColumn: 'span 3'
+        };
+
         return (
-            <div className="prop-query">
-                <label>{he.translate('qhistory__query_contains')}</label>
-                {'\u00a0'}
-                <input type="text" value={props.value} onChange={handleValueChange} />
-            </div>
+            <>
+                <label>{he.translate('qhistory__query_contains')}:</label>
+                <input style={inputStyle} type="text" value={props.value}
+                    onChange={handleValueChange} />
+            </>
         );
     };
 
@@ -121,17 +133,12 @@ export function init(
         };
 
         return (
-            <div className="prop-query">
-                <label>{he.translate('qhistory__used_posattrs_label')}</label>
-                {'\u00a0'}
-                <input type="text" value={props.attr} onChange={handleAttrChange} />
-                {'\u00a0'}
-                <span className="optional">(</span>
-                {he.translate('qhistory__used_property_value')}
-                {'\u00a0'}
+            <>
+                <label>{he.translate('qhistory__used_posattr_value')}:</label>
                 <input type="text" value={props.value} onChange={handleValueChange} />
-                <span className="optional">)</span>
-            </div>
+                <label>{he.translate('qhistory__used_posattrs_label')}:</label>
+                <input type="text" value={props.attr} onChange={handleAttrChange} />
+            </>
         );
     };
 
@@ -151,11 +158,10 @@ export function init(
         };
 
         return (
-            <div className="prop-query">
-                <label>{he.translate('qhistory__used_structures_label')}</label>
-                {'\u00a0'}
+            <>
+                <label>{he.translate('qhistory__used_structures_label')}:</label>
                 <input type="text" value={props.attr} onChange={handleAttrChange} />
-            </div>
+            </>
         );
     };
 
@@ -185,18 +191,35 @@ export function init(
         };
 
         return (
-            <div className="prop-query">
-                <label>{he.translate('qhistory__used_structattrs_label')}</label>
-                {'\u00a0'}
-                <input type="text" value={props.attr} onChange={handleAttrChange} />
-                {'\u00a0'}
-                <span className="optional">(</span>
-                {he.translate('qhistory__used_property_value')}
-                {'\u00a0'}
+            <>
+                <label>{he.translate('qhistory__used_structattrs_value')}:</label>
                 <input type="text" value={props.value} onChange={handleValueChange} />
-                <span className="optional">)</span>
-            </div>
+                <label>{he.translate('qhistory__used_structattrs_label')}:</label>
+                <input type="text" value={props.attr} onChange={handleAttrChange} />
+            </>
+        );
+    };
 
+    // -------------------- <UsedCorpus /> --------------------------
+
+    const UsedCorpus:React.FC<{
+        value:string;
+    }> = (props) => {
+
+        const handleValueChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch(
+                Actions.SetFsCorpus,
+                {
+                    value: evt.target.value
+                }
+            );
+        };
+
+        return (
+            <>
+                <label>{he.translate('global__corpus')}:</label>
+                <input type="text" value={props.value} onChange={handleValueChange} />
+            </>
         );
     };
 
@@ -216,11 +239,10 @@ export function init(
         };
 
         return (
-            <div className="prop-query">
-                <label>{he.translate('qhistory__used_subcorpus')}</label>
-                {'\u00a0'}
+            <>
+                <label>{he.translate('qhistory__used_subcorpus')}:</label>
                 <input type="text" value={props.value} onChange={handleValueChange} />
-            </div>
+            </>
         );
     };
 
@@ -240,10 +262,11 @@ export function init(
         }
 
         return (
-            <div className="prop-query">
-                <label htmlFor="searchHistory_QueryCQLProps">{he.translate('qhistory__query_cql_props')}:</label>{'\u00a0'}
-                <input id="searchHistory_QueryCQLProps" type="checkbox" checked={props.isAdvancedQuery} onChange={handleClick} />
-            </div>
+            <>
+                <label htmlFor="searchHistory_QueryCQLProps">{he.translate('qhistory__srch_by_query_props')}:</label>
+                <div><input id="searchHistory_QueryCQLProps" type="checkbox" checked={props.isAdvancedQuery} onChange={handleClick} /></div>
+                <div></div><div></div>
+            </>
         )
     };
 
@@ -257,6 +280,7 @@ export function init(
         fsStructattrName:string;
         fsStructattrValue:string;
         fsAnyPropertyValue:string;
+        fsCorpus:string;
         fsSubcorpus:string;
     }> = (props) => {
 
@@ -264,12 +288,18 @@ export function init(
             <QueryCQLProps isAdvancedQuery={props.fsQueryCQLProps} />
             {props.fsQueryCQLProps ?
                 <>
+                    <UsedCorpus value={props.fsCorpus} />
                     <UsedSubcorpus value={props.fsSubcorpus} />
                     <UsedPosattrs attr={props.fsPosattrName} value={props.fsPosattrValue} />
-                    <UsedStructures attr={props.fsStructureName} />
                     <UsedStructattrs attr={props.fsStructattrName} value={props.fsStructattrValue} />
+                    <UsedStructures attr={props.fsStructureName} />
+                    <div />
                 </> :
-                <AnyPropertyValue value={props.fsAnyPropertyValue} />
+                <>
+                    <UsedCorpus value={props.fsCorpus} />
+                    <UsedSubcorpus value={props.fsSubcorpus} />
+                    <AnyPropertyValue value={props.fsAnyPropertyValue} />
+                </>
             }
         </>
     }
@@ -284,6 +314,7 @@ export function init(
         fsStructattrName:string;
         fsStructattrValue:string;
         fsAnyPropertyValue:string;
+        fsCorpus:string;
         fsSubcorpus:string;
     }> = (props) => {
 
@@ -291,12 +322,17 @@ export function init(
             <QueryCQLProps isAdvancedQuery={props.fsQueryCQLProps} />
             {props.fsQueryCQLProps ?
                 <>
+                    <UsedCorpus value={props.fsCorpus} />
                     <UsedSubcorpus value={props.fsSubcorpus} />
                     <UsedPosattrs attr={props.fsPosattrName} value={props.fsPosattrValue} />
                     <UsedStructures attr={props.fsStructureName} />
                     <UsedStructattrs attr={props.fsStructattrName} value={props.fsStructattrValue} />
                 </> :
-                <AnyPropertyValue value={props.fsAnyPropertyValue} />
+                <>
+                    <UsedCorpus value={props.fsCorpus} />
+                    <UsedSubcorpus value={props.fsSubcorpus} />
+                    <AnyPropertyValue value={props.fsAnyPropertyValue} />
+                </>
             }
         </>
     }
@@ -306,6 +342,7 @@ export function init(
     const WListForm:React.FC<{
         fsQueryCQLProps:boolean;
         fsAnyPropertyValue:string;
+        fsCorpus:string;
         fsSubcorpus:string;
         wlattr:string;
         wlpat:string;
@@ -353,32 +390,22 @@ export function init(
             <QueryCQLProps isAdvancedQuery={props.fsQueryCQLProps} />
             {props.fsQueryCQLProps ?
                 <>
+                    <UsedCorpus value={props.fsCorpus} />
                     <UsedSubcorpus value={props.fsSubcorpus} />
-                    <div className="prop-query">
-                        <label>{he.translate('qhistory__used_wlattr')}</label>
-                        {'\u00a0'}
-                        <input type="text" value={props.wlattr} onChange={handleWlattrChange} />
-                    </div>
-
-                    <div className="prop-query">
-                        <label>{he.translate('qhistory__used_wlpat')}</label>
-                        {'\u00a0'}
-                        <input type="text" value={props.wlpat} onChange={handleWlpatChange} />
-                    </div>
-
-                    <div className="prop-query">
-                        <label>{he.translate('qhistory__used_pfilter')}</label>
-                        {'\u00a0'}
-                        <input type="text" value={props.pfilter} onChange={handlePFilterChange} />
-                    </div>
-
-                    <div className="prop-query">
-                        <label>{he.translate('qhistory__used_nfilter')}</label>
-                        {'\u00a0'}
-                        <input type="text" value={props.nfilter} onChange={handleNFilterChange} />
-                    </div>
+                    <label>{he.translate('qhistory__used_wlattr')}</label>
+                    <input type="text" value={props.wlattr} onChange={handleWlattrChange} />
+                    <label>{he.translate('qhistory__used_wlpat')}</label>
+                    <input type="text" value={props.wlpat} onChange={handleWlpatChange} />
+                    <label>{he.translate('qhistory__used_pfilter')}</label>
+                    <input type="text" value={props.pfilter} onChange={handlePFilterChange} />
+                    <label>{he.translate('qhistory__used_nfilter')}</label>
+                    <input type="text" value={props.nfilter} onChange={handleNFilterChange} />
                 </> :
-                <AnyPropertyValue value={props.fsAnyPropertyValue} />
+                <>
+                    <UsedCorpus value={props.fsCorpus} />
+                    <UsedSubcorpus value={props.fsSubcorpus} />
+                    <AnyPropertyValue value={props.fsAnyPropertyValue} />
+                </>
             }
         </>
     }
@@ -388,6 +415,7 @@ export function init(
     const KWordsForm:React.FC<{
         fsAnyPropertyValue:string;
         fsQueryCQLProps:boolean;
+        fsCorpus:string;
         fsSubcorpus:string;
         fsPosattrName:string;
     }> = (props) => {
@@ -405,6 +433,7 @@ export function init(
             <QueryCQLProps isAdvancedQuery={props.fsQueryCQLProps} />
             {props.fsQueryCQLProps ?
                 <>
+                    <UsedCorpus value={props.fsCorpus} />
                     <UsedSubcorpus value={props.fsSubcorpus} />
                     <div className="prop-query">
                         <label>{he.translate('qhistory__used_posattrs_label')}</label>
@@ -412,7 +441,11 @@ export function init(
                         <input type="text" value={props.fsPosattrName} onChange={handleAttrChange} />
                     </div>
                 </> :
-                <AnyPropertyValue value={props.fsAnyPropertyValue} />
+                <>
+                    <UsedCorpus value={props.fsCorpus} />
+                    <UsedSubcorpus value={props.fsSubcorpus} />
+                    <AnyPropertyValue value={props.fsAnyPropertyValue} />
+                </>
             }
         </>
     }
@@ -421,12 +454,15 @@ export function init(
 
     const AnyForm:React.FC<{
         fsAnyPropertyValue:string;
+        fsCorpus:string;
+        fsSubcorpus:string;
     }> = (props) => {
 
         return (
             <>
+                <UsedCorpus value={props.fsCorpus} />
+                <UsedSubcorpus value={props.fsSubcorpus} />
                 <AnyPropertyValue value={props.fsAnyPropertyValue} />
-                <p className="note">({he.translate('qhistory__any_search_note')})</p>
             </>
         )
     }

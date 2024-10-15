@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { Bound, IActionDispatcher } from 'kombo';
+import { Bound, BoundWithProps, IActionDispatcher } from 'kombo';
 import * as Kontext from '../../../types/kontext';
 import { SearchHistoryModel } from '../../../models/searchHistory';
 import { Actions } from '../../../models/searchHistory/actions';
@@ -27,16 +27,16 @@ import { SearchHistoryModelState } from '../../../models/searchHistory/common';
 import { init as extendedSearchFormInit } from './fulltextForms';
 import * as S from './style';
 
-export interface FieldsetViews {
-    BasicFieldset:React.ComponentClass<{}>;
-    ExtendedFieldset:React.ComponentClass<{}>;
+export interface FieldsViews {
+    BasicFields:React.ComponentClass<{corpusSel:boolean}>;
+    ExtendedFields:React.ComponentClass<{}>;
 }
 
 export function init(
     dispatcher:IActionDispatcher,
     he:Kontext.ComponentHelpers,
     queryHistoryModel:SearchHistoryModel
-):FieldsetViews {
+):FieldsViews {
 
     const extendedSearchForms = extendedSearchFormInit(dispatcher, he);
 
@@ -115,35 +115,27 @@ export function init(
 
     // -------------------- <BasicFieldset /> -------------------------
 
-    const BasicFieldset:React.FC<SearchHistoryModelState> = (props) => {
-        return <fieldset className="basic">
-            <legend>
-                {he.translate('qhistory__filter_legend')}
-            </legend>
-            <label>
-                {he.translate('qhistory__curr_corp_only_label_{corpus}', {corpus: props.corpname})}:
-                <CurrentCorpCheckbox value={props.currentCorpusOnly} />
-            </label>
-            <label>
-                {he.translate('qhistory__query_supertype_sel')}:
+    const BasicFields:React.FC<SearchHistoryModelState & {corpusSel:boolean}> = (props) => {
+        return (
+            <>
+                {props.corpusSel ?
+                    <>
+                        <label>{he.translate('qhistory__curr_corp_only_label_{corpus}', {corpus: props.corpname})}:</label>
+                        <CurrentCorpCheckbox value={props.currentCorpusOnly} />
+                    </> :
+                    null
+                }
+                <label>{he.translate('qhistory__query_supertype_sel')}:</label>
                 <SearchKindSelector value={props.querySupertype} />
-            </label>
-            <label>
-                {he.translate('qhistory__checkbox_archived_only')}:
+                <label>{he.translate('qhistory__checkbox_archived_only')}:</label>
                 <ArchivedOnlyCheckbox value={props.archivedOnly} />
-            </label>
-        </fieldset>
+            </>
+        );
     }
 
     // -------------------- <AdvancedFieldset /> -------------------------
 
-    const AdvancedFieldset:React.FC<SearchHistoryModelState> = (props) => {
-
-        const handleClickSearch = () => {
-            dispatcher.dispatch(
-                Actions.SubmitExtendedSearch
-            );
-        };
+    const AdvancedFields:React.FC<SearchHistoryModelState> = (props) => {
 
         const renderExtendedForm = () => {
             switch (props.querySupertype) {
@@ -151,6 +143,7 @@ export function init(
                     return <extendedSearchForms.ConcForm
                         fsQueryCQLProps={props.fsQueryCQLProps}
                         fsAnyPropertyValue={props.fsAnyPropertyValue}
+                        fsCorpus={props.fsCorpus}
                         fsSubcorpus={props.fsSubcorpus}
                         fsPosattrName={props.fsPosattrName}
                         fsPosattrValue={props.fsPosattrValue}
@@ -161,6 +154,7 @@ export function init(
                     return <extendedSearchForms.PQueryForm
                         fsQueryCQLProps={props.fsQueryCQLProps}
                         fsAnyPropertyValue={props.fsAnyPropertyValue}
+                        fsCorpus={props.fsCorpus}
                         fsSubcorpus={props.fsSubcorpus}
                         fsPosattrName={props.fsPosattrName}
                         fsPosattrValue={props.fsPosattrValue}
@@ -171,6 +165,7 @@ export function init(
                     return <extendedSearchForms.WListForm
                         fsAnyPropertyValue={props.fsAnyPropertyValue}
                         fsQueryCQLProps={props.fsQueryCQLProps}
+                        fsCorpus={props.fsCorpus}
                         fsSubcorpus={props.fsSubcorpus}
                         wlattr={props.fsWlAttr}
                         wlpat={props.fsWlPat}
@@ -180,27 +175,23 @@ export function init(
                     return <extendedSearchForms.KWordsForm
                         fsAnyPropertyValue={props.fsAnyPropertyValue}
                         fsQueryCQLProps={props.fsQueryCQLProps}
+                        fsCorpus={props.fsCorpus}
                         fsSubcorpus={props.fsSubcorpus}
                         fsPosattrName={props.fsPosattrName} />
                 default:
                     return <extendedSearchForms.AnyForm
+                            fsCorpus={props.fsCorpus}
+                            fsSubcorpus={props.fsSubcorpus}
                             fsAnyPropertyValue={props.fsAnyPropertyValue} />
             }
         }
 
-        return <fieldset className='advanced'>
-            <legend>
-                {he.translate('qhistory__search_legend')}
-            </legend>
-            {renderExtendedForm()}
-            <button type="button" className="util-button" onClick={handleClickSearch}>
-                    {he.translate('qhistory__search_button')}
-            </button>
-        </fieldset>
+        return renderExtendedForm();
     }
 
     return {
-        BasicFieldset: Bound(BasicFieldset, queryHistoryModel),
-        ExtendedFieldset: Bound(AdvancedFieldset, queryHistoryModel),
+        BasicFields: BoundWithProps<{corpusSel:boolean}, SearchHistoryModelState>(
+            BasicFields, queryHistoryModel),
+        ExtendedFields: Bound(AdvancedFields, queryHistoryModel),
     }
 }
