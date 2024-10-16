@@ -344,6 +344,11 @@ export const FilterForm = styled.form`
     .util-button {
         margin-top: 1em;
     }
+
+    label.emph {
+        font-weight: bold;
+        font-size: 1.1em;
+    }
 `;
 
 // ---------------------- <RowToolbar /> ------------------------------

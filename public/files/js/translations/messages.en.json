@@ -492,6 +492,7 @@
         "qhistory__used_posattr_value": "Positional attribute value",
         "qhistory__used_structattrs_label": "Structural attribute name",
         "qhistory__used_structattrs_value": "Structural attribute value",
+        "qhistory__used_structattrs_text_type": "text type",
         "qhistory__used_structures_label": "Structure name",
         "qhistory__query_contains": "Query contains",
         "qhistory__search_button": "Search",

@@ -71,6 +71,11 @@ export interface ExtendedSearchForms {
     }>;
 }
 
+const largeInputCSS:React.CSSProperties = {
+    height: '1.8em',
+    fontSize: '1.4em',
+};
+
 
 export function init(
     dispatcher:IActionDispatcher,
@@ -94,13 +99,14 @@ export function init(
 
         const inputStyle:React.CSSProperties = {
             width: '20em',
-            height: '1.6em',
+            height: '1.8em',
+            fontSize: '1.4em',
             gridColumn: 'span 3'
         };
 
         return (
             <>
-                <label>{he.translate('qhistory__query_contains')}:</label>
+                <label className="emph">{he.translate('qhistory__query_contains')}:</label>
                 <input style={inputStyle} type="text" value={props.value}
                     onChange={handleValueChange} />
             </>
@@ -134,8 +140,8 @@ export function init(
 
         return (
             <>
-                <label>{he.translate('qhistory__used_posattr_value')}:</label>
-                <input type="text" value={props.value} onChange={handleValueChange} />
+                <label className="emph">{he.translate('qhistory__used_posattr_value')}:</label>
+                <input style={largeInputCSS} type="text" value={props.value} onChange={handleValueChange} />
                 <label>{he.translate('qhistory__used_posattrs_label')}:</label>
                 <input type="text" value={props.attr} onChange={handleAttrChange} />
             </>
@@ -192,8 +198,12 @@ export function init(
 
         return (
             <>
-                <label>{he.translate('qhistory__used_structattrs_value')}:</label>
-                <input type="text" value={props.value} onChange={handleValueChange} />
+                <label className="emph">
+                    {he.translate('qhistory__used_structattrs_value')}:
+                    <br />
+                    ({he.translate('qhistory__used_structattrs_text_type')})
+                </label>
+                <input style={largeInputCSS} type="text" value={props.value} onChange={handleValueChange} />
                 <label>{he.translate('qhistory__used_structattrs_label')}:</label>
                 <input type="text" value={props.attr} onChange={handleAttrChange} />
             </>
@@ -323,8 +333,8 @@ export function init(
             {props.fsQueryCQLProps ?
                 <>
                     <UsedPosattrs attr={props.fsPosattrName} value={props.fsPosattrValue} />
-                    <UsedStructures attr={props.fsStructureName} />
                     <UsedStructattrs attr={props.fsStructattrName} value={props.fsStructattrValue} />
+                    <UsedStructures attr={props.fsStructureName} />
                 </> :
                 <>
                     <AnyPropertyValue value={props.fsAnyPropertyValue} />
@@ -388,13 +398,13 @@ export function init(
             <QueryCQLProps isAdvancedQuery={props.fsQueryCQLProps} />
             {props.fsQueryCQLProps ?
                 <>
-                    <label>{he.translate('qhistory__used_wlattr')}</label>
+                    <label className="emph">{he.translate('qhistory__used_wlpat')}:</label>
+                    <input style={largeInputCSS} type="text" value={props.wlpat} onChange={handleWlpatChange} />
+                    <label>{he.translate('qhistory__used_wlattr')}:</label>
                     <input type="text" value={props.wlattr} onChange={handleWlattrChange} />
-                    <label>{he.translate('qhistory__used_wlpat')}</label>
-                    <input type="text" value={props.wlpat} onChange={handleWlpatChange} />
-                    <label>{he.translate('qhistory__used_pfilter')}</label>
+                    <label>{he.translate('qhistory__used_pfilter')}:</label>
                     <input type="text" value={props.pfilter} onChange={handlePFilterChange} />
-                    <label>{he.translate('qhistory__used_nfilter')}</label>
+                    <label>{he.translate('qhistory__used_nfilter')}:</label>
                     <input type="text" value={props.nfilter} onChange={handleNFilterChange} />
                 </> :
                 <>
@@ -429,11 +439,8 @@ export function init(
             <QueryCQLProps isAdvancedQuery={props.fsQueryCQLProps} />
             {props.fsQueryCQLProps ?
                 <>
-                    <div className="prop-query">
-                        <label>{he.translate('qhistory__used_posattrs_label')}</label>
-                        {'\u00a0'}
-                        <input type="text" value={props.fsPosattrName} onChange={handleAttrChange} />
-                    </div>
+                    <label>{he.translate('qhistory__used_posattrs_label')}</label>
+                    <input type="text" value={props.fsPosattrName} onChange={handleAttrChange} />
                 </> :
                 <>
                     <AnyPropertyValue value={props.fsAnyPropertyValue} />

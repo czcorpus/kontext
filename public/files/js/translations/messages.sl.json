@@ -942,6 +942,7 @@
         "qhistory__used_posattr_value": "Positional attribute value UNTRANSLATED",
         "qhistory__used_structattrs_label": "Structural attribute name UNTRANSLATED",
         "qhistory__used_structattrs_value": "Structural attribute value UNTRANSLATED",
+        "qhistory__used_structattrs_text_type": "text type UNTRANSLATED",
         "qhistory__used_structures_label": "Structure name UNTRANSLATED",
         "qhistory__query_contains": "Query contains UNTRANSLATED",
         "qhistory__search_button": "Search UNTRANSLATED",

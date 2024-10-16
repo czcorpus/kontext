@@ -491,6 +491,7 @@
         "qhistory__used_posattr_value": "Hodnota pozičního atributu",
         "qhistory__used_structattrs_label": "Název strukturního atributu",
         "qhistory__used_structattrs_value": "Hodnota strukturního atributu",
+        "qhistory__used_structattrs_text_type": "typ textu",
         "qhistory__used_structures_label": "Název struktury",
         "qhistory__query_contains": "Dotaz obsahuje",
         "qhistory__search_button": "Hledat",
