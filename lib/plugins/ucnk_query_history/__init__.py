@@ -18,7 +18,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
-from typing import Optional
 from urllib.parse import urljoin, urlencode
 import ujson as json
 
@@ -143,15 +142,15 @@ class UcnkQueryHistory(MySqlQueryHistory):
     @staticmethod
     def _generate_query_string(
             q_supertype: str,
-            archived_only: bool,
             full_search_args: FullSearchArgs
     ) -> str:
         parts = []
-        if archived_only:
-            parts.append('+name:/.*/')
 
         if q_supertype:
             parts.append(make_bleve_field('query_supertype', q_supertype))
+        
+        if full_search_args.name:
+            parts.append(make_bleve_field('name', full_search_args.name))
 
         if full_search_args.corpus:
                 parts.append(make_bleve_field('corpora', full_search_args.corpus))
@@ -197,7 +196,7 @@ class UcnkQueryHistory(MySqlQueryHistory):
             return await super().get_user_queries(plugin_ctx, user_id, corpus_factory, from_date, to_date, q_supertype, corpname, archived_only, offset, limit, full_search_args)
 
         params = {
-            'q': self._generate_query_string(q_supertype, archived_only, full_search_args),
+            'q': self._generate_query_string(q_supertype, full_search_args),
             'order': '-_score,-created',
             'limit': limit,
             'fields': 'query_supertype,name',
