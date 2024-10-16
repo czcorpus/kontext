@@ -99,7 +99,7 @@ class UcnkQueryHistory(MySqlQueryHistory):
         done = await super().make_transient(plugin_ctx, user_id, query_id, created, name)
         await self._update_indexed_name(plugin_ctx, query_id, user_id, created)
         return done
-    
+
     async def delete(self, plugin_ctx, user_id, query_id, created):
         done = await super().delete(plugin_ctx, user_id, query_id, created)
         await self._delete_indexed_item(plugin_ctx, query_id, user_id, created)
@@ -143,11 +143,10 @@ class UcnkQueryHistory(MySqlQueryHistory):
     @staticmethod
     def _generate_query_string(
             q_supertype: str,
-            user_id: int,
             archived_only: bool,
             full_search_args: FullSearchArgs
     ) -> str:
-        parts = [f'+user_id:{user_id}']
+        parts = []
         if archived_only:
             parts.append('+name:/.*/')
 
@@ -156,7 +155,7 @@ class UcnkQueryHistory(MySqlQueryHistory):
 
         if full_search_args.corpus:
                 parts.append(make_bleve_field('corpora', full_search_args.corpus))
-    
+
         if full_search_args.subcorpus:
             parts.append(make_bleve_field('subcorpus', full_search_args.subcorpus))
 
@@ -198,14 +197,14 @@ class UcnkQueryHistory(MySqlQueryHistory):
             return await super().get_user_queries(plugin_ctx, user_id, corpus_factory, from_date, to_date, q_supertype, corpname, archived_only, offset, limit, full_search_args)
 
         params = {
-            'q': self._generate_query_string(q_supertype, user_id, archived_only, full_search_args),
+            'q': self._generate_query_string(q_supertype, archived_only, full_search_args),
             'order': '-_score,-created',
             'limit': limit,
             'fields': 'query_supertype,name',
         }
 
         url_query = urlencode(list(params.items()))
-        url = urljoin(self._fulltext_service_url, f'/indexer/search?{url_query}')
+        url = urljoin(self._fulltext_service_url, f'/user-query-history/{user_id}?{url_query}')
         async with plugin_ctx.request.ctx.http_client.get(url) as resp:
             index_data = await resp.json()
 
@@ -218,36 +217,25 @@ class UcnkQueryHistory(MySqlQueryHistory):
                 'q_supertype': hit['fields']['query_supertype'],
                 'name': hit['fields']['name'],
             })
-        
+
         full_data = await self._process_rows(plugin_ctx, corpus_factory, rows)
         for i, item in enumerate(full_data):
             item['idx'] = i
         return full_data
-    
+
     async def _update_indexed_name(self, plugin_ctx, query_id, user_id, created, new_name = ""):
         params = {
-            'queryId': query_id,
-            'userId': user_id,
-            'created': created,
             'name': new_name,
         }
-
         url_query = urlencode(list(params.items()))
-        url = urljoin(self._fulltext_service_url, f'/indexer/update?{url_query}')
-        async with plugin_ctx.request.ctx.http_client.get(url) as resp:
+        url = urljoin(self._fulltext_service_url, f'/user-query-history/{user_id}/{query_id}/{created}?{url_query}')
+        async with plugin_ctx.request.ctx.http_client.post(url) as resp:
             if not resp.ok:
                 data = await resp.json()
                 raise Exception(f'Failed to update query in index: {data}')
-    
-    async def _delete_indexed_item(self, plugin_ctx, query_id, user_id, created):
-        params = {
-            'queryId': query_id,
-            'userId': user_id,
-            'created': created,
-        }
 
-        url_query = urlencode(list(params.items()))
-        url = urljoin(self._fulltext_service_url, f'/indexer/delete?{url_query}')
+    async def _delete_indexed_item(self, plugin_ctx, query_id, user_id, created):
+        url = urljoin(self._fulltext_service_url, f'/user-query-history/{user_id}/{query_id}/{created}')
         async with plugin_ctx.request.ctx.http_client.get(url) as resp:
             if not resp.ok:
                 data = await resp.json()
