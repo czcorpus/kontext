@@ -97,6 +97,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                 fsQueryCQLProps: true,
                 fsCorpus: pageModel.getCorpusIdent().id,
                 fsSubcorpus: '',
+                fsArchAs: '',
                 fsWlAttr: '',
                 fsWlPat: '',
                 fsWlNFilter: '',
@@ -133,6 +134,15 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                 if (!this.isExtendedSearch()) {
                     this.performLoadAction();
                 }
+            }
+        );
+
+        this.addActionHandler(
+            Actions.HistorySetArchivedAs,
+            action => {
+                this.changeState(state => {
+                    state.fsArchAs = action.payload.value
+                });
             }
         );
 
@@ -518,10 +528,12 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                         args.fsStructureName = this.state.fsStructureName;
                         args.fsCorpus = this.state.fsCorpus;
                         args.fsSubcorpus = this.state.fsSubcorpus;
+                        args.fsArchivedAs = this.state.fsArchAs;
 
                     } else {
                         args.fsCorpus = this.state.fsCorpus;
                         args.fsSubcorpus = this.state.fsSubcorpus;
+                        args.fsArchivedAs = this.state.fsArchAs;
                         args.fsAnyPropertyValue = this.state.fsAnyPropertyValue;
                     }
                     break;
@@ -529,6 +541,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                     if (this.state.fsQueryCQLProps) {
                         args.fsCorpus = this.state.fsCorpus;
                         args.fsSubcorpus = this.state.fsSubcorpus;
+                        args.fsArchivedAs = this.state.fsArchAs;
                         args.fsWlpat = this.state.fsWlPat;
                         args.fsWlattr = this.state.fsWlAttr;
                         args.fsWlPfilter = this.state.fsWlPFilter;
@@ -537,6 +550,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                     } else {
                         args.fsCorpus = this.state.fsCorpus;
                         args.fsSubcorpus = this.state.fsSubcorpus;
+                        args.fsArchivedAs = this.state.fsArchAs;
                         args.fsAnyPropertyValue = this.state.fsAnyPropertyValue;
                     }
                     break;
@@ -544,17 +558,20 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                     if (this.state.fsQueryCQLProps) {
                         args.fsSubcorpus = this.state.fsSubcorpus;
                         args.fsSubcorpus = this.state.fsSubcorpus;
+                        args.fsArchivedAs = this.state.fsArchAs;
                         args.fsPosattrName = this.state.fsPosattrName;
 
                     } else {
                         args.fsCorpus = this.state.fsCorpus;
                         args.fsSubcorpus = this.state.fsSubcorpus;
+                        args.fsArchivedAs = this.state.fsArchAs;
                         args.fsAnyPropertyValue = this.state.fsAnyPropertyValue;
                     }
                     break;
                 default:
                     args.fsCorpus = this.state.fsCorpus;
                     args.fsSubcorpus = this.state.fsSubcorpus;
+                    args.fsArchivedAs = this.state.fsArchAs;
                     args.fsAnyPropertyValue = this.state.fsAnyPropertyValue;
                     break;
             }

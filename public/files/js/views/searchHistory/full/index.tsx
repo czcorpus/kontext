@@ -113,7 +113,7 @@ export function init(
                             {he.translate('qhistory__filter_legend')}
                         </legend>
                         <div className="grid-inputs">
-                            <srchFields.BasicFields corpusSel={true} />
+                            <srchFields.BasicFields corpusSel={true} archivedAsEnable={false} />
                         </div>
                     </fieldset>
                 </S.FilterForm>
@@ -124,7 +124,7 @@ export function init(
                             {he.translate('qhistory__search_legend')}
                         </legend>
                         <div className="grid-inputs">
-                            <srchFields.BasicFields corpusSel={false} />
+                            <srchFields.BasicFields corpusSel={false} archivedAsEnable={true} />
                             <srchFields.ExtendedFields />
                         </div>
                         {!props.querySupertype ?
