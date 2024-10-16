@@ -524,6 +524,7 @@
         "qhistory__remove_from_list": "Odstrani s seznama",
         "qhistory__item_removed": "Odstranjeno s seznama",
         "qhistory__blank_query": "prazno",
+        "qhistory__archived_as_label": "Archived as UNTRANSLATED",
         "concview__ipm_rel_to_the_whole_corp": "se nanaša na celoten korpus",
         "concview__click_to_play_audio": "Kliknite za predvajanje zvočnega posnetka",
         "concview__detail_default_mode_menu": "Privzeti prikaz",

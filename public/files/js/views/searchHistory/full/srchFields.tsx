@@ -28,7 +28,7 @@ import { init as extendedSearchFormInit } from './fulltextForms';
 import * as S from './style';
 
 export interface FieldsViews {
-    BasicFields:React.ComponentClass<{corpusSel:boolean}>;
+    BasicFields:React.ComponentClass<{corpusSel:boolean; archivedAsEnable:boolean}>;
     ExtendedFields:React.ComponentClass<{}>;
 }
 
@@ -106,16 +106,42 @@ export function init(
         };
 
         return (
-            <S.ArchivedOnlyCheckbox>
-               <input type="checkbox" checked={props.value} onChange={handleChange}
+            <>
+                <label>{he.translate('qhistory__checkbox_archived_only')}:</label>
+                <S.ArchivedOnlyCheckbox>
+                    <input type="checkbox" checked={props.value} onChange={handleChange}
                         style={{verticalAlign: 'middle'}} />
-            </S.ArchivedOnlyCheckbox>
-        )
-    }
+                </S.ArchivedOnlyCheckbox>
+            </>
+        );
+    };
+
+    // -------------- <ArchivedAsInput /> ----------------------------
+
+    const ArchivedAsInput:React.FC<{
+        value:string;
+    }> = (props) => {
+
+        const handleChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch(
+                Actions.HistorySetArchivedAs,
+                {
+                    value: evt.target.value
+                }
+            );
+        };
+
+        return (
+            <>
+                <label>{he.translate('qhistory__archived_as_label')}:</label>
+                <input type="text" value={props.value} onChange={handleChange} />
+            </>
+        );
+    };
 
     // -------------------- <BasicFieldset /> -------------------------
 
-    const BasicFields:React.FC<SearchHistoryModelState & {corpusSel:boolean}> = (props) => {
+    const BasicFields:React.FC<SearchHistoryModelState & {corpusSel:boolean; archivedAsEnable:boolean}> = (props) => {
         return (
             <>
                 {props.corpusSel ?
@@ -127,8 +153,10 @@ export function init(
                 }
                 <label>{he.translate('qhistory__query_supertype_sel')}:</label>
                 <SearchKindSelector value={props.querySupertype} />
-                <label>{he.translate('qhistory__checkbox_archived_only')}:</label>
-                <ArchivedOnlyCheckbox value={props.archivedOnly} />
+                {props.archivedAsEnable ?
+                    <ArchivedAsInput value={props.fsArchAs} /> :
+                    <ArchivedOnlyCheckbox value={props.archivedOnly} />
+                }
             </>
         );
     }
@@ -190,7 +218,7 @@ export function init(
     }
 
     return {
-        BasicFields: BoundWithProps<{corpusSel:boolean}, SearchHistoryModelState>(
+        BasicFields: BoundWithProps<{corpusSel:boolean; archivedAsEnable:boolean}, SearchHistoryModelState>(
             BasicFields, queryHistoryModel),
         ExtendedFields: Bound(AdvancedFields, queryHistoryModel),
     }

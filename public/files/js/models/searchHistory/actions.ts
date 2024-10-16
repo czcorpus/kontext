@@ -43,6 +43,12 @@ export class Actions {
         name: 'QUERY_HISTORY_SET_ARCHIVED_ONLY'
     };
 
+    static HistorySetArchivedAs:Action<{
+        value:string;
+    }> = {
+        name: 'QUERY_HISTORY_SET_ARCHIVED_AS'
+    };
+
     static HistorySetEditedItem:Action<{
         itemIdx:number;
     }> = {

@@ -285,19 +285,17 @@ export function init(
     }> = (props) => {
 
         return <>
+            <UsedCorpus value={props.fsCorpus} />
+            <UsedSubcorpus value={props.fsSubcorpus} />
             <QueryCQLProps isAdvancedQuery={props.fsQueryCQLProps} />
             {props.fsQueryCQLProps ?
                 <>
-                    <UsedCorpus value={props.fsCorpus} />
-                    <UsedSubcorpus value={props.fsSubcorpus} />
                     <UsedPosattrs attr={props.fsPosattrName} value={props.fsPosattrValue} />
                     <UsedStructattrs attr={props.fsStructattrName} value={props.fsStructattrValue} />
                     <UsedStructures attr={props.fsStructureName} />
                     <div />
                 </> :
                 <>
-                    <UsedCorpus value={props.fsCorpus} />
-                    <UsedSubcorpus value={props.fsSubcorpus} />
                     <AnyPropertyValue value={props.fsAnyPropertyValue} />
                 </>
             }
@@ -319,18 +317,16 @@ export function init(
     }> = (props) => {
 
         return <>
+            <UsedCorpus value={props.fsCorpus} />
+            <UsedSubcorpus value={props.fsSubcorpus} />
             <QueryCQLProps isAdvancedQuery={props.fsQueryCQLProps} />
             {props.fsQueryCQLProps ?
                 <>
-                    <UsedCorpus value={props.fsCorpus} />
-                    <UsedSubcorpus value={props.fsSubcorpus} />
                     <UsedPosattrs attr={props.fsPosattrName} value={props.fsPosattrValue} />
                     <UsedStructures attr={props.fsStructureName} />
                     <UsedStructattrs attr={props.fsStructattrName} value={props.fsStructattrValue} />
                 </> :
                 <>
-                    <UsedCorpus value={props.fsCorpus} />
-                    <UsedSubcorpus value={props.fsSubcorpus} />
                     <AnyPropertyValue value={props.fsAnyPropertyValue} />
                 </>
             }
@@ -387,11 +383,11 @@ export function init(
         };
 
         return <>
+            <UsedCorpus value={props.fsCorpus} />
+            <UsedSubcorpus value={props.fsSubcorpus} />
             <QueryCQLProps isAdvancedQuery={props.fsQueryCQLProps} />
             {props.fsQueryCQLProps ?
                 <>
-                    <UsedCorpus value={props.fsCorpus} />
-                    <UsedSubcorpus value={props.fsSubcorpus} />
                     <label>{he.translate('qhistory__used_wlattr')}</label>
                     <input type="text" value={props.wlattr} onChange={handleWlattrChange} />
                     <label>{he.translate('qhistory__used_wlpat')}</label>
@@ -402,8 +398,6 @@ export function init(
                     <input type="text" value={props.nfilter} onChange={handleNFilterChange} />
                 </> :
                 <>
-                    <UsedCorpus value={props.fsCorpus} />
-                    <UsedSubcorpus value={props.fsSubcorpus} />
                     <AnyPropertyValue value={props.fsAnyPropertyValue} />
                 </>
             }
@@ -430,11 +424,11 @@ export function init(
         };
 
         return <>
+            <UsedCorpus value={props.fsCorpus} />
+            <UsedSubcorpus value={props.fsSubcorpus} />
             <QueryCQLProps isAdvancedQuery={props.fsQueryCQLProps} />
             {props.fsQueryCQLProps ?
                 <>
-                    <UsedCorpus value={props.fsCorpus} />
-                    <UsedSubcorpus value={props.fsSubcorpus} />
                     <div className="prop-query">
                         <label>{he.translate('qhistory__used_posattrs_label')}</label>
                         {'\u00a0'}
@@ -442,8 +436,6 @@ export function init(
                     </div>
                 </> :
                 <>
-                    <UsedCorpus value={props.fsCorpus} />
-                    <UsedSubcorpus value={props.fsSubcorpus} />
                     <AnyPropertyValue value={props.fsAnyPropertyValue} />
                 </>
             }

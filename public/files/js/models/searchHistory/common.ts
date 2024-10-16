@@ -147,6 +147,7 @@ export interface GetHistoryArgs {
     fsStructattrValue?:string;
     fsCorpus?:string;
     fsSubcorpus?:string;
+    fsArchivedAs?:string;
     fsWlpat?:string;
     fsWlattr?:string;
     fsWlPfilter?:string;
@@ -197,6 +198,7 @@ export interface SearchHistoryModelState {
     fsAnyPropertyValue:string;
     fsCorpus:string;
     fsSubcorpus:string;
+    fsArchAs:string;
     fsWlAttr:string;
     fsWlPat:string;
     fsWlPFilter:string;
