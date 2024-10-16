@@ -16,6 +16,7 @@ from dataclasses import dataclass
 
 @dataclass
 class FullSearchArgs:
+    name: str
     any_property_value: str
     posattr_name: str
     posattr_value: str

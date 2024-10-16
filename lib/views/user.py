@@ -222,6 +222,7 @@ async def ajax_query_history(amodel: UserActionModel, req: KRequest, resp: KResp
 
     extended_search = bool(int(req.args.get('extended_search', '0')))
     full_search_args = FullSearchArgs(
+        req.args.get('fsArchivedAs', None),
         req.args.get('fsAnyPropertyValue', None),
         req.args.get('fsPosattrName', None),
         req.args.get('fsPosattrValue', None),
