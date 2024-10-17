@@ -59,7 +59,7 @@ from conclib.empty import InitialConc
 from conclib.errors import (
     ConcordanceException, ConcordanceQueryParamsError,
     ConcordanceSpecificationError, UnknownConcordanceAction,
-    extract_manatee_error)
+    ConcordanceQuerySyntaxError, extract_manatee_error)
 from conclib.freq import one_level_crit
 from conclib.search import get_conc
 from corplib.abstract import SubcorpusIdent
@@ -167,6 +167,12 @@ async def query_submit(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         ans['finished'] = conc.finished()
         amodel.on_query_store(store_last_op)
         resp.set_http_status(201)
+    except ConcordanceQuerySyntaxError as ex:
+        # we want queries with syntax errors to be saved, so we suppress
+        # the error a bit to make amodel.post_dispatch do its work
+        ans['size'] = 0
+        ans['finished'] = True
+        resp.add_system_message('error', str(ex))
     except (ConcordanceException, ConcCacheStatusException) as ex:
         ans['size'] = 0
         ans['finished'] = True
