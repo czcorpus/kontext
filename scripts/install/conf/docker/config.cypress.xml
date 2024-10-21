@@ -159,7 +159,7 @@
             <module>ucnk_query_history</module>
             <page_num_records>10</page_num_records>
             <preserve_amount>10</preserve_amount>
-            <fulltext_service_url>http://camus-camus-1:8787/</fulltext_service_url>
+            <fulltext_service_url>http://kontext-camus-1:8787/</fulltext_service_url>
         </query_history>
         <query_suggest />
         <settings_storage>
@@ -169,7 +169,11 @@
                 <item>3</item>
             </excluded_users>
         </settings_storage>
-        <subcmixer/>
+        <subcmixer>
+            <module>masm_subcmixer</module>
+            <js_module>subcmixer</js_module>
+            <service_url>http://kontext-masm-1:8088/</service_url>
+        </subcmixer>
         <subc_storage>
             <module>mysql_subc_storage</module>
         </subc_storage>

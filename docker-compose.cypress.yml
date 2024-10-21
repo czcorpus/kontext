@@ -51,6 +51,14 @@ services:
         condition: service_started
     networks:
       - databases
+  
+  masm:
+    build: ${MASM_PATH}
+    networks:
+      - databases
+    volumes:
+      - ./scripts/install/conf/docker/masm-conf-cypress.json:/opt/masm/conf-docker.json
+      - corpora-data:/var/lib/manatee
 
 volumes:
   kontext_testdb: {}
