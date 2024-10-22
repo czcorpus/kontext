@@ -24,7 +24,10 @@ describe('Query History', () => {
                 cy.hoverNthMenuItem(1);
                 cy.clickMenuItem(1, 3);
                 cy.get('#wl-pattern-input').type('.*ining');
-                cy.get('#wordlist-form-mount .default-button').click();
+                cy.get('#wordlist-form-mount .default-button').click().then(() => {
+                    
+                    cy.wait(1000);
+                });
             });
         });
 
@@ -36,10 +39,11 @@ describe('Query History', () => {
 
         // open query history modal from menu
         cy.hoverNthMenuItem(1);
-        cy.clickMenuItem(1, 4);
+        cy.openHistory();
     });
 
     afterEach(() => {
+        cy.closeMessages();
         cy.actionLogout();
     });
 
@@ -58,21 +62,21 @@ describe('Query History', () => {
         history.should('contain.text', 'paradigmatic query');
 
         // test concordance supertype
-        cy.get('#query-history-mount fieldset label select').select('concordance');
+        cy.get('#query-history-mount fieldset.basic select').select('concordance');
         history = cy.get('#query-history-mount .history-entries .supertype');
         history.should('contain.text', 'concordance');
         history.should('not.contain.text', 'paradigmatic query');
         history.should('not.contain.text', 'word list');
 
         // test paradigmatic query supertype
-        cy.get('#query-history-mount fieldset label select').select('paradigmatic query');
+        cy.get('#query-history-mount fieldset.basic select').select('paradigmatic query');
         history = cy.get('#query-history-mount .history-entries .supertype');
         history.should('not.contain.text', 'concordance');
         history.should('contain.text', 'paradigmatic query');
         history.should('not.contain.text', 'word list');
 
         // test word list supertype
-        cy.get('#query-history-mount fieldset label select').select('word list');
+        cy.get('#query-history-mount fieldset.basic select').select('word list');
         history = cy.get('#query-history-mount .history-entries .supertype');
         history.should('not.contain.text', 'concordance');
         history.should('not.contain.text', 'paradigmatic query');
@@ -117,8 +121,7 @@ describe('Query History', () => {
         cy.get('.query .default-button', {timeout: 5000}).should('be.visible');
 
         // open history
-        cy.hoverNthMenuItem(1);
-        cy.clickMenuItem(1, 4);
+        cy.openHistory();
 
         // check item is in the list, remove it and check it is gone
         cy.get('#query-history-mount .history-entries', {timeout: 5000}).should('be.visible');

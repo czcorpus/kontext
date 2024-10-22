@@ -57,8 +57,8 @@ export function init(
         };
 
         return <>
-            <label htmlFor="supertype-select">{he.translate('qhistory__query_supertype_sel')}:</label>
-            <S.SearchKindSelector id="supertype-select" value={props.value} onChange={handleChange}>
+            <label>{he.translate('qhistory__query_supertype_sel')}:</label>
+            <S.SearchKindSelector value={props.value} onChange={handleChange}>
                 <option value="">{he.translate('qhistory__qs_any')}</option>
                 <option value="conc">{he.translate('qhistory__qs_conc')}</option>
                 <option value="pquery">{he.translate('qhistory__qs_pquery')}</option>
@@ -136,8 +136,8 @@ export function init(
 
         return (
             <>
-                <label htmlFor="archived-as">{he.translate('qhistory__archived_as_label')}:</label>
-                <input id="archived-as" type="text" value={props.value} onChange={handleChange} />
+                <label>{he.translate('qhistory__archived_as_label')}:</label>
+                <input type="text" value={props.value} onChange={handleChange} />
             </>
         );
     };

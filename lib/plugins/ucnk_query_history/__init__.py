@@ -256,7 +256,7 @@ class UcnkQueryHistory(MySqlQueryHistory):
 
     async def _delete_indexed_item(self, plugin_ctx, query_id, user_id, created):
         url = urljoin(self._fulltext_service_url, f'/user-query-history/{user_id}/{query_id}/{created}')
-        async with plugin_ctx.request.ctx.http_client.get(url) as resp:
+        async with plugin_ctx.request.ctx.http_client.delete(url) as resp:
             if not resp.ok:
                 data = await resp.json()
                 raise Exception(f'Failed to delete query from index: {data}')
