@@ -18,8 +18,9 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
-from urllib.parse import urljoin, urlencode
+from urllib.parse import urljoin, urlencode, quote
 import ujson as json
+from dataclasses import dataclass, asdict
 
 import plugins
 from action.argmapping.user import FullSearchArgs
@@ -47,11 +48,19 @@ def escape_bleve_chars(s: str) -> str:
     return s
 
 
-def make_bleve_field(field: str, match: str) -> str:
+@dataclass
+class Field:
+    field: str
+    value: str
+    requirement: str
+    isWildCard: bool
+
+
+def make_bleve_field(field: str, match: str, use_wildcard: bool = False) -> Field:
     """
     Creates required bleve match query
     """
-    return f'+{field}:{escape_bleve_chars(match)}'
+    return Field(field=field, value=match, requirement="must", isWildCard=use_wildcard)
 
 
 class UcnkQueryHistory(MySqlQueryHistory):
@@ -186,25 +195,26 @@ class UcnkQueryHistory(MySqlQueryHistory):
                 if full_search_args.wl_attr:
                     parts.append(make_bleve_field('pos_attr_names', full_search_args.posattr_name))
 
-        return ' '.join(parts)
+        return json.dumps([asdict(p) for p in parts])
 
     async def get_user_queries(
             self, plugin_ctx, user_id, corpus_factory, from_date=None, to_date=None, q_supertype=None, corpname=None,
             archived_only=False, offset=0, limit=None, full_search_args=None):
 
         if full_search_args is None:
-            return await super().get_user_queries(plugin_ctx, user_id, corpus_factory, from_date, to_date, q_supertype, corpname, archived_only, offset, limit, full_search_args)
+            return await super().get_user_queries(
+                plugin_ctx, user_id, corpus_factory, from_date, to_date, q_supertype, corpname, archived_only, offset,
+                limit, full_search_args)
 
         params = {
-            'q': self._generate_query_string(q_supertype, full_search_args),
             'order': '-_score,-created',
             'limit': limit,
             'fields': 'query_supertype,name',
         }
 
-        url_query = urlencode(list(params.items()))
+        url_query = urlencode(list(params.items()), quote_via=quote)
         url = urljoin(self._fulltext_service_url, f'/user-query-history/{user_id}?{url_query}')
-        async with plugin_ctx.request.ctx.http_client.get(url) as resp:
+        async with plugin_ctx.request.ctx.http_client.post(url, data=self._generate_query_string(q_supertype, full_search_args)) as resp:
             index_data = await resp.json()
 
         rows = []
