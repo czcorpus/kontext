@@ -7,6 +7,7 @@ describe('Initial testing experiments', () => {
     });
 
     after(() => {
+        cy.closeMessages();
         cy.actionLogout();
     });
 

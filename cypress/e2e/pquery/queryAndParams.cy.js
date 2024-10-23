@@ -8,6 +8,7 @@ describe('Paradigmatic query', () => {
     });
 
     afterEach(() => {
+        cy.closeMessages();
         cy.actionLogout();
     });
 

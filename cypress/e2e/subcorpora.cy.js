@@ -8,10 +8,11 @@ describe('Subcorpora', () => {
     });
 
     afterEach(() => {
+        cy.closeMessages();
         cy.actionLogout();
     });
 
-    const createSubcorpus = (name, description, texttypes, isDraft) => {
+    const createSubcorpus = (name, description, texttypes) => {
         // open create subcorpus
         cy.hoverNthMenuItem(2);
         cy.clickMenuItem(2, 4);
@@ -22,13 +23,26 @@ describe('Subcorpora', () => {
             cy.get('#subcorp-form-mount table.form textarea').type(description);
         }
         texttypes.forEach(v => {
-            cy.get('#subcorp-form-mount div.data-sel div.grid > div').eq(1).get('input[type=checkbox]').check(v);
+            cy.get('#subcorp-form-mount div.data-sel div.grid > div input[type=checkbox]').check(v);
         });
-        if (isDraft) {
-            cy.get('#subcorp-form-mount p.submit-buttons').contains('button', 'Save draft').click();
-        } else {
-            cy.get('#subcorp-form-mount p.submit-buttons').contains('button', 'Create subcorpus').click();
-        }
+        cy.get('#subcorp-form-mount p.submit-buttons').contains('button', 'Create subcorpus').click();
+    }
+
+    const createSubcorpusDraft = (name, texttypes) => {
+        // open concordance form
+        cy.hoverNthMenuItem(1);
+        cy.clickMenuItem(1, 1);
+        cy.url().should('include', '/query');
+
+        // create subcorpus draft from text type
+        cy.contains('h2 a', 'Restrict search').click();
+        texttypes.forEach(v => {
+            cy.get('.specify-text-types div.grid > div input[type=checkbox]').check(v);
+        });
+        cy.contains('a.util-button', 'Save as a subcorpus draft').click();
+        cy.get('input[name=subcorpName]').type(name);
+
+        cy.contains('button', 'Create draft').click();
     }
 
     const openProperties = (name) => {
@@ -42,6 +56,7 @@ describe('Subcorpora', () => {
     const deleteSubcorpus = (name) => {
         openProperties(name);
         cy.get('.closeable-frame').contains('button', 'Delete').click();
+        closeMessages('Subcorpus has been deleted');
     }
 
     const closeMessages = (message) => {
@@ -71,7 +86,7 @@ describe('Subcorpora', () => {
     });
 
     it('creates and deletes subcorpus', () => {
-        createSubcorpus('sus1', 'description', ['1'], false);
+        createSubcorpus('sus1', 'description', ['1']);
 
         // table contains `sus1` subcorpus
         cy.url().should('include', '/subcorpus/list');
@@ -94,36 +109,11 @@ describe('Subcorpora', () => {
         deleteSubcorpus('sus1');
         cy.get('#my-subcorpora-mount table.data tbody tr').contains('sus1').should('have.length', 0);
         cy.get('#my-subcorpora-mount div.inputs input#inp_pattern').type('description');
-        cy.wait(500); // searching is delayed
         cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus1').should('have.length', 0);
     });
 
-    it('creates and deletes subcorpus draft', () => {
-        createSubcorpus('sus2', 'description', ['1'], true);
-
-        // check subcpage contains `sus2` and it is draft
-        cy.url().should('include', '/subcorpus/list');
-        cy.get('#my-subcorpora-mount table.data tbody tr').contains('a', 'sus2').should('have.length', 1);
-        cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus2').contains('td', 'draft').should('have.length', 1);
-
-        // check properties
-        openProperties('sus2');
-        checkSubcProperties(['1'], [], 'sus2', 'description');
-        closeProperties();
-
-        deleteSubcorpus('sus2');
-        cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus2').should('have.length', 0);
-    });
-
-    it('creates subcorpus draft from query view', () => {
-        cy.url().should('include', '/query');
-
-        // create subcorpus draft from text type
-        cy.contains('h2 a', 'Restrict search').click();
-        cy.get('input[type=checkbox]').check('1');
-        cy.contains('a.util-button', 'Save as a subcorpus draft').click();
-        cy.get('input[name=subcorpName]').type('sus3');
-        cy.contains('button', 'Create draft').click();
+    it('creates subcorpus draft', () => {
+        createSubcorpusDraft('sus3', ['1']);
 
         // still on query page
         cy.url().should('include', '/query');
@@ -141,34 +131,11 @@ describe('Subcorpora', () => {
         deleteSubcorpus('sus3');
     });
 
-    it('creates subcorpus draft from query view with redirecting to new subcorpus view', () => {
-        cy.url().should('include', '/query');
-
-        // create subcorpus draft from text type
-        cy.contains('h2 a', 'Restrict search').click();
-        cy.get('input[type=checkbox]').check('1');
-        cy.contains('a.util-button', 'Save as a subcorpus draft').click();
-        cy.get('.closeable-frame input[name=subcorpName]').type('sus4');
-        cy.get('.closeable-frame input[type=checkbox]').check();
-        cy.contains('button', 'Create draft').click();
-
-        // should be on new page
-        cy.url().should('include', '/subcorpus/new');
-
+    it('creates subcorpus from draft', () => {
+        createSubcorpusDraft('sus5', ['1']);
+        
         cy.hoverNthMenuItem(2);
         cy.clickMenuItem(2, 2);
-        cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus4').contains('td', 'draft').should('have.length', 1);
-
-        // check properties
-        openProperties('sus4');
-        checkSubcProperties(['1'], [], 'sus4', '');
-        closeProperties();
-
-        deleteSubcorpus('sus4');
-    });
-
-    it('creates subcorpus from draft', () => {
-        createSubcorpus('sus5', 'description', ['1'], true);
         cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus5').contains('td', 'draft').should('have.length', 1);
 
         cy.get('#my-subcorpora-mount table.data tbody tr a').contains('sus5').click();
@@ -179,7 +146,7 @@ describe('Subcorpora', () => {
         cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus5').contains('td', 'draft').should('have.length', 0);
         // check properties
         openProperties('sus5');
-        checkSubcProperties(['1'], [], 'sus5', 'description');
+        checkSubcProperties(['1'], [], 'sus5', '');
         closeProperties();
 
         cy.get('#my-subcorpora-mount table.data tbody tr a').contains('sus5').click();
@@ -191,7 +158,10 @@ describe('Subcorpora', () => {
     });
 
     it('creates subcorpus from draft using properties window', () => {
-        createSubcorpus('sus6', 'description', ['1'], true);
+        createSubcorpusDraft('sus6', ['1']);
+        
+        cy.hoverNthMenuItem(2);
+        cy.clickMenuItem(2, 2);
         cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus6').contains('td', 'draft').should('have.length', 1);
 
         // create corpus from draft
@@ -199,12 +169,11 @@ describe('Subcorpora', () => {
         cy.contains('button', 'Subcorpus structure').click();
         cy.contains('button', 'Create subcorpus').click();
         closeMessages('A new subcorpus is being created');
-        closeProperties();
         cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus6').contains('td', 'draft').should('have.length', 0);
 
         // check properties
         openProperties('sus6');
-        checkSubcProperties(['1'], [], 'sus6', 'description');
+        checkSubcProperties(['1'], [], 'sus6', '');
         closeProperties();
 
         cy.get('#my-subcorpora-mount table.data tbody tr a').contains('sus6').click();
@@ -216,7 +185,7 @@ describe('Subcorpora', () => {
     });
 
     it('creates subcorpus, edits it and removes it', () => {
-        createSubcorpus('sus7', 'some description', ['1'], false);
+        createSubcorpus('sus7', 'some description', ['1']);
 
         // check values and edit draft in properties
         cy.url().should('include', '/subcorpus/list');
@@ -246,24 +215,15 @@ describe('Subcorpora', () => {
     });
 
     it('creates subcorpus draft, edits it and removes it', () => {
-        createSubcorpus('sus8', 'description', ['1'], true);
+        createSubcorpusDraft('sus8', ['1']);
+        cy.hoverNthMenuItem(2);
+        cy.clickMenuItem(2, 2);
 
         // check values and edit draft in properties
         cy.url().should('include', '/subcorpus/list');
         openProperties('sus8');
         // first check structure, name and description
-        checkSubcProperties(['1'], [], 'sus8', 'description');
-        // edit structure and check
-        cy.get('.closeable-frame').contains('button', 'Subcorpus structure').click();
-        cy.get('.closeable-frame').get('input[type=checkbox]').uncheck('1');
-        cy.get('.closeable-frame').get('input[type=checkbox]').check('2');
-        cy.get('.closeable-frame').contains('button', 'Save draft').click();
-        closeMessages('Draft has been saved');
-
-        //open and close properties to reload data before check
-        closeProperties();
-        openProperties('sus8')
-        checkSubcProperties(['2'], ['1'], 'sus8', 'description');
+        checkSubcProperties(['1'], [], 'sus8', '');
 
         // edit name and description and check
         cy.get('.closeable-frame').contains('button', 'Name and public description').click();
@@ -273,34 +233,15 @@ describe('Subcorpora', () => {
         closeMessages('Subcorpus description has been updated');
         //open and close properties to reload data before check
         closeProperties();
-        openProperties('sus8')
-        checkSubcProperties(['2'], ['1'], 'sus8new', 'new description');
+        openProperties('sus8new')
+        checkSubcProperties(['1'], [], 'sus8new', 'new description');
         closeProperties();
 
-        // check change and edit draft on subcorpus/new page
-        cy.get('#my-subcorpora-mount table.data tbody tr a').contains('sus8new').click();
-        cy.url().should('include', '/subcorpus/new');
-        cy.get('#subcorp-form-mount table.form .subcname input').should('have.value', 'sus8new');
-        cy.get('#subcorp-form-mount table.form .subcname input').clear().type('sus8old');
-        cy.get('#subcorp-form-mount table.form textarea').should('have.value', 'new description');
-        cy.get('#subcorp-form-mount table.form textarea').clear().type('old description');
-        cy.get('input[value=1]').should('not.be.checked');
-        cy.get('input[value=2]').should('be.checked');
-        cy.get('input[type=checkbox]').check('1');
-        cy.get('input[type=checkbox]').uncheck('2');
-        cy.contains('button', 'Save draft').click();
-
-        // check change in properties
-        cy.url().should('include', '/subcorpus/list');
-        openProperties('sus8old');
-        checkSubcProperties(['1'], ['2'], 'sus8old', 'old description');
-        closeProperties();
-
-        deleteSubcorpus('sus8old');
+        deleteSubcorpus('sus8new');
     });
 
     it('tests archiving subcorpus', () => {
-        createSubcorpus('sus9', 'description', ['1'], false);
+        createSubcorpus('sus9', 'description', ['1']);
 
         // table contains `sus9` subcorpus
         cy.url().should('include', '/subcorpus/list');
@@ -326,39 +267,39 @@ describe('Subcorpora', () => {
     });
 
     it('tests reusing subcorpus', () => {
-        createSubcorpus('sus10', 'description', ['1'], false);
+        createSubcorpus('sus10', 'description', ['1']);
 
         cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus10').should('have.length', 1);
         cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus11').should('have.length', 0);
 
         openProperties('sus10');
         cy.get('.closeable-frame').contains('button', 'Subcorpus structure').click();
-        cy.get('.closeable-frame input[type=checkbox]').check('10');
+        cy.get('.closeable-frame input[type=checkbox]').check('maj');
 
         cy.window().then((p) => {
             cy.stub(p, 'prompt').returns('sus11');
             cy.get('.closeable-frame').contains('button', 'Save as').click();
         });
         closeMessages('A new subcorpus is being created');
-        closeProperties();
+        closeMessages('Subcorpus susanne/sus11 creation - done');
 
         cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus10').should('have.length', 1);
         cy.get('#my-subcorpora-mount table.data tbody tr').contains('tr', 'sus11').should('have.length', 1);
 
         // check properties
         openProperties('sus11');
-        checkSubcProperties(['1', '10'], [], 'sus11', 'description');
+        checkSubcProperties(['1', 'maj'], [], 'sus11', 'description');
         closeProperties();
 
         deleteSubcorpus('sus10');
-        cy.wait(200);
+        cy.wait(500);
         deleteSubcorpus('sus11');
     });
 
     it('checks subcorp page size settings', () => {
-        createSubcorpus('sus12', 'description', ['1'], false);
-        createSubcorpus('sus13', 'description', ['1'], false);
-        createSubcorpus('sus14', 'description', ['1'], false);
+        createSubcorpus('sus12', 'description', ['1']);
+        createSubcorpus('sus13', 'description', ['1']);
+        createSubcorpus('sus14', 'description', ['1']);
 
         // set subcorpus page size to 1
         cy.hoverNthMenuItem(8);

@@ -11,6 +11,7 @@ describe('Word List', () => {
     });
 
     afterEach(() => {
+        cy.closeMessages();
         cy.actionLogout();
     });
 
