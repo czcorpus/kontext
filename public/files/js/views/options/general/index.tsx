@@ -191,7 +191,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 </th>
                 <td align="center">
                     <layoutViews.ValidatedItem invalid={props.value.isInvalid}>
-                        <input className="tst-conc-kwic-size"  type="text" value={props.value.value} min={0}
+                        <input className="tst-refs-max-width"  type="text" value={props.value.value} min={0}
                                 onChange={handleInputChange} style={{width: '2em'}} />
                     </layoutViews.ValidatedItem>
                 </td>

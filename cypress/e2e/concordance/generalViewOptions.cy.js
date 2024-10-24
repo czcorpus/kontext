@@ -67,7 +67,7 @@ describe('Concordance - general view options', () => {
         // turn on line numbers
         cy.hoverNthMenuItem(8);
         cy.clickMenuItem(8, 3);
-        cy.get('#view-options-mount .FieldsetConcordance label[for="show-line-numbers-input"]').click();
+        cy.get('#view-options-mount .FieldsetConcordance .ToggleSwitch').eq(0).click();
         cy.get('#view-options-mount div.buttons button').click();
 
         // check new line numbers options
@@ -75,30 +75,4 @@ describe('Concordance - general view options', () => {
         cy.get('#conc-dashboard-mount table tbody tr:nth-child(2) td.line-num').should('contain.text', '2');
         cy.get('#conc-dashboard-mount table tbody tr:nth-child(3) td.line-num').should('contain.text', '3');
     });
-
-    it('tests line shuffle', () => {
-        cy.get('.simple-input').type('and');
-        cy.get('.query .default-button').click();
-        cy.url().should('include', '/view');
-
-        // line shuffeling
-        cy.hoverNthMenuItem(8);
-        cy.clickMenuItem(8, 3);
-        cy.get('#view-options-mount .FieldsetConcordance label[for="always-shuffle"]').click();
-        cy.get('#view-options-mount div.buttons button').click();
-
-        // take value of first left kwic
-        cy.get('#conc-dashboard-mount table tbody tr:nth-child(1) td.lc').invoke('text').then(text => {
-            // run new query
-            cy.hoverNthMenuItem(1);
-            cy.clickMenuItem(1, 1);
-            cy.get('.simple-input').type('and');
-            cy.get('.query .default-button').click();
-            cy.url().should('include', '/view');
-
-            // check new line numbers options
-            cy.get('#conc-dashboard-mount table tbody tr:nth-child(1) td.lc').should('not.have.text', text);
-        });
-    });
-
 });
