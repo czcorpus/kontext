@@ -43,9 +43,22 @@ Cypress.Commands.add('closeNotifications', () => {
     cy.get('.async-task-list .header button.close-link').click();
 });
 
-Cypress.Commands.add('openLastHistoryItem', () => {
+Cypress.Commands.add('closeMessages', () => {
+    cy.get('#content .messages-mount')
+    .then($mount => {
+        if ($mount.find('a.close-icon').length) {
+            cy.get('#content .messages-mount a.close-icon').click({multiple: true});
+        }
+    });
+});
+
+Cypress.Commands.add('openHistory', () => {
     cy.hoverNthMenuItem(1);
-    cy.clickMenuItem(1, 4);
+    cy.clickMenuItem(1, 5);
+});
+
+Cypress.Commands.add('openLastHistoryItem', () => {
+    cy.openHistory();
     cy.get('#query-history-mount')
         .find('.history-entries')
         .should('not.be.empty', {'timeout': 5000})

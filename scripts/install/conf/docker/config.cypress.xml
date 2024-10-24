@@ -96,9 +96,11 @@
             <cache_dir>/var/local/corpora/cache</cache_dir>
         </conc_cache>
         <query_persistence>
-            <module>mysql_query_persistence</module>
+            <module>ucnk_query_persistence</module>
             <ttl_days>100</ttl_days>
             <anonymous_user_ttl_days>7</anonymous_user_ttl_days>
+            <archive_queue_key>conc_archive_queue</archive_queue_key>
+            <implicit_archiving>true</implicit_archiving>
         </query_persistence>
         <corparch>
             <module>mysql_corparch</module>
@@ -141,8 +143,10 @@
             <fallback_lang>en-US</fallback_lang>
         </getlang>
         <live_attributes>
-            <module>mysql_live_attributes</module>
+            <module>masm_live_attributes</module>
             <js_module>liveAttributes</js_module>
+            <service_url>http://kontext-masm-1:8088/</service_url>
+            <doclist_cache_dir>/var/local/corpora/liveattrs-cache</doclist_cache_dir>
         </live_attributes>
         <menu_items>
             <module>default_menu_items</module>
@@ -152,9 +156,10 @@
             <module>default_audio_provider</module>
         </audio_provider>
         <query_history>
-            <module>default_query_history</module>
+            <module>ucnk_query_history</module>
             <page_num_records>10</page_num_records>
-            <ttl_days>10</ttl_days>
+            <preserve_amount>10</preserve_amount>
+            <fulltext_service_url>http://kontext-camus-1:8787/</fulltext_service_url>
         </query_history>
         <query_suggest />
         <settings_storage>
@@ -164,7 +169,11 @@
                 <item>3</item>
             </excluded_users>
         </settings_storage>
-        <subcmixer/>
+        <subcmixer>
+            <module>masm_subcmixer</module>
+            <js_module>subcmixer</js_module>
+            <service_url>http://kontext-masm-1:8088/</service_url>
+        </subcmixer>
         <subc_storage>
             <module>mysql_subc_storage</module>
         </subc_storage>

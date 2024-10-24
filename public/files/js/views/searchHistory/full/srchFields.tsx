@@ -56,7 +56,8 @@ export function init(
             });
         };
 
-        return (
+        return <>
+            <label>{he.translate('qhistory__query_supertype_sel')}:</label>
             <S.SearchKindSelector value={props.value} onChange={handleChange}>
                 <option value="">{he.translate('qhistory__qs_any')}</option>
                 <option value="conc">{he.translate('qhistory__qs_conc')}</option>
@@ -64,12 +65,13 @@ export function init(
                 <option value="wlist">{he.translate('qhistory__qs_wlist')}</option>
                 <option value="kwords">{he.translate('qhistory__qs_kwords')}</option>
             </S.SearchKindSelector>
-        );
+        </>;
     };
 
     // -------------------- <CurrentCorpCheckbox /> ------------------------
 
     const CurrentCorpCheckbox:React.FC<{
+        corpname:string;
         value:boolean;
 
     }> = (props) => {
@@ -82,12 +84,13 @@ export function init(
                 }
             });
         };
-        return (
+        return <>
+            <label htmlFor="curr-corp-only">{he.translate('qhistory__curr_corp_only_label_{corpus}', {corpus: props.corpname})}:</label>
             <S.CurrentCorpCheckbox>
-                 <input type="checkbox" checked={props.value} onChange={handleChange}
+                 <input id="curr-corp-only" type="checkbox" checked={props.value} onChange={handleChange}
                         style={{verticalAlign: 'middle'}} />
             </S.CurrentCorpCheckbox>
-        );
+        </>;
     };
 
     // -------------------- <ArchivedOnlyCheckbox /> ------------------------
@@ -107,9 +110,9 @@ export function init(
 
         return (
             <>
-                <label>{he.translate('qhistory__checkbox_archived_only')}:</label>
+                <label htmlFor="archived-only">{he.translate('qhistory__checkbox_archived_only')}:</label>
                 <S.ArchivedOnlyCheckbox>
-                    <input type="checkbox" checked={props.value} onChange={handleChange}
+                    <input id="archived-only" type="checkbox" checked={props.value} onChange={handleChange}
                         style={{verticalAlign: 'middle'}} />
                 </S.ArchivedOnlyCheckbox>
             </>
@@ -145,13 +148,9 @@ export function init(
         return (
             <>
                 {props.corpusSel ?
-                    <>
-                        <label>{he.translate('qhistory__curr_corp_only_label_{corpus}', {corpus: props.corpname})}:</label>
-                        <CurrentCorpCheckbox value={props.currentCorpusOnly} />
-                    </> :
+                    <CurrentCorpCheckbox corpname={props.corpname} value={props.currentCorpusOnly} /> :
                     null
                 }
-                <label>{he.translate('qhistory__query_supertype_sel')}:</label>
                 <SearchKindSelector value={props.querySupertype} />
                 {props.archivedAsEnable ?
                     <ArchivedAsInput value={props.fsArchAs} /> :

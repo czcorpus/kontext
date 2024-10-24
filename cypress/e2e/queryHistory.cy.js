@@ -10,24 +10,36 @@ describe('Query History', () => {
         // concordance query
         cy.hoverNthMenuItem(1);
         cy.clickMenuItem(1, 1);
+        cy.url().should('contain', '/query?');
         cy.get('.simple-input').type('London');
-        cy.get('.query .default-button').click().then(() => {
+        cy.get('.query .default-button').click();
+        cy.url().should('contain', '/view?');
 
-            // paradigmatic query
-            cy.hoverNthMenuItem(1);
-            cy.clickMenuItem(1, 2);
-            cy.get('#pquery-form-mount .cql-input').eq(0).type('[word="e.*"]');
-            cy.get('#pquery-form-mount .cql-input').eq(1).type('[tag="N.*"]');
-            cy.get('#pquery-form-mount .submit').click().then(() => {
+        // paradigmatic query
+        cy.hoverNthMenuItem(1);
+        cy.clickMenuItem(1, 2);
+        cy.url().should('contain', '/pquery/index?');
+        cy.get('#pquery-form-mount .cql-input').eq(0).type('[word="e.*"]');
+        cy.get('#pquery-form-mount .cql-input').eq(1).type('[tag="N.*"]');
+        cy.get('#pquery-form-mount .submit').click();
+        cy.url().should('contain', '/pquery/result?');
 
-                // word list query
-                cy.hoverNthMenuItem(1);
-                cy.clickMenuItem(1, 3);
-                cy.get('#wl-pattern-input').type('.*ining');
-                cy.get('#wordlist-form-mount .default-button').click();
-            });
-        });
-
+        // word list query
+        cy.hoverNthMenuItem(1);
+        cy.clickMenuItem(1, 3);
+        cy.url().should('contain', '/wordlist/form?');
+        cy.get('#wl-pattern-input').type('.*ining');
+        cy.get('#wordlist-form-mount .default-button').click();
+        cy.url().should('contain', '/wordlist/result?');
+                    
+        // keywords
+        cy.hoverNthMenuItem(1);
+        cy.clickMenuItem(1, 4);
+        cy.url().should('contain', '/keywords/form?');
+        cy.get('#kw-pattern').clear().type('.*ining');
+        cy.get('#keywords-form-mount .default-button').click();
+        cy.url().should('contain', '/keywords/result?');
+        
         cy.actionLogout();
     });
 
@@ -36,10 +48,11 @@ describe('Query History', () => {
 
         // open query history modal from menu
         cy.hoverNthMenuItem(1);
-        cy.clickMenuItem(1, 4);
+        cy.openHistory();
     });
 
     afterEach(() => {
+        cy.closeMessages();
         cy.actionLogout();
     });
 
@@ -56,27 +69,39 @@ describe('Query History', () => {
         history.should('contain.text', 'concordance');
         history.should('contain.text', 'word list');
         history.should('contain.text', 'paradigmatic query');
+        history.should('contain.text', 'keywords');
 
         // test concordance supertype
-        cy.get('#query-history-mount fieldset label select').select('concordance');
+        cy.get('#query-history-mount fieldset.basic select').select('concordance');
         history = cy.get('#query-history-mount .history-entries .supertype');
         history.should('contain.text', 'concordance');
         history.should('not.contain.text', 'paradigmatic query');
         history.should('not.contain.text', 'word list');
+        history.should('not.contain.text', 'keywords');
 
         // test paradigmatic query supertype
-        cy.get('#query-history-mount fieldset label select').select('paradigmatic query');
+        cy.get('#query-history-mount fieldset.basic select').select('paradigmatic query');
         history = cy.get('#query-history-mount .history-entries .supertype');
         history.should('not.contain.text', 'concordance');
         history.should('contain.text', 'paradigmatic query');
         history.should('not.contain.text', 'word list');
+        history.should('not.contain.text', 'keywords');
 
         // test word list supertype
-        cy.get('#query-history-mount fieldset label select').select('word list');
+        cy.get('#query-history-mount fieldset.basic select').select('word list');
         history = cy.get('#query-history-mount .history-entries .supertype');
         history.should('not.contain.text', 'concordance');
         history.should('not.contain.text', 'paradigmatic query');
         history.should('contain.text', 'word list');
+        history.should('not.contain.text', 'keywords');
+
+        // test keywords supertype
+        cy.get('#query-history-mount fieldset.basic select').select('keywords');
+        history = cy.get('#query-history-mount .history-entries .supertype');
+        history.should('not.contain.text', 'concordance');
+        history.should('not.contain.text', 'paradigmatic query');
+        history.should('not.contain.text', 'word list');
+        history.should('contain.text', 'keywords');
 
         // need to close history widget, so logout can be clicked
         cy.get('#query-history-mount img.close-icon').click();
@@ -117,8 +142,7 @@ describe('Query History', () => {
         cy.get('.query .default-button', {timeout: 5000}).should('be.visible');
 
         // open history
-        cy.hoverNthMenuItem(1);
-        cy.clickMenuItem(1, 4);
+        cy.openHistory();
 
         // check item is in the list, remove it and check it is gone
         cy.get('#query-history-mount .history-entries', {timeout: 5000}).should('be.visible');

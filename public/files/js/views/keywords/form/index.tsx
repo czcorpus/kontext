@@ -177,7 +177,7 @@ export function init({
                         props.isBusy ?
                             <img className="ajax-loader" src={he.createStaticUrl('img/ajax-loader-bar.gif')}
                                 alt={he.translate('global__loading')} title={he.translate('global__loading')} /> :
-                            <button role='button' className="default-button" onClick={handleSubmit}>{he.translate('query__search_btn')}</button>
+                            <button type='button' className="default-button" onClick={handleSubmit}>{he.translate('query__search_btn')}</button>
                     }
                 </div>
             </S.KeywordsForm>
