@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { Bound, IActionDispatcher } from 'kombo';
+import { Bound, BoundWithProps, IActionDispatcher } from 'kombo';
 import { Keyboard, Dict, pipe, List } from 'cnc-tskit';
 
 import * as Kontext from '../../../types/kontext';
@@ -38,7 +38,7 @@ import * as QS from '../../query/style';
 
 
 export interface HistoryViews {
-    RecentQueriesPageList:React.ComponentClass<{}>;
+    RecentQueriesPageList:React.ComponentClass<{onCloseClick: ()=>void}>;
 }
 
 
@@ -100,6 +100,12 @@ export function init(
             );
         };
 
+        const handleHelpClick = () => {
+            dispatcher.dispatch(
+                Actions.ToggleHelpView
+            );
+        };
+
         return (
             <layoutViews.TabView
                     className="SortFormSelector"
@@ -131,9 +137,16 @@ export function init(
                             <p className="note">({he.translate('qhistory__any_search_note')})</p> :
                             null
                         }
-                        <button type="button" className="util-button" onClick={handleClickSearch}>
-                            {he.translate('qhistory__search_button')}
-                        </button>
+                        <div className="button-area">
+                            <a className="help" onClick={handleHelpClick}>
+                                <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/question-mark.svg')}
+                                    alt={he.translate('qhistory__help_button')} />
+                            </a>
+                            <div style={{flexGrow: '1'}}></div>
+                            <button type="button" className="util-button" onClick={handleClickSearch}>
+                                {he.translate('qhistory__search_button')}
+                            </button>
+                        </div>
                     </fieldset>
                 </S.FilterForm>
 
@@ -720,33 +733,94 @@ export function init(
         );
     };
 
+    // -------------------- <HelpControls /> ---------------------------------
+
+    const HelpControls:React.FC<{}> = (props) => {
+
+        const handleBackClick = () => {
+            dispatcher.dispatch(
+                Actions.ToggleHelpView
+            );
+        };
+
+        return (
+            <div className="navig">
+                <a onClick={handleBackClick}>
+                    <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/back-button.svg')}
+                        alt={he.translate('global__back')} />
+                </a>
+            </div>
+        );
+    }
+
+    // -------------------- <HelpView /> -------------------------------------
+
+
+    const HelpView:React.FC<{}> = (props) => {
+
+
+
+        return (
+            <S.HelpView>
+                <p>
+                    Při hledání dotazů se prohledávají jejich jednotlivé části:
+                    <ul>
+                        <li>poziční atributy <strong>[A]</strong></li>
+                        <li>hodnoty pozičních atributů <strong>[B]</strong></li>
+                        <li>struktury <strong>[C]</strong> (včetně tech vybraných v sekci &quot;Omezit hledání&quot;)</li>
+                        <li>strukturní atributy <strong>[D]</strong> (včetně tech vybraných v sekci &quot;Omezit hledání&quot;)</li>
+                        <li>hodnoty strukturních atributů <strong>[E]</strong>  (včetně tech vybraných v sekci &quot;Omezit hledání&quot;)</li>
+
+                    </ul>
+
+                    Help - TODO
+                </p>
+                <p>
+                    <img src={he.createStaticUrl('img/fs_help.svg')} />
+                </p>
+            </S.HelpView>
+        );
+    };
+
     // -------------------- <RecentQueriesPageList /> ------------------------
 
-    const RecentQueriesPageList:React.FC<SearchHistoryModelState> = (props) => {
+    const RecentQueriesPageList:React.FC<SearchHistoryModelState & {onCloseClick: ()=>void}> = (props) => {
         return (
-            <S.RecentQueriesPageList>
-                <FilterForm
-                        corpname={props.corpname}
-                        querySupertype={props.querySupertype}
-                        currentCorpusOnly={props.currentCorpusOnly}
-                        archivedOnly={props.archivedOnly}
-                        supportsFulltext={props.supportsFulltext}
-                        searchFormView={props.searchFormView} />
-                {props.data.length === 0 && props.isBusy ?
-                    <div className="loader"><layoutViews.AjaxLoaderImage /></div> :
-                    <DataTable data={props.data} offset={props.offset}
-                            modelIsBusy={props.isBusy}
-                            hasMoreItems={props.hasMoreItems}
-                            itemsToolbars={props.itemsToolbars}
-                            searched={props.searched} />
+            <layoutViews.ModalOverlay onCloseKey={props.onCloseClick}>
+                <layoutViews.CloseableFrame
+                        scrollable={true}
+                        onCloseClick={props.onCloseClick}
+                        label={he.translate('query__recent_queries_link')}
+                        customClass="OptionsContainer"
+                        customControls={props.isHelpVisible ? <HelpControls /> : null} >
+                {props.isHelpVisible ?
+                    <div><HelpView /></div> :
+                    <S.RecentQueriesPageList>
+                        <FilterForm
+                            corpname={props.corpname}
+                            querySupertype={props.querySupertype}
+                            currentCorpusOnly={props.currentCorpusOnly}
+                            archivedOnly={props.archivedOnly}
+                            supportsFulltext={props.supportsFulltext}
+                            searchFormView={props.searchFormView} />
+                        {props.data.length === 0 && props.isBusy ?
+                            <div className="loader"><layoutViews.AjaxLoaderImage /></div> :
+                            <DataTable data={props.data} offset={props.offset}
+                                    modelIsBusy={props.isBusy}
+                                    hasMoreItems={props.hasMoreItems}
+                                    itemsToolbars={props.itemsToolbars}
+                                    searched={props.searched} />
+                        }
+                    </S.RecentQueriesPageList>
                 }
-            </S.RecentQueriesPageList>
+                </layoutViews.CloseableFrame>
+            </layoutViews.ModalOverlay>
         );
     }
 
 
     return {
-        RecentQueriesPageList: Bound(RecentQueriesPageList, queryHistoryModel)
+        RecentQueriesPageList: BoundWithProps<{onCloseClick: ()=>void}, SearchHistoryModelState>(RecentQueriesPageList, queryHistoryModel)
     };
 
 }

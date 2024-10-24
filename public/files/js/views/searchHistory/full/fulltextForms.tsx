@@ -29,10 +29,13 @@ export interface ExtendedSearchForms {
         fsQueryCQLProps:boolean;
         fsPosattrName:string;
         fsPosattrValue:string;
+        fsPosattrValueIsSub:boolean;
         fsStructureName:string;
         fsStructattrName:string;
         fsStructattrValue:string;
+        fsStructattrValueIsSub:boolean;
         fsAnyPropertyValue:string;
+        fsAnyPropertyValueIsSub:boolean;
         fsCorpus:string;
         fsSubcorpus:string;
     }>;
@@ -40,16 +43,20 @@ export interface ExtendedSearchForms {
         fsQueryCQLProps:boolean;
         fsPosattrName:string;
         fsPosattrValue:string;
+        fsPosattrValueIsSub:boolean;
         fsStructureName:string;
         fsStructattrName:string;
         fsStructattrValue:string;
+        fsStructattrValueIsSub:boolean;
         fsAnyPropertyValue:string;
+        fsAnyPropertyValueIsSub:boolean;
         fsCorpus:string;
         fsSubcorpus:string;
     }>;
     WListForm:React.FC<{
         fsQueryCQLProps:boolean;
         fsAnyPropertyValue:string;
+        fsAnyPropertyValueIsSub:boolean;
         fsCorpus:string;
         fsSubcorpus:string;
         wlattr:string;
@@ -59,6 +66,7 @@ export interface ExtendedSearchForms {
     }>;
     KWordsForm:React.FC<{
         fsAnyPropertyValue:string;
+        fsAnyPropertyValueIsSub:boolean;
         fsQueryCQLProps:boolean;
         fsCorpus:string;
         fsSubcorpus:string;
@@ -66,6 +74,7 @@ export interface ExtendedSearchForms {
     }>;
     AnyForm:React.FC<{
         fsAnyPropertyValue:string;
+        fsAnyPropertyValueIsSub:boolean;
         fsCorpus:string;
         fsSubcorpus:string;
     }>;
@@ -86,6 +95,7 @@ export function init(
 
     const AnyPropertyValue:React.FC<{
         value:string;
+        isSubstr:boolean;
     }> = (props) => {
 
         const handleValueChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
@@ -93,6 +103,15 @@ export function init(
                 Actions.SetFsAnyPropertyValue,
                 {
                     value: evt.target.value
+                }
+            );
+        };
+
+        const handleVariantChange = (evt:React.ChangeEvent<HTMLSelectElement>) => {
+            dispatcher.dispatch(
+                Actions.SetFsAnyPropertyValueIsSub,
+                {
+                    value: evt.target.value === "1"
                 }
             );
         };
@@ -106,7 +125,13 @@ export function init(
 
         return (
             <>
-                <label className="emph">{he.translate('qhistory__query_contains')}:</label>
+                <div className="aligned">
+                    <select onChange={handleVariantChange}>
+                        <option value="0">{he.translate('qhistory__query_contains')}</option>
+                        <option value="1">{he.translate('qhistory__query_part_contains')}</option>
+                    </select>
+                <strong>:</strong>
+                </div>
                 <input style={inputStyle} type="text" value={props.value}
                     onChange={handleValueChange} />
             </>
@@ -118,6 +143,7 @@ export function init(
     const UsedPosattrs:React.FC<{
         attr:string;
         value:string;
+        isSubstr:boolean;
     }> = (props) => {
 
         const handleAttrChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
@@ -138,9 +164,28 @@ export function init(
             );
         };
 
+        const handleSubSelChange = (evt:React.ChangeEvent<HTMLSelectElement>) => {
+            dispatcher.dispatch(
+                Actions.SetFsPosattrValueIsSub,
+                {
+                    value: evt.target.value === "1"
+                }
+            );
+        };
+
         return (
             <>
-                <label className="emph">{he.translate('qhistory__used_posattr_value')}:</label>
+                <div className="aligned">
+                    <select onChange={handleSubSelChange} value={props.isSubstr ? "1" : "0"}>
+                        <option value="0">
+                            {he.translate('qhistory__used_posattr_value')}
+                        </option>
+                        <option value="1">
+                            {he.translate('qhistory__used_posattr_value_contains')}
+                        </option>
+                    </select>
+                    <strong>:</strong>
+                </div>
                 <input style={largeInputCSS} type="text" value={props.value} onChange={handleValueChange} />
                 <label>{he.translate('qhistory__used_posattrs_label')}:</label>
                 <input type="text" value={props.attr} onChange={handleAttrChange} />
@@ -176,6 +221,7 @@ export function init(
     const UsedStructattrs:React.FC<{
         attr:string;
         value:string;
+        isSubstr:boolean;
     }> = (props) => {
 
         const handleAttrChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
@@ -196,15 +242,26 @@ export function init(
             );
         };
 
+        const handleSubSelChange = (evt:React.ChangeEvent<HTMLSelectElement>) => {
+            dispatcher.dispatch(
+                Actions.SetFsStructattrValueIsSub,
+                {
+                    value: evt.target.value === "1"
+                }
+            );
+        };
+
         return (
             <>
-                <label className="emph">
-                    {he.translate('qhistory__used_structattrs_value')}:
-                    <br />
-                    ({he.translate('qhistory__used_structattrs_text_type')})
-                </label>
+                <div className="aligned">
+                    <select value={props.isSubstr ? "1" : "0"} onChange={handleSubSelChange}>
+                        <option value="0">{he.translate('qhistory__used_structattrs_value')}</option>
+                        <option value="1">{he.translate('qhistory__used_structattrs_value_contains')}</option>
+                    </select>
+                    <strong>:</strong>
+                </div>
                 <input style={largeInputCSS} type="text" value={props.value} onChange={handleValueChange} />
-                <label>{he.translate('qhistory__used_structattrs_label')}:</label>
+                <label>{he.translate('qhistory__used_structattrs_label')}</label>
                 <input type="text" value={props.attr} onChange={handleAttrChange} />
             </>
         );
@@ -286,10 +343,13 @@ export function init(
         fsQueryCQLProps:boolean;
         fsPosattrName:string;
         fsPosattrValue:string;
+        fsPosattrValueIsSub:boolean;
         fsStructureName:string;
         fsStructattrName:string;
         fsStructattrValue:string;
+        fsStructattrValueIsSub:boolean;
         fsAnyPropertyValue:string;
+        fsAnyPropertyValueIsSub:boolean;
         fsCorpus:string;
         fsSubcorpus:string;
     }> = (props) => {
@@ -300,13 +360,16 @@ export function init(
             <QueryCQLProps isAdvancedQuery={props.fsQueryCQLProps} />
             {props.fsQueryCQLProps ?
                 <>
-                    <UsedPosattrs attr={props.fsPosattrName} value={props.fsPosattrValue} />
-                    <UsedStructattrs attr={props.fsStructattrName} value={props.fsStructattrValue} />
+                    <UsedPosattrs attr={props.fsPosattrName} value={props.fsPosattrValue}
+                            isSubstr={props.fsPosattrValueIsSub} />
+                    <UsedStructattrs attr={props.fsStructattrName} value={props.fsStructattrValue}
+                            isSubstr={props.fsStructattrValueIsSub} />
                     <UsedStructures attr={props.fsStructureName} />
                     <div />
                 </> :
                 <>
-                    <AnyPropertyValue value={props.fsAnyPropertyValue} />
+                    <AnyPropertyValue value={props.fsAnyPropertyValue}
+                            isSubstr={props.fsAnyPropertyValueIsSub} />
                 </>
             }
         </>
@@ -318,10 +381,13 @@ export function init(
         fsQueryCQLProps:boolean;
         fsPosattrName:string;
         fsPosattrValue:string;
+        fsPosattrValueIsSub:boolean;
         fsStructureName:string;
         fsStructattrName:string;
         fsStructattrValue:string;
+        fsStructattrValueIsSub:boolean;
         fsAnyPropertyValue:string;
+        fsAnyPropertyValueIsSub:boolean;
         fsCorpus:string;
         fsSubcorpus:string;
     }> = (props) => {
@@ -332,12 +398,14 @@ export function init(
             <QueryCQLProps isAdvancedQuery={props.fsQueryCQLProps} />
             {props.fsQueryCQLProps ?
                 <>
-                    <UsedPosattrs attr={props.fsPosattrName} value={props.fsPosattrValue} />
-                    <UsedStructattrs attr={props.fsStructattrName} value={props.fsStructattrValue} />
+                    <UsedPosattrs attr={props.fsPosattrName} value={props.fsPosattrValue}
+                            isSubstr={props.fsPosattrValueIsSub} />
+                    <UsedStructattrs attr={props.fsStructattrName} value={props.fsStructattrValue}
+                            isSubstr={props.fsStructattrValueIsSub} />
                     <UsedStructures attr={props.fsStructureName} />
                 </> :
                 <>
-                    <AnyPropertyValue value={props.fsAnyPropertyValue} />
+                    <AnyPropertyValue value={props.fsAnyPropertyValue} isSubstr={props.fsAnyPropertyValueIsSub} />
                 </>
             }
         </>
@@ -348,6 +416,7 @@ export function init(
     const WListForm:React.FC<{
         fsQueryCQLProps:boolean;
         fsAnyPropertyValue:string;
+        fsAnyPropertyValueIsSub:boolean;
         fsCorpus:string;
         fsSubcorpus:string;
         wlattr:string;
@@ -408,7 +477,7 @@ export function init(
                     <input type="text" value={props.nfilter} onChange={handleNFilterChange} />
                 </> :
                 <>
-                    <AnyPropertyValue value={props.fsAnyPropertyValue} />
+                    <AnyPropertyValue value={props.fsAnyPropertyValue} isSubstr={props.fsAnyPropertyValueIsSub} />
                 </>
             }
         </>
@@ -418,6 +487,7 @@ export function init(
 
     const KWordsForm:React.FC<{
         fsAnyPropertyValue:string;
+        fsAnyPropertyValueIsSub:boolean;
         fsQueryCQLProps:boolean;
         fsCorpus:string;
         fsSubcorpus:string;
@@ -443,7 +513,8 @@ export function init(
                     <input type="text" value={props.fsPosattrName} onChange={handleAttrChange} />
                 </> :
                 <>
-                    <AnyPropertyValue value={props.fsAnyPropertyValue} />
+                    <AnyPropertyValue value={props.fsAnyPropertyValue}
+                            isSubstr={props.fsAnyPropertyValueIsSub} />
                 </>
             }
         </>
@@ -453,6 +524,7 @@ export function init(
 
     const AnyForm:React.FC<{
         fsAnyPropertyValue:string;
+        fsAnyPropertyValueIsSub:boolean;
         fsCorpus:string;
         fsSubcorpus:string;
     }> = (props) => {
@@ -461,7 +533,7 @@ export function init(
             <>
                 <UsedCorpus value={props.fsCorpus} />
                 <UsedSubcorpus value={props.fsSubcorpus} />
-                <AnyPropertyValue value={props.fsAnyPropertyValue} />
+                <AnyPropertyValue value={props.fsAnyPropertyValue} isSubstr={props.fsAnyPropertyValueIsSub} />
             </>
         )
     }

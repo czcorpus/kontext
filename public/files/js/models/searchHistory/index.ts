@@ -90,11 +90,14 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                 searchFormView: 'quick',
                 fsPosattrName: 'word',
                 fsPosattrValue: '',
+                fsPosattrValueIsSub: false,
                 fsStructureName: '',
                 fsStructattrName: '',
                 fsStructattrValue: '',
+                fsStructattrValueIsSub: false,
                 fsAnyPropertyValue: '',
-                fsQueryCQLProps: true,
+                fsAnyPropertyValueIsSub: false,
+                fsQueryCQLProps: false,
                 fsCorpus: pageModel.getCorpusIdent().id,
                 fsSubcorpus: '',
                 fsArchAs: '',
@@ -102,6 +105,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                 fsWlPat: '',
                 fsWlNFilter: '',
                 fsWlPFilter: '',
+                isHelpVisible: false
             }
         );
         this.pageModel = pageModel;
@@ -338,6 +342,17 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         );
 
         this.addActionHandler(
+            Actions.SetFsPosattrValueIsSub,
+            action => {
+                this.changeState(
+                    state => {
+                        state.fsPosattrValueIsSub = action.payload.value;
+                    }
+                );
+            }
+        )
+
+        this.addActionHandler(
             Actions.SetFsStructureName,
             action => {
                 this.changeState(
@@ -371,11 +386,33 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         );
 
         this.addActionHandler(
+            Actions.SetFsStructattrValueIsSub,
+            action => {
+                this.changeState(
+                    state => {
+                        state.fsStructattrValueIsSub = action.payload.value;
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
             Actions.SetFsAnyPropertyValue,
             action => {
                 this.changeState(
                     state => {
                         state.fsAnyPropertyValue = action.payload.value
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SetFsAnyPropertyValueIsSub,
+            action => {
+                this.changeState(
+                    state => {
+                        state.fsAnyPropertyValueIsSub = action.payload.value
                     }
                 );
             }
@@ -466,7 +503,29 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                 });
                 this.performLoadAction();
             }
-        )
+        );
+
+        this.addActionHandler(
+            Actions.ToggleHelpView,
+            action => {
+                this.changeState(
+                    state => {
+                        state.isHelpVisible = !state.isHelpVisible;
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            MainMenuActions.ClearActiveItem,
+            action => {
+                this.changeState(
+                    state => {
+                        state.isHelpVisible = false;
+                    }
+                );
+            }
+        );
     }
 
     private isToggleWidgetAction(action:Action): action is typeof Actions.ToggleQueryHistoryWidget {
@@ -523,8 +582,10 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                     if (this.state.fsQueryCQLProps) {
                         args.fsPosattrName = this.state.fsPosattrName;
                         args.fsPosattrValue = this.state.fsPosattrValue;
+                        args.fsPosattrValueIsSub = this.state.fsPosattrValueIsSub;
                         args.fsStructattrName = this.state.fsStructattrName;
                         args.fsStructattrValue = this.state.fsStructattrValue;
+                        args.fsStructattrValueIsSub = this.state.fsStructattrValueIsSub;
                         args.fsStructureName = this.state.fsStructureName;
                         args.fsCorpus = this.state.fsCorpus;
                         args.fsSubcorpus = this.state.fsSubcorpus;
@@ -535,6 +596,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                         args.fsSubcorpus = this.state.fsSubcorpus;
                         args.fsArchivedAs = this.state.fsArchAs;
                         args.fsAnyPropertyValue = this.state.fsAnyPropertyValue;
+                        args.fsAnyPropertyValueIsSub = this.state.fsAnyPropertyValueIsSub;
                     }
                     break;
                 case 'wlist':
@@ -552,6 +614,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                         args.fsSubcorpus = this.state.fsSubcorpus;
                         args.fsArchivedAs = this.state.fsArchAs;
                         args.fsAnyPropertyValue = this.state.fsAnyPropertyValue;
+                        args.fsAnyPropertyValueIsSub = this.state.fsAnyPropertyValueIsSub;
                     }
                     break;
                 case 'kwords':
@@ -566,6 +629,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                         args.fsSubcorpus = this.state.fsSubcorpus;
                         args.fsArchivedAs = this.state.fsArchAs;
                         args.fsAnyPropertyValue = this.state.fsAnyPropertyValue;
+                        args.fsAnyPropertyValueIsSub = this.state.fsAnyPropertyValueIsSub;
                     }
                     break;
                 default:
@@ -573,6 +637,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                     args.fsSubcorpus = this.state.fsSubcorpus;
                     args.fsArchivedAs = this.state.fsArchAs;
                     args.fsAnyPropertyValue = this.state.fsAnyPropertyValue;
+                    args.fsAnyPropertyValueIsSub = this.state.fsAnyPropertyValueIsSub;
                     break;
             }
         }

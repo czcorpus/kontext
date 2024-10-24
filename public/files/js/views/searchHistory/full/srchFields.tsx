@@ -171,27 +171,34 @@ export function init(
                     return <extendedSearchForms.ConcForm
                         fsQueryCQLProps={props.fsQueryCQLProps}
                         fsAnyPropertyValue={props.fsAnyPropertyValue}
+                        fsAnyPropertyValueIsSub={props.fsAnyPropertyValueIsSub}
                         fsCorpus={props.fsCorpus}
                         fsSubcorpus={props.fsSubcorpus}
                         fsPosattrName={props.fsPosattrName}
                         fsPosattrValue={props.fsPosattrValue}
+                        fsPosattrValueIsSub={props.fsAnyPropertyValueIsSub}
                         fsStructureName={props.fsStructureName}
                         fsStructattrName={props.fsStructattrName}
-                        fsStructattrValue={props.fsStructattrValue} />
+                        fsStructattrValue={props.fsStructattrValue}
+                        fsStructattrValueIsSub={props.fsStructattrValueIsSub} />
                 case 'pquery':
                     return <extendedSearchForms.PQueryForm
                         fsQueryCQLProps={props.fsQueryCQLProps}
                         fsAnyPropertyValue={props.fsAnyPropertyValue}
+                        fsAnyPropertyValueIsSub={props.fsAnyPropertyValueIsSub}
                         fsCorpus={props.fsCorpus}
                         fsSubcorpus={props.fsSubcorpus}
                         fsPosattrName={props.fsPosattrName}
                         fsPosattrValue={props.fsPosattrValue}
+                        fsPosattrValueIsSub={props.fsAnyPropertyValueIsSub}
                         fsStructureName={props.fsStructureName}
                         fsStructattrName={props.fsStructattrName}
-                        fsStructattrValue={props.fsStructattrValue} />
+                        fsStructattrValue={props.fsStructattrValue}
+                        fsStructattrValueIsSub={props.fsStructattrValueIsSub} />
                 case 'wlist':
                     return <extendedSearchForms.WListForm
                         fsAnyPropertyValue={props.fsAnyPropertyValue}
+                        fsAnyPropertyValueIsSub={props.fsAnyPropertyValueIsSub}
                         fsQueryCQLProps={props.fsQueryCQLProps}
                         fsCorpus={props.fsCorpus}
                         fsSubcorpus={props.fsSubcorpus}
@@ -202,6 +209,7 @@ export function init(
                 case 'kwords':
                     return <extendedSearchForms.KWordsForm
                         fsAnyPropertyValue={props.fsAnyPropertyValue}
+                        fsAnyPropertyValueIsSub={props.fsAnyPropertyValueIsSub}
                         fsQueryCQLProps={props.fsQueryCQLProps}
                         fsCorpus={props.fsCorpus}
                         fsSubcorpus={props.fsSubcorpus}
@@ -210,7 +218,8 @@ export function init(
                     return <extendedSearchForms.AnyForm
                             fsCorpus={props.fsCorpus}
                             fsSubcorpus={props.fsSubcorpus}
-                            fsAnyPropertyValue={props.fsAnyPropertyValue} />
+                            fsAnyPropertyValue={props.fsAnyPropertyValue}
+                            fsAnyPropertyValueIsSub={props.fsAnyPropertyValueIsSub} />
             }
         }
 

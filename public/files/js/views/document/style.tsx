@@ -106,6 +106,25 @@ export const CloseableFrame = styled.section<{fixedTop?: string}>`
         }
     }
 
+    .custom-controls {
+        padding-top: 0.2em;
+        padding-bottom: 0.2em;
+
+        .buttons {
+            display: flex;
+            align-items: center;
+        }
+
+        hr {
+            margin: 0;
+            padding: 0;
+        }
+
+        a img {
+            width: 2em;
+        }
+    }
+
     .contents {
         flex-grow: 1;
 

@@ -142,9 +142,11 @@ export interface GetHistoryArgs {
     extended_search:boolean;
     fsPosattrName?:string;
     fsPosattrValue?:string;
+    fsPosattrValueIsSub?:boolean;
     fsStructureName?:string;
     fsStructattrName?:string;
     fsStructattrValue?:string;
+    fsStructattrValueIsSub?:boolean;
     fsCorpus?:string;
     fsSubcorpus?:string;
     fsArchivedAs?:string;
@@ -153,6 +155,7 @@ export interface GetHistoryArgs {
     fsWlPfilter?:string;
     fsWlNfilter?:string;
     fsAnyPropertyValue?:string;
+    fsAnyPropertyValueIsSub?:boolean;
 }
 
 export interface GetHistoryResponse extends Kontext.AjaxResponse {
@@ -192,10 +195,13 @@ export interface SearchHistoryModelState {
     fsQueryCQLProps:boolean;
     fsPosattrName:string;
     fsPosattrValue:string;
+    fsPosattrValueIsSub:boolean;
     fsStructureName:string;
     fsStructattrName:string;
     fsStructattrValue:string;
+    fsStructattrValueIsSub:boolean;
     fsAnyPropertyValue:string;
+    fsAnyPropertyValueIsSub:boolean;
     fsCorpus:string;
     fsSubcorpus:string;
     fsArchAs:string;
@@ -203,5 +209,6 @@ export interface SearchHistoryModelState {
     fsWlPat:string;
     fsWlPFilter:string;
     fsWlNFilter:string;
+    isHelpVisible:boolean;
 }
 

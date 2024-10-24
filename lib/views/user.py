@@ -222,19 +222,22 @@ async def ajax_query_history(amodel: UserActionModel, req: KRequest, resp: KResp
 
     extended_search = bool(int(req.args.get('extended_search', '0')))
     full_search_args = FullSearchArgs(
-        req.args.get('fsArchivedAs', None),
-        req.args.get('fsAnyPropertyValue', None),
-        req.args.get('fsPosattrName', None),
-        req.args.get('fsPosattrValue', None),
-        req.args.get('fsStructureName', None),
-        req.args.get('fsStructattrName', None),
-        req.args.get('fsStructattrValue', None),
-        req.args.get('fsCorpus', None),
-        req.args.get('fsSubcorpus', None),
-        req.args.get('fsWlpat', None),
-        req.args.get('fsWattr', None),
-        req.args.get('fsWlPfilter', None),
-        req.args.get('fsWlNfilter', None),
+        name=req.args.get('fsArchivedAs', None),
+        any_property_value=req.args.get('fsAnyPropertyValue', None),
+        any_property_value_is_sub=req.args.get('fsAnyPropertyValueIsSub', '0') == '1',
+        posattr_name=req.args.get('fsPosattrName', None),
+        posattr_value=req.args.get('fsPosattrValue', None),
+        posattr_value_is_sub=req.args.get('fsPosattrValueIsSub', '0' == '1'),
+        structure_name=req.args.get('fsStructureName', None),
+        structattr_name=req.args.get('fsStructattrName', None),
+        structattr_value=req.args.get('fsStructattrValue', None),
+        structattr_value_is_sub=req.args.get('fsStructattrValueIsSub', '0') == '1',
+        corpus=req.args.get('fsCorpus', None),
+        subcorpus=req.args.get('fsSubcorpus', None),
+        wl_pat=req.args.get('fsWlpat', None),
+        wl_attr=req.args.get('fsWattr', None),
+        wl_pfilter=req.args.get('fsWlPfilter', None),
+        wl_nfilter=req.args.get('fsWlNfilter', None),
     )
 
     rows = await _load_query_history(

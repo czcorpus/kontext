@@ -341,13 +341,32 @@ export const FilterForm = styled.form`
         align-items: center;
     }
 
-    .util-button {
-        margin-top: 1em;
-    }
-
     label.emph {
         font-weight: bold;
         font-size: 1.1em;
+    }
+
+    div.aligned {
+        display: flex;
+        align-items: center;
+
+        strong {
+            padding-left: 0.2em;
+            padding-right: 1em;
+            font-size: 1.2em;
+        }
+    }
+
+    .button-area {
+        display: flex;
+        align-items: center;
+        margin-top: 1.4em;
+
+        .help img {
+            display: block;
+            margin: 0;
+            padding: 0;
+        }
     }
 `;
 
@@ -399,4 +418,12 @@ export const SearchKindSelector = styled.select`
         margin: 0;
         padding: 0;
     }
+`;
+
+// ---------------------- <HelpView /> --------------------------------------
+
+export const HelpView = styled.div`
+
+
+
 `;
