@@ -157,7 +157,7 @@ class UcnkQueryHistory(MySqlQueryHistory):
 
         if q_supertype:
             parts.append(make_bleve_field('query_supertype', q_supertype))
-        
+
         if full_search_args.name:
             parts.append(make_bleve_field('name', full_search_args.name))
 
@@ -168,18 +168,29 @@ class UcnkQueryHistory(MySqlQueryHistory):
             parts.append(make_bleve_field('subcorpus', full_search_args.subcorpus))
 
         if full_search_args.any_property_value:
-            parts.append(make_bleve_field('_all', full_search_args.any_property_value))
-
+            parts.append(make_bleve_field(
+                '_all',
+                full_search_args.any_property_value,
+                use_wildcard=full_search_args.any_property_value_is_sub))
         else:
             if q_supertype in ('conc', 'pquery'):
                 if full_search_args.posattr_name:
                     parts.append(make_bleve_field('pos_attr_names', full_search_args.posattr_name))
                 if full_search_args.posattr_value:
-                    parts.append(make_bleve_field('pos_attr_values', full_search_args.posattr_value))
+                    parts.append(
+                        make_bleve_field(
+                            'pos_attr_values',
+                            full_search_args.posattr_value,
+                            use_wildcard=full_search_args.posattr_value_is_sub))
                 if full_search_args.structattr_name:
-                    parts.append(make_bleve_field('struct_attr_names', full_search_args.structattr_name))
+                    parts.append(
+                        make_bleve_field('struct_attr_names', full_search_args.structattr_name))
                 if full_search_args.structattr_value:
-                    parts.append(make_bleve_field('struct_attr_values', full_search_args.structattr_value))
+                    parts.append(
+                        make_bleve_field(
+                            'struct_attr_values',
+                            full_search_args.structattr_value,
+                            use_wildcard=full_search_args.structattr_value_is_sub))
 
             elif q_supertype == 'wlist':
                 if full_search_args.wl_pat:

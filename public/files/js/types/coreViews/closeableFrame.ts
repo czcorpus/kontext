@@ -26,6 +26,7 @@ export interface Props {
     onReady?:(elm:HTMLElement)=>void;
     customClass?:string;
     scrollable?:boolean;
+    customControls?:React.ReactNode;
     autoWidth?:AutoWidth;
     fixedTop?:string;
     icon?:React.ReactNode;

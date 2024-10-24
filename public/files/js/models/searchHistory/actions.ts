@@ -141,6 +141,12 @@ export class Actions {
         name: 'QUERY_HISTORY_SET_FS_POSATTR_VALUE'
     };
 
+    static SetFsPosattrValueIsSub:Action<{
+        value:boolean;
+    }> = {
+        name: 'QUERY_HISTORY_SET_FS_POSATTR_VALUE_IS_SUB'
+    };
+
     static SetFsStructureName:Action<{
         value:string;
     }> = {
@@ -159,10 +165,22 @@ export class Actions {
         name: 'QUERY_HISTORY_SET_FS_STRUCTATTR_VALUE'
     };
 
+    static SetFsStructattrValueIsSub:Action<{
+        value:boolean;
+    }> = {
+        name: 'QUERY_HISTORY_SET_FS_STRUCTATTR_VALUE_IS_SUB'
+    };
+
     static SetFsAnyPropertyValue:Action<{
         value:string;
     }> = {
         name: 'QUERY_HISTORY_SET_FS_ANY_PROPERTY_VALUE'
+    };
+
+    static SetFsAnyPropertyValueIsSub:Action<{
+        value:boolean;
+    }> = {
+        name: 'QUERY_HISTORY_SET_FS_ANY_PROPERTY_VALUE_IS_SUB'
     };
 
     static SetFsAdvancedQuery:Action<{
@@ -210,6 +228,11 @@ export class Actions {
     static SubmitExtendedSearch:Action<{
     }> = {
         name: 'QUERY_HISTORY_SUBMIT_EXTENDED_SEARCH'
+    };
+
+    static ToggleHelpView:Action<{
+    }> = {
+        name: 'QUERY_HISTORY_TOGGLE_HELP_VIEW'
     };
 
 }

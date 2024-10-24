@@ -18,11 +18,14 @@ from dataclasses import dataclass
 class FullSearchArgs:
     name: str
     any_property_value: str
+    any_property_value_is_sub: bool
     posattr_name: str
     posattr_value: str
+    posattr_value_is_sub: bool
     structure_name: str
     structattr_name: str
     structattr_value: str
+    structattr_value_is_sub: bool
     corpus: str
     subcorpus: str
     wl_pat: str

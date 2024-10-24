@@ -44,64 +44,33 @@ export function init({dispatcher, helpers, searchHistoryModel, mainMenuModel}:Ma
     const layoutViews = helpers.getLayoutViews();
     const widgetView = fullViewInit(dispatcher, helpers, searchHistoryModel);
 
-    class HistoryContainer extends React.PureComponent<MainMenuModelState> {
+    const HistoryContainer:React.FC<MainMenuModelState> = (props) => {
 
-        _isActiveItem(itemName) {
-            return this.props.activeItem && this.props.activeItem.actionName === itemName;
-        }
+        const _isActive = () => {
+            return props.activeItem &&
+                props.activeItem.actionName === MainMenuActions.ShowQueryHistory.name;
+        };
 
-        _isActive() {
-            return this._isActiveItem(MainMenuActions.ShowQueryHistory.name);
-        }
-
-        _handleCloseClick() {
+        const _handleCloseClick = () => {
             dispatcher.dispatch<typeof MainMenuActions.ClearActiveItem>({
                 name: MainMenuActions.ClearActiveItem.name
             });
-        }
+        };
 
-        _renderForm() {
-            if (this._isActive()) {
-                return <widgetView.RecentQueriesPageList />;
+        if (_isActive()) {
+            return <widgetView.RecentQueriesPageList onCloseClick={_handleCloseClick} />
 
-            } else {
-                return <div></div>;
-            }
-        }
+        } else if (props.isBusy) {
+            return <layoutViews.ModalOverlay onCloseKey={_handleCloseClick}>
+                    <layoutViews.CloseableFrame label={helpers.translate('global__loading')}
+                                onCloseClick={()=>undefined}
+                                customClass="OptionsContainer busy">
+                        <layoutViews.AjaxLoaderImage htmlClass="ajax-loader" />
+                    </layoutViews.CloseableFrame>
+                </layoutViews.ModalOverlay>;
 
-        _renderTitle() {
-            if (this._isActive()) {
-                return helpers.translate('query__recent_queries_link')
-
-            } else {
-                return '--';
-            }
-        }
-
-        render() {
-            if (this._isActive()) {
-                return <layoutViews.ModalOverlay onCloseKey={this._handleCloseClick}>
-                        <layoutViews.CloseableFrame
-                                scrollable={true}
-                                onCloseClick={this._handleCloseClick}
-                                label={this._renderTitle()}
-                                customClass="OptionsContainer">
-                            {this._renderForm()}
-                        </layoutViews.CloseableFrame>
-                    </layoutViews.ModalOverlay>;
-
-            } else if (this.props.isBusy) {
-                return <layoutViews.ModalOverlay onCloseKey={this._handleCloseClick}>
-                        <layoutViews.CloseableFrame label={helpers.translate('global__loading')}
-                                    onCloseClick={()=>undefined}
-                                    customClass="OptionsContainer busy">
-                            <layoutViews.AjaxLoaderImage htmlClass="ajax-loader" />
-                        </layoutViews.CloseableFrame>
-                    </layoutViews.ModalOverlay>;
-
-            } else {
-                return null;
-            }
+        } else {
+            return null;
         }
     }
 

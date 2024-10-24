@@ -370,6 +370,15 @@ export function init(
                                     alt={he.translate('global__close_the_window')} />
                         </div>
                     </div>
+                    {this.props.customControls ?
+                        <div className="custom-controls">
+                            <div className="buttons">
+                                {this.props.customControls}
+                            </div>
+                            <hr />
+                        </div> :
+                        null
+                    }
                     <div className="contents" style={this.props.scrollable ? {overflow: 'auto'} : {}}>
                         <div className="padded-contents">
                             {this.props.children}
