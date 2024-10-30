@@ -52,14 +52,16 @@ describe('Query History', () => {
     });
 
     afterEach(() => {
+        cy.closeHistory();
         cy.closeMessages();
         cy.actionLogout();
     });
 
     it('tests opening and closing history', () => {
         cy.get('#query-history-mount').should('not.be.empty');
-        cy.get('#query-history-mount img.close-icon').click();
+        cy.closeHistory();
         cy.get('#query-history-mount').should('be.empty');
+        cy.openHistory();
     });
 
     it('tests supertype filter', () => {
@@ -102,9 +104,6 @@ describe('Query History', () => {
         history.should('not.contain.text', 'paradigmatic query');
         history.should('not.contain.text', 'word list');
         history.should('contain.text', 'keywords');
-
-        // need to close history widget, so logout can be clicked
-        cy.get('#query-history-mount img.close-icon').click();
     });
 
     it('tests archive filter', () => {
@@ -127,14 +126,11 @@ describe('Query History', () => {
         cy.get('#query-history-mount .history-entries').children().first().find('.tools img').click();
         cy.get('#query-history-mount .history-entries').children().first().find('.tools button').eq(1).click();
         cy.get('#query-history-mount .history-entries').should('be.empty');
-
-        // need to close history widget, so logout can be clicked
-        cy.get('#query-history-mount img.close-icon').click();
     });
 
     it('tests remove history item', () => {
         // close history
-        cy.get('#query-history-mount img.close-icon').click();
+        cy.closeHistory();
 
         // create new concordance query
         cy.get('.simple-input').type('general archive test query');
@@ -150,9 +146,23 @@ describe('Query History', () => {
         cy.get('#query-history-mount .history-entries').children().first().find('.tools img').click();
         cy.get('#query-history-mount .history-entries').children().first().find('.tools button').eq(0).click();
         cy.get('#query-history-mount .history-entries').children().first().should('not.contain', 'general archive test query');
+    });
 
-        // need to close history widget, so logout can be clicked
-        cy.get('#query-history-mount img.close-icon').click();
+    it('tests exact match and substring search', () => {
+        cy.get('#query-history-mount').contains('button', 'Extended search').click();
+        
+        cy.get('#query-history-mount select').last().select('Any part of a query (exact match)');
+        cy.get('#query-history-mount input').last().clear().type('London');
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        cy.get('#query-history-mount').should('not.contain.text', 'No data found.');
+
+        cy.get('#query-history-mount input').last().clear().type('lond'); // TODO substring is case does not work
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        cy.get('#query-history-mount').should('contain.text', 'No data found.');
+
+        cy.get('#query-history-mount select').last().select('Any part of a query (substring)');
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        cy.get('#query-history-mount').should('not.contain.text', 'No data found.');
     });
 
 });
