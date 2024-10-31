@@ -59,6 +59,10 @@ describe('Query History', () => {
 
     it('tests opening and closing history', () => {
         cy.get('#query-history-mount').should('not.be.empty');
+        cy.get('#query-history-mount').contains('button', 'Extended search').click();
+        cy.get('#query-history-mount').should('be.empty');
+        cy.get('#query-history-mount').contains('button', 'Quick search').click();
+        cy.get('#query-history-mount').should('not.be.empty');
         cy.closeHistory();
         cy.get('#query-history-mount').should('be.empty');
         cy.openHistory();
