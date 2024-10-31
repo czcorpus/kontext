@@ -148,6 +148,55 @@ describe('Query History', () => {
         cy.get('#query-history-mount .history-entries').children().first().should('not.contain', 'general archive test query');
     });
 
+    it('tests query supertype search', () => {
+        cy.get('#query-history-mount').contains('button', 'Extended search').click();
+        
+        cy.get('#query-history-mount select').first().select('any');
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        let history = cy.get('#query-history-mount .history-entries .supertype');
+        history.should('not.be.empty');
+        history.should('contain.text', 'concordance');
+        history.should('contain.text', 'word list');
+        history.should('contain.text', 'paradigmatic query');
+        history.should('contain.text', 'keywords');
+
+        cy.get('#query-history-mount select').first().select('concordance');
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        history = cy.get('#query-history-mount .history-entries .supertype');
+        history.should('not.be.empty');
+        history.should('contain.text', 'concordance');
+        history.should('not.contain.text', 'word list');
+        history.should('not.contain.text', 'paradigmatic query');
+        history.should('not.contain.text', 'keywords');
+
+        cy.get('#query-history-mount select').first().select('word list');
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        history = cy.get('#query-history-mount .history-entries .supertype');
+        history.should('not.be.empty');
+        history.should('not.contain.text', 'concordance');
+        history.should('contain.text', 'word list');
+        history.should('not.contain.text', 'paradigmatic query');
+        history.should('not.contain.text', 'keywords');
+
+        cy.get('#query-history-mount select').first().select('paradigmatic query');
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        history = cy.get('#query-history-mount .history-entries .supertype');
+        history.should('not.be.empty');
+        history.should('not.contain.text', 'concordance');
+        history.should('not.contain.text', 'word list');
+        history.should('contain.text', 'paradigmatic query');
+        history.should('not.contain.text', 'keywords');
+
+        cy.get('#query-history-mount select').first().select('keywords');
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        history = cy.get('#query-history-mount .history-entries .supertype');
+        history.should('not.be.empty');
+        history.should('not.contain.text', 'concordance');
+        history.should('not.contain.text', 'word list');
+        history.should('not.contain.text', 'paradigmatic query');
+        history.should('contain.text', 'keywords');
+    });
+
     it('tests exact match and substring search', () => {
         cy.get('#query-history-mount').contains('button', 'Extended search').click();
         
