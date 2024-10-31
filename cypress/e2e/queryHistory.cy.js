@@ -52,8 +52,8 @@ describe('Query History', () => {
     });
 
     afterEach(() => {
-        cy.closeHistory();
         cy.closeMessages();
+        cy.closeHistory();
         cy.actionLogout();
     });
 
@@ -64,7 +64,7 @@ describe('Query History', () => {
         cy.openHistory();
     });
 
-    it('tests supertype filter', () => {
+    it('tests supertype filter in quick search', () => {
         // test any supertype
         let history = cy.get('#query-history-mount .history-entries .supertype');
         history.should('not.be.empty');
@@ -106,8 +106,62 @@ describe('Query History', () => {
         history.should('contain.text', 'keywords');
     });
 
-    it('tests archive filter', () => {
+    it('tests supertype filter in extended search', () => {
+        cy.get('#query-history-mount').contains('button', 'Extended search').click();
+        
         // test any supertype
+        cy.get('#query-history-mount select').first().select('any');
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        let history = cy.get('#query-history-mount .history-entries .supertype');
+        history.should('not.be.empty');
+        history.should('contain.text', 'concordance');
+        history.should('contain.text', 'word list');
+        history.should('contain.text', 'paradigmatic query');
+        history.should('contain.text', 'keywords');
+
+        // test concordance supertype
+        cy.get('#query-history-mount select').first().select('concordance');
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        history = cy.get('#query-history-mount .history-entries .supertype');
+        history.should('not.be.empty');
+        history.should('contain.text', 'concordance');
+        history.should('not.contain.text', 'word list');
+        history.should('not.contain.text', 'paradigmatic query');
+        history.should('not.contain.text', 'keywords');
+
+        // test word list supertype
+        cy.get('#query-history-mount select').first().select('word list');
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        history = cy.get('#query-history-mount .history-entries .supertype');
+        history.should('not.be.empty');
+        history.should('not.contain.text', 'concordance');
+        history.should('contain.text', 'word list');
+        history.should('not.contain.text', 'paradigmatic query');
+        history.should('not.contain.text', 'keywords');
+
+        // test paradigmatic query supertype
+        cy.get('#query-history-mount select').first().select('paradigmatic query');
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        history = cy.get('#query-history-mount .history-entries .supertype');
+        history.should('not.be.empty');
+        history.should('not.contain.text', 'concordance');
+        history.should('not.contain.text', 'word list');
+        history.should('contain.text', 'paradigmatic query');
+        history.should('not.contain.text', 'keywords');
+
+        // test keywords supertype
+        cy.get('#query-history-mount select').first().select('keywords');
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        history = cy.get('#query-history-mount .history-entries .supertype');
+        history.should('not.be.empty');
+        history.should('not.contain.text', 'concordance');
+        history.should('not.contain.text', 'word list');
+        history.should('not.contain.text', 'paradigmatic query');
+        history.should('contain.text', 'keywords');
+    });
+
+    it('tests archive filter in quick search', () => {
+        // check nothing is archived
         cy.get('#query-history-mount fieldset label').eq(2).click();
         cy.get('#query-history-mount .history-entries').should('be.empty');
         cy.get('#query-history-mount fieldset label').eq(2).click();
@@ -128,76 +182,94 @@ describe('Query History', () => {
         cy.get('#query-history-mount .history-entries').should('be.empty');
     });
 
-    it('tests remove history item', () => {
+    it('tests archive filter in extended search', () => {
+        cy.get('#query-history-mount').contains('button', 'Extended search').click();
+        // check nothing is archived
+        cy.get('#query-history-mount input').eq(0).type('first-archived-item');
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        cy.get('#query-history-mount .history-entries').should('be.empty');
+        cy.get('#query-history-mount input').eq(0).clear();
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+
+        // open tools and archive
+        cy.get('#query-history-mount .history-entries').children().first().find('.tools img').click();
+        cy.get('#query-history-mount .history-entries').children().first().find('.tools button').eq(1).click();
+        cy.get('#query-history-mount .history-entries').children().first().find('.tools input[type="text"]').type('first-archived-item');
+        cy.get('#query-history-mount .history-entries').children().first().find('.tools button').eq(1).click();
+
+        // check there are archived items
+        cy.get('#query-history-mount input').eq(0).type('first-archived-item');
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        cy.get('#query-history-mount fieldset label').eq(2).click();
+        cy.get('#query-history-mount .history-entries').should('not.be.empty');
+
+        // open tools and dearchive
+        cy.get('#query-history-mount .history-entries').children().first().find('.tools img').click();
+        cy.get('#query-history-mount .history-entries').children().first().find('.tools button').eq(1).click();
+        cy.get('#query-history-mount .history-entries').should('be.empty');
+    });
+
+    it('tests remove history item in quick and extended search', () => {
         // close history
         cy.closeHistory();
 
         // create new concordance query
-        cy.get('.simple-input').type('general archive test query');
+        cy.get('.simple-input').type('history test query 1');
         cy.get('.query .default-button').click();
-        cy.get('.query .default-button', {timeout: 5000}).should('be.visible');
+        cy.get('.query .default-button').should('be.visible');
+
+        cy.hoverNthMenuItem(1);
+        cy.clickMenuItem(1, 1);
+        cy.url().should('contain', '/query?');
+
+        cy.get('.simple-input').type('history test query 2');
+        cy.get('.query .default-button').click();
+        cy.get('.query .default-button').should('be.visible');
+
+        cy.wait(5000); // wait for saving query to index
 
         // open history
         cy.openHistory();
+        cy.get('#query-history-mount .history-entries').should('be.visible');
 
-        // check item is in the list, remove it and check it is gone
-        cy.get('#query-history-mount .history-entries', {timeout: 5000}).should('be.visible');
-        cy.get('#query-history-mount .history-entries').children().first().should('contain', 'general archive test query');
-        cy.get('#query-history-mount .history-entries').children().first().find('.tools img').click();
-        cy.get('#query-history-mount .history-entries').children().first().find('.tools button').eq(0).click();
-        cy.get('#query-history-mount .history-entries').children().first().should('not.contain', 'general archive test query');
-    });
-
-    it('tests query supertype search', () => {
+        // check quick search
+        cy.get('#query-history-mount .history-entries').children().eq(1).should('contain.text', 'history test query 1');
+        cy.get('#query-history-mount .history-entries').children().eq(0).should('contain.text', 'history test query 2');
+        // check extended search
         cy.get('#query-history-mount').contains('button', 'Extended search').click();
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        cy.get('#query-history-mount .history-entries').children().eq(1).should('contain.text', 'history test query 1');
+        cy.get('#query-history-mount .history-entries').children().eq(0).should('contain.text', 'history test query 2');
+
+        // delete from quick search
+        cy.get('#query-history-mount').contains('button', 'Quick search').click();        
+        cy.get('#query-history-mount .history-entries').children().eq(1).find('.tools img').click();
+        cy.get('#query-history-mount .history-entries').find('.tools button').eq(0).click();
+        cy.get('#query-history-mount .history-entries').should('not.contain.text', 'history test query 1');
+        cy.get('#query-history-mount .history-entries').should('contain.text', 'history test query 2');
+
+        // delete from extended search
+        cy.get('#query-history-mount').contains('button', 'Extended search').click();
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        cy.get('#query-history-mount .history-entries').should('not.contain.text', 'history test query 1');
+        cy.get('#query-history-mount .history-entries').should('contain.text', 'history test query 2');
+        cy.get('#query-history-mount .history-entries').children().eq(0).find('.tools img').click();
+        cy.get('#query-history-mount .history-entries').find('.tools button').eq(0).click();
+        cy.get('#query-history-mount .history-entries').should('not.contain.text', 'history test query 1');
+        cy.get('#query-history-mount .history-entries').should('not.contain.text', 'history test query 2');
+
+        // check extended search
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        cy.get('#query-history-mount .history-entries').should('not.contain.text', 'history test query 1');
+        cy.get('#query-history-mount .history-entries').should('not.contain.text', 'history test query 2');
         
-        cy.get('#query-history-mount select').first().select('any');
-        cy.get('#query-history-mount').contains('button', 'Search').click();
-        let history = cy.get('#query-history-mount .history-entries .supertype');
-        history.should('not.be.empty');
-        history.should('contain.text', 'concordance');
-        history.should('contain.text', 'word list');
-        history.should('contain.text', 'paradigmatic query');
-        history.should('contain.text', 'keywords');
-
-        cy.get('#query-history-mount select').first().select('concordance');
-        cy.get('#query-history-mount').contains('button', 'Search').click();
-        history = cy.get('#query-history-mount .history-entries .supertype');
-        history.should('not.be.empty');
-        history.should('contain.text', 'concordance');
-        history.should('not.contain.text', 'word list');
-        history.should('not.contain.text', 'paradigmatic query');
-        history.should('not.contain.text', 'keywords');
-
-        cy.get('#query-history-mount select').first().select('word list');
-        cy.get('#query-history-mount').contains('button', 'Search').click();
-        history = cy.get('#query-history-mount .history-entries .supertype');
-        history.should('not.be.empty');
-        history.should('not.contain.text', 'concordance');
-        history.should('contain.text', 'word list');
-        history.should('not.contain.text', 'paradigmatic query');
-        history.should('not.contain.text', 'keywords');
-
-        cy.get('#query-history-mount select').first().select('paradigmatic query');
-        cy.get('#query-history-mount').contains('button', 'Search').click();
-        history = cy.get('#query-history-mount .history-entries .supertype');
-        history.should('not.be.empty');
-        history.should('not.contain.text', 'concordance');
-        history.should('not.contain.text', 'word list');
-        history.should('contain.text', 'paradigmatic query');
-        history.should('not.contain.text', 'keywords');
-
-        cy.get('#query-history-mount select').first().select('keywords');
-        cy.get('#query-history-mount').contains('button', 'Search').click();
-        history = cy.get('#query-history-mount .history-entries .supertype');
-        history.should('not.be.empty');
-        history.should('not.contain.text', 'concordance');
-        history.should('not.contain.text', 'word list');
-        history.should('not.contain.text', 'paradigmatic query');
-        history.should('contain.text', 'keywords');
+        // check quick search
+        cy.get('#query-history-mount').contains('button', 'Quick search').click();
+        cy.get('#query-history-mount .history-entries').should('not.contain.text', 'history test query 1');
+        cy.get('#query-history-mount .history-entries').should('not.contain.text', 'history test query 2');
     });
 
-    it('tests exact match and substring search', () => {
+    it('tests exact match and substring search in extended search', () => {
         cy.get('#query-history-mount').contains('button', 'Extended search').click();
         
         cy.get('#query-history-mount select').last().select('Any part of a query (exact match)');
