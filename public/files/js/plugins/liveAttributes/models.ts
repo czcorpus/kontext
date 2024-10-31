@@ -385,10 +385,10 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                             });
 
                         } else {
-                            dispatch<typeof TTActions.AttributeTextInputAutocompleteRequestDone>({
-                                name: TTActions.AttributeTextInputAutocompleteRequestDone.name,
-                                error: new Error('Did not recieve list of items but a summary instead')
-                            });
+                            dispatch(
+                                TTActions.AttributeTextInputAutocompleteRequestDone,
+                                new Error(this.pluginApi.translate('ucnkLA__too_many_autocomplete_values'))
+                            );
                         }
                     },
                     error: err => {
