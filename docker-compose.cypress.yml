@@ -67,6 +67,8 @@ services:
     volumes:
       - ./scripts/install/conf/docker/camus-conf-cypress.json:/opt/camus/conf.json
       - kontext_testindex:/index.bleve
+    ports:
+      - "8787:8787"
 
 volumes:
   kontext_testdb:

@@ -36,7 +36,7 @@ describe('Query History', () => {
         cy.hoverNthMenuItem(1);
         cy.clickMenuItem(1, 4);
         cy.url().should('contain', '/keywords/form?');
-        cy.get('#kw-pattern').clear().type('.*ining');
+        cy.get('#kw-pattern').clear().type('.*ing');
         cy.get('#keywords-form-mount .default-button').click();
         cy.url().should('contain', '/keywords/result?');
         

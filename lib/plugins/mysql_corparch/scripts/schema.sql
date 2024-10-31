@@ -314,6 +314,7 @@ CREATE TABLE kontext_conc_persistence (
   created timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   num_access int(11) NOT NULL DEFAULT 0,
   last_access timestamp,
+  permanent tinyint(4) NOT NULL DEFAULT 0,
   PRIMARY KEY (id,created)
 ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
