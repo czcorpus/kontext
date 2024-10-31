@@ -1,0 +1,12 @@
+--- corp/wordlist.cc	2023-06-20 18:05:58.000000000 +0200
++++ corp/wordlist-patched.cc	2024-10-31 11:47:47.682232125 +0100
+@@ -88,6 +88,9 @@
+                     new_ids.insert(str2id(new_val));
+                 }
+         } else {  // MULTISEP is a single byte delimiter
++            if (strchr (full_value, *multisep) == NULL) {
++                continue;
++            }
+             static int value_len = 0;
+             static char *value = NULL;
+             ensuresize (value, value_len, strlen (full_value) +1, "store_multival");
