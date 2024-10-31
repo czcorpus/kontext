@@ -64,3 +64,7 @@ Cypress.Commands.add('openLastHistoryItem', () => {
         .should('not.be.empty', {'timeout': 5000})
         .children().first().click();
 });
+
+Cypress.Commands.add('closeHistory', () => {
+    cy.get('#query-history-mount img.close-icon').click();
+});
