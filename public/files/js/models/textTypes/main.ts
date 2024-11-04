@@ -444,16 +444,18 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             Actions.AttributeTextInputAutocompleteRequestDone,
             _ => !this.readonlyMode,
             action => {
-                if (!action.error) {
-                    this.changeState(state => {
-                        state.busyAttributes[action.payload.attrName] = false;
+                this.changeState(state => {
+                    state.busyAttributes[action.payload.attrName] = false;
+                    if (!action.error) {
                         this.setAutoComplete(
                             state,
                             action.payload.attrName,
                             action.payload.autoCompleteData,
+                            action.payload.appliedCutoff
                         );
-                    });
-                } else {
+                    }
+                });
+                if (action.error) {
                     this.pluginApi.showMessage('error', action.error);
                 }
             }
@@ -1122,11 +1124,13 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
     setAutoComplete(
         state:TextTypesModelState,
         attrName:string,
-        values:Array<TextTypes.AutoCompleteItem>
+        values:Array<TextTypes.AutoCompleteItem>,
+        cutoff:number|undefined
     ):void {
         const attrIdx = this.getAttributeIdx(state, attrName);
         if (attrIdx > -1) {
-            state.attributes[attrIdx] = TTSelOps.setAutoComplete(state.attributes[attrIdx], values);
+            state.attributes[attrIdx] = TTSelOps.setAutoComplete(
+                state.attributes[attrIdx], values, cutoff);
         }
     }
 

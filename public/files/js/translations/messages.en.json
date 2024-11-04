@@ -318,6 +318,7 @@
         "query__tt_exact_value": "Exact value...",
         "query__tt_regexp_value_label": "Regular expression",
         "query__tt_negative_selection": "Negative selection",
+        "query__tt_too_many_autocomplete_items_{num_items}": "Too many matching items. Showing only {num_items, plural, one{first # record} few{first # records} other{first # records}}.",
         "query__span_from": "From",
         "query__span_to": "To",
         "query__include_kwic": "Include KWIC",

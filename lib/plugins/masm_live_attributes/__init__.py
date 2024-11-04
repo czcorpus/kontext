@@ -65,8 +65,8 @@ class MasmLiveAttributes(AbstractLiveAttributes):
         return bool((await self.corparch.get_corpus_info(plugin_ctx, corpora[0])).metadata.database)
 
     async def get_attr_values(
-            self, plugin_ctx, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None, limit_lists=True):
-        json_body = {'attrs': attr_map}
+            self, plugin_ctx, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None, apply_cutoff=False, limit_lists=True):
+        json_body = {'attrs': attr_map, 'applyCutoff': apply_cutoff}
         if aligned_corpora:
             json_body['aligned'] = aligned_corpora
         if autocomplete_attr:
