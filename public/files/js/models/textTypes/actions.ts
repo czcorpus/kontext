@@ -156,6 +156,7 @@ export class Actions {
         attrName:string;
         autoCompleteData:Array<TextTypes.AutoCompleteItem>;
         filterData:SelectionFilterMap;
+        appliedCutoff:number|undefined;
     }> = {
         name: 'TT_ATTRIBUTE_TEXT_INPUT_AUTOCOMPLETE_REQUEST_DONE'
     };

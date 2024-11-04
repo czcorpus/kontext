@@ -57,6 +57,7 @@ class AttrValuesResponse:
     attr_values: Optional[Dict[str, Union[AttrValue, Dict[str, int], int]]] = None
     aligned: Optional[List[str]] = None
     poscount: Optional[int] = None
+    applied_cutoff: Optional[int] = None
     error: Optional[str] = None
     details: Optional[List[str]] = None
 
@@ -73,9 +74,15 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
 
     @abc.abstractmethod
     async def get_attr_values(
-            self, plugin_ctx: AbstractCorpusPluginCtx, corpus: AbstractKCorpus, attr_map: Dict[str, Union[str, List[str]]],
-            aligned_corpora: Optional[List[str]] = None, autocomplete_attr: Optional[str] = None,
-            limit_lists: bool = True) -> AttrValuesResponse:
+            self,
+            plugin_ctx: AbstractCorpusPluginCtx,
+            corpus: AbstractKCorpus,
+            attr_map: Dict[str, Union[str, List[str]]],
+            aligned_corpora: Optional[List[str]] = None,
+            autocomplete_attr: Optional[str] = None,
+            apply_cutoff: Optional[bool] = False,
+            limit_lists: bool = True
+    ) -> AttrValuesResponse:
         """
         Find all the available values of remaining attributes according to the
         provided attr_map and aligned_corpora

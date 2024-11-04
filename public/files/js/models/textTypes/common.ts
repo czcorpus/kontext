@@ -179,6 +179,7 @@ function createTextInputAttributeSelection(
                 docLabel: attrItem.attr_doc_label
             },
             autoCompleteHints: [],
+            autocompleteCutoff: undefined,
             values: List.map(
                 value => ({
                     value,
@@ -193,7 +194,7 @@ function createTextInputAttributeSelection(
             textFieldValue: '',
             excludeSelection,
             type: 'text',
-            metaInfo: null,
+            metaInfo: null
         };
     }
     return {
@@ -207,6 +208,7 @@ function createTextInputAttributeSelection(
             docLabel: attrItem.attr_doc_label
         },
         autoCompleteHints: [],
+        autocompleteCutoff: undefined,
         values: [],
         definesSubcorpus,
         textFieldValue: '',
