@@ -190,7 +190,7 @@ class LiveAttributes(CachedLiveAttributes):
 
     @cached
     async def get_attr_values(
-            self, plugin_ctx, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None, limit_lists=True):
+            self, plugin_ctx, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None, apply_cutoff=False, limit_lists=True):
         """
         Finds all the available values of remaining attributes according to the
         provided attr_map and aligned_corpora

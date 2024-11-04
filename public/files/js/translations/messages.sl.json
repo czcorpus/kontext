@@ -311,6 +311,7 @@
         "query__tt_exact_value": "Exact value... UNTRANSLATED",
         "query__tt_regexp_value_label": "Regular expression UNTRANSLATED",
         "query__tt_negative_selection": "Negative selection UNTRANSLATED",
+        "query__tt_too_many_autocomplete_items_{num_items}": "Too many matching items. Showing only {num_items, plural, one{first # record} few{first # records} other{first # records}}. UNTRANSLATED",
         "concview__invalid_page_num_err": "Neveljavna številka strani",
         "concview__click_for_details": "Kliknite za ogled podrobnosti",
         "concview__sort_jump_to": "Skoči na",

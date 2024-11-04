@@ -114,6 +114,7 @@ export interface TextInputAttributeSelection extends BaseAttributeSelection {
     isInterval:boolean;
     isNumeric:boolean;
     autoCompleteHints:Array<AutoCompleteItem>;
+    autocompleteCutoff:number|undefined;
     values:Array<AttributeValue>; // it supports appending values via a single text input
     textFieldValue:string;
     excludeSelection:boolean;

@@ -205,13 +205,15 @@ export class TTSelOps {
 
     static setAutoComplete(
         sel:TextTypes.AnyTTSelection,
-        values:Array<TextTypes.AutoCompleteItem>
+        values:Array<TextTypes.AutoCompleteItem>,
+        cutoff:number|undefined
     ):TextTypes.AnyTTSelection {
 
         if (sel.type === 'text') {
             return {
                 ...sel,
-                autoCompleteHints: values
+                autoCompleteHints: values,
+                autocompleteCutoff: cutoff
             };
 
         } else {
