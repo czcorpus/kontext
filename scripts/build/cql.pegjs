@@ -242,7 +242,7 @@ PQuery =
 // ------------------------------- tokens -------------------------------
 
 RG_NON_LETTER = '\''
-RG_NON_SPEC = [#%§]
+RG_NON_SPEC = [#%§!]
 RG_AMP = '&'
 
 LETTER_PHON =
