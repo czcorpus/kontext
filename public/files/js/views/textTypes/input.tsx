@@ -116,18 +116,28 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
         render() {
             const data = TTSelOps.getAutoComplete(this.props.attrObj);
             return (
-                <ul className="auto-complete"
-                    onClick={this._handleAutoCompleteAreaClick}>
-                {data.map((item) => {
-                    return (
-                        <li key={item.ident}>
-                            <a onClick={()=>this._handleAutoCompleteHintClick(item)}>
-                                {item.label}
-                            </a>
-                        </li>
-                    );
-                })}
-                </ul>
+                <>
+                    <ul className="auto-complete"
+                        onClick={this._handleAutoCompleteAreaClick}>
+                    {data.map((item) => {
+                        return (
+                            <li key={item.ident}>
+                                <a onClick={()=>this._handleAutoCompleteHintClick(item)}>
+                                    {item.label}
+                                </a>
+                            </li>
+                        );
+                    })}
+                    </ul>
+                    {this.props.attrObj.autocompleteCutoff > 0 ?
+                        <p>
+                            {he.translate(
+                                'query__tt_too_many_autocomplete_items_{num_items}',
+                                {num_items: this.props.attrObj.autocompleteCutoff})}
+                        </p> :
+                        null
+                    }
+                </>
             );
         }
     }

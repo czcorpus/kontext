@@ -40,10 +40,11 @@ import { DownloadType } from '../../app/page';
 
 
 interface ServerRefineResponse extends Kontext.AjaxResponse {
-    error?:string;
     aligned:Array<string>;
     poscount:number;
     attr_values:TextTypes.ValueDomainsSizes;
+    applied_cutoff?:number;
+    error?:string;
 }
 
 interface ServerBibInfoResponse extends Kontext.AjaxResponse {
@@ -380,15 +381,21 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                                     autoCompleteData: List.map(
                                         v => ({ident: v[1], label: v[2]}),
                                         values
-                                    )
+                                    ),
+                                    appliedCutoff: resp.applied_cutoff
                                 }
                             });
 
                         } else {
-                            dispatch<typeof TTActions.AttributeTextInputAutocompleteRequestDone>({
-                                name: TTActions.AttributeTextInputAutocompleteRequestDone.name,
-                                error: new Error('Did not recieve list of items but a summary instead')
-                            });
+                            dispatch(
+                                TTActions.AttributeTextInputAutocompleteRequestDone,
+                                {
+                                    attrName: action.payload.attrName,
+                                    filterData: {},
+                                    autoCompleteData: []
+                                },
+                                new Error(this.pluginApi.translate('ucnkLA__too_many_autocomplete_values'))
+                            );
                         }
                     },
                     error: err => {

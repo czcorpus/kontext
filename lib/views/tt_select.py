@@ -53,8 +53,12 @@ async def attr_val_autocomplete(amodel: CorpusActionModel, req: KRequest, resp: 
     aligned = json.loads(req.form.get('aligned', '[]'))
     with plugins.runtime.LIVE_ATTRIBUTES as lattr:
         return await lattr.get_attr_values(
-            amodel.plugin_ctx, corpus=amodel.corp, attr_map=attrs,
-            aligned_corpora=aligned, autocomplete_attr=req.form.get('patternAttr'))
+            amodel.plugin_ctx,
+            corpus=amodel.corp,
+            attr_map=attrs,
+            aligned_corpora=aligned,
+            autocomplete_attr=req.form.get('patternAttr'),
+            apply_cutoff=True)
 
 
 @bp.route('/fill_attrs', methods=['POST'])
