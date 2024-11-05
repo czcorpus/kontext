@@ -184,6 +184,18 @@ export function init(
                                 </div>
                             </td>
                         </tr>
+                        {
+                            props.isSubcorpusSelected && props.flimit.value === '0' ?
+                                <tr>
+                                    <td colSpan={2}>
+                                        <div className="zero-val-note">
+                                            <layoutViews.StatusIcon status="warning" />
+                                            <p>{he.translate('freq__warn_about_zero_freq_vs_subc')}</p>
+                                        </div>
+                                    </td>
+                                </tr> :
+                                null
+                        }
                     </tbody>
                 </table>
                 <table className="form">
@@ -423,87 +435,80 @@ export function init(
 
     // ---------------------- <MLFreqForm /> ---------------------
 
-    class MLFreqForm extends React.Component<MLFreqFormModelState> {
+    const MLFreqForm:React.FC<MLFreqFormModelState> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._handleAddLevelClick = this._handleAddLevelClick.bind(this);
-        }
-
-        _handleAddLevelClick() {
+        const _handleAddLevelClick = () => {
             dispatcher.dispatch<typeof Actions.MLAddLevel>({
                 name: Actions.MLAddLevel.name,
                 payload: {}
             });
         }
 
-        render() {
-            const levels = List.map((_, i) => i, this.props.mlxattr);
-            return (
-                <S.MLFreqForm>
-                    <tbody>
-                        <tr>
-                            <td>
-                                <label style={{fontWeight: 'bold'}}>
-                                    {he.translate('freq__freq_limit_label')}:{'\u00a0'}
-                                    <FreqLimitInput flimit={this.props.flimit} actionName={Actions.MLSetFLimit.name} />
-                                </label>
-                            </td>
-                            <td />
-                        </tr>
-                        <tr>
-                            <td colSpan={2}>
-                                <table className="multilevel-freq-params">
-                                    <tbody>
-                                        <tr>
-                                            <th>
-                                                {he.translate('freq__ml_th_level')}
-                                            </th>
-                                            <th>
-                                                {he.translate('freq__ml_th_attribute')}
-                                            </th>
-                                            <th>
-                                                {he.translate('freq__ml_th_icase')}
-                                            </th>
-                                            <th>
-                                                {he.translate('freq__ml_th_position')}
-                                            </th>
-                                            <th>
-                                                {he.translate('freq__ml_th_node_start_at')}
-                                            </th>
-                                            <th />
-                                            <th />
-                                        </tr>
-                                        {levels.map(item => {
-                                            return <SingleLevelFieldTR
-                                                        key={`level_${item}`}
-                                                        isRemovable={item > 0 || levels.length > 1}
-                                                        numLevels={levels.length}
-                                                        levelIdx={item}
-                                                        attrList={this.props.attrList}
-                                                        mlxAttrValue={this.props.mlxattr[item]}
-                                                        mlxicaseValue={this.props.mlxicase[item]}
-                                                        positionRangeLabels={mlFreqFormModel.getPositionRangeLabels()}
-                                                        mlxctxIndex={this.props.mlxctxIndices[item]}
-                                                        alignType={this.props.alignType[item]} />;
-                                        })}
-                                        {levels.length < this.props.maxNumLevels ?
-                                            (<tr>
-                                                <td>
-                                                    <layoutViews.PlusButton mouseOverHint={he.translate('freq__add_level_btn')}
-                                                        onClick={this._handleAddLevelClick} />
-                                                </td>
-                                                <td colSpan={6} />
-                                            </tr>)
-                                        : null}
-                                    </tbody>
-                                </table>
-                            </td>
-                        </tr>
-                    </tbody>
-                </S.MLFreqForm>
-            );
-        }
+        const levels = List.map((_, i) => i, props.mlxattr);
+        return (
+            <S.MLFreqForm>
+                <tbody>
+                    <tr>
+                        <td>
+                            <label style={{fontWeight: 'bold'}}>
+                                {he.translate('freq__freq_limit_label')}:{'\u00a0'}
+                                <FreqLimitInput flimit={props.flimit} actionName={Actions.MLSetFLimit.name} />
+                            </label>
+                        </td>
+                        <td />
+                    </tr>
+                    <tr>
+                        <td colSpan={2}>
+                            <table className="multilevel-freq-params">
+                                <tbody>
+                                    <tr>
+                                        <th>
+                                            {he.translate('freq__ml_th_level')}
+                                        </th>
+                                        <th>
+                                            {he.translate('freq__ml_th_attribute')}
+                                        </th>
+                                        <th>
+                                            {he.translate('freq__ml_th_icase')}
+                                        </th>
+                                        <th>
+                                            {he.translate('freq__ml_th_position')}
+                                        </th>
+                                        <th>
+                                            {he.translate('freq__ml_th_node_start_at')}
+                                        </th>
+                                        <th />
+                                        <th />
+                                    </tr>
+                                    {levels.map(item => {
+                                        return <SingleLevelFieldTR
+                                                    key={`level_${item}`}
+                                                    isRemovable={item > 0 || levels.length > 1}
+                                                    numLevels={levels.length}
+                                                    levelIdx={item}
+                                                    attrList={props.attrList}
+                                                    mlxAttrValue={props.mlxattr[item]}
+                                                    mlxicaseValue={props.mlxicase[item]}
+                                                    positionRangeLabels={mlFreqFormModel.getPositionRangeLabels()}
+                                                    mlxctxIndex={props.mlxctxIndices[item]}
+                                                    alignType={props.alignType[item]} />;
+                                    })}
+                                    {levels.length < props.maxNumLevels ?
+                                        (<tr>
+                                            <td>
+                                                <layoutViews.PlusButton mouseOverHint={he.translate('freq__add_level_btn')}
+                                                    onClick={_handleAddLevelClick} />
+                                            </td>
+                                            <td colSpan={6} />
+                                        </tr>)
+                                    : null}
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                </tbody>
+            </S.MLFreqForm>
+        );
     }
 
     return {

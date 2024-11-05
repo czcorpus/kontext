@@ -748,6 +748,7 @@
         "freq__align_type_right": "skrajna desna beseda KWIC",
         "freq__move_level_up": "Premakni navzgor",
         "freq__move_level_down": "Premakni navzdol",
+        "freq__warn_about_zero_freq_vs_subc": "If a subcorpus is used, all available values from the entire corpus are displayed when the limit is zero. UNTRANSLATED",
         "freq__ml_th_level": "Stopnja",
         "freq__ml_th_attribute": "Atribut",
         "freq__ml_th_icase": "Ne ločuj malih/velikih črk",

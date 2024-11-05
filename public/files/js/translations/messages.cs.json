@@ -751,6 +751,7 @@
         "freq__align_type_right": "slova KWIC nejvíce vpravo",
         "freq__move_level_up": "Posunout nahoru",
         "freq__move_level_down": "Posunout dolů",
+        "freq__warn_about_zero_freq_vs_subc": "Je-li používán subkorpus, při nulovém limitu se zobrazí všechny dostupné hodnoty z celého korpusu.",
         "freq__ml_th_level": "Úroveň",
         "freq__ml_th_attribute": "Atribut",
         "freq__ml_th_icase": "Nerozlišovat velikost",
