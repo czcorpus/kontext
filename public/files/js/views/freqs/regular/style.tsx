@@ -311,6 +311,17 @@ export const TTFreqForm = styled.div`
 
             }
         }
+
+        .zero-val-note {
+            display: flex;
+            align-items: center;
+
+            p {
+                flex-grow: 1;
+                color: ${theme.colorLightText};
+                padding-left: 1em;
+            }
+        }
     }
 
 `;
