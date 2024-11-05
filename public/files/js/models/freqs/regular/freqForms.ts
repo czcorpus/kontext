@@ -265,6 +265,7 @@ export interface TTFreqFormModelState {
     fttattr:Array<string>;
     flimit:Kontext.FormValue<string>;
     freqSort:string;
+    isSubcorpusSelected:boolean;
 }
 
 export class TTFreqFormModel extends StatelessModel<TTFreqFormModelState> {
@@ -279,6 +280,7 @@ export class TTFreqFormModel extends StatelessModel<TTFreqFormModelState> {
                 fttattr: props.fttattr,
                 flimit: {value: props.flimit, isInvalid: false, isRequired: true},
                 freqSort: props.freq_sort,
+                isSubcorpusSelected: !!pageModel.getCorpusIdent().usesubcorp
             }
         );
         this.pageModel = pageModel;
