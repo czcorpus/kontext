@@ -149,7 +149,7 @@ export class TTSelOps {
 
     static addValue(sel:TextTypes.AnyTTSelection, value:TextTypes.AttributeValue):TextTypes.AnyTTSelection {
         if (sel.type == 'text') {
-            if (sel.values.find(x => x.value === value.value) === undefined) {
+            if (sel.values.find(x => x.ident === value.ident) === undefined) {
                 return {
                     ...sel,
                     values: sel.values.concat([value])
