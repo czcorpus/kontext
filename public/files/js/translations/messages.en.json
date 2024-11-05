@@ -766,6 +766,7 @@
         "freq__align_type_right": "rightmost KWIC word",
         "freq__move_level_up": "Move upwards",
         "freq__move_level_down": "Move downwards",
+        "freq__warn_about_zero_freq_vs_subc": "If a subcorpus is used, all available values from the entire corpus are displayed when the limit is zero.",
         "freq__ml_th_level": "Level",
         "freq__ml_th_attribute": "Attribute",
         "freq__ml_th_icase": "Ignore case",
