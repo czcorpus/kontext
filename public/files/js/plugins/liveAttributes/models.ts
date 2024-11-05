@@ -445,7 +445,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
         this.addActionHandler(
             TTActions.AttributeTextInputAutocompleteRequestDone,
             (state, action) => {
-                if (!action.error && Array.isArray(action.payload.filterData[state.bibIdAttr])) {
+                if (!action.error && Array.isArray(action.payload.filterData[state.bibLabelAttr])) {
                     this.attachBibData(state, action.payload.filterData);
                 }
             }
@@ -739,7 +739,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
     }
 
     private attachBibData(state:LiveAttrsModelState, filterData:SelectionFilterMap) {
-        const newBibData = filterData[state.bibIdAttr];
+        const newBibData = filterData[state.bibLabelAttr];
         // set the data iff server data are full-fledget (i.e. including unique 'ident')
         if (newBibData.length > 0 && !!newBibData[0].ident) {
             state.bibliographyIds = pipe(
