@@ -7,10 +7,28 @@ describe('Query History', () => {
     before(() => {
         cy.actionLogin();
 
+        cy.get('#query-form-mount')
+        .then($mount => {
+            let options = $mount.find('#subcorp-selector option').filter(':contains("test-subc")');
+            if (!options.length) {
+                // open create subcorpus
+                cy.hoverNthMenuItem(2);
+                cy.clickMenuItem(2, 4);
+
+                // create subcorpus from text type
+                cy.get('#subcorp-form-mount table.form .subcname input').type("test-subc");
+                ["1"].forEach(v => {
+                    cy.get('#subcorp-form-mount div.data-sel div.grid > div input[type=checkbox]').check(v);
+                });
+                cy.get('#subcorp-form-mount p.submit-buttons').contains('button', 'Create subcorpus').click();     
+            }
+        });
+
         // concordance query
         cy.hoverNthMenuItem(1);
         cy.clickMenuItem(1, 1);
         cy.url().should('contain', '/query?');
+        cy.get('#subcorp-selector').select('test-subc');
         cy.get('.simple-input').type('London');
         cy.get('.query .default-button').click();
         cy.url().should('contain', '/view?');
@@ -19,6 +37,7 @@ describe('Query History', () => {
         cy.hoverNthMenuItem(1);
         cy.clickMenuItem(1, 2);
         cy.url().should('contain', '/pquery/index?');
+        cy.get('#subcorp-selector').select('--whole corpus--');
         cy.get('#pquery-form-mount .cql-input').eq(0).type('[word="e.*"]');
         cy.get('#pquery-form-mount .cql-input').eq(1).type('[tag="N.*"]');
         cy.get('#pquery-form-mount .submit').click();
@@ -60,7 +79,7 @@ describe('Query History', () => {
     it('tests opening and closing history', () => {
         cy.get('#query-history-mount').should('not.be.empty');
         cy.get('#query-history-mount').contains('button', 'Extended search').click();
-        cy.get('#query-history-mount').should('be.empty');
+        cy.get('#query-history-mount').should('not.be.empty');
         cy.get('#query-history-mount').contains('button', 'Quick search').click();
         cy.get('#query-history-mount').should('not.be.empty');
         cy.closeHistory();
@@ -288,6 +307,21 @@ describe('Query History', () => {
         cy.get('#query-history-mount select').last().select('Any part of a query (substring)');
         cy.get('#query-history-mount').contains('button', 'Search').click();
         cy.get('#query-history-mount').should('not.contain.text', 'No data found.');
+    });
+
+    it('tests subcorpus search in extended search', () => {
+        cy.get('#query-history-mount').contains('button', 'Extended search').click();
+        
+        cy.get('#query-history-mount input').eq(2).type('test-subc');
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+
+        // test concordance supertype
+        let history = cy.get('#query-history-mount .history-entries .supertype');
+        history.should('not.be.empty');
+        history.should('contain.text', 'concordance');
+        history.should('not.contain.text', 'word list');
+        history.should('not.contain.text', 'paradigmatic query');
+        history.should('not.contain.text', 'keywords');
     });
 
 });
