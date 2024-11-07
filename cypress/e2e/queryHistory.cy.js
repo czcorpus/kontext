@@ -341,6 +341,9 @@ describe('Query History', () => {
         cy.get('#query-history-mount select').first().select('concordance');
         cy.get('#query-history-mount #searchHistory_QueryCQLProps').check();
         cy.get('#query-history-mount input').eq(5).clear();
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        cy.get('#query-history-mount .history-entries li').should('not.be.empty');
+
         cy.get('#query-history-mount input').eq(4).type('London');
         cy.get('#query-history-mount').contains('button', 'Search').click();
         cy.get('#query-history-mount .history-entries li span.query').each($item => {
@@ -383,6 +386,20 @@ describe('Query History', () => {
         cy.get('#query-history-mount').should('contain.text', 'No data found.');
 
         cy.get('#query-history-mount select').eq(2).select('Text type (substring)');
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        cy.get('#query-history-mount .history-entries li span.query').each($item => {
+            cy.wrap($item).should('contain.text', 'the');
+        });
+
+        cy.get('#query-history-mount input').eq(6).clear();
+        cy.get('#query-history-mount input').eq(7).type('type');
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        cy.get('#query-history-mount .history-entries li span.query').each($item => {
+            cy.wrap($item).should('contain.text', 'the');
+        });
+
+        cy.get('#query-history-mount input').eq(7).clear();
+        cy.get('#query-history-mount input').eq(8).type('head');
         cy.get('#query-history-mount').contains('button', 'Search').click();
         cy.get('#query-history-mount .history-entries li span.query').each($item => {
             cy.wrap($item).should('contain.text', 'the');
