@@ -227,7 +227,7 @@ async def ajax_query_history(amodel: UserActionModel, req: KRequest, resp: KResp
         any_property_value_is_sub=req.args.get('fsAnyPropertyValueIsSub', '0') == '1',
         posattr_name=req.args.get('fsPosattrName', None),
         posattr_value=req.args.get('fsPosattrValue', None),
-        posattr_value_is_sub=req.args.get('fsPosattrValueIsSub', '0' == '1'),
+        posattr_value_is_sub=req.args.get('fsPosattrValueIsSub', '0') == '1',
         structure_name=req.args.get('fsStructureName', None),
         structattr_name=req.args.get('fsStructattrName', None),
         structattr_value=req.args.get('fsStructattrValue', None),

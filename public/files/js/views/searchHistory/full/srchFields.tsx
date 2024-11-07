@@ -175,7 +175,7 @@ export function init(
                         fsSubcorpus={props.fsSubcorpus}
                         fsPosattrName={props.fsPosattrName}
                         fsPosattrValue={props.fsPosattrValue}
-                        fsPosattrValueIsSub={props.fsAnyPropertyValueIsSub}
+                        fsPosattrValueIsSub={props.fsPosattrValueIsSub}
                         fsStructureName={props.fsStructureName}
                         fsStructattrName={props.fsStructattrName}
                         fsStructattrValue={props.fsStructattrValue}
@@ -189,7 +189,7 @@ export function init(
                         fsSubcorpus={props.fsSubcorpus}
                         fsPosattrName={props.fsPosattrName}
                         fsPosattrValue={props.fsPosattrValue}
-                        fsPosattrValueIsSub={props.fsAnyPropertyValueIsSub}
+                        fsPosattrValueIsSub={props.fsPosattrValueIsSub}
                         fsStructureName={props.fsStructureName}
                         fsStructattrName={props.fsStructattrName}
                         fsStructattrValue={props.fsStructattrValue}
