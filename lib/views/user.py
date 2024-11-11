@@ -235,7 +235,7 @@ async def ajax_query_history(amodel: UserActionModel, req: KRequest, resp: KResp
         corpus=req.args.get('fsCorpus', None),
         subcorpus=req.args.get('fsSubcorpus', None),
         wl_pat=req.args.get('fsWlpat', None),
-        wl_attr=req.args.get('fsWattr', None),
+        wl_attr=req.args.get('fsWlattr', None),
         wl_pfilter=req.args.get('fsWlPfilter', None),
         wl_nfilter=req.args.get('fsWlNfilter', None),
     )

@@ -56,7 +56,7 @@ describe('Query History', () => {
         cy.get('#pquery-form-mount .cql-input').eq(0).type('[word="e.*"]');
         cy.get('#pquery-form-mount .cql-input').eq(1).type('[tag="N.*"]');
         cy.get('#pquery-form-mount .submit').click();
-        cy.url().should('contain', '/pquery/result?');
+        cy.url({timeout: 10000}).should('contain', '/pquery/result?');
 
         // word list query
         cy.hoverNthMenuItem(1);
@@ -341,6 +341,9 @@ describe('Query History', () => {
         cy.get('#query-history-mount select').first().select('concordance');
         cy.get('#query-history-mount #searchHistory_QueryCQLProps').check();
         cy.get('#query-history-mount input').eq(5).clear();
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        cy.get('#query-history-mount .history-entries li').should('not.be.empty');
+
         cy.get('#query-history-mount input').eq(4).type('London');
         cy.get('#query-history-mount').contains('button', 'Search').click();
         cy.get('#query-history-mount .history-entries li span.query').each($item => {
@@ -364,7 +367,6 @@ describe('Query History', () => {
             cy.wrap($item).should('contain.text', 'London');
         });
 
-        cy.get('#query-history-mount input').eq(4).clear();
         cy.get('#query-history-mount input').eq(5).clear().type('lemma');
         cy.get('#query-history-mount').contains('button', 'Search').click();
         cy.get('#query-history-mount .history-entries li span.query').each($item => {
@@ -387,6 +389,96 @@ describe('Query History', () => {
         cy.get('#query-history-mount .history-entries li span.query').each($item => {
             cy.wrap($item).should('contain.text', 'the');
         });
+
+        cy.get('#query-history-mount input').eq(6).clear();
+        cy.get('#query-history-mount input').eq(7).type('type');
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        cy.get('#query-history-mount .history-entries li span.query').each($item => {
+            cy.wrap($item).should('contain.text', 'the');
+        });
+
+        cy.get('#query-history-mount input').eq(7).clear();
+        cy.get('#query-history-mount input').eq(8).type('head');
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        cy.get('#query-history-mount .history-entries li span.query').each($item => {
+            cy.wrap($item).should('contain.text', 'the');
+        });
     });
 
+    it('tests pquery detailed search in extended search', () => {
+        cy.get('#query-history-mount').contains('button', 'Extended search').click();
+        cy.get('#query-history-mount select').first().select('paradigmatic query');
+        cy.get('#query-history-mount #searchHistory_QueryCQLProps').check();
+        cy.get('#query-history-mount input').eq(5).clear();
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        cy.get('#query-history-mount .history-entries li').should('not.be.empty');
+
+        cy.get('#query-history-mount input').eq(4).type('e.*');
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        cy.get('#query-history-mount .history-entries li').should('not.be.empty');
+
+        cy.get('#query-history-mount input').eq(4).clear().type('e');
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        cy.get('#query-history-mount').should('contain.text', 'No data found.');
+
+        cy.get('#query-history-mount select').eq(1).select('Token/position (substring)');
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        cy.get('#query-history-mount .history-entries li').should('not.be.empty');
+
+        cy.get('#query-history-mount input').eq(4).clear();
+        cy.get('#query-history-mount input').eq(5).clear().type('word');
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        cy.get('#query-history-mount .history-entries li').should('not.be.empty');
+
+        cy.get('#query-history-mount input').eq(5).clear().type('lemma');
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        cy.get('#query-history-mount').should('contain.text', 'No data found.');
+
+        cy.get('#query-history-mount input').eq(5).clear().type('tag');
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        cy.get('#query-history-mount .history-entries li').should('not.be.empty');
+    });
+
+    it('tests wlist detailed search in extended search', () => {
+        cy.get('#query-history-mount').contains('button', 'Extended search').click();
+        cy.get('#query-history-mount select').first().select('word list');
+        cy.get('#query-history-mount #searchHistory_QueryCQLProps').check();
+        cy.get('#query-history-mount input').eq(4).clear();
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        cy.get('#query-history-mount .history-entries li').should('not.be.empty');
+
+        cy.get('#query-history-mount input').eq(4).type('pattern');
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        cy.get('#query-history-mount').should('contain.text', 'No data found.');
+
+        cy.get('#query-history-mount input').eq(4).clear().type('.*ining');
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        cy.get('#query-history-mount .history-entries li').should('not.be.empty');
+
+        cy.get('#query-history-mount input').eq(4).clear();
+        cy.get('#query-history-mount input').eq(5).clear().type('lemma');
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        cy.get('#query-history-mount').should('contain.text', 'No data found.');
+
+        cy.get('#query-history-mount input').eq(5).clear().type('word');
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        cy.get('#query-history-mount .history-entries li').should('not.be.empty');
+    });
+
+    it('tests kwords detailed search in extended search', () => {
+        cy.get('#query-history-mount').contains('button', 'Extended search').click();
+        cy.get('#query-history-mount select').first().select('word list');
+        cy.get('#query-history-mount #searchHistory_QueryCQLProps').check();
+        cy.get('#query-history-mount input').eq(4).clear();
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        cy.get('#query-history-mount .history-entries li').should('not.be.empty');
+
+        cy.get('#query-history-mount input').eq(4).type('lemma');
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        cy.get('#query-history-mount').should('contain.text', 'No data found.');
+
+        cy.get('#query-history-mount input').eq(4).clear().type('word');
+        cy.get('#query-history-mount').contains('button', 'Search').click();
+        cy.get('#query-history-mount .history-entries li').should('not.be.empty');
+    });
 });
