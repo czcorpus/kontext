@@ -203,7 +203,7 @@ class UcnkQueryHistory(MySqlQueryHistory):
                     parts.append(make_bleve_field('nfilter_words', full_search_args.wl_nfilter))
 
             elif q_supertype == 'kwords':
-                if full_search_args.wl_attr:
+                if full_search_args.posattr_name:
                     parts.append(make_bleve_field('pos_attr_names', full_search_args.posattr_name))
 
         return json.dumps([asdict(p) for p in parts])
