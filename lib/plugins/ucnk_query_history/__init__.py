@@ -182,6 +182,9 @@ class UcnkQueryHistory(MySqlQueryHistory):
                             'pos_attr_values',
                             full_search_args.posattr_value,
                             use_wildcard=full_search_args.posattr_value_is_sub))
+                if full_search_args.structure_name:
+                    parts.append(
+                        make_bleve_field('structures', full_search_args.structure_name))
                 if full_search_args.structattr_name:
                     parts.append(
                         make_bleve_field('struct_attr_names', full_search_args.structattr_name))
