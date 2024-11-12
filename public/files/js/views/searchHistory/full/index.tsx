@@ -215,7 +215,7 @@ export function init(
                                     List.map(k => (
                                         <li key={k}>
                                             <strong>{k}</strong>:
-                                            {this.props.textTypes(k).join(', ')}
+                                            {this.props.textTypes[k].join(', ')}
                                         </li>
                                     ))
                                 )}
