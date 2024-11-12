@@ -97,7 +97,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                 fsStructattrValueIsSub: false,
                 fsAnyPropertyValue: '',
                 fsAnyPropertyValueIsSub: false,
-                fsQueryCQLProps: false,
+                fsQueryCQLProps: true,
                 fsCorpus: pageModel.getCorpusIdent().id,
                 fsSubcorpus: '',
                 fsArchAs: '',
@@ -119,10 +119,10 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             Actions.HistorySetCurrentCorpusOnly,
             action => {
                 this.changeState(state => {
-                    state.isBusy = !this.isExtendedSearch();
+                    state.isBusy = state.searchFormView !== 'extended';
                     state.currentCorpusOnly = action.payload.value;
                 });
-                if (!this.isExtendedSearch()) {
+                if (this.state.searchFormView !== 'extended') {
                     this.performLoadAction();
                 }
             }
@@ -132,10 +132,10 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             Actions.HistorySetArchivedOnly,
             action => {
                 this.changeState(state => {
-                    state.isBusy = !this.isExtendedSearch();
+                    state.isBusy = state.searchFormView !== 'extended';
                     state.archivedOnly = action.payload.value;
                 });
-                if (!this.isExtendedSearch()) {
+                if (this.state.searchFormView !== 'extended') {
                     this.performLoadAction();
                 }
             }
@@ -154,10 +154,10 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             Actions.HistorySetQuerySupertype,
             action => {
                 this.changeState(state => {
-                    state.isBusy = !this.isExtendedSearch();
+                    state.isBusy = state.searchFormView !== 'extended';
                     state.querySupertype = action.payload.value;
                 });
-                if (!this.isExtendedSearch()) {
+                if (this.state.searchFormView !== 'extended') {
                     this.performLoadAction();
                 }
             }
@@ -175,18 +175,33 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         );
 
         this.addActionHandler(
-            [Actions.ToggleQueryHistoryWidget, MainMenuActions.ShowQueryHistory],
+            Actions.ToggleQueryHistoryWidget,
             action => {
                 this.changeState(state => {
                     state.isBusy = true;
                 });
-                if (this.isToggleWidgetAction(action)) {
-                    this.performLoadAction(true);
-                } else {
-                    this.performLoadAction();
-                }
+                this.performLoadAction(true);
             }
         );
+
+        this.addActionHandler(
+            MainMenuActions.ShowQueryHistory,
+            action => {
+                this.changeState(state => {
+                    state.isBusy = true;
+                });
+                if (this.state.searchFormView === 'quick') {
+                    this.performLoadAction();
+
+                } else {
+                    this.changeState(
+                        state => {
+                            state.isBusy = false;
+                        }
+                    );
+                }
+            }
+        )
 
         this.addActionHandler(
             Actions.HistoryOpenQueryForm,
@@ -526,6 +541,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                 );
             }
         );
+
     }
 
     private isToggleWidgetAction(action:Action): action is typeof Actions.ToggleQueryHistoryWidget {
@@ -573,9 +589,9 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             corpname: !widgetMode && this.state.currentCorpusOnly ?
                 this.pageModel.getCorpusIdent().id : undefined,
             archived_only: !widgetMode && this.state.archivedOnly,
-            extended_search: !widgetMode && this.isExtendedSearch(),
+            extended_search: !widgetMode && this.state.searchFormView === 'extended',
         };
-        if (!widgetMode && this.isExtendedSearch()) {
+        if (!widgetMode && this.state.searchFormView === 'extended') {
             switch (this.state.querySupertype) {
                 case 'conc':
                 case 'pquery':
@@ -649,7 +665,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         ).pipe(
             tap(data => {
                 this.changeState(state => {
-                    state.hasMoreItems = data.data.length === state.limit + 1;
+                    state.hasMoreItems = data.data.length === state.limit + 1 && state.searchFormView === 'quick';
                     state.data = pipe(
                         state.hasMoreItems ?
                             data.data.slice(0, data.data.length - 1) :
@@ -744,9 +760,5 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                     this.pageModel.translate('query__save_as_item_removed')
             )
         );
-    }
-
-    private isExtendedSearch():boolean {
-        return this.state.searchFormView === 'extended';
     }
 }

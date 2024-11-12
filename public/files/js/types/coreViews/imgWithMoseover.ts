@@ -26,6 +26,8 @@ export interface Props {
     alt:string;
     title?:string;
     style?:{[prop:string]:string};
+    role?:React.AriaRole;
+    tabIndex?:number;
 }
 
 export type Component = React.FC<Props>;

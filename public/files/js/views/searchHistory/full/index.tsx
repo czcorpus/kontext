@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { Bound, BoundWithProps, IActionDispatcher } from 'kombo';
+import { BoundWithProps, IActionDispatcher } from 'kombo';
 import { Keyboard, Dict, pipe, List } from 'cnc-tskit';
 
 import * as Kontext from '../../../types/kontext';
@@ -38,7 +38,7 @@ import * as QS from '../../query/style';
 
 
 export interface HistoryViews {
-    RecentQueriesPageList:React.ComponentClass<{onCloseClick: ()=>void}>;
+    RecentQueriesPageList:React.ComponentClass<{onCloseClick: ()=>void; onHelpClick: ()=>void}>;
 }
 
 
@@ -100,11 +100,17 @@ export function init(
             );
         };
 
-        const handleHelpClick = () => {
+        const handleKeyDown = () => {
             dispatcher.dispatch(
-                Actions.ToggleHelpView
+                Actions.SubmitExtendedSearch
             );
         };
+
+        React.useEffect(() => {
+            document.addEventListener('keydown', handleKeyDown);
+            return () => document.removeEventListener('keydown', handleKeyDown);
+
+        }, [])
 
         return (
             <layoutViews.TabView
@@ -126,9 +132,6 @@ export function init(
 
                 <S.FilterForm>
                     <fieldset className="advanced">
-                        <legend>
-                            {he.translate('qhistory__search_legend')}
-                        </legend>
                         <div className="grid-inputs">
                             <srchFields.BasicFields corpusSel={false} archivedAsEnable={true} />
                             <srchFields.ExtendedFields />
@@ -138,10 +141,6 @@ export function init(
                             null
                         }
                         <div className="button-area">
-                            <a className="help" onClick={handleHelpClick}>
-                                <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/question-mark.svg')}
-                                    alt={he.translate('qhistory__help_button')} />
-                            </a>
                             <div style={{flexGrow: '1'}}></div>
                             <button type="button" className="util-button" onClick={handleClickSearch}>
                                 {he.translate('qhistory__search_button')}
@@ -216,7 +215,7 @@ export function init(
                                     List.map(k => (
                                         <li key={k}>
                                             <strong>{k}</strong>:
-                                            {this.props.textTypes[k].join(', ')}
+                                            {this.props.textTypes(k).join(', ')}
                                         </li>
                                     ))
                                 )}
@@ -762,21 +761,66 @@ export function init(
 
         return (
             <S.HelpView>
+                <h2>{he.translate('qhistory__extended_search')}</h2>
+                <h3>{he.translate('qhistory__help_any_search')}</h3>
                 <p>
-                    Při hledání dotazů se prohledávají jejich jednotlivé části:
-                    <ul>
-                        <li>poziční atributy <strong>[A]</strong></li>
-                        <li>hodnoty pozičních atributů <strong>[B]</strong></li>
-                        <li>struktury <strong>[C]</strong> (včetně tech vybraných v sekci &quot;Omezit hledání&quot;)</li>
-                        <li>strukturní atributy <strong>[D]</strong> (včetně tech vybraných v sekci &quot;Omezit hledání&quot;)</li>
-                        <li>hodnoty strukturních atributů <strong>[E]</strong>  (včetně tech vybraných v sekci &quot;Omezit hledání&quot;)</li>
-
-                    </ul>
-
-                    Help - TODO
+                    {he.translate('qhistory__help_section_any_type_search')}
                 </p>
+                <h3>{he.translate('qhistory__help_extended_search_conc')}</h3>
                 <p>
-                    <img src={he.createStaticUrl('img/fs_help.svg')} />
+                    {he.translate('qhistory__help_section_intro')}
+                </p>
+                <div className="table-and-schema">
+                    <table className="query-parts">
+                        <thead>
+                            <tr>
+                                <th rowSpan={2}>{he.translate('qhistory__help_query_part')}</th>
+                                <th colSpan={2}>{he.translate('qhistory__help_comparison_method')}</th>
+                            </tr>
+                            <tr>
+                                <th>{he.translate('qhistory__help_exact_match')}</th>
+                                <th>{he.translate('qhistory__help_substring')}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>{he.translate('qhistory__help_posattr_name')} <code>(A)</code></td>
+                                <td>{'\u2705'}</td>
+                                <td>{'\u274C'}</td>
+                            </tr>
+                            <tr>
+                                <td>{he.translate('qhistory__help_posattr_value')} <code>(B)</code></td>
+                                <td>{'\u2705'}</td>
+                                <td>{'\u2705'}</td>
+                            </tr>
+                            <tr>
+                                <td>{he.translate('qhistory__help_structure_name')} <code>(C)</code></td>
+                                <td>{'\u2705'}</td>
+                                <td>{'\u274C'}</td>
+                            </tr>
+                            <tr>
+                                <td>{he.translate('qhistory__help_structattr_name')} <code>(D)</code></td>
+                                <td>{'\u2705'}</td>
+                                <td>{'\u274C'}</td>
+                            </tr>
+                            <tr>
+                                <td>{he.translate('qhistory__help_structattr_value')} <code>(E)</code></td>
+                                <td>{'\u2705'}</td>
+                                <td>{'\u2705'}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div className="schema">
+                        <img src={he.createStaticUrl('img/fs_help.svg')} />
+                    </div>
+                </div>
+                <h4>{he.translate('query__qt_simple')}</h4>
+                <p>
+                    {he.translate('qhistory__help_section_simple_query')}
+                </p>
+                <h4>{he.translate('query__qt_advanced')}</h4>
+                <p>
+                    {he.translate('qhistory__help_section_advanced_query')}
                 </p>
             </S.HelpView>
         );
@@ -784,12 +828,18 @@ export function init(
 
     // -------------------- <RecentQueriesPageList /> ------------------------
 
-    const RecentQueriesPageList:React.FC<SearchHistoryModelState & {onCloseClick: ()=>void}> = (props) => {
+    const RecentQueriesPageList:React.FC<
+            SearchHistoryModelState &
+            {
+                onCloseClick: ()=>void
+                onHelpClick: ()=>void
+            }> = (props) => {
         return (
             <layoutViews.ModalOverlay onCloseKey={props.onCloseClick}>
                 <layoutViews.CloseableFrame
                         scrollable={true}
                         onCloseClick={props.onCloseClick}
+                        onHelpClick={props.onHelpClick}
                         label={he.translate('query__recent_queries_link')}
                         customClass="OptionsContainer"
                         customControls={props.isHelpVisible ? <HelpControls /> : null} >
@@ -820,7 +870,9 @@ export function init(
 
 
     return {
-        RecentQueriesPageList: BoundWithProps<{onCloseClick: ()=>void}, SearchHistoryModelState>(RecentQueriesPageList, queryHistoryModel)
+        RecentQueriesPageList: BoundWithProps<
+        {onCloseClick: ()=>void; onHelpClick: ()=>void},
+        SearchHistoryModelState>(RecentQueriesPageList, queryHistoryModel)
     };
 
 }
