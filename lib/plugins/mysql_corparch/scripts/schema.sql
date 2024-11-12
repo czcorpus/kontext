@@ -314,6 +314,7 @@ CREATE TABLE kontext_conc_persistence (
   created timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   num_access int(11) NOT NULL DEFAULT 0,
   last_access timestamp,
+  permanent tinyint(4) NOT NULL DEFAULT 0,
   PRIMARY KEY (id,created)
 ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
@@ -351,6 +352,18 @@ CREATE TABLE registry_conf (
   CONSTRAINT registry_conf_docstructure_fkey FOREIGN KEY (corpus_name, docstructure) REFERENCES corpus_structure (corpus_name, name) ON UPDATE CASCADE,
   CONSTRAINT registry_conf_ibfk_1 FOREIGN KEY (corpus_name) REFERENCES kontext_corpus (name) ON UPDATE CASCADE,
   CONSTRAINT registry_conf_wsattr_id_fkey FOREIGN KEY (corpus_name, wsattr) REFERENCES corpus_posattr (corpus_name, name)
+) ENGINE=InnoDB CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_general_ci';
+
+CREATE TABLE registry_variable (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  corpus_name varchar(63) NOT NULL,
+  variant varchar(63) DEFAULT NULL,
+  maxcontext int(11) DEFAULT NULL,
+  maxdetail int(11) DEFAULT NULL,
+  maxkwic int(11) DEFAULT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY registry_variable_corp_variant_uniq (corpus_name, variant),
+  CONSTRAINT registry_varible_corpus_name_fkey FOREIGN KEY (corpus_name) REFERENCES kontext_corpus (name) ON UPDATE CASCADE
 ) ENGINE=InnoDB CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_general_ci';
 
 -- -------------------- susanne corpus

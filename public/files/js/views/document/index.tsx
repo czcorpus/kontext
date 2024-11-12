@@ -363,13 +363,32 @@ export function init(
                             {this.props.label}
                         </h2>
                         <div className="control">
+                            {this.props.onHelpClick ?
+                                <ImgWithMouseover src={he.createStaticUrl('img/question-mark.svg')}
+                                        clickHandler={this.props.onHelpClick}
+                                        alt={he.translate('global__help')}
+                                        role="button"
+                                        tabIndex={0}
+                                         /> :
+                                null
+                            }
                             <ImgWithMouseover htmlClass="close-icon"
                                     src={he.createStaticUrl('img/close-icon.svg')}
                                     src2={he.createStaticUrl('img/close-icon_s.svg')}
                                     clickHandler={this.closeClickHandler}
-                                    alt={he.translate('global__close_the_window')} />
+                                    alt={he.translate('global__close_the_window')}
+                                    role="button"
+                                    tabIndex={0} />
                         </div>
                     </div>
+                    {this.props.customControls ?
+                        <div className="custom-controls">
+                            <div className="buttons">
+                                {this.props.customControls}
+                            </div>
+                        </div> :
+                        null
+                    }
                     <div className="contents" style={this.props.scrollable ? {overflow: 'auto'} : {}}>
                         <div className="padded-contents">
                             {this.props.children}

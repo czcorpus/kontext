@@ -1,0 +1,40 @@
+{
+    "listenAddress": "0.0.0.0",
+    "listenPort": 8787,
+    "serverReadTimeoutSecs": 60,
+    "serverWriteTimeoutSecs": 60,
+    "corsAllowedOrigins": [],
+    "timeZone": "Europe/Prague",
+    "logLevel": "debug",
+    "redis": {
+        "host": "kontext-redis-1",
+        "port": 6379,
+        "db": 1
+    },
+    "db": {
+        "host": "kontext-mariadb-1",
+        "name": "kontext",
+        "user": "kontext",
+        "password": "kontext-secret"
+    },
+    "archiver": {
+        "ddStateFilePath": "ddstate",
+        "checkIntervalSecs": 5,
+        "checkIntervalChunk": 10,
+        "preloadLastNItems": 100,
+        "queueKey": "conc_archive_queue",
+        "failedRecordsKey": "camus_failed_items"
+    },
+    "cleaner": {
+        "checkIntervalSecs": 60,
+        "numProcessItemsPerTick": 5,
+        "minAgeDaysUnvisited": 100
+    },
+    "indexer": {
+        "indexDirPath": "/index.bleve",
+        "docRemoveChannel": "query_history_fulltext_del_channel"
+    },
+    "checkIntervalSecs": 5,
+    "checkIntervalChunk": 2,
+    "ddStateFilePath": "./deduplicator.bin"
+}

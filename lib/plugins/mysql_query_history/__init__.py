@@ -30,7 +30,7 @@ configuration.
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Tuple
 
 import plugins
@@ -62,7 +62,7 @@ class CorpusCache:
 
 class MySqlQueryHistory(AbstractQueryHistory):
 
-    DEFAULT_TTL_DAYS = 10
+    DEFAULT_PRESERVE_AMOUNT = 100
 
     TABLE_NAME = 'kontext_query_history'
 
@@ -78,14 +78,14 @@ class MySqlQueryHistory(AbstractQueryHistory):
         conf -- the 'settings' module (or some compatible object)
         db -- default_db history backend
         """
-        tmp = conf.get('plugins', 'query_history').get('ttl_days', None)
+        tmp = conf.get('plugins', 'query_history').get('preserve_amount', None)
         if tmp:
-            self.ttl_days = int(tmp)
+            self.preserve_amount = int(tmp)
         else:
-            self.ttl_days = self.DEFAULT_TTL_DAYS
+            self.preserve_amount = self.DEFAULT_PRESERVE_AMOUNT
             logging.getLogger(__name__).warning(
-                'QueryHistory - ttl_days not set, using default value {0} day(s) for query history records'.format(
-                    self.ttl_days))
+                'QueryHistory - preserve_amount not set, using default value {0} for query history records'.format(
+                    self.preserve_amount))
         self._db = db
         self._query_persistence = query_persistence
         self._subc_archive = subc_archive
@@ -93,7 +93,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
         self._page_num_records = int(conf.get('plugins', 'query_history')['page_num_records'])
 
     async def store(self, user_id, query_id, q_supertype):
-        created = int(datetime.utcnow().timestamp())
+        created = int(datetime.now(timezone.utc).timestamp())
         corpora = (await self._query_persistence.open(query_id))['corpora']
         async with self._db.cursor() as cursor:
             await cursor.executemany(
@@ -113,7 +113,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
             )
             return cursor.rowcount > 0
 
-    async def make_persistent(self, user_id, query_id, q_supertype, created, name) -> bool:
+    async def make_persistent(self, plugin_ctx, user_id, query_id, q_supertype, created, name) -> bool:
         if await self._update_name(user_id, query_id, created, name):
             await self._query_persistence.archive(query_id, True)
         else:
@@ -121,10 +121,10 @@ class MySqlQueryHistory(AbstractQueryHistory):
             await self._update_name(user_id, query_id, c, name)
         return True
 
-    async def make_transient(self, user_id, query_id, created, name) -> bool:
+    async def make_transient(self, plugin_ctx, user_id, query_id, created, name) -> bool:
         return await self._update_name(user_id, query_id, created, None)
 
-    async def delete(self, user_id, query_id, created):
+    async def delete(self, plugin_ctx, user_id, query_id, created):
         async with self._db.cursor() as cursor:
             await cursor.execute(
                 f'DELETE FROM {self.TABLE_NAME} WHERE user_id = %s AND query_id = %s AND created = %s',
@@ -180,16 +180,13 @@ class MySqlQueryHistory(AbstractQueryHistory):
 
     async def get_user_queries(
             self, plugin_ctx, user_id, corpus_factory, from_date=None, to_date=None, q_supertype=None, corpname=None,
-            archived_only=False, offset=0, limit=None):
+            archived_only=False, offset=0, limit=None, full_search_args=None):
         """
         Returns list of queries of a specific user.
 
         arguments:
         see the super-class
         """
-
-        async def extract_id(item_id: str, item_data: Dict) -> Tuple[str, Dict]:
-            return item_id, item_data
 
         where_dict = {
             'user_id = %s': user_id,
@@ -215,138 +212,155 @@ class MySqlQueryHistory(AbstractQueryHistory):
                 {'LIMIT %s' if limit is not None else ''}
                 {'OFFSET %s' if offset else ''}
             ''', values)
-
-            full_data = []
-            corpora = CorpusCache(corpus_factory)
             rows = [item for item in await cursor.fetchall()]
-            qdata_map = {}
-            for item in rows:
-                stored = await self._query_persistence.open(item['query_id'])
-                if stored:
-                    qdata_map[item['query_id']] = stored
-            subc_names = await self._subc_archive.get_names(
-                [item.get('usesubcorp') for item in qdata_map.values() if item.get('usesubcorp')])
-            for item in rows:
-                q_id = item['query_id']
-                q_supertype = item['q_supertype']
-                if q_id not in qdata_map:
-                    logging.getLogger(__name__).warning(f'Missing conc data for query {q_id}')
-                    continue
-                qdata = qdata_map[q_id]
-                if q_supertype == 'conc':
-                    # test we have actually the 'query' or 'filter' type and if not then move
-                    # to the first query in chain (this fixes possibly broken query history records)
-                    form_type = qdata.get('lastop_form', {}).get('form_type', None)
-                    if form_type not in ('query', 'filter'):
-                        ops = await self._query_persistence.map_pipeline_ops(plugin_ctx, q_id, extract_id)
-                        logging.getLogger(__name__).warning(
-                            'Runtime patching broken query history record '
-                            f'{q_id} of invalid type "{form_type}" (proper id: {ops[0][0]})')
-                        lastop_qid = q_id
-                        q_id, qdata = ops[0]
-                        qdata['query_id'], item['query_id'] = q_id, q_id
-                        qdata['lastop_query_id'] = lastop_qid
-                    else:
-                        qdata['lastop_query_id'] = q_id
-                    tmp = await self._merge_conc_data(item, qdata)
-                    if not tmp:
-                        continue
-                    tmp['human_corpname'] = (await corpora.corpus(tmp['corpname'])).human_readable_corpname
-                    for ac in tmp['aligned']:
-                        ac['human_corpname'] = (await corpora.corpus(ac['corpname'])).human_readable_corpname
-                    tmp['subcorpus_name'] = subc_names.get(qdata.get('usesubcorp'))
-                    full_data.append(tmp)
-                elif q_supertype == 'pquery':
-                    if not qdata:
-                        continue
-                    tmp = {
-                        'corpname': qdata['corpora'][0],
-                        'aligned': [],
-                        'human_corpname': (await corpora.corpus(qdata['corpora'][0])).human_readable_corpname,
-                        'subcorpus_name': subc_names.get(qdata.get('usesubcorp'))
-                    }
-                    q_join = []
-                    for q in qdata.get('form', {}).get('conc_ids', []):
-                        stored_q = await self._query_persistence.open(q)
-                        if stored_q is None:
-                            logging.getLogger(__name__).warning(
-                                'Missing conc for pquery: {}'.format(q))
-                        else:
-                            for qs in stored_q.get('lastop_form', {}).get('curr_queries', {}).values():
-                                q_join.append(f'{{ {qs} }}')
-                    q_subset = qdata.get('form', {}).get('conc_subset_complements', None)
-                    if q_subset is not None:
-                        for q in q_subset.get('conc_ids', []):
-                            max_ratio = q_subset.get('max_non_matching_ratio', 0)
-                            stored_q = await self._query_persistence.open(q)
-                            if stored_q is None or 'query' not in stored_q.get('lastop_form', {}).get('form_type'):
-                                logging.getLogger(__name__).warning(
-                                    'Missing conc for pquery subset: {}'.format(q))
-                            else:
-                                query = stored_q['lastop_form']['curr_queries'][tmp['corpname']]
-                                q_join.append(f'!{max_ratio if max_ratio else ""}{{ {query} }}')
-
-                    q_superset = qdata.get('form', {}).get('conc_superset', None)
-                    if q_superset is not None:
-                        max_ratio = q_superset.get('max_non_matching_ratio', 0)
-                        stored_q = await self._query_persistence.open(q_superset['conc_id'])
-                        if stored_q is None or 'query' not in stored_q.get('lastop_form', {}).get('form_type'):
-                            logging.getLogger(__name__).warning(
-                                'Missing conc for pquery superset: {}'.format(q_superset['conc_id']))
-                        else:
-                            query = stored_q['lastop_form']['curr_queries'][tmp['corpname']]
-                            q_join.append(f'?{max_ratio if max_ratio else ""}{{ {query} }}')
-
-                    tmp['query'] = ' && '.join(q_join)
-                    tmp.update(item)
-                    tmp.update(qdata)
-                    full_data.append(tmp)
-                elif q_supertype == 'wlist':
-                    if not qdata:
-                        continue
-                    tmp = dict(
-                        corpname=qdata['corpora'][0],
-                        aligned=[],
-                        human_corpname=(await corpora.corpus(qdata['corpora'][0])).human_readable_corpname,
-                        query=qdata.get('form', {}).get('wlpat'),
-                        subcorpus_name=subc_names.get(qdata.get('usesubcorp')),
-                        pfilter_words=qdata['form']['pfilter_words'],
-                        nfilter_words=qdata['form']['nfilter_words'])
-                    tmp.update(item)
-                    tmp.update(qdata)
-                    full_data.append(tmp)
-                elif q_supertype == 'kwords':
-                    if not qdata:
-                        continue
-                    tmp = dict(
-                        corpname=qdata['corpora'][0],
-                        aligned=[],
-                        human_corpname=(await corpora.corpus(qdata['corpora'][0])).human_readable_corpname,
-                        query=qdata.get('form', {}).get('wlpat'),
-                        subcorpus_name=subc_names.get(qdata.get('usesubcorp')))
-                    tmp.update(item)
-                    tmp.update(qdata)
-                    full_data.append(tmp)
-                else:
-                    logging.getLogger(__name__).error('Unknown query supertype: ', q_supertype)
-
+            full_data = await self._process_rows(plugin_ctx, corpus_factory, rows)
+        
         for i, item in enumerate(full_data):
             item['idx'] = offset + i
 
         return full_data
+    
+    async def _process_rows(self, plugin_ctx, corpus_factory, rows):
+        async def extract_id(item_id: str, item_data: Dict) -> Tuple[str, Dict]:
+            return item_id, item_data
+        
+        full_data = []
+        corpora = CorpusCache(corpus_factory)
+        qdata_map = {}
+        for item in rows:
+            stored = await self._query_persistence.open(item['query_id'])
+            if stored:
+                qdata_map[item['query_id']] = stored
+        subc_names = await self._subc_archive.get_names(
+            [item.get('usesubcorp') for item in qdata_map.values() if item.get('usesubcorp')])
+        for item in rows:
+            q_id = item['query_id']
+            q_supertype = item['q_supertype']
+            if q_id not in qdata_map:
+                logging.getLogger(__name__).warning(f'Missing conc data for query {q_id}')
+                continue
+            qdata = qdata_map[q_id]
+            if q_supertype == 'conc':
+                # test we have actually the 'query' or 'filter' type and if not then move
+                # to the first query in chain (this fixes possibly broken query history records)
+                form_type = qdata.get('lastop_form', {}).get('form_type', None)
+                if form_type not in ('query', 'filter'):
+                    ops = await self._query_persistence.map_pipeline_ops(plugin_ctx, q_id, extract_id)
+                    logging.getLogger(__name__).warning(
+                        'Runtime patching broken query history record '
+                        f'{q_id} of invalid type "{form_type}" (proper id: {ops[0][0]})')
+                    lastop_qid = q_id
+                    q_id, qdata = ops[0]
+                    qdata['query_id'], item['query_id'] = q_id, q_id
+                    qdata['lastop_query_id'] = lastop_qid
+                else:
+                    qdata['lastop_query_id'] = q_id
+                tmp = await self._merge_conc_data(item, qdata)
+                if not tmp:
+                    continue
+                tmp['human_corpname'] = (await corpora.corpus(tmp['corpname'])).human_readable_corpname
+                for ac in tmp['aligned']:
+                    ac['human_corpname'] = (await corpora.corpus(ac['corpname'])).human_readable_corpname
+                tmp['subcorpus_name'] = subc_names.get(qdata.get('usesubcorp'))
+                full_data.append(tmp)
+            elif q_supertype == 'pquery':
+                if not qdata:
+                    continue
+                tmp = {
+                    'corpname': qdata['corpora'][0],
+                    'aligned': [],
+                    'human_corpname': (await corpora.corpus(qdata['corpora'][0])).human_readable_corpname,
+                    'subcorpus_name': subc_names.get(qdata.get('usesubcorp'))
+                }
+                q_join = []
+                for q in qdata.get('form', {}).get('conc_ids', []):
+                    stored_q = await self._query_persistence.open(q)
+                    if stored_q is None:
+                        logging.getLogger(__name__).warning(
+                            'Missing conc for pquery: {}'.format(q))
+                    else:
+                        for qs in stored_q.get('lastop_form', {}).get('curr_queries', {}).values():
+                            q_join.append(f'{{ {qs} }}')
+                q_subset = qdata.get('form', {}).get('conc_subset_complements', None)
+                if q_subset is not None:
+                    for q in q_subset.get('conc_ids', []):
+                        max_ratio = q_subset.get('max_non_matching_ratio', 0)
+                        stored_q = await self._query_persistence.open(q)
+                        if stored_q is None or 'query' not in stored_q.get('lastop_form', {}).get('form_type'):
+                            logging.getLogger(__name__).warning(
+                                'Missing conc for pquery subset: {}'.format(q))
+                        else:
+                            query = stored_q['lastop_form']['curr_queries'][tmp['corpname']]
+                            q_join.append(f'!{max_ratio if max_ratio else ""}{{ {query} }}')
+
+                q_superset = qdata.get('form', {}).get('conc_superset', None)
+                if q_superset is not None:
+                    max_ratio = q_superset.get('max_non_matching_ratio', 0)
+                    stored_q = await self._query_persistence.open(q_superset['conc_id'])
+                    if stored_q is None or 'query' not in stored_q.get('lastop_form', {}).get('form_type'):
+                        logging.getLogger(__name__).warning(
+                            'Missing conc for pquery superset: {}'.format(q_superset['conc_id']))
+                    else:
+                        query = stored_q['lastop_form']['curr_queries'][tmp['corpname']]
+                        q_join.append(f'?{max_ratio if max_ratio else ""}{{ {query} }}')
+
+                tmp['query'] = ' && '.join(q_join)
+                tmp.update(item)
+                tmp.update(qdata)
+                full_data.append(tmp)
+            elif q_supertype == 'wlist':
+                if not qdata:
+                    continue
+                tmp = dict(
+                    corpname=qdata['corpora'][0],
+                    aligned=[],
+                    human_corpname=(await corpora.corpus(qdata['corpora'][0])).human_readable_corpname,
+                    query=qdata.get('form', {}).get('wlpat'),
+                    subcorpus_name=subc_names.get(qdata.get('usesubcorp')),
+                    pfilter_words=qdata['form']['pfilter_words'],
+                    nfilter_words=qdata['form']['nfilter_words'])
+                tmp.update(item)
+                tmp.update(qdata)
+                full_data.append(tmp)
+            elif q_supertype == 'kwords':
+                if not qdata:
+                    continue
+                tmp = dict(
+                    corpname=qdata['corpora'][0],
+                    aligned=[],
+                    human_corpname=(await corpora.corpus(qdata['corpora'][0])).human_readable_corpname,
+                    query=qdata.get('form', {}).get('wlpat'),
+                    subcorpus_name=subc_names.get(qdata.get('usesubcorp')))
+                tmp.update(item)
+                tmp.update(qdata)
+                full_data.append(tmp)
+            else:
+                logging.getLogger(__name__).error('Unknown query supertype: ', q_supertype)
+        
+        return full_data
 
     async def delete_old_records(self):
         """
-        Deletes records older than ttl_days. Named records are
-        kept intact.
-        now - created > ttl
-        now - ttl  > created
+        Preserve only preserve_amount of newest records.
+        Named records are kept intact.
         """
         # TODO remove also named but unpaired history entries
         async with self._db.cursor() as cursor:
             await cursor.execute(
-                f'DELETE FROM {self.TABLE_NAME} WHERE created < %s AND name IS NULL',
-                (int(datetime.utcnow().timestamp()) - self.ttl_days * 3600 * 24,)
+                f'''
+                DELETE FROM {self.TABLE_NAME}
+                WHERE CONCAT(user_id, '/', created, '/', query_id) IN (
+                    SELECT CONCAT(user_id, '/', created, '/', query_id) AS id
+                    FROM (
+                        SELECT user_id, created, query_id,
+                        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created DESC) AS row_num
+                        FROM {self.TABLE_NAME}
+                        WHERE name is NULL
+                    ) AS tmp
+                    WHERE row_num > %s
+                )
+                '''
+                (self.preserve_amount,)
             )
 
     async def export(self, plugin_ctx):

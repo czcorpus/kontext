@@ -37,7 +37,8 @@ CREATE TABLE kontext_conc_persistence (
     data JSON NOT NULL,
     created TIMESTAMP NOT NULL,
     num_access INT NOT NULL DEFAULT 0,
-    last_access TIMESTAMP
+    last_access TIMESTAMP,
+    permanent tinyint(4) NOT NULL DEFAULT 0
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
 Possible modifications in case the number of records is large:
@@ -77,9 +78,12 @@ class UCNKQueryPersistence(MySqlQueryPersistence):
         plugin_conf = settings.get('plugins', 'query_persistence')
         self._archive_queue_key = plugin_conf['archive_queue_key']
 
-    async def archive(self, conc_id, explicit):
-        await self.db.list_append(self._archive_queue_key, dict(key=conc_id, explicit=explicit))
+    async def archive(self, conc_id: str, explicit: bool):
+        await self.db.list_append(self._archive_queue_key, dict(type="archive", key=conc_id, explicit=explicit))
         return await self.db.get(mk_key(conc_id))
+    
+    async def queue_history(self, conc_id: str, created: int, user_id: int, name: str = ""):
+        await self.db.list_append(self._archive_queue_key, dict(type="history", key=conc_id, created=created, user_id=user_id, name=name))
 
     def export_tasks(self):
         return tuple()

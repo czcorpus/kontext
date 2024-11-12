@@ -92,16 +92,39 @@ export const CloseableFrame = styled.section<{fixedTop?: string}>`
         }
 
         div.control {
-            text-align: right;
+            display: flex;
+            align-items: center;
             font-size: 1em;
             margin-right: 0;
             margin-top: 0.3em;
-            float: right;
 
             img {
-                width: 1em;
-                height: 1em;
+                width: 1.5em;
+                height: 1.5em;
                 cursor: pointer;
+            }
+
+            img:not(:first-child) {
+                margin-left: 0.4em;
+            }
+        }
+    }
+
+    .custom-controls {
+        padding-top: 0.2em;
+        padding-bottom: 0.2em;
+        background-color: ${theme.colorLightFrame};
+
+        .buttons {
+            display: flex;
+            align-items: center;
+        }
+
+        a {
+            margin-left: 0.3em;
+
+            img {
+                width: 2em;
             }
         }
     }

@@ -8,6 +8,7 @@ describe('Paradigmatic query vs. general view options', () => {
     });
 
     afterEach(() => {
+        cy.closeMessages();
         cy.actionLogout();
     });
 

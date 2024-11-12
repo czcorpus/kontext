@@ -43,6 +43,12 @@ export class Actions {
         name: 'QUERY_HISTORY_SET_ARCHIVED_ONLY'
     };
 
+    static HistorySetArchivedAs:Action<{
+        value:string;
+    }> = {
+        name: 'QUERY_HISTORY_SET_ARCHIVED_AS'
+    };
+
     static HistorySetEditedItem:Action<{
         itemIdx:number;
     }> = {
@@ -117,9 +123,10 @@ export class Actions {
         name: 'QUERY_HISTORY_REMOVE_ITEM_FROM_LIST_DONE'
     };
 
-    static ToggleAdvancedSearch:Action<{
+    static ChangeSearchForm:Action<{
+        value:'extended'|'quick';
     }> = {
-        name: 'QUERY_HISTORY_TOGGLE_ADVANCED_SEARCH'
+        name: 'QUERY_HISTORY_CHANGE_SEARCH_FORM'
     };
 
     static SetFsPosattrName:Action<{
@@ -132,6 +139,12 @@ export class Actions {
         value:string;
     }> = {
         name: 'QUERY_HISTORY_SET_FS_POSATTR_VALUE'
+    };
+
+    static SetFsPosattrValueIsSub:Action<{
+        value:boolean;
+    }> = {
+        name: 'QUERY_HISTORY_SET_FS_POSATTR_VALUE_IS_SUB'
     };
 
     static SetFsStructureName:Action<{
@@ -152,10 +165,22 @@ export class Actions {
         name: 'QUERY_HISTORY_SET_FS_STRUCTATTR_VALUE'
     };
 
+    static SetFsStructattrValueIsSub:Action<{
+        value:boolean;
+    }> = {
+        name: 'QUERY_HISTORY_SET_FS_STRUCTATTR_VALUE_IS_SUB'
+    };
+
     static SetFsAnyPropertyValue:Action<{
         value:string;
     }> = {
         name: 'QUERY_HISTORY_SET_FS_ANY_PROPERTY_VALUE'
+    };
+
+    static SetFsAnyPropertyValueIsSub:Action<{
+        value:boolean;
+    }> = {
+        name: 'QUERY_HISTORY_SET_FS_ANY_PROPERTY_VALUE_IS_SUB'
     };
 
     static SetFsAdvancedQuery:Action<{
@@ -164,9 +189,50 @@ export class Actions {
         name: 'QUERY_HISTORY_SET_FS_ADVANCED_QUERY'
     };
 
+    static SetFsSubcorpus:Action<{
+        value:string;
+    }> = {
+        name: 'QUERY_HISTORY_SET_FS_SUBCORPUS'
+    };
+
+    static SetFsCorpus:Action<{
+        value:string;
+    }> = {
+        name: 'QUERY_HISTORY_SET_FS_CORPUS'
+    };
+
+    static SetFsWlpat:Action<{
+        value:string;
+    }> = {
+        name: 'QUERY_HISTORY_SET_FS_WLPAT'
+    };
+
+    static SetFsWlattr:Action<{
+        value:string;
+    }> = {
+        name: 'QUERY_HISTORY_SET_FS_WLATTR'
+    };
+
+    static SetFsPFilter:Action<{
+        value:string;
+    }> = {
+        name: 'QUERY_HISTORY_SET_FS_PFILTER'
+    };
+
+    static SetFsNFilter:Action<{
+        value:string;
+    }> = {
+        name: 'QUERY_HISTORY_SET_FS_NFILTER'
+    };
+
     static SubmitExtendedSearch:Action<{
     }> = {
         name: 'QUERY_HISTORY_SUBMIT_EXTENDED_SEARCH'
+    };
+
+    static ToggleHelpView:Action<{
+    }> = {
+        name: 'QUERY_HISTORY_TOGGLE_HELP_VIEW'
     };
 
 }

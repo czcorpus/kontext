@@ -51,10 +51,35 @@ services:
         condition: service_started
     networks:
       - databases
+  
+  masm:
+    build: ${MASM_PATH}
+    networks:
+      - databases
+    volumes:
+      - ./scripts/install/conf/docker/masm-conf-cypress.json:/opt/masm/conf-docker.json
+      - corpora-data:/var/lib/manatee
+  
+  camus:
+    build: ${CAMUS_PATH}
+    networks:
+      - databases
+    volumes:
+      - ./scripts/install/conf/docker/camus-conf-cypress.json:/opt/camus/conf.json
+      - kontext_testindex:/index.bleve
+    ports:
+      - "8787:8787"
 
 volumes:
-  kontext_testdb: {}
-
+  kontext_testdb:
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  
+  kontext_testindex:
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
 
 networks:
   databases: {}

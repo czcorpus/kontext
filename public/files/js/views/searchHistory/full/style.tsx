@@ -288,7 +288,7 @@ export const SaveItemForm = styled.div`
 
 // ---------------------- <FilterForm /> --------------------------------
 
-export const FilterForm = styled.div`
+export const FilterForm = styled.form`
 
     margin-bottom: 2.3em;
 
@@ -307,9 +307,66 @@ export const FilterForm = styled.div`
         label {
             white-space: nowrap;
         }
-
     }
 
+    .grid-inputs {
+        display: grid;
+        grid-template-columns: auto auto auto auto;
+        gap: 1rem;
+        align-items: center;
+        width: max-content;
+
+        input[type=text] {
+            height: 1.2em;
+        }
+    }
+
+    fieldset.advanced {
+        border: none;
+        padding: ${theme.defaultFieldsetPadding};
+
+        .advanced-fields {
+            margin-top: 1em;
+        }
+
+        button {
+            float: right;
+        }
+    }
+
+    .prop-query {
+        padding-bottom: 1.1em;
+        display: flex;
+        align-items: center;
+    }
+
+    label.emph {
+        font-weight: bold;
+        font-size: 1.1em;
+    }
+
+    div.aligned {
+        display: flex;
+        align-items: center;
+
+        strong {
+            padding-left: 0.2em;
+            padding-right: 1em;
+            font-size: 1.2em;
+        }
+    }
+
+    .button-area {
+        display: flex;
+        align-items: center;
+        margin-top: 1.4em;
+
+        .help img {
+            display: block;
+            margin: 0;
+            padding: 0;
+        }
+    }
 `;
 
 // ---------------------- <RowToolbar /> ------------------------------
@@ -330,42 +387,92 @@ export const RemoveFromHistoryButton = styled.button`
 // ---------------------- <CurrentCorpCheckbox /> ----------------------
 
 export const CurrentCorpCheckbox = styled.span`
-    margin-left: 0.2em;
+    margin: 0;
+
+    input {
+        margin: 0;
+        padding: 0;
+    }
 `;
 
 
 // ---------------------- <ArchivedOnlyCheckbox /> ----------------------
 
 export const ArchivedOnlyCheckbox = styled.span`
-    margin-left: 0.2em;
+    margin: 0;
+
+    input {
+        margin: 0;
+        padding: 0;
+    }
 `;
 
 
 // ---------------------- <SearchKindSelector /> ----------------------
 
 export const SearchKindSelector = styled.select`
-    margin-left: 0.2em;
-`;
+    margin: 0;
 
-// ---------------------- <FulltextBlock /> ----------------------------
-
-export const FulltextBlock = styled.div`
-    margin-top: 0.7em;
-
-    .button {
-        display: flex;
-        flex-direction: row-reverse;
+    input {
+        margin: 0;
+        padding: 0;
     }
 `;
 
-// ---------------------- <FulltextFieldset /> -------------------------
+// ---------------------- <HelpView /> --------------------------------------
 
-export const FulltextFieldset = styled.fieldset`
+export const HelpView = styled.div`
 
-    .prop-query {
-        display: flex;
-        align-items: center;
-        padding: 0.3em 0;
-
+    h2 {
+        padding-left: 0;
+        margin-left: 0;
+        font-size: 1.8em;
+        letter-spacing: 0.06em;
     }
+
+    h3 {
+        margin-left: 0;
+        font-size: 1.2em;
+    }
+
+    h4 {
+        margin-left: 0;
+        font-size: 0.9em;
+        text-transform: uppercase;
+    }
+
+    .table-and-schema {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1em;
+
+        table.query-parts {
+            border-collapse: collapse;
+            box-sizing: border-box;
+            width: 55%;
+
+            td, th {
+                padding: 0.4em 0.7em;
+                border: 1px solid ${theme.colorLightGrey};
+            }
+        }
+
+        .schema {
+            width: 40%;
+            min-width: 350px;
+            box-sizing: border-box;
+            border: 1px solid ${theme.colorLightGrey};
+            padding: 1em;
+
+            img {
+                width: 100%;
+            }
+        }
+    }
+
+    .query-parts code {
+        color: ${theme.colorLogoPink};
+    }
+
+
 `;

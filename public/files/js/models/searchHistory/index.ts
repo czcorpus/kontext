@@ -73,6 +73,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         super(
             dispatcher,
             {
+                searched: false,
                 corpname: pageModel.getCorpusIdent().id,
                 data: [],
                 itemsToolbars: [],
@@ -86,14 +87,25 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                 archivedOnly: false,
                 currentItem: 0,
                 supportsFulltext,
+                searchFormView: 'quick',
                 fsPosattrName: 'word',
                 fsPosattrValue: '',
+                fsPosattrValueIsSub: false,
                 fsStructureName: '',
                 fsStructattrName: '',
                 fsStructattrValue: '',
+                fsStructattrValueIsSub: false,
                 fsAnyPropertyValue: '',
+                fsAnyPropertyValueIsSub: false,
                 fsQueryCQLProps: true,
-                extendedSearchVisible: false
+                fsCorpus: pageModel.getCorpusIdent().id,
+                fsSubcorpus: '',
+                fsArchAs: '',
+                fsWlAttr: '',
+                fsWlPat: '',
+                fsWlNFilter: '',
+                fsWlPFilter: '',
+                isHelpVisible: false
             }
         );
         this.pageModel = pageModel;
@@ -107,10 +119,12 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             Actions.HistorySetCurrentCorpusOnly,
             action => {
                 this.changeState(state => {
-                    state.isBusy = true;
+                    state.isBusy = state.searchFormView !== 'extended';
                     state.currentCorpusOnly = action.payload.value;
                 });
-                this.performLoadAction();
+                if (this.state.searchFormView !== 'extended') {
+                    this.performLoadAction();
+                }
             }
         );
 
@@ -118,10 +132,21 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             Actions.HistorySetArchivedOnly,
             action => {
                 this.changeState(state => {
-                    state.isBusy = true;
+                    state.isBusy = state.searchFormView !== 'extended';
                     state.archivedOnly = action.payload.value;
                 });
-                this.performLoadAction();
+                if (this.state.searchFormView !== 'extended') {
+                    this.performLoadAction();
+                }
+            }
+        );
+
+        this.addActionHandler(
+            Actions.HistorySetArchivedAs,
+            action => {
+                this.changeState(state => {
+                    state.fsArchAs = action.payload.value
+                });
             }
         );
 
@@ -129,9 +154,12 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             Actions.HistorySetQuerySupertype,
             action => {
                 this.changeState(state => {
+                    state.isBusy = state.searchFormView !== 'extended';
                     state.querySupertype = action.payload.value;
                 });
-                this.performLoadAction();
+                if (this.state.searchFormView !== 'extended') {
+                    this.performLoadAction();
+                }
             }
         );
 
@@ -147,18 +175,33 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         );
 
         this.addActionHandler(
-            [Actions.ToggleQueryHistoryWidget, MainMenuActions.ShowQueryHistory],
+            Actions.ToggleQueryHistoryWidget,
             action => {
                 this.changeState(state => {
                     state.isBusy = true;
                 });
-                if (this.isToggleWidgetAction(action)) {
-                    this.performLoadAction(true);
-                } else {
-                    this.performLoadAction();
-                }
+                this.performLoadAction(true);
             }
         );
+
+        this.addActionHandler(
+            MainMenuActions.ShowQueryHistory,
+            action => {
+                this.changeState(state => {
+                    state.isBusy = true;
+                });
+                if (this.state.searchFormView === 'quick') {
+                    this.performLoadAction();
+
+                } else {
+                    this.changeState(
+                        state => {
+                            state.isBusy = false;
+                        }
+                    );
+                }
+            }
+        )
 
         this.addActionHandler(
             Actions.HistoryOpenQueryForm,
@@ -275,13 +318,19 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         );
 
         this.addActionHandler(
-            Actions.ToggleAdvancedSearch,
+            Actions.ChangeSearchForm,
             action => {
                 this.changeState(
                     state => {
-                        state.extendedSearchVisible = !state.extendedSearchVisible;
+                        state.searched = false;
+                        state.searchFormView = action.payload.value;
+                        state.data = [];
+                        state.isBusy = action.payload.value === 'quick';
                     }
-                )
+                );
+                if (action.payload.value === 'quick') {
+                    this.performLoadAction();
+                }
             }
         );
 
@@ -306,6 +355,17 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                 );
             }
         );
+
+        this.addActionHandler(
+            Actions.SetFsPosattrValueIsSub,
+            action => {
+                this.changeState(
+                    state => {
+                        state.fsPosattrValueIsSub = action.payload.value;
+                    }
+                );
+            }
+        )
 
         this.addActionHandler(
             Actions.SetFsStructureName,
@@ -341,11 +401,33 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         );
 
         this.addActionHandler(
+            Actions.SetFsStructattrValueIsSub,
+            action => {
+                this.changeState(
+                    state => {
+                        state.fsStructattrValueIsSub = action.payload.value;
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
             Actions.SetFsAnyPropertyValue,
             action => {
                 this.changeState(
                     state => {
                         state.fsAnyPropertyValue = action.payload.value
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SetFsAnyPropertyValueIsSub,
+            action => {
+                this.changeState(
+                    state => {
+                        state.fsAnyPropertyValueIsSub = action.payload.value
                     }
                 );
             }
@@ -363,23 +445,103 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         );
 
         this.addActionHandler(
+            Actions.SetFsSubcorpus,
+            action => {
+                this.changeState(
+                    state => {
+                        state.fsSubcorpus = action.payload.value
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SetFsCorpus,
+            action => {
+                this.changeState(
+                    state => {
+                        state.fsCorpus = action.payload.value
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SetFsWlpat,
+            action => {
+                this.changeState(
+                    state => {
+                        state.fsWlPat = action.payload.value
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SetFsWlattr,
+            action => {
+                this.changeState(
+                    state => {
+                        state.fsWlAttr = action.payload.value
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SetFsPFilter,
+            action => {
+                this.changeState(
+                    state => {
+                        state.fsWlPFilter = action.payload.value
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SetFsNFilter,
+            action => {
+                this.changeState(
+                    state => {
+                        state.fsWlNFilter = action.payload.value
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
             Actions.SubmitExtendedSearch,
             action => {
-                this.loadData().subscribe({
-                    next: () => {
-                        this.changeState(state => {
-                            state.isBusy = false
-                        });
-                    },
-                    error: (err) => {
-                        this.changeState(state => {
-                            state.isBusy = false
-                        });
-                        this.pageModel.showMessage('error', err);
-                    },
+                this.changeState(state => {
+                    state.isBusy = true;
                 });
+                this.performLoadAction();
             }
-        )
+        );
+
+        this.addActionHandler(
+            Actions.ToggleHelpView,
+            action => {
+                this.changeState(
+                    state => {
+                        state.isHelpVisible = !state.isHelpVisible;
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            MainMenuActions.ClearActiveItem,
+            action => {
+                this.changeState(
+                    state => {
+                        state.isHelpVisible = false;
+                    }
+                );
+            }
+        );
+
     }
 
     private isToggleWidgetAction(action:Action): action is typeof Actions.ToggleQueryHistoryWidget {
@@ -401,28 +563,21 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
     }
 
     private performLoadAction(widgetMode: boolean = false): void {
-        if (!this.state.extendedSearchVisible) {
-            this.loadData(widgetMode).subscribe({
-                next: () => {
-                    this.changeState(state => {
-                        state.isBusy = false
-                    });
-                },
-                error: (err) => {
-                    this.changeState(state => {
-                        state.isBusy = false
-                    });
-                    this.pageModel.showMessage('error', err);
-                },
-            });
-
-        } else {
-            this.changeState(
-                state => {
+        this.loadData(widgetMode).subscribe({
+            next: () => {
+                this.changeState(state => {
                     state.isBusy = false;
-                }
-            );
-        }
+                    state.searched = true;
+                });
+            },
+            error: (err) => {
+                this.changeState(state => {
+                    state.isBusy = false;
+                    state.searched = true;
+                });
+                this.pageModel.showMessage('error', err);
+            },
+        });
     }
 
     private loadData(widgetMode:boolean=false): Observable<GetHistoryResponse> {
@@ -433,18 +588,73 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             query_supertype: this.state.querySupertype,
             corpname: !widgetMode && this.state.currentCorpusOnly ?
                 this.pageModel.getCorpusIdent().id : undefined,
-            archived_only: !widgetMode && this.state.archivedOnly
+            archived_only: !widgetMode && this.state.archivedOnly,
+            extended_search: !widgetMode && this.state.searchFormView === 'extended',
         };
-        if (this.state.extendedSearchVisible) {
-            if (this.state.fsQueryCQLProps) {
-                args.fsPosattrName = this.state.fsPosattrName;
-                args.fsPosattrValue = this.state.fsPosattrValue;
-                args.fsStructattrName = this.state.fsStructattrName;
-                args.fsStructattrValue = this.state.fsStructattrValue;
-                args.fsStructureName = this.state.fsStructureName;
+        if (!widgetMode && this.state.searchFormView === 'extended') {
+            switch (this.state.querySupertype) {
+                case 'conc':
+                case 'pquery':
+                    if (this.state.fsQueryCQLProps) {
+                        args.fsPosattrName = this.state.fsPosattrName;
+                        args.fsPosattrValue = this.state.fsPosattrValue;
+                        args.fsPosattrValueIsSub = this.state.fsPosattrValueIsSub;
+                        args.fsStructattrName = this.state.fsStructattrName;
+                        args.fsStructattrValue = this.state.fsStructattrValue;
+                        args.fsStructattrValueIsSub = this.state.fsStructattrValueIsSub;
+                        args.fsStructureName = this.state.fsStructureName;
+                        args.fsCorpus = this.state.fsCorpus;
+                        args.fsSubcorpus = this.state.fsSubcorpus;
+                        args.fsArchivedAs = this.state.fsArchAs;
 
-            } else {
-                args.fsAnyPropertyValue = this.state.fsAnyPropertyValue;
+                    } else {
+                        args.fsCorpus = this.state.fsCorpus;
+                        args.fsSubcorpus = this.state.fsSubcorpus;
+                        args.fsArchivedAs = this.state.fsArchAs;
+                        args.fsAnyPropertyValue = this.state.fsAnyPropertyValue;
+                        args.fsAnyPropertyValueIsSub = this.state.fsAnyPropertyValueIsSub;
+                    }
+                    break;
+                case 'wlist':
+                    if (this.state.fsQueryCQLProps) {
+                        args.fsCorpus = this.state.fsCorpus;
+                        args.fsSubcorpus = this.state.fsSubcorpus;
+                        args.fsArchivedAs = this.state.fsArchAs;
+                        args.fsWlpat = this.state.fsWlPat;
+                        args.fsWlattr = this.state.fsWlAttr;
+                        args.fsWlPfilter = this.state.fsWlPFilter;
+                        args.fsWlNfilter = this.state.fsWlNFilter;
+
+                    } else {
+                        args.fsCorpus = this.state.fsCorpus;
+                        args.fsSubcorpus = this.state.fsSubcorpus;
+                        args.fsArchivedAs = this.state.fsArchAs;
+                        args.fsAnyPropertyValue = this.state.fsAnyPropertyValue;
+                        args.fsAnyPropertyValueIsSub = this.state.fsAnyPropertyValueIsSub;
+                    }
+                    break;
+                case 'kwords':
+                    if (this.state.fsQueryCQLProps) {
+                        args.fsSubcorpus = this.state.fsSubcorpus;
+                        args.fsSubcorpus = this.state.fsSubcorpus;
+                        args.fsArchivedAs = this.state.fsArchAs;
+                        args.fsPosattrName = this.state.fsPosattrName;
+
+                    } else {
+                        args.fsCorpus = this.state.fsCorpus;
+                        args.fsSubcorpus = this.state.fsSubcorpus;
+                        args.fsArchivedAs = this.state.fsArchAs;
+                        args.fsAnyPropertyValue = this.state.fsAnyPropertyValue;
+                        args.fsAnyPropertyValueIsSub = this.state.fsAnyPropertyValueIsSub;
+                    }
+                    break;
+                default:
+                    args.fsCorpus = this.state.fsCorpus;
+                    args.fsSubcorpus = this.state.fsSubcorpus;
+                    args.fsArchivedAs = this.state.fsArchAs;
+                    args.fsAnyPropertyValue = this.state.fsAnyPropertyValue;
+                    args.fsAnyPropertyValueIsSub = this.state.fsAnyPropertyValueIsSub;
+                    break;
             }
         }
         return this.pageModel.ajax$<GetHistoryResponse>(
@@ -455,7 +665,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         ).pipe(
             tap(data => {
                 this.changeState(state => {
-                    state.hasMoreItems = data.data.length === state.limit + 1;
+                    state.hasMoreItems = data.data.length === state.limit + 1 && state.searchFormView === 'quick';
                     state.data = pipe(
                         state.hasMoreItems ?
                             data.data.slice(0, data.data.length - 1) :

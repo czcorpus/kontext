@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { Bound, IActionDispatcher } from 'kombo';
+import { BoundWithProps, IActionDispatcher } from 'kombo';
 import { Keyboard, Dict, pipe, List } from 'cnc-tskit';
 
 import * as Kontext from '../../../types/kontext';
@@ -30,7 +30,7 @@ import * as S from './style';
 import { SearchHistoryModelState, ConcQueryHistoryItem,
     QueryHistoryItem } from '../../../models/searchHistory/common';
 import { SearchHistoryModel } from '../../../models/searchHistory';
-import { init as fulltextViewInit } from './fulltext';
+import { init as fieldsViewInit } from './srchFields';
 import gearIcon from '../../../../img/config-icon.svg';
 import gearIconS from '../../../../img/config-icon_s.svg';
 
@@ -38,7 +38,7 @@ import * as QS from '../../query/style';
 
 
 export interface HistoryViews {
-    RecentQueriesPageList:React.ComponentClass<{}>;
+    RecentQueriesPageList:React.ComponentClass<{onCloseClick: ()=>void; onHelpClick: ()=>void}>;
 }
 
 
@@ -49,8 +49,7 @@ export function init(
 ):HistoryViews {
 
     const layoutViews = he.getLayoutViews();
-    const FulltextFieldset = fulltextViewInit(dispatcher, he, queryHistoryModel);
-
+    const srchFields = fieldsViewInit(dispatcher, he, queryHistoryModel);
 
     const supertypeToHuman = (qSupertype:Kontext.QuerySupertype) => {
         switch (qSupertype) {
@@ -71,82 +70,6 @@ export function init(
             he.translate('query__qt_simple');
     };
 
-    // -------------------- <QueryTypeSelector /> ------------------------
-
-    const SearchKindSelector:React.FC<{
-        value:Kontext.QuerySupertype;
-
-    }> = (props) => {
-
-        const handleChange = (evt) => {
-            dispatcher.dispatch<typeof Actions.HistorySetQuerySupertype>({
-                name: Actions.HistorySetQuerySupertype.name,
-                payload: {
-                    value: evt.target.value
-                }
-            });
-        };
-
-        return (
-            <S.SearchKindSelector value={props.value} onChange={handleChange}>
-                <option value="">
-                    {he.translate('qhistory__qs_any')}
-                </option>
-                {List.map(
-                    v => <option key={v} value={v}>{supertypeToHuman(v)}</option>,
-                    ['conc', 'pquery', 'wlist', 'kwords'] as Array<Kontext.QuerySupertype>
-                )}
-            </S.SearchKindSelector>
-        );
-    };
-
-    // -------------------- <CurrentCorpCheckbox /> ------------------------
-
-    const CurrentCorpCheckbox:React.FC<{
-        value:boolean;
-
-    }> = (props) => {
-
-        const handleChange = () => {
-            dispatcher.dispatch<typeof Actions.HistorySetCurrentCorpusOnly>({
-                name: Actions.HistorySetCurrentCorpusOnly.name,
-                payload: {
-                    value: !props.value
-                }
-            });
-        };
-        return (
-            <S.CurrentCorpCheckbox>
-                 <input type="checkbox" checked={props.value} onChange={handleChange}
-                        style={{verticalAlign: 'middle'}} />
-            </S.CurrentCorpCheckbox>
-        );
-    };
-
-    // -------------------- <ArchivedOnlyCheckbox /> ------------------------
-
-    const ArchivedOnlyCheckbox:React.FC<{
-        value:boolean;
-
-    }> = (props) => {
-        const handleChange = () => {
-            dispatcher.dispatch<typeof Actions.HistorySetArchivedOnly>({
-                name: Actions.HistorySetArchivedOnly.name,
-                payload: {
-                    value: !props.value
-                }
-            });
-        };
-
-        return (
-            <S.ArchivedOnlyCheckbox>
-               <input type="checkbox" checked={props.value} onChange={handleChange}
-                        style={{verticalAlign: 'middle'}} />
-            </S.ArchivedOnlyCheckbox>
-        )
-    }
-
-
     // -------------------- <FilterForm /> ------------------------
 
     const FilterForm:React.FC<{
@@ -155,33 +78,78 @@ export function init(
         querySupertype:Kontext.QuerySupertype;
         archivedOnly:boolean;
         supportsFulltext:boolean;
+        searchFormView:string;
 
     }> = (props) => {
 
+        const handleChangeSearchFormView = (id:string) => {
+            dispatcher.dispatch(
+                Actions.ChangeSearchForm,
+                {value: id},
+            );
+        };
+
+        const items = [{id: 'quick', label: he.translate('qhistory__quick_search')}];
+        if (props.supportsFulltext) {
+            items.push({id: 'extended', label: he.translate('qhistory__extended_search')});
+        }
+
+        const handleClickSearch = () => {
+            dispatcher.dispatch(
+                Actions.SubmitExtendedSearch
+            );
+        };
+
+        const handleKeyDown = () => {
+            dispatcher.dispatch(
+                Actions.SubmitExtendedSearch
+            );
+        };
+
+        React.useEffect(() => {
+            document.addEventListener('keydown', handleKeyDown);
+            return () => document.removeEventListener('keydown', handleKeyDown);
+
+        }, [])
+
         return (
-            <S.FilterForm>
-                <fieldset className="basic">
-                    <legend>
-                        {he.translate('qhistory__filter_legend')}
-                    </legend>
-                    <label>
-                        {he.translate('qhistory__curr_corp_only_label_{corpus}', {corpus: props.corpname})}:
-                        <CurrentCorpCheckbox value={props.currentCorpusOnly} />
-                    </label>
-                    <label>
-                        {he.translate('qhistory__query_supertype_sel')}:
-                        <SearchKindSelector value={props.querySupertype} />
-                    </label>
-                    <label>
-                        {he.translate('qhistory__checkbox_archived_only')}:
-                        <ArchivedOnlyCheckbox value={props.archivedOnly} />
-                    </label>
-                </fieldset>
-                {props.supportsFulltext ?
-                    <FulltextFieldset /> :
-                    null
-                }
-            </S.FilterForm>
+            <layoutViews.TabView
+                    className="SortFormSelector"
+                    defaultId={props.searchFormView}
+                    callback={handleChangeSearchFormView}
+                    items={items}>
+
+                <S.FilterForm>
+                    <fieldset className="basic">
+                        <legend>
+                            {he.translate('qhistory__filter_legend')}
+                        </legend>
+                        <div className="grid-inputs">
+                            <srchFields.BasicFields corpusSel={true} archivedAsEnable={false} />
+                        </div>
+                    </fieldset>
+                </S.FilterForm>
+
+                <S.FilterForm>
+                    <fieldset className="advanced">
+                        <div className="grid-inputs">
+                            <srchFields.BasicFields corpusSel={false} archivedAsEnable={true} />
+                            <srchFields.ExtendedFields />
+                        </div>
+                        {!props.querySupertype ?
+                            <p className="note">({he.translate('qhistory__any_search_note')})</p> :
+                            null
+                        }
+                        <div className="button-area">
+                            <div style={{flexGrow: '1'}}></div>
+                            <button type="button" className="util-button" onClick={handleClickSearch}>
+                                {he.translate('qhistory__search_button')}
+                            </button>
+                        </div>
+                    </fieldset>
+                </S.FilterForm>
+
+            </layoutViews.TabView>
         );
     };
 
@@ -247,7 +215,7 @@ export function init(
                                     List.map(k => (
                                         <li key={k}>
                                             <strong>{k}</strong>:
-                                            {this.props.textTypes[k].join(', ')}
+                                            {this.props.textTypes(k).join(', ')}
                                         </li>
                                     ))
                                 )}
@@ -710,6 +678,7 @@ export function init(
         dataLength:number;
         hasMoreItems:boolean;
         modelIsBusy:boolean;
+        searched:boolean;
 
     }> = (props) => {
         if (props.dataLength > 0) {
@@ -721,7 +690,11 @@ export function init(
             }
 
         } else {
-            return <NoDataBlock />;
+            if (props.searched) {
+                return <NoDataBlock />;
+            } else {
+                return null;
+            }
         }
     };
 
@@ -733,6 +706,7 @@ export function init(
         modelIsBusy:boolean;
         itemsToolbars:Array<[boolean, boolean]>;
         data:Array<QueryHistoryItem>;
+        searched:boolean;
 
     }> = (props) => {
         return (
@@ -753,36 +727,152 @@ export function init(
                     )}
                 </ul>
                 <DataTableFooter dataLength={props.data.length} modelIsBusy={props.modelIsBusy}
-                        hasMoreItems={props.hasMoreItems} />
+                        hasMoreItems={props.hasMoreItems} searched={props.searched} />
             </div>
+        );
+    };
+
+    // -------------------- <HelpControls /> ---------------------------------
+
+    const HelpControls:React.FC<{}> = (props) => {
+
+        const handleBackClick = () => {
+            dispatcher.dispatch(
+                Actions.ToggleHelpView
+            );
+        };
+
+        return (
+            <div className="navig">
+                <a onClick={handleBackClick}>
+                    <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/back-button.svg')}
+                        alt={he.translate('global__back')} />
+                </a>
+            </div>
+        );
+    }
+
+    // -------------------- <HelpView /> -------------------------------------
+
+
+    const HelpView:React.FC<{}> = (props) => {
+
+
+
+        return (
+            <S.HelpView>
+                <h2>{he.translate('qhistory__extended_search')}</h2>
+                <h3>{he.translate('qhistory__help_any_search')}</h3>
+                <p>
+                    {he.translate('qhistory__help_section_any_type_search')}
+                </p>
+                <h3>{he.translate('qhistory__help_extended_search_conc')}</h3>
+                <p>
+                    {he.translate('qhistory__help_section_intro')}
+                </p>
+                <div className="table-and-schema">
+                    <table className="query-parts">
+                        <thead>
+                            <tr>
+                                <th rowSpan={2}>{he.translate('qhistory__help_query_part')}</th>
+                                <th colSpan={2}>{he.translate('qhistory__help_comparison_method')}</th>
+                            </tr>
+                            <tr>
+                                <th>{he.translate('qhistory__help_exact_match')}</th>
+                                <th>{he.translate('qhistory__help_substring')}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>{he.translate('qhistory__help_posattr_name')} <code>(A)</code></td>
+                                <td>{'\u2705'}</td>
+                                <td>{'\u274C'}</td>
+                            </tr>
+                            <tr>
+                                <td>{he.translate('qhistory__help_posattr_value')} <code>(B)</code></td>
+                                <td>{'\u2705'}</td>
+                                <td>{'\u2705'}</td>
+                            </tr>
+                            <tr>
+                                <td>{he.translate('qhistory__help_structure_name')} <code>(C)</code></td>
+                                <td>{'\u2705'}</td>
+                                <td>{'\u274C'}</td>
+                            </tr>
+                            <tr>
+                                <td>{he.translate('qhistory__help_structattr_name')} <code>(D)</code></td>
+                                <td>{'\u2705'}</td>
+                                <td>{'\u274C'}</td>
+                            </tr>
+                            <tr>
+                                <td>{he.translate('qhistory__help_structattr_value')} <code>(E)</code></td>
+                                <td>{'\u2705'}</td>
+                                <td>{'\u2705'}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div className="schema">
+                        <img src={he.createStaticUrl('img/fs_help.svg')} />
+                    </div>
+                </div>
+                <h4>{he.translate('query__qt_simple')}</h4>
+                <p>
+                    {he.translate('qhistory__help_section_simple_query')}
+                </p>
+                <h4>{he.translate('query__qt_advanced')}</h4>
+                <p>
+                    {he.translate('qhistory__help_section_advanced_query')}
+                </p>
+            </S.HelpView>
         );
     };
 
     // -------------------- <RecentQueriesPageList /> ------------------------
 
-    const RecentQueriesPageList:React.FC<SearchHistoryModelState> = (props) => {
+    const RecentQueriesPageList:React.FC<
+            SearchHistoryModelState &
+            {
+                onCloseClick: ()=>void
+                onHelpClick: ()=>void
+            }> = (props) => {
         return (
-            <S.RecentQueriesPageList>
-                <FilterForm
-                        corpname={props.corpname}
-                        querySupertype={props.querySupertype}
-                        currentCorpusOnly={props.currentCorpusOnly}
-                        archivedOnly={props.archivedOnly}
-                        supportsFulltext={props.supportsFulltext} />
-                {props.data.length === 0 && props.isBusy ?
-                    <div className="loader"><layoutViews.AjaxLoaderImage /></div> :
-                    <DataTable data={props.data} offset={props.offset}
-                            modelIsBusy={props.isBusy}
-                            hasMoreItems={props.hasMoreItems}
-                            itemsToolbars={props.itemsToolbars} />
+            <layoutViews.ModalOverlay onCloseKey={props.onCloseClick}>
+                <layoutViews.CloseableFrame
+                        scrollable={true}
+                        onCloseClick={props.onCloseClick}
+                        onHelpClick={props.onHelpClick}
+                        label={he.translate('query__recent_queries_link')}
+                        customClass="OptionsContainer"
+                        customControls={props.isHelpVisible ? <HelpControls /> : null} >
+                {props.isHelpVisible ?
+                    <div><HelpView /></div> :
+                    <S.RecentQueriesPageList>
+                        <FilterForm
+                            corpname={props.corpname}
+                            querySupertype={props.querySupertype}
+                            currentCorpusOnly={props.currentCorpusOnly}
+                            archivedOnly={props.archivedOnly}
+                            supportsFulltext={props.supportsFulltext}
+                            searchFormView={props.searchFormView} />
+                        {props.data.length === 0 && props.isBusy ?
+                            <div className="loader"><layoutViews.AjaxLoaderImage /></div> :
+                            <DataTable data={props.data} offset={props.offset}
+                                    modelIsBusy={props.isBusy}
+                                    hasMoreItems={props.hasMoreItems}
+                                    itemsToolbars={props.itemsToolbars}
+                                    searched={props.searched} />
+                        }
+                    </S.RecentQueriesPageList>
                 }
-            </S.RecentQueriesPageList>
+                </layoutViews.CloseableFrame>
+            </layoutViews.ModalOverlay>
         );
     }
 
 
     return {
-        RecentQueriesPageList: Bound(RecentQueriesPageList, queryHistoryModel)
+        RecentQueriesPageList: BoundWithProps<
+        {onCloseClick: ()=>void; onHelpClick: ()=>void},
+        SearchHistoryModelState>(RecentQueriesPageList, queryHistoryModel)
     };
 
 }

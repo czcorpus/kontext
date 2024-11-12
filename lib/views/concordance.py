@@ -59,7 +59,7 @@ from conclib.empty import InitialConc
 from conclib.errors import (
     ConcordanceException, ConcordanceQueryParamsError,
     ConcordanceSpecificationError, UnknownConcordanceAction,
-    extract_manatee_error)
+    ConcordanceQuerySyntaxError, extract_manatee_error)
 from conclib.freq import one_level_crit
 from conclib.search import get_conc
 from corplib.abstract import SubcorpusIdent
@@ -167,6 +167,12 @@ async def query_submit(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         ans['finished'] = conc.finished()
         amodel.on_query_store(store_last_op)
         resp.set_http_status(201)
+    except ConcordanceQuerySyntaxError as ex:
+        # we want queries with syntax errors to be saved, so we suppress
+        # the error a bit to make amodel.post_dispatch do its work
+        ans['size'] = 0
+        ans['finished'] = True
+        resp.add_system_message('error', str(ex))
     except (ConcordanceException, ConcCacheStatusException) as ex:
         ans['size'] = 0
         ans['finished'] = True
@@ -314,20 +320,20 @@ async def view_conc(
 
     amodel.add_save_menu_item(
         'CSV', save_format='csv',
-        hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
-            amodel.CONC_QUICK_SAVE_MAX_LINES)))
+        hint=req.translate('Saves at most {0} items. Use "Custom" for more options.').format(
+            amodel.CONC_QUICK_SAVE_MAX_LINES))
     amodel.add_save_menu_item(
         'XLSX', save_format='xlsx',
-        hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
-            amodel.CONC_QUICK_SAVE_MAX_LINES)))
+        hint=req.translate('Saves at most {0} items. Use "Custom" for more options.').format(
+            amodel.CONC_QUICK_SAVE_MAX_LINES))
     amodel.add_save_menu_item(
         'XML', save_format='xml',
-        hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
-            amodel.CONC_QUICK_SAVE_MAX_LINES)))
+        hint=req.translate('Saves at most {0} items. Use "Custom" for more options.').format(
+            amodel.CONC_QUICK_SAVE_MAX_LINES))
     amodel.add_save_menu_item(
         'TXT', save_format='txt',
-        hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
-            amodel.CONC_QUICK_SAVE_MAX_LINES)))
+        hint=req.translate('Saves at most {0} items. Use "Custom" for more options.').format(
+            amodel.CONC_QUICK_SAVE_MAX_LINES))
     amodel.add_save_menu_item(req.translate('Custom'))
 
     # unlike 'globals' 'widectx_globals' stores full structs+structattrs information
@@ -542,6 +548,7 @@ async def save_query(amodel: UserActionModel, req: KRequest, resp: KResponse):
                 await qp.archive(conc_id, True)
 
         hsave = await qh.make_persistent(
+            amodel.plugin_ctx,
             amodel.session_get('user', 'id'),
             req.json['query_id'],
             qp.stored_query_supertype(data),
@@ -559,6 +566,7 @@ async def unsave_query(amodel: UserActionModel, req: KRequest, resp: KResponse):
     # not want to keep the query in their history
     with plugins.runtime.QUERY_HISTORY as qh:
         ans = await qh.make_transient(
+            amodel.plugin_ctx,
             amodel.session_get('user', 'id'),
             req.json['query_id'],
             req.json['created'],
@@ -573,6 +581,7 @@ async def delete_query(amodel: UserActionModel, req: KRequest, resp: KResponse):
     # remove query from history (respective results are kept)
     with plugins.runtime.QUERY_HISTORY as qh:
         ans = await qh.delete(
+            amodel.plugin_ctx,
             amodel.session_get('user', 'id'),
             req.json['query_id'],
             int(req.json['created'])

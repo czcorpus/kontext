@@ -24,7 +24,7 @@ from typing import Union
 
 import redis
 import uvloop
-from rq import Connection, Worker, get_current_job
+from rq import Worker, get_current_job
 
 APP_PATH = os.path.realpath(f'{os.path.dirname(os.path.abspath(__file__))}/..')
 sys.path.insert(0, os.path.join(APP_PATH, 'lib'))
@@ -184,30 +184,30 @@ for p in plugins.runtime:
 
 
 if __name__ == "__main__":
-    with Connection(redis.Redis(
+    connection = redis.Redis(
         host=settings.get('calc_backend', 'rq_redis_host'),
         port=settings.get('calc_backend', 'rq_redis_port'),
         db=settings.get('calc_backend', 'rq_redis_db')
-    )):
+    )
 
-        logging_handlers = []
-        if settings.contains('logging', 'stderr'):
-            handler = logging.StreamHandler(sys.stderr)
-        elif settings.contains('logging', 'stdout'):
-            handler = logging.StreamHandler(sys.stdout)
-        elif settings.contains('calc_backend', 'rq_log_path'):
-            handler = logging.FileHandler(settings.get('calc_backend', 'rq_log_path'))
+    logging_handlers = []
+    if settings.contains('logging', 'stderr'):
+        handler = logging.StreamHandler(sys.stderr)
+    elif settings.contains('logging', 'stdout'):
+        handler = logging.StreamHandler(sys.stdout)
+    elif settings.contains('calc_backend', 'rq_log_path'):
+        handler = logging.FileHandler(settings.get('calc_backend', 'rq_log_path'))
 
-        if handler:
-            handler.setFormatter(KontextLogFormatter())
-            logging_handlers.append(handler)
+    if handler:
+        handler.setFormatter(KontextLogFormatter())
+        logging_handlers.append(handler)
 
-        logging.basicConfig(
-            handlers=logging_handlers,
-            level=logging.INFO if not settings.is_debug_mode() else logging.DEBUG
-        )
+    logging.basicConfig(
+        handlers=logging_handlers,
+        level=logging.INFO if not settings.is_debug_mode() else logging.DEBUG
+    )
 
-        qs = sys.argv[1:] or ['default']
-        worker.init_scheduler()
-        w = Worker(qs)
-        w.work()
+    qs = sys.argv[1:] or ['default']
+    worker.init_scheduler()
+    w = Worker(qs, connection=connection)
+    w.work()

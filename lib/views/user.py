@@ -15,9 +15,11 @@
 
 import datetime
 import logging
+from typing import Optional
 
 import plugins
 import settings
+from action.argmapping.user import FullSearchArgs
 from action.control import http_action
 from action.errors import ImmediateRedirectException, UserReadableException
 from action.krequest import KRequest
@@ -191,7 +193,9 @@ async def _load_query_history(
         to_date: str,
         q_supertype: str,
         corpname: str,
-        archived_only: bool):
+        archived_only: bool,
+        full_search_args: Optional[FullSearchArgs],
+):
     rows = []
     with plugins.runtime.QUERY_HISTORY as qh:
         rows = await qh.get_user_queries(
@@ -201,7 +205,9 @@ async def _load_query_history(
             offset=offset, limit=limit,
             q_supertype=q_supertype, corpname=corpname,
             from_date=from_date, to_date=to_date,
-            archived_only=archived_only)
+            archived_only=archived_only,
+            full_search_args=full_search_args,
+        )
     return rows
 
 
@@ -213,10 +219,31 @@ async def ajax_query_history(amodel: UserActionModel, req: KRequest, resp: KResp
     query_supertype = req.args.get('query_supertype')
     corpname = req.args.get('corpname', None)
     archived_only = bool(int(req.args.get('archived_only', '0')))
+
+    extended_search = bool(int(req.args.get('extended_search', '0')))
+    full_search_args = FullSearchArgs(
+        name=req.args.get('fsArchivedAs', None),
+        any_property_value=req.args.get('fsAnyPropertyValue', None),
+        any_property_value_is_sub=req.args.get('fsAnyPropertyValueIsSub', '0') == '1',
+        posattr_name=req.args.get('fsPosattrName', None),
+        posattr_value=req.args.get('fsPosattrValue', None),
+        posattr_value_is_sub=req.args.get('fsPosattrValueIsSub', '0') == '1',
+        structure_name=req.args.get('fsStructureName', None),
+        structattr_name=req.args.get('fsStructattrName', None),
+        structattr_value=req.args.get('fsStructattrValue', None),
+        structattr_value_is_sub=req.args.get('fsStructattrValueIsSub', '0') == '1',
+        corpus=req.args.get('fsCorpus', None),
+        subcorpus=req.args.get('fsSubcorpus', None),
+        wl_pat=req.args.get('fsWlpat', None),
+        wl_attr=req.args.get('fsWlattr', None),
+        wl_pfilter=req.args.get('fsWlPfilter', None),
+        wl_nfilter=req.args.get('fsWlNfilter', None),
+    )
+
     rows = await _load_query_history(
         amodel=amodel, q_supertype=query_supertype, corpname=corpname, from_date=None,
         user_id=req.session_get('user', 'id'), to_date=None, archived_only=archived_only, offset=offset,
-        limit=limit)
+        limit=limit, full_search_args=full_search_args if extended_search else None)
     return dict(
         data=rows,
         from_date=None,

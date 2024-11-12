@@ -24,7 +24,7 @@ import corplib
 import plugins
 import settings
 from action.argmapping import UserActionArgs
-from action.errors import FunctionNotSupported, UserReadableException
+from action.errors import UserReadableException
 from action.krequest import KRequest
 from action.model import ModelsSharedData
 from action.model.abstract import AbstractUserModel

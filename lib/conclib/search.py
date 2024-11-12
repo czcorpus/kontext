@@ -22,7 +22,6 @@ import asyncio
 import logging
 import os
 from typing import List, Optional, Tuple, Union
-import uuid
 
 import aiofiles.os
 import bgcalc

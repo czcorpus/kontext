@@ -25,6 +25,7 @@ import * as Kontext from '../../types/kontext';
 import { init as fullViewInit } from './full';
 import { MainMenuModelState } from '../../models/mainMenu';
 import { Actions as MainMenuActions } from '../../models/mainMenu/actions';
+import { Actions } from '../../models/searchHistory/actions';
 import { SearchHistoryModel } from '../../models/searchHistory';
 
 export interface MainModuleArgs {
@@ -44,64 +45,41 @@ export function init({dispatcher, helpers, searchHistoryModel, mainMenuModel}:Ma
     const layoutViews = helpers.getLayoutViews();
     const widgetView = fullViewInit(dispatcher, helpers, searchHistoryModel);
 
-    class HistoryContainer extends React.PureComponent<MainMenuModelState> {
+    const HistoryContainer:React.FC<MainMenuModelState> = (props) => {
 
-        _isActiveItem(itemName) {
-            return this.props.activeItem && this.props.activeItem.actionName === itemName;
-        }
+        const _isActive = () => {
+            return props.activeItem &&
+                props.activeItem.actionName === MainMenuActions.ShowQueryHistory.name;
+        };
 
-        _isActive() {
-            return this._isActiveItem(MainMenuActions.ShowQueryHistory.name);
-        }
-
-        _handleCloseClick() {
+        const _handleCloseClick = () => {
             dispatcher.dispatch<typeof MainMenuActions.ClearActiveItem>({
                 name: MainMenuActions.ClearActiveItem.name
             });
-        }
+        };
 
-        _renderForm() {
-            if (this._isActive()) {
-                return <widgetView.RecentQueriesPageList />;
+        const _handleHelpClick = () => {
+            dispatcher.dispatch<typeof Actions.ToggleHelpView>({
+                name: Actions.ToggleHelpView.name
+            });
+        };
 
-            } else {
-                return <div></div>;
-            }
-        }
+        if (_isActive()) {
+            return <widgetView.RecentQueriesPageList
+                    onCloseClick={_handleCloseClick}
+                    onHelpClick={_handleHelpClick} />
 
-        _renderTitle() {
-            if (this._isActive()) {
-                return helpers.translate('query__recent_queries_link')
+        } else if (props.isBusy) {
+            return <layoutViews.ModalOverlay onCloseKey={_handleCloseClick}>
+                    <layoutViews.CloseableFrame label={helpers.translate('global__loading')}
+                                onCloseClick={()=>undefined}
+                                customClass="OptionsContainer busy">
+                        <layoutViews.AjaxLoaderImage htmlClass="ajax-loader" />
+                    </layoutViews.CloseableFrame>
+                </layoutViews.ModalOverlay>;
 
-            } else {
-                return '--';
-            }
-        }
-
-        render() {
-            if (this._isActive()) {
-                return <layoutViews.ModalOverlay onCloseKey={this._handleCloseClick}>
-                        <layoutViews.CloseableFrame
-                                scrollable={true}
-                                onCloseClick={this._handleCloseClick}
-                                label={this._renderTitle()}
-                                customClass="OptionsContainer">
-                            {this._renderForm()}
-                        </layoutViews.CloseableFrame>
-                    </layoutViews.ModalOverlay>;
-
-            } else if (this.props.isBusy) {
-                return <layoutViews.ModalOverlay onCloseKey={this._handleCloseClick}>
-                        <layoutViews.CloseableFrame label={helpers.translate('global__loading')}
-                                    onCloseClick={()=>undefined}
-                                    customClass="OptionsContainer busy">
-                            <layoutViews.AjaxLoaderImage htmlClass="ajax-loader" />
-                        </layoutViews.CloseableFrame>
-                    </layoutViews.ModalOverlay>;
-
-            } else {
-                return null;
-            }
+        } else {
+            return null;
         }
     }
 

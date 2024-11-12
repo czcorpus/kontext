@@ -52,6 +52,8 @@ export const ImgWithMouseover:React.FC<CoreViews.ImgWithMouseover.Props> = (prop
                 alt={props.alt}
                 title={props.alt}
                 style={css}
+                role={props.role ? props.role : null}
+                tabIndex={props.tabIndex ? props.tabIndex : null}
                 onMouseOver={handleCloseMouseover}
                 onMouseOut={handleCloseMouseout}  />;
 };

@@ -15,7 +15,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import re
-import sys
 
 
 def shorten(val, length=8, suffix='...', nice=False):

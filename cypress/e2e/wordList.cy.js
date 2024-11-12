@@ -11,6 +11,7 @@ describe('Word List', () => {
     });
 
     afterEach(() => {
+        cy.closeMessages();
         cy.actionLogout();
     });
 
@@ -83,7 +84,7 @@ describe('Word List', () => {
 
     it('defines a word list query including non-words, submits and reloads query form from history', () => {
         cy.get('#wl-pattern-input').type(',');
-        cy.get('#wordlist-form-mount label[for="wl-include-non-words-checkbox"]').click();
+        cy.get('#wordlist-form-mount span.ToggleSwitch').click();
         cy.get('#wordlist-form-mount .default-button').click();
 
         // test result page
@@ -97,7 +98,7 @@ describe('Word List', () => {
         cy.openLastHistoryItem();
         cy.url().should('include', '/wordlist/form');
         cy.get('#wl-pattern-input').should('have.value', ',');
-        cy.get('#wl-include-non-words-checkbox').should('be.checked');
+        cy.get('#wordlist-form-mount span.ToggleSwitch a.on').should('have.length', 1);
     });
 
     it('defines a word list query with positive filter, submits and reloads query form from history', () => {
@@ -161,7 +162,7 @@ describe('Word List', () => {
 
         // TODO Freqs page?
 
-        cy.url().should('include', '/freqs');
+        cy.url().should('include', '/freqml?');
         // switch to chart view
         cy.get('.FreqViewSelector button').first().click();
         const svgCharts = cy.get('#result-mount svg');

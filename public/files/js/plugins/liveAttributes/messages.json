@@ -25,7 +25,8 @@
         "ucnkLA__download_btn": "Download",
         "ucnkLA__dt_structattrs": "Included attributes",
         "ucnkLA__total_items": "Total items",
-        "ucnkLA__dt_file_format": "Data format"
+        "ucnkLA__dt_file_format": "Data format",
+        "ucnkLA__too_many_autocomplete_values": "The number of matching items is too high to be listed"
     },
     "cs-CZ": {
         "ucnkLA__bib_list_warning": "Vzhledem k velkému počtu odpovídajících položek se konkrétní tituly objeví až po dalším filtrování a zúžení výběru.",
@@ -53,7 +54,8 @@
         "ucnkLA__download_btn": "Stáhnout",
         "ucnkLA__dt_structattrs": "Zahrnuté atributy",
         "ucnkLA__total_items": "Položek celkem",
-        "ucnkLA__dt_file_format": "Formát dat"
+        "ucnkLA__dt_file_format": "Formát dat",
+        "ucnkLA__too_many_autocomplete_values": "Počet odpovídajích položek je pro zobrazení příliš velký"
 	},
     "szl": {
         "ucnkLA__bib_list_warning": "Skuli wielości ôdpowiadajōncych elymyntōw lista indywidualnych tytułōw bydzie pokŏzanŏ po zakuratniyniu zaznaczyniŏ.",
@@ -81,7 +83,8 @@
         "ucnkLA__download_btn": "Download UNTRANSLATED",
         "ucnkLA__dt_structattrs": "Included attributes UNTRANSLATED",
         "ucnkLA__total_items": "Total items UNTRANSLATED",
-        "ucnkLA__dt_file_format": "Data format UNTRANSLATED"
+        "ucnkLA__dt_file_format": "Data format UNTRANSLATED",
+        "ucnkLA__too_many_autocomplete_values": "The number of matching items is too high to be listed UNTRANSLATED"
     },
     "sl-SI": {
         "ucnkLA__bib_list_warning": "Due to the large number of matching items, the list of individual titles will only be displayed after refining the selection. UNTRANSLATED",
@@ -109,6 +112,7 @@
         "ucnkLA__download_btn": "Download UNTRANSLATED",
         "ucnkLA__dt_structattrs": "Included attributes UNTRANSLATED",
         "ucnkLA__total_items": "Total items UNTRANSLATED",
-        "ucnkLA__dt_file_format": "Data format UNTRANSLATED"
+        "ucnkLA__dt_file_format": "Data format UNTRANSLATED",
+        "ucnkLA__too_many_autocomplete_values": "The number of matching items is too high to be listed UNTRANSLATED"
     }
 }

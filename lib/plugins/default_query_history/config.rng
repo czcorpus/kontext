@@ -10,7 +10,7 @@
             <element name="page_num_records">
                 <data type="positiveInteger" />
             </element>
-            <element name="ttl_days">
+            <element name="preserve_amount">
                 <data type="positiveInteger" />
             </element>
         </element>

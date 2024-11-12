@@ -139,12 +139,23 @@ export interface GetHistoryArgs {
     query_supertype:Kontext.QuerySupertype;
     corpname:string;
     archived_only:boolean;
+    extended_search:boolean;
     fsPosattrName?:string;
     fsPosattrValue?:string;
+    fsPosattrValueIsSub?:boolean;
     fsStructureName?:string;
     fsStructattrName?:string;
     fsStructattrValue?:string;
+    fsStructattrValueIsSub?:boolean;
+    fsCorpus?:string;
+    fsSubcorpus?:string;
+    fsArchivedAs?:string;
+    fsWlpat?:string;
+    fsWlattr?:string;
+    fsWlPfilter?:string;
+    fsWlNfilter?:string;
     fsAnyPropertyValue?:string;
+    fsAnyPropertyValueIsSub?:boolean;
 }
 
 export interface GetHistoryResponse extends Kontext.AjaxResponse {
@@ -166,6 +177,7 @@ export interface WidgetProps {
 }
 
 export interface SearchHistoryModelState {
+    searched:boolean;
     corpname:string;
     data:Array<QueryHistoryItem>;
     itemsToolbars:Array<[boolean, boolean]>;
@@ -179,14 +191,24 @@ export interface SearchHistoryModelState {
     archivedOnly:boolean;
     currentItem:number;
     supportsFulltext:boolean;
+    searchFormView:'extended'|'quick';
     fsQueryCQLProps:boolean;
     fsPosattrName:string;
     fsPosattrValue:string;
+    fsPosattrValueIsSub:boolean;
     fsStructureName:string;
     fsStructattrName:string;
     fsStructattrValue:string;
+    fsStructattrValueIsSub:boolean;
     fsAnyPropertyValue:string;
-    extendedSearchVisible:boolean;
-
+    fsAnyPropertyValueIsSub:boolean;
+    fsCorpus:string;
+    fsSubcorpus:string;
+    fsArchAs:string;
+    fsWlAttr:string;
+    fsWlPat:string;
+    fsWlPFilter:string;
+    fsWlNFilter:string;
+    isHelpVisible:boolean;
 }
 

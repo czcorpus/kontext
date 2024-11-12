@@ -23,7 +23,7 @@ describe('corpus settings - structures', () => {
         cy.clickMenuItem(8, 2);
         cy.get('#view-options-mount ul.FieldsetsTabs li:nth-child(2) button').click();
         cy.get('#view-options-mount section.StructsAndAttrsCheckboxes div.group:nth-child(3) input.select-all').click();
-        cy.get('#view-options-mount section.StructsAndAttrsCheckboxes div.group:nth-child(4) input').click();
+        cy.get('#view-options-mount section.StructsAndAttrsCheckboxes div.group:nth-child(2) input').click();
         cy.get('#view-options-mount .buttons button').click();
         // close option save message
         cy.get('.messages-mount .message .button-box .close-icon').click();
