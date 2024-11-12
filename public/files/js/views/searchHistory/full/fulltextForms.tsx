@@ -126,7 +126,7 @@ export function init(
         return (
             <>
                 <div className="aligned">
-                    <select onChange={handleVariantChange}>
+                    <select onChange={handleVariantChange} value={props.isSubstr ? '1' : '0'} >
                         <option value="0">{he.translate('qhistory__query_contains')}</option>
                         <option value="1">{he.translate('qhistory__query_part_contains')}</option>
                     </select>

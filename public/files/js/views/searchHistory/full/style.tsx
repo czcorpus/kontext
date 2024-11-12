@@ -322,8 +322,7 @@ export const FilterForm = styled.form`
     }
 
     fieldset.advanced {
-        border: 1px solid ${theme.colorLightFrame};
-        border-radius: ${theme.borderRadiusDefault};
+        border: none;
         padding: ${theme.defaultFieldsetPadding};
 
         .advanced-fields {
@@ -424,6 +423,56 @@ export const SearchKindSelector = styled.select`
 
 export const HelpView = styled.div`
 
+    h2 {
+        padding-left: 0;
+        margin-left: 0;
+        font-size: 1.8em;
+        letter-spacing: 0.06em;
+    }
+
+    h3 {
+        margin-left: 0;
+        font-size: 1.2em;
+    }
+
+    h4 {
+        margin-left: 0;
+        font-size: 0.9em;
+        text-transform: uppercase;
+    }
+
+    .table-and-schema {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1em;
+
+        table.query-parts {
+            border-collapse: collapse;
+            box-sizing: border-box;
+            width: 55%;
+
+            td, th {
+                padding: 0.4em 0.7em;
+                border: 1px solid ${theme.colorLightGrey};
+            }
+        }
+
+        .schema {
+            width: 40%;
+            min-width: 350px;
+            box-sizing: border-box;
+            border: 1px solid ${theme.colorLightGrey};
+            padding: 1em;
+
+            img {
+                width: 100%;
+            }
+        }
+    }
+
+    .query-parts code {
+        color: ${theme.colorLogoPink};
+    }
 
 
 `;

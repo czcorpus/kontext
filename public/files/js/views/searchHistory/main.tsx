@@ -25,6 +25,7 @@ import * as Kontext from '../../types/kontext';
 import { init as fullViewInit } from './full';
 import { MainMenuModelState } from '../../models/mainMenu';
 import { Actions as MainMenuActions } from '../../models/mainMenu/actions';
+import { Actions } from '../../models/searchHistory/actions';
 import { SearchHistoryModel } from '../../models/searchHistory';
 
 export interface MainModuleArgs {
@@ -57,8 +58,16 @@ export function init({dispatcher, helpers, searchHistoryModel, mainMenuModel}:Ma
             });
         };
 
+        const _handleHelpClick = () => {
+            dispatcher.dispatch<typeof Actions.ToggleHelpView>({
+                name: Actions.ToggleHelpView.name
+            });
+        };
+
         if (_isActive()) {
-            return <widgetView.RecentQueriesPageList onCloseClick={_handleCloseClick} />
+            return <widgetView.RecentQueriesPageList
+                    onCloseClick={_handleCloseClick}
+                    onHelpClick={_handleHelpClick} />
 
         } else if (props.isBusy) {
             return <layoutViews.ModalOverlay onCloseKey={_handleCloseClick}>

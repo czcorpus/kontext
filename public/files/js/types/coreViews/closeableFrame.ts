@@ -23,6 +23,7 @@ import { AutoWidth } from './common';
 
 export interface Props {
     onCloseClick:()=>void;
+    onHelpClick?:()=>void;
     onReady?:(elm:HTMLElement)=>void;
     customClass?:string;
     scrollable?:boolean;
