@@ -34,25 +34,6 @@ from .backend import Backend
 bp = Blueprint('mysql_user_items')
 
 
-def import_legacy_record(data):
-    ans = FavoriteItem()
-    ans.ident = data['id']
-    ans.name = data.get('name', '??')
-    ans.corpora = [dict(id=data['corpus_id'], name=data['name'])]
-    if data.get('corpora', None):
-        for item in data.get('corpora', []):
-            try:
-                ans.corpora.append(dict(id=item['canonical_id'], name=item['name']))
-            except Exception as ex:
-                logging.getLogger(__name__).warning(
-                    'Failed to import legacy fav. item record component: {0}'.format(ex))
-    ans.subcorpus_id = data.get('subcorpus_id', None)
-    ans.subcorpus_name = data.get('subcorpus_orig_id', ans.subcorpus_id)
-    ans.size = data.get('size', None)
-    ans.size_info = data.get('size_info', None)
-    return ans
-
-
 @bp.route('/user/set_favorite_item', methods=['POST'])
 @http_action(return_type='json', access_level=2, action_model=UserActionModel)
 async def set_favorite_item(amodel: UserActionModel, req: KRequest, resp: KResponse):
