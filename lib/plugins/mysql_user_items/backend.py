@@ -22,12 +22,13 @@ A corparch database backend for MySQL/MariaDB.
 """
 from typing import List
 
-from plugin_types.user_items import FavoriteItem
+from plugin_types.user_items import CorpusItem, FavoriteItem
 from plugins.common.sqldb import DatabaseAdapter
 from plugins.common.mysql.adhocdb import AdhocDB
 
 DFLT_USER_TABLE = 'kontext_user'
 DFLT_CORP_TABLE = 'kontext_corpus'
+DFLT_SUBCORP_TABLE = 'kontext_subcorpus'
 DFLT_GROUP_ACC_TABLE = 'kontext_group_access'
 DFLT_GROUP_ACC_CORP_ATTR = 'corpus_name'
 DFLT_GROUP_ACC_GROUP_ATTR = 'group_access'
@@ -42,6 +43,7 @@ class Backend:
             db: DatabaseAdapter,
             user_table: str = DFLT_USER_TABLE,
             corp_table: str = DFLT_CORP_TABLE,
+            subcorp_table: str = DFLT_SUBCORP_TABLE,
             group_acc_table: str = DFLT_GROUP_ACC_TABLE,
             user_acc_table: str = DFLT_USER_ACC_TABLE,
             user_acc_corp_attr: str = DFLT_USER_ACC_CORP_ATTR,
@@ -50,6 +52,7 @@ class Backend:
         self._db = db
         self._user_table = user_table
         self._corp_table = corp_table
+        self._subcorp_table = subcorp_table
         self._group_acc_table = group_acc_table
         self._user_acc_table = user_acc_table
         self._user_acc_corp_attr = user_acc_corp_attr
@@ -59,19 +62,20 @@ class Backend:
     async def get_favitems(self, user_id: int) -> List[FavoriteItem]:
         async with self._db.cursor() as cursor:
             await cursor.execute(
-                'SELECT fav.id as id, fav.name, fav.subcorpus_id, fav.subcorpus_orig_id as subcorpus_name, '
+                'SELECT fav.id as id, fav.subcorpus_id, sc.name as subcorpus_name, '
                 " GROUP_CONCAT(t.corpus_name ORDER BY t.corpus_order SEPARATOR ',') as corpora, "
                 " GROUP_CONCAT(c.size ORDER BY t.corpus_order SEPARATOR ',') as sizes "
                 'FROM kontext_user_fav_item as fav '
                 'JOIN kontext_corpus_user_fav_item AS t ON fav.id = t.user_fav_corpus_id '
                 f'JOIN {self._corp_table} AS c ON t.corpus_name = c.name '
-                'WHERE user_id = %s '
+                f'LEFT JOIN {self._subcorp_table} AS sc ON fav.subcorpus_id = sc.id '
+                'WHERE fav.user_id = %s '
                 'GROUP BY id '
-                'ORDER BY fav.name, t.corpus_order ', (user_id,))
+                'ORDER BY t.corpus_order ', (user_id,))
 
             ans = []
             for item in await cursor.fetchall():
-                item['corpora'] = [{'name': corp, 'id': corp}
+                item['corpora'] = [CorpusItem(id=corp, name=corp)
                                    for corp in item['corpora'].split(',')]
                 item['size'] = int(item['sizes'].split(',')[0])
                 ans.append(FavoriteItem(**item))
@@ -90,8 +94,8 @@ class Backend:
         async with self._db.connection() as conn:
             async with await conn.cursor() as cursor:
                 await cursor.execute(
-                    'INSERT INTO kontext_user_fav_item (name, subcorpus_id, subcorpus_orig_id, user_id) '
-                    'VALUES (%s, %s, %s, %s) ', (item.name, item.subcorpus_id, item.subcorpus_name, user_id))
+                    'INSERT INTO kontext_user_fav_item (subcorpus_id, user_id) '
+                    'VALUES (%s, %s, %s) ', (item.subcorpus_id, user_id))
 
                 favitem_id: int = cursor.lastrowid
                 await cursor.executemany(

@@ -34,19 +34,18 @@ def import_favitems(redis_db: redis.Redis, mysql_db: mysql.connector.MySQLConnec
         _, _, user_id = favitem_key.decode().split(':')
         favitems = redis_db.hgetall(favitem_key)
         for favitem in map(json.loads, favitems.values()):
-            values = (favitem['name'], favitem['subcorpus_id'],
-                      favitem.get('subcorpus_orig_id'), int(user_id))
+            values = (favitem['subcorpus_id'], int(user_id))
 
             cursor.execute(
                 'SELECT COUNT(*) AS count FROM kontext_user_fav_item '
-                'WHERE name = %s and subcorpus_id = %s and subcorpus_orig_id = %s and user_id = %s ',
+                'WHERE subcorpus_id = %s and user_id = %s ',
                 values)
             if cursor.fetchone()[0] == 0:
                 inserted += 1
                 if not dry_run:
                     cursor.execute(
-                        'INSERT INTO kontext_user_fav_item (name, subcorpus_id, subcorpus_orig_id, user_id) '
-                        'VALUES (%s, %s, %s, %s)',
+                        'INSERT INTO kontext_user_fav_item (subcorpus_id, user_id) '
+                        'VALUES (%s, %s)',
                         values
                     )
                     favitem_id = cursor.lastrowid

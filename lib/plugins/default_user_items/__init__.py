@@ -13,6 +13,7 @@
 # GNU General Public License for more details.
 
 import logging
+from typing import List
 
 import l10n
 import plugins
@@ -139,11 +140,22 @@ class UserItems(AbstractUserItems):
         return json.dumps(obj.to_dict())
 
     async def get_user_items(self, plugin_ctx):
-        ans = []
+        ans: List[FavoriteItem] = []
         if self._auth.anonymous_user(plugin_ctx)['id'] != plugin_ctx.user_id:
             for item_id, item in (await self._db.hash_get_all(self._mk_key(plugin_ctx.user_id))).items():
                 ans.append(import_record(item))
-            ans = l10n.sort(ans, plugin_ctx.user_lang, key=lambda itm: itm.sort_key, reverse=False)
+            # update corpus/subcorpus names and compose fav names
+            for fav in ans:
+                for c in fav.corpora:
+                    cinfo = await plugin_ctx.corpus_factory.get_info(c['id'])
+                    c['name'] = cinfo.name
+                fav.name = ' || '.join(c['name'] for c in fav.corpora)
+                if fav.subcorpus_id is not None:
+                    with plugins.runtime.SUBC_STORAGE as sa:
+                        subc = await sa.get_info(fav.subcorpus_id)
+                        fav.subcorpus_name = subc.name
+                    fav.name = f'{fav.name} / {fav.subcorpus_name}' 
+            ans = l10n.sort(ans, plugin_ctx.user_lang, key=lambda itm: itm.name, reverse=False)
         return ans
 
     async def add_user_item(self, plugin_ctx, item: FavoriteItem):

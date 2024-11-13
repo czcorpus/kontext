@@ -14,6 +14,7 @@
 
 import logging
 
+import l10n
 import plugins
 import ujson as json
 from action.control import http_action
@@ -32,25 +33,6 @@ from sanic.blueprints import Blueprint
 from .backend import Backend
 
 bp = Blueprint('mysql_user_items')
-
-
-def import_legacy_record(data):
-    ans = FavoriteItem()
-    ans.ident = data['id']
-    ans.name = data.get('name', '??')
-    ans.corpora = [dict(id=data['corpus_id'], name=data['name'])]
-    if data.get('corpora', None):
-        for item in data.get('corpora', []):
-            try:
-                ans.corpora.append(dict(id=item['canonical_id'], name=item['name']))
-            except Exception as ex:
-                logging.getLogger(__name__).warning(
-                    'Failed to import legacy fav. item record component: {0}'.format(ex))
-    ans.subcorpus_id = data.get('subcorpus_id', None)
-    ans.subcorpus_name = data.get('subcorpus_orig_id', ans.subcorpus_id)
-    ans.size = data.get('size', None)
-    ans.size_info = data.get('size_info', None)
-    return ans
 
 
 @bp.route('/user/set_favorite_item', methods=['POST'])
@@ -80,9 +62,7 @@ async def set_favorite_item(amodel: UserActionModel, req: KRequest, resp: KRespo
             corp = await amodel.cf.get_corpus(c_id)
         corpora.append(dict(id=c_id, name=corp.get_conf('NAME')))
     item = FavoriteItem(
-        ident=None,  # will be updated after database insert (autoincrement)
-        name=' || '.join(c['name'] for c in corpora) +
-        (' / ' + subcorpus_name if subcorpus_name else ''),
+        ident=None,
         corpora=corpora,
         subcorpus_id=subcorpus_id,
         subcorpus_name=subcorpus_name,
@@ -122,7 +102,15 @@ class MySQLUserItems(AbstractUserItems):
         ans = []
         if self._auth.anonymous_user(plugin_ctx)['id'] != plugin_ctx.user_id:
             ans = await self._backend.get_favitems(plugin_ctx.user_id)
-            # ans = l10n.sort(ans, plugin_ctx.user_lang, key=lambda itm: itm.sort_key, reverse=False)
+            # update corpus names and compose fav names
+            for fav in ans:
+                for c in fav.corpora:
+                    cinfo = await plugin_ctx.corpus_factory.get_info(c['id'])
+                    c['name'] = cinfo.name
+                fav.name = ' || '.join(c['name'] for c in fav.corpora)
+                if fav.subcorpus_name is not None:
+                    fav.name = f'{fav.name} / {fav.subcorpus_name}' 
+            ans = l10n.sort(ans, plugin_ctx.user_lang, key=lambda itm: itm.name, reverse=False)
         return ans
 
     async def add_user_item(self, plugin_ctx, item):
