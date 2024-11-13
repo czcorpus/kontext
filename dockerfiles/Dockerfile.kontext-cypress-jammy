@@ -2,7 +2,10 @@ FROM czcorpus/kontext-manatee:2.225.8-jammy
 
 SHELL ["/bin/bash", "--login", "-c"]
 
-RUN apt-get update && apt-get install -y sox libsox-fmt-mp3 nodejs npm python3-pip python3-icu
+RUN apt-get update \
+    && apt-get install -y curl \
+    && curl -sL https://deb.nodesource.com/setup_16.x  | bash - \
+    && apt-get install -y sox libsox-fmt-mp3 nodejs python3-pip python3-icu libcairo2
 
 COPY ./requirements.txt ./
 RUN pip3 install --upgrade pip && pip3 install -r requirements.txt

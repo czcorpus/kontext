@@ -8,7 +8,9 @@ COPY requirements.txt ./
 COPY ./conf ./conf
 
 RUN apt-get update \
-    && apt-get install -y sox libsox-fmt-mp3 nodejs npm python3-pip python3-icu python3-lxml \
+    && apt-get install -y curl \
+    && curl -sL https://deb.nodesource.com/setup_16.x  | bash - \
+    && apt-get install -y sox libsox-fmt-mp3 nodejs python3-pip python3-icu python3-lxml libcairo2 \
     && npm install \
     && pip3 install --upgrade pip \
     && sed '/PyICU/d' ./requirements.txt | pip3 install -r /dev/stdin  \
