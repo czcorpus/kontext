@@ -48,6 +48,7 @@ class CorpusItem(TypedDict):
 @dataclass
 class FavoriteItem:
 
+    name: Optional[str] = None
     ident: Optional[str] = None
     id: InitVar[str] = None
     data: Optional[Dict[str, Any]] = field(default_factory=dict)
@@ -73,13 +74,10 @@ class FavoriteItem:
     def main_corpus_id(self):
         return self.corpora[0]['id']
 
-    @property
-    def sort_key(self):
-        return '{0} {1}'.format(' '.join(x['name'] for x in self.corpora), self.subcorpus_id)
-
     def to_dict(self):
         return dict(
             id=self.ident,
+            name=self.name,
             size=self.size,
             size_info=self.size_info,
             corpora=self.corpora,

@@ -325,6 +325,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                                 trashedItemId: action.payload.itemId,
                                 rescuedItem: {
                                     id: response.id, // might be regenerated
+                                    name: response.name,
                                     subcorpus_id: response.subcorpus_id,
                                     // TODO !!! missing orig subc name
                                     subcorpus_name: response.subcorpus_id,

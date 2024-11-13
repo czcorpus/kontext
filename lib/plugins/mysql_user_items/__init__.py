@@ -102,11 +102,15 @@ class MySQLUserItems(AbstractUserItems):
         ans = []
         if self._auth.anonymous_user(plugin_ctx)['id'] != plugin_ctx.user_id:
             ans = await self._backend.get_favitems(plugin_ctx.user_id)
+            # update corpus names and compose fav names
             for fav in ans:
                 for c in fav.corpora:
                     cinfo = await plugin_ctx.corpus_factory.get_info(c['id'])
                     c['name'] = cinfo.name
-            ans = l10n.sort(ans, plugin_ctx.user_lang, key=lambda itm: itm.sort_key, reverse=False)
+                fav.name = ' || '.join(c['name'] for c in fav.corpora)
+                if fav.subcorpus_name is not None:
+                    fav.name = f'{fav.name} / {fav.subcorpus_name}' 
+            ans = l10n.sort(ans, plugin_ctx.user_lang, key=lambda itm: itm.name, reverse=False)
         return ans
 
     async def add_user_item(self, plugin_ctx, item):

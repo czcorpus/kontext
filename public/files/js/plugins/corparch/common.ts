@@ -34,6 +34,7 @@ export enum Favorite {
 
 export interface ServerFavlistItem {
     id:string;
+    name:string;
     subcorpus_id:string;
     subcorpus_name:string;
     size:number;

@@ -778,7 +778,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             initial_keywords.extend(mapped_external_keywords)
 
         return dict(
-            favorite=self.export_favorite(plugin_ctx, await self._user_items.get_user_items(plugin_ctx)),
+            favorite=await self.export_favorite(plugin_ctx, await self._user_items.get_user_items(plugin_ctx)),
             featured=await self._export_featured(plugin_ctx),
             corpora_labels=[(k, lab, self.get_label_color(k))
                             for k, lab in await self.all_keywords(plugin_ctx)],
