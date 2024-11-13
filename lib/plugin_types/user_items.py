@@ -48,7 +48,6 @@ class CorpusItem(TypedDict):
 @dataclass
 class FavoriteItem:
 
-    name: Optional[str] = None
     ident: Optional[str] = None
     id: InitVar[str] = None
     data: Optional[Dict[str, Any]] = field(default_factory=dict)
@@ -81,7 +80,6 @@ class FavoriteItem:
     def to_dict(self):
         return dict(
             id=self.ident,
-            name=self.name,
             size=self.size,
             size_info=self.size_info,
             corpora=self.corpora,

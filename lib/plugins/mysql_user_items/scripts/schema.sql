@@ -4,9 +4,7 @@ DROP TABLE IF EXISTS kontext_corpus_user_fav_item;
 
 CREATE TABLE kontext_user_fav_item (
     id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
-    name TEXT NOT NULL,
     subcorpus_id varchar(127),
-    subcorpus_orig_id varchar(127),
     user_id INT
 ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 

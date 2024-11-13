@@ -14,6 +14,7 @@
 
 import logging
 
+import l10n
 import plugins
 import ujson as json
 from action.control import http_action
@@ -61,9 +62,7 @@ async def set_favorite_item(amodel: UserActionModel, req: KRequest, resp: KRespo
             corp = await amodel.cf.get_corpus(c_id)
         corpora.append(dict(id=c_id, name=corp.get_conf('NAME')))
     item = FavoriteItem(
-        ident=None,  # will be updated after database insert (autoincrement)
-        name=' || '.join(c['name'] for c in corpora) +
-        (' / ' + subcorpus_name if subcorpus_name else ''),
+        ident=None,
         corpora=corpora,
         subcorpus_id=subcorpus_id,
         subcorpus_name=subcorpus_name,
@@ -103,7 +102,11 @@ class MySQLUserItems(AbstractUserItems):
         ans = []
         if self._auth.anonymous_user(plugin_ctx)['id'] != plugin_ctx.user_id:
             ans = await self._backend.get_favitems(plugin_ctx.user_id)
-            # ans = l10n.sort(ans, plugin_ctx.user_lang, key=lambda itm: itm.sort_key, reverse=False)
+            for fav in ans:
+                for c in fav.corpora:
+                    cinfo = await plugin_ctx.corpus_factory.get_info(c['id'])
+                    c['name'] = cinfo.name
+            ans = l10n.sort(ans, plugin_ctx.user_lang, key=lambda itm: itm.sort_key, reverse=False)
         return ans
 
     async def add_user_item(self, plugin_ctx, item):

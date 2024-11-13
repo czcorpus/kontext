@@ -59,7 +59,7 @@ bp = Blueprint('mysql_corparch')
 @http_action(return_type='json', access_level=2, action_model=UserActionModel)
 async def get_favorite_corpora(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.CORPARCH as ca, plugins.runtime.USER_ITEMS as ui:
-        return await ca.export_favorite(amodel.plugin_ctx, await ui.get_user_items(amodel.plugin_ctx))
+        return ca.export_favorite(amodel.plugin_ctx, await ui.get_user_items(amodel.plugin_ctx))
 
 
 class MySQLCorparch(AbstractSearchableCorporaArchive):
