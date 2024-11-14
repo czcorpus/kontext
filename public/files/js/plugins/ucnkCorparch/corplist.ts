@@ -17,7 +17,11 @@
  */
 
 import * as PluginInterfaces from '../../types/plugins';
-import * as corplistDefault from '../corparch/corplist';
+import {
+    CorplistTableModelState as CorplistTableModelStateDflt,
+    CorplistTableModel as CorplistTableModelDflt,
+    CorplistServerData
+} from '../corparch/corplist';
 import * as Kontext from '../../types/kontext';
 import { IFullActionControl, StatelessModel } from 'kombo';
 import { Observable } from 'rxjs';
@@ -27,14 +31,14 @@ import { HTTP } from 'cnc-tskit';
 import { IPluginApi } from '../../types/plugins/common';
 
 
-export interface CorplistTableModelState extends corplistDefault.CorplistTableModelState {
+export interface CorplistTableModelState extends CorplistTableModelStateDflt {
     rows:Array<CorplistItem>;
 }
 
 /**
  * This model handles table dataset
  */
-export class CorplistTableModel extends corplistDefault.CorplistTableModel {
+export class CorplistTableModel extends CorplistTableModelDflt {
 
     static LoadLimit:number = 5000;
 
@@ -44,7 +48,7 @@ export class CorplistTableModel extends corplistDefault.CorplistTableModel {
     constructor(
         dispatcher:IFullActionControl,
         pluginApi:IPluginApi,
-        initialData:corplistDefault.CorplistServerData,
+        initialData:CorplistServerData,
         preselectedKeywords:Array<string>
     ) {
         super(dispatcher, pluginApi, initialData, preselectedKeywords);
@@ -70,15 +74,14 @@ export class CorpusAccessRequestModel extends StatelessModel<{isBusy:boolean;}> 
                     action.payload.corpusName,
                     action.payload.customMessage
 
-                ).subscribe(
-                    null,
-                    (error) => {
+                ).subscribe({
+                    error: error => {
                         this.pluginApi.showMessage('error', error);
                         dispatch<typeof Actions.CorpusAccessReqSubmittedDone>({
                             name: Actions.CorpusAccessReqSubmittedDone.name
                         });
                     },
-                    () => {
+                    complete: () => {
                         this.pluginApi.showMessage('info',
                             this.pluginApi.translate('ucnkCorparch__your_message_sent')
                         );
@@ -86,7 +89,7 @@ export class CorpusAccessRequestModel extends StatelessModel<{isBusy:boolean;}> 
                             name: Actions.CorpusAccessReqSubmittedDone.name
                         });
                     },
-                );
+                });
             }
         );
 
@@ -130,7 +133,7 @@ export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage {
 
     constructor(
         pluginApi:IPluginApi,
-        initialData:corplistDefault.CorplistServerData,
+        initialData:CorplistServerData,
         viewsInit:((...args:any[])=>any)
     ) {
         this.pluginApi = pluginApi;
