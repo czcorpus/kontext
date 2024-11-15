@@ -541,11 +541,6 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                 );
             }
         );
-
-    }
-
-    private isToggleWidgetAction(action:Action): action is typeof Actions.ToggleQueryHistoryWidget {
-        return action.name === Actions.ToggleQueryHistoryWidget.name
     }
 
     private openQueryForm(idx:number):void {
