@@ -214,16 +214,16 @@ class MySqlQueryHistory(AbstractQueryHistory):
             ''', values)
             rows = [item for item in await cursor.fetchall()]
             full_data = await self._process_rows(plugin_ctx, corpus_factory, rows)
-        
+
         for i, item in enumerate(full_data):
             item['idx'] = offset + i
 
         return full_data
-    
+
     async def _process_rows(self, plugin_ctx, corpus_factory, rows):
         async def extract_id(item_id: str, item_data: Dict) -> Tuple[str, Dict]:
             return item_id, item_data
-        
+
         full_data = []
         corpora = CorpusCache(corpus_factory)
         qdata_map = {}
@@ -336,7 +336,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
                 full_data.append(tmp)
             else:
                 logging.getLogger(__name__).error('Unknown query supertype: ', q_supertype)
-        
+
         return full_data
 
     async def delete_old_records(self):
@@ -359,7 +359,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
                     ) AS tmp
                     WHERE row_num > %s
                 )
-                '''
+                ''',
                 (self.preserve_amount,)
             )
 

@@ -264,6 +264,13 @@ class UcnkQueryHistory(MySqlQueryHistory):
                 data = await resp.json()
                 raise Exception(f'Failed to delete query from index: {data}')
 
+    def export_tasks(self):
+        """
+        For ucnk_query_history, we have to export action to regularly remove old records
+        so our fulltext index in Camus won't grow indefinitely.
+        """
+        return self.delete_old_records,
+
 
 @inject(
     plugins.runtime.INTEGRATION_DB,
