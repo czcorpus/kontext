@@ -20,6 +20,7 @@ from typing import Optional
 import plugins
 import settings
 from action.argmapping.user import FullSearchArgs
+from action.argmapping.log_mapping import ajax_query_hist
 from action.control import http_action
 from action.errors import ImmediateRedirectException, UserReadableException
 from action.krequest import KRequest
@@ -212,7 +213,7 @@ async def _load_query_history(
 
 
 @bp.route('/ajax_query_history')
-@http_action(access_level=2, return_type='json', action_model=UserActionModel)
+@http_action(access_level=2, return_type='json', action_model=UserActionModel, action_log_mapper=ajax_query_hist)
 async def ajax_query_history(amodel: UserActionModel, req: KRequest, resp: KResponse):
     offset = int(req.args.get('offset', '0'))
     limit = int(req.args.get('limit'))
