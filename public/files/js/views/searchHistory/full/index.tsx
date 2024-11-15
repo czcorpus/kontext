@@ -829,6 +829,48 @@ export function init(
         );
     };
 
+    // -------------------- <SrchResult /> --------------------------------------
+
+    const SrchResult:React.FC<{
+        searchFormView:'extended'|'quick';
+        data:Array<QueryHistoryItem>;
+        isBusy:boolean;
+        offset:number;
+        hasMoreItems:boolean;
+        itemsToolbars:Array<[boolean, boolean]>;
+        searched:boolean;
+
+    }> = (props) => {
+        if (props.searchFormView === 'quick') {
+            return <>
+                {props.data.length > 0 ?
+                    <DataTable data={props.data} offset={props.offset}
+                            modelIsBusy={props.isBusy}
+                            hasMoreItems={props.hasMoreItems}
+                            itemsToolbars={props.itemsToolbars}
+                            searched={props.searched} /> :
+                    null
+                }
+                {props.isBusy ?
+                    <div className="loader"><layoutViews.AjaxLoaderImage /></div> :
+                    null
+                }
+            </>;
+
+        } else {
+            return <>
+                {props.isBusy ?
+                    <div className="loader"><layoutViews.AjaxLoaderImage /></div> :
+                    <DataTable data={props.data} offset={props.offset}
+                            modelIsBusy={props.isBusy}
+                            hasMoreItems={props.hasMoreItems}
+                            itemsToolbars={props.itemsToolbars}
+                            searched={props.searched} />
+                }
+            </>;
+        }
+    };
+
     // -------------------- <RecentQueriesPageList /> ------------------------
 
     const RecentQueriesPageList:React.FC<
@@ -856,14 +898,14 @@ export function init(
                             archivedOnly={props.archivedOnly}
                             supportsFulltext={props.supportsFulltext}
                             searchFormView={props.searchFormView} />
-                        {props.data.length === 0 && props.isBusy ?
-                            <div className="loader"><layoutViews.AjaxLoaderImage /></div> :
-                            <DataTable data={props.data} offset={props.offset}
-                                    modelIsBusy={props.isBusy}
-                                    hasMoreItems={props.hasMoreItems}
-                                    itemsToolbars={props.itemsToolbars}
-                                    searched={props.searched} />
-                        }
+                        <SrchResult
+                            searchFormView={props.searchFormView}
+                            data={props.data}
+                            isBusy={props.isBusy}
+                            offset={props.offset}
+                            hasMoreItems={props.hasMoreItems}
+                            itemsToolbars={props.itemsToolbars}
+                            searched={props.searched} />
                     </S.RecentQueriesPageList>
                 }
                 </layoutViews.CloseableFrame>
