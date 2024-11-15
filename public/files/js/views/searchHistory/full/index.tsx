@@ -100,10 +100,13 @@ export function init(
             );
         };
 
-        const handleKeyDown = () => {
-            dispatcher.dispatch(
-                Actions.SubmitExtendedSearch
-            );
+        const handleKeyDown = (evt:KeyboardEvent) => {
+            if (evt.key === 'Enter') {
+                evt.stopPropagation();
+                dispatcher.dispatch(
+                    Actions.SubmitExtendedSearch
+                );
+            }
         };
 
         React.useEffect(() => {
