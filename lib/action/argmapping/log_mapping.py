@@ -98,3 +98,13 @@ def widectx(request: KRequest):
 def new_subcorpus(request: KRequest):
     return dict(
         corpname=request.json.get('corpname'), form_type=request.json.get('form_type'))
+
+
+def ajax_query_hist(request: KRequest):
+    ans = {}
+    for k, v in request.args.items():
+        if len(v) == 1:
+            ans[k] = v[0]
+        elif len(v) > 1:
+            ans[k] = v
+    return ans
