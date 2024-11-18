@@ -102,7 +102,7 @@ export function init(
 
         React.useEffect(
             () => {
-                if (isTTSelection(props.data.selections) && !props.liveAttrsInitialized) {
+                if (isTTSelection(props.data.selections) && props.liveAttrsEnabled && !props.liveAttrsInitialized) {
                     dispatcher.dispatch(
                         PluginInterfaces.LiveAttributes.Actions.RefineClicked,
                         {
