@@ -138,14 +138,22 @@ class UcnkQueryHistory(MySqlQueryHistory):
                         ''',
                         (self.preserve_amount, self._del_chunk_size)
                     )
+                    num_del = 0
+                    num_err = 0
                     for row in await cursor.fetchall():
-                        await cursor.execute(
-                            f'DELETE FROM {self.TABLE_NAME} WHERE query_id = %s AND user_id = %s AND created = %s',
-                            (row['query_id'], row['user_id'], row['created']))
-                        await self._kvdb.publish_channel(self._del_channel, json.dumps(row))
-                    await conn.commit_tx()
+                        try:
+                            await cursor.execute(
+                                f'DELETE FROM {self.TABLE_NAME} WHERE query_id = %s AND user_id = %s AND created = %s',
+                                (row['query_id'], row['user_id'], row['created']))
+                            await self._kvdb.publish_channel(self._del_channel, json.dumps(row))
+                            num_del += 1
+                        except Exception as ex:
+                            logging.getLogger(__name__).error(f'failed to delete old query history record: {ex}, skipping')
+                            num_err += 1
+                    await self._db.commit_tx()
+                    logging.getLogger(__name__).info(f"deleted {num_del} old query history records (num errors: {num_err})")
                 except Exception as ex:
-                    await conn.rollback_tx()
+                    await self._db.rollback_tx()
                     raise ex
 
     @staticmethod

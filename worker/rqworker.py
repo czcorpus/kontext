@@ -20,7 +20,7 @@
 
 import os
 import sys
-from typing import Union
+from typing import Union, Callable
 
 import redis
 import uvloop
@@ -176,11 +176,20 @@ async def create_subcorpus(
 
 # ----------------------------- PLUG-IN TASKS ---------------------------------
 
+def mk_task(tsk:Callable):
+    async def task_wrapper(*args, **kwargs):
+        try:
+            await plugins.runtime.INTEGRATION_DB.instance.on_aio_task_enter()
+            await tsk(*args, **kwargs)
+        finally:
+            await plugins.runtime.INTEGRATION_DB.instance.on_aio_task_exit()
+    return as_sync(task_wrapper)
+
 # creates [plugin_name]__[task_name] tasks
 for p in plugins.runtime:
     if callable(getattr(p.instance, 'export_tasks', None)):
         for tsk in p.instance.export_tasks():
-            globals()[f'{p.name}__{tsk.__name__}'] = as_sync(tsk)
+            globals()[f'{p.name}__{tsk.__name__}'] = mk_task(tsk)
 
 
 if __name__ == "__main__":
