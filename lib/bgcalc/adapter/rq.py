@@ -174,6 +174,9 @@ class RqClient(AbstractBgClient):
         if self.scheduler_conf_path:
             with open(self.scheduler_conf_path) as f:
                 for entry in json.load(f):
+                    if entry.get('disabled', False):
+                        logging.getLogger(__name__).warning('Skipping disabled task {}'.format(entry["task"]))
+                        continue
                     self.scheduler.cron(
                         entry['schedule'],
                         f'{self.prefix}.{entry["task"]}',
