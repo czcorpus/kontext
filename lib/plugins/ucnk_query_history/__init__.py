@@ -113,7 +113,7 @@ class UcnkQueryHistory(MySqlQueryHistory):
         await self._delete_indexed_item(plugin_ctx, query_id, user_id, created)
         return done
 
-    async def delete_old_records(self):
+    async def delete_old_records(self, num_del_per_run=None):
         """
         Preserve only preserve_amount of newest records.
         Named records are kept intact.
@@ -123,6 +123,7 @@ class UcnkQueryHistory(MySqlQueryHistory):
             async with await conn.cursor(dictionary=True) as cursor:
                 await self._db.begin_tx(cursor)
                 try:
+                    num_del = num_del_per_run if num_del_per_run is not None else self._del_chunk_size
                     await cursor.execute(
                         f'''
                         SELECT user_id, created, query_id
@@ -136,7 +137,7 @@ class UcnkQueryHistory(MySqlQueryHistory):
                         ORDER BY created
                         LIMIT %s
                         ''',
-                        (self.preserve_amount, self._del_chunk_size)
+                        (self.preserve_amount, num_del)
                     )
                     num_del = 0
                     num_err = 0
