@@ -5,7 +5,9 @@
     "serverWriteTimeoutSecs": 60,
     "corsAllowedOrigins": [],
     "timeZone": "Europe/Prague",
-    "logLevel": "debug",
+    "logging": {
+        "level": "debug"
+    },
     "redis": {
         "host": "kontext-redis-1",
         "port": 6379,
