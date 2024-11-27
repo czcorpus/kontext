@@ -282,10 +282,12 @@ class MySQLSubcArchive(AbstractSubcArchive):
         async with self._db.cursor() as cursor:
             await cursor.execute(
                 f"""SELECT
-                t1.*,
+                t1.*, CONCAT(t3.bib_id_struct, '.', t3.bib_id_attr) AS bib_id_attr,
+                CONCAT(t3.bib_label_struct, '.', t3.bib_label_attr) AS bib_label_attr,
                 CONCAT(t2.{self._bconf.user_table_firstname_col}, ' ', {self._bconf.user_table_lastname_col}) AS fullname
                 FROM {self._bconf.subccorp_table} AS t1
                 JOIN {self._bconf.user_table} AS t2 ON t1.author_id = t2.id
+                JOIN {self._bconf.corpora_table} AS t3 ON t3.name = t1.corpus_name
                 WHERE t1.corpus_name = %s AND t1.name = %s AND t1.author_id = %s
                 ORDER BY t1.created
                 LIMIT 1""",
