@@ -22,7 +22,7 @@ class APIActionLog(DefaultActionLog):
     def collect_args(self, request, args_map, action_log_mapper, full_action_name, err_desc):
         log_data = super().collect_args(request, args_map, action_log_mapper, full_action_name, err_desc)
         if 'x-is-web-app' in request.headers:
-            log_data['request']['X_IS_WEB_APP'] = request.headers['x-is-web-app']
+            log_data['request']['HTTP_X_IS_WEB_APP'] = request.headers['x-is-web-app']
         log_data['is_api'] = True
         return log_data
 
