@@ -61,7 +61,7 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser('Kontext instalation script')
     argparser.add_argument('--ucnk', action='store_true', default=False, help='Use UCNK sources')
     argparser.add_argument('--patch', dest='patch_paths', action='append',
-                           default=None, help='Path to UCNK Manatee patch')
+                           default=[], help='Path to UCNK Manatee patch')
     argparser.add_argument('--manatee-version', dest='manatee_version',
                            action='store', default=MANATEE_VER, help='Set Manatee version')
     argparser.add_argument('--no-safe-http', dest='no_cert_check', action='store_true',
