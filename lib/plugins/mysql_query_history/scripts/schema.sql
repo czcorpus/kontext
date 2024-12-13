@@ -6,6 +6,7 @@ CREATE TABLE kontext_query_history (
     user_id int NOT NULL,
     q_supertype VARCHAR(32) NOT NULL,
     name TEXT,
+    pending_deletion_from TIMESTAMP,
     created int NOT NULL,
     PRIMARY KEY (query_id, user_id, created),
     CONSTRAINT kontext_query_history_corpus_name FOREIGN KEY (corpus_name) REFERENCES kontext_corpus(name)
