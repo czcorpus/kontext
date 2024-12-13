@@ -96,7 +96,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                 fsStructattrValue: '',
                 fsStructattrValueIsSub: false,
                 fsAnyPropertyValue: '',
-                fsAnyPropertyValueIsSub: false,
+                fsAnyPropertyValueIsSub: true,
                 fsQueryCQLProps: true,
                 fsCorpus: pageModel.getCorpusIdent().id,
                 fsSubcorpus: '',
