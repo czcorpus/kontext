@@ -20,19 +20,18 @@
 
 import { Keyboard, Client, List } from 'cnc-tskit';
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
-import * as Kontext from '../../types/kontext';
-import * as CoreViews from '../../types/coreViews';
-import { MessageModel, MessageModelState } from '../../models/common/layout';
-import { Actions } from '../../models/common/actions';
-import { init as calendarInit } from './calendar';
-import { init as kwicRangeInit } from './kwicRange';
-import { init as toggleSwitchInit } from './toggle';
-import { init as responsiveInit } from './responsiveWrapper';
-import { ImgWithMouseover } from './general';
-import * as S from './style';
+import * as Kontext from '../../types/kontext.js';
+import * as CoreViews from '../../types/coreViews/index.js';
+import { MessageModel, MessageModelState } from '../../models/common/layout.js';
+import { Actions } from '../../models/common/actions.js';
+import { init as calendarInit } from './calendar.js';
+import { init as kwicRangeInit } from './kwicRange.js';
+import { init as toggleSwitchInit } from './toggle/index.js';
+import { init as responsiveInit } from './responsiveWrapper.js';
+import { ImgWithMouseover } from './general.js';
+import * as S from './style.js';
 
 
 const calcAutoWidth = (val:CoreViews.AutoWidth|undefined):number => {
@@ -179,78 +178,77 @@ export function init(
      * is not modal but in can be wrapped in <ModalOverlay />
      * component to get modal box/window.
      */
-    class PopupBox extends React.Component<CoreViews.PopupBox.Props, CoreViews.PopupBox.State> {
+    const PopupBox:React.FC<CoreViews.PopupBox.Props> = (props) => {
 
-        private rootElm:HTMLElement;
+        // CoreViews.PopupBox.State
 
-        private resize:(ref:HTMLElement)=>void;
+        const closeBtnRef = React.useRef(null);
+        const selfRef = React.useRef(null);
 
-        private closeBtnRef:React.RefObject<HTMLButtonElement>;
-
-        constructor(props) {
-            super(props);
-            this._handleKeyPress = this._handleKeyPress.bind(this);
-            this._closeClickHandler = this._closeClickHandler.bind(this);
-            this._windowResizeHandler = this._windowResizeHandler.bind(this);
-            this._handleAreaClick = this._handleAreaClick.bind(this);
-            this.closeBtnRef = React.createRef();
-
-            if (this.props.autoWidth) {
-                this.resize = (ref) => {
-                    if (ref) {
-                        this.rootElm = ref;
-                        this.rootElm.style.minWidth = '5em';
-                        this.rootElm.style.overflow = 'auto';
-                        this.rootElm.style.width = `${(calcAutoWidth(this.props.autoWidth)).toFixed()}px`;
-                    }
+        const resize = props.autoWidth ?
+        () => {
+            if (selfRef) {
+                const elm = selfRef.current;
+                if (elm) {
+                    elm.style.minWidth = '5em';
+                    elm.style.overflow = 'auto';
+                    elm.style.width = `${(calcAutoWidth(this.props.autoWidth)).toFixed()}px`;
                 }
-
-            } else {
-                this.resize = (_)=>undefined;
             }
-        }
+        } :
+        ()=>undefined;
 
-        private _windowResizeHandler():void {
-            this.resize(this.rootElm);
-        }
 
-        componentDidMount() {
-            if (this.props.takeFocus) {
-                this.closeBtnRef.current.focus();
+        React.useEffect(
+            () => {
+                if (props.takeFocus) {
+                    const btnElm = closeBtnRef.current;
+                    btnElm.select();
+                    btnElm.focus();
+                }
+                if (props.onReady) {
+                    const rootElm = selfRef.current;
+                    rootElm.select();
+                    props.onReady(rootElm);
+                }
+                window.addEventListener('resize', windowResizeHandler);
+                return () => {
+                    window.removeEventListener('resize', windowResizeHandler);
+                }
+            },
+            []
+        );
+
+        React.useEffect(() => {
+            if (props.takeFocus) {
+                const elmBtn = closeBtnRef.current;
+                if (elmBtn) {
+                    elmBtn.focus();
+                }
             }
-            if (this.props.onReady) {
-                this.props.onReady(ReactDOM.findDOMNode(this) as HTMLElement);
+        });
+
+        const windowResizeHandler = () => {
+            resize();
+        }
+
+        const closeClickHandler = () => {
+            if (typeof props.onCloseClick === 'function') {
+                props.onCloseClick.call(this);
             }
-            window.addEventListener('resize', this._windowResizeHandler);
-        }
+        };
 
-        componentDidUpdate(prevProps: Readonly<CoreViews.PopupBox.Props>, prevState: Readonly<CoreViews.PopupBox.State>, snapshot?: any): void {
-            if (this.props.takeFocus) {
-                this.closeBtnRef.current.focus();
-            }
-        }
-
-        componentWillUnmount() {
-            window.removeEventListener('resize', this._windowResizeHandler);
-        }
-
-        _closeClickHandler() {
-            if (typeof this.props.onCloseClick === 'function') {
-                this.props.onCloseClick.call(this);
-            }
-        }
-
-        _handleKeyPress(evt:React.KeyboardEvent) {
+        const handleKeyPress = (evt:React.KeyboardEvent) => {
             if (evt.key === Keyboard.Value.ESC) {
-                 this._closeClickHandler();
-                 evt.stopPropagation();
+                    closeClickHandler();
+                    evt.stopPropagation();
             }
-            if (typeof this.props.keyPressHandler === 'function') {
-                this.props.keyPressHandler(evt);
+            if (typeof props.keyPressHandler === 'function') {
+                props.keyPressHandler(evt);
             }
-        }
+        };
 
-        _handleAreaClick(evt:React.MouseEvent):void {
+        const handleAreaClick = (evt:React.MouseEvent):void => {
             const targetElm = evt.target as HTMLElement;
             const isInteractiveActive = (elm:HTMLElement) =>
                 ['INPUT', 'SELECT', 'BUTTON', 'A', 'LABEL', 'TEXTAREA'].indexOf(elm.nodeName) > -1 ||
@@ -258,36 +256,34 @@ export function init(
             if (!isInteractiveActive(targetElm)) {
                 const sel = window.getSelection();
                 if (sel.anchorOffset === sel.focusOffset) { // <- prevents Firefox from resetting the selection
-                    this.closeBtnRef.current.focus();
+                    closeBtnRef.current.focus();
                 }
-                if (this.props.onAreaClick) {
-                    this.props.onAreaClick();
+                if (props.onAreaClick) {
+                    props.onAreaClick();
                 }
             }
         }
 
-        render() {
-            const classes = ['tooltip-box'];
-            if (this.props.customClass) {
-                classes.push(this.props.customClass);
-            }
-
-            return (
-                <S.TooltipBox className={classes.join(' ')} style={this.props.customStyle} ref={this.resize}
-                        onClick={this._handleAreaClick}
-                        onKeyDown={this._handleKeyPress}>
-                    <div className="header">
-                        <button type="button" className="close-link"
-                                onClick={this._closeClickHandler}
-                                onKeyDown={this._handleKeyPress}
-                                ref={this.closeBtnRef}
-                                title={he.translate('global__click_or_esc_to_close')} />
-                        <StatusIcon status={this.props.status} />
-                    </div>
-                    {this.props.children}
-                </S.TooltipBox>
-            );
+        const classes = ['tooltip-box'];
+        if (props.customClass) {
+            classes.push(props.customClass);
         }
+
+        return (
+            <S.TooltipBox className={classes.join(' ')} style={props.customStyle} ref={resize}
+                    onClick={handleAreaClick}
+                    onKeyDown={handleKeyPress}>
+                <div className="header">
+                    <button type="button" className="close-link"
+                            onClick={closeClickHandler}
+                            onKeyDown={handleKeyPress}
+                            ref={closeBtnRef}
+                            title={he.translate('global__click_or_esc_to_close')} />
+                    <StatusIcon status={props.status} />
+                </div>
+                {this.props.children}
+            </S.TooltipBox>
+        );
     }
 
     // ------------------------------ <ImgWithHighlight /> -----------------------------
@@ -309,94 +305,91 @@ export function init(
 
     // ------------------------------ <CloseableFrame /> -----------------------------
 
-    class CloseableFrame extends React.PureComponent<CoreViews.CloseableFrame.Props> {
+    const CloseableFrame:React.FC<CoreViews.CloseableFrame.Props> = (props) => {
 
-        private resizeFn:(elm:HTMLElement)=>void;
+        const ref = React.useRef(null);
 
-        private rootElm:HTMLElement;
+        const resizeFn:(evt:UIEvent)=>any = this.props.autoWidth ?
+            (evt) => {
+                if (ref) {
+                    const elm = ref.current;
+                    elm.select();
+                    elm.style.overflow = 'auto';
+                    elm.style.width = `${(calcAutoWidth(props.autoWidth)).toFixed()}px`;
+                }
+            } :
+            (evt:UIEvent) => undefined;
 
-        constructor(props) {
-            super(props);
-            this.closeClickHandler = this.closeClickHandler.bind(this);
-            this.windowResizeHandler = this.windowResizeHandler.bind(this);
-            this.resizeFn = this.props.autoWidth ?
-                (ref) => {
-                    if (ref) {
-                        this.rootElm = ref;
-                        this.rootElm.style.overflow = 'auto';
-                        this.rootElm.style.width = `${(calcAutoWidth(this.props.autoWidth)).toFixed()}px`;
-                    }
-                } :
-                (_) => undefined;
-        }
-
-        private closeClickHandler() {
-            if (typeof this.props.onCloseClick === 'function') {
-                this.props.onCloseClick();
+        const closeClickHandler = () => {
+            if (typeof props.onCloseClick === 'function') {
+                props.onCloseClick();
             }
         }
 
-        private windowResizeHandler() {
-            this.resizeFn(this.rootElm);
+        const windowResizeHandler = () => {
+            const elm = ref.current;
+            elm.select();
+            this.resizeFn(elm);
         }
 
-        componentDidMount() {
-            window.addEventListener('resize', this.windowResizeHandler);
-            if (this.props.onReady) {
-                this.props.onReady(ReactDOM.findDOMNode(this) as HTMLElement);
-            }
-        }
+        React.useEffect(() => {
+                window.addEventListener('resize', resizeFn);
+                if (props.onReady) {
+                    const elm = ref.current;
+                    elm.select();
+                    props.onReady(elm);
+                }
+                return () => {
+                    window.removeEventListener('resize', windowResizeHandler);
+                }
+            },
+            []
+        );
 
-        componentWillUnmount() {
-            window.removeEventListener('resize', this.windowResizeHandler);
-        }
+        const htmlClass = 'closeable-frame' + (props.customClass ? ` ${props.customClass}` : '');
 
-        render() {
-            const htmlClass = 'closeable-frame' + (this.props.customClass ? ` ${this.props.customClass}` : '');
-
-            return (
-                <S.CloseableFrame className={htmlClass} ref={this.resizeFn} fixedTop="5%">
-                    <div className="heading">
-                        {this.props.icon ?
-                            <span className="icon">{this.props.icon}</span> : null}
-                        <h2>
-                            {this.props.label}
-                        </h2>
-                        <div className="control">
-                            {this.props.onHelpClick ?
-                                <ImgWithMouseover src={he.createStaticUrl('img/question-mark.svg')}
-                                        clickHandler={this.props.onHelpClick}
-                                        alt={he.translate('global__help')}
-                                        role="button"
-                                        tabIndex={0}
-                                         /> :
-                                null
-                            }
-                            <ImgWithMouseover htmlClass="close-icon"
-                                    src={he.createStaticUrl('img/close-icon.svg')}
-                                    src2={he.createStaticUrl('img/close-icon_s.svg')}
-                                    clickHandler={this.closeClickHandler}
-                                    alt={he.translate('global__close_the_window')}
+        return (
+            <S.CloseableFrame className={htmlClass} ref={ref} fixedTop="5%">
+                <div className="heading">
+                    {props.icon ?
+                        <span className="icon">{props.icon}</span> : null}
+                    <h2>
+                        {props.label}
+                    </h2>
+                    <div className="control">
+                        {props.onHelpClick ?
+                            <ImgWithMouseover src={he.createStaticUrl('img/question-mark.svg')}
+                                    clickHandler={props.onHelpClick}
+                                    alt={he.translate('global__help')}
                                     role="button"
-                                    tabIndex={0} />
-                        </div>
+                                    tabIndex={0}
+                                        /> :
+                            null
+                        }
+                        <ImgWithMouseover htmlClass="close-icon"
+                                src={he.createStaticUrl('img/close-icon.svg')}
+                                src2={he.createStaticUrl('img/close-icon_s.svg')}
+                                clickHandler={closeClickHandler}
+                                alt={he.translate('global__close_the_window')}
+                                role="button"
+                                tabIndex={0} />
                     </div>
-                    {this.props.customControls ?
-                        <div className="custom-controls">
-                            <div className="buttons">
-                                {this.props.customControls}
-                            </div>
-                        </div> :
-                        null
-                    }
-                    <div className="contents" style={this.props.scrollable ? {overflow: 'auto'} : {}}>
-                        <div className="padded-contents">
-                            {this.props.children}
+                </div>
+                {props.customControls ?
+                    <div className="custom-controls">
+                        <div className="buttons">
+                            {props.customControls}
                         </div>
+                    </div> :
+                    null
+                }
+                <div className="contents" style={props.scrollable ? {overflow: 'auto'} : {}}>
+                    <div className="padded-contents">
+                        {props.children}
                     </div>
-                </S.CloseableFrame>
-            );
-        }
+                </div>
+            </S.CloseableFrame>
+        );
     }
 
     // ------------------------------ <InlineHelp /> -----------------------------

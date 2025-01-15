@@ -22,11 +22,11 @@ import * as React from 'react';
 import { List, tuple } from 'cnc-tskit';
 import { IActionDispatcher } from 'kombo';
 
-import * as Kontext from '../../types/kontext';
-import * as TextTypes from '../../types/textTypes';
-import { Actions } from '../../models/textTypes/actions';
+import * as Kontext from '../../types/kontext.js';
+import * as TextTypes from '../../types/textTypes.js';
+import { Actions } from '../../models/textTypes/actions.js';
 
-import * as S from './style';
+import * as S from './style.js';
 
 
 function rangeToRegexp(d1:Date, d2:Date):string {

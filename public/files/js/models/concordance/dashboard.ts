@@ -20,8 +20,8 @@
 
 import { StatelessModel, IActionDispatcher } from 'kombo';
 
-import { PageModel } from '../../app/page';
-import { Actions } from './actions';
+import { PageModel } from '../../app/page.js';
+import { Actions } from './actions.js';
 
 
 export interface ConcDashboardConf {

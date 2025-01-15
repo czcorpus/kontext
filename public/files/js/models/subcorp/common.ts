@@ -21,11 +21,11 @@
 import { HTTP, List } from 'cnc-tskit';
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, throwError } from 'rxjs';
-import { PageModel } from '../../app/page';
-import * as Kontext from '../../types/kontext';
-import * as TextTypes from '../../types/textTypes';
-import { TTInitialData } from '../textTypes/common';
-import { SubcorpListItem } from './list';
+import { PageModel } from '../../app/page.js';
+import * as Kontext from '../../types/kontext.js';
+import * as TextTypes from '../../types/textTypes.js';
+import { TTInitialData } from '../textTypes/common.js';
+import { SubcorpListItem } from './list.js';
 
 
 export interface SubcorpusServerRecord {

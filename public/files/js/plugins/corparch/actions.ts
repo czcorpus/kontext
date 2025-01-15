@@ -19,9 +19,9 @@
  */
 
 import { Action } from 'kombo';
-import { CorpusInfo } from '../../models/common/corpusInfo';
-import { CorplistDataResponse, Filters, ServerFavlistItem } from './common';
-import { SearchResultRow } from './search';
+import { CorpusInfo } from '../../models/common/corpusInfo.js';
+import { CorplistDataResponse, Filters, ServerFavlistItem } from './common.js';
+import { SearchResultRow } from './search.js';
 
 
 export class Actions {

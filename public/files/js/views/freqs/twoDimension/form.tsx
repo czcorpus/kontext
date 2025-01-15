@@ -21,12 +21,12 @@
 import * as React from 'react';
 import { IActionDispatcher, Bound } from 'kombo';
 
-import * as Kontext from '../../../types/kontext';
-import { FreqFilterQuantities, Dimensions, isStructAttr } from '../../../models/freqs/twoDimension/common';
-import { Freq2DFormModel, Freq2DFormModelState } from '../../../models/freqs/twoDimension/form';
-import { Actions } from '../../../models/freqs/twoDimension/actions';
+import * as Kontext from '../../../types/kontext.js';
+import { FreqFilterQuantities, Dimensions, isStructAttr } from '../../../models/freqs/twoDimension/common.js';
+import { Freq2DFormModel, Freq2DFormModelState } from '../../../models/freqs/twoDimension/form.js';
+import { Actions } from '../../../models/freqs/twoDimension/actions.js';
 
-import * as S from './style';
+import * as S from './style.js';
 
 
 

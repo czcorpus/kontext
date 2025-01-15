@@ -21,10 +21,10 @@ import { Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 
 
-import { LineSelections, LineSelectionModes, ConcLineSelection } from './common';
+import { LineSelections, LineSelectionModes, ConcLineSelection } from './common.js';
 import { IActionDispatcher } from 'kombo';
-import { Actions } from './actions';
-import { TEXT_INPUT_WRITE_THROTTLE_INTERVAL_MS } from '../../types/kontext';
+import { Actions } from './actions.js';
+import { TEXT_INPUT_WRITE_THROTTLE_INTERVAL_MS } from '../../types/kontext.js';
 
 
 

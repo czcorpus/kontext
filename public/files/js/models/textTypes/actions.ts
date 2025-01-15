@@ -19,8 +19,8 @@
  */
 
 import { Action } from 'kombo';
-import * as TextTypes from '../../types/textTypes';
-import { SelectionFilterMap } from './common';
+import * as TextTypes from '../../types/textTypes.js';
+import { SelectionFilterMap } from './common.js';
 
 
 export class Actions {

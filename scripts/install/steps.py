@@ -117,12 +117,6 @@ class SetupBgCalc(InstallationStep):
         pass
 
     def run(self):
-        try:
-            subprocess.check_call(['useradd', '-r', '-s', '/bin/false',
-                                   'bg-calc'], stdout=self.stdout)
-        except:
-            pass
-
         subprocess.check_call(['cp', os.path.join(
             self.kontext_path, 'scripts/install/conf/rq-all.target'), '/etc/systemd/system'], stdout=self.stdout)
         subprocess.check_call(['cp', os.path.join(
@@ -131,7 +125,7 @@ class SetupBgCalc(InstallationStep):
                                '/opt/kontext', self.kontext_path)
         subprocess.check_call(['cp', os.path.join(
             self.kontext_path, 'scripts/install/conf/rqscheduler.service'), '/etc/systemd/system'], stdout=self.stdout)
-        create_directory('/var/log/rq', 'bg-calc', 'root')
+        create_directory('/var/log/rq', 'www-data', 'root')
         subprocess.check_call(['systemctl', 'enable', 'rq-all.target'], stdout=self.stdout)
         subprocess.check_call(['systemctl', 'enable', 'rqscheduler'], stdout=self.stdout)
 

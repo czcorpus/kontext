@@ -18,15 +18,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { PageModel } from '../../app/page';
-import * as Kontext from '../../types/kontext';
+import { PageModel } from '../../app/page.js';
+import * as Kontext from '../../types/kontext.js';
 import { StatelessModel, IActionDispatcher } from 'kombo';
 import { Observable, Subject } from 'rxjs';
-import { Actions } from './actions';
+import { Actions } from './actions.js';
 import { HTTP } from 'cnc-tskit';
 import { debounceTime } from 'rxjs/operators';
-import { importServerSubcList, SubcorpusServerRecord } from './common';
-import { SubcorpListItem } from './list';
+import { importServerSubcList, SubcorpusServerRecord } from './common.js';
+import { SubcorpListItem } from './list.js';
 
 
 export interface LoadDataResponse extends Kontext.AjaxResponse {

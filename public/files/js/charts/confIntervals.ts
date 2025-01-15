@@ -19,8 +19,8 @@
  */
 
 import * as d3 from 'd3';
-import { PageModel } from '../app/page';
-import * as theme from '../views/theme/default';
+import { PageModel } from '../app/page.js';
+import * as theme from '../views/theme/default/index.js';
 
 
 export type NumTriplet = [number, number, number];

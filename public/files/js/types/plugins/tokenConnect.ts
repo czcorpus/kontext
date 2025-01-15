@@ -19,8 +19,8 @@
  */
 
 import { Observable } from 'rxjs';
-import { GeneralProps } from '../kontext';
-import { BasePlugin, IPluginApi } from './common';
+import { AnyInterface, GeneralProps } from '../kontext.js';
+import { BasePlugin, IPluginApi } from './common.js';
 
 // ------------------------------------------------------------------------
 // ------------------------- [token_connect] plug-in ----------------------
@@ -40,8 +40,7 @@ export interface RendererData {
     data: Array<[string, string]>;
 }
 
-export type Renderer = React.ComponentClass<GeneralProps>|
-    React.FC<GeneralProps>;
+export type Renderer<P = any> = React.ComponentClass<P>|React.FC<P>;
 
 export interface DataAndRenderer {
     renderer:Renderer;

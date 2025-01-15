@@ -21,10 +21,10 @@
 import { Action } from 'kombo';
 import { AudioPlayerActions, DetailExpandPositions, LineSelectionModes, LineSelValue,
     AjaxConcResponse, LineGroupId, RefsColumn, PaginationActions, LineGroupChartData,
-    ConcViewMode, HighlightInfo } from './common';
-import * as TextTypes from '../../types/textTypes';
-import { DataSaveFormat } from '../../app/navigation/save';
-import { HighlightAttrMatch } from './main';
+    ConcViewMode, HighlightInfo } from './common.js';
+import * as TextTypes from '../../types/textTypes.js';
+import { DataSaveFormat } from '../../app/navigation/save.js';
+import { HighlightAttrMatch } from './main.js';
 
 
 export interface ConcGroupChangePayload {

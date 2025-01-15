@@ -19,7 +19,7 @@
  */
 
 
-import * as Kontext from '../types/kontext';
+import * as Kontext from '../types/kontext.js';
 
 /**
  * Test whether a string 's' represents an integer

@@ -20,29 +20,29 @@
 
 import * as React from 'react';
 
-import * as Kontext from '../types/kontext';
-import * as TextTypes from '../types/textTypes';
-import * as PluginInterfaces from '../types/plugins';
-import { PageModel } from '../app/page';
-import { init as subcorpViewsInit } from '../views/subcorp/forms';
-import { SubcorpFormModel } from '../models/subcorp/new';
-import { SubcorpWithinFormModel } from '../models/subcorp/withinForm';
-import { TextTypesModel } from '../models/textTypes/main';
-import { init as ttViewsInit, TextTypesPanelProps } from '../views/textTypes';
-import { init as basicOverviewViewsInit } from '../views/query/basicOverview';
-import { PluginName } from '../app/plugin';
-import { KontextPage } from '../app/main';
+import * as Kontext from '../types/kontext.js';
+import * as TextTypes from '../types/textTypes.js';
+import * as PluginInterfaces from '../types/plugins/index.js';
+import { PageModel } from '../app/page.js';
+import { init as subcorpViewsInit } from '../views/subcorp/forms.js';
+import { SubcorpFormModel } from '../models/subcorp/new.js';
+import { SubcorpWithinFormModel } from '../models/subcorp/withinForm.js';
+import { TextTypesModel } from '../models/textTypes/main.js';
+import { init as ttViewsInit, TextTypesPanelProps } from '../views/textTypes/index.js';
+import { init as basicOverviewViewsInit } from '../views/query/basicOverview/index.js';
+import { PluginName } from '../app/plugin.js';
+import { KontextPage } from '../app/main.js';
 import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import subcMixer from 'plugins/subcmixer/init';
-import { Actions as GlobalActions } from '../models/common/actions';
-import { importInitialTTData, TTInitialData } from '../models/textTypes/common';
-import { ConcFormArgs } from '../models/query/formArgs';
-import { fetchQueryFormArgs } from '../models/query/first';
-import { ServerWithinSelection } from '../models/subcorp/common';
+import { Actions as GlobalActions } from '../models/common/actions.js';
+import { importInitialTTData, TTInitialData } from '../models/textTypes/common.js';
+import { ConcFormArgs } from '../models/query/formArgs.js';
+import { fetchQueryFormArgs } from '../models/query/first.js';
+import { ServerWithinSelection } from '../models/subcorp/common.js';
 import { Root } from 'react-dom/client';
 import { Ident, List, pipe } from 'cnc-tskit';
-import { IUnregistrable } from '../models/common/common';
+import { IUnregistrable } from '../models/common/common.js';
 
 
 interface TTProps {

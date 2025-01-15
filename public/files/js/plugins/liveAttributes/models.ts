@@ -23,19 +23,19 @@ import { Observable, of as rxOf } from 'rxjs';
 import { concatMap, map, tap } from 'rxjs/operators';
 import { pipe, List, Dict, tuple, HTTP } from 'cnc-tskit';
 
-import * as Kontext from '../../types/kontext';
-import * as TextTypes from '../../types/textTypes';
-import * as PluginInterfaces from '../../types/plugins';
-import { extractTTSelectionValue, SelectionFilterMap } from '../../models/textTypes/common';
-import { Actions as TTActions } from '../../models/textTypes/actions';
-import { Actions as QueryActions } from '../../models/query/actions';
-import { Actions as SubcActions } from '../../models/subcorp/actions';
-import { Actions as GlobalActions } from '../../models/common/actions';
-import { IUnregistrable } from '../../models/common/common';
-import { IPluginApi } from '../../types/plugins/common';
-import { isTTSelection } from '../../models/subcorp/common';
-import { DataSaveFormat } from '../../app/navigation/save';
-import { DownloadType } from '../../app/page';
+import * as Kontext from '../../types/kontext.js';
+import * as TextTypes from '../../types/textTypes.js';
+import * as PluginInterfaces from '../../types/plugins/index.js';
+import { extractTTSelectionValue, SelectionFilterMap } from '../../models/textTypes/common.js';
+import { Actions as TTActions } from '../../models/textTypes/actions.js';
+import { Actions as QueryActions } from '../../models/query/actions.js';
+import { Actions as SubcActions } from '../../models/subcorp/actions.js';
+import { Actions as GlobalActions } from '../../models/common/actions.js';
+import { IUnregistrable } from '../../models/common/common.js';
+import { IPluginApi } from '../../types/plugins/common.js';
+import { isTTSelection } from '../../models/subcorp/common.js';
+import { DataSaveFormat } from '../../app/navigation/save.js';
+import { DownloadType } from '../../app/page.js';
 
 
 

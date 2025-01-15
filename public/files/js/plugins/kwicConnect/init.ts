@@ -18,13 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as PluginInterfaces from '../../types/plugins';
-import { init as viewInit, View } from './views';
-import { init as renderersInit, Views as RenderersView } from './renderers';
-import { KwicConnectModel, KnownRenderers } from './model';
+import * as PluginInterfaces from '../../types/plugins/index.js';
+import { init as viewInit, View } from './views.js';
+import { init as renderersInit, Views as RenderersView } from './renderers.js';
+import { KwicConnectModel, KnownRenderers } from './model.js';
 import { List } from 'cnc-tskit';
-import { IPluginApi } from '../../types/plugins/common';
-import { RendererData } from '../../types/plugins/tokenConnect';
+import { IPluginApi } from '../../types/plugins/common.js';
+import { RendererData } from '../../types/plugins/tokenConnect.js';
 
 declare var require:any;
 require('./style.css'); // webpack

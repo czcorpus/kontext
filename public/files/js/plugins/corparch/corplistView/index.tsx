@@ -18,16 +18,16 @@
 
 import * as React from 'react';
 import { IActionDispatcher, Bound } from 'kombo';
-import { Actions } from '../actions';
+import { Actions } from '../actions.js';
 import { pipe, List } from 'cnc-tskit';
 
-import * as Kontext from '../../../types/kontext';
-import { CorplistTableModel, CorplistTableModelState, KeywordInfo } from '../corplist';
-import { CorplistItem, Filters } from '../common';
-import { CorpusInfoBoxProps } from '../../../views/overview';
-import { CorpusInfoType } from '../../../models/common/corpusInfo';
-import * as S from './style';
-import * as S2 from '../commonStyle';
+import * as Kontext from '../../../types/kontext.js';
+import { CorplistTableModel, CorplistTableModelState, KeywordInfo } from '../corplist.js';
+import { CorplistItem, Filters } from '../common.js';
+import { CorpusInfoBoxProps } from '../../../views/overview/index.js';
+import { CorpusInfoType } from '../../../models/common/corpusInfo.js';
+import * as S from './style.js';
+import * as S2 from '../commonStyle.js';
 
 
 export interface CorplistViews {

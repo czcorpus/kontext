@@ -21,8 +21,8 @@
  */
 
 import { Action } from 'kombo';
-import { ChartExportFormat } from '../../types/kontext';
-import { DispersionDataRow } from './result';
+import { ChartExportFormat } from '../../types/kontext.js';
+import { DispersionDataRow } from './result.js';
 
 
 

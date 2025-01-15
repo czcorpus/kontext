@@ -20,11 +20,11 @@
  */
 
 import { Dict, List, pipe, tuple } from 'cnc-tskit';
-import * as Kontext from '../../types/kontext';
-import { highlightSyntaxStatic, ParsedPQItem } from '../cqleditor/parser';
-import { AlignTypes } from '../freqs/twoDimension/common';
-import { AdvancedQuery, AdvancedQuerySubmit } from '../query/query';
-import { FilterFormArgs, isQueryFormArgs, QueryFormArgs } from '../query/formArgs';
+import * as Kontext from '../../types/kontext.js';
+import { highlightSyntaxStatic, ParsedPQItem } from '../cqleditor/parser.js';
+import { AlignTypes } from '../freqs/twoDimension/common.js';
+import { AdvancedQuery, AdvancedQuerySubmit } from '../query/query.js';
+import { FilterFormArgs, isQueryFormArgs, QueryFormArgs } from '../query/formArgs.js';
 
 const MAX_NUM_PARTIAL_QUERIES = 15;
 

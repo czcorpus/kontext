@@ -20,11 +20,11 @@
  */
 
 import { Action } from 'kombo';
-import * as Kontext from '../../types/kontext';
-import { AlignTypes } from '../freqs/twoDimension/common';
-import { AsyncTaskArgs, HistoryArgs, PqueryAlignTypes } from './common';
-import { SortColumn } from './result';
-import { DataSaveFormat } from '../../app/navigation/save';
+import * as Kontext from '../../types/kontext.js';
+import { AlignTypes } from '../freqs/twoDimension/common.js';
+import { AsyncTaskArgs, HistoryArgs, PqueryAlignTypes } from './common.js';
+import { SortColumn } from './result.js';
+import { DataSaveFormat } from '../../app/navigation/save.js';
 
 
 export class Actions {

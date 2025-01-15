@@ -18,12 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../../types/kontext';
-import { PageModel, SaveLinkHandler } from '../../app/page';
+import * as Kontext from '../../types/kontext.js';
+import { PageModel, SaveLinkHandler } from '../../app/page.js';
 import { IFullActionControl, StatefulModel } from 'kombo';
-import { Actions as MainMenuActions } from '../mainMenu/actions';
-import { Actions } from './actions';
-import { DataSaveFormat } from '../../app/navigation/save';
+import { Actions as MainMenuActions } from '../mainMenu/actions.js';
+import { Actions } from './actions.js';
+import { DataSaveFormat } from '../../app/navigation/save.js';
 
 
 

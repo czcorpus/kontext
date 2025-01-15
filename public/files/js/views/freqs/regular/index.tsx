@@ -19,22 +19,22 @@
  */
 
 import * as React from 'react';
-import * as Kontext from '../../../types/kontext';
+import * as Kontext from '../../../types/kontext.js';
 import { Dict, List, Maths, pipe } from 'cnc-tskit';
-import { init as dataRowsInit } from '../dataRows';
-import { init as initSaveViews } from './save';
-import { init as initChartViews } from '../charts';
-import { init as initFreqCommonViews } from '../common';
-import { FreqDataRowsModel } from '../../../models/freqs/regular/table';
-import { IActionDispatcher, BoundWithProps, Bound } from 'kombo';
-import { Actions } from '../../../models/freqs/regular/actions';
-import * as S from './style';
-import { FreqChartsModel } from '../../../models/freqs/regular/freqCharts';
-import { FreqDataRowsModelState, FreqViewProps, isEmptyResultBlock } from '../../../models/freqs/regular/common';
-import { alphaToCoeffFormatter, FreqResultViews } from '../../../models/freqs/common';
-import { FreqChartsSaveFormModel } from '../../../models/freqs/regular/saveChart';
-import { FreqResultsSaveModel } from '../../../models/freqs/regular/save';
-import { TabWrapperModel, TabWrapperModelState } from '../../../models/freqs/regular/tabs';
+import { init as dataRowsInit } from '../dataRows/index.js';
+import { init as initSaveViews } from './save.js';
+import { init as initChartViews } from '../charts/index.js';
+import { init as initFreqCommonViews } from '../common.js';
+import { FreqDataRowsModel } from '../../../models/freqs/regular/table.js';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
+import { Actions } from '../../../models/freqs/regular/actions.js';
+import * as S from './style.js';
+import { FreqChartsModel } from '../../../models/freqs/regular/freqCharts.js';
+import { FreqDataRowsModelState, FreqViewProps, isEmptyResultBlock } from '../../../models/freqs/regular/common.js';
+import { alphaToCoeffFormatter, FreqResultViews } from '../../../models/freqs/common.js';
+import { FreqChartsSaveFormModel } from '../../../models/freqs/regular/saveChart.js';
+import { FreqResultsSaveModel } from '../../../models/freqs/regular/save.js';
+import { TabWrapperModel, TabWrapperModelState } from '../../../models/freqs/regular/tabs.js';
 
 // --------------------------- exported types --------------------------------------
 

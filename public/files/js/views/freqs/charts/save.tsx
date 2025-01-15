@@ -22,11 +22,11 @@ import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { List } from 'cnc-tskit';
 
-import * as Kontext from '../../../types/kontext';
-import { FreqChartsSaveFormModel, FreqChartsSaveFormModelState } from '../../../models/freqs/regular/saveChart';
-import { Actions } from '../../../models/freqs/regular/actions';
-import { Actions as GlobalActions } from '../../../models/common/actions';
-import * as S from './style';
+import * as Kontext from '../../../types/kontext.js';
+import { FreqChartsSaveFormModel, FreqChartsSaveFormModelState } from '../../../models/freqs/regular/saveChart.js';
+import { Actions } from '../../../models/freqs/regular/actions.js';
+import { Actions as GlobalActions } from '../../../models/common/actions.js';
+import * as S from './style.js';
 
 
 interface SaveFormProps {

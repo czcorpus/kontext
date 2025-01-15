@@ -19,8 +19,8 @@
  */
 
 import * as React from 'react';
-import * as Kontext from '../../types/kontext';
-import * as CoreViews from '../../types/coreViews';
+import * as Kontext from '../../types/kontext.js';
+import * as CoreViews from '../../types/coreViews/index.js';
 import { IActionDispatcher } from 'kombo';
 
 

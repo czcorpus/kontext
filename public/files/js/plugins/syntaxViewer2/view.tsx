@@ -19,12 +19,12 @@
  */
 
 import { List } from 'cnc-tskit';
-import { ComponentHelpers } from '../../types/kontext';
+import { ComponentHelpers } from '../../types/kontext.js';
 import { Bound, IActionDispatcher } from 'kombo';
 import * as React from 'react';
-import { Actions } from './actions';
-import { SyntaxTreeModel, SyntaxTreeModelState } from './model';
-import { createGenerator } from './treeView';
+import { Actions } from './actions.js';
+import { SyntaxTreeModel, SyntaxTreeModelState } from './model.js';
+import { createGenerator } from './treeView.js';
 
 
 

@@ -20,14 +20,14 @@
 
 import { IFullActionControl, StatelessModel } from 'kombo';
 
-import * as Kontext from '../../../types/kontext';
-import { PageModel } from '../../../app/page';
-import { CTFreqServerArgs } from './common';
-import { Actions } from './actions';
+import * as Kontext from '../../../types/kontext.js';
+import { PageModel } from '../../../app/page.js';
+import { CTFreqServerArgs } from './common.js';
+import { Actions } from './actions.js';
 import {
     FreqFilterQuantities, AlignTypes, CTFormProperties, Dimensions, isStructAttr,
     roundFloat, validatePercentile, isPercentileFilterQuantity, validateMinAbsFreqAttr
-} from './common';
+} from './common.js';
 
 
 export interface Freq2DFormModelState {

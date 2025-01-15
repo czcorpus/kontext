@@ -19,8 +19,8 @@
  */
 
 import { List, pipe } from 'cnc-tskit';
-import { DataSaveFormat } from '../../app/navigation/save';
-import * as Kontext from '../../types/kontext';
+import { DataSaveFormat } from '../../app/navigation/save.js';
+import * as Kontext from '../../types/kontext.js';
 
 
 export enum WlnumsTypes {

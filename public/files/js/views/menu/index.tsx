@@ -22,14 +22,14 @@ import * as React from 'react';
 import { List } from 'cnc-tskit';
 import { IActionDispatcher, IModel, Bound } from 'kombo';
 
-import * as Kontext from '../../types/kontext';
+import * as Kontext from '../../types/kontext.js';
 import { isDynamicItem, isStaticItem, isEventTriggeringItem, StaticSubmenuItem,
-        DynamicSubmenuItem, MainMenuModelState } from '../../models/mainMenu';
-import { Actions } from '../../models/mainMenu/actions';
-import { AsyncTaskCheckerState, AsyncTaskChecker } from '../../models/asyncTask';
-import { Actions as ATActions } from '../../models/asyncTask/actions';
-import { ConcServerArgs } from '../../models/concordance/common';
-import * as S from './style';
+        DynamicSubmenuItem, MainMenuModelState } from '../../models/mainMenu/index.js';
+import { Actions } from '../../models/mainMenu/actions.js';
+import { AsyncTaskCheckerState, AsyncTaskChecker } from '../../models/asyncTask/index.js';
+import { Actions as ATActions } from '../../models/asyncTask/actions.js';
+import { ConcServerArgs } from '../../models/concordance/common.js';
+import * as S from './style.js';
 
 
 export interface MenuModuleArgs {

@@ -22,23 +22,23 @@ import * as React from 'react';
 import { IActionDispatcher, BoundWithProps, IModel } from 'kombo';
 import { List, tuple } from 'cnc-tskit';
 
-import { init as basicOverviewInit } from '../basicOverview';
-import * as Kontext from '../../../types/kontext';
-import { QueryReplayModelState, QueryReplayModel } from '../../../models/query/replay';
-import { IndirectQueryReplayModel, IndirectQueryReplayModelState } from '../../../models/query/replay/indirect';
-import { QuerySaveAsFormModel } from '../../../models/query/save';
-import { Actions } from '../../../models/query/actions';
-import { Actions as MainMenuActions } from '../../../models/mainMenu/actions';
-import { Actions as ConcActions } from '../../../models/concordance/actions';
-import { ShuffleFormProps, SampleFormProps, SwitchMainCorpFormProps } from '../miscActions';
-import { QueryFormLiteProps, QueryFormProps } from '../first';
-import { FilterFormProps, SubHitsFormProps, FirstHitsFormProps} from '../filter';
-import { SortFormProps } from '../sort';
-import { MainMenuModelState } from '../../../models/mainMenu';
-import * as S from './style';
-import { QueryOverviewBarUL as Style_QueryOverviewBarUL } from '../basicOverview/style';
-import { PersistentQueryOperation } from '../../../models/query/replay/common';
-import { init as permalinkViewInit } from './permalink';
+import { init as basicOverviewInit } from '../basicOverview/index.js';
+import * as Kontext from '../../../types/kontext.js';
+import { QueryReplayModelState, QueryReplayModel } from '../../../models/query/replay/index.js';
+import { IndirectQueryReplayModel, IndirectQueryReplayModelState } from '../../../models/query/replay/indirect.js';
+import { QuerySaveAsFormModel } from '../../../models/query/save.js';
+import { Actions } from '../../../models/query/actions.js';
+import { Actions as MainMenuActions } from '../../../models/mainMenu/actions.js';
+import { Actions as ConcActions } from '../../../models/concordance/actions.js';
+import { ShuffleFormProps, SampleFormProps, SwitchMainCorpFormProps } from '../miscActions.js';
+import { QueryFormLiteProps, QueryFormProps } from '../first/index.js';
+import { FilterFormProps, SubHitsFormProps, FirstHitsFormProps} from '../filter/index.js';
+import { SortFormProps } from '../sort/index.js';
+import { MainMenuModelState } from '../../../models/mainMenu/index.js';
+import * as S from './style.js';
+import { QueryOverviewBarUL as Style_QueryOverviewBarUL } from '../basicOverview/style.js';
+import { PersistentQueryOperation } from '../../../models/query/replay/common.js';
+import { init as permalinkViewInit } from './permalink.js';
 
 /*
 Important note regarding variable naming conventions:

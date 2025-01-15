@@ -21,11 +21,11 @@
 import * as React from 'react';
 import { IActionDispatcher, Bound } from 'kombo';
 
-import * as Kontext from '../../../types/kontext';
-import { TextTypesDistModel, TextTypesDistModelState } from '../../../models/concordance/ttdist/model';
-import { Actions } from '../../../models/concordance/actions';
-import * as S from './style';
-import { FreqBlock, FreqItem } from '../../../models/concordance/ttdist/common';
+import * as Kontext from '../../../types/kontext.js';
+import { TextTypesDistModel, TextTypesDistModelState } from '../../../models/concordance/ttdist/model.js';
+import { Actions } from '../../../models/concordance/actions.js';
+import * as S from './style.js';
+import { FreqBlock, FreqItem } from '../../../models/concordance/ttdist/common.js';
 import { List } from 'cnc-tskit';
 
 

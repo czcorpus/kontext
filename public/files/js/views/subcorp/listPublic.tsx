@@ -20,13 +20,13 @@
 
 import * as React from 'react';
 import { IActionDispatcher, Bound } from 'kombo';
-import * as Kontext from '../../types/kontext';
-import { PublicSubcorpListState, PublicSubcorpListModel } from '../../models/subcorp/listPublic';
-import { Actions } from '../../models/subcorp/actions';
+import * as Kontext from '../../types/kontext.js';
+import { PublicSubcorpListState, PublicSubcorpListModel } from '../../models/subcorp/listPublic.js';
+import { Actions } from '../../models/subcorp/actions.js';
 import { List } from 'cnc-tskit';
 
-import * as S from './style';
-import { SubcorpListItem } from '../../models/subcorp/list';
+import * as S from './style.js';
+import { SubcorpListItem } from '../../models/subcorp/list.js';
 
 
 export interface Views {

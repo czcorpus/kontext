@@ -19,8 +19,8 @@
  */
 
 import * as React from 'react';
-import * as Kontext from '../../../types/kontext';
-import * as S from './style';
+import * as Kontext from '../../../types/kontext.js';
+import * as S from './style.js';
 
 
 export function init(utils:Kontext.ComponentHelpers):React.FC<{}> {

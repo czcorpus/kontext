@@ -20,15 +20,15 @@
 
 import * as React from 'react';
 import {BoundWithProps, IActionDispatcher} from 'kombo';
-import * as Kontext from '../../types/kontext';
+import * as Kontext from '../../types/kontext.js';
 import { CorpusInfoType, CorpusInfo, CitationInfo, CorpusInfoModelState }
-    from '../../models/common/corpusInfo';
-import { init as subcOverviewInit } from '../subcorp/overview';
-import { Actions } from '../../models/common/actions';
-import * as S from './style';
-import * as S2 from '../style';
+    from '../../models/common/corpusInfo.js';
+import { init as subcOverviewInit } from '../subcorp/overview.js';
+import { Actions } from '../../models/common/actions.js';
+import * as S from './style.js';
+import * as S2 from '../style.js';
 import { List } from 'cnc-tskit';
-import { CorpusInfoModel } from '../../models/common/corpusInfo';
+import { CorpusInfoModel } from '../../models/common/corpusInfo.js';
 
 
 

@@ -19,16 +19,16 @@
  */
 
 import { IFullActionControl, StatefulModel } from 'kombo';
-import { Observable, of as rxOf, forkJoin } from 'rxjs';
-import { tap, map } from 'rxjs/operators';
+import { Observable, forkJoin } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { Color, List, pipe, Dict, HTTP, tuple } from 'cnc-tskit';
 
-import * as PluginInterfaces from '../../types/plugins';
-import { PageModel } from '../../app/page';
-import { AudioPlayer, PlayerStatus } from './media';
-import { Actions as ViewOptionsActions } from '../options/actions';
-import { Actions } from './actions';
-import { AudioPlayerActions, DetailExpandPositions, WideCtx, WideCtxArgs } from './common';
+import * as PluginInterfaces from '../../types/plugins/index.js';
+import { PageModel } from '../../app/page.js';
+import { AudioPlayer, PlayerStatus } from './media.js';
+import { Actions as ViewOptionsActions } from '../options/actions.js';
+import { Actions } from './actions.js';
+import { AudioPlayerActions, DetailExpandPositions, WideCtx, WideCtxArgs } from './common.js';
 
 /**
  *
@@ -470,10 +470,10 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.ResetDetail, typeof Actions.ShowRefDetail>(
+        this.addMultiActionHandler(
             [
-                Actions.ResetDetail.name,
-                Actions.ShowRefDetail.name
+                Actions.ResetDetail,
+                Actions.ShowRefDetail
             ],
             action => {
                 this.changeState(state => {

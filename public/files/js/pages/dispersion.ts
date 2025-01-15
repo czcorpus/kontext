@@ -19,33 +19,33 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { KontextPage } from '../app/main';
-import * as Kontext from '../types/kontext';
-import * as TextTypes from '../types/textTypes';
+import { KontextPage } from '../app/main.js';
+import * as Kontext from '../types/kontext.js';
+import * as TextTypes from '../types/textTypes.js';
 
-import { DispersionDataRow, DispersionResultModel } from '../models/dispersion/result';
-import { ImageConversionModel } from '../models/common/imgConv';
-import { Conf } from '../types/kontext';
-import { init as viewInit } from '../views/dispersion/result';
-import { IndirectQueryReplayModel } from '../models/query/replay/indirect';
-import { init as queryOverviewInit } from '../views/query/overview';
-import { QuerySaveAsFormModel } from '../models/query/save';
+import { DispersionDataRow, DispersionResultModel } from '../models/dispersion/result.js';
+import { ImageConversionModel } from '../models/common/imgConv.js';
+import { Conf } from '../types/kontext.js';
+import { init as viewInit } from '../views/dispersion/result.js';
+import { IndirectQueryReplayModel } from '../models/query/replay/indirect.js';
+import { init as queryOverviewInit } from '../views/query/overview/index.js';
+import { QuerySaveAsFormModel } from '../models/query/save.js';
 import { List, pipe, tuple, URL as CURL } from 'cnc-tskit';
-import { Actions as MainMenuActions } from '../models/mainMenu/actions';
-import { CollFormInputs, CollFormModel } from '../models/coll/collForm';
-import { init as collFormFactory } from '../views/coll/forms';
-import { init as analysisFrameInit } from '../views/analysis';
-import { init as freqFormFactory } from '../views/freqs/forms';
-import { Freq2DFlatViewModel } from '../models/freqs/twoDimension/flatTable';
-import { Freq2DFormModel } from '../models/freqs/twoDimension/form';
-import { FreqFormInputs, FreqFormProps, MLFreqFormModel, TTFreqFormModel } from '../models/freqs/regular/freqForms';
-import { AlignTypes, CTFormInputs, CTFormProperties } from '../models/freqs/twoDimension/common';
-import { TextTypesModel } from '../models/textTypes/main';
-import { Freq2DTableModel } from '../models/freqs/twoDimension/table2d';
-import { FreqCTResultsSaveModel } from '../models/freqs/twoDimension/save';
-import { importInitialTTData, TTInitialData } from '../models/textTypes/common';
-import { ConcFormArgs } from '../models/query/formArgs';
-import { fetchQueryFormArgs } from '../models/query/first';
+import { Actions as MainMenuActions } from '../models/mainMenu/actions.js';
+import { CollFormInputs, CollFormModel } from '../models/coll/collForm.js';
+import { init as collFormFactory } from '../views/coll/forms.js';
+import { init as analysisFrameInit } from '../views/analysis.js';
+import { init as freqFormFactory } from '../views/freqs/forms.js';
+import { Freq2DFlatViewModel } from '../models/freqs/twoDimension/flatTable.js';
+import { Freq2DFormModel } from '../models/freqs/twoDimension/form.js';
+import { FreqFormInputs, FreqFormProps, MLFreqFormModel, TTFreqFormModel } from '../models/freqs/regular/freqForms.js';
+import { AlignTypes, CTFormInputs, CTFormProperties } from '../models/freqs/twoDimension/common.js';
+import { TextTypesModel } from '../models/textTypes/main.js';
+import { Freq2DTableModel } from '../models/freqs/twoDimension/table2d.js';
+import { FreqCTResultsSaveModel } from '../models/freqs/twoDimension/save.js';
+import { importInitialTTData, TTInitialData } from '../models/textTypes/common.js';
+import { ConcFormArgs } from '../models/query/formArgs.js';
+import { fetchQueryFormArgs } from '../models/query/first.js';
 
 
 

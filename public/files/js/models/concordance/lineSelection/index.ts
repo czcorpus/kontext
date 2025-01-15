@@ -22,19 +22,19 @@ import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, throwError, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 
-import * as Kontext from '../../../types/kontext';
-import { ConcLinesStorage } from '../selectionStorage';
-import { DownloadType, PageModel } from '../../../app/page';
+import * as Kontext from '../../../types/kontext.js';
+import { ConcLinesStorage } from '../selectionStorage.js';
+import { DownloadType, PageModel } from '../../../app/page.js';
 import { Dict, HTTP, List, pipe } from 'cnc-tskit';
 import { LineSelections, LineSelectionModes, LineSelValue, ConcLineSelection, AjaxConcResponse,
     LineGroupId, attachColorsToIds, mapIdToIdWithColors, AjaxLineGroupRenameResponse,
     LineGroupChartData
-} from '../common';
-import { Actions } from '../actions';
-import { Actions as UserActions } from '../../user/actions';
-import { Actions as GlobalActions } from '../../common/actions';
-import { Actions as ConcActions } from '../../concordance/actions';
-import { IPageLeaveVoter } from '../../common/pageLeave';
+} from '../common.js';
+import { Actions } from '../actions.js';
+import { Actions as UserActions } from '../../user/actions.js';
+import { Actions as GlobalActions } from '../../common/actions.js';
+import { Actions as ConcActions } from '../../concordance/actions.js';
+import { IPageLeaveVoter } from '../../common/pageLeave.js';
 import * as copy from 'copy-to-clipboard';
 
 

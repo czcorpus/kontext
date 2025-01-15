@@ -21,12 +21,12 @@
 import * as React from 'react';
 import { IActionDispatcher, Bound, StatelessModel } from 'kombo';
 
-import * as Kontext from '../../../types/kontext';
-import { GeneralViewOptionsModelState } from '../../../models/options/general';
-import { Actions } from '../../../models/options/actions';
+import * as Kontext from '../../../types/kontext.js';
+import { GeneralViewOptionsModelState } from '../../../models/options/general.js';
+import { Actions } from '../../../models/options/actions.js';
 
-import * as S from './style';
-import { FreqResultViews } from '../../../models/freqs/common';
+import * as S from './style.js';
+import { FreqResultViews } from '../../../models/freqs/common.js';
 
 
 export interface GeneralViews {

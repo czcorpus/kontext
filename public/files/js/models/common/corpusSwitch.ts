@@ -21,14 +21,14 @@
 import { StatefulModel, IFullActionControl } from 'kombo';
 import { List, Dict, HTTP, pipe, tuple } from 'cnc-tskit';
 
-import * as Kontext from '../../types/kontext';
-import { Actions } from './actions';
-import { Actions as GlobalActions } from '../common/actions';
+import * as Kontext from '../../types/kontext.js';
+import { Actions } from './actions.js';
+import { Actions as GlobalActions } from '../common/actions.js';
 import { forkJoin } from 'rxjs';
 import { scan, tap } from 'rxjs/operators';
-import { IUnregistrable } from './common';
-import { AjaxConcResponse } from '../concordance/common';
-import { ExportedSelection } from '../../types/textTypes';
+import { IUnregistrable } from './common.js';
+import { AjaxConcResponse } from '../concordance/common.js';
+import { ExportedSelection } from '../../types/textTypes.js';
 
 
 interface UnregistrationGroup {

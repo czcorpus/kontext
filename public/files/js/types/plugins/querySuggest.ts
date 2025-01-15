@@ -19,11 +19,11 @@
  */
 
 import { Action } from 'kombo';
-import { IUnregistrable } from '../../models/common/common';
-import { QueryFormType } from '../../models/query/actions';
-import { AnyQuery, QuerySuggestion, QueryType } from '../../models/query/query';
-import { GeneralProps } from '../kontext';
-import { BasePlugin, IPluginApi } from './common';
+import { IUnregistrable } from '../../models/common/common.js';
+import { QueryFormType } from '../../models/query/actions.js';
+import { AnyQuery, QuerySuggestion, QueryType } from '../../models/query/query.js';
+import { GeneralProps } from '../kontext.js';
+import { BasePlugin, IPluginApi } from './common.js';
 
 
 // ------------------------------------------------------------------------

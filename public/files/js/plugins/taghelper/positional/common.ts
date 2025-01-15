@@ -20,8 +20,8 @@
 
 import { List } from 'cnc-tskit';
 
-import * as PluginInterfaces from '../../../types/plugins';
-import { TagBuilderBaseState } from '../common';
+import * as PluginInterfaces from '../../../types/plugins/index.js';
+import { TagBuilderBaseState } from '../common.js';
 
 
 

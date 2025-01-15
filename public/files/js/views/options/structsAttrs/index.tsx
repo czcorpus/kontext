@@ -21,15 +21,15 @@
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
-import * as Kontext from '../../../types/kontext';
-import * as ViewOptions from '../../../types/viewOptions';
+import * as Kontext from '../../../types/kontext.js';
+import * as ViewOptions from '../../../types/viewOptions.js';
 import {
     CorpusViewOptionsModel,
-    CorpusViewOptionsModelState } from '../../../models/options/structsAttrs';
-import { Actions } from '../../../models/options/actions';
-import { List, pipe } from 'cnc-tskit';
+    CorpusViewOptionsModelState } from '../../../models/options/structsAttrs.js';
+import { Actions } from '../../../models/options/actions.js';
+import { List } from 'cnc-tskit';
 
-import * as S from './style';
+import * as S from './style.js';
 
 export interface StructsAttrsModuleArgs {
     dispatcher:IActionDispatcher;

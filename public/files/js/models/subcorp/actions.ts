@@ -19,12 +19,12 @@
  */
 
 import { Action } from 'kombo';
-import { SubcListFilter } from './list';
-import { FormType, SubcorpusRecord, ServerWithinSelection } from './common';
-import * as TextTypes from '../../types/textTypes';
-import { LoadDataResponse } from './listPublic';
-import * as Kontext from '../../types/kontext';
-import { TTInitialData } from '../textTypes/common';
+import { SubcListFilter } from './list.js';
+import { FormType, SubcorpusRecord, ServerWithinSelection } from './common.js';
+import * as TextTypes from '../../types/textTypes.js';
+import { LoadDataResponse } from './listPublic.js';
+import * as Kontext from '../../types/kontext.js';
+import { TTInitialData } from '../textTypes/common.js';
 
 
 export class Actions {

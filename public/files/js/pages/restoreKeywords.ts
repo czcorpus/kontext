@@ -18,12 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { KontextPage } from '../app/main';
-import { PageModel } from '../app/page';
-import * as Kontext from '../types/kontext';
-import { Actions } from '../models/asyncTask/actions';
+import { KontextPage } from '../app/main.js';
+import { PageModel } from '../app/page.js';
+import * as Kontext from '../types/kontext.js';
+import { Actions } from '../models/asyncTask/actions.js';
 import { List } from 'cnc-tskit';
-import { init as viewInit } from '../views/keywords/restore';
+import { init as viewInit } from '../views/keywords/restore.js';
 
 class KeywordsRestorePage {
 

@@ -18,15 +18,15 @@
 
 import * as React from 'react';
 import {IActionDispatcher, BoundWithProps} from 'kombo';
-import * as Kontext from '../../types/kontext';
-import * as PluginInterfaces from '../../types/plugins';
-import { SubcorpFormModel, SubcorpFormModelState } from '../../models/subcorp/new';
-import { SubcorpWithinFormModel } from '../../models/subcorp/withinForm';
-import { TextTypesPanelProps } from '../textTypes';
-import { Actions } from '../../models/subcorp/actions';
-import { init as withinViewInit } from './withinForm';
+import * as Kontext from '../../types/kontext.js';
+import * as PluginInterfaces from '../../types/plugins/index.js';
+import { SubcorpFormModel, SubcorpFormModelState } from '../../models/subcorp/new.js';
+import { SubcorpWithinFormModel } from '../../models/subcorp/withinForm.js';
+import { TextTypesPanelProps } from '../textTypes/index.js';
+import { Actions } from '../../models/subcorp/actions.js';
+import { init as withinViewInit } from './withinForm.js';
 
-import * as S from './style';
+import * as S from './style.js';
 
 
 export interface FormsModuleArgs {

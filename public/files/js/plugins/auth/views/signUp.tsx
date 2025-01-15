@@ -23,12 +23,12 @@ import { IActionDispatcher, Bound } from 'kombo';
 import { Subject, Observable } from 'rxjs';
 import { debounceTime } from 'rxjs/operators'
 
-import * as Kontext from '../../../types/kontext';
-import { UserProfileModel, UserProfileState } from '../profile';
-import { UserProfileViews } from './profile';
-import { Actions } from '../actions';
+import * as Kontext from '../../../types/kontext.js';
+import { UserProfileModel, UserProfileState } from '../profile.js';
+import { UserProfileViews } from './profile/index.js';
+import { Actions } from '../actions.js';
 
-import * as S from './style';
+import * as S from './style.js';
 
 export interface UserSignUpViews {
     SignUpForm:React.ComponentClass;

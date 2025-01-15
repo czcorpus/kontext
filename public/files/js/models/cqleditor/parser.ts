@@ -18,11 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../../types/kontext';
+import * as Kontext from '../../types/kontext.js';
 import { parse as parseQuery, SyntaxError } from 'cqlParser/parser';
-import { IAttrHelper, NullAttrHelper } from './attrs';
+import { IAttrHelper, NullAttrHelper } from './attrs.js';
 import { tuple } from 'cnc-tskit';
-import { ParsedAttr, ParsedPQItem, RuleCharMap } from './rules';
+import { ParsedAttr, ParsedPQItem, RuleCharMap } from './rules.js';
 
 export type { ParsedAttr, ParsedPQItem } from './rules';
 

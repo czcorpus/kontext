@@ -22,14 +22,14 @@ import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Keyboard, List, pipe } from 'cnc-tskit';
 
-import * as Kontext from '../../../types/kontext';
-import { SearchHistoryModel, InputBoxHistoryItem } from '../../../models/searchHistory';
-import { Actions } from '../../../models/searchHistory/actions';
-import { Actions as QueryActions } from '../../../models/query/actions';
+import * as Kontext from '../../../types/kontext.js';
+import { SearchHistoryModel, InputBoxHistoryItem } from '../../../models/searchHistory/index.js';
+import { Actions } from '../../../models/searchHistory/actions.js';
+import { Actions as QueryActions } from '../../../models/query/actions.js';
 
-import * as S from './style';
-import { QueryFormType } from '../../../models/query/actions';
-import { isConcQueryHistoryItem, SearchHistoryModelState } from '../../../models/searchHistory/common';
+import * as S from './style.js';
+import { QueryFormType } from '../../../models/query/actions.js';
+import { isConcQueryHistoryItem, SearchHistoryModelState } from '../../../models/searchHistory/common.js';
 
 
 export interface QueryHistoryProps {
@@ -65,7 +65,7 @@ export function init(
         getFlatData():Array<InputBoxHistoryItem> {
             return pipe(
                 this.props.data,
-                List.flatMap(v => 
+                List.flatMap(v =>
                     [{query: v.query, query_type: v.query_type, created: v.created}]
                     .concat(
                         isConcQueryHistoryItem(v) ?

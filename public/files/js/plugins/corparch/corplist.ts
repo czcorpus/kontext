@@ -21,12 +21,12 @@ import { map } from 'rxjs/operators';
 import { StatelessModel, IActionDispatcher, SEDispatcher } from 'kombo';
 import { List, HTTP, pipe, tuple, Dict } from 'cnc-tskit';
 
-import * as Kontext from '../../types/kontext';
-import * as PluginInterfaces from '../../types/plugins';
-import { CorpusInfo, CorpusInfoType, CorpusInfoResponse } from '../../models/common/corpusInfo';
-import { Actions } from './actions';
-import { CorplistItem, Filters, CorplistDataResponse, validateSizeSpec, ConfPluginData } from './common';
-import { IPluginApi } from '../../types/plugins/common';
+import * as Kontext from '../../types/kontext.js';
+import * as PluginInterfaces from '../../types/plugins/index.js';
+import { CorpusInfo, CorpusInfoType, CorpusInfoResponse } from '../../models/common/corpusInfo.js';
+import { Actions } from './actions.js';
+import { CorplistItem, Filters, CorplistDataResponse, validateSizeSpec, ConfPluginData } from './common.js';
+import { IPluginApi } from '../../types/plugins/common.js';
 
 
 interface SetFavItemResponse extends Kontext.AjaxResponse {

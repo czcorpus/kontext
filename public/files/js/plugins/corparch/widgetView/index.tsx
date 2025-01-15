@@ -21,15 +21,15 @@
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
-import * as Kontext from '../../../types/kontext';
-import { CorplistWidgetModel, FavListItem, CorplistWidgetModelState } from '../widget';
-import { CorplistItem } from '../common';
-import { SearchKeyword, SearchResultRow } from '../search';
-import { Actions } from '../actions';
+import * as Kontext from '../../../types/kontext.js';
+import { CorplistWidgetModel, FavListItem, CorplistWidgetModelState } from '../widget.js';
+import { CorplistItem } from '../common.js';
+import { SearchKeyword, SearchResultRow } from '../search.js';
+import { Actions } from '../actions.js';
 import { Keyboard, Strings, List } from 'cnc-tskit';
-import { CorpusSwitchModel } from '../../../models/common/corpusSwitch';
-import * as S from './style';
-import * as S2 from '../commonStyle';
+import { CorpusSwitchModel } from '../../../models/common/corpusSwitch.js';
+import * as S from './style.js';
+import * as S2 from '../commonStyle.js';
 
 
 export interface WidgetViewModuleArgs {

@@ -19,10 +19,10 @@
  */
 
 import * as React from 'react';
-import * as Kontext from '../../../types/kontext';
-import { FreqResultsSaveModel, FreqResultsSaveModelState } from '../../../models/freqs/regular/save';
+import * as Kontext from '../../../types/kontext.js';
+import { FreqResultsSaveModel, FreqResultsSaveModelState } from '../../../models/freqs/regular/save.js';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { Actions } from '../../../models/freqs/regular/actions';
+import { Actions } from '../../../models/freqs/regular/actions.js';
 
 
 interface SaveFreqFormProps {

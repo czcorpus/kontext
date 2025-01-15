@@ -22,11 +22,11 @@ import * as React from 'react';
 import { IActionDispatcher } from 'kombo';
 import { List } from 'cnc-tskit';
 
-import {PositionValue, PositionOptions, PosTagModelState} from './common';
-import * as Kontext from '../../../types/kontext';
-import { Actions } from '../actions';
+import {PositionValue, PositionOptions, PosTagModelState} from './common.js';
+import * as Kontext from '../../../types/kontext.js';
+import { Actions } from '../actions.js';
 
-import * as S from '../style';
+import * as S from '../style.js';
 
 
 type CheckboxHandler = (lineIdx:number, value:string, checked:boolean)=>void;

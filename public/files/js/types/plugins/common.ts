@@ -21,11 +21,11 @@
 import { Observable } from 'rxjs';
 import { ITranslator, IFullActionControl } from 'kombo';
 
-import * as Kontext from '../kontext';
-import * as CoreViews from '../coreViews';
-import { ConcServerArgs } from '../../models/concordance/common';
+import * as Kontext from '../kontext.js';
+import * as CoreViews from '../coreViews/index.js';
+import { ConcServerArgs } from '../../models/concordance/common.js';
 import { Root } from 'react-dom/client';
-import { DownloadType } from '../../app/page';
+import { DownloadType } from '../../app/page.js';
 
 
 

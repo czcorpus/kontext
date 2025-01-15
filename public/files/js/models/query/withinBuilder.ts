@@ -21,12 +21,12 @@
 import { IFullActionControl, StatelessModel } from 'kombo';
 import { Observable } from 'rxjs';
 
-import { PageModel } from '../../app/page';
-import { Actions } from './actions';
+import { PageModel } from '../../app/page.js';
+import { Actions } from './actions.js';
 import { HTTP, List, Dict, pipe, tuple } from 'cnc-tskit';
-import { WithinBuilderData } from './common';
-import { IUnregistrable } from '../common/common';
-import { Actions as GlobalActions } from '../common/actions';
+import { WithinBuilderData } from './common.js';
+import { IUnregistrable } from '../common/common.js';
+import { Actions as GlobalActions } from '../common/actions.js';
 
 
 export interface WithinBuilderModelState {

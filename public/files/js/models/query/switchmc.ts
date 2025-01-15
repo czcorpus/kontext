@@ -21,15 +21,15 @@
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
-import * as Kontext from '../../types/kontext';
+import * as Kontext from '../../types/kontext.js';
 import { Dict, HTTP, List } from 'cnc-tskit';
 
-import { PageModel } from '../../app/page';
-import { Actions as MainMenuActions } from '../../models/mainMenu/actions';
-import { Actions as ConcActions } from '../../models/concordance/actions';
-import { Actions } from './actions';
-import { ConcFormArgs, SwitchMainCorpArgs } from './formArgs';
-import { AjaxConcResponse } from '../concordance/common';
+import { PageModel } from '../../app/page.js';
+import { Actions as MainMenuActions } from '../../models/mainMenu/actions.js';
+import { Actions as ConcActions } from '../../models/concordance/actions.js';
+import { Actions } from './actions.js';
+import { ConcFormArgs, SwitchMainCorpArgs } from './formArgs.js';
+import { AjaxConcResponse } from '../concordance/common.js';
 
 
 

@@ -20,8 +20,8 @@
 
 import { Dict, List, pipe, tuple } from 'cnc-tskit';
 import * as React from 'react';
-import { WideCtx } from '../../../models/concordance/common';
-import * as Kontext from '../../../types/kontext';
+import { WideCtx } from '../../../models/concordance/common.js';
+import * as Kontext from '../../../types/kontext.js';
 
 
 export interface FormattedTextRendererProps {

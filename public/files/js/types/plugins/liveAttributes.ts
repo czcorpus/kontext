@@ -19,12 +19,12 @@
  */
 
 import { Action, IModel } from 'kombo';
-import { DataSaveFormat } from '../../app/navigation/save';
-import { IUnregistrable } from '../../models/common/common';
-import { TTInitialData } from '../../models/textTypes/common';
-import { AttrItem } from '../kontext';
-import { ExportedSelection } from '../textTypes';
-import { BasePlugin, IPluginApi } from './common';
+import { DataSaveFormat } from '../../app/navigation/save.js';
+import { IUnregistrable } from '../../models/common/common.js';
+import { TTInitialData } from '../../models/textTypes/common.js';
+import { AttrItem } from '../kontext.js';
+import { ExportedSelection } from '../textTypes.js';
+import { BasePlugin, IPluginApi } from './common.js';
 
 
 // ------------------------------------------------------------------------

@@ -20,12 +20,12 @@
  */
 
 import * as React from 'react';
-import * as Kontext from '../../types/kontext';
-import { TreeWidgetModel, Node } from './model';
+import * as Kontext from '../../types/kontext.js';
+import { TreeWidgetModel, Node } from './model.js';
 import { IActionDispatcher } from 'kombo';
 import { Subscription } from 'rxjs';
 
-import * as S from './style';
+import * as S from './style.js';
 
 
 export interface Views {

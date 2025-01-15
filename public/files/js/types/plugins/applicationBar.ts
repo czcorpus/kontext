@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { IUnregistrable } from '../../models/common/common';
-import { BasePlugin, IPluginApi } from './common';
+import { IUnregistrable } from '../../models/common/common.js';
+import { BasePlugin, IPluginApi } from './common.js';
 
 // ------------------------------------------------------------------------
 // --------------------------- [application_bar] plug-in ------------------

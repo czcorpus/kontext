@@ -23,11 +23,11 @@ import { IActionDispatcher } from 'kombo';
 import { Keyboard } from 'cnc-tskit';
 import { Subscription } from 'rxjs';
 
-import { ConcordanceModel } from '../../../models/concordance/main';
-import { Actions } from '../../../models/concordance/actions'
-import * as Kontext from '../../../types/kontext';
-import { PaginationActions } from '../../../models/concordance/common';
-import * as S from './style';
+import { ConcordanceModel } from '../../../models/concordance/main.js';
+import { Actions } from '../../../models/concordance/actions.js';
+import * as Kontext from '../../../types/kontext.js';
+import { PaginationActions } from '../../../models/concordance/common.js';
+import * as S from './style.js';
 
 
 export interface PaginatorProps {

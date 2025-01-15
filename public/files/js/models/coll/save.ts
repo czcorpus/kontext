@@ -19,12 +19,12 @@
  */
 
 import { IActionDispatcher, StatelessModel } from 'kombo';
-import { PageModel, SaveLinkHandler } from '../../app/page';
-import * as Kontext from '../../types/kontext';
-import { Actions } from './actions';
-import { Actions as MainMenuActions } from '../mainMenu/actions';
-import { DataSaveFormat } from '../../app/navigation/save';
-import { CollSaveServerArgs } from './common';
+import { PageModel, SaveLinkHandler } from '../../app/page.js';
+import * as Kontext from '../../types/kontext.js';
+import { Actions } from './actions.js';
+import { Actions as MainMenuActions } from '../mainMenu/actions.js';
+import { DataSaveFormat } from '../../app/navigation/save.js';
+import { CollSaveServerArgs } from './common.js';
 
 
 export interface COllResultsSaveModelArgs {

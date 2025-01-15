@@ -21,10 +21,10 @@
 import * as React from 'react';
 import { BoundWithProps, IActionDispatcher } from 'kombo';
 
-import * as Kontext from '../../../types/kontext';
-import { CollResultsSaveModel, CollResultsSaveModelState } from '../../../models/coll/save';
-import { Actions } from '../../../models/coll/actions';
-import * as S from './style';
+import * as Kontext from '../../../types/kontext.js';
+import { CollResultsSaveModel, CollResultsSaveModelState } from '../../../models/coll/save.js';
+import { Actions } from '../../../models/coll/actions.js';
+import * as S from './style.js';
 
 
 export interface SaveModuleArgs {

@@ -20,21 +20,21 @@
 
 import * as React from 'react';
 import {IActionDispatcher, Bound} from 'kombo';
-import * as Kontext from '../../types/kontext';
+import * as Kontext from '../../types/kontext.js';
 import {
     SubcorpListModel, SubcListFilter, SortKey, UnfinishedSubcorp, SubcorpListItem,
     SubcorpListModelState
-} from '../../models/subcorp/list';
-import { createSelectId } from '../../models/subcorp/common';
-import * as PluginInterfaces from '../../types/plugins';
+} from '../../models/subcorp/list.js';
+import { createSelectId } from '../../models/subcorp/common.js';
+import * as PluginInterfaces from '../../types/plugins/index.js';
 import { Dict, List, pipe, tuple } from 'cnc-tskit';
-import { Actions } from '../../models/subcorp/actions';
-import { init as editViewInit } from './edit';
+import { Actions } from '../../models/subcorp/actions.js';
+import { init as editViewInit } from './edit.js';
 
-import * as S from './style';
-import { SubcorpusEditModel } from '../../models/subcorp/edit';
-import { TextTypesModel } from '../../models/textTypes/main';
-import { SubcorpWithinFormModel } from '../../models/subcorp/withinForm';
+import * as S from './style.js';
+import { SubcorpusEditModel } from '../../models/subcorp/edit.js';
+import { TextTypesModel } from '../../models/textTypes/main.js';
+import { SubcorpWithinFormModel } from '../../models/subcorp/withinForm.js';
 
 export interface ListViews {
     SubcorpList:React.ComponentClass;

@@ -18,15 +18,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../types/kontext';
-import { PageModel } from '../app/page';
-import * as PluginInterfaces from '../types/plugins';
-import { init as wordlistFormInit, WordlistFormExportViews } from '../views/wordlist/form';
-import { init as basicOverviewViewsInit } from '../views/query/basicOverview';
-import { WordlistFormModel, WordlistFormModelArgs } from '../models/wordlist/form';
-import { KontextPage } from '../app/main';
-import { WlnumsTypes } from '../models/wordlist/common';
-import { Actions as GlobalActions } from '../models/common/actions';
+import * as Kontext from '../types/kontext.js';
+import { PageModel } from '../app/page.js';
+import * as PluginInterfaces from '../types/plugins/index.js';
+import { init as wordlistFormInit, WordlistFormExportViews } from '../views/wordlist/form/index.js';
+import { init as basicOverviewViewsInit } from '../views/query/basicOverview/index.js';
+import { WordlistFormModel, WordlistFormModelArgs } from '../models/wordlist/form.js';
+import { KontextPage } from '../app/main.js';
+import { WlnumsTypes } from '../models/wordlist/common.js';
+import { Actions as GlobalActions } from '../models/common/actions.js';
 import createCorparch from 'plugins/corparch/init';
 import { Root } from 'react-dom/client';
 import { Ident } from 'cnc-tskit';

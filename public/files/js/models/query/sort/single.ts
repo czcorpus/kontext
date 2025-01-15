@@ -22,16 +22,16 @@ import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap, map, concatMap } from 'rxjs/operators';
 
-import * as Kontext from '../../../types/kontext';
-import { PageModel } from '../../../app/page';
-import { SortServerArgs } from '../common';
-import { Actions as MainMenuActions } from '../../mainMenu/actions';
-import { Actions } from '../actions';
+import * as Kontext from '../../../types/kontext.js';
+import { PageModel } from '../../../app/page.js';
+import { SortServerArgs } from '../common.js';
+import { Actions as MainMenuActions } from '../../mainMenu/actions.js';
+import { Actions } from '../actions.js';
 import { Dict, HTTP, List, tuple } from 'cnc-tskit';
-import { SortFormProperties } from './common';
-import { AjaxConcResponse } from '../../concordance/common';
-import { Actions as ConcActions } from '../../concordance/actions';
-import { SortFormArgs } from '../formArgs';
+import { SortFormProperties } from './common.js';
+import { AjaxConcResponse } from '../../concordance/common.js';
+import { Actions as ConcActions } from '../../concordance/actions.js';
+import { SortFormArgs } from '../formArgs.js';
 
 
 /**

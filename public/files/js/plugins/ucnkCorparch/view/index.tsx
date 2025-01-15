@@ -17,15 +17,15 @@
  */
 
 import * as React from 'react';
-import * as Kontext from '../../../types/kontext';
-import { init as defaultViewInit } from '../../corparch/corplistView';
-import { corplistItemIsUcnk } from '../common';
-import { CorplistTableModel, CorplistTableModelState } from '../corplist';
+import * as Kontext from '../../../types/kontext.js';
+import { init as defaultViewInit } from '../../corparch/corplistView/index.js';
+import { corplistItemIsUcnk } from '../common.js';
+import { CorplistTableModel, CorplistTableModelState } from '../corplist.js';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { CorplistItem } from '../../corparch/common';
-import { Actions as DefaultActions} from '../../corparch/actions';
-import { Actions } from '../actions';
-import * as S from './style';
+import { CorplistItem } from '../../corparch/common.js';
+import { Actions as DefaultActions} from '../../corparch/actions.js';
+import { Actions } from '../actions.js';
+import * as S from './style.js';
 
 export interface ViewModuleArgs {
     dispatcher:IActionDispatcher;
@@ -293,7 +293,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
      */
     class CorplistTable extends React.PureComponent<CorplistTableProps & CorplistTableModelState> {
 
-        constructor(props) {
+        constructor(props:CorplistTableProps & CorplistTableModelState) {
             super(props);
             this._detailClickHandler = this._detailClickHandler.bind(this);
             this._detailCloseHandler = this._detailCloseHandler.bind(this);

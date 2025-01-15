@@ -17,13 +17,13 @@
  */
 
 import * as React from 'react';
-import * as Kontext from '../../types/kontext';
-import { TreeWidgetModel, TreeWidgetModelState } from './init';
+import * as Kontext from '../../types/kontext.js';
+import { TreeWidgetModel, TreeWidgetModelState } from './init.js';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { Actions, Corplist, itemIsCorplist } from './common';
+import { Actions, Corplist, itemIsCorplist } from './common.js';
 import { List } from 'cnc-tskit';
 
-import * as S from './style';
+import * as S from './style.js';
 
 export interface CorptreeWidgetProps {
     widgetId:string;

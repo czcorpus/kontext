@@ -20,17 +20,17 @@
  */
 
 import { BoundWithProps, IActionDispatcher, IModel } from 'kombo';
-import * as Kontext from '../../../types/kontext';
-import { init as basicOverviewViewsInit } from '../../query/basicOverview';
-import { init as formInit } from '../form';
+import * as Kontext from '../../../types/kontext.js';
+import { init as basicOverviewViewsInit } from '../../query/basicOverview/index.js';
+import { init as formInit } from '../form/index.js';
 import * as React from 'react';
-import { Actions } from '../../../models/wordlist/actions';
-import { MainMenuModelState } from '../../../models/mainMenu';
-import { WordlistFormModel, WordlistFormState } from '../../../models/wordlist/form';
-import * as PluginInterfaces from '../../../types/plugins';
-import * as S from './style';
+import { Actions } from '../../../models/wordlist/actions.js';
+import { MainMenuModelState } from '../../../models/mainMenu/index.js';
+import { WordlistFormModel, WordlistFormState } from '../../../models/wordlist/form.js';
+import * as PluginInterfaces from '../../../types/plugins/index.js';
+import * as S from './style.js';
 import { List } from 'cnc-tskit';
-import { splitFilterWords } from '../../../models/wordlist/common';
+import { splitFilterWords } from '../../../models/wordlist/common.js';
 
 
 export interface OverviewProps {

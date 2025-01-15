@@ -19,10 +19,10 @@
  */
 
 import { Action } from 'kombo';
-import * as Kontext from '../../types/kontext';
-import { WithinBuilderData, QueryContextArgs, CtxLemwordType, FilterTypes } from './common';
-import { ConcFormArgs } from './formArgs';
-import { QueryType } from './query';
+import * as Kontext from '../../types/kontext.js';
+import { WithinBuilderData, QueryContextArgs, CtxLemwordType, FilterTypes } from './common.js';
+import { ConcFormArgs } from './formArgs.js';
+import { QueryType } from './query.js';
 
 
 export type QueryFormType = Kontext.ConcFormTypes.QUERY | Kontext.ConcFormTypes.FILTER;

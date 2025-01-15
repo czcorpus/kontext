@@ -21,16 +21,16 @@
 import { Observable } from 'rxjs';
 import { IModel, StatelessModel } from 'kombo';
 
-import * as CoreViews from './coreViews';
-import { MainMenuModel } from '../models/mainMenu';
-import { CorpusViewOptionsModel } from '../models/options/structsAttrs';
-import { AsyncTaskChecker } from '../models/asyncTask';
-import { GeneralViewOptionsModelState } from '../models/options/general';
-import { CorpusSwitchModel } from '../models/common/corpusSwitch';
-import { SearchHistoryModel } from '../models/searchHistory';
-import { ScreenProps } from '../views/document/responsiveWrapper';
+import * as CoreViews from './coreViews/index.js';
+import { MainMenuModel } from '../models/mainMenu/index.js';
+import { CorpusViewOptionsModel } from '../models/options/structsAttrs.js';
+import { AsyncTaskChecker } from '../models/asyncTask/index.js';
+import { GeneralViewOptionsModelState } from '../models/options/general.js';
+import { CorpusSwitchModel } from '../models/common/corpusSwitch.js';
+import { SearchHistoryModel } from '../models/searchHistory/index.js';
+import { ScreenProps } from '../views/document/responsiveWrapper.js';
 import { Dict, List, pipe } from 'cnc-tskit';
-import { CorpusInfoModel } from '../models/common/corpusInfo';
+import { CorpusInfoModel } from '../models/common/corpusInfo.js';
 
 
 /**

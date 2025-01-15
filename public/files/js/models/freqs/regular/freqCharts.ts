@@ -21,22 +21,22 @@
 import { Dict, HTTP, List, Maths, pipe, tuple } from 'cnc-tskit';
 import { IFullActionControl, SEDispatcher, StatelessModel } from 'kombo';
 import { debounceTime, Observable, Subject } from 'rxjs';
-import { PageModel } from '../../../app/page';
-import { FreqChartsAvailableData, FreqChartsAvailableTypes, FreqResultResponse } from '../common';
-import { Actions } from './actions';
-import { Actions as MainMenuActions } from '../../mainMenu/actions';
+import { PageModel } from '../../../app/page.js';
+import { FreqChartsAvailableData, FreqChartsAvailableTypes, FreqResultResponse } from '../common.js';
+import { Actions } from './actions.js';
+import { Actions as MainMenuActions } from '../../mainMenu/actions.js';
 import {
     EmptyResultBlock, FreqChartsModelState, FreqDataLoader, FreqServerArgs,
     isEmptyResultBlock, isFreqChartsModelState, PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS,
     recalculateConfIntervals, ResultBlock
-} from './common';
-import { importData } from './table';
-import { FreqFormInputs } from './freqForms';
+} from './common.js';
+import { importData } from './table.js';
+import { FreqFormInputs } from './freqForms.js';
 import {
     StructuralAttribute, newFormValue, AttrItem, ChartExportFormat,
     BasicFreqModuleType
 } from '../../../types/kontext';
-import { validateGzNumber } from '../../base';
+import { validateGzNumber } from '../../base.js';
 import * as copy from 'copy-to-clipboard';
 
 

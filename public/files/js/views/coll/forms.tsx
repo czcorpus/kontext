@@ -21,12 +21,12 @@
 import * as React from 'react';
 import { IActionDispatcher, Bound } from 'kombo';
 
-import * as Kontext from '../../types/kontext';
-import { CollFormModel, CollFormModelState } from '../../models/coll/collForm';
+import * as Kontext from '../../types/kontext.js';
+import { CollFormModel, CollFormModelState } from '../../models/coll/collForm.js';
 import { Dict, List } from 'cnc-tskit';
-import { Actions } from '../../models/coll/actions';
+import { Actions } from '../../models/coll/actions.js';
 
-import * as S from './style';
+import * as S from './style.js';
 
 
 

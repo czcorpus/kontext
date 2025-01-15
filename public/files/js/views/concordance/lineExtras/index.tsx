@@ -22,14 +22,14 @@ import * as React from 'react';
 import { IActionDispatcher } from 'kombo';
 import { List, Strings, pipe } from 'cnc-tskit';
 
-import * as Kontext from '../../../types/kontext';
-import { ConcordanceModel } from '../../../models/concordance/main';
-import { ConcLinesStorage } from '../../../models/concordance/selectionStorage';
-import { init as initMediaViews } from '../media';
-import { Actions } from '../../../models/concordance/actions'
-import { LineSelectionModes, TextChunk } from '../../../models/concordance/common';
-import * as S from './style';
-import { PlayerStatus } from '../../../models/concordance/media';
+import * as Kontext from '../../../types/kontext.js';
+import { ConcordanceModel } from '../../../models/concordance/main.js';
+import { ConcLinesStorage } from '../../../models/concordance/selectionStorage.js';
+import { init as initMediaViews } from '../media/index.js';
+import { Actions } from '../../../models/concordance/actions.js';
+import { LineSelectionModes, TextChunk } from '../../../models/concordance/common.js';
+import * as S from './style.js';
+import { PlayerStatus } from '../../../models/concordance/media.js';
 
 
 export interface LineExtrasViews {

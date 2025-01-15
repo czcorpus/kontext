@@ -20,13 +20,13 @@
  */
 
 import * as React from 'react';
-import * as Kontext from '../../types/kontext';
+import * as Kontext from '../../types/kontext.js';
 import { IActionDispatcher } from 'kombo';
 import { List, pipe, Dict } from 'cnc-tskit';
-import { Model } from './model';
+import { Model } from './model.js';
 
-import * as S from './style';
-import { PosAttrPairRelFrontendClickHanlder, KnownRenderers, CncExtendedSublemmaFrontendClickHandler, CncExhaustiveQueryInfoFrontendClickPayload } from './frontends';
+import * as S from './style.js';
+import { PosAttrPairRelFrontendClickHanlder, KnownRenderers, CncExtendedSublemmaFrontendClickHandler, CncExhaustiveQueryInfoFrontendClickPayload } from './frontends.js';
 
 
 export interface BasicRendererProps {

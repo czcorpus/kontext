@@ -21,13 +21,13 @@
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
-import * as Kontext from '../../../types/kontext';
-import { Keyboard, List } from 'cnc-tskit';import { init as initSaveViews } from '../save';
-import { CollResultModel, CollResultModelState } from '../../../models/coll/result';
-import { CollResultsSaveModel } from '../../../models/coll/save';
-import { CollResultRow, CollResultHeadingCell } from '../../../models/coll/common';
-import { Actions } from '../../../models/coll/actions';
-import * as S from './style';
+import * as Kontext from '../../../types/kontext.js';
+import { Keyboard, List } from 'cnc-tskit';import { init as initSaveViews } from '../save/index.js';
+import { CollResultModel, CollResultModelState } from '../../../models/coll/result.js';
+import { CollResultsSaveModel } from '../../../models/coll/save.js';
+import { CollResultRow, CollResultHeadingCell } from '../../../models/coll/common.js';
+import { Actions } from '../../../models/coll/actions.js';
+import * as S from './style.js';
 
 
 export interface CollResultViewProps {

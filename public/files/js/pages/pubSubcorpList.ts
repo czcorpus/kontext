@@ -18,11 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { PageModel } from '../app/page';
-import { init as viewInit } from '../views/subcorp/listPublic';
-import { PublicSubcorpListModel } from '../models/subcorp/listPublic';
-import { KontextPage } from '../app/main';
-import { SubcorpListItem } from '../models/subcorp/list';
+import { PageModel } from '../app/page.js';
+import { init as viewInit } from '../views/subcorp/listPublic.js';
+import { PublicSubcorpListModel } from '../models/subcorp/listPublic.js';
+import { KontextPage } from '../app/main.js';
+import { SubcorpListItem } from '../models/subcorp/list.js';
 
 
 class PubSubcorpPage {

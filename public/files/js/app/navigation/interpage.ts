@@ -20,9 +20,9 @@
 
 import { List, pipe, URL } from 'cnc-tskit';
 import { Action } from 'kombo';
-import { Actions as MainMenuActions } from '../../models/mainMenu/actions';
-import { Actions as QueryActions } from '../../models/query/actions';
-import { PageModel } from '../page';
+import { Actions as MainMenuActions } from '../../models/mainMenu/actions.js';
+import { Actions as QueryActions } from '../../models/query/actions.js';
+import { PageModel } from '../page.js';
 
 
 export type ActionUrlCodes =

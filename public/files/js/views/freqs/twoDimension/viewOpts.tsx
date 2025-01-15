@@ -22,10 +22,10 @@ import * as React from 'react';
 import { IActionDispatcher } from 'kombo';
 import { Maths } from 'cnc-tskit';
 
-import * as Kontext from '../../../types/kontext';
-import { FreqFilterQuantities } from '../../../models/freqs/twoDimension/common';
-import { Actions } from '../../../models/freqs/twoDimension/actions';
-import { init as commonViewsInit } from '../common';
+import * as Kontext from '../../../types/kontext.js';
+import { FreqFilterQuantities } from '../../../models/freqs/twoDimension/common.js';
+import { Actions } from '../../../models/freqs/twoDimension/actions.js';
+import { init as commonViewsInit } from '../common.js';
 
 
 interface AlphaLevelSelectProps {

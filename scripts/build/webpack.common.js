@@ -18,10 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-const path = require('path');
-const ProgressBarPlugin = require('progress-bar-webpack-plugin');
-const kontext = require('./kontext');
-const kplugins = require('./plugins');
+import path from 'path';
+import ProgressBarPlugin from 'progress-bar-webpack-plugin';
+import kontext from './kontext';
+import kplugins from './plugins';
 
 const mkpath = (p) => path.resolve(__dirname, '../../public/files', p);
 
@@ -79,7 +79,11 @@ module.exports = {
                 mkpath('js/.compiled'),
                 'node_modules'
             ],
-            extensions: ['.webpack.js', '.web.js', '.ts', '.tsx', '.jsx', '.js', '.json', '.css', '.less']
+            extensions: ['.ts', '.tsx', '.js', '.jsx', '.json', '.css', '.less'],
+            extensionAlias: {
+                '.js': ['.ts', '.tsx', '.js', '.jsx'],
+                '.mjs': ['.mts', '.mjs']
+            }
         },
         module: {
             rules: [
@@ -101,6 +105,9 @@ module.exports = {
                                     dynamicImport: false
                                 },
                                 target: 'es2016'
+                            },
+                            module: {
+                                type: 'es6'
                             }
                         }
                     }

@@ -18,16 +18,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../../types/kontext';
-import * as TextTypes from '../../types/textTypes';
-import { PageModel } from '../../app/page';
-import { BaseSubcorpFormState, CreateSubcorpusArgs, BaseTTSubcorpFormModel, FormType } from './common';
+import * as Kontext from '../../types/kontext.js';
+import * as TextTypes from '../../types/textTypes.js';
+import { PageModel } from '../../app/page.js';
+import { BaseSubcorpFormState, CreateSubcorpusArgs, BaseTTSubcorpFormModel, FormType } from './common.js';
 import { ITranslator, IFullActionControl } from 'kombo';
 import { Dict, List } from 'cnc-tskit';
-import { Actions } from './actions';
-import { Actions as GlobalActions } from '../common/actions';
-import { Actions as TTActions } from '../textTypes/actions';
-import { IUnregistrable } from '../common/common';
+import { Actions } from './actions.js';
+import { Actions as GlobalActions } from '../common/actions.js';
+import { Actions as TTActions } from '../textTypes/actions.js';
+import { IUnregistrable } from '../common/common.js';
 import { concatMap } from 'rxjs';
 
 /**

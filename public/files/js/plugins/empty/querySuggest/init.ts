@@ -18,11 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { QueryFormType } from '../../../models/query/actions';
-import { AnyQuery, QuerySuggestion } from '../../../models/query/query';
-import * as PluginInterfaces from '../../../types/plugins';
-import { IPluginApi } from '../../../types/plugins/common';
-import { QueryValueSubformat } from '../../../types/plugins/querySuggest';
+import { QueryFormType } from '../../../models/query/actions.js';
+import { AnyQuery, QuerySuggestion } from '../../../models/query/query.js';
+import * as PluginInterfaces from '../../../types/plugins/index.js';
+import { IPluginApi } from '../../../types/plugins/common.js';
+import { QueryValueSubformat } from '../../../types/plugins/querySuggest.js';
 
 /**
  *

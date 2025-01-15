@@ -18,9 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as PluginInterfaces from '../../types/plugins';
-import { TokensLinkingModel } from './model';
-import { IPluginApi } from '../../types/plugins/common';
+import * as PluginInterfaces from '../../types/plugins/index.js';
+import { TokensLinkingModel } from './model.js';
+import { IPluginApi } from '../../types/plugins/common.js';
 import { List, pipe } from 'cnc-tskit';
 
 

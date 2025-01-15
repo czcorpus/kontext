@@ -20,8 +20,8 @@
 
 import * as React from 'react';
 import { IActionDispatcher, IModel } from 'kombo';
-import { ComponentHelpers } from '../../types/kontext';
-import { SyntaxTreeViewerState } from './common';
+import { ComponentHelpers } from '../../types/kontext.js';
+import { SyntaxTreeViewerState } from './common.js';
 
 export function init(
     dispatcher:IActionDispatcher,

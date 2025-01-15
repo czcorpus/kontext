@@ -24,11 +24,11 @@ import { ajax, AjaxError, AjaxResponse as RxAjaxResponse } from 'rxjs/ajax';
 import { IFullActionControl } from 'kombo';
 import { pipe, List, HTTP, Dict, tuple, URL } from 'cnc-tskit';
 
-import * as Kontext from '../../types/kontext';
-import { CorpusSwitchModel } from '../../models/common/corpusSwitch';
-import { createHistory } from './history';
-import { PageLeaveVoting, IPageLeaveVoter } from '../../models/common/pageLeave';
-import { IUnregistrable } from '../../models/common/common';
+import * as Kontext from '../../types/kontext.js';
+import { CorpusSwitchModel } from '../../models/common/corpusSwitch.js';
+import { createHistory } from './history.js';
+import { PageLeaveVoting, IPageLeaveVoter } from '../../models/common/pageLeave.js';
+import { IUnregistrable } from '../../models/common/common.js';
 
 
 /**

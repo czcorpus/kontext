@@ -16,19 +16,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as PluginInterfaces from '../../types/plugins';
+import * as PluginInterfaces from '../../types/plugins/index.js';
 import {
     CorplistTableModelState as CorplistTableModelStateDflt,
     CorplistTableModel as CorplistTableModelDflt,
     CorplistServerData
-} from '../corparch/corplist';
-import * as Kontext from '../../types/kontext';
+} from '../corparch/corplist.js';
+import * as Kontext from '../../types/kontext.js';
 import { IFullActionControl, StatelessModel } from 'kombo';
 import { Observable } from 'rxjs';
-import { CorplistItem } from '../corparch/common';
-import { Actions} from './actions';
+import { CorplistItem } from '../corparch/common.js';
+import { Actions} from './actions.js';
 import { HTTP } from 'cnc-tskit';
-import { IPluginApi } from '../../types/plugins/common';
+import { IPluginApi } from '../../types/plugins/common.js';
 
 
 export interface CorplistTableModelState extends CorplistTableModelStateDflt {

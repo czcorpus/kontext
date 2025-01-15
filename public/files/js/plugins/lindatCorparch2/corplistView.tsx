@@ -17,16 +17,16 @@
  */
 
 import * as React from 'react';
-import * as Kontext from '../../types/kontext';
-import { CorplistTableModel, CorplistTableModelState, Filters, KeywordInfo } from './corplist';
-import { CorplistItem } from './common';
-import { CorpusInfoBoxProps } from '../../views/overview';
-import { CorpusInfoType } from '../../models/common/corpusInfo';
+import * as Kontext from '../../types/kontext.js';
+import { CorplistTableModel, CorplistTableModelState, Filters, KeywordInfo } from './corplist.js';
+import { CorplistItem } from './common.js';
+import { CorpusInfoBoxProps } from '../../views/overview/index.js';
+import { CorpusInfoType } from '../../models/common/corpusInfo.js';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { pipe, List } from 'cnc-tskit';
-import { Actions } from './actions';
+import { Actions } from './actions.js';
 
-import * as S from './style';
+import * as S from './style.js';
 
 
 export interface CorplistTableProps {

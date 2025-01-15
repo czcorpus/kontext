@@ -18,11 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-const { merge } = require('webpack-merge');
-const common = require('./scripts/build/webpack.common');
-const webpack = require('webpack');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const TerserPlugin = require('terser-webpack-plugin');
+import { merge } from 'webpack-merge';
+import * as common from './scripts/build/webpack.common';
+import webpack from 'webpack';
+import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+import TerserPlugin from 'terser-webpack-plugin';
 
 
 module.exports = (env) => merge(common.wpConf(env), {

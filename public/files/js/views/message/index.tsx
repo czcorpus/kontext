@@ -20,11 +20,11 @@
 
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import * as Kontext from '../../types/kontext';
-import { MessageModel, MessageModelState } from '../../models/common/layout';
-import { ConcServerArgs } from '../../models/concordance/common';
+import * as Kontext from '../../types/kontext.js';
+import { MessageModel, MessageModelState } from '../../models/common/layout.js';
+import { ConcServerArgs } from '../../models/concordance/common.js';
 import { Dict, List } from 'cnc-tskit';
-import * as S from './style';
+import * as S from './style.js';
 
 
 export interface MessageViewProps {

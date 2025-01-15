@@ -22,15 +22,15 @@ import * as React from 'react';
 import { List, Dict } from 'cnc-tskit';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
-import * as Kontext from '../../types/kontext';
-import { SubcMixerModel, SubcMixerModelState } from './model';
-import { init as subcorpViewsInit } from '../../views/subcorp/forms';
-import { CalculationResults, SubcMixerExpression } from './common';
-import { Actions } from './actions';
-import { Actions as SubcActions } from '../../models/subcorp/actions';
-import { Actions as GeneralSubcmixerActions } from '../../types/plugins/subcMixer';
+import * as Kontext from '../../types/kontext.js';
+import { SubcMixerModel, SubcMixerModelState } from './model.js';
+import { init as subcorpViewsInit } from '../../views/subcorp/forms.js';
+import { CalculationResults, SubcMixerExpression } from './common.js';
+import { Actions } from './actions.js';
+import { Actions as SubcActions } from '../../models/subcorp/actions.js';
+import { Actions as GeneralSubcmixerActions } from '../../types/plugins/subcMixer.js';
 
-import * as S from './style';
+import * as S from './style.js';
 
 
 export interface WidgetProps {

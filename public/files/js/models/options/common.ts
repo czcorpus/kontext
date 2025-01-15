@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../../types/kontext';
-import { FreqResultViews } from '../freqs/common';
+import * as Kontext from '../../types/kontext.js';
+import { FreqResultViews } from '../freqs/common.js';
 
 export interface ViewOptsResponse extends Kontext.AjaxResponse {
     pagesize:number;

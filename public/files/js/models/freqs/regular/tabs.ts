@@ -21,11 +21,11 @@
 import { Maths } from 'cnc-tskit';
 import { IFullActionControl, StatelessModel } from 'kombo';
 import { debounceTime, Subject } from 'rxjs';
-import { FormValue, newFormValue, updateFormValue } from '../../../types/kontext';
-import { FreqResultViews } from '../common';
-import { Actions } from './actions';
-import { PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS, validateNumber } from './common';
-import { FreqFormInputs } from './freqForms';
+import { FormValue, newFormValue, updateFormValue } from '../../../types/kontext.js';
+import { FreqResultViews } from '../common.js';
+import { Actions } from './actions.js';
+import { PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS, validateNumber } from './common.js';
+import { FreqFormInputs } from './freqForms.js';
 
 
 export interface TabWrapperModelState {

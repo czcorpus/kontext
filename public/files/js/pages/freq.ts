@@ -18,44 +18,44 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../types/kontext';
-import * as TextTypes from '../types/textTypes';
-import { PageModel, DownloadType } from '../app/page';
-import { CollFormModel, CollFormInputs } from '../models/coll/collForm';
+import * as Kontext from '../types/kontext.js';
+import * as TextTypes from '../types/textTypes.js';
+import { PageModel, DownloadType } from '../app/page.js';
+import { CollFormModel, CollFormInputs } from '../models/coll/collForm.js';
 import { MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps }
-    from '../models/freqs/regular/freqForms';
-import { Freq2DTableModel } from '../models/freqs/twoDimension/table2d';
-import { Freq2DFlatViewModel } from '../models/freqs/twoDimension/flatTable';
-import { Freq2DFormModel } from '../models/freqs/twoDimension/form';
-import { QuerySaveAsFormModel } from '../models/query/save';
-import { fetchQueryFormArgs } from '../models/query/first';
-import { init as freqFormFactory } from '../views/freqs/forms';
-import { init as collFormFactory } from '../views/coll/forms';
-import { init as analysisFrameInit } from '../views/analysis';
-import { init as queryOverviewInit } from '../views/query/overview';
-import { init as resultViewFactory } from '../views/freqs/regular';
-import { init as ctResultViewInit } from '../views/freqs/twoDimension/table2d';
-import { FreqDataRowsModel, importData as importFreqData } from '../models/freqs/regular/table';
-import { FreqCTResultsSaveModel } from '../models/freqs/twoDimension/save';
-import { TextTypesModel } from '../models/textTypes/main';
-import { KontextPage } from '../app/main';
-import { IndirectQueryReplayModel } from '../models/query/replay/indirect';
+    from '../models/freqs/regular/freqForms.js';
+import { Freq2DTableModel } from '../models/freqs/twoDimension/table2d.js';
+import { Freq2DFlatViewModel } from '../models/freqs/twoDimension/flatTable.js';
+import { Freq2DFormModel } from '../models/freqs/twoDimension/form.js';
+import { QuerySaveAsFormModel } from '../models/query/save.js';
+import { fetchQueryFormArgs } from '../models/query/first.js';
+import { init as freqFormFactory } from '../views/freqs/forms.js';
+import { init as collFormFactory } from '../views/coll/forms.js';
+import { init as analysisFrameInit } from '../views/analysis.js';
+import { init as queryOverviewInit } from '../views/query/overview/index.js';
+import { init as resultViewFactory } from '../views/freqs/regular/index.js';
+import { init as ctResultViewInit } from '../views/freqs/twoDimension/table2d/index.js';
+import { FreqDataRowsModel, importData as importFreqData } from '../models/freqs/regular/table.js';
+import { FreqCTResultsSaveModel } from '../models/freqs/twoDimension/save.js';
+import { TextTypesModel } from '../models/textTypes/main.js';
+import { KontextPage } from '../app/main.js';
+import { IndirectQueryReplayModel } from '../models/query/replay/indirect.js';
 import { Dict, List, Maths, pipe, tuple } from 'cnc-tskit';
 import { CTFormInputs, CTFormProperties, CTFreqResultData,
-    AlignTypes } from '../models/freqs/twoDimension/common';
-import { Actions } from '../models/freqs/regular/actions';
-import { Block, FreqResultViews } from '../models/freqs/common';
-import { ConcFormArgs } from '../models/query/formArgs';
-import { FreqChartsModel } from '../models/freqs/regular/freqCharts';
-import { FreqDataLoader } from '../models/freqs/regular/common';
-import { init as viewFreqCommonInit } from '../views/freqs/common';
-import { ImageConversionModel } from '../models/common/imgConv';
-import { DispersionResultModel } from '../models/dispersion/result';
-import { FreqResultsSaveModel } from '../models/freqs/regular/save';
-import { FreqChartsSaveFormModel } from '../models/freqs/regular/saveChart';
-import { importInitialTTData, TTInitialData } from '../models/textTypes/common';
-import { TabWrapperModel } from '../models/freqs/regular/tabs';
-import { transferActionToViewPage } from '../app/navigation/interpage';
+    AlignTypes } from '../models/freqs/twoDimension/common.js';
+import { Actions } from '../models/freqs/regular/actions.js';
+import { Block, FreqResultViews } from '../models/freqs/common.js';
+import { ConcFormArgs } from '../models/query/formArgs.js';
+import { FreqChartsModel } from '../models/freqs/regular/freqCharts.js';
+import { FreqDataLoader } from '../models/freqs/regular/common.js';
+import { init as viewFreqCommonInit } from '../views/freqs/common.js';
+import { ImageConversionModel } from '../models/common/imgConv.js';
+import { DispersionResultModel } from '../models/dispersion/result.js';
+import { FreqResultsSaveModel } from '../models/freqs/regular/save.js';
+import { FreqChartsSaveFormModel } from '../models/freqs/regular/saveChart.js';
+import { importInitialTTData, TTInitialData } from '../models/textTypes/common.js';
+import { TabWrapperModel } from '../models/freqs/regular/tabs.js';
+import { transferActionToViewPage } from '../app/navigation/interpage.js';
 
 /**
  *

@@ -23,12 +23,12 @@ import { List, HTTP } from 'cnc-tskit';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-import { PageModel } from '../../../app/page';
-import { Actions } from '../actions';
-import { Actions as MainMenuActions } from '../../mainMenu/actions';
-import { PersistentQueryOperation, importEncodedOperation } from './common';
-import { AjaxConcResponse } from '../../concordance/common';
-import { QueryOperation } from '../../../types/kontext';
+import { PageModel } from '../../../app/page.js';
+import { Actions } from '../actions.js';
+import { Actions as MainMenuActions } from '../../mainMenu/actions.js';
+import { PersistentQueryOperation, importEncodedOperation } from './common.js';
+import { AjaxConcResponse } from '../../concordance/common.js';
+import { QueryOperation } from '../../../types/kontext.js';
 
 
 interface QueryOverviewResponse extends AjaxConcResponse {

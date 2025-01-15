@@ -22,14 +22,14 @@ import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { List, pipe } from 'cnc-tskit';
 
-import * as Kontext from '../../../types/kontext';
-import * as PluginInterfaces from '../../../types/plugins';
-import { init as initSpeechViews } from './speech';
-import { ConcDetailModel, ConcDetailModelState } from '../../../models/concordance/detail';
-import { RefsDetailModel, RefsDetailModelState } from '../../../models/concordance/refsDetail';
-import { Actions } from '../../../models/concordance/actions';
-import { DetailExpandPositions } from '../../../models/concordance/common';
-import * as S from './style';
+import * as Kontext from '../../../types/kontext.js';
+import * as PluginInterfaces from '../../../types/plugins/index.js';
+import { init as initSpeechViews } from './speech.js';
+import { ConcDetailModel, ConcDetailModelState } from '../../../models/concordance/detail.js';
+import { RefsDetailModel, RefsDetailModelState } from '../../../models/concordance/refsDetail.js';
+import { Actions } from '../../../models/concordance/actions.js';
+import { DetailExpandPositions } from '../../../models/concordance/common.js';
+import * as S from './style.js';
 
 
 export interface RefDetailProps {

@@ -20,9 +20,9 @@
 
 import * as React from 'react';
 import { IActionDispatcher, Bound } from 'kombo';
-import * as Kontext from '../../types/kontext';
-import { ConcRestoreModel, ConcRestoreModelState } from '../../models/concRestore';
-import * as S from './style';
+import * as Kontext from '../../types/kontext.js';
+import { ConcRestoreModel, ConcRestoreModelState } from '../../models/concRestore/index.js';
+import * as S from './style.js';
 
 
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, model:ConcRestoreModel) {

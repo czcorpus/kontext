@@ -19,20 +19,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { PageModel } from '../app/page';
-import { KontextPage } from '../app/main';
-import * as Kontext from '../types/kontext';
-import { init as formViewInit } from '../views/pquery/form';
-import { PqueryFormModel } from '../models/pquery/form';
-import * as PluginInterfaces from '../types/plugins';
+import { PageModel } from '../app/page.js';
+import { KontextPage } from '../app/main.js';
+import * as Kontext from '../types/kontext.js';
+import { init as formViewInit } from '../views/pquery/form/index.js';
+import { PqueryFormModel } from '../models/pquery/form.js';
+import * as PluginInterfaces from '../types/plugins/index.js';
 import corplistComponent from 'plugins/corparch/init';
-import { Actions as GlobalActions } from '../models/common/actions';
+import { Actions as GlobalActions } from '../models/common/actions.js';
 import { Ident, tuple } from 'cnc-tskit';
-import { init as queryOverviewInit } from '../views/pquery/overview';
+import { init as queryOverviewInit } from '../views/pquery/overview/index.js';
 import { FreqIntersectionArgs, importConcQueries, newModelState, InvolvedConcFormArgs,
-    storedQueryToModel } from '../models/pquery/common';
-import { AttrHelper } from '../models/cqleditor/attrs';
-import { HtmlHelpModel } from '../models/help/help';
+    storedQueryToModel } from '../models/pquery/common.js';
+import { AttrHelper } from '../models/cqleditor/attrs.js';
+import { HtmlHelpModel } from '../models/help/help.js';
 import { Root } from 'react-dom/client';
 
 

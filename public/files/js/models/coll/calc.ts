@@ -20,9 +20,9 @@
 
 import { HTTP } from 'cnc-tskit';
 
-import { PageModel } from '../../app/page';
-import * as Kontext from '../../types/kontext';
-import { StatusRequestArgs } from './common';
+import { PageModel } from '../../app/page.js';
+import * as Kontext from '../../types/kontext.js';
+import { StatusRequestArgs } from './common.js';
 
 
 type WatchdogUpdateCallback = (status:number, err:Error)=>void;

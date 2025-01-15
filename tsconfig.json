@@ -6,7 +6,7 @@
         "noImplicitAny": false,
         "module": "es2015",
         "target": "es2015",
-        "jsx": "react",
+        "jsx": "react-jsx",
         "moduleResolution": "node",
         "paths": {
             "plugins/corparch/*": ["./public/files/js/plugins/corparch/*"],

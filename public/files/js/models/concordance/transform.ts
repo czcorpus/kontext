@@ -19,9 +19,9 @@
  */
 
 import { Dict, List, pipe } from 'cnc-tskit';
-import { HighlightWords, KWICSection, Line, PosAttrRole, ServerLineData, ServerTextChunk, TextChunk, Token } from './common';
-import { ConclineSectionOps } from './line';
-import { defaultBgHighlighted } from '../../views/theme/default';
+import { HighlightWords, KWICSection, Line, PosAttrRole, ServerLineData, ServerTextChunk, TextChunk, Token } from './common.js';
+import { ConclineSectionOps } from './line.js';
+import { defaultBgHighlighted } from '../../views/theme/default/index.js';
 
 
 /**

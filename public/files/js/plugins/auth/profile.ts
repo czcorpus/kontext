@@ -23,13 +23,13 @@ import { Observable, of as rxOf } from 'rxjs';
 import { concatMap } from 'rxjs/operators';
 import { HTTP, List, pipe } from 'cnc-tskit';
 
-import * as Kontext from '../../types/kontext';
-import { Actions } from './actions';
+import * as Kontext from '../../types/kontext.js';
+import { Actions } from './actions.js';
 import {
     UsernameTestResponse, validationStatusHasErrors, SignUpResponse,
     ValidationStatus, PasswordSetResponse, newValidationStatus,
-    SubmitFormErrors } from './common';
-import { IPluginApi } from '../../types/plugins/common';
+    SubmitFormErrors } from './common.js';
+import { IPluginApi } from '../../types/plugins/common.js';
 
 
 export interface UserProfileState {

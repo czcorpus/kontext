@@ -21,17 +21,17 @@
 
 import { BoundWithProps, IActionDispatcher } from 'kombo';
 import * as React from 'react';
-import { DispersionDataRow, DispersionResultModel, DispersionResultModelState } from '../../models/dispersion/result';
-import { ChartExportFormat, ComponentHelpers } from '../../types/kontext';
+import { DispersionDataRow, DispersionResultModel, DispersionResultModelState } from '../../models/dispersion/result.js';
+import { ChartExportFormat, ComponentHelpers } from '../../types/kontext.js';
 import { BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Bar } from 'recharts';
-import * as theme from '../theme/default';
+import * as theme from '../theme/default/index.js';
 
-import { Actions as GlobalActions } from '../../models/common/actions';
+import { Actions as GlobalActions } from '../../models/common/actions.js';
 
-import { Actions } from '../../models/dispersion/actions';
+import { Actions } from '../../models/dispersion/actions.js';
 import { List } from 'cnc-tskit';
 
-import * as S from './style';
+import * as S from './style.js';
 import * as ReactDOM from 'react-dom';
 
 

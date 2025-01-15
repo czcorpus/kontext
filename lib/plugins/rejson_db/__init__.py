@@ -27,7 +27,7 @@ required XML: please see config.rng
 
 import logging
 
-import aioredis
+from redis import asyncio as aioredis
 import ujson as json
 from plugins.redis_db import RedisDb
 from util import as_sync

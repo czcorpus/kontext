@@ -19,10 +19,10 @@
  */
 
 import { Action } from 'kombo';
-import { CorplistDataResponse, Filters } from './corplist';
-import { CorpusInfo } from '../../models/common/corpusInfo';
-import { ServerFavlistItem } from './common';
-import { SearchResultRow } from './search';
+import { CorplistDataResponse, Filters } from './corplist.js';
+import { CorpusInfo } from '../../models/common/corpusInfo.js';
+import { ServerFavlistItem } from './common.js';
+import { SearchResultRow } from './search.js';
 
 
 export class Actions {

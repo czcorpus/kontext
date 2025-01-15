@@ -21,21 +21,21 @@
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
-import * as Kontext from '../../../types/kontext';
-import { init as inputInit } from '../input';
-import { FilterFormModel, FilterFormModelState } from '../../../models/query/filter';
-import { FirstHitsModelState } from '../../../models/query/firstHits';
-import { WithinBuilderModel } from '../../../models/query/withinBuilder';
-import { VirtualKeyboardModel } from '../../../models/query/virtualKeyboard';
-import { FirstHitsModel } from '../../../models/query/firstHits';
-import * as PluginInterfaces from '../../../types/plugins';
-import { UsageTipsModel } from '../../../models/usageTips';
-import { Actions } from '../../../models/query/actions';
+import * as Kontext from '../../../types/kontext.js';
+import { init as inputInit } from '../input/index.js';
+import { FilterFormModel, FilterFormModelState } from '../../../models/query/filter.js';
+import { FirstHitsModelState } from '../../../models/query/firstHits.js';
+import { WithinBuilderModel } from '../../../models/query/withinBuilder.js';
+import { VirtualKeyboardModel } from '../../../models/query/virtualKeyboard.js';
+import { FirstHitsModel } from '../../../models/query/firstHits.js';
+import * as PluginInterfaces from '../../../types/plugins/index.js';
+import { UsageTipsModel } from '../../../models/usageTips/index.js';
+import { Actions } from '../../../models/query/actions.js';
 import { Keyboard } from 'cnc-tskit';
-import * as QS from '../first/style';
-import * as S from './style';
-import { SearchHistoryModel } from '../../../models/searchHistory';
-import { FilterTypes } from '../../../models/query/common';
+import * as QS from '../first/style.js';
+import * as S from './style.js';
+import { SearchHistoryModel } from '../../../models/searchHistory/index.js';
+import { FilterTypes } from '../../../models/query/common.js';
 
 
 

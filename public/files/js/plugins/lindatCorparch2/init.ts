@@ -18,17 +18,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as PluginInterfaces from '../../types/plugins';
-import { CorplistWidgetModel } from './widget';
-import { CorplistPage, CorplistServerData } from './corplist';
-import { init as viewInit } from './corplistView';
-import { init as widgetInit } from './widgetView';
-import { init as overviewViewInit } from '../../views/overview';
-import { CorplistTableModel } from './corplist';
-import * as common from './common';
-import { SearchEngine } from './search';
-import { IPluginApi } from '../../types/plugins/common';
-import { InitialWidgetData } from '../../types/plugins/corparch';
+import * as PluginInterfaces from '../../types/plugins/index.js';
+import { CorplistWidgetModel } from './widget.js';
+import { CorplistPage, CorplistServerData } from './corplist.js';
+import { init as viewInit } from './corplistView.js';
+import { init as widgetInit } from './widgetView.js';
+import { init as overviewViewInit } from '../../views/overview/index.js';
+import { CorplistTableModel } from './corplist.js';
+import * as common from './common.js';
+import { SearchEngine } from './search.js';
+import { IPluginApi } from '../../types/plugins/common.js';
+import { InitialWidgetData } from '../../types/plugins/corparch.js';
 
 declare var require:any;
 require('./style.css'); // webpack

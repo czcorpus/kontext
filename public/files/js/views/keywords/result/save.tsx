@@ -19,10 +19,10 @@
  */
 
 import * as React from 'react';
-import * as Kontext from '../../../types/kontext';
+import * as Kontext from '../../../types/kontext.js';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { Actions } from '../../../models/keywords/actions';
-import { KeywordsResultsSaveModel, KeywordsResultsSaveModelState } from 'public/files/js/models/keywords/save';
+import { Actions } from '../../../models/keywords/actions.js';
+import { KeywordsResultsSaveModel, KeywordsResultsSaveModelState } from '../../../models/keywords/save.js';
 
 
 interface SaveKeywordsFormProps {

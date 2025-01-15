@@ -1,5 +1,5 @@
-import styled from 'styled-components';
-import * as theme from '../../views/theme/default';
+import { styled } from 'styled-components';
+import * as theme from '../../views/theme/default/index.js';
 
 
 const corplistWidgetTableSpacing = '30pt';

@@ -20,7 +20,7 @@
 
 import { StatefulModel, IFullActionControl, IModel } from 'kombo';
 
-import { IStaticallyIdentifiable } from './common';
+import { IStaticallyIdentifiable } from './common.js';
 import { List, pipe, Dict } from 'cnc-tskit';
 
 export interface IPageLeaveVoter<T> extends IModel<T>, IStaticallyIdentifiable {

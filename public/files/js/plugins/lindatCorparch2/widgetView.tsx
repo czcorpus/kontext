@@ -18,16 +18,16 @@
 
 import * as React from 'react';
 import { Keyboard, List } from 'cnc-tskit';
-import * as Kontext from '../../types/kontext';
-import { FavListItem, CorplistWidgetModelState, CorplistWidgetModel } from './widget';
-import { CorplistItem } from './common';
-import { SearchKeyword, SearchResultRow } from './search';
+import * as Kontext from '../../types/kontext.js';
+import { FavListItem, CorplistWidgetModelState, CorplistWidgetModel } from './widget.js';
+import { CorplistItem } from './common.js';
+import { SearchKeyword, SearchResultRow } from './search.js';
 import { IActionDispatcher, BoundWithProps, Bound } from 'kombo';
-import { Actions } from './actions';
-import { Actions as GlobalActions } from '../../models/common/actions';
-import { CorpusSwitchModel, CorpusSwitchModelState } from '../../models/common/corpusSwitch';
+import { Actions } from './actions.js';
+import { Actions as GlobalActions } from '../../models/common/actions.js';
+import { CorpusSwitchModel, CorpusSwitchModelState } from '../../models/common/corpusSwitch.js';
 
-import * as S from './style';
+import * as S from './style.js';
 
 
 export interface WidgetViewModuleArgs {

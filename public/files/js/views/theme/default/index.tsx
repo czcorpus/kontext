@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import styled, { css } from 'styled-components';
+import { styled, css } from 'styled-components';
 import { keyframes } from 'styled-components';
 import backgroundSrc from '../../../../img/groovepaper2.jpg';
 

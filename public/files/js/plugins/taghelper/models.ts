@@ -19,7 +19,7 @@
  */
 
 import { IFullActionControl, StatefulModel } from 'kombo';
-import { Actions } from './actions';
+import { Actions } from './actions.js';
 
 export interface TabFrameModelState {
     activeTabs:{[sourceId:string]:string};

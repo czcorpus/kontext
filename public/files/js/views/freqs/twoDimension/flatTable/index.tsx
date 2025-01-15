@@ -21,13 +21,13 @@
 import * as React from 'react';
 import { IActionDispatcher, Bound } from 'kombo';
 
-import * as Kontext from '../../../../types/kontext';
-import { Freq2DFlatViewModel, Freq2DFlatViewModelState, FreqDataItem } from '../../../../models/freqs/twoDimension/flatTable';
-import { GeneralFreq2DModel } from '../../../../models/freqs/twoDimension/generalDisplay';
-import { init as ctViewOptsFactory } from '../viewOpts';
-import { Actions } from '../../../../models/freqs/twoDimension/actions';
-import * as S from './style';
-import * as S2 from '../style';
+import * as Kontext from '../../../../types/kontext.js';
+import { Freq2DFlatViewModel, Freq2DFlatViewModelState, FreqDataItem } from '../../../../models/freqs/twoDimension/flatTable.js';
+import { GeneralFreq2DModel } from '../../../../models/freqs/twoDimension/generalDisplay.js';
+import { init as ctViewOptsFactory } from '../viewOpts.js';
+import { Actions } from '../../../../models/freqs/twoDimension/actions.js';
+import * as S from './style.js';
+import * as S2 from '../style.js';
 
 
 // ----------------------- exported types ------------------------------------

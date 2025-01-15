@@ -22,31 +22,31 @@ import * as React from 'react';
 import { IActionDispatcher, BoundWithProps, IModel, Bound } from 'kombo';
 import { List, pipe, tuple } from 'cnc-tskit';
 
-import * as Kontext from '../../../types/kontext';
-import * as ViewOptions from '../../../types/viewOptions';
-import * as PluginInterfaces from '../../../types/plugins';
-import { init as lineSelViewsInit } from '../lineSelection';
-import { init as paginatorViewsInit } from '../paginator';
-import { init as linesViewInit } from '../lines';
-import { init as concDetailViewsInit } from '../detail/index';
-import { init as concSaveViewsInit } from '../save';
-import { init as extendedInfoViewsInit } from '../extendedInfo';
+import * as Kontext from '../../../types/kontext.js';
+import * as ViewOptions from '../../../types/viewOptions.js';
+import * as PluginInterfaces from '../../../types/plugins/index.js';
+import { init as lineSelViewsInit } from '../lineSelection/index.js';
+import { init as paginatorViewsInit } from '../paginator/index.js';
+import { init as linesViewInit } from '../lines/index.js';
+import { init as concDetailViewsInit } from '../detail/index.js';
+import { init as concSaveViewsInit } from '../save.js';
+import { init as extendedInfoViewsInit } from '../extendedInfo/index.js';
 import { LineSelectionModel, LineSelectionModelState }
-    from '../../../models/concordance/lineSelection';
-import { ConcordanceModel, ConcordanceModelState } from '../../../models/concordance/main';
-import { ConcDetailModel } from '../../../models/concordance/detail';
-import { ConcSummaryModel, ConcSummaryModelState } from '../../../models/concordance/summary';
-import { RefsDetailModel } from '../../../models/concordance/refsDetail';
-import { CollFormModel } from '../../../models/coll/collForm';
-import { TextTypesDistModel } from '../../../models/concordance/ttdist/model';
-import { ConcDashboard, ConcDashboardState } from '../../../models/concordance/dashboard';
-import { UsageTipsModel } from '../../../models/usageTips';
-import { MainMenuModelState } from '../../../models/mainMenu';
-import { Actions } from '../../../models/concordance/actions';
-import { LineSelectionModes } from '../../../models/concordance/common';
-import { Actions as ViewOptionsActions } from '../../../models/options/actions';
-import { Actions as UserActions } from '../../../models/user/actions';
-import * as S from './style';
+    from '../../../models/concordance/lineSelection/index.js';
+import { ConcordanceModel, ConcordanceModelState } from '../../../models/concordance/main.js';
+import { ConcDetailModel } from '../../../models/concordance/detail.js';
+import { ConcSummaryModel, ConcSummaryModelState } from '../../../models/concordance/summary.js';
+import { RefsDetailModel } from '../../../models/concordance/refsDetail.js';
+import { CollFormModel } from '../../../models/coll/collForm.js';
+import { TextTypesDistModel } from '../../../models/concordance/ttdist/model.js';
+import { ConcDashboard, ConcDashboardState } from '../../../models/concordance/dashboard.js';
+import { UsageTipsModel } from '../../../models/usageTips/index.js';
+import { MainMenuModelState } from '../../../models/mainMenu/index.js';
+import { Actions } from '../../../models/concordance/actions.js';
+import { LineSelectionModes } from '../../../models/concordance/common.js';
+import { Actions as ViewOptionsActions } from '../../../models/options/actions.js';
+import { Actions as UserActions } from '../../../models/user/actions.js';
+import * as S from './style.js';
 
 
 export class ViewPageModels {

@@ -22,11 +22,11 @@ import { Observable, of as rxOf } from 'rxjs';
 import { List, pipe, HTTP, Dict } from 'cnc-tskit';
 import { StatefulModel, IFullActionControl, StatelessModel, IActionDispatcher } from 'kombo';
 
-import { Actions } from '../actions';
-import { Actions as QueryActions } from '../../../models/query/actions';
-import { IPluginApi } from '../../../types/plugins/common';
+import { Actions } from '../actions.js';
+import { Actions as QueryActions } from '../../../models/query/actions.js';
+import { IPluginApi } from '../../../types/plugins/common.js';
 import { createEmptyPosTagsetStatus, PositionValue, PositionOptions, PosTagModelState,
-    RawTagValues, TagDataResponse, PosTagStatus, cloneSelection } from './common';
+    RawTagValues, TagDataResponse, PosTagStatus, cloneSelection } from './common.js';
 
 
 /**

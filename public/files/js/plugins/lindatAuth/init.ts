@@ -17,7 +17,7 @@
  */
 
 declare var AAI:any; // TODO (webpack)
-import * as PluginInterfaces from '../../types/plugins';
+import * as PluginInterfaces from '../../types/plugins/index.js';
 /// <reference path="./aai.d.ts" />
 
 

@@ -18,16 +18,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../../types/kontext';
-import { CorplistPage } from './corplist';
-import * as PluginInterfaces from '../../types/plugins';
-import { init as viewInit } from './view';
-import { init as overviewViewInit } from '../../views/overview';
-import { CorplistTableModel } from './corplist';
-import { Plugin as DCPlugin } from '../corparch/init';
-import { CorplistServerData } from '../corparch/corplist';
-import { IPluginApi } from '../../types/plugins/common';
-import { InitialWidgetData } from '../../types/plugins/corparch';
+import { CorplistPage } from './corplist.js';
+import * as PluginInterfaces from '../../types/plugins/index.js';
+import { init as viewInit } from './view/index.js';
+import { init as overviewViewInit } from '../../views/overview/index.js';
+import { CorplistTableModel } from './corplist.js';
+import { Plugin as DCPlugin } from '../corparch/init.js';
+import { CorplistServerData } from '../corparch/corplist.js';
+import { IPluginApi } from '../../types/plugins/common.js';
+import { InitialWidgetData } from '../../types/plugins/corparch.js';
 
 class Plugin extends DCPlugin {
 

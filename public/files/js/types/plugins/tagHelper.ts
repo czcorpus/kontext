@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { QueryFormType } from '../../models/query/actions';
-import { BasePlugin, IPluginApi } from './common';
+import { QueryFormType } from '../../models/query/actions.js';
+import { BasePlugin, IPluginApi } from './common.js';
 
 
 // ------------------------------------------------------------------------

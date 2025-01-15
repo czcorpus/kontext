@@ -18,13 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 import * as React from 'react';
-import * as Kontext from '../../types/kontext';
-import { KwicConnectModel, KwicConnectState } from './model';
+import * as Kontext from '../../types/kontext.js';
+import { KwicConnectModel, KwicConnectState } from './model.js';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { List } from 'cnc-tskit';
-import * as PluginInterfaces from '../../types/plugins';
+import * as PluginInterfaces from '../../types/plugins/index.js';
 
-import * as S from './style';
+import * as S from './style.js';
 
 export interface KwicConnectContainerProps {
 

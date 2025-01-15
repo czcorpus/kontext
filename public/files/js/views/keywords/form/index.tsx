@@ -23,11 +23,11 @@
 import * as React from 'react';
 import { Bound, IActionDispatcher } from 'kombo';
 
-import * as Kontext from '../../../types/kontext';
-import * as S from './style';
-import * as PluginInterfaces from '../../../types/plugins';
-import { Actions } from '../../../models/keywords/actions';
-import { KeywordsFormModel, KeywordsFormState } from '../../../models/keywords/form';
+import * as Kontext from '../../../types/kontext.js';
+import * as S from './style.js';
+import * as PluginInterfaces from '../../../types/plugins/index.js';
+import { Actions } from '../../../models/keywords/actions.js';
+import { KeywordsFormModel, KeywordsFormState } from '../../../models/keywords/form.js';
 import { List } from 'cnc-tskit';
 
 

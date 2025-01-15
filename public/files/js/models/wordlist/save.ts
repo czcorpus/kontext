@@ -20,13 +20,13 @@
 import { Observable, of as rxOf } from 'rxjs';
 import { concatMap, scan } from 'rxjs/operators';
 
-import * as Kontext from '../../types/kontext';
-import { PageModel, SaveLinkHandler } from '../../app/page';
+import * as Kontext from '../../types/kontext.js';
+import { PageModel, SaveLinkHandler } from '../../app/page.js';
 import { Action, IFullActionControl, StatelessModel } from 'kombo';
-import { Actions } from './actions';
-import { Actions as MainMenuActions } from '../mainMenu/actions';
-import { WordlistSaveArgs, WordlistSubmitArgs } from './common';
-import { DataSaveFormat } from '../../app/navigation/save';
+import { Actions } from './actions.js';
+import { Actions as MainMenuActions } from '../mainMenu/actions.js';
+import { WordlistSaveArgs, WordlistSubmitArgs } from './common.js';
+import { DataSaveFormat } from '../../app/navigation/save.js';
 import { Dict } from 'cnc-tskit';
 
 

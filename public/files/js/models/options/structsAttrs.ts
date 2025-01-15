@@ -23,13 +23,13 @@ import { tap, concatMap } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import { pipe, List, Dict, HTTP, tuple } from 'cnc-tskit';
 
-import * as Kontext from '../../types/kontext';
-import * as ViewOptions from '../../types/viewOptions';
-import { PageModel } from '../../app/page';
-import { Actions } from './actions';
-import { Actions as MainMenuActions } from '../mainMenu/actions';
-import { PluginName } from '../../app/plugin';
-import { ConcServerArgs } from '../concordance/common';
+import * as Kontext from '../../types/kontext.js';
+import * as ViewOptions from '../../types/viewOptions.js';
+import { PageModel } from '../../app/page.js';
+import { Actions } from './actions.js';
+import { Actions as MainMenuActions } from '../mainMenu/actions.js';
+import { PluginName } from '../../app/plugin.js';
+import { ConcServerArgs } from '../concordance/common.js';
 
 
 interface StructAttrsSubmit {

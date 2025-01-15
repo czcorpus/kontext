@@ -19,7 +19,7 @@
  */
 
 import { Action } from 'kombo';
-import { ProviderWordMatch, FreqDistType } from './model';
+import { ProviderWordMatch, FreqDistType } from './model.js';
 
 
 export class Actions {

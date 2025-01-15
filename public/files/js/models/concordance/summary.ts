@@ -20,13 +20,13 @@
 
 import { IActionDispatcher, StatelessModel } from 'kombo';
 import { concatMap, map } from 'rxjs/operators';
-import { Actions } from './actions';
-import { PageModel } from '../../app/page';
-import * as Kontext from '../../types/kontext';
-import * as TextTypes from '../../types/textTypes';
+import { Actions } from './actions.js';
+import { PageModel } from '../../app/page.js';
+import * as Kontext from '../../types/kontext.js';
+import * as TextTypes from '../../types/textTypes.js';
 import { Observable } from 'rxjs';
 import { HTTP, List } from 'cnc-tskit';
-import * as PluginInterfaces from '../../types/plugins';
+import * as PluginInterfaces from '../../types/plugins/index.js';
 
 
 export interface WithinMaxHits extends Kontext.AjaxResponse {

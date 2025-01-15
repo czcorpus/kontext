@@ -22,20 +22,20 @@ import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, of, Subject } from 'rxjs';
 import { concatMap, delay, switchMap, tap } from 'rxjs/operators';
 
-import * as Kontext from '../../types/kontext';
-import { PageModel } from '../../app/page';
+import * as Kontext from '../../types/kontext.js';
+import { PageModel } from '../../app/page.js';
 import { pipe, List, HTTP } from 'cnc-tskit';
-import { Actions } from './actions';
-import { Actions as ATActions } from '../asyncTask/actions';
-import { Actions as GlobalOptionsActions } from '../options/actions';
+import { Actions } from './actions.js';
+import { Actions as ATActions } from '../asyncTask/actions.js';
+import { Actions as GlobalOptionsActions } from '../options/actions.js';
 import {
     archiveSubcorpora,
     splitSelectId,
     importServerSubcList,
     SubcorpList,
     SubcorpusServerRecord,
-    wipeSubcorpora } from './common';
-import { validateGzNumber } from '../base';
+    wipeSubcorpora } from './common.js';
+import { validateGzNumber } from '../base.js';
 
 
 
@@ -332,7 +332,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             })
         );
 
-        this.addActionHandler(
+        this.addMultiActionHandler(
             [
                 Actions.WipeSubcorpusDone,
                 Actions.RestoreSubcorpusDone,

@@ -19,18 +19,18 @@
  */
 
 import * as React from 'react';
-import { List, pipe, tuple } from 'cnc-tskit';
+import { List, pipe } from 'cnc-tskit';
 import { IActionDispatcher } from 'kombo';
 
-import * as Kontext from '../../../types/kontext';
-import { InputModuleViews } from '../input';
-import * as PluginInterfaces from '../../../types/plugins';
-import { Actions } from '../../../models/query/actions';
-import { Actions as GlobalActions } from '../../../models/common/actions';
-import { AnyQuery } from '../../../models/query/query';
-import * as S from './style';
-import * as SC from '../style';
-import * as theme from '../../theme/default';
+import * as Kontext from '../../../types/kontext.js';
+import { InputModuleViews } from '../input/index.js';
+import * as PluginInterfaces from '../../../types/plugins/index.js';
+import { Actions } from '../../../models/query/actions.js';
+import { Actions as GlobalActions } from '../../../models/common/actions.js';
+import { AnyQuery } from '../../../models/query/query.js';
+import * as S from './style.js';
+import * as SC from '../style.js';
+import * as theme from '../../theme/default/index.js';
 
 
 export interface AlignedModuleArgs {

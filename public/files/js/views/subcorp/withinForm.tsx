@@ -18,13 +18,13 @@
 
 import * as React from 'react';
 import {IActionDispatcher, Bound} from 'kombo';
-import * as Kontext from '../../types/kontext';
-import { SubcorpWithinFormModel, SubcorpWithinFormModelState, WithinLine } from '../../models/subcorp/withinForm';
-import { TextTypesPanelProps } from '../textTypes';
-import { Actions } from '../../models/subcorp/actions';
+import * as Kontext from '../../types/kontext.js';
+import { SubcorpWithinFormModel, SubcorpWithinFormModelState, WithinLine } from '../../models/subcorp/withinForm.js';
+import { TextTypesPanelProps } from '../textTypes/index.js';
+import { Actions } from '../../models/subcorp/actions.js';
 import { Dict, List, pipe } from 'cnc-tskit';
 
-import * as S from './style';
+import * as S from './style.js';
 
 
 export interface SubcorpFormProps {

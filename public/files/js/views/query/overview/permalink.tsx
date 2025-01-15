@@ -21,12 +21,12 @@
 import * as React from 'react';
 import { IActionDispatcher, Bound } from 'kombo';
 
-import * as Kontext from '../../../types/kontext';
-import { QuerySaveAsFormModel, QuerySaveAsFormModelState } from '../../../models/query/save';
-import { Actions } from '../../../models/query/actions';
-import { Actions as MainMenuActions } from '../../../models/mainMenu/actions';
-import { Actions as ConcActions } from '../../../models/concordance/actions';
-import * as S from './style';
+import * as Kontext from '../../../types/kontext.js';
+import { QuerySaveAsFormModel, QuerySaveAsFormModelState } from '../../../models/query/save.js';
+import { Actions } from '../../../models/query/actions.js';
+import { Actions as MainMenuActions } from '../../../models/mainMenu/actions.js';
+import { Actions as ConcActions } from '../../../models/concordance/actions.js';
+import * as S from './style.js';
 
 
 export function init(

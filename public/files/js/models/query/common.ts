@@ -22,30 +22,30 @@ import { Dict, List, tuple, pipe } from 'cnc-tskit';
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { diffArrays } from 'diff';
 
-import * as Kontext from '../../types/kontext';
-import * as TextTypes from '../../types/textTypes';
-import * as ViewOptions from '../../types/viewOptions';
-import { PageModel } from '../../app/page';
-import { TextTypesModel } from '../textTypes/main';
-import { QueryContextModel } from './context';
+import * as Kontext from '../../types/kontext.js';
+import * as TextTypes from '../../types/textTypes.js';
+import * as ViewOptions from '../../types/viewOptions.js';
+import { PageModel } from '../../app/page.js';
+import { TextTypesModel } from '../textTypes/main.js';
+import { QueryContextModel } from './context.js';
 import { parse as parseQuery, ITracer } from 'cqlParser/parser';
-import { ConcServerArgs, ConcViewMode } from '../concordance/common';
-import { QueryFormType, Actions } from './actions';
+import { ConcServerArgs, ConcViewMode } from '../concordance/common.js';
+import { QueryFormType, Actions } from './actions.js';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
-import * as PluginInterfaces from '../../types/plugins';
-import { Actions as CorpOptActions } from '../options/actions';
+import * as PluginInterfaces from '../../types/plugins/index.js';
+import { Actions as CorpOptActions } from '../options/actions.js';
 import {
     AdvancedQuery, advancedToSimpleQuery, AnyQuery, AnyQuerySubmit, findTokenIdxBySuggFocusIdx,
     parseSimpleQuery, QueryType, runSimpleQueryParser, SimpleQuery, simpleToAdvancedQuery,
-    TokenSuggestions } from './query';
-import { getApplyRules, highlightSyntax, ParsedAttr } from '../cqleditor/parser';
-import { AttrHelper } from '../cqleditor/attrs';
-import { Actions as QueryHintsActions } from '../usageTips/actions';
-import { Actions as HistoryActions } from '../searchHistory/actions';
-import { SubmitEncodedSimpleTokens } from './formArgs';
-import { QueryValueSubformat } from '../../types/plugins/querySuggest';
-import { EmptyPlugin } from '../../plugins/empty/init';
+    TokenSuggestions } from './query.js';
+import { getApplyRules, highlightSyntax, ParsedAttr } from '../cqleditor/parser.js';
+import { AttrHelper } from '../cqleditor/attrs.js';
+import { Actions as QueryHintsActions } from '../usageTips/actions.js';
+import { Actions as HistoryActions } from '../searchHistory/actions.js';
+import { SubmitEncodedSimpleTokens } from './formArgs.js';
+import { QueryValueSubformat } from '../../types/plugins/querySuggest.js';
+import { EmptyPlugin } from '../../plugins/empty/init.js';
 
 /*
 Some important terms to prevent confusion:

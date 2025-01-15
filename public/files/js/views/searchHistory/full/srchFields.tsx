@@ -20,12 +20,12 @@
 
 import * as React from 'react';
 import { Bound, BoundWithProps, IActionDispatcher } from 'kombo';
-import * as Kontext from '../../../types/kontext';
-import { SearchHistoryModel } from '../../../models/searchHistory';
-import { Actions } from '../../../models/searchHistory/actions';
-import { SearchHistoryModelState } from '../../../models/searchHistory/common';
-import { init as extendedSearchFormInit } from './fulltextForms';
-import * as S from './style';
+import * as Kontext from '../../../types/kontext.js';
+import { SearchHistoryModel } from '../../../models/searchHistory/index.js';
+import { Actions } from '../../../models/searchHistory/actions.js';
+import { SearchHistoryModelState } from '../../../models/searchHistory/common.js';
+import { init as extendedSearchFormInit } from './fulltextForms.js';
+import * as S from './style.js';
 
 export interface FieldsViews {
     BasicFields:React.ComponentClass<{corpusSel:boolean; archivedAsEnable:boolean}>;

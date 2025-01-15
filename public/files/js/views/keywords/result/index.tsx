@@ -23,13 +23,13 @@
 import * as React from 'react';
 import { Bound, IActionDispatcher } from 'kombo';
 
-import * as Kontext from '../../../types/kontext';
-import { KeywordsResultModel, KeywordsResultState } from '../../../models/keywords/result';
+import * as Kontext from '../../../types/kontext.js';
+import { KeywordsResultModel, KeywordsResultState } from '../../../models/keywords/result.js';
 import { List } from 'cnc-tskit';
-import * as S from './style';
-import { Actions } from '../../../models/keywords/actions';
-import { KeywordsResultsSaveModel } from 'public/files/js/models/keywords/save';
-import { init as initSaveViews } from './save';
+import * as S from './style.js';
+import { Actions } from '../../../models/keywords/actions.js';
+import { KeywordsResultsSaveModel } from '../../../models/keywords/save.js';
+import { init as initSaveViews } from './save.js';
 
 
 export interface KeywordsResultViewArgs {

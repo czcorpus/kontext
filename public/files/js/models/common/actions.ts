@@ -19,9 +19,9 @@
  */
 
 import { Action } from 'kombo';
-import * as Kontext from '../../types/kontext';
-import { ConcServerArgs } from '../concordance/common';
-import { FreqChartsAvailableTypes } from '../freqs/common';
+import * as Kontext from '../../types/kontext.js';
+import { ConcServerArgs } from '../concordance/common.js';
+import { FreqChartsAvailableTypes } from '../freqs/common.js';
 
 
 export interface CorpusSwitchModelRestorePayload {

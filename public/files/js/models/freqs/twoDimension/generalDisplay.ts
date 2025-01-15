@@ -21,9 +21,9 @@
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { Maths, Dict, tuple, pipe, List } from 'cnc-tskit';
 
-import { PageModel } from '../../../app/page';
-import { ConcQuickFilterServerArgs } from '../../concordance/common';
-import { FreqFilterQuantities, validateMinAbsFreqAttr, isStructAttr } from './common';
+import { PageModel } from '../../../app/page.js';
+import { ConcQuickFilterServerArgs } from '../../concordance/common.js';
+import { FreqFilterQuantities, validateMinAbsFreqAttr, isStructAttr } from './common.js';
 import { empty } from 'rxjs';
 
 

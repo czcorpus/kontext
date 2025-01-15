@@ -19,14 +19,14 @@
  */
 
 import { Bound, IActionDispatcher } from 'kombo';
-import * as Kontext from '../../types/kontext';
+import * as Kontext from '../../types/kontext.js';
 import * as React from 'react';
-import * as S from './style';
-import * as GS from './global-style';
+import * as S from './style.js';
+import * as GS from './global-style.js';
 import flagSI from './flag-si.svg';
 import flagCS from './flag-cs.svg';
 import flagUK from './flag-uk.svg';
-import { Actions, ClarinSiAppBarModel } from './model';
+import { Actions, ClarinSiAppBarModel } from './model.js';
 
 
 export function init(

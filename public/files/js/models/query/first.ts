@@ -25,27 +25,27 @@ import { Observable, of as rxOf } from 'rxjs';
 import { tap, map, concatMap, reduce } from 'rxjs/operators';
 import { Dict, tuple, List, pipe, HTTP, Rx } from 'cnc-tskit';
 
-import * as Kontext from '../../types/kontext';
-import * as TextTypes from '../../types/textTypes';
-import { PageModel } from '../../app/page';
-import { QueryContextModel } from './context';
+import * as Kontext from '../../types/kontext.js';
+import * as TextTypes from '../../types/textTypes.js';
+import { PageModel } from '../../app/page.js';
+import { QueryContextModel } from './context.js';
 import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState,
-    ConcQueryArgs, QueryContextArgs, determineSupportedWidgets, getTagBuilderSupport, suggestionsEnabled } from './common';
-import { Actions } from './actions';
-import { Actions as GenOptsActions } from '../options/actions';
-import { Actions as TTActions } from '../../models/textTypes/actions';
-import { Actions as GlobalActions } from '../common/actions';
-import { Actions as QuickSubcorpActions } from '../subcorp/actions';
-import { IUnregistrable } from '../common/common';
-import * as PluginInterfaces from '../../types/plugins';
-import { ConcQueryResponse, ConcServerArgs } from '../concordance/common';
+    ConcQueryArgs, QueryContextArgs, determineSupportedWidgets, getTagBuilderSupport, suggestionsEnabled } from './common.js';
+import { Actions } from './actions.js';
+import { Actions as GenOptsActions } from '../options/actions.js';
+import { Actions as TTActions } from '../../models/textTypes/actions.js';
+import { Actions as GlobalActions } from '../common/actions.js';
+import { Actions as QuickSubcorpActions } from '../subcorp/actions.js';
+import { IUnregistrable } from '../common/common.js';
+import * as PluginInterfaces from '../../types/plugins/index.js';
+import { ConcQueryResponse, ConcServerArgs } from '../concordance/common.js';
 import { AdvancedQuery, advancedToSimpleQuery, AnyQuery, AnyQuerySubmit, parseSimpleQuery, isAdvancedQuery,
-    QueryType, SimpleQuery, simpleToAdvancedQuery} from './query';
-import { ajaxErrorMapped } from '../../app/navigation';
-import { AttrHelper } from '../cqleditor/attrs';
-import { highlightSyntaxStatic } from '../cqleditor/parser';
-import { ConcFormArgs, QueryFormArgs, QueryFormArgsResponse, SubmitEncodedSimpleTokens } from './formArgs';
-import { PluginName } from '../../app/plugin';
+    QueryType, SimpleQuery, simpleToAdvancedQuery} from './query.js';
+import { ajaxErrorMapped } from '../../app/navigation/index.js';
+import { AttrHelper } from '../cqleditor/attrs.js';
+import { highlightSyntaxStatic } from '../cqleditor/parser.js';
+import { ConcFormArgs, QueryFormArgs, QueryFormArgsResponse, SubmitEncodedSimpleTokens } from './formArgs.js';
+import { PluginName } from '../../app/plugin.js';
 
 
 export interface QueryFormUserEntries {

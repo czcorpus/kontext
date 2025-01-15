@@ -17,13 +17,13 @@
  */
 
 import * as React from 'react';
-import * as Kontext from '../../types/kontext';
-import * as VRD from './vallex';
-import * as PDTVRD from './pdt-vallex';
-import * as ENGVRD from './eng-vallex';
+import * as Kontext from '../../types/kontext.js';
+import * as VRD from './vallex.js';
+import * as PDTVRD from './pdt-vallex.js';
+import * as ENGVRD from './eng-vallex.js';
 import { IActionDispatcher } from 'kombo';
 
-import * as S from './style';
+import * as S from './style.js';
 
 
 export interface Views {

@@ -22,14 +22,14 @@ import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap, map, concatMap } from 'rxjs/operators';
 
-import { PageModel } from '../../app/page';
-import { Actions as MainMenuActions } from '../mainMenu/actions';
-import { Actions } from './actions';
-import { Actions as ConcActions } from '../../models/concordance/actions';
-import { AjaxConcResponse } from '../concordance/common';
+import { PageModel } from '../../app/page.js';
+import { Actions as MainMenuActions } from '../mainMenu/actions.js';
+import { Actions } from './actions.js';
+import { Actions as ConcActions } from '../../models/concordance/actions.js';
+import { AjaxConcResponse } from '../concordance/common.js';
 import { HTTP, List } from 'cnc-tskit';
-import { ShuffleFormArgs } from './formArgs';
-import { ConcFormTypes } from '../../types/kontext';
+import { ShuffleFormArgs } from './formArgs.js';
+import { ConcFormTypes } from '../../types/kontext.js';
 
 
 interface ShuffleModelState {

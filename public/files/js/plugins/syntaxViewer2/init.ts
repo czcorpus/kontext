@@ -20,14 +20,14 @@
 
 import { IFullActionControl, IModel } from 'kombo';
 
-import * as PluginInterfaces from '../../types/plugins';
-import * as srcData from './srcdata';
-import { IPluginApi } from '../../types/plugins/common';
+import * as PluginInterfaces from '../../types/plugins/index.js';
+import * as srcData from './srcdata.js';
+import { IPluginApi } from '../../types/plugins/common.js';
 import * as React from 'react';
-import { SyntaxTreeModel } from './model';
-import { init as initView } from './view';
-import { PluginName } from '../../app/plugin';
-import { EmptySyntaxViewer } from '../empty/syntaxViewer/init';
+import { SyntaxTreeModel } from './model.js';
+import { init as initView } from './view.js';
+import { PluginName } from '../../app/plugin.js';
+import { EmptySyntaxViewer } from '../empty/syntaxViewer/init.js';
 
 
 declare var require:any;

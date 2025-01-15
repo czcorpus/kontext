@@ -22,7 +22,7 @@
 /// <reference path="../vendor.d.ts/translations.d.ts" />
 
 import * as translations from 'translations';
-import * as IntlMessageFormat from '../vendor/intl-messageformat';
+import * as IntlMessageFormat from '../vendor/intl-messageformat.js';
 import { ITranslator } from 'kombo';
 
 

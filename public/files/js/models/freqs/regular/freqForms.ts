@@ -21,13 +21,13 @@
 import { IFullActionControl, StatelessModel } from 'kombo';
 import { Dict, List, pipe, tuple } from 'cnc-tskit';
 
-import * as Kontext from '../../../types/kontext';
-import { PageModel } from '../../../app/page';
-import { FreqServerArgs, MLFreqServerArgs } from './common';
-import { AlignTypes } from '../twoDimension/common';
-import { Actions } from './actions';
-import { FreqChartsAvailableOrder } from '../common';
-import { validateNumber } from '../../base';
+import * as Kontext from '../../../types/kontext.js';
+import { PageModel } from '../../../app/page.js';
+import { FreqServerArgs, MLFreqServerArgs } from './common.js';
+import { AlignTypes } from '../twoDimension/common.js';
+import { Actions } from './actions.js';
+import { FreqChartsAvailableOrder } from '../common.js';
+import { validateNumber } from '../../base.js';
 
 
 export interface FreqFormInputs {

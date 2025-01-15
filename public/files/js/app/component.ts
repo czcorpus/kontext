@@ -19,11 +19,11 @@
  */
 
 
-import * as Kontext from '../types/kontext';
-import * as CoreViews from '../types/coreViews';
-import { PageModel } from './page';
+import * as Kontext from '../types/kontext.js';
+import * as CoreViews from '../types/coreViews/index.js';
+import { PageModel } from './page.js';
 import { debounceTime, fromEvent, map, Observable } from 'rxjs';
-import { ScreenProps } from '../views/document/responsiveWrapper';
+import { ScreenProps } from '../views/document/responsiveWrapper.js';
 
 /**
  * ComponentTools provide a set of runtime functions

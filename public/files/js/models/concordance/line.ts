@@ -19,7 +19,7 @@
  */
 
 import { List, pipe } from 'cnc-tskit';
-import { KWICSection, MLPositionsData, TextChunk, textChunkMatchesLinkId } from './common';
+import { KWICSection, MLPositionsData, TextChunk, textChunkMatchesLinkId } from './common.js';
 
 
 export class ConclineSectionOps {

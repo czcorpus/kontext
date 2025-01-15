@@ -23,13 +23,13 @@ import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 import { Dict, HTTP, List } from 'cnc-tskit';
 
-import { PageModel } from '../../app/page';
-import { SampleServerArgs } from './common';
-import { Actions as MainMenuActions } from '../../models/mainMenu/actions';
-import { Actions } from './actions';
-import { Actions as ConcActions } from '../../models/concordance/actions';
-import { AjaxConcResponse } from '../concordance/common';
-import { ConcFormArgs, SampleFormArgs } from './formArgs';
+import { PageModel } from '../../app/page.js';
+import { SampleServerArgs } from './common.js';
+import { Actions as MainMenuActions } from '../../models/mainMenu/actions.js';
+import { Actions } from './actions.js';
+import { Actions as ConcActions } from '../../models/concordance/actions.js';
+import { AjaxConcResponse } from '../concordance/common.js';
+import { ConcFormArgs, SampleFormArgs } from './formArgs.js';
 
 
 export interface SampleFormProperties {

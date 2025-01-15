@@ -18,9 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../../../types/kontext';
+import * as Kontext from '../../../types/kontext.js';
 import { Dict, List, pipe, tuple } from 'cnc-tskit';
-import { ConcFormArgs, SortFormArgs } from '../formArgs';
+import { ConcFormArgs, SortFormArgs } from '../formArgs.js';
 
 
 

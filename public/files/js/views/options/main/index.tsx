@@ -21,14 +21,14 @@
 import * as React from 'react';
 import { IActionDispatcher, IModel, BoundWithProps, StatelessModel } from 'kombo';
 
-import * as Kontext from '../../../types/kontext';
-import { init as generalViewsInit } from '../general';
-import { init as structsAttrsViewsInit } from '../structsAttrs';
-import { CorpusViewOptionsModel } from '../../../models/options/structsAttrs';
-import { MainMenuModelState } from '../../../models/mainMenu';
-import { Actions as MainMenuActions } from '../../../models/mainMenu/actions';
-import { GeneralViewOptionsModelState } from '../../../models/options/general';
-import * as S from './style';
+import * as Kontext from '../../../types/kontext.js';
+import { init as generalViewsInit } from '../general/index.js';
+import { init as structsAttrsViewsInit } from '../structsAttrs/index.js';
+import { CorpusViewOptionsModel } from '../../../models/options/structsAttrs.js';
+import { MainMenuModelState } from '../../../models/mainMenu/index.js';
+import { Actions as MainMenuActions } from '../../../models/mainMenu/actions.js';
+import { GeneralViewOptionsModelState } from '../../../models/options/general.js';
+import * as S from './style.js';
 
 
 export interface MainModuleArgs {

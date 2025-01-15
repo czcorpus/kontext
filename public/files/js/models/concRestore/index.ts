@@ -19,9 +19,9 @@
  */
 
 import { IActionDispatcher, StatelessModel } from 'kombo';
-import { PageModel } from '../../app/page';
-import { Actions } from './actions';
-import { Actions as ConcActions } from '../concordance/actions';
+import { PageModel } from '../../app/page.js';
+import { Actions } from './actions.js';
+import { Actions as ConcActions } from '../concordance/actions.js';
 
 
 export interface ConcRestoreModelState {

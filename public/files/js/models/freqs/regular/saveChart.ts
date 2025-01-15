@@ -18,10 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../../../types/kontext';
-import { PageModel } from '../../../app/page';
+import * as Kontext from '../../../types/kontext.js';
+import { PageModel } from '../../../app/page.js';
 import { IFullActionControl, StatefulModel } from 'kombo';
-import { Actions } from './actions';
+import { Actions } from './actions.js';
 
 export interface FreqChartsSaveFormModelState {
     formIsActive:boolean;

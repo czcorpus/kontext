@@ -2,11 +2,11 @@ import * as React from 'react';
 import { IActionDispatcher } from 'kombo';
 import { List, pipe, Dict } from 'cnc-tskit';
 
-import { FilterRecord, UDTagBuilderModelState } from './models';
-import * as Kontext from '../../../types/kontext';
-import { Actions } from '../actions';
+import { FilterRecord, UDTagBuilderModelState } from './models.js';
+import * as Kontext from '../../../types/kontext.js';
+import { Actions } from '../actions.js';
 
-import * as S from '../style';
+import * as S from '../style.js';
 
 
 export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):React.FC<UDTagBuilderModelState & {sourceId:string}> {

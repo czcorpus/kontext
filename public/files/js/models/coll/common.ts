@@ -18,9 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../../types/kontext';
-import { ConcServerArgs } from '../concordance/common';
-import { DataSaveFormat } from '../../app/navigation/save';
+import * as Kontext from '../../types/kontext.js';
+import { ConcServerArgs } from '../concordance/common.js';
+import { DataSaveFormat } from '../../app/navigation/save.js';
 
 
 export interface CollResultRow {

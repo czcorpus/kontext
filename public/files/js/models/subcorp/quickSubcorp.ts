@@ -18,15 +18,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { PageModel } from '../../app/page';
-import { CreateSubcorpusArgs, BaseTTSubcorpFormModel } from './common';
+import { PageModel } from '../../app/page.js';
+import { CreateSubcorpusArgs, BaseTTSubcorpFormModel } from './common.js';
 import { IFullActionControl } from 'kombo';
-import { Actions } from './actions';
-import { Actions as QueryActions } from '../query/actions';
-import { Actions as TTActions } from '../textTypes/actions';
-import { IUnregistrable } from '../common/common';
-import { Actions as GlobalActions } from '../common/actions';
-import { Actions as LiveattrsActions } from '../../types/plugins/liveAttributes';
+import { Actions } from './actions.js';
+import { Actions as QueryActions } from '../query/actions.js';
+import { Actions as TTActions } from '../textTypes/actions.js';
+import { IUnregistrable } from '../common/common.js';
+import { Actions as GlobalActions } from '../common/actions.js';
+import { Actions as LiveattrsActions } from '../../types/plugins/liveAttributes.js';
 import { concatMap, throwError } from 'rxjs';
 
 

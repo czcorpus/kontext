@@ -18,14 +18,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../../types/kontext';
-import { PageModel } from '../../app/page';
-import { FormType, isServerWithinSelection, ServerWithinSelection } from './common';
+import * as Kontext from '../../types/kontext.js';
+import { PageModel } from '../../app/page.js';
+import { FormType, isServerWithinSelection, ServerWithinSelection } from './common.js';
 import { StatelessModel, IActionDispatcher } from 'kombo';
 import { List, pipe, Dict } from 'cnc-tskit';
-import { Actions } from './actions';
-import { Actions as GlobalActions } from '../common/actions';
-import { IUnregistrable } from '../common/common';
+import { Actions } from './actions.js';
+import { Actions as GlobalActions } from '../common/actions.js';
+import { IUnregistrable } from '../common/common.js';
 
 /**
  *

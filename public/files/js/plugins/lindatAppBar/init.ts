@@ -16,10 +16,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as PluginInterfaces from '../../types/plugins';
-import { init as localeInit } from './locale';
+import * as PluginInterfaces from '../../types/plugins/index.js';
+import { init as localeInit } from './locale.js';
 import { StatelessModel, IFullActionControl } from 'kombo';
-import { Actions as GlobalActions } from '../../models/common/actions';
+import { Actions as GlobalActions } from '../../models/common/actions.js';
 
 declare var require:any;
 require('./style.css'); // webpack

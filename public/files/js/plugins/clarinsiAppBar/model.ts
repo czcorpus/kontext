@@ -20,8 +20,8 @@
 
 import { tuple } from 'cnc-tskit';
 import { StatelessModel, IFullActionControl, Action } from 'kombo';
-import { Actions as GlobalActions } from '../../models/common/actions';
-import { IPluginApi } from '../../types/plugins/common';
+import { Actions as GlobalActions } from '../../models/common/actions.js';
+import { IPluginApi } from '../../types/plugins/common.js';
 
 
 export class Actions {

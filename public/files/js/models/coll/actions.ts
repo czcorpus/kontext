@@ -19,9 +19,9 @@
  */
 
 import { Action } from 'kombo';
-import { AjaxResponse, CollServerArgs, HistoryState } from './common';
-import { ConcQuickFilterServerArgs } from '../concordance/common';
-import { DataSaveFormat } from '../../app/navigation/save';
+import { AjaxResponse, CollServerArgs, HistoryState } from './common.js';
+import { ConcQuickFilterServerArgs } from '../concordance/common.js';
+import { DataSaveFormat } from '../../app/navigation/save.js';
 
 
 export class Actions {

@@ -21,10 +21,10 @@
 import * as React from 'react';
 import { IActionDispatcher } from 'kombo';
 
-import * as Kontext from '../../../types/kontext';
-import { PlayerStatus } from '../../../models/concordance/media';
-import { Actions } from '../../../models/concordance/actions';
-import * as S from './style';
+import * as Kontext from '../../../types/kontext.js';
+import { PlayerStatus } from '../../../models/concordance/media.js';
+import { Actions } from '../../../models/concordance/actions.js';
+import * as S from './style.js';
 import { List, Time } from 'cnc-tskit';
 
 

@@ -20,8 +20,8 @@
  */
 
 import { Dict, List, pipe } from 'cnc-tskit';
-import { QuerySuggestion } from '../../models/query/query';
-import { CncExhaustiveQueryInfoRendererProps } from './view';
+import { QuerySuggestion } from '../../models/query/query.js';
+import { CncExhaustiveQueryInfoRendererProps } from './view.js';
 
 
 export enum KnownRenderers {

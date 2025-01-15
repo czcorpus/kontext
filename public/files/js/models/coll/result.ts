@@ -22,16 +22,16 @@ import { StatelessModel, SEDispatcher, IActionDispatcher } from 'kombo';
 import { forkJoin, Observable, of } from 'rxjs';
 import { concatMap } from 'rxjs/operators';
 
-import { validateGzNumber } from '../../models/base';
-import { PageModel } from '../../app/page';
-import { CollFormModel } from '../../models/coll/collForm';
-import { Actions } from './actions';
-import { Actions as MainMenuActions } from '../mainMenu/actions';
+import { validateGzNumber } from '../../models/base.js';
+import { PageModel } from '../../app/page.js';
+import { CollFormModel } from '../../models/coll/collForm.js';
+import { Actions } from './actions.js';
+import { Actions as MainMenuActions } from '../mainMenu/actions.js';
 import { HTTP, List } from 'cnc-tskit';
 import { CollResultData, CollResultHeading, CollResultRow, CollResultHeadingCell,
-    AjaxResponse, CollServerArgs, CollSaveServerArgs } from './common';
-import { CalcWatchdog } from './calc';
-import { ConcQuickFilterServerArgs } from '../concordance/common';
+    AjaxResponse, CollServerArgs, CollSaveServerArgs } from './common.js';
+import { CalcWatchdog } from './calc.js';
+import { ConcQuickFilterServerArgs } from '../concordance/common.js';
 
 
 

@@ -20,12 +20,12 @@
 
 import * as React from 'react';
 import {IActionDispatcher, BoundWithProps} from 'kombo';
-import * as Kontext from '../../types/kontext';
-import { Actions } from '../../models/subcorp/actions';
+import * as Kontext from '../../types/kontext.js';
+import { Actions } from '../../models/subcorp/actions.js';
 
-import { QuickSubcorpModel, QuickSubcorpModelState } from '../../models/subcorp/quickSubcorp';
+import { QuickSubcorpModel, QuickSubcorpModelState } from '../../models/subcorp/quickSubcorp.js';
 import { Keyboard } from 'cnc-tskit';
-import * as S from './style';
+import * as S from './style.js';
 
 
 export interface QuickSubcorpWidgetArgs {

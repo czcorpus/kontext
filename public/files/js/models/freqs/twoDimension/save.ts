@@ -18,11 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Freq2DTableModel } from '../twoDimension/table2d';
-import { Freq2DFlatViewModel } from '../twoDimension/flatTable';
+import { Freq2DTableModel } from '../twoDimension/table2d.js';
+import { Freq2DFlatViewModel } from '../twoDimension/flatTable.js';
 import { IFullActionControl, StatefulModel } from 'kombo';
-import { Actions as MainMenuActions } from '../../mainMenu/actions';
-import { Actions as Actions2df } from '../twoDimension/actions';
+import { Actions as MainMenuActions } from '../../mainMenu/actions.js';
+import { Actions as Actions2df } from '../twoDimension/actions.js';
 
 
 export interface FreqCTResultsSaveModelState {

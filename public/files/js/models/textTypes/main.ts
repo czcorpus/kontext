@@ -23,25 +23,25 @@ import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 import { List, Dict, pipe, tuple, HTTP, Strings } from 'cnc-tskit';
 
-import * as Kontext from '../../types/kontext';
-import * as TextTypes from '../../types/textTypes';
-import * as PluginInterfaces from '../../types/plugins';
-import { TTSelOps } from './selectionOps';
+import * as Kontext from '../../types/kontext.js';
+import * as TextTypes from '../../types/textTypes.js';
+import * as PluginInterfaces from '../../types/plugins/index.js';
+import { TTSelOps } from './selectionOps.js';
 import {
     SelectionFilterMap, IntervalChar, WidgetView, importInitialTTData,
     textTypeSelectionEquals, extractTTSelectionValue
-} from './common';
-import { Actions } from './actions';
-import { IUnregistrable } from '../common/common';
-import { Actions as GlobalActions } from '../common/actions';
-import { Actions as ConcActions } from '../concordance/actions';
-import { Actions as QueryActions } from '../query/actions';
-import { Actions as SubcActions } from '../subcorp/actions';
-import { Actions as GeneralSubcmixerActions } from '../../types/plugins/subcMixer';
-import { PluginName } from '../../app/plugin';
-import { QueryFormArgs } from '../query/formArgs';
-import { IPluginApi } from '../../types/plugins/common';
-import { isTTSelection } from '../subcorp/common';
+} from './common.js';
+import { Actions } from './actions.js';
+import { IUnregistrable } from '../common/common.js';
+import { Actions as GlobalActions } from '../common/actions.js';
+import { Actions as ConcActions } from '../concordance/actions.js';
+import { Actions as QueryActions } from '../query/actions.js';
+import { Actions as SubcActions } from '../subcorp/actions.js';
+import { Actions as GeneralSubcmixerActions } from '../../types/plugins/subcMixer.js';
+import { PluginName } from '../../app/plugin.js';
+import { QueryFormArgs } from '../query/formArgs.js';
+import { IPluginApi } from '../../types/plugins/common.js';
+import { isTTSelection } from '../subcorp/common.js';
 
 
 
@@ -644,7 +644,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionHandler(
+        this.addMultiActionHandler(
             [
                 QueryActions.QuerySubmit,
                 QueryActions.BranchQuery,

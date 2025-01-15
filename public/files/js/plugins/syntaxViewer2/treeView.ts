@@ -18,13 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../../types/kontext';
+import * as Kontext from '../../types/kontext.js';
 import * as d3 from 'd3';
 import { List } from 'cnc-tskit';
-import * as srcData from './srcdata';
+import * as srcData from './srcdata.js';
 import {
     DetailAttrOrders, OverflowHandler, Options, Sentence, TreeNodeMap, DetailValue,
-    Edge, Label, Token, ReferencedValues } from './common';
+    Edge, Label, Token, ReferencedValues } from './common.js';
 import { debounceTime, fromEvent, map } from 'rxjs';
 
 
@@ -465,7 +465,7 @@ class TreeGenerator {
 
         let svgTarget = wrapper;
         if (expanded) {
-            svgTarget = wrapper.append('div').style('overflow', 'auto');     
+            svgTarget = wrapper.append('div').style('overflow', 'auto');
         }
 
         const svg = svgTarget

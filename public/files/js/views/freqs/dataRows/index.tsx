@@ -18,14 +18,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../../../types/kontext';
+import * as Kontext from '../../../types/kontext.js';
 import * as React from 'react';
-import { ResultHeader, ResultItem } from '../../../models/freqs/regular/common';
+import { ResultHeader, ResultItem } from '../../../models/freqs/regular/common.js';
 import { IActionDispatcher } from 'kombo';
-import { Actions } from '../../../models/freqs/regular/actions';
+import { Actions } from '../../../models/freqs/regular/actions.js';
 import { List, Maths } from 'cnc-tskit';
-import * as S from './style';
-import { alphaToCoeffFormatter } from '../../../models/freqs/common';
+import * as S from './style.js';
+import { alphaToCoeffFormatter } from '../../../models/freqs/common.js';
 
 
 interface DataTableProps {

@@ -22,26 +22,26 @@
 import { Dict, HTTP, List, pipe, tuple } from 'cnc-tskit';
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, forkJoin, of as rxOf } from 'rxjs';
-import { PageModel } from '../../app/page';
-import { Actions } from './actions';
-import { IUnregistrable } from '../common/common';
-import { Actions as GlobalActions } from '../common/actions';
-import { Actions as QueryActions } from '../query/actions';
-import { Actions as ATActions } from '../../models/asyncTask/actions';
-import { AdvancedQuery, AdvancedQuerySubmit } from '../query/query';
-import * as Kontext from '../../types/kontext';
-import * as TextTypes from '../../types/textTypes';
-import { ConcQueryResponse } from '../concordance/common';
-import { catchError, concatMap, every, map, mergeMap, reduce, tap } from 'rxjs/operators';
-import { ConcQueryArgs, QueryContextArgs } from '../query/common';
+import { PageModel } from '../../app/page.js';
+import { Actions } from './actions.js';
+import { IUnregistrable } from '../common/common.js';
+import { Actions as GlobalActions } from '../common/actions.js';
+import { Actions as QueryActions } from '../query/actions.js';
+import { Actions as ATActions } from '../../models/asyncTask/actions.js';
+import { AdvancedQuery, AdvancedQuerySubmit } from '../query/query.js';
+import * as Kontext from '../../types/kontext.js';
+import * as TextTypes from '../../types/textTypes.js';
+import { ConcQueryResponse } from '../concordance/common.js';
+import { catchError, concatMap, map, reduce, tap } from 'rxjs/operators';
+import { ConcQueryArgs, QueryContextArgs } from '../query/common.js';
 import {
     AsyncTaskArgs, FreqIntersectionArgs, FreqIntersectionResponse, createSourceId,
     PqueryFormModelState, PqueryAlignTypes, ParadigmaticQuery, SubsetComplementsAndRatio,
     SupersetAndRatio, ParadigmaticPartialQuery, splitFullQuery, joinPartialQueries, ConcStatus
-} from './common';
-import { highlightSyntax, ParsedAttr, ParsedPQItem } from '../cqleditor/parser';
-import { AttrHelper } from '../cqleditor/attrs';
-import { AlignTypes } from '../freqs/twoDimension/common';
+} from './common.js';
+import { highlightSyntax, ParsedAttr, ParsedPQItem } from '../cqleditor/parser.js';
+import { AttrHelper } from '../cqleditor/attrs.js';
+import { AlignTypes } from '../freqs/twoDimension/common.js';
 import { AjaxError } from 'rxjs/ajax';
 
 

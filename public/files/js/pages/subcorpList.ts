@@ -18,19 +18,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../types/kontext';
-import { PageModel } from '../app/page';
-import { SubcorpListModel, SortKey, SubcListFilter } from '../models/subcorp/list';
-import { init as listViewInit } from '../views/subcorp/list';
-import { KontextPage } from '../app/main';
-import { SubcorpusEditModel } from '../models/subcorp/edit';
-import { TextTypesModel } from '../models/textTypes/main';
-import { SubcorpWithinFormModel } from '../models/subcorp/withinForm';
-import * as PluginInterfaces from '../types/plugins';
-import { PluginName } from '../app/plugin';
+import * as Kontext from '../types/kontext.js';
+import { PageModel } from '../app/page.js';
+import { SubcorpListModel, SortKey, SubcListFilter } from '../models/subcorp/list.js';
+import { init as listViewInit } from '../views/subcorp/list.js';
+import { KontextPage } from '../app/main.js';
+import { SubcorpusEditModel } from '../models/subcorp/edit.js';
+import { TextTypesModel } from '../models/textTypes/main.js';
+import { SubcorpWithinFormModel } from '../models/subcorp/withinForm.js';
+import * as PluginInterfaces from '../types/plugins/index.js';
+import { PluginName } from '../app/plugin.js';
 import liveAttributes from 'plugins/liveAttributes/init';
-import { SubcorpusServerRecord } from '../models/subcorp/common';
-import { RawCQLEmptyModel } from '../models/subcorp/rawCql';
+import { SubcorpusServerRecord } from '../models/subcorp/common.js';
+import { RawCQLEmptyModel } from '../models/subcorp/rawCql.js';
 
 /**
  *
