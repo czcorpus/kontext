@@ -20,8 +20,12 @@
 
 import path from 'path';
 import ProgressBarPlugin from 'progress-bar-webpack-plugin';
-import kontext from './kontext.js';
-import kplugins from './plugins.js';
+import * as kontext from './kontext.js';
+import { PreparePlugin } from './plugins.js';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const mkpath = (p) => path.resolve(__dirname, '../../public/files', p);
 
@@ -32,7 +36,7 @@ const CONF_DOC = kontext.loadKontextConf(path.resolve(__dirname, '../../conf/con
 const PUBLIC_PATH = kontext.findActionPathPrefix(CONF_DOC);
 const DIST_PATH = mkpath('dist');
 
-module.exports = {
+export default {
     JS_PATH: JS_PATH,
     CSS_PATH: CSS_PATH,
     THEMES_PATH: THEMES_PATH,
@@ -124,7 +128,7 @@ module.exports = {
         externals: [], // KonText build script adds things here (plug-ins' build.json conf)
         plugins: [
             new ProgressBarPlugin(),
-            new kplugins.PreparePlugin({
+            new PreparePlugin({
                 confDoc: CONF_DOC,
                 jsPath: JS_PATH,
                 cssPath: CSS_PATH,

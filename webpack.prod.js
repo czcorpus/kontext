@@ -19,13 +19,13 @@
  */
 
 import { merge } from 'webpack-merge';
-import * as common from './scripts/build/webpack.common.js';
+import common from './scripts/build/webpack.common.js';
 import webpack from 'webpack';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import TerserPlugin from 'terser-webpack-plugin';
 
 
-module.exports = (env) => merge(common.wpConf(env), {
+export default (env) => merge(common.wpConf(env), {
 	mode: 'production',
 	module: {
 		rules: [

@@ -30,7 +30,7 @@ import { loadModulePathMap, findPluginExternalModules } from './kontext.js';
  *
  * @param {*} options
  */
-class PreparePlugin {
+export class PreparePlugin {
 
     constructor(options) {
         this._confDoc = options.confDoc;

@@ -60,7 +60,6 @@ const tsConfig = {
 };
 
 tsConfig.compilerOptions.paths = aliases;
-console.log('tsConfig.compilerOptions.paths: ', tsConfig.compilerOptions.paths)
 const tsPath = resolve(__dirname, '..', '..', '.tsconfig.tmp.json');
 const outf = fs.openSync(tsPath, 'w');
 fs.writeSync(outf, JSON.stringify(tsConfig, null, 2) + '\n');

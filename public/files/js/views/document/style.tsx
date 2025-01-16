@@ -42,7 +42,7 @@ export const ModalOverlay = styled.div`
 
 // ---------------- <CloseableFrame /> --------------------------------------
 
-export const CloseableFrame = styled.section<{fixedTop?: string}>`
+export const CloseableFrame = styled.section<{$fixedTop?: string}>`
     background-color: ${theme.colorSectionBg};
     border-radius: ${theme.borderRadiusDefault};
     box-shadow: ${theme.portalBoxShadow};
@@ -56,9 +56,9 @@ export const CloseableFrame = styled.section<{fixedTop?: string}>`
         position: absolute;
         left: 50%;
 
-        ${props => props.fixedTop ?
+        ${props => props.$fixedTop ?
             css`
-                top: ${props.fixedTop};
+                top: ${props.$fixedTop};
                 transform: translate(-50%,0%);
             ` :
             css`

@@ -589,7 +589,7 @@
         "concview__create_new_id_msg_unavailable": "zadané ID není k dispozici",
         "concview__create_new_id_msg_checking_availability": "kontroluji dostupnost...",
         "concview__tips_heading": "Uživatelské tipy",
-        "concview__tip_01": "Na této stránce můžete používat řadu klávesových zkratek. Stiskněte <Shift> <k> pro získání jejich seznamu.",
+        "concview__tip_01": "Na této stránce můžete používat řadu klávesových zkratek. Stiskněte &lt;Shift&gt; &lt;k&gt; pro získání jejich seznamu.",
         "concview__tip_02": "V případě že váš CQL dotaz produkuje vnořené shody (např. při hledání jednoho a více adjektiv před podstatným jménem), použijte 'Filtr -> Odstranit vnořené shody'.",
         "concview__tip_03": "Hledání pomocí ad-hoc subkorpusu (\"omezit hledání\") neposkytuje přímo hodnotu i.p.m. Potřebujete-li i.p.m., vytvořte si pojmenovaný subkorpus a hledání proveďte na něm.",
         "concview__tip_04": "Pro rychlé skrytí/zobrazení tohoto okna použijte klávesu <e>",

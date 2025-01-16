@@ -110,7 +110,6 @@ function _highlightSyntax({
 
     const rcMap = new RuleCharMap(query, he, attrHelper, wrapLongQuery, wrapRange);
     const stack = new ParserStack(rcMap);
-
     const wrapUnrecognizedPart = (v:string, numParserRecover:number, error:SyntaxError):[string, string|undefined] => {
         if (numParserRecover === 0 && error) {
             const title = he.translate(
@@ -157,7 +156,6 @@ function _highlightSyntax({
             throw e;
         }
     }
-
     const lastPos = stack.getLastPos();
     const [ans, parsedAttrs, pqItems] = rcMap.generate();
 

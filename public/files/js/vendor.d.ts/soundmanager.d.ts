@@ -179,5 +179,7 @@ declare module "vendor/SoundManager" {
         ():SoundManager;
     }
 
-    export var soundManager:SoundManager;
+    var soundManager:SoundManager;
+
+    export default soundManager;
 }

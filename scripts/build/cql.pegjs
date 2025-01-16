@@ -168,11 +168,11 @@ RgAltVal =
     DASH
 
 RgChar =
+    AnyLetter /
     RG_ESCAPED /
     RG_REPEAT /
     RG_QM /
     RG_ANY /
-    AnyLetter /
     RG_OP /
     RG_NON_LETTER /
     RG_NON_SPEC /
@@ -217,7 +217,9 @@ RgRangeSpec =
     NUMBER COMMA NUMBER? / NUMBER
 
 AnyLetter =
-    LETTER / LETTER_PHON
+    LETTER {}
+    / LETTER_PHON {}
+// !!!! important note - without curly parentheses above, the produced parser is incorrect !!!  (a peggy bug or what?)
 
 // ------------------------- paradigmatic query -------------------------
 

@@ -27,7 +27,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import merge from 'merge';
 import path from 'path';
-import * as peg from 'pegjs';
+import peg from 'peggy';
 import { DOMParser } from '@xmldom/xmldom';
 
 
@@ -73,7 +73,7 @@ function findPluginTags(pluginsPath, doc) {
                 ans.push({
                     canonicalName: `@plugins/${canonizeName(node.nodeName)}`,
                     jsDir,
-                    jsExists: fs.existsSync(path.resolve(pluginsPath, 'plugins', jsDir))
+                    jsExists: fs.existsSync(path.resolve(pluginsPath, jsDir))
                 });
             }
         }
@@ -93,7 +93,7 @@ function findAllPluginBuildConf(pluginsDir, doc) {
     let ans = {};
     findPluginTags(pluginsDir, doc).forEach((item) => {
         if (item.jsExists) {
-            const dirPath = pluginDir + '/' + item.jsDir;
+            const dirPath = pluginsDir + '/' + item.jsDir;
             fs.readdirSync(dirPath).forEach(function (filename) {
                 if (filename === 'build.json') {
                     ans[item.jsDir] = JSON.parse(fs.readFileSync(dirPath + '/' + filename));
@@ -158,8 +158,8 @@ export function loadModulePathMap (confDoc, jsPath, cssPath, isTypecheck) {
     const moduleMap = {
         'translations': translatPath,
         'views': path.resolve(jsPath, 'views'),
-        'vendor/intl-messageformat': path.resolve(jsPath, 'vendor/intl-messageformat'),
-        'vendor/SoundManager' : path.resolve(jsPath, 'vendor/soundmanager2.min'),
+        //'vendor/intl-messageformat': path.resolve(jsPath, 'vendor/intl-messageformat.js'),
+        'vendor/SoundManager' : path.resolve(jsPath, 'vendor/soundmanager2.min.js'),
         'cqlParser/parser': cqlParserPath,
         'misc/keyboardLayouts': path.resolve(jsPath, 'kb-layouts.json'),
         'styles': cssPath
@@ -197,7 +197,7 @@ function parseCqlGrammar(jsPath) {
         {
             allowedStartRules: ['PQuery', 'Query', 'RegExpRaw' , 'PhraseQuery', 'WithinContainingPart', 'Sequence'],
             output: 'source',
-            format: 'commonjs',
+            format: 'es',
             trace: true
         }
     );

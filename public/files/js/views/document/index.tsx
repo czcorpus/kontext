@@ -203,12 +203,10 @@ export function init(
             () => {
                 if (props.takeFocus) {
                     const btnElm = closeBtnRef.current;
-                    btnElm.select();
                     btnElm.focus();
                 }
                 if (props.onReady) {
                     const rootElm = selfRef.current;
-                    rootElm.select();
                     props.onReady(rootElm);
                 }
                 window.addEventListener('resize', windowResizeHandler);
@@ -281,7 +279,7 @@ export function init(
                             title={he.translate('global__click_or_esc_to_close')} />
                     <StatusIcon status={props.status} />
                 </div>
-                {this.props.children}
+                {props.children}
             </S.TooltipBox>
         );
     }
@@ -309,7 +307,7 @@ export function init(
 
         const ref = React.useRef(null);
 
-        const resizeFn:(evt:UIEvent)=>any = this.props.autoWidth ?
+        const resizeFn:(evt:UIEvent)=>any = props.autoWidth ?
             (evt) => {
                 if (ref) {
                     const elm = ref.current;
@@ -329,7 +327,7 @@ export function init(
         const windowResizeHandler = () => {
             const elm = ref.current;
             elm.select();
-            this.resizeFn(elm);
+            resizeFn(elm);
         }
 
         React.useEffect(() => {
@@ -349,7 +347,7 @@ export function init(
         const htmlClass = 'closeable-frame' + (props.customClass ? ` ${props.customClass}` : '');
 
         return (
-            <S.CloseableFrame className={htmlClass} ref={ref} fixedTop="5%">
+            <S.CloseableFrame className={htmlClass} ref={ref} $fixedTop="5%">
                 <div className="heading">
                     {props.icon ?
                         <span className="icon">{props.icon}</span> : null}

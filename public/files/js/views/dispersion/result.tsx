@@ -32,7 +32,6 @@ import { Actions } from '../../models/dispersion/actions.js';
 import { List } from 'cnc-tskit';
 
 import * as S from './style.js';
-import * as ReactDOM from 'react-dom';
 
 
 

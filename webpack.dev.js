@@ -18,11 +18,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-const { merge } = require('webpack-merge');
-const common = require('./scripts/build/webpack.common.js');
-const path = require('path');
+import { merge } from 'webpack-merge';
+import common from './scripts/build/webpack.common.js';
+import * as path from 'path';
+import { fileURLToPath } from 'url';
 
-module.exports = (env) => merge(common.wpConf(env), {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export default (env) => merge(common.wpConf(env), {
     mode: 'development',
     module: {
         rules: [

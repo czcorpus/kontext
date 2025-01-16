@@ -20,7 +20,7 @@
 
 /// <reference path="../../vendor.d.ts/soundmanager.d.ts" />
 
-import * as SoundManager from 'vendor/SoundManager';
+import SoundManager from 'vendor/SoundManager';
 import { List } from 'cnc-tskit';
 import { ajax } from 'rxjs/ajax';
 
@@ -39,7 +39,7 @@ export interface PlayerStatus {
  */
 export class AudioPlayer {
 
-    private soundManager:SoundManager.SoundManager;
+    private soundManager:typeof SoundManager;
 
     private status:PlayerStatus;
 
@@ -72,7 +72,7 @@ export class AudioPlayer {
             position: 0,
             waveform: []
         };
-        this.soundManager = SoundManager.soundManager;
+        this.soundManager = SoundManager;
         this.soundManager.ontimeout = function (status) {
             console.error(status); // TODO
         }

@@ -20,5 +20,5 @@ declare module "translations" {
 
     var translations:{[locale:string]:{[key:string]:string}};
 
-    export = translations;
+    export default translations;
 }

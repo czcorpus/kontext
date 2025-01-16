@@ -21,7 +21,7 @@
 import * as Kontext from '../../types/kontext.js';
 import { IAttrHelper } from './attrs.js';
 import { List, tuple, pipe, Dict } from 'cnc-tskit';
-import { TokenSuggestions } from '../query/query.js';
+
 
 
 type FormattedNonTerm = 'Position'|'WithinOrContaining'|'GlobPart';
@@ -398,6 +398,7 @@ export interface ParsedPQItem {
             this.nonTerminals,
             List.reversed(),
             List.forEach(nonTerm => {
+                console.log('nonTERMINAL: ', nonTerm)
                 switch (nonTerm.rule) {
                     case 'Position':
                         this.findRuleInRange('AttVal', nonTerm.from, nonTerm.to).forEach(attVal => {
@@ -467,6 +468,8 @@ export interface ParsedPQItem {
                         inserts[range[1]+1].push('</span>');
                     }
                     break;
+                    default:
+                        console.log('>>> OTHER RULE: ', nonTerm.rule)
                 }
             })
         );
