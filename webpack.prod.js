@@ -19,7 +19,7 @@
  */
 
 import { merge } from 'webpack-merge';
-import * as common from './scripts/build/webpack.common';
+import * as common from './scripts/build/webpack.common.js';
 import webpack from 'webpack';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import TerserPlugin from 'terser-webpack-plugin';

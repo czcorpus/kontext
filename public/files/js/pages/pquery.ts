@@ -25,7 +25,7 @@ import * as Kontext from '../types/kontext.js';
 import { init as formViewInit } from '../views/pquery/form/index.js';
 import { PqueryFormModel } from '../models/pquery/form.js';
 import * as PluginInterfaces from '../types/plugins/index.js';
-import corplistComponent from 'plugins/corparch/init';
+import corplistComponent from '@plugins/corparch';
 import { Actions as GlobalActions } from '../models/common/actions.js';
 import { Ident, tuple } from 'cnc-tskit';
 import { init as queryOverviewInit } from '../views/pquery/overview/index.js';

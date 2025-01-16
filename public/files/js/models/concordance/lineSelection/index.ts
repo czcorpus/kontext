@@ -35,7 +35,7 @@ import { Actions as UserActions } from '../../user/actions.js';
 import { Actions as GlobalActions } from '../../common/actions.js';
 import { Actions as ConcActions } from '../../concordance/actions.js';
 import { IPageLeaveVoter } from '../../common/pageLeave.js';
-import * as copy from 'copy-to-clipboard';
+import copy from 'copy-to-clipboard';
 
 
 interface ReenableEditResponse extends AjaxConcResponse {
@@ -464,8 +464,12 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
         );
 
 
-        this.addActionHandler(
-            [Actions.ChangePage, Actions.ReloadConc, ConcActions.SwitchKwicSentMode],
+        this.addMultiActionHandler(
+            [
+                Actions.ChangePage,
+                Actions.ReloadConc,
+                ConcActions.SwitchKwicSentMode
+            ],
             action => {
                 this.dispatchSideEffect(
                     Actions.PublishStoredLineSelections,

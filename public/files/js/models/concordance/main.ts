@@ -22,8 +22,7 @@ import { ExtractPayload, IFullActionControl, StatefulModel } from 'kombo';
 import { throwError, Observable, interval, Subscription, forkJoin } from 'rxjs';
 import { tap, map, concatMap } from 'rxjs/operators';
 import { List, pipe, HTTP, tuple, Dict, Rx } from 'cnc-tskit';
-import * as copy from 'copy-to-clipboard';
-
+import copy from 'copy-to-clipboard';
 import * as ViewOptions from '../../types/viewOptions.js';
 import { PageModel } from '../../app/page.js';
 import { ConclineSectionOps } from './line.js';

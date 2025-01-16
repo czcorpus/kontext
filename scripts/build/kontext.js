@@ -24,15 +24,24 @@
  * template JS models) information.
  */
 import fs from 'fs';
+import { fileURLToPath } from 'url';
 import merge from 'merge';
 import path from 'path';
 import * as peg from 'pegjs';
 import { DOMParser } from '@xmldom/xmldom';
 
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+function canonizeName(s) {
+    return s.replaceAll('_', '-')
+}
+
 function camelizeName(s) {
     return s.split('_')
-            .map((x, i) => i > 0 ? x.substr(0, 1).toUpperCase() + x.substr(1) : x)
-            .join('');
+        .map((x, i) => i > 0 ? x.substr(0, 1).toUpperCase() + x.substr(1) : x)
+        .join('');
 }
 
 /**
@@ -42,10 +51,10 @@ function camelizeName(s) {
  *
  * @param {*} doc A DOM document representing parsed config.xml
  */
-function findPluginTags(doc) {
+function findPluginTags(pluginsPath, doc) {
     let plugins = doc.getElementsByTagName('plugins');
     let ans = [];
-    function findJsModule(root) {
+    function findJsDir(root) {
         let jsm = root.getElementsByTagName('js_module');
         if (jsm.length > 0) {
             return jsm[0].textContent;
@@ -57,8 +66,15 @@ function findPluginTags(doc) {
         for (let i = 0; i < plugins[0].childNodes.length; i += 1) {
             let node = plugins[0].childNodes[i];
             if (node.nodeType === 1) {
-                let jsm = findJsModule(node);
-                ans.push({canonicalName: camelizeName(node.nodeName), jsModule: jsm ? jsm : null});
+                let jsDir = findJsDir(node);
+                if (!jsDir) {
+                    jsDir = camelizeName(node.nodeName);
+                }
+                ans.push({
+                    canonicalName: `@plugins/${canonizeName(node.nodeName)}`,
+                    jsDir,
+                    jsExists: fs.existsSync(path.resolve(pluginsPath, 'plugins', jsDir))
+                });
             }
         }
     }
@@ -73,15 +89,14 @@ function findPluginTags(doc) {
  * @param {*} pluginDir A directory path where JS plugins are located
  * @param {*} doc A DOM document representing parsed config.xml
  */
-function findAllPluginBuildConf(pluginDir, doc) {
+function findAllPluginBuildConf(pluginsDir, doc) {
     let ans = {};
-    findPluginTags(doc).forEach((item) => {
-        let dirPath;
-        if (item['jsModule']) {
-            dirPath = pluginDir + '/' + item['jsModule'];
+    findPluginTags(pluginsDir, doc).forEach((item) => {
+        if (item.jsExists) {
+            const dirPath = pluginDir + '/' + item.jsDir;
             fs.readdirSync(dirPath).forEach(function (filename) {
                 if (filename === 'build.json') {
-                    ans[item['jsModule']] = JSON.parse(fs.readFileSync(dirPath + '/' + filename));
+                    ans[item.jsDir] = JSON.parse(fs.readFileSync(dirPath + '/' + filename));
                 }
             });
         }
@@ -89,9 +104,9 @@ function findAllPluginBuildConf(pluginDir, doc) {
     return ans;
 }
 
-function findMatchingEmptyPlugin(canonicalName, pluginsPath) {
-    const custom = path.resolve(pluginsPath, 'empty', canonicalName);
-    return fs.existsSync(custom) ? custom : path.resolve(pluginsPath, 'empty');
+function findMatchingEmptyPlugin(jsDirName, pluginsPath) {
+    const custom = path.resolve(pluginsPath, 'empty', jsDirName, 'init.ts');
+    return fs.existsSync(custom) ? custom : path.resolve(pluginsPath, 'empty/init.ts');
 }
 
 export function loadKontextConf (confPath) {
@@ -156,12 +171,12 @@ export function loadModulePathMap (confDoc, jsPath, cssPath, isTypecheck) {
             moduleMap[p] = path.resolve(__dirname, '..', '..', 'public', 'files', 'js', remapModules[p]);
         }
     };
-    findPluginTags(confDoc).forEach((item) => {
-        if (item.jsModule) {
-            moduleMap['plugins/' + item.canonicalName] = path.resolve(pluginsPath, item.jsModule);
+    findPluginTags(pluginsPath, confDoc).forEach((item) => {
+        if (item.jsExists) {
+            moduleMap[item.canonicalName] = path.resolve(pluginsPath, item.jsDir, 'init.ts');
 
         } else {
-            moduleMap['plugins/' + item.canonicalName] = findMatchingEmptyPlugin(item.canonicalName, pluginsPath);
+            moduleMap[item.canonicalName] = findMatchingEmptyPlugin(item.jsDir, pluginsPath, 'init.ts');
         }
     });
     return moduleMap;

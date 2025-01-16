@@ -1,0 +1,22 @@
+{
+    "compilerOptions": {
+        "module": "node16",
+        "moduleResolution": "node16",
+        "esModuleInterop": true,
+        "target": "ES2022",
+        "jsx": "react",
+        "checkJs": true,
+        "allowJs": true,
+        "strictFunctionTypes": true,
+        "sourceMap": true,
+        "baseUrl": "./",
+        "paths": {
+            "plugins/*": ["plugins/*"],
+            "plugins/corparch": ["plugins/corparch"]
+          }
+    },
+    "exclude": [
+        "node_modules",
+        "**/node_modules/*"
+    ]
+}

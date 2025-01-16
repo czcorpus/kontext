@@ -27,7 +27,7 @@ import { WordlistFormModel, WordlistFormModelArgs } from '../models/wordlist/for
 import { KontextPage } from '../app/main.js';
 import { WlnumsTypes } from '../models/wordlist/common.js';
 import { Actions as GlobalActions } from '../models/common/actions.js';
-import createCorparch from 'plugins/corparch/init';
+import createCorparch from '@plugins/corparch';
 import { Root } from 'react-dom/client';
 import { Ident } from 'cnc-tskit';
 

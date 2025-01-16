@@ -28,7 +28,7 @@ import { TextTypesModel } from '../models/textTypes/main.js';
 import { SubcorpWithinFormModel } from '../models/subcorp/withinForm.js';
 import * as PluginInterfaces from '../types/plugins/index.js';
 import { PluginName } from '../app/plugin.js';
-import liveAttributes from 'plugins/liveAttributes/init';
+import liveAttributes from '@plugins/live-attributes';
 import { SubcorpusServerRecord } from '../models/subcorp/common.js';
 import { RawCQLEmptyModel } from '../models/subcorp/rawCql.js';
 

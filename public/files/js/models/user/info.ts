@@ -23,7 +23,7 @@ import { Observable, of as rxOf } from 'rxjs';
 
 import * as Kontext from '../../types/kontext.js';
 import { PageModel } from '../../app/page.js';
-import { Actions } from  './actions';
+import { Actions } from  './actions.js';
 import { HTTP } from 'cnc-tskit';
 
 export interface UserInfoModelState {

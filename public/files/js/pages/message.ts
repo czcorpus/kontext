@@ -22,7 +22,7 @@ import * as Kontext from '../types/kontext.js';
 import { PageModel } from '../app/page.js';
 import { init as messageViewsInit, MessageViewProps } from '../views/message/index.js';
 import { KontextPage } from '../app/main.js';
-import issueReportingPlugin from 'plugins/issueReporting/init';
+import issueReportingPlugin from '@plugins/issue-reporting';
 import { PluginName } from '../app/plugin.js';
 import { ConcServerArgs } from '../models/concordance/common.js';
 

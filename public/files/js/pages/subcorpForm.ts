@@ -32,9 +32,9 @@ import { init as ttViewsInit, TextTypesPanelProps } from '../views/textTypes/ind
 import { init as basicOverviewViewsInit } from '../views/query/basicOverview/index.js';
 import { PluginName } from '../app/plugin.js';
 import { KontextPage } from '../app/main.js';
-import corplistComponent from 'plugins/corparch/init';
-import liveAttributes from 'plugins/liveAttributes/init';
-import subcMixer from 'plugins/subcmixer/init';
+import corplistComponent from '@plugins/corparch';
+import liveAttributes from '@plugins/live-attributes';
+import subcMixer from '@plugins/subcmixer';
 import { Actions as GlobalActions } from '../models/common/actions.js';
 import { importInitialTTData, TTInitialData } from '../models/textTypes/common.js';
 import { ConcFormArgs } from '../models/query/formArgs.js';

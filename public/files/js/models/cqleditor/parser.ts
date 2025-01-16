@@ -24,7 +24,7 @@ import { IAttrHelper, NullAttrHelper } from './attrs.js';
 import { tuple } from 'cnc-tskit';
 import { ParsedAttr, ParsedPQItem, RuleCharMap } from './rules.js';
 
-export type { ParsedAttr, ParsedPQItem } from './rules';
+export type { ParsedAttr, ParsedPQItem } from './rules.js';
 
 
 /**

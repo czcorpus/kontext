@@ -19,14 +19,14 @@
  */
 
 /// <reference path="./js-treex-view.d.ts" />
+/// <reference path="./external.d.ts" />
 
 import { StatefulModel, IModel } from 'kombo';
 
 import * as PluginInterfaces from '../../types/plugins/index.js';
 
 
-declare var require:any;
-import * as $ from 'jquery';
+import $ from 'jquery';
 import './js-treex-view';
 import { IFullActionControl } from 'kombo';
 import { HTTP, List, pipe } from 'cnc-tskit';

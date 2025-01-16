@@ -37,9 +37,9 @@ import {
     ConcLinesStorage, StorageUsingState,
     openStorage } from '../models/concordance/selectionStorage.js';
 import { Actions as GlobalActions } from '../models/common/actions.js';
-import corplistComponent from 'plugins/corparch/init';
-import liveAttributes from 'plugins/liveAttributes/init';
-import tagHelperPlugin from 'plugins/taghelper/init';
+import corplistComponent from '@plugins/corparch';
+import liveAttributes from '@plugins/live-attributes';
+import tagHelperPlugin from '@plugins/taghelper';
 import { QueryHelpModel } from '../models/help/queryHelp.js';
 import { ConcFormArgs, isFilterFormArgs, QueryFormArgs } from '../models/query/formArgs.js';
 import { QuickSubcorpModel } from '../models/subcorp/quickSubcorp.js';

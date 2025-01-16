@@ -21,13 +21,12 @@
 
 import { DefaultTokenConnectBackend } from '../tokenConnect/init.js';
 import * as PluginInterfaces from '../../types/plugins/index.js';
-import { init as initDefaultView, Views as DefaultTokenConnectRenderers } from '../tokenConnect/views.js';
+import { init as initDefaultView, Views as DefaultTokenConnectRenderers } from '../tokenConnect/views/index.js';
 import { init as initLindatView, Views as LindatTokenConnectRenderers } from './view.js';
 import { KnownRenderers } from '../kwicConnect/model.js';
 import { IPluginApi } from '../../types/plugins/common.js';
 
-declare var require:any;
-require('../tokenConnect/style.css');
+import '../tokenConnect/style.css';
 
 
 export type ServerExportedConf = {

@@ -6,6 +6,7 @@
         "noImplicitAny": false,
         "module": "es2015",
         "target": "es2015",
+        "esModuleInterop": true,
         "jsx": "react-jsx",
         "moduleResolution": "node",
         "paths": {

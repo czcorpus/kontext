@@ -21,6 +21,7 @@ import * as PluginInterfaces from '../../../types/plugins/index.js';
 import { TextTypesModel } from '../../../models/textTypes/main.js';
 import { Actions as GlobalActions } from '../../../models/common/actions.js';
 import { IPluginApi } from '../../../types/plugins/common.js';
+import { IModel } from 'kombo';
 
 
 export class EmptyLiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPlugin {
@@ -45,7 +46,7 @@ export class EmptyLiveAttributesPlugin implements PluginInterfaces.LiveAttribute
 
     getViews(
         subcMixerView:PluginInterfaces.SubcMixer.View,
-        textTypesModel:TextTypesModel,
+        textTypesModel:IModel<{}>,
         useAlignedCorpBox:boolean,
     ):PluginInterfaces.LiveAttributes.Views {
 

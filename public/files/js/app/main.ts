@@ -26,7 +26,7 @@ import { PageModel } from './page.js';
 import { ComponentTools } from './component.js';
 import { L10n } from './l10n.js';
 import { UserSettings } from './userSettings.js';
-import { AppNavigation } from './navigation.js';
+import { AppNavigation } from './navigation/index.js';
 import { ActionDispatcher } from 'kombo';
 import { IPluginApi } from '../types/plugins/common.js';
 

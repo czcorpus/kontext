@@ -19,7 +19,7 @@
  */
 
 const { merge } = require('webpack-merge');
-const common = require('./scripts/build/webpack.common');
+const common = require('./scripts/build/webpack.common.js');
 const path = require('path');
 
 module.exports = (env) => merge(common.wpConf(env), {

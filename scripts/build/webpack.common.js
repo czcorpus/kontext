@@ -20,8 +20,8 @@
 
 import path from 'path';
 import ProgressBarPlugin from 'progress-bar-webpack-plugin';
-import kontext from './kontext';
-import kplugins from './plugins';
+import kontext from './kontext.js';
+import kplugins from './plugins.js';
 
 const mkpath = (p) => path.resolve(__dirname, '../../public/files', p);
 
@@ -77,6 +77,7 @@ module.exports = {
             alias: {}, // filled in dynamically
             modules: [
                 mkpath('js/.compiled'),
+                mkpath('js/plugins'),
                 'node_modules'
             ],
             extensions: ['.ts', '.tsx', '.js', '.jsx', '.json', '.css', '.less'],

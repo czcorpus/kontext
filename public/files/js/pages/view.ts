@@ -77,11 +77,11 @@ import { importMultiLevelArg, SortFormProperties, fetchSortFormArgs }
     from '../models/query/sort/common.js';
 import { MultiLevelConcSortModel } from '../models/query/sort/multi.js';
 import { PluginName } from '../app/plugin.js';
-import tagHelperPlugin from 'plugins/taghelper/init';
-import syntaxViewerInit from 'plugins/syntaxViewer/init';
-import tokenConnectInit from 'plugins/tokenConnect/init';
-import kwicConnectInit from 'plugins/kwicConnect/init';
-import tokensLinkingInit from 'plugins/tokensLinking/init';
+import tagHelperPlugin from '@plugins/taghelper';
+import syntaxViewerInit from '@plugins/syntax-viewer';
+import tokenConnectInit from '@plugins/token-connect';
+import kwicConnectInit from '@plugins/kwic-connect';
+import tokensLinkingInit from '@plugins/tokens-linking';
 import { importInitialTTData, TTInitialData } from '../models/textTypes/common.js';
 import { QueryType } from '../models/query/query.js';
 import { HitReloader } from '../models/concordance/concStatus.js';

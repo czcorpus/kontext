@@ -35,9 +35,9 @@ import { FreqFormInputs } from './freqForms.js';
 import {
     StructuralAttribute, newFormValue, AttrItem, ChartExportFormat,
     BasicFreqModuleType
-} from '../../../types/kontext';
+} from '../../../types/kontext.js';
 import { validateGzNumber } from '../../base.js';
-import * as copy from 'copy-to-clipboard';
+import copy from 'copy-to-clipboard';
 
 
 

@@ -18,7 +18,7 @@
 
 import * as Kontext from '../types/kontext.js';
 import { KontextPage } from '../app/main.js';
-import corparch from 'plugins/corparch/init';
+import corparch from '@plugins/corparch';
 
 
 /**

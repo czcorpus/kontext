@@ -23,7 +23,7 @@
 import { IFullActionControl, StatelessModel } from 'kombo';
 
 import * as PluginInterfaces from '../../types/plugins/index.js';
-import * as toolbar from 'plugins/applicationBar/toolbar';
+import * as toolbar from '@plugins/application-bar/applicationBar';
 import { PageModel } from '../../app/page.js';
 import { Actions } from './actions.js';
 import { IUnregistrable } from '../../models/common/common.js';

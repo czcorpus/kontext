@@ -36,7 +36,7 @@ const CONF_DOC = kontext.loadKontextConf(resolve(__dirname, '../../conf/config.x
 const aliasesTmp = kontext.loadModulePathMap(CONF_DOC, JS_PATH, CSS_PATH, true);
 const aliases = {};
 Object.keys(aliasesTmp).forEach((k) => {
-    aliases[k + '/*'] = [aliasesTmp[k] + '/*'];
+    aliases[k] = [aliasesTmp[k]];
 });
 
 const tsConfig = {
@@ -45,6 +45,7 @@ const tsConfig = {
         sourceMap: false,
         noImplicitAny: false,
         module: "node16",
+        esModuleInterop: true,
         target: "esnext",
         jsx: "react-jsx",
         moduleResolution: "node16",
@@ -59,6 +60,7 @@ const tsConfig = {
 };
 
 tsConfig.compilerOptions.paths = aliases;
+console.log('tsConfig.compilerOptions.paths: ', tsConfig.compilerOptions.paths)
 const tsPath = resolve(__dirname, '..', '..', '.tsconfig.tmp.json');
 const outf = fs.openSync(tsPath, 'w');
 fs.writeSync(outf, JSON.stringify(tsConfig, null, 2) + '\n');

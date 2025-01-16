@@ -20,7 +20,7 @@
 
 import * as Kontext from '../types/kontext.js';
 import { CommonViews } from '../views/common.js';
-import * as CoreViews from '../types/coreViews.js';
+import * as CoreViews from '../types/coreViews/index.js';
 import { Observable } from 'rxjs';
 import { DownloadType, PageModel } from './page.js';
 import { ConcServerArgs } from '../models/concordance/common.js';

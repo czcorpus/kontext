@@ -44,8 +44,8 @@ export function init(
 
     const globalComponents = he.getLayoutViews();
 
-    const storeChartData = (ref) => {
-        const container = ReactDOM.findDOMNode(ref.current);
+    const storeChartData = (ref:React.RefObject<HTMLElement>) => {
+        const container = ref.current;
         if (container instanceof Text || !container) {
             return;
         }

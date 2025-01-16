@@ -255,7 +255,7 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
             }
         );
 
-        this.addActionHandler(
+        this.addMultiActionHandler(
             [
                 Actions.ClearActiveItem,
                 ConcActions.AddedNewOperation

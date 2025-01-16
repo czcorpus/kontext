@@ -23,7 +23,7 @@ import { PageModel } from '../app/page.js';
 import * as Kontext from '../types/kontext.js';
 import { Actions } from '../models/asyncTask/actions.js';
 import { List } from 'cnc-tskit';
-import { init as viewInit } from '../views/keywords/restore.js';
+import { init as viewInit } from '../views/keywords/restore/index.js';
 
 class KeywordsRestorePage {
 

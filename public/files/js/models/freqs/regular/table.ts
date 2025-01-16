@@ -34,7 +34,7 @@ import { Block, FreqResultResponse } from '../common.js';
 import { Actions as GeneralOptsActions } from '../../options/actions.js';
 import { AttrItem, BasicFreqModuleType } from '../../../types/kontext.js';
 import { validateGzNumber } from '../../base.js';
-import * as copy from 'copy-to-clipboard';
+import copy from 'copy-to-clipboard';
 
 
 export interface FreqDataRowsModelArgs {

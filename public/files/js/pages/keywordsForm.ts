@@ -23,7 +23,7 @@ import * as Kontext from '../types/kontext.js';
 import { PageModel } from '../app/page.js';
 import { KontextPage } from '../app/main.js';
 import * as PluginInterfaces from '../types/plugins/index.js';
-import createCorparch from 'plugins/corparch/init';
+import createCorparch from '@plugins/corparch';
 import { KeywordsFormModel } from '../models/keywords/form.js';
 import { init as viewInit } from '../views/keywords/form/index.js';
 import { Actions as GlobalActions } from '../models/common/actions.js';

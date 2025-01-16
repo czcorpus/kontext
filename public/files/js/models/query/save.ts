@@ -21,12 +21,12 @@
 import { PageModel } from '../../app/page.js';
 import * as Kontext from '../../types/kontext.js';
 import { StatelessModel, IActionDispatcher, SEDispatcher } from 'kombo';
-import { concatMap, debounceTime, map, Observable, of as rxOf, Subject } from 'rxjs';
+import { debounceTime, map, Observable, Subject } from 'rxjs';
 import { Actions } from './actions.js';
 import { Actions as ConcActions } from '../concordance/actions.js';
 import { HTTP } from 'cnc-tskit';
 import { SaveItemResponse } from '../searchHistory/common.js';
-import * as copy from 'copy-to-clipboard';
+import copy from 'copy-to-clipboard';
 
 
 interface IsArchivedResponse extends Kontext.AjaxResponse {
