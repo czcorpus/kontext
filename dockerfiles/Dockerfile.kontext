@@ -1,20 +1,28 @@
-FROM czcorpus/kontext-manatee:latest
+FROM czcorpus/kontext-manatee:2.225.8
 
 SHELL ["/bin/bash", "--login", "-c"]
-RUN wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.36.0/install.sh | bash
-RUN nvm install 16
 
-RUN apt-get update
-RUN apt-get install -y sox libsox-fmt-mp3
-
-COPY ./requirements.txt ./
-RUN pip3 install --upgrade pip && pip3 install -r requirements.txt
-
-COPY ./pack*.json ./
-RUN npm install
+ENV NODE_VERSION 22.13.0
+ENV NVM_DIR /usr/local/nvm
 
 COPY . .
-RUN python3 scripts/install/steps.py SetupKontext
-RUN npm start build:production && npm prune --production
+
+RUN apt-get update \
+    && apt-get install -y curl \
+    && mkdir -p $NVM_DIR \
+    && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash \
+    && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" \
+    && nvm install "${NODE_VERSION}" \
+    && apt-get install -y sox libsox-fmt-mp3 python3-pip python3-icu libcairo2 \
+    && pip3 install -r requirements.txt --break-system-packages \
+    && python3 scripts/install/steps.py SetupKontext \
+    && npm install \
+    && npm start build:production \
+    && nvm uninstall 22 \
+    && apt-get -y autoremove \
+    && rm -rf node_modules \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV PATH="${NVM_DIR}/versions/node/v${NODE_VERSION}/bin:${PATH}"
 
 CMD [ "python3", "./public/app.py", "--address", "0.0.0.0", "--port", "8080", "--workers", "2" ]

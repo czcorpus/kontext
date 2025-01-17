@@ -1,10 +1,17 @@
-FROM python:3.8
-
-RUN apt-get update && apt-get install -y swig libpcre++ locales
-RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && dpkg-reconfigure --frontend=noninteractive locales
-
+# This dockerfile produces the image czcorpus/kontext-manatee:2.225.8
+FROM ubuntu:noble
+SHELL ["/bin/bash", "--login", "-c"]
 WORKDIR /opt/kontext
-
 COPY ./scripts/install/steps.py ./scripts/install/*.patch ./scripts/install/
-RUN python3 scripts/install/steps.py SetupManatee --step-args 2.167.10 scripts/install/ucnk-manatee-2.167.10.patch 0
-RUN rm -r /usr/local/src/manatee-open-2.167.10
+
+RUN apt-get update && apt-get install -y git autoconf-archive swig libpcre++ locales python3 python3-dev wget build-essential libltdl-dev libpcre3-dev bison \
+  && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && dpkg-reconfigure --frontend=noninteractive locales \
+  && python3 scripts/install/steps.py SetupManatee --ucnk --step-args 2.225.8 0 \
+  && rm -r /usr/local/src/manatee-open-2.225.8 \
+  && apt-get -y remove python3-dev build-essential libltdl-dev libpcre3-dev ocaml-base-nox git autoconf-archive bison \
+    # for some reason, the installation of Manatee produces incorrect target path /usr/local/local/lib/...
+  && if [[ -d /usr/local/local/lib/python3.12/dist-packages ]]; then mv /usr/local/local/lib/python3.12/dist-packages/* /usr/local/lib/python3.12/dist-packages/; fi \
+  && if [[ -f /usr/local/local/lib/python3.12/dist-packages/__pycache__ ]]; then rm -rf /usr/local/local/lib/python3.12/dist-packages/__pycache__; fi \
+  && if [[ -d /usr/local/lib/python3.12/site-packages ]]; then mv /usr/local/lib/python3.12/site-packages/* /usr/local/lib/python3.12/dist-packages/ ; fi \
+  && if [[ -f /usr/local/lib/python3.12/site-packages/__pycache__ ]]; then rm -rf /usr/local/lib/python3.12/site-packages/__pycache__; fi
+
