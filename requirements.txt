@@ -4,7 +4,7 @@
 concurrent_log_handler >= 0.9.20
 python-json-logger >= 2.0.7
 tzdata >= 2023.3
-#PyICU >= 1.5
+PyICU >= 1.5
 babel >= 2.9.1
 jinja2 >= 2.11.3
 secure-cookie >= 0.1.0
@@ -16,7 +16,6 @@ pyJWT >= 2.6.0
 lxml >= 3.4
 Markdown >= 3.4.1
 openpyxl >= 3.0.10
-# aioredis will be part of redis in the futureF
 redis >= 4.3.4
 async_timeout >= 5.0.1
 uvloop >= 0.16.0
