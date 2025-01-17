@@ -21,10 +21,10 @@
 import { List, pipe } from 'cnc-tskit';
 import * as React from 'react';
 
-import * as Kontext from '../../types/kontext';
-import { ImgWithMouseover } from './general';
-import * as CoreViews from '../../types/coreViews';
-import * as S from './style';
+import * as Kontext from '../../types/kontext.js';
+import { ImgWithMouseover } from './general.js';
+import * as CoreViews from '../../types/coreViews/index.js';
+import * as S from './style.js';
 
 
 export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Props> {

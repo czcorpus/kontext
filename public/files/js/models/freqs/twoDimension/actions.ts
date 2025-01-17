@@ -21,9 +21,9 @@
 import { Action } from 'kombo';
 import {
     Dimensions, FreqFilterQuantities, AlignTypes, FreqQuantities,
-    CTFreqResultData } from '../twoDimension/common';
+    CTFreqResultData } from '../twoDimension/common.js';
 import { Maths } from 'cnc-tskit';
-import { ColorMappings } from '../twoDimension/table2d';
+import { ColorMappings } from '../twoDimension/table2d.js';
 
 
 export class Actions {

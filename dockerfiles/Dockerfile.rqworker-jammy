@@ -10,5 +10,4 @@ RUN apt-get update \
     && mkdir /var/log/rq  \
     && apt-get -y autoremove \
     && rm -rf /var/lib/apt/lists/*
-
 CMD [ "python3",  "worker/rqworker.py" ]

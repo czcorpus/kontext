@@ -18,13 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../types/kontext';
-import { CommonViews } from '../views/common';
-import * as CoreViews from '../types/coreViews';
+import * as Kontext from '../types/kontext.js';
+import { CommonViews } from '../views/common.js';
+import * as CoreViews from '../types/coreViews/index.js';
 import { Observable } from 'rxjs';
-import { DownloadType, PageModel } from './page';
-import { ConcServerArgs } from '../models/concordance/common';
-import { IPluginApi } from '../types/plugins/common';
+import { DownloadType, PageModel } from './page.js';
+import { ConcServerArgs } from '../models/concordance/common.js';
+import { IPluginApi } from '../types/plugins/common.js';
 import { Root } from 'react-dom/client';
 
 

@@ -18,19 +18,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as PluginInterfaces from '../../types/plugins';
-import * as Kontext from '../../types/kontext';
-import * as ttResponse from '../../models/concordance/ttdist/response';
-import { Actions as ConcActions } from '../../models/concordance/actions';
-import { Actions as QueryActions } from '../../models/query/actions';
+import * as PluginInterfaces from '../../types/plugins/index.js';
+import * as Kontext from '../../types/kontext.js';
+import * as ttResponse from '../../models/concordance/ttdist/response.js';
+import { Actions as ConcActions } from '../../models/concordance/actions.js';
+import { Actions as QueryActions } from '../../models/query/actions.js';
 import { StatefulModel, IFullActionControl } from 'kombo';
 import { Observable, of as rxOf, concat } from 'rxjs';
 import { concatMap } from 'rxjs/operators';
-import { FreqServerArgs } from '../../models/freqs/regular/common';
+import { FreqServerArgs } from '../../models/freqs/regular/common.js';
 import { HTTP, List } from 'cnc-tskit';
-import { Actions } from './actions';
-import { IPluginApi } from '../../types/plugins/common';
-import { HighlightAttrMatch, mergeHighlightItems } from '../../models/concordance/main';
+import { Actions } from './actions.js';
+import { IPluginApi } from '../../types/plugins/common.js';
+import { HighlightAttrMatch, mergeHighlightItems } from '../../models/concordance/main.js';
 
 
 export enum KnownRenderers {

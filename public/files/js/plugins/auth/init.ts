@@ -20,14 +20,14 @@
 
 import { IFullActionControl, StatefulModel } from 'kombo';
 
-import * as Kontext from '../../types/kontext';
-import * as PluginInterfaces from '../../types/plugins';
-import { init as userPaneViewsFactory, UserPaneViews} from './views/pane';
-import { init as userProfileViewsFactory, UserProfileViews} from './views/profile';
-import { init as userSignUpViewsFactory, UserSignUpViews} from './views/signUp';
-import { UserProfileModel } from './profile';
-import { Actions as UserActions } from '../../models/user/actions';
-import { IPluginApi } from '../../types/plugins/common';
+import * as Kontext from '../../types/kontext.js';
+import * as PluginInterfaces from '../../types/plugins/index.js';
+import { init as userPaneViewsFactory, UserPaneViews, UserPaneProps} from './views/pane.js';
+import { init as userProfileViewsFactory, UserProfileViews} from './views/profile/index.js';
+import { init as userSignUpViewsFactory, UserSignUpViews} from './views/signUp.js';
+import { UserProfileModel } from './profile.js';
+import { Actions as UserActions } from '../../models/user/actions.js';
+import { IPluginApi } from '../../types/plugins/common.js';
 
 
 export interface UsersStatusModelState {

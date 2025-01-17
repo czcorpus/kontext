@@ -18,11 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../../types/kontext';
+import * as Kontext from '../../types/kontext.js';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 import { pipe, List, tuple, HTTP } from 'cnc-tskit';
-import { IPluginApi } from '../../types/plugins/common';
+import { IPluginApi } from '../../types/plugins/common.js';
 
 
 /**

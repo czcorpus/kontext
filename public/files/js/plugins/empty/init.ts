@@ -18,11 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { IUnregistrable } from '../../models/common/common';
+import { IUnregistrable } from '../../models/common/common.js';
 import { IFullActionControl } from 'kombo';
-import { Actions as GlobalActions } from '../../models/common/actions';
+import { Actions as GlobalActions } from '../../models/common/actions.js';
 import { Observable } from 'rxjs';
-import { BasePlugin, IPluginApi } from '../../types/plugins/common';
+import { BasePlugin, IPluginApi } from '../../types/plugins/common.js';
 
 
 /**

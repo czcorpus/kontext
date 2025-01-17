@@ -19,9 +19,9 @@
  */
 
 import { Color, pipe, List } from 'cnc-tskit';
-import * as Kontext from '../../types/kontext';
-import * as ViewOptions from '../../types/viewOptions';
-import { DataSaveFormat } from '../../app/navigation/save';
+import * as Kontext from '../../types/kontext.js';
+import * as ViewOptions from '../../types/viewOptions.js';
+import { DataSaveFormat } from '../../app/navigation/save.js';
 
 
 export interface ConcToken {

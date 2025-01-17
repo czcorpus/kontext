@@ -26,43 +26,43 @@ import { Observable, Subject, of as rxOf } from 'rxjs';
 import { webSocket } from 'rxjs/webSocket';
 import { List, HTTP, tuple, pipe, URL as CURL } from 'cnc-tskit';
 
-import * as PluginInterfaces from '../types/plugins';
-import * as Kontext from '../types/kontext';
-import * as CoreViews from '../types/coreViews';
-import { init as documentViewsFactory } from '../views/document';
-import { init as commonViewsFactory, CommonViews } from '../views/common';
-import { init as menuViewsFactory } from '../views/menu';
-import { init as overviewAreaViewsFactory } from '../views/overview';
-import { init as viewOptionsFactory } from '../views/options/main';
-import { init as initQueryHistoryViews } from '../views/searchHistory/main';
-import * as docModels from '../models/common/layout';
-import { UserInfo } from '../models/user/info';
-import { CorpusViewOptionsModel } from '../models/options/structsAttrs';
-import { GeneralViewOptionsModel, GeneralViewOptionsModelState } from '../models/options/general';
-import { L10n } from './l10n';
-import { AsyncTaskChecker } from '../models/asyncTask';
-import { UserSettings } from './userSettings';
-import { MainMenuModel, InitialMenuData, disableMenuItems } from '../models/mainMenu';
-import { AppNavigation } from './navigation';
-import { EmptyPlugin } from '../plugins/empty/init';
-import { Actions as MainMenuActions } from '../models/mainMenu/actions';
-import { Actions as ATActions } from '../models/asyncTask/actions';
-import { ConcServerArgs, IConcArgsHandler } from '../models/concordance/common';
-import { Actions } from '../models/common/actions';
-import applicationBar from 'plugins/applicationBar/init';
-import footerBar from 'plugins/footerBar/init';
-import authPlugin from 'plugins/auth/init';
-import issueReportingPlugin from 'plugins/issueReporting/init';
-import querySuggestPlugin from 'plugins/querySuggest/init';
-import { IPageLeaveVoter } from '../models/common/pageLeave';
-import { IUnregistrable } from '../models/common/common';
-import { PluginName } from './plugin';
-import { GlobalStyle } from '../views/theme/default/global';
-import { SearchHistoryModel } from '../models/searchHistory';
-import { IPluginApi } from '../types/plugins/common';
-import { FreqResultViews } from '../models/freqs/common';
-import { PageMount } from './mounts';
-import { CorpusInfoModel } from '../models/common/corpusInfo';
+import * as PluginInterfaces from '../types/plugins/index.js';
+import * as Kontext from '../types/kontext.js';
+import * as CoreViews from '../types/coreViews/index.js';
+import { init as documentViewsFactory } from '../views/document/index.js';
+import { init as commonViewsFactory, CommonViews } from '../views/common.js';
+import { init as menuViewsFactory } from '../views/menu/index.js';
+import { init as overviewAreaViewsFactory } from '../views/overview/index.js';
+import { init as viewOptionsFactory } from '../views/options/main/index.js';
+import { init as initQueryHistoryViews } from '../views/searchHistory/main.js';
+import * as docModels from '../models/common/layout.js';
+import { UserInfo } from '../models/user/info.js';
+import { CorpusViewOptionsModel } from '../models/options/structsAttrs.js';
+import { GeneralViewOptionsModel, GeneralViewOptionsModelState } from '../models/options/general.js';
+import { L10n } from './l10n.js';
+import { AsyncTaskChecker } from '../models/asyncTask/index.js';
+import { UserSettings } from './userSettings.js';
+import { MainMenuModel, InitialMenuData, disableMenuItems } from '../models/mainMenu/index.js';
+import { AppNavigation } from './navigation/index.js';
+import { EmptyPlugin } from '../plugins/empty/init.js';
+import { Actions as MainMenuActions } from '../models/mainMenu/actions.js';
+import { Actions as ATActions } from '../models/asyncTask/actions.js';
+import { ConcServerArgs, IConcArgsHandler } from '../models/concordance/common.js';
+import { Actions } from '../models/common/actions.js';
+import applicationBar from '@plugins/application-bar';
+import footerBar from '@plugins/footer-bar';
+import authPlugin from '@plugins/auth';
+import issueReportingPlugin from '@plugins/issue-reporting';
+import querySuggestPlugin from '@plugins/query-suggest';
+import { IPageLeaveVoter } from '../models/common/pageLeave.js';
+import { IUnregistrable } from '../models/common/common.js';
+import { PluginName } from './plugin.js';
+import { GlobalStyle } from '../views/theme/default/global.js';
+import { SearchHistoryModel } from '../models/searchHistory/index.js';
+import { IPluginApi } from '../types/plugins/common.js';
+import { FreqResultViews } from '../models/freqs/common.js';
+import { PageMount } from './mounts.js';
+import { CorpusInfoModel } from '../models/common/corpusInfo.js';
 
 
 export enum DownloadType {
@@ -110,6 +110,10 @@ export class UnsupportedBlob implements Blob {
     }
 
     text(): Promise<string> {
+        return Promise.reject(UnsupportedBlob.translate('global__func_not_supp_by_the_browser'));
+    }
+
+    bytes(): Promise<Uint8Array> {
         return Promise.reject(UnsupportedBlob.translate('global__func_not_supp_by_the_browser'));
     }
 }

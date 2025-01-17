@@ -21,12 +21,12 @@
 import * as React from 'react';
 import { IActionDispatcher, IModel, BoundWithProps } from 'kombo';
 
-import * as Kontext from '../../types/kontext';
-import { init as fullViewInit } from './full';
-import { MainMenuModelState } from '../../models/mainMenu';
-import { Actions as MainMenuActions } from '../../models/mainMenu/actions';
-import { Actions } from '../../models/searchHistory/actions';
-import { SearchHistoryModel } from '../../models/searchHistory';
+import * as Kontext from '../../types/kontext.js';
+import { init as fullViewInit } from './full/index.js';
+import { MainMenuModelState } from '../../models/mainMenu/index.js';
+import { Actions as MainMenuActions } from '../../models/mainMenu/actions.js';
+import { Actions } from '../../models/searchHistory/actions.js';
+import { SearchHistoryModel } from '../../models/searchHistory/index.js';
 
 export interface MainModuleArgs {
     dispatcher:IActionDispatcher;

@@ -17,10 +17,11 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-import * as PluginInterfaces from '../../../types/plugins';
-import { TextTypesModel } from '../../../models/textTypes/main';
-import { Actions as GlobalActions } from '../../../models/common/actions';
-import { IPluginApi } from '../../../types/plugins/common';
+import * as PluginInterfaces from '../../../types/plugins/index.js';
+import { TextTypesModel } from '../../../models/textTypes/main.js';
+import { Actions as GlobalActions } from '../../../models/common/actions.js';
+import { IPluginApi } from '../../../types/plugins/common.js';
+import { IModel } from 'kombo';
 
 
 export class EmptyLiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPlugin {
@@ -45,7 +46,7 @@ export class EmptyLiveAttributesPlugin implements PluginInterfaces.LiveAttribute
 
     getViews(
         subcMixerView:PluginInterfaces.SubcMixer.View,
-        textTypesModel:TextTypesModel,
+        textTypesModel:IModel<{}>,
         useAlignedCorpBox:boolean,
     ):PluginInterfaces.LiveAttributes.Views {
 

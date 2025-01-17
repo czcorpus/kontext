@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../../../types/kontext';
-import { ConcFormArgs } from '../formArgs';
+import * as Kontext from '../../../types/kontext.js';
+import { ConcFormArgs } from '../formArgs.js';
 
 
 /**

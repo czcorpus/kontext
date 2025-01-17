@@ -23,35 +23,35 @@ import { concatMap, tap, map, reduce } from 'rxjs/operators';
 import { SEDispatcher, IActionDispatcher, Action } from 'kombo';
 import { List, Dict, pipe, tuple, HTTP } from 'cnc-tskit';
 
-import * as Kontext from '../../../types/kontext';
-import { PageModel } from '../../../app/page';
-import { FirstQueryFormModel } from '../first';
-import { FilterFormModel } from '../filter';
-import { ConcSampleModel } from '../sample';
-import { SwitchMainCorpModel } from '../switchmc';
-import { TextTypesModel } from '../../textTypes/main';
-import { FirstHitsModel } from '../../query/firstHits';
-import { QueryInfoModel } from './info';
-import { Actions } from '../actions';
-import { Actions as ConcActions } from '../../concordance/actions';
-import { Actions as MainMenuActions } from '../../mainMenu/actions';
-import { Actions as TTActions } from '../../textTypes/actions';
-import { Actions as QueryActions } from '../../query/actions';
+import * as Kontext from '../../../types/kontext.js';
+import { PageModel } from '../../../app/page.js';
+import { FirstQueryFormModel } from '../first.js';
+import { FilterFormModel } from '../filter.js';
+import { ConcSampleModel } from '../sample.js';
+import { SwitchMainCorpModel } from '../switchmc.js';
+import { TextTypesModel } from '../../textTypes/main.js';
+import { FirstHitsModel } from '../../query/firstHits.js';
+import { QueryInfoModel } from './info.js';
+import { Actions } from '../actions.js';
+import { Actions as ConcActions } from '../../concordance/actions.js';
+import { Actions as MainMenuActions } from '../../mainMenu/actions.js';
+import { Actions as TTActions } from '../../textTypes/actions.js';
+import { Actions as QueryActions } from '../../query/actions.js';
 import {
     PersistentQueryOperation, importEncodedOperation, QueryPipelineResponse,
     QueryPipelineResponseItem,
     exportDecodedOperation,
-    NormalizeConcFormArgsResp} from './common';
-import { AjaxConcResponse, ConcQueryResponse } from '../../concordance/common';
-import { QueryContextArgs } from '../common';
-import { ConcSortModel } from '../sort/single';
-import { MultiLevelConcSortModel } from '../sort/multi';
+    NormalizeConcFormArgsResp} from './common.js';
+import { AjaxConcResponse, ConcQueryResponse } from '../../concordance/common.js';
+import { QueryContextArgs } from '../common.js';
+import { ConcSortModel } from '../sort/single.js';
+import { MultiLevelConcSortModel } from '../sort/multi.js';
 import {
     ConcFormArgs, ConcFormArgsResponse, FilterFormArgs, FilterFormArgsResponse, FirstHitsFormArgs,
     QueryFormArgs, QueryFormArgsResponse, SampleFormArgs, SampleFormArgsResponse, SortFormArgs,
     SortFormArgsResponse, SwitchMainCorpArgs
-} from '../formArgs';
-import { ExportedSelection } from '../../../types/textTypes';
+} from '../formArgs.js';
+import { ExportedSelection } from '../../../types/textTypes.js';
 
 
 /*
@@ -558,7 +558,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             }
         );
 
-        this.addActionHandler(
+        this.addMultiActionHandler(
             [
                 QueryActions.ApplyFilter,
                 QueryActions.FilterFirstHitsSubmit,
@@ -929,7 +929,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 )
         ).pipe(
             map(
-                data => {
+                (data:QueryPipelineResponse) => {
                     const newCache = pipe(
                         data.ops,
                         List.map(item =>tuple(item.id, item.form_args)),

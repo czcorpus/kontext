@@ -21,18 +21,18 @@
 
 import { HTTP, List } from 'cnc-tskit';
 import { IActionDispatcher, SEDispatcher, StatelessModel } from 'kombo';
-import { PageModel } from '../../app/page';
-import { IUnregistrable } from '../common/common';
-import { Actions } from './actions';
-import { Actions as GlobalActions } from '../common/actions';
-import { Actions as CorparchActions } from '../../types/plugins/corparch';
-import { Actions as ATActions } from '../../models/asyncTask/actions';
-import { KeywordsSubmitArgs, KeywordsSubmitResponse } from './common';
-import { WlnumsTypes } from '../wordlist/common';
-import { AsyncTaskInfo, AttrItem, FormValue, newFormValue } from '../../types/kontext';
+import { PageModel } from '../../app/page.js';
+import { IUnregistrable } from '../common/common.js';
+import { Actions } from './actions.js';
+import { Actions as GlobalActions } from '../common/actions.js';
+import { Actions as CorparchActions } from '../../types/plugins/corparch.js';
+import { Actions as ATActions } from '../../models/asyncTask/actions.js';
+import { KeywordsSubmitArgs, KeywordsSubmitResponse } from './common.js';
+import { WlnumsTypes } from '../wordlist/common.js';
+import { AsyncTaskInfo, AttrItem, FormValue, newFormValue } from '../../types/kontext.js';
 import { Subject, debounceTime } from 'rxjs';
-import { TEXT_INPUT_WRITE_THROTTLE_INTERVAL_MS } from '../../types/kontext';
-import { validateNumber } from '../base';
+import { TEXT_INPUT_WRITE_THROTTLE_INTERVAL_MS } from '../../types/kontext.js';
+import { validateNumber } from '../base.js';
 
 
 export type ScoreType = 'default'|'logL'|'chi2'|'din';

@@ -21,10 +21,10 @@
 import { of as rxOf, zip } from 'rxjs';
 import { expand, takeWhile, delay, concatMap, take } from 'rxjs/operators';
 import { HTTP } from 'cnc-tskit';
-import { PageModel } from "../../app/page";
-import { Actions } from './actions';
-import * as Kontext from '../../types/kontext';
-import { ConcServerArgs } from './common';
+import { PageModel } from "../../app/page.js";
+import { Actions } from './actions.js';
+import * as Kontext from '../../types/kontext.js';
+import { ConcServerArgs } from './common.js';
 
 
 export interface ConcStatus extends Kontext.AjaxResponse {

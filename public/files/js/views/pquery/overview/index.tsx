@@ -20,17 +20,17 @@
  */
 
 import { BoundWithProps, IActionDispatcher, IModel } from 'kombo';
-import { PqueryFormModelState } from '../../../models/pquery/common';
-import { PqueryFormModel } from '../../../models/pquery/form';
-import * as Kontext from '../../../types/kontext';
-import { init as basicOverviewViewsInit } from '../../query/basicOverview';
-import { init as formInit } from '../form';
+import { PqueryFormModelState } from '../../../models/pquery/common.js';
+import { PqueryFormModel } from '../../../models/pquery/form.js';
+import * as Kontext from '../../../types/kontext.js';
+import { init as basicOverviewViewsInit } from '../../query/basicOverview/index.js';
+import { init as formInit } from '../form/index.js';
 import * as React from 'react';
 import { Dict, List, pipe, Strings } from 'cnc-tskit';
-import * as S from './style';
-import { Actions } from '../../../models/pquery/actions';
-import { HtmlHelpModel } from '../../../models/help/help';
-import { MainMenuModelState } from '../../../models/mainMenu';
+import * as S from './style.js';
+import { Actions } from '../../../models/pquery/actions.js';
+import { HtmlHelpModel } from '../../../models/help/help.js';
+import { MainMenuModelState } from '../../../models/mainMenu/index.js';
 
 
 export interface OverviewProps {

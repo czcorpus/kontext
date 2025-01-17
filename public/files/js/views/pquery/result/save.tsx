@@ -19,10 +19,10 @@
  */
 
 import * as React from 'react';
-import * as Kontext from '../../../types/kontext';
-import { PqueryResultsSaveModel, PqueryResultsSaveModelState } from '../../../models/pquery/save';
+import * as Kontext from '../../../types/kontext.js';
+import { PqueryResultsSaveModel, PqueryResultsSaveModelState } from '../../../models/pquery/save.js';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { Actions } from '../../../models/pquery/actions';
+import { Actions } from '../../../models/pquery/actions.js';
 
 
 interface SavePqueryFormProps {

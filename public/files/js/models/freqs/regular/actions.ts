@@ -19,13 +19,13 @@
  */
 
 import { Action } from 'kombo';
-import { HistoryState, MulticritFreqServerArgs, ResultBlock } from './common';
-import { AlignTypes } from '../twoDimension/common';
-import { FreqResultViews } from '../common';
-import { DataSaveFormat } from '../../../app/navigation/save';
-import { FreqChartsAvailableTypes, FreqChartsAvailableData, FreqChartsAvailableOrder } from '../common';
+import { HistoryState, MulticritFreqServerArgs, ResultBlock } from './common.js';
+import { AlignTypes } from '../twoDimension/common.js';
+import { FreqResultViews } from '../common.js';
+import { DataSaveFormat } from '../../../app/navigation/save.js';
+import { FreqChartsAvailableTypes, FreqChartsAvailableData, FreqChartsAvailableOrder } from '../common.js';
 import { Maths } from 'cnc-tskit';
-import { ChartExportFormat } from '../../../types/kontext';
+import { ChartExportFormat } from '../../../types/kontext.js';
 
 
 export class Actions {

@@ -19,8 +19,8 @@
  */
 
 
-import styled from 'styled-components';
-import * as theme from '../theme/default';
+import { styled } from 'styled-components';
+import * as theme from '../theme/default/index.js';
 
 // ---------------- <ConcRestore /> --------------------------------------
 

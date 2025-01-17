@@ -19,14 +19,14 @@
  */
 
 import * as React from 'react';
-import * as Kontext from '../../../types/kontext';
+import * as Kontext from '../../../types/kontext.js';
 import { Cell, LabelList, Legend, Pie, PieChart } from 'recharts';
 import { List } from 'cnc-tskit';
 import { IActionDispatcher } from 'kombo';
-import { Actions } from '../../../models/concordance/actions';
-import * as S from './style';
-import { LineSelectionModelState } from '../../../models/concordance/lineSelection';
-import { LineGroupChartData } from '../../../models/concordance/common';
+import { Actions } from '../../../models/concordance/actions.js';
+import * as S from './style.js';
+import { LineSelectionModelState } from '../../../models/concordance/lineSelection/index.js';
+import { LineGroupChartData } from '../../../models/concordance/common.js';
 
 
 export interface LineGroupChartProps {

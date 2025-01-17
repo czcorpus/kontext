@@ -19,7 +19,7 @@
  */
 
 import { Action } from 'kombo';
-import * as Kontext from '../../types/kontext';
+import * as Kontext from '../../types/kontext.js';
 
 
 

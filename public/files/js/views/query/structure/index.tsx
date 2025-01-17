@@ -21,11 +21,11 @@
 import { List, Strings, pipe } from 'cnc-tskit';
 import { BoundWithProps, IActionDispatcher } from 'kombo';
 import * as React from 'react';
-import { Actions, QueryFormType } from '../../../models/query/actions';
-import { QueryFormModel, QueryFormModelState } from '../../../models/query/common';
-import { ParsedSimpleQueryToken } from '../../../models/query/query';
-import * as Kontext from '../../../types/kontext';
-import * as S from './style';
+import { Actions, QueryFormType } from '../../../models/query/actions.js';
+import { QueryFormModel, QueryFormModelState } from '../../../models/query/common.js';
+import { isSimpleQuery, ParsedSimpleQueryToken } from '../../../models/query/query.js';
+import * as Kontext from '../../../types/kontext.js';
+import * as S from './style.js';
 
 export interface InputModuleArgs {
     dispatcher:IActionDispatcher;
@@ -131,7 +131,7 @@ export function init({dispatcher, he, queryModel}:InputModuleArgs) {
 
         const queryObj = props.queries[props.sourceId];
 
-        if (queryObj.qtype === 'simple') {
+        if (isSimpleQuery(queryObj)) {
             const hasExpandedTokens = List.some(t => t.isExtended, queryObj.queryParsed);
             return (
                 <layoutViews.ModalOverlay onCloseKey={handleClose}>

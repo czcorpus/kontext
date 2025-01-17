@@ -20,12 +20,12 @@
 
 import { StatelessModel, IActionDispatcher } from 'kombo';
 
-import * as Kontext from '../../types/kontext';
-import { PageModel } from '../../app/page';
-import { Actions } from './actions';
-import { Actions as MainMenuActions } from '../mainMenu/actions';
+import * as Kontext from '../../types/kontext.js';
+import { PageModel } from '../../app/page.js';
+import { Actions } from './actions.js';
+import { Actions as MainMenuActions } from '../mainMenu/actions.js';
 import { tuple, Dict, pipe, List } from 'cnc-tskit';
-import { CollServerArgs } from './common';
+import { CollServerArgs } from './common.js';
 
 
 /**

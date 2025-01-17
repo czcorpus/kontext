@@ -22,12 +22,12 @@
 import { tuple, pipe, List, Dict, HTTP } from 'cnc-tskit';
 import { Action, StatefulModel, IFullActionControl } from 'kombo';
 
-import * as PluginInterfaces from '../../../types/plugins';
-import { TagBuilderBaseState } from '../common';
-import { Actions } from '../actions';
-import * as Kontext from '../../../types/kontext';
-import { Actions as QueryActions } from '../../../models/query/actions';
-import { IPluginApi } from '../../../types/plugins/common';
+import * as PluginInterfaces from '../../../types/plugins/index.js';
+import { TagBuilderBaseState } from '../common.js';
+import { Actions } from '../actions.js';
+import * as Kontext from '../../../types/kontext.js';
+import { Actions as QueryActions } from '../../../models/query/actions.js';
+import { IPluginApi } from '../../../types/plugins/common.js';
 
 
 interface DataResponse extends Kontext.AjaxResponse {

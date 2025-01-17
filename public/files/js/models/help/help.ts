@@ -21,8 +21,8 @@
 import { HTTP } from 'cnc-tskit';
 import { IFullActionControl, StatefulModel } from 'kombo';
 
-import { PageModel } from '../../app/page';
-import { Actions } from './actions';
+import { PageModel } from '../../app/page.js';
+import { Actions } from './actions.js';
 
 
 

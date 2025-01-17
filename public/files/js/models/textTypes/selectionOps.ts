@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as TextTypes from '../../types/textTypes';
+import * as TextTypes from '../../types/textTypes.js';
 import { List, pipe } from 'cnc-tskit';
 
 

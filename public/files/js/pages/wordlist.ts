@@ -18,18 +18,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../types/kontext';
-import { PageModel, DownloadType } from '../app/page';
-import { WordlistFormExportViews } from '../views/wordlist/form';
-import { init as wordlistResultViewInit } from '../views/wordlist/result';
-import { init as wordlistSaveViewInit } from '../views/wordlist/save';
-import { WordlistFormModel, WordlistFormModelArgs } from '../models/wordlist/form';
-import { WordlistSaveModel } from '../models/wordlist/save';
-import { init as queryOverviewInit } from '../views/wordlist/overview';
-import { KontextPage } from '../app/main';
-import { WordlistResultModel } from '../models/wordlist/main';
-import { ResultItem, WordlistSaveArgs } from '../models/wordlist/common';
-import { Actions } from '../models/wordlist/actions';
+import * as Kontext from '../types/kontext.js';
+import { PageModel, DownloadType } from '../app/page.js';
+import { WordlistFormExportViews } from '../views/wordlist/form/index.js';
+import { init as wordlistResultViewInit } from '../views/wordlist/result/index.js';
+import { init as wordlistSaveViewInit } from '../views/wordlist/save.js';
+import { WordlistFormModel, WordlistFormModelArgs } from '../models/wordlist/form.js';
+import { WordlistSaveModel } from '../models/wordlist/save.js';
+import { init as queryOverviewInit } from '../views/wordlist/overview/index.js';
+import { KontextPage } from '../app/main.js';
+import { WordlistResultModel } from '../models/wordlist/main.js';
+import { ResultItem, WordlistSaveArgs } from '../models/wordlist/common.js';
+import { Actions } from '../models/wordlist/actions.js';
 import { Ident } from 'cnc-tskit';
 
 

@@ -19,20 +19,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as PluginInterfaces from '../../types/plugins';
-import * as Kontext from '../../types/kontext';
+import * as PluginInterfaces from '../../types/plugins/index.js';
+import * as Kontext from '../../types/kontext.js';
 import { StatelessModel, IActionDispatcher, SEDispatcher } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { List, HTTP, Ident, Dict, pipe, id, tuple } from 'cnc-tskit';
 import { map, tap, concatMap, mergeMap, scan } from 'rxjs/operators';
-import { Actions as QueryActions } from '../../models/query/actions';
+import { Actions as QueryActions } from '../../models/query/actions.js';
 import { cutLongResult, isBasicFrontend, isPosAttrPairRelFrontend, listAttrs1ToExtend,
     mergeResults, isErrorFrontend, filterOutTrivialSuggestions, isCncExtendedSublemmaFrontend,
-    isCncExhaustiveQueryInfoFrontend} from './frontends';
-import { AnyProviderInfo, supportsRequest } from './providers';
-import { Actions } from './actions';
-import { QuerySuggestion, QueryType } from '../../models/query/query';
-import { IPluginApi } from '../../types/plugins/common';
+    isCncExhaustiveQueryInfoFrontend} from './frontends.js';
+import { AnyProviderInfo, supportsRequest } from './providers.js';
+import { Actions } from './actions.js';
+import { QuerySuggestion, QueryType } from '../../models/query/query.js';
+import { IPluginApi } from '../../types/plugins/common.js';
 
 
 interface HTTPRequestArgs {
@@ -406,7 +406,7 @@ export class Model extends StatelessModel<ModelState> {
 
         ).pipe(
             map(
-                data => ({
+                (data:HTTPResponse) => ({
                     results: List.map(
                         item => ({
                             rendererId: item.renderer,

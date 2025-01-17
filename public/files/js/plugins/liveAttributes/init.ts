@@ -17,13 +17,13 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-import * as PluginInterfaces from '../../types/plugins';
-import { TextTypesModel } from '../../models/textTypes/main';
-import * as liveAttrsModel from './models';
-import { init as viewInit } from './view';
+import * as PluginInterfaces from '../../types/plugins/index.js';
+import { TextTypesModel } from '../../models/textTypes/main.js';
+import * as liveAttrsModel from './models.js';
+import { init as viewInit } from './view.js';
 import { List, pipe } from 'cnc-tskit';
-import { IPluginApi } from '../../types/plugins/common';
-import { PluginName } from '../../app/plugin';
+import { IPluginApi } from '../../types/plugins/common.js';
+import { PluginName } from '../../app/plugin.js';
 
 
 export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPlugin {

@@ -18,10 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../../types/kontext';
-import * as TextTypes from '../../types/textTypes';
-import { QueryFormType } from '../query/actions';
-import { QueryType } from '../query/query';
+import * as Kontext from '../../types/kontext.js';
+import * as TextTypes from '../../types/textTypes.js';
+import { QueryFormType } from '../query/actions.js';
+import { QueryType } from '../query/query.js';
 
 
 interface AbstractQueryHistoryItem {

@@ -20,7 +20,7 @@
 
 import { IModel } from 'kombo';
 import * as React from 'react';
-import { BasePlugin, IPluginApi } from './common';
+import { BasePlugin, IPluginApi } from './common.js';
 
 // ------------------------------------------------------------------------
 // ------------------------------ [syntax_viewer] plug-in -----------------

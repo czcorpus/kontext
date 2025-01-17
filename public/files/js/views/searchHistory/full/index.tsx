@@ -22,19 +22,19 @@ import * as React from 'react';
 import { BoundWithProps, IActionDispatcher } from 'kombo';
 import { Keyboard, Dict, pipe, List } from 'cnc-tskit';
 
-import * as Kontext from '../../../types/kontext';
-import { Actions } from '../../../models/searchHistory/actions';
-import { QueryType } from '../../../models/query/query';
+import * as Kontext from '../../../types/kontext.js';
+import { Actions } from '../../../models/searchHistory/actions.js';
+import { QueryType } from '../../../models/query/query.js';
 
-import * as S from './style';
+import * as S from './style.js';
 import { SearchHistoryModelState, ConcQueryHistoryItem,
-    QueryHistoryItem } from '../../../models/searchHistory/common';
-import { SearchHistoryModel } from '../../../models/searchHistory';
-import { init as fieldsViewInit } from './srchFields';
+    QueryHistoryItem } from '../../../models/searchHistory/common.js';
+import { SearchHistoryModel } from '../../../models/searchHistory/index.js';
+import { init as fieldsViewInit } from './srchFields.js';
 import gearIcon from '../../../../img/config-icon.svg';
 import gearIconS from '../../../../img/config-icon_s.svg';
 
-import * as QS from '../../query/style';
+import * as QS from '../../query/style.js';
 
 
 export interface HistoryViews {

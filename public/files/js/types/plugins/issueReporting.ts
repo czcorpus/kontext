@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { BasePlugin, IPluginApi } from './common';
-import * as CoreViews from '../../types/coreViews';
+import { BasePlugin, IPluginApi } from './common.js';
+import * as CoreViews from '../../types/coreViews/index.js';
 
 // ------------------------------------------------------------------------
 // ------------------------- [issue_reporting] plug-in --------------------

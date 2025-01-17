@@ -18,9 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import styled from 'styled-components';
-import * as theme from '../../theme/default';
-import { CollMetricsSelection } from '../../coll/style';
+import { styled } from 'styled-components';
+import * as theme from '../../theme/default/index.js';
+import { CollMetricsSelection } from '../../coll/style.js';
 
 // ---------------- <StructsAndAttrsForm /> --------------------------------------
 

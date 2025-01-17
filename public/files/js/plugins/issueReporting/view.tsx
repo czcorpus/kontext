@@ -19,11 +19,11 @@
  */
 
 import * as React from 'react';
-import * as Kontext from '../../types/kontext';
-import { IssueReportingModel, IssueReportingModelState } from './init';
+import * as Kontext from '../../types/kontext.js';
+import { IssueReportingModel, IssueReportingModelState } from './init.js';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { Actions } from './actions';
-import * as CoreViews from '../../types/coreViews';
+import { Actions } from './actions.js';
+import * as CoreViews from '../../types/coreViews/index.js';
 
 
 

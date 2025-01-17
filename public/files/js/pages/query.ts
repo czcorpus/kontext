@@ -20,32 +20,32 @@
 
 import { Dict, Ident, List, pipe, tuple } from 'cnc-tskit';
 
-import * as Kontext from '../types/kontext';
-import { PageModel } from '../app/page';
-import { TextTypesModel } from '../models/textTypes/main';
-import { FirstQueryFormModel } from '../models/query/first';
-import { WithinBuilderModel } from '../models/query/withinBuilder';
-import { VirtualKeyboardModel } from '../models/query/virtualKeyboard';
-import { QueryContextModel } from '../models/query/context';
-import { UsageTipsModel } from '../models/usageTips';
-import { init as queryFormInit, QueryFormProps } from '../views/query/first';
-import { init as basicOverviewViewsInit } from '../views/query/basicOverview';
-import * as PluginInterfaces from '../types/plugins';
-import { PluginName } from '../app/plugin';
-import { KontextPage } from '../app/main';
+import * as Kontext from '../types/kontext.js';
+import { PageModel } from '../app/page.js';
+import { TextTypesModel } from '../models/textTypes/main.js';
+import { FirstQueryFormModel } from '../models/query/first.js';
+import { WithinBuilderModel } from '../models/query/withinBuilder.js';
+import { VirtualKeyboardModel } from '../models/query/virtualKeyboard.js';
+import { QueryContextModel } from '../models/query/context.js';
+import { UsageTipsModel } from '../models/usageTips/index.js';
+import { init as queryFormInit, QueryFormProps } from '../views/query/first/index.js';
+import { init as basicOverviewViewsInit } from '../views/query/basicOverview/index.js';
+import * as PluginInterfaces from '../types/plugins/index.js';
+import { PluginName } from '../app/plugin.js';
+import { KontextPage } from '../app/main.js';
 import {
     ConcLinesStorage, StorageUsingState,
-    openStorage } from '../models/concordance/selectionStorage';
-import { Actions as GlobalActions } from '../models/common/actions';
-import corplistComponent from 'plugins/corparch/init';
-import liveAttributes from 'plugins/liveAttributes/init';
-import tagHelperPlugin from 'plugins/taghelper/init';
-import { QueryHelpModel } from '../models/help/queryHelp';
-import { ConcFormArgs, isFilterFormArgs, QueryFormArgs } from '../models/query/formArgs';
-import { QuickSubcorpModel } from '../models/subcorp/quickSubcorp';
-import { importInitialTTData, TTInitialData } from '../models/textTypes/common';
-import { ConcServerArgs } from '../models/concordance/common';
-import { AnyTTSelection, ExportedSelection } from '../types/textTypes';
+    openStorage } from '../models/concordance/selectionStorage.js';
+import { Actions as GlobalActions } from '../models/common/actions.js';
+import corplistComponent from '@plugins/corparch';
+import liveAttributes from '@plugins/live-attributes';
+import tagHelperPlugin from '@plugins/taghelper';
+import { QueryHelpModel } from '../models/help/queryHelp.js';
+import { ConcFormArgs, isFilterFormArgs, QueryFormArgs } from '../models/query/formArgs.js';
+import { QuickSubcorpModel } from '../models/subcorp/quickSubcorp.js';
+import { importInitialTTData, TTInitialData } from '../models/textTypes/common.js';
+import { ConcServerArgs } from '../models/concordance/common.js';
+import { AnyTTSelection, ExportedSelection } from '../types/textTypes.js';
 import { Root } from 'react-dom/client';
 
 

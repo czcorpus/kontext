@@ -21,10 +21,10 @@
 import { concatMap, map, Observable, tap, throwError } from 'rxjs';
 import { Action, IActionQueue, SEDispatcher, StatelessModel } from 'kombo';
 
-import { PageModel } from '../../app/page';
-import { Actions } from './actions';
-import { Actions as TTActions } from '../textTypes/actions';
-import { Actions as ATActions } from '../asyncTask/actions';
+import { PageModel } from '../../app/page.js';
+import { Actions } from './actions.js';
+import { Actions as TTActions } from '../textTypes/actions.js';
+import { Actions as ATActions } from '../asyncTask/actions.js';
 import { HTTP, List, pipe, tuple } from 'cnc-tskit';
 import {
     archiveSubcorpora,
@@ -37,8 +37,8 @@ import {
     SubcorpusPropertiesResponse,
     SubcorpusRecord,
     subcServerRecord2SubcorpusRecord,
-    wipeSubcorpora } from './common';
-import * as PluginInterfaces from '../../types/plugins';
+    wipeSubcorpora } from './common.js';
+import * as PluginInterfaces from '../../types/plugins/index.js';
 
 
 export interface SubcorpusEditModelState {

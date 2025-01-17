@@ -19,8 +19,8 @@
  */
 
 import { Action } from 'kombo';
-import * as Kontext from '../../types/kontext';
-import { QueryFormType } from '../query/actions';
+import * as Kontext from '../../types/kontext.js';
+import { QueryFormType } from '../query/actions.js';
 
 
 export class Actions {

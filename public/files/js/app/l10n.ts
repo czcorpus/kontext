@@ -18,11 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../vendor.d.ts/intl-messageformat.d.ts" />
 /// <reference path="../vendor.d.ts/translations.d.ts" />
 
-import * as translations from 'translations';
-import * as IntlMessageFormat from '../vendor/intl-messageformat';
+import translations from 'translations';
+import { IntlMessageFormat } from 'intl-messageformat';
 import { ITranslator } from 'kombo';
 
 
@@ -64,7 +63,7 @@ export class L10n implements ITranslator {
             if (tmp) {
                 try {
                     const format = new IntlMessageFormat(this.translations[msg], this.uiLang);
-                    return format.format(values);
+                    return format.format(values) + '';
 
                 } catch (e) {
                     console.error('Failed to translate ', msg, e);

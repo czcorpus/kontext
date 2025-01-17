@@ -19,8 +19,8 @@
  */
 
 import { Action } from 'kombo';
-import { BasePlugin, IPluginApi } from './common';
-import { HighlightInfo, HighlightRequest, TokenLink } from '../../models/concordance/common';
+import { BasePlugin, IPluginApi } from './common.js';
+import { HighlightInfo, HighlightRequest, TokenLink } from '../../models/concordance/common.js';
 
 // ------------------------------------------------------------------------
 // ------------------------- [tokens_linking] plug-in -----------------------

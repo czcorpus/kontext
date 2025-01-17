@@ -19,8 +19,8 @@
  */
 
 import { Maths } from 'cnc-tskit';
-import { ComponentHelpers } from '../../types/kontext';
-import { AjaxConcResponse, ConcQuickFilterServerArgs } from '../concordance/common';
+import { ComponentHelpers } from '../../types/kontext.js';
+import { AjaxConcResponse, ConcQuickFilterServerArgs } from '../concordance/common.js';
 
 export interface Item {
     Word:Array<{n:string}>;

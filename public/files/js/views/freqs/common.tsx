@@ -20,12 +20,12 @@
 
 import { IActionDispatcher } from 'kombo';
 import * as React from 'react';
-import { Actions as HelpActions } from '../../models/help/actions';
-import { Actions } from '../../models/freqs/regular/actions';
-import { ComponentHelpers } from '../../types/kontext';
-import { FormValue, newFormValue, updateFormValue } from '../../types/kontext';
-import * as SChart from './charts/style';
-import * as S from './style';
+import { Actions as HelpActions } from '../../models/help/actions.js';
+import { Actions } from '../../models/freqs/regular/actions.js';
+import { ComponentHelpers } from '../../types/kontext.js';
+import { FormValue, newFormValue, updateFormValue } from '../../types/kontext.js';
+import * as SChart from './charts/style.js';
+import * as S from './style.js';
 
 
 export interface CommonFreqComponents {

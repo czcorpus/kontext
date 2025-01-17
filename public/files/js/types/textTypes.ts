@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { WidgetView } from '../models/textTypes/common'; // TODO this breaks meaning of the 'common' module
+import { WidgetView } from '../models/textTypes/common.js'; // TODO this breaks meaning of the 'common'.js module
 
 
 /**

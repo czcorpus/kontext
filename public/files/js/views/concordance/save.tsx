@@ -20,9 +20,9 @@
 
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import * as Kontext from '../../types/kontext';
-import { ConcSaveModel, ConcSaveModelState } from '../../models/concordance/save';
-import { Actions } from '../../models/concordance/actions';
+import * as Kontext from '../../types/kontext.js';
+import { ConcSaveModel, ConcSaveModelState } from '../../models/concordance/save.js';
+import { Actions } from '../../models/concordance/actions.js';
 
 
 export interface ConcSaveFormProps {

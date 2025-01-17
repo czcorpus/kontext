@@ -1,5 +1,5 @@
 
-import cookies from '../../vendor/cookies';
+import cookies from '../../vendor/cookies.js';
 declare var $:any;
 
 export function init():void {

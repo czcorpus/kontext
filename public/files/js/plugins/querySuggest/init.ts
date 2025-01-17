@@ -22,21 +22,21 @@
 import { List, pipe, tuple } from 'cnc-tskit';
 import { createElement } from 'react';
 
-import * as PluginInterfaces from '../../types/plugins';
-import { init as initView, SuggestionsViews } from './view';
-import { isEmptyResponse, Model } from './model';
+import * as PluginInterfaces from '../../types/plugins/index.js';
+import { init as initView, SuggestionsViews } from './view.js';
+import { isEmptyResponse, Model } from './model.js';
 import {
     isBasicFrontend, isPosAttrPairRelFrontend, isErrorFrontend, isPosAttrPairRelClickPayload,
     KnownRenderers, isCncExtendedSublemmaFrontendClickPayload, isCncExtendedSublemmaFrontend,
     isCncExhaustiveQueryInfoFrontend,
     isCncExhaustiveQueryInfoFrontendClickPayload,
-} from './frontends';
-import { AnyProviderInfo, isEnabledFor } from './providers';
-import { AnyQuery, QuerySuggestion } from '../../models/query/query';
-import { IPluginApi } from '../../types/plugins/common';
-import { QueryFormType } from '../../models/query/actions';
-import { QueryValueSubformat } from '../../types/plugins/querySuggest';
-import { Actions as GlobalActions } from '../../models/common/actions';
+} from './frontends.js';
+import { AnyProviderInfo, isEnabledFor } from './providers.js';
+import { AnyQuery, QuerySuggestion } from '../../models/query/query.js';
+import { IPluginApi } from '../../types/plugins/common.js';
+import { QueryFormType } from '../../models/query/actions.js';
+import { QueryValueSubformat } from '../../types/plugins/querySuggest.js';
+import { Actions as GlobalActions } from '../../models/common/actions.js';
 
 
 /**

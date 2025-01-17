@@ -21,14 +21,14 @@
 
 import { HTTP, List, pipe } from 'cnc-tskit';
 import { IFullActionControl, StatefulModel } from 'kombo';
-import { PageModel } from '../../app/page';
-import { Actions } from './actions';
-import { Actions as MainMenuActions } from '../mainMenu/actions';
-import { Actions as ViewOptionsActions } from '../options/actions';
-import { PqueryResult } from './common';
-import { AlignTypes } from '../freqs/twoDimension/common';
-import { FormValue, TEXT_INPUT_WRITE_THROTTLE_INTERVAL_MS } from '../../types/kontext';
-import { validateGzNumber } from '../../models/base';
+import { PageModel } from '../../app/page.js';
+import { Actions } from './actions.js';
+import { Actions as MainMenuActions } from '../mainMenu/actions.js';
+import { Actions as ViewOptionsActions } from '../options/actions.js';
+import { PqueryResult } from './common.js';
+import { AlignTypes } from '../freqs/twoDimension/common.js';
+import { FormValue, TEXT_INPUT_WRITE_THROTTLE_INTERVAL_MS } from '../../types/kontext.js';
+import { validateGzNumber } from '../../models/base.js';
 import { debounceTime, Subject } from 'rxjs';
 
 

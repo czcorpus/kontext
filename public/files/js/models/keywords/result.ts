@@ -19,13 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../../types/kontext';
+import * as Kontext from '../../types/kontext.js';
 import { IActionDispatcher, IFullActionControl, SEDispatcher, StatelessModel } from 'kombo';
-import { PageModel } from '../../app/page';
-import { Keyword } from './common';
-import { Actions } from './actions';
-import { Actions as MainMenuActions } from '../mainMenu/actions';
-import { validateGzNumber } from '../base';
+import { PageModel } from '../../app/page.js';
+import { Keyword } from './common.js';
+import { Actions } from './actions.js';
+import { Actions as MainMenuActions } from '../mainMenu/actions.js';
+import { validateGzNumber } from '../base.js';
 import { Observable, tap } from 'rxjs';
 import { HTTP } from 'cnc-tskit';
 

@@ -18,11 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-(function (module) {
-
-const path = require('path');
-const fs = require('fs');
-const kontext = require('./kontext');
+import { resolve } from 'path';
+import * as fs from 'fs';
+import { loadModulePathMap, findPluginExternalModules } from './kontext.js';
 
 /**
  * PreparePlugin configures dynamically Webpack's compiler object
@@ -32,7 +30,7 @@ const kontext = require('./kontext');
  *
  * @param {*} options
  */
-class PreparePlugin {
+export class PreparePlugin {
 
     constructor(options) {
         this._confDoc = options.confDoc;
@@ -45,22 +43,22 @@ class PreparePlugin {
 
     apply(compiler) {
         compiler.hooks.afterPlugins.tap('PreparePlugin', (compilation) => {
-            const tmpJsDir = path.resolve(this._jsPath, '.compiled');
+            const tmpJsDir = resolve(this._jsPath, '.compiled');
             if (fs.existsSync(tmpJsDir)) {
                 fs.readdirSync(tmpJsDir).forEach(item => {
-                    fs.unlinkSync(path.resolve(tmpJsDir, item));
+                    fs.unlinkSync(resolve(tmpJsDir, item));
                 });
                 fs.rmdirSync(tmpJsDir);
             }
             fs.mkdirSync(tmpJsDir);
 
-            compiler.options.resolve.alias = kontext.loadModulePathMap(this._confDoc, this._jsPath, this._cssPath);
+            compiler.options.resolve.alias = loadModulePathMap(this._confDoc, this._jsPath, this._cssPath);
             console.log("\x1b[44m", 'Defined aliases:', "\x1b[0m");
             Object.keys(compiler.options.resolve.alias).forEach(item => {
                 console.log("\x1b[32m", item, "\x1b[0m", '\u21D2', compiler.options.resolve.alias[item]);
             });
             console.log("\x1b[44m", 'Defined external modules:', "\x1b[0m");
-            const externals = kontext.findPluginExternalModules(this._confDoc, this._jsPath);
+            const externals = findPluginExternalModules(this._confDoc, this._jsPath);
             externals.forEach(item => {
                 compiler.options.externals.push({[item[0]]: item[1]});
             });
@@ -70,7 +68,3 @@ class PreparePlugin {
         });
     }
 }
-
-module.exports.PreparePlugin = PreparePlugin;
-
-})(module);

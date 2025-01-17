@@ -21,15 +21,15 @@
  import { IActionDispatcher, StatelessModel } from 'kombo';
 import { List, tuple, pipe } from 'cnc-tskit';
 
-import * as Kontext from '../../types/kontext';
-import { PageModel } from '../../app/page';
-import { Actions } from './actions';
-import { Actions as ConcActions } from '../concordance/actions';
-import { Actions as GeneralOptsActions } from '../options/actions';
-import { Actions as GlobalActions } from '../common/actions';
-import { Actions as FreqActions } from '../freqs/regular/actions';
-import { ConcServerArgs } from '../concordance/common';
-import { FreqResultViews } from '../freqs/common';
+import * as Kontext from '../../types/kontext.js';
+import { PageModel } from '../../app/page.js';
+import { Actions } from './actions.js';
+import { Actions as ConcActions } from '../concordance/actions.js';
+import { Actions as GeneralOptsActions } from '../options/actions.js';
+import { Actions as GlobalActions } from '../common/actions.js';
+import { Actions as FreqActions } from '../freqs/regular/actions.js';
+import { ConcServerArgs } from '../concordance/common.js';
+import { FreqResultViews } from '../freqs/common.js';
 
 
 
@@ -255,7 +255,7 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
             }
         );
 
-        this.addActionHandler(
+        this.addMultiActionHandler(
             [
                 Actions.ClearActiveItem,
                 ConcActions.AddedNewOperation

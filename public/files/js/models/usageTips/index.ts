@@ -21,10 +21,10 @@
 import { StatelessModel, IActionDispatcher } from 'kombo';
 import { tuple, List, pipe, Dict } from 'cnc-tskit';
 
-import { Actions } from './actions';
-import { Actions as QueryActions } from '../query/actions';
-import { IUnregistrable } from '../common/common';
-import { Actions as GlobalActions } from '../common/actions';
+import { Actions } from './actions.js';
+import { Actions as QueryActions } from '../query/actions.js';
+import { IUnregistrable } from '../common/common.js';
+import { Actions as GlobalActions } from '../common/actions.js';
 
 
 

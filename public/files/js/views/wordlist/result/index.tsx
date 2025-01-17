@@ -19,15 +19,15 @@
  */
 
 import * as React from 'react';
-import * as Kontext from '../../../types/kontext';
+import * as Kontext from '../../../types/kontext.js';
 import { Keyboard } from 'cnc-tskit';
 import { IActionDispatcher, BoundWithProps, IModel, Bound } from 'kombo';
-import { WordlistResultModel, WordlistResultModelState } from '../../../models/wordlist/main';
-import { WordlistSaveViews } from '../save';
-import { Actions } from '../../../models/wordlist/actions';
+import { WordlistResultModel, WordlistResultModelState } from '../../../models/wordlist/main.js';
+import { WordlistSaveViews } from '../save.js';
+import { Actions } from '../../../models/wordlist/actions.js';
 import { List } from 'cnc-tskit';
-import { WordlistFormState } from '../../../models/wordlist/form';
-import * as S from './style';
+import { WordlistFormState } from '../../../models/wordlist/form.js';
+import * as S from './style.js';
 
 
 export interface WordlistResultViewsArgs {

@@ -16,34 +16,34 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../types/kontext';
-import * as TextTypes from '../types/textTypes';
-import { PageModel, DownloadType } from '../app/page';
-import { KontextPage } from '../app/main';
-import { CollFormModel, CollFormInputs, CollFormProps } from '../models/coll/collForm';
+import * as Kontext from '../types/kontext.js';
+import * as TextTypes from '../types/textTypes.js';
+import { PageModel, DownloadType } from '../app/page.js';
+import { KontextPage } from '../app/main.js';
+import { CollFormModel, CollFormInputs, CollFormProps } from '../models/coll/collForm.js';
 import {
     MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps
-} from '../models/freqs/regular/freqForms';
-import { Freq2DFormModel } from '../models/freqs/twoDimension/form';
-import { QuerySaveAsFormModel } from '../models/query/save';
-import { CollResultModel } from '../models/coll/result';
-import { init as analysisFrameInit } from '../views/analysis';
-import { init as collFormInit } from '../views/coll/forms';
-import { init as collResultViewInit, CollResultViewProps } from '../views/coll/result';
-import { init as freqFormInit } from '../views/freqs/forms';
-import { init as queryOverviewInit } from '../views/query/overview';
-import { TextTypesModel } from '../models/textTypes/main';
-import { IndirectQueryReplayModel } from '../models/query/replay/indirect';
+} from '../models/freqs/regular/freqForms.js';
+import { Freq2DFormModel } from '../models/freqs/twoDimension/form.js';
+import { QuerySaveAsFormModel } from '../models/query/save.js';
+import { CollResultModel } from '../models/coll/result.js';
+import { init as analysisFrameInit } from '../views/analysis.js';
+import { init as collFormInit } from '../views/coll/forms.js';
+import { init as collResultViewInit, CollResultViewProps } from '../views/coll/result/index.js';
+import { init as freqFormInit } from '../views/freqs/forms.js';
+import { init as queryOverviewInit } from '../views/query/overview/index.js';
+import { TextTypesModel } from '../models/textTypes/main.js';
+import { IndirectQueryReplayModel } from '../models/query/replay/indirect.js';
 import { List, tuple } from 'cnc-tskit';
-import { CollResultsSaveModel } from '../models/coll/save';
-import { CollResultData, CollResultHeading } from '../models/coll/common';
-import { CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/twoDimension/common';
-import { Actions } from '../models/coll/actions';
-import { DispersionResultModel } from '../models/dispersion/result';
-import { importInitialTTData, TTInitialData } from '../models/textTypes/common';
-import { ConcFormArgs } from '../models/query/formArgs';
-import { fetchQueryFormArgs } from '../models/query/first';
-import { transferActionToViewPage } from '../app/navigation/interpage';
+import { CollResultsSaveModel } from '../models/coll/save.js';
+import { CollResultData, CollResultHeading } from '../models/coll/common.js';
+import { CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/twoDimension/common.js';
+import { Actions } from '../models/coll/actions.js';
+import { DispersionResultModel } from '../models/dispersion/result.js';
+import { importInitialTTData, TTInitialData } from '../models/textTypes/common.js';
+import { ConcFormArgs } from '../models/query/formArgs.js';
+import { fetchQueryFormArgs } from '../models/query/first.js';
+import { transferActionToViewPage } from '../app/navigation/interpage.js';
 
 
 /**

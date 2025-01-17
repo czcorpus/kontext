@@ -19,9 +19,9 @@
  */
 
 import { Action } from 'kombo';
-import { AnyTTSelection } from '../textTypes';
-import { BasePlugin, IPluginApi } from './common';
-import * as TextTypes from '../textTypes';
+import { AnyTTSelection } from '../textTypes.js';
+import { BasePlugin, IPluginApi } from './common.js';
+import * as TextTypes from '../textTypes.js';
 
 // ------------------------------------------------------------------------
 // --------------------------- [subcmixer] plug-in ------------------------

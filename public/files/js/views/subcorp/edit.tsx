@@ -20,20 +20,20 @@
 
 import * as React from 'react';
 
-import { Actions } from '../../models/subcorp/actions';
-import * as Kontext from '../../types/kontext';
-import { SubcorpusEditModel, SubcorpusEditModelState } from '../../models/subcorp/edit';
+import { Actions } from '../../models/subcorp/actions.js';
+import * as Kontext from '../../types/kontext.js';
+import { SubcorpusEditModel, SubcorpusEditModelState } from '../../models/subcorp/edit.js';
 import { BoundWithProps, IActionDispatcher } from 'kombo';
 import {
     isCQLSelection, isTTSelection, isServerWithinSelection, SubcorpusRecord,
-    FormType, getFormTypeFromSelection } from '../../models/subcorp/common';
-import { TextTypesModel } from '../../models/textTypes/main';
-import { init as ttInit } from '../../views/textTypes/index';
-import { init as withinViewInit } from './withinForm';
-import { init as subcOverviewInit } from './overview';
-import { SubcorpWithinFormModel } from '../../models/subcorp/withinForm';
-import * as PluginInterfaces from '../../types/plugins';
-import * as S from './style';
+    FormType, getFormTypeFromSelection } from '../../models/subcorp/common.js';
+import { TextTypesModel } from '../../models/textTypes/main.js';
+import { init as ttInit } from '../../views/textTypes/index.js';
+import { init as withinViewInit } from './withinForm.js';
+import { init as subcOverviewInit } from './overview.js';
+import { SubcorpWithinFormModel } from '../../models/subcorp/withinForm.js';
+import * as PluginInterfaces from '../../types/plugins/index.js';
+import * as S from './style.js';
 
 
 export function init(

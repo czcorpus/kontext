@@ -22,23 +22,23 @@ import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Color, pipe, Maths, Dict, List } from 'cnc-tskit';
 
-import * as Kontext from '../../../../types/kontext';
-import * as TextTypes from '../../../../types/textTypes';
-import { init as ctFlatResultFactory } from '../flatTable';
-import { init as ctViewOptsFactory } from '../viewOpts';
-import { Freq2DFlatViewModel } from '../../../../models/freqs/twoDimension/flatTable';
+import * as Kontext from '../../../../types/kontext.js';
+import * as TextTypes from '../../../../types/textTypes.js';
+import { init as ctFlatResultFactory } from '../flatTable/index.js';
+import { init as ctViewOptsFactory } from '../viewOpts.js';
+import { Freq2DFlatViewModel } from '../../../../models/freqs/twoDimension/flatTable.js';
 import {
     Freq2DTableModel, Data2DTable, ColorMappings, TableInfo,
-    Freq2DTableModelState } from '../../../../models/freqs/twoDimension/table2d';
+    Freq2DTableModelState } from '../../../../models/freqs/twoDimension/table2d.js';
 import {
     FreqFilterQuantities, Dimensions,
-    FreqQuantities } from '../../../../models/freqs/twoDimension/common';
-import { CTFreqCell } from '../../../../models/freqs/twoDimension/generalDisplay';
-import { DataPoint } from '../../../../charts/confIntervals';
-import { Actions } from '../../../../models/freqs/twoDimension/actions';
-import { Actions as MainMenuActions } from '../../../../models/mainMenu/actions';
-import * as S from './style';
-import * as S2 from '../style';
+    FreqQuantities } from '../../../../models/freqs/twoDimension/common.js';
+import { CTFreqCell } from '../../../../models/freqs/twoDimension/generalDisplay.js';
+import { DataPoint } from '../../../../charts/confIntervals.js';
+import { Actions } from '../../../../models/freqs/twoDimension/actions.js';
+import { Actions as MainMenuActions } from '../../../../models/mainMenu/actions.js';
+import * as S from './style.js';
+import * as S2 from '../style.js';
 
 
 const enum TableViewMode {

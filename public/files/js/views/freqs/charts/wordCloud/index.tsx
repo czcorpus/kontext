@@ -17,10 +17,10 @@
  */
 import { List } from 'cnc-tskit';
 import * as React from 'react';
-import * as Kontext from '../../../../types/kontext';
-import { Rect, WordCloudItemCalc, TooltipData, createWordCloud, MAX_WC_FONT_SIZE } from './calc';
-import * as theme from '../../../../views/theme/default';
-import * as S from './style';
+import * as Kontext from '../../../../types/kontext.js';
+import { Rect, WordCloudItemCalc, TooltipData, createWordCloud, MAX_WC_FONT_SIZE } from './calc.js';
+import * as theme from '../../../../views/theme/default/index.js';
+import * as S from './style.js';
 
 
 export type WordCloudItem = WordCloudItemCalc;

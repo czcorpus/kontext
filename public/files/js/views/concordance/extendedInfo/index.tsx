@@ -21,16 +21,16 @@
 import * as React from 'react';
 import { IActionDispatcher, Bound, BoundWithProps } from 'kombo';
 
-import * as Kontext from '../../../types/kontext';
-import { init as ttOverviewInit } from '../ttOverview';
-import { TextTypesDistModel } from '../../../models/concordance/ttdist/model';
-import { ConcDashboard, ConcDashboardState } from '../../../models/concordance/dashboard';
-import { UsageTipsModel, UsageTipsState, UsageTipCategory } from '../../../models/usageTips';
-import * as PluginInterfaces from '../../../types/plugins';
-import { Actions } from '../../../models/concordance/actions';
-import { Actions as HintActions } from '../../../models/usageTips/actions';
-import * as S2 from '../style';
-import * as S from './style';
+import * as Kontext from '../../../types/kontext.js';
+import { init as ttOverviewInit } from '../ttOverview/index.js';
+import { TextTypesDistModel } from '../../../models/concordance/ttdist/model.js';
+import { ConcDashboard, ConcDashboardState } from '../../../models/concordance/dashboard.js';
+import { UsageTipsModel, UsageTipsState, UsageTipCategory } from '../../../models/usageTips/index.js';
+import * as PluginInterfaces from '../../../types/plugins/index.js';
+import { Actions } from '../../../models/concordance/actions.js';
+import { Actions as HintActions } from '../../../models/usageTips/actions.js';
+import * as S2 from '../style.js';
+import * as S from './style.js';
 
 
 export interface ConcExtendedInfoProps {

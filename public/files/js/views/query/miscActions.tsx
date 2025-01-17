@@ -21,11 +21,11 @@
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
-import * as Kontext from '../../types/kontext';
+import * as Kontext from '../../types/kontext.js';
 import { Keyboard, List, pipe } from 'cnc-tskit';
-import { ConcSampleModel, ConcSampleModelState } from '../../models/query/sample';
-import { SwitchMainCorpModel, SwitchMainCorpModelState } from '../../models/query/switchmc';
-import { Actions } from '../../models/query/actions';
+import { ConcSampleModel, ConcSampleModelState } from '../../models/query/sample.js';
+import { SwitchMainCorpModel, SwitchMainCorpModelState } from '../../models/query/switchmc.js';
+import { Actions } from '../../models/query/actions.js';
 
 
 export interface SampleFormViews {

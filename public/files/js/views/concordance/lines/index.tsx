@@ -22,24 +22,24 @@ import * as React from 'react';
 import { IActionDispatcher, BoundWithProps, ExtractPayload } from 'kombo';
 import { Color, List, pipe, tuple } from 'cnc-tskit';
 
-import * as Kontext from '../../../types/kontext';
-import * as ViewOptions from '../../../types/viewOptions';
-import { init as lineExtrasViewsInit } from '../lineExtras';
-import { ConcordanceModel, ConcordanceModelState } from '../../../models/concordance/main';
+import * as Kontext from '../../../types/kontext.js';
+import * as ViewOptions from '../../../types/viewOptions.js';
+import { init as lineExtrasViewsInit } from '../lineExtras/index.js';
+import { ConcordanceModel, ConcordanceModelState } from '../../../models/concordance/main.js';
 import { LineSelectionModel, LineSelectionModelState }
-    from '../../../models/concordance/lineSelection';
-import { ConcDetailModel } from '../../../models/concordance/detail';
-import { Actions } from '../../../models/concordance/actions';
-import { Actions as MainMenuActions } from '../../../models/mainMenu/actions';
+    from '../../../models/concordance/lineSelection/index.js';
+import { ConcDetailModel } from '../../../models/concordance/detail.js';
+import { Actions } from '../../../models/concordance/actions.js';
+import { Actions as MainMenuActions } from '../../../models/mainMenu/actions.js';
 import {
     KWICSection, LineSelectionModes, TextChunk,
     Line as ConcLine,
     ConcToken,
-    Token} from '../../../models/concordance/common';
-import * as S from './style';
-import { PlayerStatus } from '../../../models/concordance/media';
-import { SentenceToken } from '../../../types/plugins/syntaxViewer';
-import { Actions as TokensLinkingActions } from '../../../types/plugins/tokensLinking';
+    Token} from '../../../models/concordance/common.js';
+import * as S from './style.js';
+import { PlayerStatus } from '../../../models/concordance/media.js';
+import { SentenceToken } from '../../../types/plugins/syntaxViewer.js';
+import { Actions as TokensLinkingActions } from '../../../types/plugins/tokensLinking.js';
 
 
 export interface LinesModuleArgs {
@@ -93,7 +93,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
     }
 
 
-    function renderTokens(token:Token, dehighlightHandler:(tokenId:number) => void):JSX.Element {
+    function renderTokens(token:Token, dehighlightHandler:(tokenId:number) => void):React.JSX.Element {
 
         const handleMouseover = ({attr, s}:{attr:string; s:string}) => () => {
             dispatcher.dispatch(

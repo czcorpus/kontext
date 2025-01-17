@@ -19,15 +19,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../types/kontext';
-import { DownloadType, PageModel } from '../app/page';
-import { KontextPage } from '../app/main';
-import { init as viewInit } from '../views/keywords/result';
+import * as Kontext from '../types/kontext.js';
+import { DownloadType, PageModel } from '../app/page.js';
+import { KontextPage } from '../app/main.js';
+import { init as viewInit } from '../views/keywords/result/index.js';
 import { Root } from 'react-dom/client';
-import { KeywordsResultModel } from '../models/keywords/result';
-import { KeywordsSubmitArgs } from '../models/keywords/common';
-import { Actions } from '../models/keywords/actions';
-import { KeywordsResultsSaveModel } from '../models/keywords/save';
+import { KeywordsResultModel } from '../models/keywords/result.js';
+import { KeywordsSubmitArgs } from '../models/keywords/common.js';
+import { Actions } from '../models/keywords/actions.js';
+import { KeywordsResultsSaveModel } from '../models/keywords/save.js';
 
 
 /**

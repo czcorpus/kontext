@@ -21,12 +21,12 @@
 import * as React from 'react';
 import { BoundWithProps, IActionDispatcher, IModel } from 'kombo';
 
-import * as Kontext from '../../../types/kontext';
-import { Actions } from '../../../models/query/actions';
-import * as S from './style';
-import { MainMenuModelState } from '../../../models/mainMenu';
+import * as Kontext from '../../../types/kontext.js';
+import { Actions } from '../../../models/query/actions.js';
+import * as S from './style.js';
+import { MainMenuModelState } from '../../../models/mainMenu/index.js';
 import { List } from 'cnc-tskit';
-import { PersistentQueryOperation } from '../../../models/query/replay/common';
+import { PersistentQueryOperation } from '../../../models/query/replay/common.js';
 
 
 export interface QueryOverviewTableProps {

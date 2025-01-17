@@ -21,18 +21,17 @@
 
 import { BoundWithProps, IActionDispatcher } from 'kombo';
 import * as React from 'react';
-import { DispersionDataRow, DispersionResultModel, DispersionResultModelState } from '../../models/dispersion/result';
-import { ChartExportFormat, ComponentHelpers } from '../../types/kontext';
+import { DispersionDataRow, DispersionResultModel, DispersionResultModelState } from '../../models/dispersion/result.js';
+import { ChartExportFormat, ComponentHelpers } from '../../types/kontext.js';
 import { BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Bar } from 'recharts';
-import * as theme from '../theme/default';
+import * as theme from '../theme/default/index.js';
 
-import { Actions as GlobalActions } from '../../models/common/actions';
+import { Actions as GlobalActions } from '../../models/common/actions.js';
 
-import { Actions } from '../../models/dispersion/actions';
+import { Actions } from '../../models/dispersion/actions.js';
 import { List } from 'cnc-tskit';
 
-import * as S from './style';
-import * as ReactDOM from 'react-dom';
+import * as S from './style.js';
 
 
 
@@ -44,8 +43,8 @@ export function init(
 
     const globalComponents = he.getLayoutViews();
 
-    const storeChartData = (ref) => {
-        const container = ReactDOM.findDOMNode(ref.current);
+    const storeChartData = (ref:React.RefObject<HTMLElement>) => {
+        const container = ref.current;
         if (container instanceof Text || !container) {
             return;
         }

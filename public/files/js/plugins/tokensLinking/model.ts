@@ -18,14 +18,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as PluginInterfaces from '../../types/plugins';
+import * as PluginInterfaces from '../../types/plugins/index.js';
 import { StatefulModel, IFullActionControl, ExtractPayload } from 'kombo';
-import { IPluginApi } from '../../types/plugins/common';
+import { IPluginApi } from '../../types/plugins/common.js';
 import { Dict, HTTP, List, Rx, pipe, tuple } from 'cnc-tskit';
-import { AjaxResponse } from '../../types/kontext';
-import { AttrSet } from '../../types/plugins/tokensLinking';
-import { Actions as ConcActions } from '../../models/concordance/actions';
-import { HighlightInfo, TokenLink } from '../../models/concordance/common';
+import { AjaxResponse } from '../../types/kontext.js';
+import { AttrSet } from '../../types/plugins/tokensLinking.js';
+import { Actions as ConcActions } from '../../models/concordance/actions.js';
+import { HighlightInfo, TokenLink } from '../../models/concordance/common.js';
 
 
 

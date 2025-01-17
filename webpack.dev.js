@@ -18,11 +18,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-const { merge } = require('webpack-merge');
-const common = require('./scripts/build/webpack.common');
-const path = require('path');
+import { merge } from 'webpack-merge';
+import common from './scripts/build/webpack.common.js';
+import * as path from 'path';
+import { fileURLToPath } from 'url';
 
-module.exports = (env) => merge(common.wpConf(env), {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export default (env) => merge(common.wpConf(env), {
     mode: 'development',
     module: {
         rules: [
@@ -41,7 +45,7 @@ module.exports = (env) => merge(common.wpConf(env), {
            poll: true
         },
         */
-        allowedHosts: ['localhost', 'kontext6.korpus.test'],
+        allowedHosts: ['localhost', 'kontext.korpus.test'],
         port: process.env.DEV_SERVER_PORT || 9000,
         host: process.env.DEV_SERVER_HOST || 'localhost',
         static: {
@@ -49,19 +53,27 @@ module.exports = (env) => merge(common.wpConf(env), {
             publicPath: (process.env.DEV_PUBLIC_PATH === undefined ? common.PUBLIC_PATH : process.env.DEV_PUBLIC_PATH)
         },
         client: {
-              webSocketURL: 'ws://localhost:8080/wds-ws',
+              webSocketURL: 'ws://localhost:8084/wds-ws',
         },
         liveReload: false,
-        onAfterSetupMiddleware: function (devServer) {
-            // In the devel-server mode, all the css is delivered via Webpack
-            // but at the same time our hardcoded <link rel="stylesheet" ... />
-            // elements cause browser to load non-available styles.
-            // So we always return an empty stuff with proper content type.
-            devServer.app.get((process.env.DEV_PUBLIC_PATH === undefined ? common.PUBLIC_PATH : process.env.DEV_PUBLIC_PATH) + '/*.css', function(req, res) {
-                res.set('Content-Type', 'text/css');
-                res.send('');
+        setupMiddlewares: (middlewares, devServer) => {
+            if (!devServer) {
+                throw new Error('webpack-dev-server is not defined');
+            }
+            const cssPath = (process.env.DEV_PUBLIC_PATH === undefined ? common.PUBLIC_PATH : process.env.DEV_PUBLIC_PATH) + '/*.css';
+            middlewares.push({
+                name: 'css-handler',
+                middleware: (req, res, next) => {
+                    if (req.url.match(cssPath)) {
+                        res.set('Content-Type', 'text/css');
+                        res.send('');
+                    } else {
+                        next();
+                    }
+                }
             });
-          }
+            return middlewares;
+        }
     },
     devtool: "inline-source-map",
     target: ['web', 'es5']

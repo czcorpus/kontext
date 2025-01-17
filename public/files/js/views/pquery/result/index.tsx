@@ -22,14 +22,14 @@
 import * as React from 'react';
 import { Bound, IActionDispatcher } from 'kombo';
 
-import * as Kontext from '../../../types/kontext';
-import { PqueryResultModel, PqueryResultModelState, SortColumn } from '../../../models/pquery/result';
-import { Actions } from '../../../models/pquery/actions';
-import * as S from './style';
+import * as Kontext from '../../../types/kontext.js';
+import { PqueryResultModel, PqueryResultModelState, SortColumn } from '../../../models/pquery/result.js';
+import { Actions } from '../../../models/pquery/actions.js';
+import * as S from './style.js';
 import { Color, id, List, pipe } from 'cnc-tskit';
-import { init as initSaveViews } from './save';
-import { PqueryResultsSaveModel } from '../../../models/pquery/save';
-import { colorHeatmap } from '../../theme/default';
+import { init as initSaveViews } from './save.js';
+import { PqueryResultsSaveModel } from '../../../models/pquery/save.js';
+import { colorHeatmap } from '../../theme/default/index.js';
 
 export interface PqueryFormViewsArgs {
     dispatcher:IActionDispatcher;

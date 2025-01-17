@@ -18,10 +18,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-const path = require('path');
-const ProgressBarPlugin = require('progress-bar-webpack-plugin');
-const kontext = require('./kontext');
-const kplugins = require('./plugins');
+import path from 'path';
+import ProgressBarPlugin from 'progress-bar-webpack-plugin';
+import * as kontext from './kontext.js';
+import { PreparePlugin } from './plugins.js';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const mkpath = (p) => path.resolve(__dirname, '../../public/files', p);
 
@@ -32,7 +36,7 @@ const CONF_DOC = kontext.loadKontextConf(path.resolve(__dirname, '../../conf/con
 const PUBLIC_PATH = kontext.findActionPathPrefix(CONF_DOC);
 const DIST_PATH = mkpath('dist');
 
-module.exports = {
+export default {
     JS_PATH: JS_PATH,
     CSS_PATH: CSS_PATH,
     THEMES_PATH: THEMES_PATH,
@@ -77,9 +81,14 @@ module.exports = {
             alias: {}, // filled in dynamically
             modules: [
                 mkpath('js/.compiled'),
+                mkpath('js/plugins'),
                 'node_modules'
             ],
-            extensions: ['.webpack.js', '.web.js', '.ts', '.tsx', '.jsx', '.js', '.json', '.css', '.less']
+            extensions: ['.ts', '.tsx', '.js', '.jsx', '.json', '.css', '.less'],
+            extensionAlias: {
+                '.js': ['.ts', '.tsx', '.js', '.jsx'],
+                '.mjs': ['.mts', '.mjs']
+            }
         },
         module: {
             rules: [
@@ -101,6 +110,9 @@ module.exports = {
                                     dynamicImport: false
                                 },
                                 target: 'es2016'
+                            },
+                            module: {
+                                type: 'es6'
                             }
                         }
                     }
@@ -116,7 +128,7 @@ module.exports = {
         externals: [], // KonText build script adds things here (plug-ins' build.json conf)
         plugins: [
             new ProgressBarPlugin(),
-            new kplugins.PreparePlugin({
+            new PreparePlugin({
                 confDoc: CONF_DOC,
                 jsPath: JS_PATH,
                 cssPath: CSS_PATH,

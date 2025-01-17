@@ -22,16 +22,16 @@
  import { Dict, pipe, List, HTTP } from 'cnc-tskit';
  import { of as rxOf, Observable } from 'rxjs';
 
-import * as Kontext from '../../../types/kontext';
-import { SortFormProperties, importMultiLevelArg } from './common';
-import { PageModel } from '../../../app/page';
-import { Actions as MainMenuActions } from '../../mainMenu/actions';
-import { Actions } from '../actions';
+import * as Kontext from '../../../types/kontext.js';
+import { SortFormProperties, importMultiLevelArg } from './common.js';
+import { PageModel } from '../../../app/page.js';
+import { Actions as MainMenuActions } from '../../mainMenu/actions.js';
+import { Actions } from '../actions.js';
 import { tap, map, concatMap } from 'rxjs/operators';
-import { MLSortServerArgs } from '../common';
-import { AjaxConcResponse } from '../../concordance/common';
-import { Actions as ConcActions } from '../../concordance/actions';
-import { SortFormArgs } from '../formArgs';
+import { MLSortServerArgs } from '../common.js';
+import { AjaxConcResponse } from '../../concordance/common.js';
+import { Actions as ConcActions } from '../../concordance/actions.js';
+import { SortFormArgs } from '../formArgs.js';
 
 
  /**

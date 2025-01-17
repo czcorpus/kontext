@@ -22,23 +22,22 @@ import { ExtractPayload, IFullActionControl, StatefulModel } from 'kombo';
 import { throwError, Observable, interval, Subscription, forkJoin } from 'rxjs';
 import { tap, map, concatMap } from 'rxjs/operators';
 import { List, pipe, HTTP, tuple, Dict, Rx } from 'cnc-tskit';
-import * as copy from 'copy-to-clipboard';
-
-import * as ViewOptions from '../../types/viewOptions';
-import { PageModel } from '../../app/page';
-import { ConclineSectionOps } from './line';
-import { AudioPlayer, PlayerStatus } from './media';
-import { ConcSaveModel } from './save';
-import { Actions as ViewOptionsActions } from '../options/actions';
+import copy from 'copy-to-clipboard';
+import * as ViewOptions from '../../types/viewOptions.js';
+import { PageModel } from '../../app/page.js';
+import { ConclineSectionOps } from './line.js';
+import { AudioPlayer, PlayerStatus } from './media.js';
+import { ConcSaveModel } from './save.js';
+import { Actions as ViewOptionsActions } from '../options/actions.js';
 import { CorpColumn, ViewConfiguration, AudioPlayerActions, AjaxConcResponse,
     ServerPagination, ServerLineData, LineGroupId, attachColorsToIds,
     mapIdToIdWithColors, Line, TextChunk, PaginationActions, ConcViewMode,
-    HighlightWords, ConcQueryResponse, KWICSection} from './common';
+    HighlightWords, ConcQueryResponse, KWICSection} from './common.js';
 import { Actions, ConcGroupChangePayload,
-    PublishLineSelectionPayload } from './actions';
-import { Actions as MainMenuActions } from '../mainMenu/actions';
-import { Block } from '../freqs/common';
-import { highlightConcLineTokens, importLines } from './transform';
+    PublishLineSelectionPayload } from './actions.js';
+import { Actions as MainMenuActions } from '../mainMenu/actions.js';
+import { Block } from '../freqs/common.js';
+import { highlightConcLineTokens, importLines } from './transform.js';
 
 /**
  * HighlightAttrMatch specifies a single global (per page)
@@ -456,7 +455,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler(
+        this.addMultiActionHandler(
             [
                 Actions.ChangePage,
                 Actions.ReloadConc
@@ -555,7 +554,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler(
+        this.addMultiActionHandler(
             [Actions.LineSelectionResetOnServerDone, Actions.SwitchFirstSelectPage],
             action => {
                 this.changeState(state => {
@@ -778,7 +777,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler(
+        this.addMultiActionHandler(
             [
                 MainMenuActions.ShowSaveForm,
                 Actions.ResultCloseSaveForm
@@ -1092,7 +1091,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler(
+        this.addMultiActionHandler(
             [
                 Actions.CloseAlignAttrsMismatchModal,
                 ViewOptionsActions.UnsetAttributesAndSave

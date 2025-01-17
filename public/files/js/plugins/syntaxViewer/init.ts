@@ -19,24 +19,24 @@
  */
 
 /// <reference path="./js-treex-view.d.ts" />
+/// <reference path="./external.d.ts" />
 
 import { StatefulModel, IModel } from 'kombo';
 
-import * as PluginInterfaces from '../../types/plugins';
+import * as PluginInterfaces from '../../types/plugins/index.js';
 
 
-declare var require:any;
-const $ = require('jquery');
+import $ from 'jquery';
 import './js-treex-view';
 import { IFullActionControl } from 'kombo';
 import { HTTP, List, pipe } from 'cnc-tskit';
-import { Actions } from '../syntaxViewer2/actions';
-import { Actions as ConcActions } from '../../models/concordance/actions';
-import { IPluginApi } from '../../types/plugins/common';
-import { SyntaxTreeViewerState } from './common';
-import { init as viewInit } from './view';
+import { Actions } from '../syntaxViewer2/actions.js';
+import { Actions as ConcActions } from '../../models/concordance/actions.js';
+import { IPluginApi } from '../../types/plugins/common.js';
+import { SyntaxTreeViewerState } from './common.js';
+import { init as viewInit } from './view.js';
 import * as React from 'react';
-require('./style.css'); // webpack
+import './style.css'; // webpack
 
 
 /**

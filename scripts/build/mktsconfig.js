@@ -18,21 +18,25 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-const path = require('path');
-const kontext = require('./kontext');
-const fs = require('fs');
+import * as kontext from './kontext.js';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
 
-const mkpath = (p) => path.resolve(__dirname, '../../public/files', p);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const mkpath = (p) => resolve(__dirname, '../../public/files', p);
 
 const JS_PATH = mkpath('js');
 const CSS_PATH = mkpath('css');
-const CONF_DOC = kontext.loadKontextConf(path.resolve(__dirname, '../../conf/config.xml'));
+const CONF_DOC = kontext.loadKontextConf(resolve(__dirname, '../../conf/config.xml'));
 
 
 const aliasesTmp = kontext.loadModulePathMap(CONF_DOC, JS_PATH, CSS_PATH, true);
 const aliases = {};
 Object.keys(aliasesTmp).forEach((k) => {
-    aliases[k + '/*'] = [aliasesTmp[k] + '/*'];
+    aliases[k] = [aliasesTmp[k]];
 });
 
 const tsConfig = {
@@ -40,10 +44,11 @@ const tsConfig = {
         baseUrl: ".",
         sourceMap: false,
         noImplicitAny: false,
-        module: "esnext",
+        module: "node16",
+        esModuleInterop: true,
         target: "esnext",
-        jsx: "react",
-        moduleResolution: "node",
+        jsx: "react-jsx",
+        moduleResolution: "node16",
         paths: {}
     },
     include: [
@@ -55,6 +60,6 @@ const tsConfig = {
 };
 
 tsConfig.compilerOptions.paths = aliases;
-const tsPath = path.resolve(__dirname, '..', '..', '.tsconfig.tmp.json');
+const tsPath = resolve(__dirname, '..', '..', '.tsconfig.tmp.json');
 const outf = fs.openSync(tsPath, 'w');
 fs.writeSync(outf, JSON.stringify(tsConfig, null, 2) + '\n');

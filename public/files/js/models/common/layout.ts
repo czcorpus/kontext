@@ -24,9 +24,9 @@ import { Ident, List, pipe } from 'cnc-tskit';
 import { AjaxError } from 'rxjs/ajax';
 import { StatelessModel, IActionDispatcher } from 'kombo';
 
-import * as Kontext from '../../types/kontext';
-import { Actions } from './actions';
-import { IPluginApi } from '../../types/plugins/common';
+import * as Kontext from '../../types/kontext.js';
+import { Actions } from './actions.js';
+import { IPluginApi } from '../../types/plugins/common.js';
 
 
 export interface MessageModelState {

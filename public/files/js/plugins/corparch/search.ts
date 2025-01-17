@@ -22,8 +22,8 @@ import { of as rxOf, Observable } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 import { HTTP, List } from 'cnc-tskit';
 
-import * as Kontext from '../../types/kontext';
-import { IPluginApi } from '../../types/plugins/common';
+import * as Kontext from '../../types/kontext.js';
+import { IPluginApi } from '../../types/plugins/common.js';
 
 
 /**

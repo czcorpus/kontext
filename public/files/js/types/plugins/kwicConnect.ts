@@ -19,7 +19,7 @@
  */
 
 import { Action } from 'kombo';
-import { BasePlugin, IPluginApi } from './common';
+import { BasePlugin, IPluginApi } from './common.js';
 
 // ------------------------------------------------------------------------
 // ------------------------- [kwic_connect] plug-in -----------------------

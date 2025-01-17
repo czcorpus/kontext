@@ -21,19 +21,19 @@
 import * as React from 'react';
 import { IActionDispatcher} from 'kombo';
 
-import * as Kontext from '../../types/kontext';
-import { init as freqFormsFactory } from './regular/freqForms';
-import { Actions as ActionsRF } from '../../models/freqs/regular/actions';
-import { Actions as Actions2DF } from '../../models/freqs/twoDimension/actions';
-import { init as ctFreqFormFactory } from './twoDimension/form';
-import { init as dispersionFormFactory } from '../dispersion/form';
-import { Freq2DFormModel } from '../../models/freqs/twoDimension/form';
-import { MLFreqFormModel, TTFreqFormModel } from '../../models/freqs/regular/freqForms';
-import { Actions as ActionsDp } from '../../models/dispersion/actions';
+import * as Kontext from '../../types/kontext.js';
+import { init as freqFormsFactory } from './regular/freqForms.js';
+import { Actions as ActionsRF } from '../../models/freqs/regular/actions.js';
+import { Actions as Actions2DF } from '../../models/freqs/twoDimension/actions.js';
+import { init as ctFreqFormFactory } from './twoDimension/form.js';
+import { init as dispersionFormFactory } from '../dispersion/form.js';
+import { Freq2DFormModel } from '../../models/freqs/twoDimension/form.js';
+import { MLFreqFormModel, TTFreqFormModel } from '../../models/freqs/regular/freqForms.js';
+import { Actions as ActionsDp } from '../../models/dispersion/actions.js';
 
 
-import * as S from './regular/style';
-import { DispersionResultModel } from '../../models/dispersion/result';
+import * as S from './regular/style.js';
+import { DispersionResultModel } from '../../models/dispersion/result.js';
 
 
 // -------------------------- exported component ----------

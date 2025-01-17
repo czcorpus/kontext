@@ -23,21 +23,21 @@ import { Observable, of as rxOf } from 'rxjs';
 import { concatMap, tap } from 'rxjs/operators';
 import { tuple, pipe, Dict, List, HTTP, id } from 'cnc-tskit';
 
-import * as Kontext from '../../types/kontext';
-import { PageModel } from '../../app/page';
-import { QueryContextModel } from './context';
-import { validateNumber, setFormItemInvalid } from '../../models/base';
+import * as Kontext from '../../types/kontext.js';
+import { PageModel } from '../../app/page.js';
+import { QueryContextModel } from './context.js';
+import { validateNumber, setFormItemInvalid } from '../../models/base.js';
 import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState,
-    FilterServerArgs, determineSupportedWidgets, getTagBuilderSupport, FilterTypes, suggestionsEnabled } from './common';
-import { Actions } from './actions';
-import { Actions as ConcActions } from '../concordance/actions';
-import { Actions as MainMenuActions } from '../mainMenu/actions';
-import * as PluginInterfaces from '../../types/plugins';
-import { AjaxConcResponse } from '../concordance/common';
-import { QueryType, AnyQuery, AdvancedQuery, SimpleQuery, parseSimpleQuery } from './query';
-import { highlightSyntaxStatic } from '../cqleditor/parser';
-import { AttrHelper } from '../cqleditor/attrs';
-import * as formArgs from './formArgs';
+    FilterServerArgs, determineSupportedWidgets, getTagBuilderSupport, FilterTypes, suggestionsEnabled } from './common.js';
+import { Actions } from './actions.js';
+import { Actions as ConcActions } from '../concordance/actions.js';
+import { Actions as MainMenuActions } from '../mainMenu/actions.js';
+import * as PluginInterfaces from '../../types/plugins/index.js';
+import { AjaxConcResponse } from '../concordance/common.js';
+import { QueryType, AnyQuery, AdvancedQuery, SimpleQuery, parseSimpleQuery } from './query.js';
+import { highlightSyntaxStatic } from '../cqleditor/parser.js';
+import { AttrHelper } from '../cqleditor/attrs.js';
+import * as formArgs from './formArgs.js';
 
 
 /**
@@ -80,7 +80,7 @@ export function isFilterFormProperties(
 }
 
 /**
- * import {GeneralViewOptionsModel} from '../options/general';
+ * import {GeneralViewOptionsModel} from '../options/general.js';
  */
 export function fetchFilterFormArgs<T extends
         formArgs.FilterFormArgs[keyof formArgs.FilterFormArgs]>(

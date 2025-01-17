@@ -20,9 +20,9 @@
 
 import { Dict } from 'cnc-tskit';
 import { StatelessModel, IActionQueue } from 'kombo';
-import { DownloadType, PageModel, UnsupportedBlob } from '../../app/page';
-import { Actions } from '../common/actions';
-import { FreqChartsAvailableTypes } from '../freqs/common';
+import { DownloadType, PageModel, UnsupportedBlob } from '../../app/page.js';
+import { Actions } from '../common/actions.js';
+import { FreqChartsAvailableTypes } from '../freqs/common.js';
 
 
 export interface ImageConversionModelState {

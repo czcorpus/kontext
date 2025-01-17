@@ -19,12 +19,12 @@
  */
 
 import { IFullActionControl, StatefulModel } from 'kombo';
-import { Actions } from './actions';
-import { CtxLemwordType } from './common';
-import { IUnregistrable } from '../common/common';
-import { Actions as GlobalActions } from '../common/actions';
+import { Actions } from './actions.js';
+import { CtxLemwordType } from './common.js';
+import { IUnregistrable } from '../common/common.js';
+import { Actions as GlobalActions } from '../common/actions.js';
 import { List } from 'cnc-tskit';
-import { QueryFormArgs } from './formArgs';
+import { QueryFormArgs } from './formArgs.js';
 
 
 

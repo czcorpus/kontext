@@ -19,19 +19,19 @@
  */
 
 import { HTTP, List, Maths, pipe, tuple } from 'cnc-tskit';
-import { ajaxErrorMapped } from '../../../app/navigation';
-import { PageModel } from '../../../app/page';
+import { ajaxErrorMapped } from '../../../app/navigation/index.js';
+import { PageModel } from '../../../app/page.js';
 import { Observable } from 'rxjs';
-import { ConcServerArgs } from '../../concordance/common';
+import { ConcServerArgs } from '../../concordance/common.js';
 import {
     FreqChartsAvailableData,
     FreqChartsAvailableOrder,
     FreqChartsAvailableTypes,
     FreqResultResponse,
     FreqResultViews
-} from '../common';
-import { AttrItem, BasicFreqModuleType } from '../../../types/kontext';
-import * as Kontext from '../../../types/kontext';
+} from '../common.js';
+import { AttrItem, BasicFreqModuleType } from '../../../types/kontext.js';
+import * as Kontext from '../../../types/kontext.js';
 
 
 export const PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS = 500;

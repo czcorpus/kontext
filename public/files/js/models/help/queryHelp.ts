@@ -21,10 +21,10 @@
 import { List } from 'cnc-tskit';
 import { IFullActionControl } from 'kombo';
 
-import { PageModel } from '../../app/page';
-import * as PluginInterfaces from '../../types/plugins';
-import { HtmlHelpModel } from './help';
-import { Actions as QueryActions } from '../query/actions';
+import { PageModel } from '../../app/page.js';
+import * as PluginInterfaces from '../../types/plugins/index.js';
+import { HtmlHelpModel } from './help.js';
+import { Actions as QueryActions } from '../query/actions.js';
 
 
 

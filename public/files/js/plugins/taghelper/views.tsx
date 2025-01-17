@@ -21,16 +21,16 @@ import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { List, pipe } from 'cnc-tskit';
 
-import * as Kontext from '../../types/kontext';
-import * as PluginInterfaces from '../../types/plugins';
-import { Actions as QueryActions, QueryFormType } from '../../models/query/actions';
-import { Actions } from './actions';
-import { TabFrameModel, TabFrameModelState } from './models';
-import { PosTagModel } from './positional/models';
-import { UDTagBuilderModelState, UDTagBuilderModel } from './keyval/models';
+import * as Kontext from '../../types/kontext.js';
+import * as PluginInterfaces from '../../types/plugins/index.js';
+import { Actions as QueryActions, QueryFormType } from '../../models/query/actions.js';
+import { Actions } from './actions.js';
+import { TabFrameModel, TabFrameModelState } from './models.js';
+import { PosTagModel } from './positional/models.js';
+import { UDTagBuilderModelState, UDTagBuilderModel } from './keyval/models.js';
 
-import * as S from './style';
-import { PosTagModelState } from './positional/common';
+import * as S from './style.js';
+import { PosTagModelState } from './positional/common.js';
 
 
 export function init(

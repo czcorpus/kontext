@@ -21,12 +21,12 @@
  */
 
 import * as React from 'react';
-import * as PluginInterfaces from '../../types/plugins';
-import { IPluginApi } from '../../types/plugins/common';
-import { TreeWidgetModel } from './model';
-import { Views as CorplistViews, init as corplistViewInit } from './view';
-import { init as widgetViewInit } from './widget';
-import { InitialWidgetData } from '../../types/plugins/corparch';
+import * as PluginInterfaces from '../../types/plugins/index.js';
+import { IPluginApi } from '../../types/plugins/common.js';
+import { TreeWidgetModel } from './model.js';
+import { Views as CorplistViews, init as corplistViewInit } from './view.js';
+import { init as widgetViewInit } from './widget.js';
+import { InitialWidgetData } from '../../types/plugins/corparch.js';
 
 
 export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage  {

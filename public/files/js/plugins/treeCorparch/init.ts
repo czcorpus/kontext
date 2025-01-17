@@ -16,16 +16,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../../types/kontext';
-import * as PluginInterfaces from '../../types/plugins';
-import { init as viewInit, Views as TreeCorparchViews } from './view';
+import * as Kontext from '../../types/kontext.js';
+import * as PluginInterfaces from '../../types/plugins/index.js';
+import { init as viewInit, Views as TreeCorparchViews } from './view.js';
 import { StatelessModel, SEDispatcher } from 'kombo';
-import { Actions, Corplist, itemIsCorplist } from './common';
+import { Actions, Corplist, itemIsCorplist } from './common.js';
 import { List, HTTP, pipe, tuple, Dict } from 'cnc-tskit';
-import { IUnregistrable } from '../../models/common/common';
-import { Actions as GlobalActions } from '../../models/common/actions';
-import { IPluginApi } from '../../types/plugins/common';
-import { InitialWidgetData } from '../../types/plugins/corparch';
+import { IUnregistrable } from '../../models/common/common.js';
+import { Actions as GlobalActions } from '../../models/common/actions.js';
+import { IPluginApi } from '../../types/plugins/common.js';
+import { InitialWidgetData } from '../../types/plugins/corparch.js';
 
 
 export interface TreeResponseData extends Kontext.AjaxResponse {

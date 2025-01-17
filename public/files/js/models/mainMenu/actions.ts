@@ -19,8 +19,8 @@
  */
 
 import { Action } from 'kombo';
-import { DataSaveFormat } from '../../app/navigation/save';
-import { PersistentQueryOperation } from '../query/replay/common';
+import { DataSaveFormat } from '../../app/navigation/save.js';
+import { PersistentQueryOperation } from '../query/replay/common.js';
 
 
 export class Actions {

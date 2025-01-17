@@ -22,13 +22,13 @@ import * as React from 'react';
 import { IActionDispatcher, Bound } from 'kombo';
 import { Keyboard, List } from 'cnc-tskit';
 
-import * as Kontext from '../../../types/kontext';
-import { MultiposAttr, WordlistFormModel, WordlistFormState } from '../../../models/wordlist/form';
-import * as PluginInterfaces from '../../../types/plugins';
-import { Actions } from '../../../models/wordlist/actions';
-import { FileTarget, WlnumsTypes } from '../../../models/wordlist/common';
-import * as S from './style';
-import * as theme from '../../theme/default';
+import * as Kontext from '../../../types/kontext.js';
+import { MultiposAttr, WordlistFormModel, WordlistFormState } from '../../../models/wordlist/form.js';
+import * as PluginInterfaces from '../../../types/plugins/index.js';
+import { Actions } from '../../../models/wordlist/actions.js';
+import { FileTarget, WlnumsTypes } from '../../../models/wordlist/common.js';
+import * as S from './style.js';
+import * as theme from '../../theme/default/index.js';
 
 export interface WordlistFormViewArgs {
     dispatcher:IActionDispatcher;
@@ -113,7 +113,7 @@ export function init({
             });
         };
 
-        const ref = React.useRef<HTMLInputElement>();
+        const ref = React.useRef<HTMLInputElement>(null);
 
         React.useLayoutEffect(
             () => {

@@ -26,7 +26,7 @@ This plug-in should be able to handle high-load installations without any proble
 required XML: please see ./config.rng
 """
 
-import aioredis
+from redis import asyncio as aioredis
 from plugins.redis_db import RedisDb
 
 

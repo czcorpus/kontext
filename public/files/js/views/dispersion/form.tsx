@@ -21,11 +21,11 @@
 
 import { Bound, IActionDispatcher } from 'kombo';
 import * as React from 'react';
-import { DispersionResultModel, DispersionResultModelState } from '../../models/dispersion/result';
-import { ComponentHelpers } from '../../types/kontext';
-import { Actions } from '../../models/dispersion/actions';
+import { DispersionResultModel, DispersionResultModelState } from '../../models/dispersion/result.js';
+import { ComponentHelpers } from '../../types/kontext.js';
+import { Actions } from '../../models/dispersion/actions.js';
 
-import * as S from './style';
+import * as S from './style.js';
 
 
 

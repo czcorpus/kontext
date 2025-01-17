@@ -20,12 +20,12 @@
 
 import { IFullActionControl, StatefulModel } from 'kombo';
 
-import * as Kontext from '../../types/kontext';
-import { validateNumber } from '../base';
-import { PageModel, SaveLinkHandler } from '../../app/page';
-import { Actions } from './actions';
-import { Actions as MainMenuActions } from '../mainMenu/actions';
-import { DataSaveFormat } from '../../app/navigation/save';
+import * as Kontext from '../../types/kontext.js';
+import { validateNumber } from '../base.js';
+import { PageModel, SaveLinkHandler } from '../../app/page.js';
+import { Actions } from './actions.js';
+import { Actions as MainMenuActions } from '../mainMenu/actions.js';
+import { DataSaveFormat } from '../../app/navigation/save.js';
 
 
 

@@ -19,10 +19,10 @@
  */
 
 import * as React from 'react';
-import * as Kontext from '../../../types/kontext';
+import * as Kontext from '../../../types/kontext.js';
 import { IActionDispatcher } from 'kombo';
-import { init as ftInit, FormattedTextRendererProps } from './formattedText';
-import * as S from '../style';
+import { init as ftInit, FormattedTextRendererProps } from './formattedText.js';
+import * as S from '../style.js';
 
 
 export interface Views {

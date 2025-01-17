@@ -19,10 +19,10 @@
  */
 
 import { Action } from 'kombo';
-import { IndexedResultItem, WlTypes, FileTarget, WordlistSubmitArgs } from './common';
-import { FilterEditorData } from './form';
-import * as Kontext from '../../types/kontext';
-import { DataSaveFormat } from '../../app/navigation/save';
+import { IndexedResultItem, WlTypes, FileTarget, WordlistSubmitArgs } from './common.js';
+import { FilterEditorData } from './form.js';
+import * as Kontext from '../../types/kontext.js';
+import { DataSaveFormat } from '../../app/navigation/save.js';
 
 
 export class Actions {

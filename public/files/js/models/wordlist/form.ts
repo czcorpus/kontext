@@ -24,17 +24,17 @@ import { concatMap } from 'rxjs/operators';
 import { List, Ident, HTTP } from 'cnc-tskit';
 
 
-import * as Kontext from '../../types/kontext';
-import { validateGzNumber } from '../base';
-import { PageModel } from '../../app/page';
-import { Actions } from './actions';
-import { Actions as MainMenuActions } from '../mainMenu/actions';
-import { Actions as GlobalActions } from '../common/actions';
-import { Actions as ATActions } from '../../models/asyncTask/actions';
+import * as Kontext from '../../types/kontext.js';
+import { validateGzNumber } from '../base.js';
+import { PageModel } from '../../app/page.js';
+import { Actions } from './actions.js';
+import { Actions as MainMenuActions } from '../mainMenu/actions.js';
+import { Actions as GlobalActions } from '../common/actions.js';
+import { Actions as ATActions } from '../../models/asyncTask/actions.js';
 import {
     ConcFreqRedirectResponse, FileTarget, isConcFreqRedirectResponse, splitFilterWords,
-    SubmitResponse, WlnumsTypes, WlTypes, WordlistSubmitArgs } from './common';
-import { IUnregistrable } from '../common/common';
+    SubmitResponse, WlnumsTypes, WlTypes, WordlistSubmitArgs } from './common.js';
+import { IUnregistrable } from '../common/common.js';
 
 
 /**

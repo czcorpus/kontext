@@ -18,13 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { KontextPage } from '../app/main';
-import { PageModel } from '../app/page';
-import { HitReloader } from '../models/concordance/concStatus';
-import { ConcRestoreModel } from '../models/concRestore';
-import { Actions } from '../models/concRestore/actions';
-import * as Kontext from '../types/kontext';
-import { init as viewInit } from '../views/restoreConc';
+import { KontextPage } from '../app/main.js';
+import { PageModel } from '../app/page.js';
+import { HitReloader } from '../models/concordance/concStatus.js';
+import { ConcRestoreModel } from '../models/concRestore/index.js';
+import { Actions } from '../models/concRestore/actions.js';
+import * as Kontext from '../types/kontext.js';
+import { init as viewInit } from '../views/restoreConc/index.js';
 
 
 class ConcRestorePage {

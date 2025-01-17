@@ -20,12 +20,12 @@
 
 import { IFullActionControl, StatelessModel } from 'kombo';
 
-import { PageModel } from '../../app/page';
-import { Actions } from './actions';
+import { PageModel } from '../../app/page.js';
+import { Actions } from './actions.js';
 import { tuple, HTTP } from 'cnc-tskit';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { FullRef, RefsColumn } from './common';
+import { FullRef, RefsColumn } from './common.js';
 
 
 export interface RefsDetailModelState {

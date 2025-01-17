@@ -19,7 +19,7 @@
  */
 
 import { Action } from 'kombo';
-import { ForcedTip } from '.';
+import { ForcedTip } from './index.js';
 
 
 export class Actions {

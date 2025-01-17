@@ -18,23 +18,23 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { PageModel } from '../../../app/page';
-import { FreqFormInputs } from './freqForms';
+import { PageModel } from '../../../app/page.js';
+import { FreqFormInputs } from './freqForms.js';
 import { IFullActionControl, SEDispatcher, StatelessModel } from 'kombo';
 import { Observable } from 'rxjs';
 import {
     EmptyResultBlock, FreqDataLoader, FreqDataRowsModelState, FreqServerArgs, isEmptyResultBlock,
-    isFreqChartsModelState, MulticritFreqServerArgs, recalculateConfIntervals, ResultBlock } from './common';
+    isFreqChartsModelState, MulticritFreqServerArgs, recalculateConfIntervals, ResultBlock } from './common.js';
 import { Dict, HTTP, List, Maths, pipe, tuple } from 'cnc-tskit';
-import { ConcQuickFilterServerArgs } from '../../concordance/common';
-import { Actions } from './actions';
-import { Actions as MainMenuActions } from '../../mainMenu/actions';
-import { TagsetInfo } from '../../../types/plugins/tagHelper';
-import { Block, FreqResultResponse } from '../common';
-import { Actions as GeneralOptsActions } from '../../options/actions';
-import { AttrItem, BasicFreqModuleType } from '../../../types/kontext';
-import { validateGzNumber } from '../../base';
-import * as copy from 'copy-to-clipboard';
+import { ConcQuickFilterServerArgs } from '../../concordance/common.js';
+import { Actions } from './actions.js';
+import { Actions as MainMenuActions } from '../../mainMenu/actions.js';
+import { TagsetInfo } from '../../../types/plugins/tagHelper.js';
+import { Block, FreqResultResponse } from '../common.js';
+import { Actions as GeneralOptsActions } from '../../options/actions.js';
+import { AttrItem, BasicFreqModuleType } from '../../../types/kontext.js';
+import { validateGzNumber } from '../../base.js';
+import copy from 'copy-to-clipboard';
 
 
 export interface FreqDataRowsModelArgs {

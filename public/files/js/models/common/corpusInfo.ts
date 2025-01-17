@@ -23,12 +23,12 @@ import { concatMap } from 'rxjs/operators';
 import { HTTP } from 'cnc-tskit';
 import { StatefulModel, IFullActionControl } from 'kombo';
 
-import { Actions } from './actions';
-import { IPluginApi } from '../../types/plugins/common';
+import { Actions } from './actions.js';
+import { IPluginApi } from '../../types/plugins/common.js';
 import {
     SubcorpusPropertiesResponse, SubcorpusRecord, subcServerRecord2SubcorpusRecord
-} from '../subcorp/common';
-import { TagsetInfo } from '../../types/plugins/tagHelper';
+} from '../subcorp/common.js';
+import { TagsetInfo } from '../../types/plugins/tagHelper.js';
 
 
 

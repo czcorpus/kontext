@@ -23,11 +23,11 @@
 import { HTTP } from 'cnc-tskit';
 import { IActionQueue, StatelessModel } from 'kombo';
 import { Observable } from 'rxjs';
-import { FormValue } from '../../types/kontext';
-import { PageModel } from '../../app/page';
-import { ChartExportFormat } from '../../types/kontext';
-import { Actions } from './actions';
-import { validateGzNumber } from '../base';
+import { FormValue } from '../../types/kontext.js';
+import { PageModel } from '../../app/page.js';
+import { ChartExportFormat } from '../../types/kontext.js';
+import { Actions } from './actions.js';
+import { validateGzNumber } from '../base.js';
 import { stackOffsetExpand } from 'd3';
 
 

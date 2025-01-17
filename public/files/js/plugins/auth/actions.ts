@@ -20,7 +20,7 @@
 
 import { Action } from 'kombo';
 
-import { SubmitFormErrors, ValidationStatus } from './common';
+import { SubmitFormErrors, ValidationStatus } from './common.js';
 
 export class Actions {
 

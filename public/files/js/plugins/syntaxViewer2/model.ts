@@ -21,17 +21,14 @@
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { HTTP, List, pipe } from 'cnc-tskit';
 
-import * as PluginInterfaces from '../../types/plugins';
-import { DetailAttrOrders } from './common';
-import { Actions as ConcActions } from '../../models/concordance/actions';
-import { Actions } from './actions';
-import * as srcData from './srcdata';
-import { IPluginApi } from '../../types/plugins/common';
+import * as PluginInterfaces from '../../types/plugins/index.js';
+import { DetailAttrOrders } from './common.js';
+import { Actions as ConcActions } from '../../models/concordance/actions.js';
+import { Actions } from './actions.js';
+import * as srcData from './srcdata.js';
+import { IPluginApi } from '../../types/plugins/common.js';
 import { debounceTime, Subject } from 'rxjs';
-
-
-declare var require:any;
-require('./style.css'); // webpack
+import './style.css';
 
 
 interface ServerExportedData {

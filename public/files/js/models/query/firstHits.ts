@@ -22,13 +22,13 @@ import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap, map, concatMap } from 'rxjs/operators';
 
-import { PageModel } from '../../app/page';
-import { Actions as MainMenuActions } from '../mainMenu/actions';
-import { Actions } from './actions';
-import { Actions as ConcActions } from '../../models/concordance/actions';
-import { AjaxConcResponse } from '../concordance/common';
+import { PageModel } from '../../app/page.js';
+import { Actions as MainMenuActions } from '../mainMenu/actions.js';
+import { Actions } from './actions.js';
+import { Actions as ConcActions } from '../../models/concordance/actions.js';
+import { AjaxConcResponse } from '../concordance/common.js';
 import { HTTP } from 'cnc-tskit';
-import { FirstHitsFormArgs } from './formArgs';
+import { FirstHitsFormArgs } from './formArgs.js';
 
 
 export interface FirstHitsModelState {

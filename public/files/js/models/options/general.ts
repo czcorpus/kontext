@@ -23,13 +23,13 @@ import { Observable, Subject, debounceTime } from 'rxjs';
 import { IFullActionControl, StatelessModel } from 'kombo';
 import { HTTP, List } from 'cnc-tskit';
 
-import * as Kontext from '../../types/kontext';
-import { PageModel } from '../../app/page';
-import { Actions as MainMenuActions } from '../mainMenu/actions';
-import { Actions } from './actions';
-import { ViewOptsResponse } from './common';
-import { validateGzNumber } from '../base';
-import { FreqResultViews } from '../freqs/common';
+import * as Kontext from '../../types/kontext.js';
+import { PageModel } from '../../app/page.js';
+import { Actions as MainMenuActions } from '../mainMenu/actions.js';
+import { Actions } from './actions.js';
+import { ViewOptsResponse } from './common.js';
+import { validateGzNumber } from '../base.js';
+import { FreqResultViews } from '../freqs/common.js';
 
 
 interface GeneralOptionsArgsSubmit {

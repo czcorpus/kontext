@@ -19,7 +19,7 @@
  */
 
 import { IActionQueue, StatelessModel } from 'kombo';
-import { Actions } from './actions';
+import { Actions } from './actions.js';
 
 
 export class RawCQLEmptyModel extends StatelessModel<{}> {

@@ -19,7 +19,7 @@
  */
 
 import { Action } from 'kombo';
-import { CalculationResults } from './common';
+import { CalculationResults } from './common.js';
 
 
 export class Actions {

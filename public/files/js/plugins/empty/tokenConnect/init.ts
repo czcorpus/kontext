@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as PluginInterfaces from '../../../types/plugins';
+import * as PluginInterfaces from '../../../types/plugins/index.js';
 import { of as rxOf, Observable } from 'rxjs';
 
 export class EmptyTokenConnectPlugin implements PluginInterfaces.TokenConnect.IPlugin {

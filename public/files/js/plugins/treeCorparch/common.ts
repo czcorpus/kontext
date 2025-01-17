@@ -19,7 +19,7 @@
  */
 
 import { Action } from 'kombo';
-import { CorpusInfo } from '../../types/plugins/corparch';
+import { CorpusInfo } from '../../types/plugins/corparch.js';
 
 
 export interface Corplist {

@@ -23,13 +23,13 @@ import { Observable, of as rxOf } from 'rxjs';
 import { map, concatMap, tap } from 'rxjs/operators';
 import { pipe, List, HTTP, tuple } from 'cnc-tskit';
 
-import { PageModel } from '../../../app/page';
-import { ConcordanceModel } from '../main';
-import { Actions as ConcActions } from '../actions';
-import { SampleServerArgs } from '../../query/common';
-import { FreqServerArgs } from '../../freqs/regular/common';
-import { FreqBlock, TextTypesDistModelProps } from './common';
-import { FreqData, Reduce } from './response';
+import { PageModel } from '../../../app/page.js';
+import { ConcordanceModel } from '../main.js';
+import { Actions as ConcActions } from '../actions.js';
+import { SampleServerArgs } from '../../query/common.js';
+import { FreqServerArgs } from '../../freqs/regular/common.js';
+import { FreqBlock, TextTypesDistModelProps } from './common.js';
+import { FreqData, Reduce } from './response.js';
 
 
 export interface TextTypesDistModelState {

@@ -22,10 +22,10 @@ import * as React from 'react';
 import { IActionDispatcher } from 'kombo';
 import { Subscription } from 'rxjs';
 
-import * as Kontext from '../../../../types/kontext';
-import { UserProfileModel, UserProfileState } from '../../profile';
-import { Actions } from '../../actions';
-import * as S from './style';
+import * as Kontext from '../../../../types/kontext.js';
+import { UserProfileModel, UserProfileState } from '../../profile.js';
+import { Actions } from '../../actions.js';
+import * as S from './style.js';
 
 
 export interface UserProfileViews {

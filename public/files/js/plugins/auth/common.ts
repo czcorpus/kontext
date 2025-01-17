@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../../types/kontext';
+import * as Kontext from '../../types/kontext.js';
 
 
 export interface PasswordSetResponse extends Kontext.AjaxResponse {

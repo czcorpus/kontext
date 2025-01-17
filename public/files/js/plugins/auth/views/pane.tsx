@@ -21,13 +21,19 @@
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
-import * as Kontext from '../../../types/kontext';
-import { UserStatusModel, UsersStatusModelState } from '../init';
-import { Actions as UserActions } from '../../../models/user/actions';
+import * as Kontext from '../../../types/kontext.js';
+import { UserStatusModel, UsersStatusModelState } from '../init.js';
+import { Actions as UserActions } from '../../../models/user/actions.js';
+
+
+export interface UserPaneProps {
+    isAnonymous:string;
+    fullname:string
+}
 
 
 export interface UserPaneViews {
-    UserPane:React.ComponentClass;
+    UserPane:React.ComponentClass<UserPaneProps, UsersStatusModelState>;
 }
 
 /**
@@ -113,10 +119,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------------- <UserPane /> ---------------------------------
 
-    interface UserPaneProps {
-        isAnonymous:string;
-        fullname:string
-    }
+
 
     class UserPane extends React.PureComponent<UserPaneProps & UsersStatusModelState> {
 

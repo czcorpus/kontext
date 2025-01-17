@@ -20,14 +20,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../../types/kontext';
+import * as Kontext from '../../types/kontext.js';
 import { Action, StatefulModel } from 'kombo';
 import { forkJoin, Observable } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
-import { AjaxConcResponse } from '../../models/concordance/common';
+import { AjaxConcResponse } from '../../models/concordance/common.js';
 import { List, HTTP } from 'cnc-tskit';
-import { IUnregistrable } from '../../models/common/common';
-import { IPluginApi } from '../../types/plugins/common';
+import { IUnregistrable } from '../../models/common/common.js';
+import { IPluginApi } from '../../types/plugins/common.js';
 
 export enum ParallelType {
     DEFAULT = 'default',

@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import * as Kontext from '../types/kontext';
+import * as Kontext from '../types/kontext.js';
 
 
 export interface CommonViews {

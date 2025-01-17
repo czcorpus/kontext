@@ -20,31 +20,31 @@
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import * as Kontext from '../../../types/kontext';
-import { Bound, BoundWithProps, IActionDispatcher } from "kombo";
-import { FreqChartsModel } from '../../../models/freqs/regular/freqCharts';
+import * as Kontext from '../../../types/kontext.js';
+import { BoundWithProps, IActionDispatcher } from "kombo";
+import { FreqChartsModel } from '../../../models/freqs/regular/freqCharts.js';
 import {
     BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
     ResponsiveContainer, ScatterChart, Scatter,
     Label, ErrorBar, Line, Area, ComposedChart
 } from 'recharts';
 import { Dict, List, pipe, Strings, tuple } from 'cnc-tskit';
-import { Actions } from '../../../models/freqs/regular/actions';
-import { Actions as GlobalActions } from '../../../models/common/actions';
-import * as theme from '../../theme/default';
-import { init as initSaveViews } from './save';
-import { init as initWordCloud } from './wordCloud/index';
-import { init as initFreqCommonViews } from '../common';
-import * as S from './style';
+import { Actions } from '../../../models/freqs/regular/actions.js';
+import { Actions as GlobalActions } from '../../../models/common/actions.js';
+import * as theme from '../../theme/default/index.js';
+import { init as initSaveViews } from './save.js';
+import { init as initWordCloud } from './wordCloud/index.js';
+import { init as initFreqCommonViews } from '../common.js';
+import * as S from './style.js';
 import {
     FreqChartsModelState,
     FreqViewProps,
     isEmptyResultBlock, ResultBlock, ResultItem
-} from '../../../models/freqs/regular/common';
-import { WordCloudItemCalc } from './wordCloud/calc';
+} from '../../../models/freqs/regular/common.js';
+import { WordCloudItemCalc } from './wordCloud/calc.js';
 import { FreqChartsAvailableData, FreqChartsAvailableOrder, FreqChartsAvailableTypes
-} from '../../../models/freqs/common';
-import { FreqChartsSaveFormModel } from '../../../models/freqs/regular/saveChart';
+} from '../../../models/freqs/common.js';
+import { FreqChartsSaveFormModel } from '../../../models/freqs/regular/saveChart.js';
 import { CSSProperties } from 'styled-components';
 
 
@@ -356,10 +356,8 @@ export function init(
 
         React.useEffect(
             () => {
-                const container = ReactDOM.findDOMNode(ref.current);
-                if (container instanceof Text || !container) {
-                    return;
-                }
+                const container = ref.current;
+                container.select();
                 const svg = container.querySelector('svg');
                 const svgURL = new XMLSerializer().serializeToString(svg);
                 const svgBlob = new Blob([svgURL], {type: "image/svg+xml;charset=utf-8"});

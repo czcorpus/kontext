@@ -19,7 +19,7 @@
  */
 
 import { createGlobalStyle } from 'styled-components';
-import * as theme from './index';
+import * as theme from './index.js';
 
 import externalLinkImg from '../../../../img/external-link.svg';
 

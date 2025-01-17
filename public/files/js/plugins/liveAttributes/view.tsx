@@ -22,17 +22,17 @@ import * as React from 'react';
 import { IActionDispatcher, Bound, IModel } from 'kombo';
 import { List, pipe } from 'cnc-tskit';
 
-import * as Kontext from '../../types/kontext';
-import * as TextTypes from '../../types/textTypes';
+import * as Kontext from '../../types/kontext.js';
+import * as TextTypes from '../../types/textTypes.js';
 import { LiveAttrsModel, LiveAttrsModelState, TTSelectionStep,
-    AlignedLangSelectionStep, isAlignedSelectionStep } from './models';
-import * as PluginInterfaces from '../../types/plugins';
-import { init as ttViewInit } from '../../views/textTypes';
-import { TextTypesModelState } from '../../models/textTypes/main';
+    AlignedLangSelectionStep, isAlignedSelectionStep } from './models.js';
+import * as PluginInterfaces from '../../types/plugins/index.js';
+import { init as ttViewInit } from '../../views/textTypes/index.js';
+import { TextTypesModelState } from '../../models/textTypes/main.js';
 
-import * as S from './style';
-import * as TTS from '../../views/textTypes/style';
-import { DataSaveFormat } from '../../app/navigation/save';
+import * as S from './style.js';
+import * as TTS from '../../views/textTypes/style.js';
+import { DataSaveFormat } from '../../app/navigation/save.js';
 
 
 export interface ViewModuleArgs {

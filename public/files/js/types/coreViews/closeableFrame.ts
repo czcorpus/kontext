@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { AutoWidth } from './common';
+import { AutoWidth } from './common.js';
 
 
 export interface Props {
@@ -35,4 +35,4 @@ export interface Props {
     children:React.ReactNode;
 }
 
-export type Component = React.ComponentClass<Props>;
+export type Component = React.FC<Props>;

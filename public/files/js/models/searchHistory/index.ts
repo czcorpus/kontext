@@ -22,20 +22,20 @@ import { tap, concatMap, map } from 'rxjs/operators';
 import { forkJoin, Observable, of as rxOf } from 'rxjs';
 import { Action, IFullActionControl, StatefulModel } from 'kombo';
 
-import * as Kontext from '../../types/kontext';
-import { highlightSyntaxStatic } from '../cqleditor/parser';
+import * as Kontext from '../../types/kontext.js';
+import { highlightSyntaxStatic } from '../cqleditor/parser.js';
 import { List, HTTP, tuple, pipe } from 'cnc-tskit';
-import { Actions } from './actions';
-import { Actions as MainMenuActions } from '../mainMenu/actions';
-import { QueryType } from '../query/query';
-import { PageModel } from '../../app/page';
+import { Actions } from './actions.js';
+import { Actions as MainMenuActions } from '../mainMenu/actions.js';
+import { QueryType } from '../query/query.js';
+import { PageModel } from '../../app/page.js';
 import {
     GetHistoryResponse,
     SaveItemResponse,
     SearchHistoryModelState,
     QueryHistoryItem,
     isConcQueryHistoryItem,
-    GetHistoryArgs} from './common';
+    GetHistoryArgs} from './common.js';
 
 
 

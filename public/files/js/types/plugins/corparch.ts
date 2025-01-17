@@ -18,11 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { IUnregistrable } from '../../models/common/common';
-import { BasePlugin, IPluginApi } from './common';
-import { FullCorpusIdent, SubcorpListItem } from '../../types/kontext';
+import { IUnregistrable } from '../../models/common/common.js';
+import { BasePlugin, IPluginApi } from './common.js';
+import { FullCorpusIdent, SubcorpListItem } from '../../types/kontext.js';
 import { Action } from 'kombo';
-import * as Kontext from '../kontext';
+import * as Kontext from '../kontext.js';
 
 // ------------------------------------------------------------------------
 // ------------------------ [corparch] plug-in ----------------------------

@@ -22,21 +22,21 @@
 import * as React from 'react';
 import { BoundWithProps, IActionDispatcher } from 'kombo';
 
-import * as Kontext from '../../../types/kontext';
-import * as PluginInterfaces from '../../../types/plugins';
-import { PqueryFormModel } from '../../../models/pquery/form';
-import { Actions } from '../../../models/pquery/actions';
-import * as S from './style';
-import * as QS from '../../query/input/style';
-import * as theme from '../../theme/default';
+import * as Kontext from '../../../types/kontext.js';
+import * as PluginInterfaces from '../../../types/plugins/index.js';
+import { PqueryFormModel } from '../../../models/pquery/form.js';
+import { Actions } from '../../../models/pquery/actions.js';
+import * as S from './style.js';
+import * as QS from '../../query/input/style.js';
+import * as theme from '../../theme/default/index.js';
 import { Dict, List, Maths, pipe } from 'cnc-tskit';
 import { ConcStatus, ExpressionRoleType, PqueryAlignTypes,
-    PqueryFormModelState } from '../../../models/pquery/common';
-import { init as cqlEditoInit } from '../../cqlEditor';
-import { AlignTypes } from '../../../models/freqs/twoDimension/common';
-import { HtmlHelpModel, HtmlHelpModelState } from '../../../models/help/help';
-import { Actions as HelpActions } from '../../../models/help/actions';
-import { AdvancedFormFieldsetProps } from '../../query/input';
+    PqueryFormModelState } from '../../../models/pquery/common.js';
+import { init as cqlEditoInit } from '../../cqlEditor.js';
+import { AlignTypes } from '../../../models/freqs/twoDimension/common.js';
+import { HtmlHelpModel, HtmlHelpModelState } from '../../../models/help/help.js';
+import { Actions as HelpActions } from '../../../models/help/actions.js';
+import { AdvancedFormFieldsetProps } from '../../query/input/index.js';
 
 export interface PqueryFormViewsArgs {
     dispatcher:IActionDispatcher;
@@ -240,7 +240,7 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
             });
         };
 
-        const queryInputElement = React.useRef();
+        const queryInputElement = React.useRef(null);
 
         return (
             <QS.QueryArea>
@@ -327,7 +327,7 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
             });
         };
 
-        const queryInputElement = React.useRef();
+        const queryInputElement = React.useRef(null);
 
         return (
             <QS.QueryArea>

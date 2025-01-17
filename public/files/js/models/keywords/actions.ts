@@ -20,10 +20,10 @@
  */
 
 import { Action } from 'kombo';
-import { ScoreType } from './form';
-import { AsyncTaskInfo } from '../../types/kontext';
-import { Keyword } from './common';
-import { DataSaveFormat } from '../../app/navigation/save';
+import { ScoreType } from './form.js';
+import { AsyncTaskInfo } from '../../types/kontext.js';
+import { Keyword } from './common.js';
+import { DataSaveFormat } from '../../app/navigation/save.js';
 
 
 export class Actions {

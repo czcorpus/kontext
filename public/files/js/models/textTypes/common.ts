@@ -25,7 +25,7 @@
 
 import { Dict, List, Strings } from 'cnc-tskit';
 
-import * as TextTypes from '../../types/textTypes';
+import * as TextTypes from '../../types/textTypes.js';
 
 
 export enum IntervalChar {

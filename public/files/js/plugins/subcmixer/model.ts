@@ -22,19 +22,19 @@ import { IActionDispatcher, StatelessModel } from 'kombo';
 import { Observable, throwError } from 'rxjs';
 import { pipe, Dict, List, HTTP, tuple, Maths } from 'cnc-tskit';
 
-import * as Kontext from '../../types/kontext';
-import * as TextTypes from '../../types/textTypes';
-import { validateSubcProps } from '../../models/subcorp/new';
-import { Actions } from './actions';
+import * as Kontext from '../../types/kontext.js';
+import * as TextTypes from '../../types/textTypes.js';
+import { validateSubcProps } from '../../models/subcorp/new.js';
+import { Actions } from './actions.js';
 import {
     SubcMixerExpression, CalculationResults, CalculationResponse,
-    TextTypeAttrVal } from './common';
-import { Actions as TTActions } from '../../models/textTypes/actions';
-import { Actions as SubcActions } from '../../models/subcorp/actions';
-import { Actions as GeneralSubcmixerActions } from '../../types/plugins/subcMixer';
-import { TTSelOps } from '../../models/textTypes/selectionOps';
-import { BaseSubcorpFormState } from '../../models/subcorp/common';
-import { IPluginApi } from '../../types/plugins/common';
+    TextTypeAttrVal } from './common.js';
+import { Actions as TTActions } from '../../models/textTypes/actions.js';
+import { Actions as SubcActions } from '../../models/subcorp/actions.js';
+import { Actions as GeneralSubcmixerActions } from '../../types/plugins/subcMixer.js';
+import { TTSelOps } from '../../models/textTypes/selectionOps.js';
+import { BaseSubcorpFormState } from '../../models/subcorp/common.js';
+import { IPluginApi } from '../../types/plugins/common.js';
 
 
 export interface SubcMixerModelState extends BaseSubcorpFormState {

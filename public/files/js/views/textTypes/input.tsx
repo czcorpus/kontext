@@ -22,13 +22,13 @@ import * as React from 'react';
 import { List } from 'cnc-tskit';
 import { IActionDispatcher } from 'kombo';
 
-import * as Kontext from '../../types/kontext';
-import * as TextTypes from '../../types/textTypes';
-import { TTSelOps } from '../../models/textTypes/selectionOps';
-import { Actions } from '../../models/textTypes/actions';
-import { init as commonViewInit } from './common';
+import * as Kontext from '../../types/kontext.js';
+import * as TextTypes from '../../types/textTypes.js';
+import { TTSelOps } from '../../models/textTypes/selectionOps.js';
+import { Actions } from '../../models/textTypes/actions.js';
+import { init as commonViewInit } from './common.js';
 
-import * as S from './style';
+import * as S from './style.js';
 
 export interface RawInputMultiValueContainerProps {
     attrObj:TextTypes.TextInputAttributeSelection;

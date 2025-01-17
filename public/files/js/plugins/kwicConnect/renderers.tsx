@@ -18,14 +18,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 import * as React from 'react';
-import * as Kontext from '../../types/kontext';
+import * as Kontext from '../../types/kontext.js';
 import { IFullActionControl } from 'kombo';
 import { Dict, List, pipe, tuple } from 'cnc-tskit';
-import { Actions as QueryActions } from '../../models/query/actions';
-import { Actions as ConcActions } from '../../models/concordance/actions';
-import { HighlightAttrMatch } from '../../models/concordance/main';
-import { FreqDistType } from './model';
-import * as TreqStyle from './treqStyle';
+import { Actions as QueryActions } from '../../models/query/actions.js';
+import { Actions as ConcActions } from '../../models/concordance/actions.js';
+import { HighlightAttrMatch } from '../../models/concordance/main.js';
+import { FreqDistType } from './model.js';
+import * as TreqStyle from './treqStyle.js';
 
 
 export interface Views {

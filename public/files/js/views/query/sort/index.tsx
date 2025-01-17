@@ -21,12 +21,12 @@
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
-import * as Kontext from '../../../types/kontext';
-import { ConcSortModel, ConcSortModelState } from '../../../models/query/sort/single';
-import { Actions } from '../../../models/query/actions';
+import * as Kontext from '../../../types/kontext.js';
+import { ConcSortModel, ConcSortModelState } from '../../../models/query/sort/single.js';
+import { Actions } from '../../../models/query/actions.js';
 import { List } from 'cnc-tskit';
-import { MultiLevelConcSortModel, MultiLevelConcSortModelState } from '../../../models/query/sort/multi';
-import * as S from './style';
+import { MultiLevelConcSortModel, MultiLevelConcSortModelState } from '../../../models/query/sort/multi.js';
+import * as S from './style.js';
 
 
 export interface SortModuleArgs {

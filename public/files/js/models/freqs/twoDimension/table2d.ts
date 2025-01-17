@@ -21,18 +21,18 @@ import { IFullActionControl } from 'kombo';
 import { Observable, Subject, debounceTime } from 'rxjs';
 import { Maths, HTTP, pipe, List, tuple, Dict } from 'cnc-tskit';
 
-import { PageModel, DownloadType } from '../../../app/page';
+import { PageModel, DownloadType } from '../../../app/page.js';
 import {
     GeneralFreq2DModel, CTFreqCell, importAvailAlphaLevels,
-    GeneralFreq2DModelState } from './generalDisplay';
-import { DataPoint, ConfIntervals } from '../../../charts/confIntervals';
-import { CTFreqServerArgs } from './common';
+    GeneralFreq2DModelState } from './generalDisplay.js';
+import { DataPoint, ConfIntervals } from '../../../charts/confIntervals.js';
+import { CTFreqServerArgs } from './common.js';
 import {
     CTFormProperties, roundFloat, Dimensions, FreqQuantities, FreqFilterQuantities,
-    CTFreqResultResponse, CTFreqResultData } from './common';
-import { Actions } from './actions';
-import * as TextTypes from '../../../types/textTypes';
-import { colorHeatmap } from '../../../views/theme/default';
+    CTFreqResultResponse, CTFreqResultData } from './common.js';
+import { Actions } from './actions.js';
+import * as TextTypes from '../../../types/textTypes.js';
+import { colorHeatmap } from '../../../views/theme/default/index.js';
 
 /**
  * A representation of 2D freq table.

@@ -19,10 +19,10 @@
  */
 
 import { Action } from 'kombo';
-import { ViewOptsResponse, GeneralOptionsShared } from './common';
-import * as ViewOptions from '../../types/viewOptions';
-import { WideCtxArgs } from '../concordance/common';
-import { FreqResultViews } from '../freqs/common';
+import { ViewOptsResponse, GeneralOptionsShared } from './common.js';
+import * as ViewOptions from '../../types/viewOptions.js';
+import { WideCtxArgs } from '../concordance/common.js';
+import { FreqResultViews } from '../freqs/common.js';
 
 
 export class Actions {

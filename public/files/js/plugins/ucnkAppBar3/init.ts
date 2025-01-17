@@ -22,12 +22,12 @@
 
 import { IFullActionControl, StatelessModel } from 'kombo';
 
-import * as PluginInterfaces from '../../types/plugins';
-import * as toolbar from 'plugins/applicationBar/toolbar';
-import { PageModel } from '../../app/page';
-import { Actions } from './actions';
-import { IUnregistrable } from '../../models/common/common';
-import { Actions as GlobalActions } from '../../models/common/actions';
+import * as PluginInterfaces from '../../types/plugins/index.js';
+import * as toolbar from '@plugins/application-bar/applicationBar';
+import { PageModel } from '../../app/page.js';
+import { Actions } from './actions.js';
+import { IUnregistrable } from '../../models/common/common.js';
+import { Actions as GlobalActions } from '../../models/common/actions.js';
 
 
 export class AppBarModel extends StatelessModel<{}> implements IUnregistrable {

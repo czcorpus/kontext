@@ -1,5 +1,6 @@
 {
   "name": "tree-view2",
+  "type": "module",
   "version": "0.1.0",
   "description": "",
   "main": "dist/treeView2.min.js",

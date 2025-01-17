@@ -21,12 +21,12 @@
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
-import * as Kontext from '../../types/kontext';
-import { QueryFormModel, QueryFormModelState } from '../../models/query/common';
-import { Actions } from '../../models/query/actions';
-import { ContentEditable } from './contentEditable';
+import * as Kontext from '../../types/kontext.js';
+import { QueryFormModel, QueryFormModelState } from '../../models/query/common.js';
+import { Actions } from '../../models/query/actions.js';
+import { ContentEditable } from './contentEditable.js';
 import { Keyboard } from 'cnc-tskit';
-import { strictEqualParsedQueries } from '../../models/query/query';
+import { strictEqualParsedQueries } from '../../models/query/query.js';
 
 
 interface RichInputProps {

@@ -19,12 +19,12 @@
  */
 
 import * as React from 'react';
-import * as Kontext from '../types/kontext';
-import { FormsViews as CollFormsViews } from './coll/forms';
-import { FormsViews as FreqFormsViews } from './freqs/forms';
+import * as Kontext from '../types/kontext.js';
+import { FormsViews as CollFormsViews } from './coll/forms.js';
+import { FormsViews as FreqFormsViews } from './freqs/forms.js';
 import { IActionDispatcher, IModel, BoundWithProps } from 'kombo';
-import { MainMenuModelState } from '../models/mainMenu';
-import { Actions as MainMenuActions } from '../models/mainMenu/actions';
+import { MainMenuModelState } from '../models/mainMenu/index.js';
+import { Actions as MainMenuActions } from '../models/mainMenu/actions.js';
 import { List } from 'cnc-tskit';
 
 export interface AnalysisModuleArgs {

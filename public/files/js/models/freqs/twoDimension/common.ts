@@ -18,9 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../../../types/kontext';
-import * as TextTypes from '../../../types/textTypes';
-import { AjaxConcResponse, ConcServerArgs } from '../../concordance/common';
+import * as Kontext from '../../../types/kontext.js';
+import * as TextTypes from '../../../types/textTypes.js';
+import { AjaxConcResponse, ConcServerArgs } from '../../concordance/common.js';
 
 export const sortAttrVals = (x1:Kontext.AttrItem, x2:Kontext.AttrItem) => {
     if (x1.label < x2.label) {

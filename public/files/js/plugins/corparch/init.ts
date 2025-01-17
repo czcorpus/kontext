@@ -18,18 +18,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../../types/kontext';
-import * as PluginInterfaces from '../../types/plugins';
-import { CorplistWidgetModel } from './widget';
-import { CorplistPage, CorplistServerData } from './corplist';
-import { init as viewInit } from './corplistView';
-import { init as widgetInit } from './widgetView';
-import { init as overviewViewInit } from '../../views/overview';
-import { CorplistTableModel } from './corplist';
-import { SearchEngine } from './search';
-import { ServerFavlistItem } from './common';
-import { IPluginApi } from '../../types/plugins/common';
-import { InitialWidgetData } from '../../types/plugins/corparch';
+import * as Kontext from '../../types/kontext.js';
+import * as PluginInterfaces from '../../types/plugins/index.js';
+import { CorplistWidgetModel } from './widget.js';
+import { CorplistPage, CorplistServerData } from './corplist.js';
+import { init as viewInit } from './corplistView/index.js';
+import { init as widgetInit } from './widgetView/index.js';
+import { init as overviewViewInit } from '../../views/overview/index.js';
+import { CorplistTableModel } from './corplist.js';
+import { SearchEngine } from './search.js';
+import { ServerFavlistItem } from './common.js';
+import { IPluginApi } from '../../types/plugins/common.js';
+import { InitialWidgetData } from '../../types/plugins/corparch.js';
 
 
 export class Plugin implements PluginInterfaces.Corparch.IPlugin {

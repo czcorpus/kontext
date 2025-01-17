@@ -23,14 +23,14 @@ import { IActionDispatcher, StatelessModel, SEDispatcher } from 'kombo';
 import { concatMap, tap, map } from 'rxjs/operators';
 import { List, HTTP, tuple } from 'cnc-tskit';
 
-import * as Kontext from '../../types/kontext';
-import { validateGzNumber } from '../base';
-import { PageModel } from '../../app/page';
-import { Actions } from './actions';
-import { Actions as MainMenuActions } from '../mainMenu/actions';
-import { ResultItem, IndexedResultItem, HeadingItem, ResultData, WordlistSubmitArgs } from './common';
-import { ConcQueryArgs } from '../query/common';
-import { ConcQueryResponse } from '../concordance/common';
+import * as Kontext from '../../types/kontext.js';
+import { validateGzNumber } from '../base.js';
+import { PageModel } from '../../app/page.js';
+import { Actions } from './actions.js';
+import { Actions as MainMenuActions } from '../mainMenu/actions.js';
+import { ResultItem, IndexedResultItem, HeadingItem, ResultData, WordlistSubmitArgs } from './common.js';
+import { ConcQueryArgs } from '../query/common.js';
+import { ConcQueryResponse } from '../concordance/common.js';
 
 
 

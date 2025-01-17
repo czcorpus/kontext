@@ -22,14 +22,14 @@ import * as React from 'react';
 import { Keyboard, List } from 'cnc-tskit';
 import { IActionDispatcher } from 'kombo';
 
-import * as Kontext from '../../types/kontext';
-import * as TextTypes from '../../types/textTypes';
-import * as CoreViews from '../../types/coreViews';
-import { Actions } from '../../models/textTypes/actions';
-import { WidgetView } from '../../models/textTypes/common';
-import { init as commonViewInit } from './common';
+import * as Kontext from '../../types/kontext.js';
+import * as TextTypes from '../../types/textTypes.js';
+import * as CoreViews from '../../types/coreViews/index.js';
+import { Actions } from '../../models/textTypes/actions.js';
+import { WidgetView } from '../../models/textTypes/common.js';
+import { init as commonViewInit } from './common.js';
 
-import * as S from './style';
+import * as S from './style.js';
 
 export interface FullListContainerProps {
     attrObj:TextTypes.FullAttributeSelection;

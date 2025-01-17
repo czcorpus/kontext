@@ -18,13 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../types/kontext';
-import { PageModel } from '../app/page';
-import { init as messageViewsInit, MessageViewProps } from '../views/message';
-import { KontextPage } from '../app/main';
-import issueReportingPlugin from 'plugins/issueReporting/init';
-import { PluginName } from '../app/plugin';
-import { ConcServerArgs } from '../models/concordance/common';
+import * as Kontext from '../types/kontext.js';
+import { PageModel } from '../app/page.js';
+import { init as messageViewsInit, MessageViewProps } from '../views/message/index.js';
+import { KontextPage } from '../app/main.js';
+import issueReportingPlugin from '@plugins/issue-reporting';
+import { PluginName } from '../app/plugin.js';
+import { ConcServerArgs } from '../models/concordance/common.js';
 
 /**
  *

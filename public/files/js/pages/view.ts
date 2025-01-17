@@ -22,76 +22,76 @@
 
 import { List, tuple, Dict, pipe } from 'cnc-tskit';
 
-import { KontextPage } from '../app/main';
-import * as ViewOptions from '../types/viewOptions';
-import * as Kontext from '../types/kontext';
-import { PageModel, DownloadType } from '../app/page';
-import * as PluginInterfaces from '../types/plugins';
-import { parseUrlArgs } from '../app/navigation';
+import { KontextPage } from '../app/main.js';
+import * as ViewOptions from '../types/viewOptions.js';
+import * as Kontext from '../types/kontext.js';
+import { PageModel, DownloadType } from '../app/page.js';
+import * as PluginInterfaces from '../types/plugins/index.js';
+import { parseUrlArgs } from '../app/navigation/index.js';
 import { init as concViewsInit, ViewPageModels, MainViews as ConcViews }
-    from '../views/concordance/main';
-import { LineSelectionModel, LineSelectionModelState } from '../models/concordance/lineSelection';
-import { ConcDetailModel } from '../models/concordance/detail';
-import { ConcordanceModel } from '../models/concordance/main';
+    from '../views/concordance/main/index.js';
+import { LineSelectionModel, LineSelectionModelState } from '../models/concordance/lineSelection/index.js';
+import { ConcDetailModel } from '../models/concordance/detail.js';
+import { ConcordanceModel } from '../models/concordance/main.js';
 import { QueryFormProperties, FirstQueryFormModel, fetchQueryFormArgs }
-    from '../models/query/first';
-import { UsageTipsModel } from '../models/usageTips';
-import { QueryReplayModel, LocalQueryFormData } from '../models/query/replay';
-import { Actions as QueryActions } from '../models/query/actions';
-import { FilterFormModel, FilterFormProperties, fetchFilterFormArgs } from '../models/query/filter';
-import { ConcSampleModel, SampleFormProperties, fetchSampleFormArgs } from '../models/query/sample';
+    from '../models/query/first.js';
+import { UsageTipsModel } from '../models/usageTips/index.js';
+import { QueryReplayModel, LocalQueryFormData } from '../models/query/replay/index.js';
+import { Actions as QueryActions } from '../models/query/actions.js';
+import { FilterFormModel, FilterFormProperties, fetchFilterFormArgs } from '../models/query/filter.js';
+import { ConcSampleModel, SampleFormProperties, fetchSampleFormArgs } from '../models/query/sample.js';
 import { SwitchMainCorpModel, SwitchMainCorpFormProperties, fetchSwitchMainCorpFormArgs }
-    from '../models/query/switchmc';
-import { QuerySaveAsFormModel } from '../models/query/save';
-import { TextTypesModel } from '../models/textTypes/main';
-import { WithinBuilderModel } from '../models/query/withinBuilder';
-import { VirtualKeyboardModel } from '../models/query/virtualKeyboard';
-import { QueryContextModel } from '../models/query/context';
-import { CollFormModel, CollFormInputs } from '../models/coll/collForm';
+    from '../models/query/switchmc.js';
+import { QuerySaveAsFormModel } from '../models/query/save.js';
+import { TextTypesModel } from '../models/textTypes/main.js';
+import { WithinBuilderModel } from '../models/query/withinBuilder.js';
+import { VirtualKeyboardModel } from '../models/query/virtualKeyboard.js';
+import { QueryContextModel } from '../models/query/context.js';
+import { CollFormModel, CollFormInputs } from '../models/coll/collForm.js';
 import { MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps }
-    from '../models/freqs/regular/freqForms';
-import { FirstHitsModel } from '../models/query/firstHits';
-import { Freq2DFormModel } from '../models/freqs/twoDimension/form';
-import { ConcSaveModel } from '../models/concordance/save';
-import { ConcDashboard } from '../models/concordance/dashboard';
-import { TextTypesDistModel } from '../models/concordance/ttdist/model';
-import { DummySyntaxViewModel } from '../models/concordance/syntax';
-import { init as queryFormInit, MainViews as QueryMainViews } from '../views/query/first';
-import { init as filterFormInit, FilterFormViews } from '../views/query/filter';
+    from '../models/freqs/regular/freqForms.js';
+import { FirstHitsModel } from '../models/query/firstHits.js';
+import { Freq2DFormModel } from '../models/freqs/twoDimension/form.js';
+import { ConcSaveModel } from '../models/concordance/save.js';
+import { ConcDashboard } from '../models/concordance/dashboard.js';
+import { TextTypesDistModel } from '../models/concordance/ttdist/model.js';
+import { DummySyntaxViewModel } from '../models/concordance/syntax.js';
+import { init as queryFormInit, MainViews as QueryMainViews } from '../views/query/first/index.js';
+import { init as filterFormInit, FilterFormViews } from '../views/query/filter/index.js';
 import { init as queryOverviewInit, OverviewViews as QueryOverviewViews }
-    from '../views/query/overview';
-import { init as sortFormInit, SortViews } from '../views/query/sort';
-import { init as sampleFormInit, SampleFormViews } from '../views/query/miscActions';
-import { init as analysisFrameInit, FormsViews as AnalysisFrameViews } from '../views/analysis';
-import { init as collFormInit, FormsViews as CollFormsViews } from '../views/coll/forms';
-import { init as freqFormInit, FormsViews as FreqFormViews } from '../views/freqs/forms';
+    from '../views/query/overview/index.js';
+import { init as sortFormInit, SortViews } from '../views/query/sort/index.js';
+import { init as sampleFormInit, SampleFormViews } from '../views/query/miscActions.js';
+import { init as analysisFrameInit, FormsViews as AnalysisFrameViews } from '../views/analysis.js';
+import { init as collFormInit, FormsViews as CollFormsViews } from '../views/coll/forms.js';
+import { init as freqFormInit, FormsViews as FreqFormViews } from '../views/freqs/forms.js';
 import { ViewConfiguration, ConcSummary, ServerPagination, ServerLineData, WideCtxArgs, ConcServerArgs, ConcViewMode }
-    from '../models/concordance/common';
-import { RefsDetailModel } from '../models/concordance/refsDetail';
-import { openStorage, ConcLinesStorage } from '../models/concordance/selectionStorage';
-import { Actions } from '../models/concordance/actions';
-import { CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/twoDimension/common';
-import { Actions as MainMenuActions } from '../models/mainMenu/actions';
-import { ConcSortModel } from '../models/query/sort/single';
+    from '../models/concordance/common.js';
+import { RefsDetailModel } from '../models/concordance/refsDetail.js';
+import { openStorage, ConcLinesStorage } from '../models/concordance/selectionStorage.js';
+import { Actions } from '../models/concordance/actions.js';
+import { CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/twoDimension/common.js';
+import { Actions as MainMenuActions } from '../models/mainMenu/actions.js';
+import { ConcSortModel } from '../models/query/sort/single.js';
 import { importMultiLevelArg, SortFormProperties, fetchSortFormArgs }
-    from '../models/query/sort/common';
-import { MultiLevelConcSortModel } from '../models/query/sort/multi';
-import { PluginName } from '../app/plugin';
-import tagHelperPlugin from 'plugins/taghelper/init';
-import syntaxViewerInit from 'plugins/syntaxViewer/init';
-import tokenConnectInit from 'plugins/tokenConnect/init';
-import kwicConnectInit from 'plugins/kwicConnect/init';
-import tokensLinkingInit from 'plugins/tokensLinking/init';
-import { importInitialTTData, TTInitialData } from '../models/textTypes/common';
-import { QueryType } from '../models/query/query';
-import { HitReloader } from '../models/concordance/concStatus';
-import { QueryHelpModel } from '../models/help/queryHelp';
-import { ConcSummaryModel } from '../models/concordance/summary';
-import * as formArgs from '../models/query/formArgs';
-import { DispersionResultModel } from '../models/dispersion/result';
-import { AnyTTSelection } from '../types/textTypes';
-import { ShuffleModel } from '../models/query/shuffle';
-import { ActionUrlCodes } from '../app/navigation/interpage';
+    from '../models/query/sort/common.js';
+import { MultiLevelConcSortModel } from '../models/query/sort/multi.js';
+import { PluginName } from '../app/plugin.js';
+import tagHelperPlugin from '@plugins/taghelper';
+import syntaxViewerInit from '@plugins/syntax-viewer';
+import tokenConnectInit from '@plugins/token-connect';
+import kwicConnectInit from '@plugins/kwic-connect';
+import tokensLinkingInit from '@plugins/tokens-linking';
+import { importInitialTTData, TTInitialData } from '../models/textTypes/common.js';
+import { QueryType } from '../models/query/query.js';
+import { HitReloader } from '../models/concordance/concStatus.js';
+import { QueryHelpModel } from '../models/help/queryHelp.js';
+import { ConcSummaryModel } from '../models/concordance/summary.js';
+import * as formArgs from '../models/query/formArgs.js';
+import { DispersionResultModel } from '../models/dispersion/result.js';
+import { AnyTTSelection } from '../types/textTypes.js';
+import { ShuffleModel } from '../models/query/shuffle.js';
+import { ActionUrlCodes } from '../app/navigation/interpage.js';
 
 
 export class QueryModels {
@@ -189,7 +189,7 @@ export class ViewPage {
 
     private deserializeHashAction(v:string):HashedActionsTypes {
         const [actionName, rawArgs] = (v || '').substring(1).split('/');
-        const args = Dict.fromEntries(parseUrlArgs(rawArgs || ''));
+        const args:{[k:string]:string} = Dict.fromEntries(parseUrlArgs(rawArgs || ''));
 
         function fetchRequired(k:string):string {
             if (k in args) {

@@ -20,13 +20,13 @@
 
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import * as Kontext from '../../../types/kontext';
-import { LineSelectionModel, LineSelectionModelState } from '../../../models/concordance/lineSelection';
-import { Actions } from '../../../models/concordance/actions';
-import { Actions as UserActions } from '../../../models/user/actions';
-import { LineSelectionModes } from '../../../models/concordance/common';
-import { init as chartViewInit } from './groupChart';
-import * as S from './style';
+import * as Kontext from '../../../types/kontext.js';
+import { LineSelectionModel, LineSelectionModelState } from '../../../models/concordance/lineSelection/index.js';
+import { Actions } from '../../../models/concordance/actions.js';
+import { Actions as UserActions } from '../../../models/user/actions.js';
+import { LineSelectionModes } from '../../../models/concordance/common.js';
+import { init as chartViewInit } from './groupChart.js';
+import * as S from './style.js';
 
 
 export interface LockedLineGroupsMenuProps {

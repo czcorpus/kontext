@@ -21,9 +21,9 @@
 import { StatelessModel, IActionDispatcher } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 
-import * as Kontext from '../../types/kontext';
-import { PageModel } from '../../app/page';
-import { Actions } from  './actions';
+import * as Kontext from '../../types/kontext.js';
+import { PageModel } from '../../app/page.js';
+import { Actions } from  './actions.js';
 import { HTTP } from 'cnc-tskit';
 
 export interface UserInfoModelState {

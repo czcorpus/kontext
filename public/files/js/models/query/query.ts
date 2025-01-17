@@ -19,8 +19,8 @@
  */
 
 import { id, List, tuple } from 'cnc-tskit';
-import { highlightSyntaxStatic, ParsedAttr } from '../cqleditor/parser';
-import { SubmitEncodedSimpleTokens } from './formArgs';
+import { highlightSyntaxStatic, ParsedAttr } from '../cqleditor/parser.js';
+import { SubmitEncodedSimpleTokens } from './formArgs.js';
 
 
 export type QueryType = 'simple'|'advanced';
@@ -113,10 +113,13 @@ export interface SimpleQuery {
 
 export type AnyQuery = SimpleQuery|AdvancedQuery;
 
-export function isAdvancedQuery(anyQuery: AnyQuery): anyQuery is AdvancedQuery {
+export function isAdvancedQuery(anyQuery:AnyQuery): anyQuery is AdvancedQuery {
     return anyQuery.qtype === 'advanced';
 }
 
+export function isSimpleQuery(anyQuery:AnyQuery): anyQuery is SimpleQuery {
+    return anyQuery.qtype === 'simple';
+}
 
 /**
  * SimpleQuerySubmit is a form of SimpleQuery as submitted to server

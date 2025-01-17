@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import styled, { css } from 'styled-components';
-import * as theme from '../../theme/default';
+import { styled, css } from 'styled-components';
+import * as theme from '../../theme/default/index.js';
 
 // ---------------------------------------------
 

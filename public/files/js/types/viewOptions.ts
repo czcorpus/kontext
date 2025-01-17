@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { WideCtxArgs } from '../models/concordance/common';
-import * as Kontext from './kontext';
+import { WideCtxArgs } from '../models/concordance/common.js';
+import * as Kontext from './kontext.js';
 
 
 export interface AttrDesc {

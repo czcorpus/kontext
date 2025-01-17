@@ -20,8 +20,8 @@
 
 import * as React from 'react';
 import { IActionDispatcher } from 'kombo';
-import * as Kontext from '../../../types/kontext';
-import { Actions } from '../../../models/searchHistory/actions';
+import * as Kontext from '../../../types/kontext.js';
+import { Actions } from '../../../models/searchHistory/actions.js';
 
 
 export interface ExtendedSearchForms {

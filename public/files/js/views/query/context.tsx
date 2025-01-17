@@ -25,12 +25,12 @@
 
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import * as Kontext from '../../types/kontext';
-import { QueryContextModel, QueryContextModelState } from '../../models/query/context';
-import { Actions } from '../../models/query/actions';
-import { CtxLemwordType } from '../../models/query/common';
+import * as Kontext from '../../types/kontext.js';
+import { QueryContextModel, QueryContextModelState } from '../../models/query/context.js';
+import { Actions } from '../../models/query/actions.js';
+import { CtxLemwordType } from '../../models/query/common.js';
 import { List, tuple } from 'cnc-tskit';
-import * as S from './style';
+import * as S from './style.js';
 
 
 export interface SpecifyContextFormProps {

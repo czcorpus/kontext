@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import * as CoreViews from '../../types/coreViews';
+import * as CoreViews from '../../types/coreViews/index.js';
 
 // ------------------------------ <ImgWithMouseover /> -----------------------------
 

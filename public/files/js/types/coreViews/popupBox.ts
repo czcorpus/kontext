@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { UserMessageTypes } from '../kontext';
-import { AutoWidth } from './common';
+import { UserMessageTypes } from '../kontext.js';
+import { AutoWidth } from './common.js';
 
 
 export interface Props {
@@ -68,4 +68,4 @@ export interface Props {
 
 export interface State {}
 
-export type Component = React.ComponentClass<Props>;
+export type Component = React.FC<Props>;

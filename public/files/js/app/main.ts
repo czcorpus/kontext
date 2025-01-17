@@ -20,15 +20,15 @@
 
 /// <reference path="../types/compat.d.ts" />
 
-import * as Kontext from '../types/kontext';
-import { PluginApi } from './plugin';
-import { PageModel } from './page';
-import { ComponentTools } from './component';
-import { L10n } from './l10n';
-import { UserSettings } from './userSettings';
-import { AppNavigation } from './navigation';
+import * as Kontext from '../types/kontext.js';
+import { PluginApi } from './plugin.js';
+import { PageModel } from './page.js';
+import { ComponentTools } from './component.js';
+import { L10n } from './l10n.js';
+import { UserSettings } from './userSettings.js';
+import { AppNavigation } from './navigation/index.js';
 import { ActionDispatcher } from 'kombo';
-import { IPluginApi } from '../types/plugins/common';
+import { IPluginApi } from '../types/plugins/common.js';
 
 
 /**

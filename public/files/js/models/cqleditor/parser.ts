@@ -18,13 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../../types/kontext';
+import * as Kontext from '../../types/kontext.js';
 import { parse as parseQuery, SyntaxError } from 'cqlParser/parser';
-import { IAttrHelper, NullAttrHelper } from './attrs';
+import { IAttrHelper, NullAttrHelper } from './attrs.js';
 import { tuple } from 'cnc-tskit';
-import { ParsedAttr, ParsedPQItem, RuleCharMap } from './rules';
+import { ParsedAttr, ParsedPQItem, RuleCharMap } from './rules.js';
 
-export type { ParsedAttr, ParsedPQItem } from './rules';
+export type { ParsedAttr, ParsedPQItem } from './rules.js';
 
 
 /**
@@ -110,7 +110,6 @@ function _highlightSyntax({
 
     const rcMap = new RuleCharMap(query, he, attrHelper, wrapLongQuery, wrapRange);
     const stack = new ParserStack(rcMap);
-
     const wrapUnrecognizedPart = (v:string, numParserRecover:number, error:SyntaxError):[string, string|undefined] => {
         if (numParserRecover === 0 && error) {
             const title = he.translate(
@@ -157,7 +156,6 @@ function _highlightSyntax({
             throw e;
         }
     }
-
     const lastPos = stack.getLastPos();
     const [ans, parsedAttrs, pqItems] = rcMap.generate();
 

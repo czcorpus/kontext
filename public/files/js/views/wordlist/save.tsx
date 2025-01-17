@@ -19,12 +19,12 @@
  */
 
 import * as React from 'react';
-import * as Kontext from '../../types/kontext';
+import * as Kontext from '../../types/kontext.js';
 import { IActionDispatcher, Bound } from 'kombo';
-import { WordlistSaveModel, WordlistSaveModelState } from '../../models/wordlist/save';
-import { CommonViews } from '../common';
-import { Actions } from '../../models/wordlist/actions';
-import { DataSaveFormat } from '../../app/navigation/save';
+import { WordlistSaveModel, WordlistSaveModelState } from '../../models/wordlist/save.js';
+import { CommonViews } from '../common.js';
+import { Actions } from '../../models/wordlist/actions.js';
+import { DataSaveFormat } from '../../app/navigation/save.js';
 
 
 export interface WordlistSaveViews {

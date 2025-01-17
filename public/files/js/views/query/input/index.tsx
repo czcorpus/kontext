@@ -23,24 +23,24 @@ import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Dict, Keyboard, List, pipe, tuple } from 'cnc-tskit';
 
-import { init as keyboardInit } from '../virtualKeyboard';
-import { init as cqlEditoInit } from '../../cqlEditor';
-import { init as richInputInit } from '../richInput';
-import { WithinBuilderModel, WithinBuilderModelState } from '../../../models/query/withinBuilder';
-import * as PluginInterfaces from '../../../types/plugins';
-import * as Kontext from '../../../types/kontext';
-import { formEncodeDefaultAttr, QueryFormModel, QueryFormModelState } from '../../../models/query/common';
-import { UsageTipsModel, UsageTipsState, UsageTipCategory } from '../../../models/usageTips';
-import { VirtualKeyboardModel } from '../../../models/query/virtualKeyboard';
-import { Actions, QueryFormType } from '../../../models/query/actions';
-import { Actions as HintActions } from '../../../models/usageTips/actions';
-import { Actions as HistoryActions } from '../../../models/searchHistory/actions';
-import { QueryType, TokenSuggestions } from '../../../models/query/query';
-import { init as queryStructureInit } from '../structure';
-import { init as shViewInit } from '../../searchHistory/simple';
-import * as S from './style';
-import * as theme from '../../theme/default';
-import { SearchHistoryModel } from '../../../models/searchHistory';
+import { init as keyboardInit } from '../virtualKeyboard/index.js';
+import { init as cqlEditoInit } from '../../cqlEditor.js';
+import { init as richInputInit } from '../richInput.js';
+import { WithinBuilderModel, WithinBuilderModelState } from '../../../models/query/withinBuilder.js';
+import * as PluginInterfaces from '../../../types/plugins/index.js';
+import * as Kontext from '../../../types/kontext.js';
+import { formEncodeDefaultAttr, QueryFormModel, QueryFormModelState } from '../../../models/query/common.js';
+import { UsageTipsModel, UsageTipsState, UsageTipCategory } from '../../../models/usageTips/index.js';
+import { VirtualKeyboardModel } from '../../../models/query/virtualKeyboard.js';
+import { Actions, QueryFormType } from '../../../models/query/actions.js';
+import { Actions as HintActions } from '../../../models/usageTips/actions.js';
+import { Actions as HistoryActions } from '../../../models/searchHistory/actions.js';
+import { isAdvancedQuery, isSimpleQuery, QueryType, TokenSuggestions } from '../../../models/query/query.js';
+import { init as queryStructureInit } from '../structure/index.js';
+import { init as shViewInit } from '../../searchHistory/simple/index.js';
+import * as S from './style.js';
+import * as theme from '../../theme/default/index.js';
+import { SearchHistoryModel } from '../../../models/searchHistory/index.js';
 
 
 export interface InputModuleViews {
@@ -500,7 +500,7 @@ export function init({
         const dynCls = props.data === null || List.every(s => querySuggest.isEmptyResponse(s), props.data.data) ?
             ' empty' : '';
 
-        const ref = React.useRef<HTMLDivElement>();
+        const ref = React.useRef<HTMLDivElement>(null);
 
         React.useLayoutEffect(
             () => {
@@ -617,8 +617,8 @@ export function init({
             }
             if (this.props.widgets.indexOf('structure') > -1) {
                 const queryObj = this.props.queries[this.props.sourceId];
-                const hasExpandedTokens = queryObj.qtype === 'simple' ?
-                    List.some(t => t.isExtended, queryObj.queryParsed) :
+                const hasExpandedTokens = isSimpleQuery(queryObj) ?
+                    List.some(t => t.isExtended,  queryObj.queryParsed) :
                     false;
                 ans.push(
                     <span className="with-icon">

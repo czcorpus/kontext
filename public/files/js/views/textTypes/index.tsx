@@ -22,23 +22,23 @@ import * as React from 'react';
 import { List, Dict, pipe, tuple } from 'cnc-tskit';
 import { IActionDispatcher, IModel, BoundWithProps } from 'kombo';
 
-import * as PluginInterfaces from '../../types/plugins';
-import * as Kontext from '../../types/kontext';
-import * as TextTypes from '../../types/textTypes';
-import { TTSelOps } from '../../models/textTypes/selectionOps';
-import { TextTypesModelState } from '../../models/textTypes/main';
-import { Actions } from '../../models/textTypes/actions';
-import { WidgetView } from '../../models/textTypes/common';
-import { init as listSelectorInit } from './list';
-import { init as rawInputMultiValSelectorInit } from './input';
-import { init as daysSelectorInit } from './days';
-import * as S from './style';
+import * as PluginInterfaces from '../../types/plugins/index.js';
+import * as Kontext from '../../types/kontext.js';
+import * as TextTypes from '../../types/textTypes.js';
+import { TTSelOps } from '../../models/textTypes/selectionOps.js';
+import { TextTypesModelState } from '../../models/textTypes/main.js';
+import { Actions } from '../../models/textTypes/actions.js';
+import { WidgetView } from '../../models/textTypes/common.js';
+import { init as listSelectorInit } from './list.js';
+import { init as rawInputMultiValSelectorInit } from './input.js';
+import { init as daysSelectorInit } from './days.js';
+import * as S from './style.js';
 
 
 export interface TextTypesPanelProps {
     LiveAttrsView:PluginInterfaces.LiveAttributes.View;
     LiveAttrsCustomTT:PluginInterfaces.LiveAttributes.CustomAttribute;
-    controls?:Array<JSX.Element>;
+    controls?:Array<React.JSX.Element>;
 }
 
 

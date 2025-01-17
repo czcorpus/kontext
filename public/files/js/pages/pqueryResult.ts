@@ -19,20 +19,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { DownloadType, PageModel } from '../app/page';
-import { KontextPage } from '../app/main';
-import * as Kontext from '../types/kontext';
-import { PqueryFormModel } from '../models/pquery/form';
-import * as PluginInterfaces from '../types/plugins';
-import { Actions } from '../models/pquery/actions';
-import { PqueryResultModel } from '../models/pquery/result';
-import { init as resultViewInit } from '../views/pquery/result';
-import { init as queryOverviewInit } from '../views/pquery/overview';
+import { DownloadType, PageModel } from '../app/page.js';
+import { KontextPage } from '../app/main.js';
+import * as Kontext from '../types/kontext.js';
+import { PqueryFormModel } from '../models/pquery/form.js';
+import * as PluginInterfaces from '../types/plugins/index.js';
+import { Actions } from '../models/pquery/actions.js';
+import { PqueryResultModel } from '../models/pquery/result.js';
+import { init as resultViewInit } from '../views/pquery/result/index.js';
+import { init as queryOverviewInit } from '../views/pquery/overview/index.js';
 import { PqueryResult, FreqIntersectionArgs, importConcQueries, InvolvedConcFormArgs,
-    storedQueryToModel } from '../models/pquery/common';
-import { AttrHelper } from '../models/cqleditor/attrs';
-import { PqueryResultsSaveModel } from '../models/pquery/save';
-import { HtmlHelpModel } from '../models/help/help';
+    storedQueryToModel } from '../models/pquery/common.js';
+import { AttrHelper } from '../models/cqleditor/attrs.js';
+import { PqueryResultsSaveModel } from '../models/pquery/save.js';
+import { HtmlHelpModel } from '../models/help/help.js';
 
 
 

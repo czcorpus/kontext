@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../types/kontext';
-import { KontextPage } from '../app/main';
+import * as Kontext from '../types/kontext.js';
+import { KontextPage } from '../app/main.js';
 
 
 export function init(conf:Kontext.Conf):void {

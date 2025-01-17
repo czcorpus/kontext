@@ -18,9 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as PluginInterfaces from '../../types/plugins';
-import { init as viewInit } from './view';
-import * as CoreViews from '../../types/coreViews';
+import * as PluginInterfaces from '../../types/plugins/index.js';
+import { init as viewInit } from './view.js';
+import * as CoreViews from '../../types/coreViews/index.js';
 
 
 export class IssueReportingPlugin implements PluginInterfaces.IssueReporting.IPlugin {

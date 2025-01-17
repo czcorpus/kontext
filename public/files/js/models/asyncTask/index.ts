@@ -23,11 +23,11 @@ import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { List, HTTP, pipe, Dict } from 'cnc-tskit';
 
-import * as Kontext from '../../types/kontext';
+import * as Kontext from '../../types/kontext.js';
 import { concatMap, map, takeWhile, tap } from 'rxjs/operators';
-import { Actions } from './actions';
-import { taskCheckTimer } from './common';
-import { DownloadType, isDownloadType, PageModel } from '../../app/page';
+import { Actions } from './actions.js';
+import { taskCheckTimer } from './common.js';
+import { DownloadType, isDownloadType, PageModel } from '../../app/page.js';
 import { AjaxError } from 'rxjs/ajax';
 
 
