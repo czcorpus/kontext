@@ -27,6 +27,7 @@ KONTEXT_PATH = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__fi
 KONTEXT_INSTALL_CONF = os.environ.get('KONTEXT_INSTALL_CONF', 'config.default.xml')
 SCHEDULER_INSTALL_CONF = os.environ.get('SCHEDULER_INSTALL_CONF', 'rq-schedule-conf.sample.json')
 MANATEE_VER = '2.225.8'
+NODE_VERSION = '22.13.0'
 
 REQUIREMENTS = [
     'python3-pip',
@@ -86,9 +87,13 @@ if __name__ == "__main__":
                                'pip', '--upgrade'], stdout=stdout)
         subprocess.check_call(['pip3 install simplejson signalfd -r requirements.txt'],
                               cwd=KONTEXT_PATH, stdout=stdout, shell=True)
+
+        env_variables = os.environ.copy()
+        env_variables['NVM_DIR'] = "/usr/local/nvm"
         subprocess.check_call(
-            'curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -', shell=True)
-        subprocess.check_call('sudo apt-get install -y nodejs', shell=True)
+            'curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash', shell=True, env=env_variables)
+        subprocess.check_call('[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"', shell=True, env=env_variables)
+        subprocess.check_call(f'nvm install {NODE_VERSION}', shell=True, )
     except Exception as ex:
         print(f'failed to install dependencies: {ex}')
 
