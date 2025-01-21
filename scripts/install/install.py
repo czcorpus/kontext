@@ -21,7 +21,9 @@
 import argparse
 import inspect
 import os
+import sys
 import subprocess
+import venv
 
 KONTEXT_PATH = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..'))
 KONTEXT_INSTALL_CONF = os.environ.get('KONTEXT_INSTALL_CONF', 'config.default.xml')
@@ -31,6 +33,7 @@ NODE_VERSION = '22.13.0'
 
 REQUIREMENTS = [
     'python3-pip',
+    'python3-venv',
     'wget',
     'curl',
     'openssh-server',
@@ -83,19 +86,26 @@ if __name__ == "__main__":
         subprocess.check_call(['locale-gen', 'en_US.UTF-8'], stdout=stdout)
         subprocess.check_call(['apt-get', 'update', '-y'], stdout=stdout)
         subprocess.check_call(['apt-get', 'install', '-y'] + REQUIREMENTS, stdout=stdout)
-        subprocess.check_call(['python3', '-m', 'pip', 'install',
-                               'pip', '--upgrade'], stdout=stdout)
-        subprocess.check_call(['pip3 install simplejson signalfd -r requirements.txt'],
+        
+        # create virtual environment and install python dependencies
+        venv_path = os.path.join(KONTEXT_PATH, 'venv')
+        venv.create(venv_path, with_pip=True)
+        venv_activate = os.path.join(venv_path, 'bin', 'activate')
+        subprocess.check_call([f'. {venv_activate}; python3 -m pip install pip --upgrade'], stdout=stdout, shell=True)
+        subprocess.check_call([f'. {venv_activate}; pip3 install simplejson signalfd -r requirements.txt'],
                               cwd=KONTEXT_PATH, stdout=stdout, shell=True)
-
+        # install node.js
         env_variables = os.environ.copy()
-        env_variables['NVM_DIR'] = "/usr/local/nvm"
+        nvm_dir = env_variables['NVM_DIR'] = "/usr/local/nvm"
+        os.makedirs(nvm_dir, exist_ok=True)
         subprocess.check_call(
             'curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash', shell=True, env=env_variables)
-        subprocess.check_call('[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"', shell=True, env=env_variables)
-        subprocess.check_call(f'nvm install {NODE_VERSION}', shell=True, )
+        subprocess.check_call(f'[ -s "$NVM_DIR/nvm.sh" ] && \\. "$NVM_DIR/nvm.sh" && nvm install {NODE_VERSION}', shell=True, env=env_variables)
+        npm_path = os.path.join(nvm_dir, 'versions/node', NODE_VERSION, 'bin')
+
     except Exception as ex:
         print(f'failed to install dependencies: {ex}')
+        sys.exit(1)
 
     # import steps here, because some depend on packages installed by this script
     import steps
@@ -103,11 +113,11 @@ if __name__ == "__main__":
     # run installation steps
     steps.SetupBgCalc(KONTEXT_PATH, stdout, stderr).run()
     steps.SetupNginx(KONTEXT_PATH, stdout, stderr).run()
-    steps.SetupManatee(KONTEXT_PATH, stdout, stderr, args.no_cert_check).run(
+    steps.SetupManatee(KONTEXT_PATH, stdout, stderr, args.no_cert_check, venv_path).run(
         args.manatee_version, args.patch_paths, ucnk_manatee=args.ucnk)
     steps.SetupKontext(
         kontext_path=KONTEXT_PATH, kontext_conf=KONTEXT_INSTALL_CONF,
-        scheduler_conf=SCHEDULER_INSTALL_CONF,  stdout=stdout, stderr=stderr).run()
+        scheduler_conf=SCHEDULER_INSTALL_CONF, stdout=stdout, stderr=stderr, npm_path=npm_path).run()
     steps.SetupDefaultUsers(KONTEXT_PATH, stdout, stderr).run()
 
     # finalize instalation

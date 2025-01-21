@@ -96,8 +96,8 @@ class InstallationStep(ABC):
     def add_final_message(self, message: str):
         self.final_messages.append(message)
 
-    def cmd(self, args, cwd):
-        return subprocess.check_call(args, cwd=cwd, stdout=self.stdout, stderr=self.stderr)
+    def cmd(self, args, cwd, env=None):
+        return subprocess.check_call(args, cwd=cwd, stdout=self.stdout, stderr=self.stderr, env=env)
 
 
 def wget_cmd(url, no_cert_check):
@@ -151,9 +151,10 @@ class SetupNginx(InstallationStep):
 
 class SetupManatee(InstallationStep):
 
-    def __init__(self, kontext_path: str, stdout: str, stderr: str, no_cert_check: bool):
+    def __init__(self, kontext_path: str, stdout: str, stderr: str, no_cert_check: bool, venv_path: str = None):
         super().__init__(kontext_path, stdout, stderr)
         self._ncc = no_cert_check
+        self._venv_path = venv_path
 
     def is_done(self):
         pass
@@ -201,11 +202,17 @@ class SetupManatee(InstallationStep):
                     raise FileNotFoundError(
                         f'Patch file `{os.path.join(self.kontext_path, patch_path)}` not found!')
 
-        python_path = subprocess.check_output(['which', 'python3']).decode().split()[0]
+        if self._venv_path is not None:
+            venv_activate = f". {os.path.join(self._venv_path, 'bin', 'activate')};"
+        else:
+            venv_activate = ''
+        python_path = subprocess.check_output([f'{venv_activate} which python3']).decode().split()[0]
+        package_path = subprocess.check_output([f'{venv_activate} python3 -c "import sysconfig; print(sysconfig.get_paths()[\'purelib\'])"'], shell=True).decode().strip()
+
         env_variables = os.environ.copy()
         env_variables['PYTHON'] = python_path
         subprocess.check_call(['./configure', '--with-pcre'],
-                              cwd=src_working_dir, stdout=self.stdout, env=env_variables)
+                              cwd=src_working_dir, stdout=self.stdout, env=env_variables, shell=True)
         subprocess.check_call(
             ['make'], cwd=src_working_dir, stdout=self.stdout)
         subprocess.check_call(
@@ -252,10 +259,11 @@ class SetupManatee(InstallationStep):
 
 class SetupKontext(InstallationStep):
 
-    def __init__(self, kontext_path: str, kontext_conf: str, scheduler_conf: str, stdout: str, stderr: str):
+    def __init__(self, kontext_path: str, kontext_conf: str, scheduler_conf: str, stdout: str, stderr: str, npm_path: str = None):
         super().__init__(kontext_path, stdout, stderr)
         self._kontext_conf = kontext_conf
         self._scheduler_conf = scheduler_conf
+        self._npm_path = npm_path
 
     def is_done(self):
         pass
@@ -291,8 +299,11 @@ class SetupKontext(InstallationStep):
         create_directory('/tmp/kontext-upload', WEBSERVER_USER, None, 0o775)
 
         if build_production:
-            subprocess.check_call(['npm', 'install'], cwd=self.kontext_path, stdout=self.stdout)
-            self.cmd(['npm', 'start', 'build:production'], cwd=self.kontext_path)
+            env_variables = os.environ.copy()
+            if self._npm_path is not None:
+                env_variables['PATH'] = f'{self._npm_path}:{env_variables["PATH"]}'
+            subprocess.check_call(['npm', 'install'], cwd=self.kontext_path, stdout=self.stdout, env=env_variables)
+            self.cmd(['npm', 'start', 'build:production'], cwd=self.kontext_path, env=env_variables)
 
 
 class SetupDefaultUsers(InstallationStep):
