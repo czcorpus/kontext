@@ -43,7 +43,7 @@ REQUIREMENTS = [
     'libltdl7',
     'libpcre3',
     'libicu-dev',
-    'libpcre++-dev',
+    'libpcre3-dev',
     'libxml2-dev',
     'libxslt1-dev',
     'libltdl-dev',
