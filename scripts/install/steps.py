@@ -227,9 +227,10 @@ class SetupManatee(InstallationStep):
         # manatee always installs to system site-packages
         # we need to make link to system dist-packages or venv site-packages
         if make_symlinks:
-            package_path = subprocess.check_output([python_path, '-c', '"import sysconfig; print(sysconfig.get_paths()[\'purelib\'])"']).decode().strip()
-            system_package_path = subprocess.check_output(['/usr/bin/python3', '-c', '"import sysconfig; print(sysconfig.get_paths()[\'purelib\'])"']).decode().strip()
+            package_path = subprocess.check_output([f'{python_path} -c "import sysconfig; print(sysconfig.get_paths()[\'purelib\'])"'], shell=True).decode().strip()
+            system_package_path = subprocess.check_output(['/usr/bin/python3 -c "import sysconfig; print(sysconfig.get_paths()[\'purelib\'])"'], shell=True).decode().strip()
             manatee_package_path = os.path.join(system_package_path, '../site-packages')
+            print(f'Creating symlinks from {manatee_package_path} to {package_path}')
             make_simlink(os.path.join(manatee_package_path, 'manatee.py'),
                         os.path.join(package_path, 'manatee.py'))
             make_simlink(os.path.join(manatee_package_path, '_manatee.a'),
