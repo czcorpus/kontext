@@ -1,5 +1,5 @@
-FROM python:3.8-slim
+FROM python:3.13.1-slim
 
-RUN pip3 install --upgrade pip && pip3 install rq-scheduler
+RUN pip3 install rq-scheduler --break-system-packages
 
 CMD [ "rqscheduler", "--host", "kontext-redis-1", "--db", "2", "-i", "10" ]

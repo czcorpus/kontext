@@ -96,8 +96,8 @@ class InstallationStep(ABC):
     def add_final_message(self, message: str):
         self.final_messages.append(message)
 
-    def cmd(self, args, cwd):
-        return subprocess.check_call(args, cwd=cwd, stdout=self.stdout, stderr=self.stderr)
+    def cmd(self, args, cwd, env=None):
+        return subprocess.check_call(args, cwd=cwd, stdout=self.stdout, stderr=self.stderr, env=env)
 
 
 def wget_cmd(url, no_cert_check):
@@ -151,9 +151,10 @@ class SetupNginx(InstallationStep):
 
 class SetupManatee(InstallationStep):
 
-    def __init__(self, kontext_path: str, stdout: str, stderr: str, no_cert_check: bool):
+    def __init__(self, kontext_path: str, stdout: str, stderr: str, no_cert_check: bool, venv_path: str = None):
         super().__init__(kontext_path, stdout, stderr)
         self._ncc = no_cert_check
+        self._venv_path = venv_path
 
     def is_done(self):
         pass
@@ -168,14 +169,17 @@ class SetupManatee(InstallationStep):
 
         version_found = False
         if ucnk_manatee:
-            subprocess.check_call(['git', 'clone', 'https://github.com/czcorpus/manatee-open.git',
-                                   f'manatee-open-{manatee_version}'], cwd='/usr/local/src', stdout=self.stdout)
+            cwd, dir = '/usr/local/src', f'manatee-open-{manatee_version}'
+            if not os.path.exists(os.path.join(cwd, dir)):
+                subprocess.check_call(['git', 'clone', 'https://github.com/czcorpus/manatee-open.git', dir], cwd=cwd, stdout=self.stdout)
+
             try:
                 subprocess.check_call(
                     ['git', 'checkout', f'release-{manatee_version}'], cwd=src_working_dir, stdout=self.stdout)
                 version_found = True
             except subprocess.CalledProcessError:
                 pass
+
             if version_found:
                 subprocess.check_call(['autoreconf', '--install', '--force'],
                                       cwd=src_working_dir, stdout=self.stdout)
@@ -201,11 +205,17 @@ class SetupManatee(InstallationStep):
                     raise FileNotFoundError(
                         f'Patch file `{os.path.join(self.kontext_path, patch_path)}` not found!')
 
-        python_path = subprocess.check_output(['which', 'python3']).decode().split()[0]
+        # get python path related to used environment
+        if self._venv_path is not None:
+            python_path = os.path.join(self._venv_path, 'bin', 'python3')
+        else:
+            python_path = subprocess.check_output(['which', 'python3']).decode().split()[0]
+
+        # build manatee
         env_variables = os.environ.copy()
         env_variables['PYTHON'] = python_path
         subprocess.check_call(['./configure', '--with-pcre'],
-                              cwd=src_working_dir, stdout=self.stdout, env=env_variables)
+                              cwd=src_working_dir, stdout=self.stdout, env=env_variables, shell=True)
         subprocess.check_call(
             ['make'], cwd=src_working_dir, stdout=self.stdout)
         subprocess.check_call(
@@ -217,17 +227,21 @@ class SetupManatee(InstallationStep):
             subprocess.check_call(['cp', '-r', '/usr/local/local/lib',
                                    '/usr/local'], stdout=self.stdout)
 
+        # manatee always installs to system site-packages
+        # we need to make link to system dist-packages or venv site-packages
         if make_symlinks:
-            lib_path = [path for path in sys.path if path.startswith(
-                '/usr/local/lib/python3') and path.endswith('dist-packages')][0]
-            make_simlink(os.path.join(lib_path, '../site-packages/manatee.py'),
-                         os.path.join(lib_path, 'manatee.py'))
-            make_simlink(os.path.join(lib_path, '../site-packages/_manatee.a'),
-                         os.path.join(lib_path, '_manatee.a'))
-            make_simlink(os.path.join(lib_path, '../site-packages/_manatee.la'),
-                         os.path.join(lib_path, '_manatee.la'))
-            make_simlink(os.path.join(lib_path, '../site-packages/_manatee.so'),
-                         os.path.join(lib_path, '_manatee.so'))
+            package_path = subprocess.check_output([f'{python_path} -c "import sysconfig; print(sysconfig.get_paths()[\'purelib\'])"'], shell=True).decode().strip()
+            system_package_path = subprocess.check_output(['/usr/bin/python3 -c "import sysconfig; print(sysconfig.get_paths()[\'purelib\'])"'], shell=True).decode().strip()
+            manatee_package_path = os.path.join(system_package_path, '../site-packages')
+            print(f'Creating symlinks from {manatee_package_path} to {package_path}')
+            make_simlink(os.path.join(manatee_package_path, 'manatee.py'),
+                        os.path.join(package_path, 'manatee.py'))
+            make_simlink(os.path.join(manatee_package_path, '_manatee.a'),
+                        os.path.join(package_path, '_manatee.a'))
+            make_simlink(os.path.join(manatee_package_path, '_manatee.la'),
+                        os.path.join(package_path, '_manatee.la'))
+            make_simlink(os.path.join(manatee_package_path, '_manatee.so'),
+                        os.path.join(package_path, '_manatee.so'))
 
         # install susanne corpus
         subprocess.check_call(wget_cmd('https://corpora.fi.muni.cz/noske/src/example-corpora/susanne-example-source.tar.bz2', self._ncc),
@@ -252,10 +266,11 @@ class SetupManatee(InstallationStep):
 
 class SetupKontext(InstallationStep):
 
-    def __init__(self, kontext_path: str, kontext_conf: str, scheduler_conf: str, stdout: str, stderr: str):
+    def __init__(self, kontext_path: str, kontext_conf: str, scheduler_conf: str, stdout: str, stderr: str, npm_path: str = None):
         super().__init__(kontext_path, stdout, stderr)
         self._kontext_conf = kontext_conf
         self._scheduler_conf = scheduler_conf
+        self._npm_path = npm_path
 
     def is_done(self):
         pass
@@ -291,8 +306,11 @@ class SetupKontext(InstallationStep):
         create_directory('/tmp/kontext-upload', WEBSERVER_USER, None, 0o775)
 
         if build_production:
-            subprocess.check_call(['npm', 'install'], cwd=self.kontext_path, stdout=self.stdout)
-            self.cmd(['npm', 'start', 'build:production'], cwd=self.kontext_path)
+            env_variables = os.environ.copy()
+            if self._npm_path is not None:
+                env_variables['PATH'] = f'{self._npm_path}:{env_variables["PATH"]}'
+            subprocess.check_call(['npm', 'install'], cwd=self.kontext_path, stdout=self.stdout, env=env_variables)
+            self.cmd(['npm', 'start', 'build:production'], cwd=self.kontext_path, env=env_variables)
 
 
 class SetupDefaultUsers(InstallationStep):
@@ -354,12 +372,18 @@ if __name__ == '__main__':
             scheduler_conf=os.environ.get('SCHEDULER_INSTALL_CONF', 'rq-schedule-conf.sample.json'),
             stdout=None, stderr=None)
         obj.run(False)
+
     elif args.step_name == 'SetupDefaultUsers':
-        obj = SetupDefaultUsers(*init_step_args, args.step_args[0], int(args.step_args[1]))
+        try:
+            obj = SetupDefaultUsers(*init_step_args, args.step_args[0], int(args.step_args[1]))
+        except IndexError:
+            obj = SetupDefaultUsers(*init_step_args)
         obj.run()
+
     elif args.step_name == 'SetupManatee':
         obj = SetupManatee(*init_step_args, True)
         obj.run(args.step_args[0], args.step_args[1:-1], bool(int(args.step_args[-1])), args.ucnk)
+
     else:
         raise Exception(f'Unknown action: {args.step_name}')
 

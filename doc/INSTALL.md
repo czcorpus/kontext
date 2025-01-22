@@ -23,7 +23,7 @@
 
 ## Install KonText (Ubuntu)
 
-The easiest way to install KonText is to create an **LXC/LXD container** with Ubuntu 22.04 LTS
+The easiest way to install KonText is to create an **LXC/LXD container** with Ubuntu 24.04 LTS
 OS, clone KonText repository and run [scripts/install/install.py](../scripts/install/install.py)
 script that performs all the installation and configuration steps that are necessary to run KonText
 as a standalone server application.
@@ -32,7 +32,7 @@ as a standalone server application.
 
 ```
 sudo apt-get install lxc
-sudo lxc-create -t download -n kontext-container -- -d ubuntu -r jammy -a amd64
+sudo lxc-create -t download -n kontext-container -- -d ubuntu -r noble -a amd64
 sudo lxc-start -n kontext-container
 ```
 
@@ -60,19 +60,20 @@ git clone https://github.com/czcorpus/kontext.git /opt/kontext/
 python3 /opt/kontext/scripts/install/install.py
 ```
 
-By default, the script installs Manatee from the `deb` packages provided by
+By default, the script builds Manatee from official sources provided by
 the [NLP Center at the Faculty of Informatics, Masaryk University](https://nlp.fi.muni.cz/).
-If you wish to build Manatee from sources and use the ucnk-specific manatee patch, you can
-use the `install.py --patch /path/to/patch` option.
-
+UCNK-specific manatee patches will be applied, by using the `install.py --patch /path/to/patch` option.
 (for more details about Manatee installation, see
 <a href="https://nlp.fi.muni.cz/trac/noske/wiki/Downloads">https://nlp.fi.muni.cz/trac/noske/wiki/Downloads</a>)
+
+By using `install.py --ucnk` option, Manatee will be built from [UCNK github source](https://github.com/czcorpus/manatee-open).
+It already contains all UCNK-specific patches and extensions.
 
 **[5]** Once the installation is complete, start KonText by entering the following
 command in the installation directory you specified above (*/opt/kontext*):
 
 ```
-python3 public/app.py --address 127.0.0.1 --port 8080
+./venv/bin/python3 public/app.py --address 127.0.0.1 --port 8080
 ```
 
 **[6] Open `[container_IP_address]`  in your browser on the host. You should see

@@ -2,7 +2,7 @@ services:
   kontext:
     build:
       context: .
-      dockerfile: dockerfiles/Dockerfile.kontext-jammy
+      dockerfile: dockerfiles/Dockerfile.kontext
     # since we are using shared volume with nginx
     # in case different version of kontext is used
     # we need to copy files into the shared volume first
@@ -40,7 +40,7 @@ services:
   rq-worker:
     build:
       context: .
-      dockerfile: dockerfiles/Dockerfile.rqworker-jammy
+      dockerfile: dockerfiles/Dockerfile.rqworker
     volumes:
       - ${KONTEXT_CONFIG}:/opt/kontext/conf/config.xml
       - corpora-data:/var/lib/manatee
