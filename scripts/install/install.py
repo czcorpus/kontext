@@ -89,16 +89,17 @@ if __name__ == "__main__":
         subprocess.check_call(['apt-get', 'install', '-y'] + REQUIREMENTS, stdout=stdout)
         
         # create virtual environment
-        venv_path, venv_activate = None, ''
+        venv_path, venv_bin_path = None, ''
         if not args.no_venv:
             venv_path = os.path.join(KONTEXT_PATH, 'venv')
-            venv.create(venv_path, with_pip=True)
-            venv_activate = f". {os.path.join(venv_path, 'bin', 'activate')};"
+            venv.create(venv_path, with_pip=True, symlinks=True)
+            venv_bin_path = os.path.join(venv_path, 'bin')
         
         # install python packages
-        subprocess.check_call([f'{venv_activate}python3 -m pip install pip --upgrade'], stdout=stdout, shell=True)
-        subprocess.check_call([f'{venv_activate}pip3 install simplejson signalfd -r requirements.txt'],
-                              cwd=KONTEXT_PATH, stdout=stdout, shell=True)
+        subprocess.check_call([os.path.join(venv_bin_path, 'python3'), '-m', 'pip', 'install', 'pip' '--upgrade'],
+                              stdout=stdout)
+        subprocess.check_call([os.path.join(venv_bin_path, 'pip3'), 'install', 'simplejson', 'signalfd', '-r', 'requirements.txt'],
+                              cwd=KONTEXT_PATH, stdout=stdout)
         
         # install node.js
         env_variables = os.environ.copy()
@@ -129,7 +130,7 @@ if __name__ == "__main__":
     if args.no_venv:
         steps.SetupDefaultUsers(KONTEXT_PATH, stdout, stderr).run()
     else:
-        subprocess.check_call([f'{venv_activate}python3 {steps.__file__} SetupDefaultUsers'], stdout=stdout, shell=True)
+        subprocess.check_call([os.path.join(venv_bin_path, 'python3'), steps.__file__, 'SetupDefaultUsers'], stdout=stdout)
         
 
     # finalize instalation
@@ -140,14 +141,14 @@ if __name__ == "__main__":
     print('Initializing Nginx...')
     subprocess.check_call(['systemctl', 'restart', 'nginx'], stdout=stdout)
 
-    python_path = '' if args.no_venv else './venv/bin/'
     # print final messages
+    relative_python_path = os.path.join(venv_bin_path.replace(KONTEXT_PATH, '.'), 'python3')
     print(inspect.cleandoc(f'''
         {steps.bcolors.BOLD}{steps.bcolors.OKGREEN}
         KonText installation successfully completed.
         To start KonText, enter the following command in the KonText install root directory (i.e. {KONTEXT_PATH}):
 
-            sudo -u {steps.WEBSERVER_USER} {python_path}python3 public/app.py --address 127.0.0.1 --port 8080
+            sudo -u {steps.WEBSERVER_USER} {relative_python_path} public/app.py --address 127.0.0.1 --port 8080
 
         (--address and --port parameters are optional; default serving address is 127.0.0.1:5000)
         {steps.bcolors.ENDC}{steps.bcolors.ENDC}
