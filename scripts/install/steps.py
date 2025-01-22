@@ -206,11 +206,12 @@ class SetupManatee(InstallationStep):
             venv_activate = f". {os.path.join(self._venv_path, 'bin', 'activate')};"
         else:
             venv_activate = ''
-        python_path = subprocess.check_output([f'{venv_activate} which python3']).decode().split()[0]
-        package_path = subprocess.check_output([f'{venv_activate} python3 -c "import sysconfig; print(sysconfig.get_paths()[\'purelib\'])"'], shell=True).decode().strip()
+        venv_python_path = subprocess.check_output([f'{venv_activate} which python3'], shell=True).decode().split()[0]
+        venv_package_path = subprocess.check_output([f'{venv_activate} python3 -c "import sysconfig; print(sysconfig.get_paths()[\'purelib\'])"'], shell=True).decode().strip()
+        system_package_path = subprocess.check_output(['python3', '-c', '"import sysconfig; print(sysconfig.get_paths()[\'purelib\'])"']).decode().strip()
 
         env_variables = os.environ.copy()
-        env_variables['PYTHON'] = python_path
+        env_variables['PYTHON'] = venv_python_path
         subprocess.check_call(['./configure', '--with-pcre'],
                               cwd=src_working_dir, stdout=self.stdout, env=env_variables, shell=True)
         subprocess.check_call(
@@ -224,17 +225,21 @@ class SetupManatee(InstallationStep):
             subprocess.check_call(['cp', '-r', '/usr/local/local/lib',
                                    '/usr/local'], stdout=self.stdout)
 
+        # manatee always installs to system dist-packages
+        # we need to make link to system/venv site-packages
         if make_symlinks:
-            lib_path = [path for path in sys.path if path.startswith(
-                '/usr/local/lib/python3') and path.endswith('dist-packages')][0]
-            make_simlink(os.path.join(lib_path, '../site-packages/manatee.py'),
-                         os.path.join(lib_path, 'manatee.py'))
-            make_simlink(os.path.join(lib_path, '../site-packages/_manatee.a'),
-                         os.path.join(lib_path, '_manatee.a'))
-            make_simlink(os.path.join(lib_path, '../site-packages/_manatee.la'),
-                         os.path.join(lib_path, '_manatee.la'))
-            make_simlink(os.path.join(lib_path, '../site-packages/_manatee.so'),
-                         os.path.join(lib_path, '_manatee.so'))
+            dest_package_path = venv_package_path
+            if venv_package_path == system_package_path and system_package_path.startswith('/usr/local/lib') and system_package_path.endswith('dist-packages'):
+                dest_package_path = venv_package_path.replace('dist-packages', 'site-packages')
+
+            make_simlink(os.path.join(system_package_path, 'manatee.py'),
+                         os.path.join(dest_package_path, 'manatee.py'))
+            make_simlink(os.path.join(system_package_path, '_manatee.a'),
+                         os.path.join(dest_package_path, '_manatee.a'))
+            make_simlink(os.path.join(system_package_path, '_manatee.la'),
+                         os.path.join(dest_package_path, '_manatee.la'))
+            make_simlink(os.path.join(system_package_path, '_manatee.so'),
+                         os.path.join(dest_package_path, '_manatee.so'))
 
         # install susanne corpus
         subprocess.check_call(wget_cmd('https://corpora.fi.muni.cz/noske/src/example-corpora/susanne-example-source.tar.bz2', self._ncc),
