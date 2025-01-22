@@ -63,15 +63,16 @@ REQUIREMENTS = [
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser('Kontext instalation script')
-    argparser.add_argument('--ucnk', action='store_true', default=False, help='Use UCNK sources')
+    argparser.add_argument('--ucnk', action='store_true', help='Use UCNK sources')
+    argparser.add_argument('--no-venv', action='store_true', help='Do not create virtualenv automatically')
     argparser.add_argument('--patch', dest='patch_paths', action='append',
                            default=[], help='Path to UCNK Manatee patch')
     argparser.add_argument('--manatee-version', dest='manatee_version',
                            action='store', default=MANATEE_VER, help='Set Manatee version')
     argparser.add_argument('--no-safe-http', dest='no_cert_check', action='store_true',
-                           default=False, help='Do not verify HTTPS certificates when downloading packages')
+                           help='Do not verify HTTPS certificates when downloading packages')
     argparser.add_argument('-v', dest='verbose', action='store_true',
-                           default=False, help='Verbose mode')
+                           help='Verbose mode')
     args = argparser.parse_args()
 
     stdout = None if args.verbose else open(os.devnull, 'wb')
@@ -87,13 +88,18 @@ if __name__ == "__main__":
         subprocess.check_call(['apt-get', 'update', '-y'], stdout=stdout)
         subprocess.check_call(['apt-get', 'install', '-y'] + REQUIREMENTS, stdout=stdout)
         
-        # create virtual environment and install python dependencies
-        venv_path = os.path.join(KONTEXT_PATH, 'venv')
-        venv.create(venv_path, with_pip=True)
-        venv_activate = os.path.join(venv_path, 'bin', 'activate')
-        subprocess.check_call([f'. {venv_activate}; python3 -m pip install pip --upgrade'], stdout=stdout, shell=True)
-        subprocess.check_call([f'. {venv_activate}; pip3 install simplejson signalfd -r requirements.txt'],
+        # create virtual environment
+        venv_path, venv_activate = None, ''
+        if not args.no_venv:
+            venv_path = os.path.join(KONTEXT_PATH, 'venv')
+            venv.create(venv_path, with_pip=True)
+            venv_activate = f". {os.path.join(venv_path, 'bin', 'activate')};"
+        
+        # install python packages
+        subprocess.check_call([f'{venv_activate}python3 -m pip install pip --upgrade'], stdout=stdout, shell=True)
+        subprocess.check_call([f'{venv_activate}pip3 install simplejson signalfd -r requirements.txt'],
                               cwd=KONTEXT_PATH, stdout=stdout, shell=True)
+        
         # install node.js
         env_variables = os.environ.copy()
         nvm_dir = env_variables['NVM_DIR'] = "/usr/local/nvm"
@@ -118,7 +124,13 @@ if __name__ == "__main__":
     steps.SetupKontext(
         kontext_path=KONTEXT_PATH, kontext_conf=KONTEXT_INSTALL_CONF,
         scheduler_conf=SCHEDULER_INSTALL_CONF, stdout=stdout, stderr=stderr, npm_path=npm_path).run()
-    steps.SetupDefaultUsers(KONTEXT_PATH, stdout, stderr, venv_path).run()
+    
+    # redis is installed in virtual environment
+    if args.no_venv:
+        steps.SetupDefaultUsers(KONTEXT_PATH, stdout, stderr).run()
+    else:
+        subprocess.check_call([f'{venv_activate}python3 {steps.__file__} SetupDefaultUsers'], stdout=stdout, shell=True)
+        
 
     # finalize instalation
     print('Initializing Rq...')
@@ -128,13 +140,14 @@ if __name__ == "__main__":
     print('Initializing Nginx...')
     subprocess.check_call(['systemctl', 'restart', 'nginx'], stdout=stdout)
 
+    python_path = '' if args.no_venv else './venv/bin/'
     # print final messages
     print(inspect.cleandoc(f'''
         {steps.bcolors.BOLD}{steps.bcolors.OKGREEN}
         KonText installation successfully completed.
         To start KonText, enter the following command in the KonText install root directory (i.e. {KONTEXT_PATH}):
 
-            sudo -u {steps.WEBSERVER_USER} python3 public/app.py --address 127.0.0.1 --port 8080
+            sudo -u {steps.WEBSERVER_USER} {python_path}python3 public/app.py --address 127.0.0.1 --port 8080
 
         (--address and --port parameters are optional; default serving address is 127.0.0.1:5000)
         {steps.bcolors.ENDC}{steps.bcolors.ENDC}
