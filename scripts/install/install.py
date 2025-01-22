@@ -118,7 +118,7 @@ if __name__ == "__main__":
     steps.SetupKontext(
         kontext_path=KONTEXT_PATH, kontext_conf=KONTEXT_INSTALL_CONF,
         scheduler_conf=SCHEDULER_INSTALL_CONF, stdout=stdout, stderr=stderr, npm_path=npm_path).run()
-    steps.SetupDefaultUsers(KONTEXT_PATH, stdout, stderr).run()
+    steps.SetupDefaultUsers(KONTEXT_PATH, stdout, stderr, venv_path).run()
 
     # finalize instalation
     print('Initializing Rq...')

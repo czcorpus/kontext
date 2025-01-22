@@ -312,8 +312,14 @@ class SetupKontext(InstallationStep):
 
 
 class SetupDefaultUsers(InstallationStep):
-    def __init__(self, kontext_path: str, stdout: str, stderr: str, redis_host: str = 'localhost', redis_port=6379):
+    def __init__(self, kontext_path: str, stdout: str, stderr: str, redis_host: str = 'localhost', redis_port=6379, venv_path: str = None):
         super().__init__(kontext_path, stdout, stderr)
+
+        # redis is installed in used virtual environment
+        if venv_path is not None:
+            venv_activate = f". {os.path.join(venv_path, 'bin', 'activate')};"
+            venv_package_path = subprocess.check_output([f'{venv_activate} python3 -c "import sysconfig; print(sysconfig.get_paths()[\'purelib\'])"'], shell=True).decode().strip()
+            sys.path.insert(0, venv_package_path)
 
         import redis
         self.redis_client = redis.Redis(host=redis_host, port=redis_port, db=1)
