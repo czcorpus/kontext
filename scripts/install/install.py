@@ -40,6 +40,7 @@ REQUIREMENTS = [
     'net-tools',
     'redis-server',
     'build-essential',
+    'autoconf-archive',
     'openssl',
     'pkg-config',
     'swig',
@@ -108,7 +109,7 @@ if __name__ == "__main__":
         subprocess.check_call(
             'curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash', shell=True, env=env_variables)
         subprocess.check_call(f'[ -s "$NVM_DIR/nvm.sh" ] && \\. "$NVM_DIR/nvm.sh" && nvm install {NODE_VERSION}', shell=True, env=env_variables)
-        npm_path = os.path.join(nvm_dir, 'versions/node', NODE_VERSION, 'bin')
+        npm_path = os.path.join(nvm_dir, 'versions/node', f'v{NODE_VERSION}', 'bin')
 
     except Exception as ex:
         print(f'failed to install dependencies: {ex}')

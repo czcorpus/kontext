@@ -169,14 +169,17 @@ class SetupManatee(InstallationStep):
 
         version_found = False
         if ucnk_manatee:
-            subprocess.check_call(['git', 'clone', 'https://github.com/czcorpus/manatee-open.git',
-                                   f'manatee-open-{manatee_version}'], cwd='/usr/local/src', stdout=self.stdout)
+            cwd, dir = '/usr/local/src', f'manatee-open-{manatee_version}'
+            if not os.path.exists(os.path.join(cwd, dir)):
+                subprocess.check_call(['git', 'clone', 'https://github.com/czcorpus/manatee-open.git', dir], cwd=cwd, stdout=self.stdout)
+
             try:
                 subprocess.check_call(
                     ['git', 'checkout', f'release-{manatee_version}'], cwd=src_working_dir, stdout=self.stdout)
                 version_found = True
             except subprocess.CalledProcessError:
                 pass
+
             if version_found:
                 subprocess.check_call(['autoreconf', '--install', '--force'],
                                       cwd=src_working_dir, stdout=self.stdout)
