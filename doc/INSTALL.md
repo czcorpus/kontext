@@ -72,7 +72,7 @@ use the `install.py --patch /path/to/patch` option.
 command in the installation directory you specified above (*/opt/kontext*):
 
 ```
-python3 public/app.py --address 127.0.0.1 --port 8080
+./venv/bin/python3 public/app.py --address 127.0.0.1 --port 8080
 ```
 
 **[6] Open `[container_IP_address]`  in your browser on the host. You should see

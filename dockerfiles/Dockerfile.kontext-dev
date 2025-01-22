@@ -7,8 +7,8 @@ COPY launcher-config.json launcher-menu.json tsconfig.json webpack.dev.js ./
 COPY requirements.txt ./
 COPY ./conf ./conf
 
-ENV NODE_VERSION 22.13.0
-ENV NVM_DIR /usr/local/nvm
+ENV NODE_VERSION=22.13.0
+ENV NVM_DIR=/usr/local/nvm
 
 RUN apt-get update \
     && apt-get install -y curl \
