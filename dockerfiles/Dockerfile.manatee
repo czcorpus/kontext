@@ -1,4 +1,4 @@
-# This dockerfile produces the image czcorpus/kontext-manatee:2.225.8
+# This dockerfile produces the image czcorpus/kontext-manatee:2.225.8-noble
 FROM ubuntu:noble
 SHELL ["/bin/bash", "--login", "-c"]
 WORKDIR /opt/kontext

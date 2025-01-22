@@ -1,4 +1,4 @@
-FROM czcorpus/kontext-manatee:2.225.8
+FROM czcorpus/kontext-manatee:2.225.8-noble
 
 WORKDIR /opt/kontext
 COPY . .
