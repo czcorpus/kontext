@@ -70,7 +70,7 @@ function findPluginTags(pluginsPath, doc) {
                 let jsDir = findJsDir(node);
                 if (!jsDir) {
                     jsDir = camelizeName(node.nodeName);
-                    isEmpty = node.getElementsByTagName('module').length;
+                    isEmpty = node.getElementsByTagName('module').length === 0;
                 }
                 ans.push({
                     canonicalName: `@plugins/${canonizeName(node.nodeName)}`,
