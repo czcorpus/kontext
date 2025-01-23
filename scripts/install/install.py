@@ -131,7 +131,7 @@ if __name__ == "__main__":
     if args.no_venv:
         steps.SetupDefaultUsers(KONTEXT_PATH, stdout, stderr).run()
     else:
-        subprocess.check_call([os.path.join(venv_bin_path, 'python3'), steps.__file__, 'SetupDefaultUsers'], stdout=stdout)
+        subprocess.check_call([os.path.join(venv_bin_path, 'python3'), steps.__file__, 'SetupDefaultUsers'])
         
 
     # finalize instalation
