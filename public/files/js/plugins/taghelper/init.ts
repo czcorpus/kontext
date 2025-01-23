@@ -30,6 +30,8 @@ import { init as ppTagsetViewInit} from './positional/views.js';
 import { init as udTagsetViewInit} from './keyval/views.js';
 import { TabFrameModel } from './models.js';
 import { IPluginApi } from '../../types/plugins/common.js';
+import { PluginName } from '../../app/plugin.js';
+import { EmptyTagHelperPlugin } from '../empty/taghelper/init.js';
 
 declare var require:any;
 require('./style.css'); // webpack
@@ -187,6 +189,11 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
     }
 }
 
-const create:PluginInterfaces.TagHelper.Factory = (pluginApi) => new TagHelperPlugin(pluginApi);
+const create:PluginInterfaces.TagHelper.Factory = (pluginApi) => {
+    if (pluginApi.pluginTypeIsActive(PluginName.SYNTAX_VIEWER)) {
+        return new TagHelperPlugin(pluginApi);
+    }
+    return new EmptyTagHelperPlugin(pluginApi.dispatcher());
+}
 
 export default create;
