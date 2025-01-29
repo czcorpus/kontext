@@ -3,6 +3,8 @@ services:
     build:
       context: .
       dockerfile: dockerfiles/Dockerfile.kontext
+      args:
+        - KONTEXT_CONFIG=${KONTEXT_CONFIG}
     # since we are using shared volume with nginx
     # in case different version of kontext is used
     # we need to copy files into the shared volume first
@@ -54,7 +56,7 @@ services:
         condition: service_started
 
   redis:
-    image: redis:latest
+    image: redis:alpine
     networks:
       - databases
     ports:
@@ -68,7 +70,7 @@ services:
       retries: 5
 
   nginx:
-    image: nginx:latest
+    image: nginx:stable-alpine
     ports:
       - "8080:80"
     volumes:

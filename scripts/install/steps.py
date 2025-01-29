@@ -214,7 +214,7 @@ class SetupManatee(InstallationStep):
         # build manatee
         env_variables = os.environ.copy()
         env_variables['PYTHON'] = python_path
-        subprocess.check_call(['./configure', '--with-pcre'],
+        subprocess.check_call(['./configure --with-pcre2'],
                               cwd=src_working_dir, stdout=self.stdout, env=env_variables, shell=True)
         subprocess.check_call(
             ['make'], cwd=src_working_dir, stdout=self.stdout)
