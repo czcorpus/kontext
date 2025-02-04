@@ -69,7 +69,7 @@ async def fill_attrs(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     fill = req.json['fill']
 
     with plugins.runtime.LIVE_ATTRIBUTES as lattr:
-        return await lattr.fill_attrs(corpus_id=amodel.corp.corpname, search=search, values=values, fill=fill)
+        return await lattr.fill_attrs(plugin_ctx=amodel.plugin_ctx, corpus_id=amodel.corp.corpname, search=search, values=values, fill=fill)
 
 
 @bp.route('/num_matching_documents', methods=['POST'])
