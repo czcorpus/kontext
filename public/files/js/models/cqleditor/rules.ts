@@ -76,7 +76,6 @@ export interface ParsedPQItem {
     type:Kontext.PqueryExpressionRoles;
 }
 
-
 /**
  * RuleCharMap applies individual rules to character ranges within
  * the original query. It is perfectly safe to apply different rules
@@ -398,7 +397,6 @@ export interface ParsedPQItem {
             this.nonTerminals,
             List.reversed(),
             List.forEach(nonTerm => {
-                console.log('nonTERMINAL: ', nonTerm)
                 switch (nonTerm.rule) {
                     case 'Position':
                         this.findRuleInRange('AttVal', nonTerm.from, nonTerm.to).forEach(attVal => {
@@ -469,7 +467,7 @@ export interface ParsedPQItem {
                     }
                     break;
                     default:
-                        console.log('>>> OTHER RULE: ', nonTerm.rule)
+                        //
                 }
             })
         );

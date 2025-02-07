@@ -20,7 +20,7 @@
 
 import { tap, concatMap, map } from 'rxjs/operators';
 import { forkJoin, Observable, of as rxOf } from 'rxjs';
-import { Action, IFullActionControl, StatefulModel } from 'kombo';
+import { IFullActionControl, StatefulModel } from 'kombo';
 
 import * as Kontext from '../../types/kontext.js';
 import { highlightSyntaxStatic } from '../cqleditor/parser.js';
@@ -48,11 +48,12 @@ export interface InputBoxHistoryItem {
 
 const attachSh = <T extends QueryHistoryItem>(he: Kontext.ComponentHelpers, item:T) => {
     if (item.query_type !== 'simple') {
-        [item.query_sh,] = highlightSyntaxStatic({
+        const parsed = highlightSyntaxStatic({
             query: item.query,
             querySuperType: item.q_supertype,
             he
         });
+        item.query_sh = parsed.highlighted;
     }
     return item;
 };

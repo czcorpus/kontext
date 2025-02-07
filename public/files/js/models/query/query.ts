@@ -57,6 +57,7 @@ export interface AdvancedQuery {
     rawAnchorIdx:number;
     rawFocusIdx:number;
     queryHtml:string;
+    containsWithin:boolean;
     pcq_pos_neg:'pos'|'neg';
     include_empty:boolean;
     default_attr:string;
@@ -145,6 +146,7 @@ export interface AdvancedQuerySubmit {
     query:string;
     pcq_pos_neg:'pos'|'neg';
     include_empty:boolean;
+    contains_within:boolean;
     default_attr:string;
 }
 
@@ -168,7 +170,7 @@ export function findTokenIdxBySuggFocusIdx(q:AnyQuery, focusIdx:number):number {
  */
 export function simpleToAdvancedQuery(q:SimpleQuery, defaultAttr:string):AdvancedQuery {
     const query = q.query.trim();
-    const [queryHtml, parsedAttrs] = highlightSyntaxStatic({
+    const parsed = highlightSyntaxStatic({
         query,
         querySuperType: 'conc',
         he: {translate: id}
@@ -177,12 +179,16 @@ export function simpleToAdvancedQuery(q:SimpleQuery, defaultAttr:string):Advance
         corpname: q.corpname,
         qtype: 'advanced',
         query,
-        parsedAttrs,
+        parsedAttrs: parsed.parsedAttrs,
         suggestions: null,
         focusedAttr: undefined,
         rawAnchorIdx: query.length,
         rawFocusIdx: query.length,
-        queryHtml,
+        queryHtml: parsed.highlighted,
+        containsWithin: List.some(
+            x => x.containsWithin,
+            parsed.ast.withinOrContainingList || [],
+        ),
         pcq_pos_neg: q.pcq_pos_neg,
         include_empty: q.include_empty,
         default_attr: defaultAttr

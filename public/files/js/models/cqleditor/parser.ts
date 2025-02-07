@@ -97,6 +97,16 @@ interface HSArgs {
     wrapRange:(startIdx:number, endIdx:number)=>[string, string];
 }
 
+
+
+export interface ParsedQuery {
+    ast:AST;
+    highlighted:string;
+    parsedAttrs:Array<ParsedAttr>;
+    parsedPqItems:Array<ParsedPQItem>;
+    errMsg:string;
+}
+
 function _highlightSyntax({
     query,
     applyRules,
@@ -106,7 +116,7 @@ function _highlightSyntax({
     parserRecoverIdx,
     wrapLongQuery,
     wrapRange
-}:HSArgs):[string, Array<ParsedAttr>, Array<ParsedPQItem>, string] {
+}:HSArgs):ParsedQuery {
 
     const rcMap = new RuleCharMap(query, he, attrHelper, wrapLongQuery, wrapRange);
     const stack = new ParserStack(rcMap);
@@ -116,7 +126,7 @@ function _highlightSyntax({
                 'query__unrecognized_input_{wrongChar}{position}',
                 {
                     wrongChar: error.found,
-                    position: error.location.start.column
+                    position: error.location?.start.column
                 }
             );
             const style = 'text-decoration: underline dotted red';
@@ -130,8 +140,9 @@ function _highlightSyntax({
     }
 
     let parseError:SyntaxError = null;
+    let ast:AST = {withinOrContainingList: []};
     try {
-        parseQuery(query, {
+        ast = parseQuery(query, {
             startRule: applyRules[0],
             tracer: {
                 trace: (v) => {
@@ -157,16 +168,22 @@ function _highlightSyntax({
         }
     }
     const lastPos = stack.getLastPos();
-    const [ans, parsedAttrs, pqItems] = rcMap.generate();
+    const [ans, parsedAttrs, parsedPqItems] = rcMap.generate();
 
     if (query.length === 0) {
-        return tuple('', [], [], undefined);
+        return {
+            ast: {withinOrContainingList: []},
+            highlighted: '',
+            parsedAttrs: [],
+            parsedPqItems: [],
+            errMsg: undefined
+        };
 
     } else if (lastPos < query.length && applyRules.length > 1) {
         // try to apply a partial rule to the rest of the query
         const srch = /^([^\s]+|)(\s+)(.+)$/.exec(query.substr(lastPos));
         if (srch !== null) {
-            const [partial, parsedAttrs] = _highlightSyntax({
+            const parsed = _highlightSyntax({
                 query: srch[3],
                 applyRules: srch[1].trim() !== '' ? applyRules.slice(1) : applyRules,
                 he: he,
@@ -178,21 +195,23 @@ function _highlightSyntax({
             });
 
             const [subQueryHighlight, err] = wrapUnrecognizedPart(srch[1] + srch[2], parserRecoverIdx, parseError);
-            return tuple(
-                ans + subQueryHighlight + partial,
+            return {
+                ast,
+                highlighted: ans + subQueryHighlight + parsed.highlighted,
                 parsedAttrs,
-                pqItems,
-                err
-            );
+                parsedPqItems,
+                errMsg: err
+            };
         }
     }
     const [subQueryHighlight, err] = wrapUnrecognizedPart(query.substr(lastPos), parserRecoverIdx, parseError);
-    return tuple(
-        ans + (query.substr(lastPos).length > 0 ? subQueryHighlight : ''),
+    return {
+        ast,
+        highlighted: ans + (query.substr(lastPos).length > 0 ? subQueryHighlight : ''),
         parsedAttrs,
-        pqItems,
-        query.length > lastPos ? err : undefined
-    );
+        parsedPqItems,
+        errMsg: query.length > lastPos ? err : undefined
+    };
 }
 
 export function getApplyRules(querySuperType:Kontext.QuerySupertype):Array<string> {
@@ -231,7 +250,7 @@ export function highlightSyntax(
         he:Kontext.ComponentHelpers,
         attrHelper:IAttrHelper,
         wrapRange:((startIdx:number, endIdx:number)=>[string, string])|undefined,
-    }):[string, Array<ParsedAttr>, Array<ParsedPQItem>, string] {
+    }):ParsedQuery {
 
     return _highlightSyntax({
         query,
@@ -265,7 +284,7 @@ export function highlightSyntaxStatic(
         querySuperType:Kontext.QuerySupertype,
         he:Kontext.Translator,
         wrapLongQuery?:boolean
-    }):[string, Array<ParsedAttr>, Array<ParsedPQItem>, string] {
+    }):ParsedQuery {
 
     return _highlightSyntax({
         query,

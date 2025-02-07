@@ -684,9 +684,9 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                             state,
                             action.payload.sourceId
                         );
-                        if (queryObj.qtype === 'advanced') {
-                            queryObj.focusedAttr = this.findFocusedAttr(queryObj);
-                        }
+                    if (queryObj.qtype === 'advanced') {
+                        queryObj.focusedAttr = this.findFocusedAttr(queryObj);
+                    }
                 });
             }
         );
@@ -1112,7 +1112,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
 
         const queryObj = state.queries[sourceId];
         if (queryObj.qtype === 'advanced') {
-            const [queryHtml, newAttrs, _, syntaxErr] = highlightSyntax({
+            const parsed = highlightSyntax({
                 query: queryObj.query,
                 querySuperType: 'conc',
                 he: this.pageModel.getComponentHelpers(),
@@ -1121,14 +1121,18 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                     return tuple(null, null);
                 }
             });
-            this.validateSemantics(state, sourceId, newAttrs);
+            this.validateSemantics(state, sourceId, parsed.parsedAttrs);
             queryObj.focusedAttr = this.findFocusedAttr(queryObj);
-            queryObj.queryHtml = queryHtml;
+            queryObj.queryHtml = parsed.highlighted;
+            queryObj.containsWithin = List.some(
+                x => x.containsWithin,
+                parsed.ast.withinOrContainingList || []
+            );
             if (updateCurrAttrs) {
-                queryObj.parsedAttrs = newAttrs;
+                queryObj.parsedAttrs = parsed.parsedAttrs;
             }
-            if (syntaxErr) {
-                state.cqlEditorMessages[sourceId].push(syntaxErr);
+            if (parsed.errMsg) {
+                state.cqlEditorMessages[sourceId].push(parsed.errMsg);
             }
         }
     }

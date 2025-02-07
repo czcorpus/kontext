@@ -187,6 +187,14 @@ export class Model extends StatelessModel<ModelState> {
                         payload: {...action.payload}
                     });
                     this.loadSuggestions(state, action.payload, dispatch);
+
+                } else {
+                    dispatcher.dispatch<typeof PluginInterfaces.QuerySuggest.Actions.ClearSuggestions>({
+                        name: PluginInterfaces.QuerySuggest.Actions.ClearSuggestions.name,
+                        payload: {
+                            formType: action.payload.formType
+                        }
+                    });
                 }
             }
         );

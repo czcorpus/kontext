@@ -494,6 +494,7 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                     qtype: 'advanced',
                     pcq_pos_neg: 'pos',
                     include_empty: false,
+                    contains_within: false,
                     default_attr: formSubmitArgs.wlattr
                 }
             ],

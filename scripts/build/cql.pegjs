@@ -11,10 +11,18 @@
  */
 
 Query =
-    Sequence (_ BINAND _ GlobPart)? (_ WithinOrContaining)*
+    Sequence (_ BINAND _ GlobPart)? w:(_ WithinOrContaining)* {
+        return {
+            withinOrContainingList: w.map(item => item[1])
+        }
+    }
 
 WithinOrContaining =
-    NOT? (KW_WITHIN / KW_CONTAINING) _ WithinContainingPart
+    NOT? w:(KW_WITHIN / KW_CONTAINING) _ WithinContainingPart {
+        return {
+            containsWithin: w == 'within'
+        }
+    }
 
 GlobPart =
     GlobCond (_ BINAND _ GlobCond)*

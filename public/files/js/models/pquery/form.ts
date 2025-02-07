@@ -835,6 +835,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             query: query.query.trim().normalize(),
             pcq_pos_neg: query.pcq_pos_neg,
             include_empty: query.include_empty,
+            contains_within: query.containsWithin,
             default_attr: !Array.isArray(query.default_attr) ?
                                 query.default_attr : ''
         };
@@ -886,7 +887,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
         sourceId:string,
         updateCurrAttrs:boolean
     ):void {
-        const [queryHtml, newAttrs, pqItems, syntaxErr] = highlightSyntax({
+        const parsed = highlightSyntax({
             query: queryObj.query,
             querySuperType: state.pqueryType === 'full' ? 'pquery' : 'conc',
             he: this.layoutModel.getComponentHelpers(),
@@ -895,18 +896,21 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                 return tuple(null, null);
             }
         });
-        queryObj.queryHtml = queryHtml;
+        queryObj.queryHtml = parsed.highlighted;
         queryObj.focusedAttr = this.findFocusedAttr(queryObj);
-
+        queryObj.containsWithin = List.some(
+            x => x.containsWithin,
+            parsed.ast.withinOrContainingList || []
+        );
         if (updateCurrAttrs) {
-            queryObj.parsedAttrs = newAttrs;
+            queryObj.parsedAttrs = parsed.parsedAttrs;
             if (queryObj.type === 'full-query') {
-                queryObj.pqItems = pqItems;
+                queryObj.pqItems = parsed.parsedPqItems;
             }
         }
-        this.validateSemantics(state, sourceId, newAttrs, pqItems);
-        if (syntaxErr) {
-            state.cqlEditorMessages[sourceId].push(syntaxErr);
+        this.validateSemantics(state, sourceId, parsed.parsedAttrs, parsed.parsedPqItems);
+        if (parsed.errMsg) {
+            state.cqlEditorMessages[sourceId].push(parsed.errMsg);
         }
     }
 
@@ -1043,6 +1047,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             rawFocusIdx: 0,
             parsedAttrs: [],
             focusedAttr: undefined,
+            containsWithin: false,
             pcq_pos_neg: 'pos',
             include_empty: false,
             default_attr: null,

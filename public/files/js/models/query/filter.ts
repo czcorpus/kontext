@@ -174,7 +174,7 @@ function importFormValues(src:any, sourceId?:string):{[key:string]:AnyQuery} {
                 filter => {
                     if (src.currQueryTypes[filter] === 'advanced') {
                         const query = src.currQueries[filter] || '';
-                        const [queryHtml,] = highlightSyntaxStatic({
+                        const parsed = highlightSyntaxStatic({
                             query,
                             querySuperType: 'conc',
                             he: {translate: id}
@@ -186,11 +186,15 @@ function importFormValues(src:any, sourceId?:string):{[key:string]:AnyQuery} {
                                 qtype: 'advanced',
                                 query,
                                 suggestions: null,
-                                queryHtml,
+                                queryHtml: parsed.highlighted,
                                 rawAnchorIdx: 0,
                                 rawFocusIdx: 0,
                                 parsedAttrs: [],
                                 focusedAttr: undefined,
+                                containsWithin: List.some(
+                                    x => x.containsWithin,
+                                    parsed.ast.withinOrContainingList || []
+                                ),
                                 pcq_pos_neg: 'pos',
                                 include_empty: false,
                                 default_attr: src.currDefaultAttrValues[filter]
@@ -227,7 +231,7 @@ function importFormValues(src:any, sourceId?:string):{[key:string]:AnyQuery} {
 
     } else if (sourceId && formArgs.isFilterFormArgs(src)) {
         const query = src.query || '';
-        const [queryHtml,] = highlightSyntaxStatic({
+        const parsed = highlightSyntaxStatic({
             query,
             querySuperType: 'conc',
             he: {translate: id}
@@ -239,11 +243,15 @@ function importFormValues(src:any, sourceId?:string):{[key:string]:AnyQuery} {
                     qtype: 'advanced',
                     query,
                     suggestions: null,
-                    queryHtml,
+                    queryHtml: parsed.highlighted,
                     rawAnchorIdx: 0,
                     rawFocusIdx: 0,
                     parsedAttrs: [],
                     focusedAttr: undefined,
+                        containsWithin: List.some(
+                            x => x.containsWithin,
+                            parsed.ast.withinOrContainingList || []
+                        ),
                     pcq_pos_neg: 'pos',
                     include_empty: false,
                     default_attr: src.default_attr

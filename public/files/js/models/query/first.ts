@@ -185,7 +185,7 @@ function importUserQueries(
             const query = data.currQueries[corpus] || '';
 
             if (qtype === 'advanced') {
-                const [queryHtml, parsedAttrs] = highlightSyntaxStatic({
+                const parsed = highlightSyntaxStatic({
                     query,
                     querySuperType: 'conc',
                     he: {
@@ -200,11 +200,15 @@ function importUserQueries(
                         qtype: 'advanced',
                         query,
                         suggestions: null,
-                        queryHtml,
+                        queryHtml: parsed.highlighted,
                         rawAnchorIdx: 0,
                         rawFocusIdx: 0,
-                        parsedAttrs,
+                        parsedAttrs: parsed.parsedAttrs,
                         focusedAttr: undefined,
+                        containsWithin: List.some(
+                            x => x.containsWithin,
+                            parsed.ast.withinOrContainingList || [],
+                        ),
                         pcq_pos_neg: data.currPcqPosNegValues[corpus] || 'pos',
                         include_empty: data.currIncludeEmptyValues[corpus] || false,
                         default_attr: Array.isArray(defaultAttr) ? List.head(defaultAttr) : defaultAttr // determineDefaultAttr always returns string for advanced query
@@ -964,6 +968,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 query: query.query.trim().normalize(),
                 pcq_pos_neg: query.pcq_pos_neg,
                 include_empty: query.include_empty,
+                contains_within: query.containsWithin,
                 default_attr: !Array.isArray(query.default_attr) ?
                                     query.default_attr : ''
             };

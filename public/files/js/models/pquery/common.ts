@@ -187,6 +187,7 @@ export function newModelState(
                         rawAnchorIdx: 0,
                         rawFocusIdx: 0,
                         queryHtml: '',
+                        containsWithin: false,
                         pcq_pos_neg: 'pos',
                         include_empty: true,
                         default_attr: null,
@@ -261,6 +262,7 @@ export function splitFullQuery(
                         rawAnchorIdx: 0,
                         rawFocusIdx: 0,
                         queryHtml: '',
+                        containsWithin: false,
                         pcq_pos_neg: 'pos',
                         include_empty: true,
                         default_attr: null,
@@ -334,6 +336,7 @@ export function joinPartialQueries(
         focusedAttr: undefined,
         rawAnchorIdx: 0,
         rawFocusIdx: 0,
+        containsWithin: false,
         queryHtml: '',
         pcq_pos_neg: 'pos',
         include_empty: true,
@@ -387,6 +390,7 @@ function importQueries(pqueryForm:FreqIntersectionArgs, concQueries:ConcQueries)
                         rawAnchorIdx: 0,
                         rawFocusIdx: 0,
                         queryHtml: '',
+                        containsWithin: false,
                         pcq_pos_neg: 'pos',
                         include_empty: query.include_empty,
                         default_attr: query.default_attr,
@@ -408,17 +412,17 @@ function importQueries(pqueryForm:FreqIntersectionArgs, concQueries:ConcQueries)
 
     List.forEach(
         ([,query]) => {
-            const [queryHtml, parsedAttrs, pqItems] = highlightSyntaxStatic({
+            const parsed = highlightSyntaxStatic({
                 query: query.query,
                 querySuperType: pqueryForm.pquery_type === 'full' ? 'pquery' : 'conc',
                 he: {
                     translate: (s:string, values?:any) => s
                 }
             });
-            query.queryHtml = queryHtml;
-            query.parsedAttrs = parsedAttrs;
+            query.queryHtml = parsed.highlighted;
+            query.parsedAttrs = parsed.parsedAttrs;
             if (query.type === 'full-query') {
-                query.pqItems = pqItems;
+                query.pqItems = parsed.parsedPqItems;
             }
         },
         actualQueries
@@ -508,6 +512,7 @@ export function importConcQueries(
                                 query,
                                 pcq_pos_neg: 'pos' as 'pos'|'neg',
                                 include_empty: false,
+                                contains_within: false,
                                 default_attr:  defaultAttrs[corpname],
                                 conc_id
                             })
