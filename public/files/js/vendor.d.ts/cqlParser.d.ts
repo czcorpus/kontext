@@ -59,5 +59,22 @@ declare module "cqlParser/parser" {
         found:string;
     }
 
-    export function parse(input:string, options?:Options):Array<any>;
+    export interface Repetition {
+        repetitionType: 'atom-query'|'open-struct-tag'|'close-struct-tag'
+    }
+
+    export interface Seq {
+        repetitionList: Array<Repetition>;
+    }
+
+    export interface Sequence {
+        seqList:Array<Seq>;
+    }
+
+    export interface AST {
+        withinOrContainingList:Array<{containsWithin: boolean}>;
+        sequence:Sequence;
+    }
+
+    export function parse(input:string, options?:Options):AST;
 }

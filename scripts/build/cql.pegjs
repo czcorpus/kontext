@@ -11,9 +11,10 @@
  */
 
 Query =
-    Sequence (_ BINAND _ GlobPart)? w:(_ WithinOrContaining)* {
+    s:Sequence (_ BINAND _ GlobPart)? w:(_ WithinOrContaining)* {
         return {
-            withinOrContainingList: w.map(item => item[1])
+            withinOrContainingList: w.map(item => item[1]),
+            sequence: s
         }
     }
 
@@ -68,15 +69,40 @@ UnionOp =
 
 // -------------------- regular expression query --------------------
 Sequence =
-    Seq (_ BINOR _ Seq)* / Seq
+    s1:Seq sList:(_ BINOR _ Seq)* {
+        return {
+            seqList: [s1].concat(sList)
+        }
+    } /
+    s1:Seq {
+        return {
+            seqList: [s1].concat(sList)
+        }
+    }
 
 Seq =
-    NOT? Repetition (_ Repetition)*
+    NOT? r1:Repetition rList:(_ Repetition)* {
+        return {
+            repetitionList: [r1].concat(rList)
+        }
+    }
 
 Repetition =
-    AtomQuery RepOpt?
-    / OpenStructTag
-    / CloseStructTag
+    AtomQuery RepOpt? {
+        return {
+            repetitionType: "atom-query"
+        }
+    }
+    / OpenStructTag {
+        return {
+            repetitionType: "open-struct-tag"
+        }
+    }
+    / CloseStructTag {
+        return {
+            repetitionType: "close-struct-tag"
+        }
+    }
 
 OpenStructTag =
     LSTRUCT Structure _ SLASH? RSTRUCT

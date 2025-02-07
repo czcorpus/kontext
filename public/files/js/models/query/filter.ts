@@ -35,7 +35,7 @@ import { Actions as MainMenuActions } from '../mainMenu/actions.js';
 import * as PluginInterfaces from '../../types/plugins/index.js';
 import { AjaxConcResponse } from '../concordance/common.js';
 import { QueryType, AnyQuery, AdvancedQuery, SimpleQuery, parseSimpleQuery } from './query.js';
-import { highlightSyntaxStatic } from '../cqleditor/parser.js';
+import { highlightSyntaxStatic, isTokenlessQuery } from '../cqleditor/parser.js';
 import { AttrHelper } from '../cqleditor/attrs.js';
 import * as formArgs from './formArgs.js';
 
@@ -195,6 +195,7 @@ function importFormValues(src:any, sourceId?:string):{[key:string]:AnyQuery} {
                                     x => x.containsWithin,
                                     parsed.ast.withinOrContainingList || []
                                 ),
+                                tokenlessQuery: isTokenlessQuery(parsed.ast),
                                 pcq_pos_neg: 'pos',
                                 include_empty: false,
                                 default_attr: src.currDefaultAttrValues[filter]
@@ -248,10 +249,11 @@ function importFormValues(src:any, sourceId?:string):{[key:string]:AnyQuery} {
                     rawFocusIdx: 0,
                     parsedAttrs: [],
                     focusedAttr: undefined,
-                        containsWithin: List.some(
-                            x => x.containsWithin,
-                            parsed.ast.withinOrContainingList || []
-                        ),
+                    containsWithin: List.some(
+                        x => x.containsWithin,
+                        parsed.ast.withinOrContainingList || []
+                    ),
+                    tokenlessQuery: isTokenlessQuery(parsed.ast),
                     pcq_pos_neg: 'pos',
                     include_empty: false,
                     default_attr: src.default_attr

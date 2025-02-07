@@ -191,7 +191,7 @@ function parseCqlGrammar(jsPath) {
         {encoding: 'utf-8'}
     );
     // cmd: 'mkdir -p public/files/js/.compiled/cqlParser;
-    // ./node_modules/pegjs/bin/pegjs --format amd
+    // ./node_modules/peggy/bin/peggy-cli --format amd
     // --allowed-start-rules Query,RegExpRaw,PhraseQuery
     // -o public/files/js/.compiled/cqlParser/parser.js scripts/build/cql.pegjs'
     const parser = peg.generate(

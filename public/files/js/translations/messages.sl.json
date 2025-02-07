@@ -111,6 +111,7 @@
         "global__tagset": "Nabor oznak",
         "global__on_attr": "na atributu",
         "global__query_type_mismatch_confirm_{type}": "Sintaksa dejanske poizvedbe ne ustreza trenutni izbrani vrsti \"{type}\". Ali želite nadaljevati?",
+        "global__query_is_tokenless": "Queries without specifying a token/position can lead to misinterpreted results. Try instead e.g. \u003Cstructure\u003E[]. UNTRANSLATED",
         "global__get_more_info": "Podrobne informacije",
         "global__bg_calculation_waiting_failed": "Računanje poteka počasi. Prosimo, počakajte par minut in osvežite stran.",
         "global__citation_info": "Informacije o citiranju",
