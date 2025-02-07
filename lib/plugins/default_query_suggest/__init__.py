@@ -37,7 +37,7 @@ async def fetch_query_suggestions(amodel: CorpusActionModel, req: KRequest, resp
     with plugins.runtime.QUERY_SUGGEST as plg:
         ans = await plg.find_suggestions(
             plugin_ctx=amodel.plugin_ctx,
-            corpora=req.args_getlist('corpora'),
+            corpora=req.args_getlist('corpname'),
             subcorpus=req.args.get('subcorpus'),
             value=req.args.get('value'),
             value_type=req.args.get('value_type'),
