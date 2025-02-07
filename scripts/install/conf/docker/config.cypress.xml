@@ -143,9 +143,9 @@
             <fallback_lang>en-US</fallback_lang>
         </getlang>
         <live_attributes>
-            <module>masm_live_attributes</module>
+            <module>frodo_live_attributes</module>
             <js_module>liveAttributes</js_module>
-            <service_url>http://kontext-masm-1:8088/</service_url>
+            <service_url>http://kontext-frodo-1:8088/</service_url>
             <doclist_cache_dir>/var/local/corpora/liveattrs-cache</doclist_cache_dir>
         </live_attributes>
         <menu_items>
@@ -170,9 +170,9 @@
             </excluded_users>
         </settings_storage>
         <subcmixer>
-            <module>masm_subcmixer</module>
+            <module>frodo_subcmixer</module>
             <js_module>subcmixer</js_module>
-            <service_url>http://kontext-masm-1:8088/</service_url>
+            <service_url>http://kontext-frodo-1:8088/</service_url>
         </subcmixer>
         <subc_storage>
             <module>mysql_subc_storage</module>

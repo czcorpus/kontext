@@ -38,7 +38,7 @@ from plugin_types.subcmixer.error import (
     ResultNotFoundException, SubcMixerException)
 from sanic.blueprints import Blueprint
 
-bp = Blueprint('masm_subcmixer', url_prefix='subcorpus')
+bp = Blueprint('frodo_subcmixer', url_prefix='subcorpus')
 
 
 @bp.route('/subcmixer_run_calc', methods=['POST'])
@@ -112,21 +112,21 @@ class CategorySize:
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
-class MasmResponse:
+class FrodoResponse:
     doc_ids: List[str]
     size_assembled: int
     category_sizes: List[CategorySize]
     error: Optional[str] = None
 
 
-async def proc_masm_response(resp) -> MasmResponse:
+async def proc_frodo_response(resp) -> FrodoResponse:
     data = await resp.json()
     if 400 <= resp.status <= 500:
         raise SubcMixerException(data.get('error', 'unspecified error'))
-    return MasmResponse.from_dict(data)
+    return FrodoResponse.from_dict(data)
 
 
-class MasmSubcmixer(AbstractSubcMixer):
+class FrodoSubcmixer(AbstractSubcMixer):
 
     def __init__(self, corparch: AbstractCorporaArchive, service_url: str):
         self._service_url = service_url
@@ -150,7 +150,7 @@ class MasmSubcmixer(AbstractSubcMixer):
                     'corpora': [corpname] + aligned_corpora,
                     'textTypes': args
                 }) as resp:
-            data = await proc_masm_response(resp)
+            data = await proc_frodo_response(resp)
         if data.error:
             raise SubcMixerException(data.error)
         if data.size_assembled > 0:
@@ -170,6 +170,6 @@ class MasmSubcmixer(AbstractSubcMixer):
 
 
 @plugins.inject(plugins.runtime.CORPARCH)
-def create_instance(settings, corparch: AbstractCorporaArchive) -> MasmSubcmixer:
+def create_instance(settings, corparch: AbstractCorporaArchive) -> FrodoSubcmixer:
     plg_conf = settings.get('plugins')['subcmixer']
-    return MasmSubcmixer(corparch, plg_conf['service_url'])
+    return FrodoSubcmixer(corparch, plg_conf['service_url'])

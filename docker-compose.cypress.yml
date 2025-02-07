@@ -2,7 +2,7 @@ services:
   mariadb-test:
     build:
       context: .
-      dockerfile: dockerfiles/Dockerfile.mariadb-cypress
+      dockerfile: dockerfiles/Dockerfile.mariadb.cypress
     environment:
       - MYSQL_PASSWORD
       - MYSQL_USER
@@ -22,7 +22,7 @@ services:
 
   kontext:
     build:
-      dockerfile: dockerfiles/Dockerfile.kontext-cypress
+      dockerfile: dockerfiles/Dockerfile.kontext.cypress
     volumes:
       - ./scripts/install/conf/docker/config.cypress.xml:/opt/kontext/conf/config.xml
     depends_on:
@@ -52,12 +52,12 @@ services:
     networks:
       - databases
   
-  masm:
-    build: ${MASM_PATH}
+  frodo:
+    build: ${FRODO_PATH}
     networks:
       - databases
     volumes:
-      - ./scripts/install/conf/docker/masm-conf-cypress.json:/opt/masm/conf-docker.json
+      - ./scripts/install/conf/docker/conf.cypress.frodo.json:/opt/frodo/conf.docker.json
       - corpora-data:/var/lib/manatee
   
   camus:
@@ -65,7 +65,7 @@ services:
     networks:
       - databases
     volumes:
-      - ./scripts/install/conf/docker/camus-conf-cypress.json:/opt/camus/conf.json
+      - ./scripts/install/conf/docker/conf.cypress.camus.json:/opt/camus/conf.json
       - kontext_testindex:/index.bleve
     ports:
       - "8787:8787"

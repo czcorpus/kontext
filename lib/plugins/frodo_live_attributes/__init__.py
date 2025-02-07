@@ -34,14 +34,14 @@ from plugin_types.live_attributes.doclist.writer import export_csv, export_jsonl
 UNLIMITED_LIST_PLACEHOLDER = 1_000_000
 
 
-async def proc_masm_response(resp) -> Any:
+async def proc_frodo_response(resp) -> Any:
     data = await resp.json()
     if 400 <= resp.status <= 500:
         raise LiveAttrsException(data.get('error', 'unspecified error'))
     return data
 
 
-class MasmLiveAttributes(AbstractLiveAttributes):
+class FrodoLiveAttributes(AbstractLiveAttributes):
 
     corparch: AbstractCorporaArchive
 
@@ -73,7 +73,7 @@ class MasmLiveAttributes(AbstractLiveAttributes):
             json_body['autocompleteAttr'] = autocomplete_attr
         json_body['maxAttrListSize'] = self._max_attr_list_size if limit_lists else UNLIMITED_LIST_PLACEHOLDER
         async with plugin_ctx.request.ctx.http_client.post(urljoin(self._service_url, f'/liveAttributes/{corpus.corpname}/query'), json=json_body) as resp:
-            data = await proc_masm_response(resp)
+            data = await proc_frodo_response(resp)
         return AttrValuesResponse(**data)
 
     async def get_subc_size(self, plugin_ctx, corpora, attr_map):
@@ -81,7 +81,7 @@ class MasmLiveAttributes(AbstractLiveAttributes):
         if len(corpora) > 1:
             json_body['aligned'] = corpora[1:]
         async with plugin_ctx.request.ctx.http_client.post(urljoin(self._service_url,f'/liveAttributes/{corpora[0]}/selectionSubcSize'), json=json_body) as resp:
-            data = await proc_masm_response(resp)
+            data = await proc_frodo_response(resp)
             return data['total']
 
     async def get_supported_structures(self, plugin_ctx, corpname):
@@ -91,18 +91,18 @@ class MasmLiveAttributes(AbstractLiveAttributes):
 
     async def get_bibliography(self, plugin_ctx, corpus, item_id):
         async with plugin_ctx.request.ctx.http_client.post(urljoin(self._service_url,f'/liveAttributes/{corpus.corpname}/getBibliography'), json={'itemId': item_id}) as resp:
-            data = await proc_masm_response(resp)
+            data = await proc_frodo_response(resp)
             return list(data.items())
 
     async def find_bib_titles(self, plugin_ctx, corpus_id, id_list) -> List[BibTitle]:
         async with plugin_ctx.request.ctx.http_client.post(urljoin(self._service_url,f'/liveAttributes/{corpus_id}/findBibTitles'), json={'itemIds': id_list}) as resp:
-            data = await proc_masm_response(resp)
+            data = await proc_frodo_response(resp)
             return [BibTitle(item_id, data[item_id]) for item_id in id_list]
 
     async def fill_attrs(self, plugin_ctx, corpus_id, search, values, fill):
         json_body = {'search': search, 'values': values, 'fill': fill}
         async with plugin_ctx.request.ctx.http_client.post(urljoin(self._service_url,f'/liveAttributes/{corpus_id}/fillAttrs'), json=json_body) as resp:
-            return await proc_masm_response(resp)
+            return await proc_frodo_response(resp)
 
     def _mk_doclist_cache_file_path(self, attr_map, aligned_corpora, view_attrs, save_format: str) -> str:
         file_path = '{}.{}'.format(mk_cache_key(attr_map, aligned_corpora, view_attrs), save_format)
@@ -112,7 +112,7 @@ class MasmLiveAttributes(AbstractLiveAttributes):
         args = dict(attrs=attr_map, aligned=aligned_corpora)
         attrs = urllib.parse.urlencode([('attr',  x) for x in view_attrs])
         async with plugin_ctx.request.ctx.http_client.post(urljoin(self._service_url,f'/liveAttributes/{corpus_id}/documentList?{attrs}'), json=args) as resp:
-            data = await proc_masm_response(resp)
+            data = await proc_frodo_response(resp)
             file = self._mk_doclist_cache_file_path(
                 attr_map, aligned_corpora, view_attrs, save_format)
             if save_format == 'csv':
@@ -137,13 +137,13 @@ class MasmLiveAttributes(AbstractLiveAttributes):
     async def num_matching_documents(self, plugin_ctx, corpus_id, attr_map, aligned_corpora):
         args = dict(attrs=attr_map, aligned=aligned_corpora)
         async with plugin_ctx.request.ctx.http_client.post(urljoin(self._service_url,f'/liveAttributes/{corpus_id}/numMatchingDocuments'), json=args) as resp:
-            return await proc_masm_response(resp)
+            return await proc_frodo_response(resp)
 
 
 @plugins.inject(plugins.runtime.CORPARCH)
-def create_instance(settings, corparch: AbstractCorporaArchive) -> MasmLiveAttributes:
+def create_instance(settings, corparch: AbstractCorporaArchive) -> FrodoLiveAttributes:
     plg_conf = settings.get('plugins')['live_attributes']
-    return MasmLiveAttributes(
+    return FrodoLiveAttributes(
         corparch,
         plg_conf['service_url'],
         plg_conf['doclist_cache_dir'],

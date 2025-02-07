@@ -2,7 +2,7 @@ services:
   kontext-dev:
     build:
       context: .
-      dockerfile: dockerfiles/Dockerfile.kontext-dev
+      dockerfile: dockerfiles/Dockerfile.kontext.dev
     environment:
       - TZ=Europe/Prague
       - DEV_SERVER_HOST=0.0.0.0
