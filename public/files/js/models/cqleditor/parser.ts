@@ -19,13 +19,38 @@
  */
 
 import * as Kontext from '../../types/kontext.js';
-import { parse as parseQuery, SyntaxError } from 'cqlParser/parser';
+import { AST, parse as parseQuery, SyntaxError } from 'cqlParser/parser';
 import { IAttrHelper, NullAttrHelper } from './attrs.js';
-import { tuple } from 'cnc-tskit';
+import { List, pipe, tuple } from 'cnc-tskit';
 import { ParsedAttr, ParsedPQItem, RuleCharMap } from './rules.js';
 
 export type { ParsedAttr, ParsedPQItem } from './rules.js';
 
+export function emptyAST():AST {
+    return {withinOrContainingList: [], sequence: {seqList: []}};
+}
+
+export function isTokenlessQuery(ast:AST):boolean {
+    return pipe(
+        ast.sequence?.seqList || [],
+        List.flatMap(
+            x => x.repetitionList
+        ),
+        List.foldl(
+            ([numTokens, numTags], x) => tuple(
+                numTokens + (x.repetitionType === 'atom-query' ? 1 : 0),
+                numTags + (x.repetitionType !== 'atom-query' ? 1 : 0)
+            ),
+            tuple(0, 0)
+        ),
+        ([numTokens, numTags]) => {
+            if (numTokens === 0 && numTags > 0) {
+                return true
+            }
+            return false
+        }
+    )
+}
 
 /**
  * ParserStack is used along with PEG parser to walk
@@ -140,7 +165,7 @@ function _highlightSyntax({
     }
 
     let parseError:SyntaxError = null;
-    let ast:AST = {withinOrContainingList: []};
+    let ast:AST = emptyAST();
     try {
         ast = parseQuery(query, {
             startRule: applyRules[0],
@@ -162,6 +187,9 @@ function _highlightSyntax({
         });
 
     } catch (e) {
+        if (!(e instanceof SyntaxError)) {
+            console.error("ERROR: ", e);
+        }
         parseError = e;
         if (!ignoreErrors) {
             throw e;
@@ -172,7 +200,7 @@ function _highlightSyntax({
 
     if (query.length === 0) {
         return {
-            ast: {withinOrContainingList: []},
+            ast: emptyAST(),
             highlighted: '',
             parsedAttrs: [],
             parsedPqItems: [],

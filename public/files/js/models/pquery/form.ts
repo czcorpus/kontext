@@ -1048,6 +1048,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             parsedAttrs: [],
             focusedAttr: undefined,
             containsWithin: false,
+            tokenlessQuery: false,
             pcq_pos_neg: 'pos',
             include_empty: false,
             default_attr: null,

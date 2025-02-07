@@ -19,7 +19,7 @@
  */
 
 import { id, List, tuple } from 'cnc-tskit';
-import { highlightSyntaxStatic, ParsedAttr } from '../cqleditor/parser.js';
+import { highlightSyntaxStatic, isTokenlessQuery, ParsedAttr } from '../cqleditor/parser.js';
 import { SubmitEncodedSimpleTokens } from './formArgs.js';
 
 
@@ -58,6 +58,7 @@ export interface AdvancedQuery {
     rawFocusIdx:number;
     queryHtml:string;
     containsWithin:boolean;
+    tokenlessQuery:boolean;
     pcq_pos_neg:'pos'|'neg';
     include_empty:boolean;
     default_attr:string;
@@ -189,6 +190,7 @@ export function simpleToAdvancedQuery(q:SimpleQuery, defaultAttr:string):Advance
             x => x.containsWithin,
             parsed.ast.withinOrContainingList || [],
         ),
+        tokenlessQuery: isTokenlessQuery(parsed.ast),
         pcq_pos_neg: q.pcq_pos_neg,
         include_empty: q.include_empty,
         default_attr: defaultAttr

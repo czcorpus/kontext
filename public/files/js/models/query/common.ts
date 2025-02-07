@@ -28,7 +28,7 @@ import * as ViewOptions from '../../types/viewOptions.js';
 import { PageModel } from '../../app/page.js';
 import { TextTypesModel } from '../textTypes/main.js';
 import { QueryContextModel } from './context.js';
-import { parse as parseQuery, ITracer } from 'cqlParser/parser';
+import { parse as parseQuery, ITracer, AST } from 'cqlParser/parser';
 import { ConcServerArgs, ConcViewMode } from '../concordance/common.js';
 import { QueryFormType, Actions } from './actions.js';
 import { Subject, Subscription } from 'rxjs';
@@ -39,7 +39,7 @@ import {
     AdvancedQuery, advancedToSimpleQuery, AnyQuery, AnyQuerySubmit, findTokenIdxBySuggFocusIdx,
     parseSimpleQuery, QueryType, runSimpleQueryParser, SimpleQuery, simpleToAdvancedQuery,
     TokenSuggestions } from './query.js';
-import { getApplyRules, highlightSyntax, ParsedAttr } from '../cqleditor/parser.js';
+import { emptyAST, getApplyRules, highlightSyntax, isTokenlessQuery, ParsedAttr } from '../cqleditor/parser.js';
 import { AttrHelper } from '../cqleditor/attrs.js';
 import { Actions as QueryHintsActions } from '../usageTips/actions.js';
 import { Actions as HistoryActions } from '../searchHistory/actions.js';
@@ -1312,33 +1312,26 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         return this.state.suggestionsConfigured && !!srchWord.trim();
     }
 
-    protected validateQuery(query:string, queryType:QueryType):boolean {
-        const parseFn = ((query:string) => {
-            switch (queryType) {
-                case 'advanced':
-                    return parseQuery.bind(
-                        null,
-                        query,
-                        {
-                            startRule: List.head(getApplyRules('conc')),
-                            tracer: this.queryTracer
-                        }
-                    );
-                default:
-                    return () => {};
+    protected validateAdvancedQuery(queryObj:AdvancedQuery):Error|undefined {
+        let ast:AST = emptyAST();
+        const parseFn = (query:string):AST => parseQuery(
+            query,
+            {
+                startRule: List.head(getApplyRules('conc')),
+                tracer: this.queryTracer
             }
-        })(query.trim());
-
-        let mismatch;
+        );
         try {
-            parseFn();
-            mismatch = false;
+            ast = parseFn(queryObj.query.trim());
+            if (isTokenlessQuery(ast)) {
+                return new Error(this.pageModel.translate('global__query_is_tokenless'));
+            }
 
         } catch (e) {
-            mismatch = true;
             console.error(e);
+            return new Error(`syntax error: ${e}`);
         }
-        return mismatch;
+        return undefined;
     }
 
     protected addQueryInfix(
@@ -1369,10 +1362,12 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         }
     }
 
-    private isPossibleQueryTypeMismatch(sourceId:string):[boolean, QueryType] {
-        const query = this.state.queries[sourceId].query;
-        const queryType = this.state.queries[sourceId].qtype;
-        return tuple(this.validateQuery(query, queryType), queryType);
+    private isPossibleQueryTypeMismatch(sourceId:string):[Error|undefined, QueryType] {
+        const query = this.state.queries[sourceId];
+        if (query.qtype === 'advanced') {
+            return tuple(this.validateAdvancedQuery(query), query.qtype);
+        }
+        return tuple(undefined, 'simple');
     }
 
     protected testQueryTypeMismatch():Error|null {
@@ -1386,11 +1381,17 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             return null;
         }
         const [err, type] = List.head(errors);
-        if (window.confirm(this.pageModel.translate(
-                'global__query_type_mismatch_confirm_{type}', {type:
-                    type === 'advanced' ?
-                            this.pageModel.translate('query__qt_advanced') :
-                            this.pageModel.translate('query__qt_simple')}))) {
+        const msg = err.message ?
+            err.message :
+            this.pageModel.translate(
+                'global__query_type_mismatch_confirm_{type}',
+                {
+                    type: type === 'advanced' ?
+                        this.pageModel.translate('query__qt_advanced') :
+                        this.pageModel.translate('query__qt_simple')
+                }
+            );
+        if (window.confirm(msg)) {
             return null;
         }
         return new Error(this.pageModel.translate('global__query_type_mismatch'));

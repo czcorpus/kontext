@@ -43,7 +43,7 @@ import { AdvancedQuery, advancedToSimpleQuery, AnyQuery, AnyQuerySubmit, parseSi
     QueryType, SimpleQuery, simpleToAdvancedQuery} from './query.js';
 import { ajaxErrorMapped } from '../../app/navigation/index.js';
 import { AttrHelper } from '../cqleditor/attrs.js';
-import { highlightSyntaxStatic } from '../cqleditor/parser.js';
+import { highlightSyntaxStatic, isTokenlessQuery } from '../cqleditor/parser.js';
 import { ConcFormArgs, QueryFormArgs, QueryFormArgsResponse, SubmitEncodedSimpleTokens } from './formArgs.js';
 import { PluginName } from '../../app/plugin.js';
 
@@ -209,6 +209,7 @@ function importUserQueries(
                             x => x.containsWithin,
                             parsed.ast.withinOrContainingList || [],
                         ),
+                        tokenlessQuery: isTokenlessQuery(parsed.ast),
                         pcq_pos_neg: data.currPcqPosNegValues[corpus] || 'pos',
                         include_empty: data.currIncludeEmptyValues[corpus] || false,
                         default_attr: Array.isArray(defaultAttr) ? List.head(defaultAttr) : defaultAttr // determineDefaultAttr always returns string for advanced query
@@ -568,11 +569,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                     ),
                     concatMap(
                         ({ttSelections, contextData}) => {
-                            let err:Error;
-                            err = this.testQueryTypeMismatch();
-                            if (err !== null) {
-                                throw err;
-                            }
                             return rxOf({
                                 contextData,
                                 ttSelections,
