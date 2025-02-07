@@ -18,32 +18,32 @@
         "altAccessMapping": {
             "omezeni": ""
         },
-        "syncAllowedCorpora": ["susanne"],
+        "syncAllowedCorpora": ["susanne", "syn2015"],
         "wordSketchDefDirPath": "/var/lib/manatee/ske-wsdef",
         "manateeDynlibPath": "/a/path/to/ucnkdynfn.so"
     },
-    "kontextSoftResetURL": ["http://localhost:8989/kontext-services/soft-reset-all"],
+    "kontext": {
+        "softResetUrl": ["http://localhost:8989/kontext-services/soft-reset-all"]
+    },
     "cncDb": {
-        "host": "kontext-mariadb-test-1:3306",
+        "host": "kontext-mariadb-1:3306",
         "user": "kontext",
         "passwd": "kontext-secret",
-        "db": "kontext",
-        "overrideCorporaTableName": "kontext_corpus",
-        "overridePcTableName": "kontext_parallel_corpus"
+        "db": "kontext"
     },
     "liveAttrs": {
         "db": {
             "type": "mysql",
             "name": "liveattrs",
-            "host": "kontext-mariadb-test-1:3306",
+            "host": "kontext-mariadb-1:3306",
             "user": "liveattrs",
             "password": "liveattrs-secret",
             "preconfSettings": []
         },
-        "confDirPath": "/opt/masm/vert-tagextract/conf"
+        "confDirPath": "/opt/frodo/vert-tagextract/conf"
     },
     "jobs": {
-        "statusDataPath": "/tmp/cnc-masm-data.bin",
+        "statusDataPath": "/tmp/frodo-data.bin",
         "maxNumRestarts": 3
     }
 }

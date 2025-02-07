@@ -1,6 +1,6 @@
 services:
-  masm:
-    build: ${MASM_PATH}
+  frodo:
+    build: ${FRODO_PATH}
     ports:
       - 8088:8088
     networks:
@@ -8,9 +8,9 @@ services:
       - databases
     command: bash -c "export PATH=$PATH:/usr/local/go/bin && curl -sSfL https://raw.githubusercontent.com/cosmtrek/air/master/install.sh | sh -s -- -b /usr/local/go/bin && air"
     volumes:
-      - ${MASM_PATH}:/opt/masm
-      - ./scripts/install/conf/docker/masm-conf.json:/opt/masm/docker-conf.json
-      - ./scripts/install/conf/docker/masm.air.toml:/opt/masm/.air.toml
+      - ${FRODO_PATH}:/opt/frodo
+      - ./scripts/install/conf/docker/conf.frodo.json:/opt/frodo/conf.docker.json
+      - ./scripts/install/conf/docker/air.frodo.toml:/opt/frodo/.air.toml
       - corpora-data:/var/lib/manatee
 
 volumes:

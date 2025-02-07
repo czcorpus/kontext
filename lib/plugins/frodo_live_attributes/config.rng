@@ -5,14 +5,14 @@
     <start>
         <element name="live_attributes">
             <element name="module">
-                <value>masm_live_attributes</value>
+                <value>frodo_live_attributes</value>
             </element>
             <element name="js_module">
                 <value>liveAttributes</value>
             </element>
             <element name="service_url">
                 <a:documentation>
-                    A URL of a CNC-MASM server
+                    A URL of a FRODO server
                 </a:documentation>
                 <data type="anyURI" />
             </element>

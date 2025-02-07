@@ -8,11 +8,11 @@ tmp_dir = "tmp"
 
 [build]
 # Just plain old shell command. You could use `make` as well.
-cmd = "./configure --with-pcre2 && make build"
+cmd = "PATH=$PATH:/usr/local/go/bin:/root/go/bin && make swagger && make build"
 # Binary file yields from `cmd`.
-bin = "masm3"
+bin = "frodo"
 # Customize binary.
-full_bin = "./masm3 start docker-conf.json"
+full_bin = "./frodo start conf.docker.json"
 # Watch these filename extensions.
 include_ext = ["go", "py"]
 # Ignore these filename extensions or directories.
