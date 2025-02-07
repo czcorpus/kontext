@@ -66,14 +66,16 @@ function findPluginTags(pluginsPath, doc) {
         for (let i = 0; i < plugins[0].childNodes.length; i += 1) {
             let node = plugins[0].childNodes[i];
             if (node.nodeType === 1) {
+                let isEmpty = false;
                 let jsDir = findJsDir(node);
                 if (!jsDir) {
                     jsDir = camelizeName(node.nodeName);
+                    isEmpty = node.getElementsByTagName('module').length === 0;
                 }
                 ans.push({
                     canonicalName: `@plugins/${canonizeName(node.nodeName)}`,
                     jsDir,
-                    jsExists: fs.existsSync(path.resolve(pluginsPath, jsDir))
+                    jsExists: isEmpty ? false : fs.existsSync(path.resolve(pluginsPath, jsDir))
                 });
             }
         }

@@ -2,7 +2,9 @@ services:
   kontext:
     build:
       context: .
-      dockerfile: dockerfiles/Dockerfile.kontext-jammy
+      dockerfile: dockerfiles/Dockerfile.kontext
+      args:
+        - KONTEXT_CONFIG=${KONTEXT_CONFIG}
     # since we are using shared volume with nginx
     # in case different version of kontext is used
     # we need to copy files into the shared volume first
@@ -40,7 +42,7 @@ services:
   rq-worker:
     build:
       context: .
-      dockerfile: dockerfiles/Dockerfile.rqworker-jammy
+      dockerfile: dockerfiles/Dockerfile.rqworker
     volumes:
       - ${KONTEXT_CONFIG}:/opt/kontext/conf/config.xml
       - corpora-data:/var/lib/manatee
@@ -54,7 +56,7 @@ services:
         condition: service_started
 
   redis:
-    image: redis:latest
+    image: redis:alpine
     networks:
       - databases
     ports:
@@ -68,7 +70,7 @@ services:
       retries: 5
 
   nginx:
-    image: nginx:latest
+    image: nginx:stable-alpine
     ports:
       - "8080:80"
     volumes:

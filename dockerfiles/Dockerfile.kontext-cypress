@@ -1,14 +1,22 @@
-FROM czcorpus/kontext-manatee:latest
+FROM czcorpus/kontext-manatee:2.225.8-noble
 
 SHELL ["/bin/bash", "--login", "-c"]
-RUN wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.36.0/install.sh | bash
-RUN nvm install 16
 
-RUN apt-get update
-RUN apt-get install -y sox libsox-fmt-mp3
+ENV NODE_VERSION=22.13.0
+ENV NVM_DIR=/usr/local/nvm
+
+RUN apt-get update \
+    && apt-get install -y curl \
+    && mkdir -p $NVM_DIR \
+    && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash \
+    && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" \
+    && nvm install "${NODE_VERSION}" \
+    && apt-get install -y sox libsox-fmt-mp3 python3-pip python3-icu libcairo2
+
+ENV PATH="${NVM_DIR}/versions/node/v${NODE_VERSION}/bin:${PATH}"
 
 COPY ./requirements.txt ./
-RUN pip3 install --upgrade pip && pip3 install -r requirements.txt
+RUN pip3 install -r requirements.txt --break-system-packages
 
 COPY ./pack*.json ./
 RUN npm install

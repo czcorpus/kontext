@@ -22,7 +22,7 @@ services:
 
   kontext:
     build:
-      dockerfile: dockerfiles/Dockerfile.kontext-cypress-jammy
+      dockerfile: dockerfiles/Dockerfile.kontext-cypress
     volumes:
       - ./scripts/install/conf/docker/config.cypress.xml:/opt/kontext/conf/config.xml
     depends_on:

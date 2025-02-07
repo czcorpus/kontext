@@ -8,7 +8,7 @@ tmp_dir = "tmp"
 
 [build]
 # Just plain old shell command. You could use `make` as well.
-cmd = "./configure && make build"
+cmd = "./configure --with-pcre2 && make build"
 # Binary file yields from `cmd`.
 bin = "masm3"
 # Customize binary.
