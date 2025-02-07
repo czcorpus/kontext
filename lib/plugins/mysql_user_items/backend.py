@@ -95,7 +95,7 @@ class Backend:
             async with await conn.cursor() as cursor:
                 await cursor.execute(
                     'INSERT INTO kontext_user_fav_item (subcorpus_id, user_id) '
-                    'VALUES (%s, %s, %s) ', (item.subcorpus_id, user_id))
+                    'VALUES (%s, %s) ', (item.subcorpus_id, user_id))
 
                 favitem_id: int = cursor.lastrowid
                 await cursor.executemany(
