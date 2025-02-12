@@ -59,20 +59,40 @@ declare module "cqlParser/parser" {
         found:string;
     }
 
-    export interface Repetition {
-        repetitionType: 'atom-query'|'open-struct-tag'|'close-struct-tag'
+    export interface RepetitionOther {
+        repetitionType: 'atom-query'|'close-struct-tag'
     }
 
     export interface Seq {
-        repetitionList: Array<Repetition>;
+        repetitionList: Array<RepetitionOther>;
     }
 
     export interface Sequence {
         seqList:Array<Seq>;
     }
 
+    export interface Structure {
+        structName:string;
+        attList:Array<{
+            attName:string;
+            attValue:string;
+        }>;
+    }
+
+    export interface RepetitionStruct {
+        repetitionType: 'open-struct-tag'
+        structure:Structure;
+    }
+
+    export interface WithinAttr {
+
+    }
+
     export interface AST {
-        withinOrContainingList:Array<{containsWithin: boolean}>;
+        withinOrContainingList:Array<{
+            containsWithin:boolean,
+            attrs:Array<RepetitionStruct>
+        }>;
         sequence:Sequence;
     }
 
