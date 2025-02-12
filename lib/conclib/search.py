@@ -249,7 +249,7 @@ async def get_conc(
                 if not ready:
                     raise ConcCalculationStatusException(
                         'Wait for concordance operation failed')
-            elif not curr_status:
+            elif not curr_status or not curr_status.is_consistent():
                 calc_status = worker.create_new_calc_status()
                 calc_status.concsize = conc.size()
                 calc_status = await cache_map.add_to_map(corp.cache_key, q[:act + 1], cutoff, calc_status)
