@@ -1121,7 +1121,6 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                     return tuple(null, null);
                 }
             });
-            console.log('parsed: ', parsed)
             this.validateSemantics(state, sourceId, parsed.parsedAttrs);
             queryObj.focusedAttr = this.findFocusedAttr(queryObj);
             queryObj.queryHtml = parsed.highlighted;
