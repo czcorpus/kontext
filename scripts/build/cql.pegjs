@@ -19,9 +19,10 @@ Query =
     }
 
 WithinOrContaining =
-    NOT? w:(KW_WITHIN / KW_CONTAINING) _ WithinContainingPart {
+    NOT? w:(KW_WITHIN / KW_CONTAINING) _ wp:WithinContainingPart {
         return {
-            containsWithin: w == 'within'
+            containsWithin: w == 'within',
+            attrs: wp
         }
     }
 
@@ -33,12 +34,29 @@ GlobCond =
     / KW_FREQ LPAREN _ NUMBER DOT AttName _ RPAREN NOT? _ ( EQ / LEQ / GEQ / LSTRUCT / RSTRUCT ) _ NUMBER
 
 WithinContainingPart =
-    Sequence
-    / WithinNumber
-    / NOT? AlignedPart
+    s:Sequence {
+        return {
+            sequence: s
+        }
+    }
+    / WithinNumber {
+        return {
+            wn: true
+        }
+    }
+    / NOT? AlignedPart {
+        return {
+            aligned: true
+        }
+    }
 
 Structure =
-    AttName _ AttValList?
+    an:AttName _ avList:AttValList? {
+        return {
+            structName: an,
+            attList: avList
+        }
+    }
 
 NumberedPosition =
     NUMBER COLON OnePosition
@@ -93,9 +111,10 @@ Repetition =
             repetitionType: "atom-query"
         }
     }
-    / OpenStructTag {
+    / w:OpenStructTag {
         return {
-            repetitionType: "open-struct-tag"
+            repetitionType: "open-struct-tag",
+            args: w
         }
     }
     / CloseStructTag {
@@ -118,10 +137,18 @@ AlignedPart =
     AttName COLON _ Sequence  // parallel alignment
 
 AttValList =
-    AttValAnd (_ BINOR _ AttValAnd)*
+    ava:AttValAnd avaList:(_ BINOR _ AttValAnd)* {
+        return {
+            attValAnd: [ava].concat(avaList.map(v => v[3]))
+        }
+    }
 
 AttValAnd =
-    AttVal (_ BINAND _ AttVal)*
+    al:AttVal alList:(_ BINAND _ AttVal)* {
+        return {
+            attVals: [al].concat(alList)
+        }
+    }
 
 AttVal =
     AttName _ (NOT)? EEQ _ RawString
@@ -129,10 +156,16 @@ AttVal =
     / POSNUM NUMBER DASH NUMBER
     / POSNUM NUMBER
     / NOT AttVal
-    / LPAREN _ AttValList _ RPAREN
+    / LPAREN _ al:AttValList _ RPAREN {
+        return al
+    }
     / (KW_WS / KW_TERM) LPAREN _ (NUMBER COMMA NUMBER / RegExp COMMA RegExp COMMA RegExp) _ RPAREN
-    / KW_SWAP LPAREN _ NUMBER COMMA AttValList _ RPAREN
-    / KW_CCOLL LPAREN _ NUMBER COMMA NUMBER COMMA AttValList _ RPAREN
+    / KW_SWAP LPAREN _ NUMBER COMMA al:AttValList _ RPAREN {
+        return al
+    }
+    / KW_CCOLL LPAREN _ NUMBER COMMA NUMBER COMMA al:AttValList _ RPAREN {
+        return al
+    }
 
 WithinNumber =
     NUMBER

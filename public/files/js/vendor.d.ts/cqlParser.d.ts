@@ -72,7 +72,7 @@ declare module "cqlParser/parser" {
     }
 
     export interface AST {
-        withinOrContainingList:Array<{containsWithin: boolean}>;
+        withinOrContainingList:Array<{containsWithin:boolean, attrs:any}>;
         sequence:Sequence;
     }
 
