@@ -66,6 +66,18 @@ class ConcCacheStatus:
     def __post_init__(self, error: Optional[List[str]]):
         self._error = ConcCacheStatus.deserialize_error(error)
 
+    def is_consistent(self) -> bool:
+        """
+        The method tests if there is consistent situation between
+        metadata attributes ('finished', 'readable') and actual data
+        file existence. Inconsistent state can happen e.g. if someone
+        manually deletes cache files while leaving corresponding
+        Redis records.
+        """
+        if self.readable:
+            return self.cachefile and os.path.isfile(self.cachefile)
+        return True
+
     def recalc_relconcsize(self, corp: AbstractKCorpus):
         """
         Update relative frequency based on current fullsize/concsize and provided corpus (and its size).
