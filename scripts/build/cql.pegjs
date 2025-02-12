@@ -19,9 +19,10 @@ Query =
     }
 
 WithinOrContaining =
-    NOT? w:(KW_WITHIN / KW_CONTAINING) _ WithinContainingPart {
+    NOT? w:(KW_WITHIN / KW_CONTAINING) _ wp:WithinContainingPart {
         return {
-            containsWithin: w == 'within'
+            containsWithin: w == 'within',
+            attrs: wp
         }
     }
 
@@ -33,12 +34,27 @@ GlobCond =
     / KW_FREQ LPAREN _ NUMBER DOT AttName _ RPAREN NOT? _ ( EQ / LEQ / GEQ / LSTRUCT / RSTRUCT ) _ NUMBER
 
 WithinContainingPart =
-    Sequence
-    / WithinNumber
-    / NOT? AlignedPart
+    s:Sequence {
+        return s
+    }
+    / WithinNumber {
+        return {
+            wn: true
+        }
+    }
+    / NOT? AlignedPart {
+        return {
+            aligned: true
+        }
+    }
 
 Structure =
-    AttName _ AttValList?
+    an:AttName _ avList:AttValList? {
+        return {
+            structName: an,
+            attList: avList
+        }
+    }
 
 NumberedPosition =
     NUMBER COLON OnePosition
@@ -70,21 +86,15 @@ UnionOp =
 // -------------------- regular expression query --------------------
 Sequence =
     s1:Seq sList:(_ BINOR _ Seq)* {
-        return {
-            seqList: [s1].concat(sList)
-        }
+        return [s1].concat(sList).flatMap(x => x)
     } /
     s1:Seq {
-        return {
-            seqList: [s1].concat(sList)
-        }
+        [s1].concat(sList).flatMap(x => x)
     }
 
 Seq =
     NOT? r1:Repetition rList:(_ Repetition)* {
-        return {
-            repetitionList: [r1].concat(rList)
-        }
+        return [r1].concat(rList)
     }
 
 Repetition =
@@ -93,9 +103,10 @@ Repetition =
             repetitionType: "atom-query"
         }
     }
-    / OpenStructTag {
+    / w:OpenStructTag {
         return {
-            repetitionType: "open-struct-tag"
+            repetitionType: "open-struct-tag",
+            ...w
         }
     }
     / CloseStructTag {
@@ -105,7 +116,11 @@ Repetition =
     }
 
 OpenStructTag =
-    LSTRUCT Structure _ SLASH? RSTRUCT
+    LSTRUCT s:Structure _ SLASH? RSTRUCT {
+        return {
+            structure: s
+        }
+    }
 
 CloseStructTag =
     LSTRUCT SLASH _ Structure RSTRUCT
@@ -118,21 +133,41 @@ AlignedPart =
     AttName COLON _ Sequence  // parallel alignment
 
 AttValList =
-    AttValAnd (_ BINOR _ AttValAnd)*
+    ava:AttValAnd avaList:(_ BINOR _ AttValAnd)* {
+        return [ava].concat(avaList.map(v => v[3])).flatMap(x => x)
+    }
 
 AttValAnd =
-    AttVal (_ BINAND _ AttVal)*
+    al:AttVal alList:(_ BINAND _ AttVal)* {
+        return [al].concat(alList.map(v => v[3]))
+    }
 
 AttVal =
-    AttName _ (NOT)? EEQ _ RawString
-    / AttName (_ NOT)? _ (EQ / LEQ / GEQ / TEQ NUMBER?) _ RegExp
+    a:AttName _ (NOT)? EEQ _ v:RawString {
+        return {
+            attName: a,
+            attValue: v
+        }
+    }
+    / a:AttName (_ NOT)? _ (EQ / LEQ / GEQ / TEQ NUMBER?) _ v:RegExp {
+        return {
+            attName: a,
+            attValue: v
+        }
+    }
     / POSNUM NUMBER DASH NUMBER
     / POSNUM NUMBER
     / NOT AttVal
-    / LPAREN _ AttValList _ RPAREN
+    / LPAREN _ al:AttValList _ RPAREN {
+        return al
+    }
     / (KW_WS / KW_TERM) LPAREN _ (NUMBER COMMA NUMBER / RegExp COMMA RegExp COMMA RegExp) _ RPAREN
-    / KW_SWAP LPAREN _ NUMBER COMMA AttValList _ RPAREN
-    / KW_CCOLL LPAREN _ NUMBER COMMA NUMBER COMMA AttValList _ RPAREN
+    / KW_SWAP LPAREN _ NUMBER COMMA al:AttValList _ RPAREN {
+        return al
+    }
+    / KW_CCOLL LPAREN _ NUMBER COMMA NUMBER COMMA al:AttValList _ RPAREN {
+        return al
+    }
 
 WithinNumber =
     NUMBER
@@ -141,7 +176,12 @@ RepOpt =
     STAR / PLUS / QUEST / LBRACE NUMBER (COMMA NUMBER?)? RBRACE
 
 AttName =
-    ATTR_CHARS / ASCII_LETTERS /* this alternatives are here just to keep non terminal AttrName relevant */
+    ATTR_CHARS {
+        return text();
+    } /
+    ASCII_LETTERS {
+        return text();
+    } /* this alternatives are here just to keep non terminal AttrName relevant */
 
 // ----------------- Phrase (a query input mode) ------------------------
 
@@ -165,7 +205,12 @@ NO_RG_ESCAPED =
 // ---------------- Regular expression with balanced parentheses --------
 
 RegExp =
-    QUOT RegExpRaw (BINOR RegExpRaw?)* QUOT / QUOT QUOT
+    QUOT RegExpRaw (BINOR RegExpRaw?)* QUOT {
+        return text()
+    } /
+    QUOT QUOT {
+        return ""
+    }
 
 RegExpRaw =
     (RgLook / RgGrouped / RgSimple)+
