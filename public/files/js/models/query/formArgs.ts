@@ -23,6 +23,7 @@ import * as TextTypes from '../../types/textTypes.js';
 import * as PluginInterfaces from '../../types/plugins/index.js';
 import { CtxLemwordType } from './common.js';
 import { QueryType } from './query.js';
+import { Dict, List } from 'cnc-tskit';
 
 
 export interface ConcFormArgs {
@@ -56,6 +57,7 @@ export interface QueryFormArgs extends ConcFormArgs {
     curr_default_attr_values:{[corpname:string]:string};
     curr_use_regexp_values:{[corpname:string]:boolean};
     curr_include_empty_values:{[corpname:string]:boolean};
+    curr_contains_within:{[corpname:string]:boolean};
     tagsets:{[corpname:string]:Array<PluginInterfaces.TagHelper.TagsetInfo>};
     selected_text_types:TextTypes.ExportedSelection;
     bib_mapping:TextTypes.BibMapping;
@@ -168,3 +170,11 @@ export interface ConcFormsInitialArgs {
 }
 
 
+export function hasWithinOrTT(concFormArgs: ConcFormArgs): boolean {
+    if (isQueryFormArgs(concFormArgs)) {
+        return Dict.some((v, _) => v, concFormArgs.curr_contains_within) || !Dict.empty(concFormArgs.selected_text_types);
+    } else if (isFilterFormArgs(concFormArgs)) {
+        // TODO
+    }
+    return false;
+}

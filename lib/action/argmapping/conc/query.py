@@ -35,6 +35,7 @@ class _QueryFormArgs:
     curr_qmcase_values: Dict[str, bool] = field(default_factory=dict)
     curr_default_attr_values: Dict[str, str] = field(default_factory=dict)
     curr_use_regexp_values: Dict[str, bool] = field(default_factory=dict)
+    curr_contains_within: Dict[str, bool] = field(default_factory=dict)
     tagsets: Dict[str, List[Dict[str, Any]]] = field(default_factory=dict)
     has_lemma: Dict[str, bool] = field(default_factory=dict)
     asnc: bool = False
@@ -127,6 +128,7 @@ class QueryFormArgs(ConcFormArgs[_QueryFormArgs], AbstractRawQueryDecoder):
             self.data.curr_qmcase_values[corp] = query.get('qmcase', False)
             self.data.curr_default_attr_values[corp] = query.get('default_attr')
             self.data.curr_use_regexp_values[corp] = query.get('use_regexp', False)
+            self.data.curr_contains_within[corp] = query.get('contains_within', False)
         self.data.bib_mapping = bib_mapping
 
         ctx = data.get('context', {})

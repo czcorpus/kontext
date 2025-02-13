@@ -769,6 +769,7 @@
         "coll__form_help_term_3": "a score based on so called \"mutual information\" (a term from information theory)",
         "coll__form_help_term_d": "Sørensen–Dice coefficient (normalized variant)",
         "coll__form_help_term_t": "a score derived from statistical T-test",
+        "coll__ad_hoc_subc_warning": "-- TODO warning --",
         "freq__h2_freq_distr": "Frequency distribution",
         "freq__sel_form_type_ml": "Standard",
         "freq__sel_form_type_tt": "According to text types",

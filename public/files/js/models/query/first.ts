@@ -136,6 +136,7 @@ export const fetchQueryFormArgs = (data:{[ident:string]:ConcFormArgs}):
             curr_qmcase_values: {},
             curr_default_attr_values: {},
             curr_use_regexp_values: {},
+            curr_contains_within: {},
             selected_text_types: {},
             bib_mapping: {},
             has_lemma: {},

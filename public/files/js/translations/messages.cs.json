@@ -768,6 +768,7 @@
         "coll__form_help_term_3": "míra založená na tzv. \"vzájemné informaci\" (pojem z teorie informace)",
         "coll__form_help_term_d": "Sørensen–Diceův koeficient (normalizovaná varianta)",
         "coll__form_help_term_t": "míra vycházející ze statistického T-testu",
+        "coll__ad_hoc_subc_warning": "-- TODO warning --",
         "freq__h2_freq_distr": "Frekvenční distribuce",
         "freq__sel_form_type_ml": "Běžná",
         "freq__sel_form_type_tt": "Podle typů textů",

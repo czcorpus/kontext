@@ -739,6 +739,7 @@
         "coll__form_help_term_3": "rezultat glede na tako imenovano \"vzajemno informacijo\" (termin iz informacijske teorije)",
         "coll__form_help_term_d": "Sørensen–Dice koeficient (normalizirana različica)",
         "coll__form_help_term_t": "rezultat glede na statistični T-test",
+        "coll__ad_hoc_subc_warning": "-- TODO warning --",
         "freq__h2_freq_distr": "Frekvenčna porazdelitev",
         "freq__sel_form_type_ml": "Standard",
         "freq__sel_form_type_tt": "Glede na vrste besedila",

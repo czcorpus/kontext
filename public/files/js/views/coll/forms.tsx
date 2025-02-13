@@ -313,6 +313,13 @@ export function init(
                                 onClick={this._handleSubmitClick}>
                             {he.translate('coll__make_candidate_list')}
                         </button>
+                        {this.props.adHocSubcWarning ?
+                            <span style={{marginLeft: '1em'}}>
+                                <img style={{margin: '0 1em', verticalAlign: 'middle'}} src={he.createStaticUrl('img/warning-icon.svg')} />
+                                {he.translate('coll__ad_hoc_subc_warning')}
+                            </span> :
+                            null
+                        }
                     </div>
                 </S.CollForm>
             );

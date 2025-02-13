@@ -26,6 +26,8 @@ import { Actions } from './actions.js';
 import { Actions as MainMenuActions } from '../mainMenu/actions.js';
 import { tuple, Dict, pipe, List } from 'cnc-tskit';
 import { CollServerArgs } from './common.js';
+import { LocalQueryFormData } from '../query/replay/index.js';
+import { hasWithinOrTT } from '../query/formArgs.js';
 
 
 /**
@@ -59,6 +61,7 @@ export interface CollFormModelState {
     cbgrfns:{[key:string]:true};
     csortfn:string;
     isBusy:boolean;
+    adHocSubcWarning:boolean;
 }
 
 /**
@@ -94,7 +97,12 @@ export class CollFormModel extends StatelessModel<CollFormModelState> {
                     Dict.fromEntries()
                 ),
                 csortfn: props.csortfn,
-                isBusy: false
+                isBusy: false,
+                adHocSubcWarning: pipe(
+                    pageModel.getConf<LocalQueryFormData>('ConcFormsArgs'),
+                    Dict.toEntries(),
+                    List.reduce((acc, [_, concFormArgs]) => acc || hasWithinOrTT(concFormArgs), false),
+                )
             }
         );
         this.pageModel = pageModel;
