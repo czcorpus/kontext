@@ -38,7 +38,7 @@ def _set_new_viewopts(
         line_numbers=False,
         shuffle=False,
         wlpagesize=0,
-        fmaxitems=0,
+        fpagesize=0,
         fdefault_view='charts',
         citemsperpage=0,
         pqueryitemsperpage=0,
@@ -60,9 +60,9 @@ def _set_new_viewopts(
     if wlpagesize <= 0:
         raise ValueError('invalid value for wlpagesize')
     amodel.args.wlpagesize = wlpagesize
-    if fmaxitems <= 0:
-        raise ValueError('invalid value for fmaxitems')
-    amodel.args.fmaxitems = fmaxitems
+    if fpagesize <= 0:
+        raise ValueError('invalid value for fpagesize')
+    amodel.args.fpagesize = fpagesize
     amodel.args.fdefault_view = fdefault_view
     if citemsperpage <= 0:
         raise ValueError('invalid value for citemsperpage')
@@ -202,7 +202,7 @@ async def viewopts(amodel: UserActionModel, req: KRequest, resp: KResponse):
         ctxunit='@pos',
         line_numbers=amodel.args.line_numbers,
         wlpagesize=amodel.args.wlpagesize,
-        fmaxitems=amodel.args.fmaxitems,
+        fpagesize=amodel.args.fpagesize,
         fdefault_view=amodel.args.fdefault_view,
         citemsperpage=amodel.args.citemsperpage,
         pqueryitemsperpage=amodel.args.pqueryitemsperpage,
@@ -224,7 +224,7 @@ async def viewoptsx(amodel: UserActionModel, req: KRequest, resp: KResponse):
             ctxunit=req.json.get('ctxunit'),
             line_numbers=req.json.get('line_numbers'),
             wlpagesize=req.json.get('wlpagesize'),
-            fmaxitems=req.json.get('fmaxitems'),
+            fpagesize=req.json.get('fpagesize'),
             fdefault_view=req.json.get('fdefault_view'),
             citemsperpage=req.json.get('citemsperpage'),
             pqueryitemsperpage=req.json.get('pqueryitemsperpage'),

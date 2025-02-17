@@ -120,7 +120,7 @@ export interface FreqDataRowsModelState extends BaseFreqModelState {
 export interface FreqChartsModelState extends BaseFreqModelState {
     type:{[sourceId:string]:FreqChartsAvailableTypes};
     dataKey:{[sourceId:string]:FreqChartsAvailableData};
-    fmaxitems:{[sourceId:string]:Kontext.FormValue<string>};
+    fpagesize:{[sourceId:string]:Kontext.FormValue<string>};
     dtFormat:{[sourceId:string]:string};
     downloadFormat:{[sourceId:string]:Kontext.ChartExportFormat};
 }
@@ -131,7 +131,7 @@ export interface FreqViewProps {
 
 export function isFreqChartsModelState(s:BaseFreqModelState):s is FreqChartsModelState {
     return s['type'] != undefined && s['dataKey'] != undefined &&
-        s['fmaxitems'] != undefined && s['dtFormat'] != undefined &&
+        s['fpagesize'] != undefined && s['dtFormat'] != undefined &&
         s['downloadFormat'] != undefined;
 }
 
@@ -154,7 +154,7 @@ export interface BaseFreqServerArgs extends ConcServerArgs {
  */
 export interface FreqServerArgs extends BaseFreqServerArgs {
     freq_type:BasicFreqModuleType;
-    fmaxitems?:number; // TODO this one vs. 'flimit'?
+    fpagesize?:number;
     fttattr?:string|Array<string>;
     fttattr_async?:string|Array<string>;
     fcrit?:string;
@@ -192,7 +192,7 @@ export interface MLFreqServerArgs extends BaseFreqServerArgs {
 export interface MulticritFreqServerArgs extends ConcServerArgs {
     flimit:number;
     fpage:number;
-    fmaxitems?:number;
+    fpagesize?:number;
     freqlevel:number;
     freq_sort:Array<string>;
     freq_type:BasicFreqModuleType;

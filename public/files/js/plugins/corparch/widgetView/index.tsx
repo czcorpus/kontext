@@ -124,14 +124,14 @@ export function init({
             htmlClasses.push('in-trash')
         }
 
-        const shortName = Strings.shortenText(props.data.name, 50);
+        const shortName = Strings.shortenText(props.data.name || '', 50);
 
         return (
             <tr className={htmlClasses.join(' ')}>
                 <td>
                     <a className="corplist-item"
                             title={props.data.trashTTL === null ?
-                                    (shortName.length < props.data.name.length ?
+                                    (shortName.length < (props.data.name || '').length ?
                                         props.data.name : props.data.description) :
                                     util.translate('defaultCorparch__item_will_be_removed')}
                             onClick={handleItemClick}>

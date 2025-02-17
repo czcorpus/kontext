@@ -107,7 +107,7 @@ class SharedFreqArgs:
 
     freq_sort: str
     # required by chart view
-    fmaxitems: IntOpt = 10
+    fpagesize: IntOpt = 10
     chart_type: StrOpt = ''
     data_key: StrOpt = ''
     # required by table view
@@ -140,7 +140,7 @@ async def shared_freqs(amodel: ConcActionModel, req: KRequest[SharedFreqArgs], r
                 req.mapped_args.fcrit: {
                     'freq_sort': req.mapped_args.freq_sort,
                     'type': req.mapped_args.chart_type,
-                    'fmaxitems': req.mapped_args.fmaxitems,
+                    'fpagesize': req.mapped_args.fpagesize,
                     'data_key': req.mapped_args.data_key,
                 }
             }
@@ -201,16 +201,14 @@ async def _freqs(
         subcpath=amodel.subcpath,
         user_id=req.session_get('user', 'id'),
         q=amodel.args.q,
-        pagesize=amodel.args.pagesize,
         cutoff=0,
         flimit=flimit,
         fcrit=fcrit,
+        fpage=amodel.args.fpage,
+        fpagesize=amodel.args.fpagesize,
         freq_sort=freq_sort if freq_sort else 'freq',  # making sure it is always set for consistent caching
         rel_mode=rel_mode,
-        collator_locale=corp_info.collator_locale,
-        fmaxitems=amodel.args.fmaxitems,
-        fpage=amodel.args.fpage)
-
+        collator_locale=corp_info.collator_locale)
     calc_result = await calculate_freqs(args)
     result.update(
         fcrit=[dict(n=f, label=f.split(' ', 1)[0]) for f in fcrit],
@@ -218,9 +216,7 @@ async def _freqs(
         Blocks=calc_result['data'],
         paging=0,
         concsize=calc_result['conc_size'],
-        fmaxitems=amodel.args.fmaxitems,
-        quick_from_line=1,
-        quick_to_line=None)
+        fpagesize=amodel.args.fpagesize)
 
     if not result['Blocks'][0]:
         logging.getLogger(__name__).warning('freqs - empty list: %s' % (result,))
@@ -228,8 +224,6 @@ async def _freqs(
             message=('error', req.translate('Empty list')),
             Blocks=[],
             paging=0,
-            quick_from_line=None,
-            quick_to_line=None,
             FCrit=[],
             fcrit=[],
             fcrit_async=[]
@@ -501,11 +495,12 @@ async def savefreq(amodel: ConcActionModel, req: KRequest[SavefreqArgs], resp: K
     """
     save a frequency list
     """
+    # Note that here we have a bit of collision between our web view pagination model and
+    # model "from line ... to line" here in the "save frequency result". It means we have
+    # to convert 0...to_line to a single page and then cut possible beginning up to "to_line"
+    amodel.args.fpagesize = req.mapped_args.to_line
     amodel.args.fpage = 1
-    amodel.args.fmaxitems = req.mapped_args.to_line - req.mapped_args.from_line + 1
-
-    # following piece of sh.t has hidden parameter dependencies
-    # also we need to get frequencies one by one, so they are sorted as on UI
+    # we need to get frequencies one by one, so they are sorted by the same column as on the web page
     data = await asyncio.gather(*(
         _freqs(amodel, req, fcrit=(fcrit,), flimit=req.mapped_args.flimit,
                freq_sort=freq_sort, fcrit_async=())
@@ -519,6 +514,8 @@ async def savefreq(amodel: ConcActionModel, req: KRequest[SavefreqArgs], resp: K
         else:
             result['fcrit'].extend(item['fcrit'])
             result['Blocks'].extend(item['Blocks'])
+    for block in result['Blocks']:
+        block['Items'] = block['Items'][req.mapped_args.from_line-1:] # here we must cut the unwanted beginning
 
     def mkfilename(suffix): return f'{amodel.args.corpname}-freq-distrib.{suffix}'
     with plugins.runtime.EXPORT as export:

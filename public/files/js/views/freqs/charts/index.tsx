@@ -218,11 +218,11 @@ export function init(
 
     const PageSizeInput:React.FC<{
         sourceId:string;
-        fmaxitems:Kontext.FormValue<string>;
+        fpagesize:Kontext.FormValue<string>;
         type:FreqChartsAvailableTypes;
         data:ResultBlock;
 
-    }> = ({sourceId, fmaxitems, type, data}) => {
+    }> = ({sourceId, fpagesize, type, data}) => {
 
         const handlePageSizeChange = (e) => {
             dispatcher.dispatch<typeof Actions.FreqChartsChangePageSize>({
@@ -237,12 +237,12 @@ export function init(
         return (
             <>
                 <label htmlFor="input-max">
-                    {he.translate('freq__visualization_display_top_prefix_{n}', {n: parseInt(fmaxitems.value) || 100})}
+                    {he.translate('freq__visualization_display_top_prefix_{n}', {n: parseInt(fpagesize.value) || 100})}
                 </label>
-                <globalComponents.ValidatedItem invalid={fmaxitems.isInvalid}>
-                    <input type="text" id="input-max" style={{width: '2em'}} value={fmaxitems.value} onChange={handlePageSizeChange} />
+                <globalComponents.ValidatedItem invalid={fpagesize.isInvalid}>
+                    <input type="text" id="input-max" style={{width: '2em'}} value={fpagesize.value} onChange={handlePageSizeChange} />
                 </globalComponents.ValidatedItem>
-                {'\u00a0'}<span>{he.translate('freq__visualization_display_top_suffix_{n}', {n: parseInt(fmaxitems.value) || 100})}
+                {'\u00a0'}<span>{he.translate('freq__visualization_display_top_suffix_{n}', {n: parseInt(fpagesize.value) || 100})}
                 </span>
             </>
         );
@@ -281,7 +281,7 @@ export function init(
         type:FreqChartsAvailableTypes;
         dataKey:FreqChartsAvailableData;
         data:ResultBlock;
-        fmaxitems:Kontext.FormValue<string>;
+        fpagesize:Kontext.FormValue<string>;
         sortColumn:FreqChartsAvailableOrder;
         isBusy:boolean;
         dtFormat:string;
@@ -295,7 +295,7 @@ export function init(
                 <div className="opts-line">
                     <ChartTypeSelector sourceId={props.sourceId} type={props.type} dtFormat={props.dtFormat} />
                     <FreqUnitsSelector sourceId={props.sourceId} dataKey={props.dataKey} data={props.data} />
-                    <PageSizeInput sourceId={props.sourceId} data={props.data} fmaxitems={props.fmaxitems} type={props.type} />
+                    <PageSizeInput sourceId={props.sourceId} data={props.data} fpagesize={props.fpagesize} type={props.type} />
                     {props.type === 'bar' || props.type === 'cloud' ?
                         <FreqSortBySelector sourceId={props.sourceId} sortColumn={props.sortColumn} data={props.data} /> :
                         null
@@ -338,7 +338,7 @@ export function init(
         dataKey:FreqChartsAvailableData;
         isBusy:boolean;
         dtFormat:string;
-        fmaxitems:Kontext.FormValue<string>;
+        fpagesize:Kontext.FormValue<string>;
         sortColumn:FreqChartsAvailableOrder;
         downloadFormat:Kontext.ChartExportFormat;
         shareWidgetIsBusy:boolean;
@@ -503,7 +503,7 @@ export function init(
                 </h3>
                 <FreqChartsParams sourceId={props.sourceId} data={props.data} type={props.type}
                         dataKey={props.dataKey} isBusy={props.isBusy} dtFormat={props.dtFormat}
-                        fmaxitems={props.fmaxitems} sortColumn={props.sortColumn} handleDownload={handleDownload}
+                        fpagesize={props.fpagesize} sortColumn={props.sortColumn} handleDownload={handleDownload}
                         downloadFormat={props.downloadFormat}
                         onShowShare={props.onShowShare} />
                 <div className="chart-wrapper">
@@ -602,7 +602,7 @@ export function init(
                                         dataKey={props.dataKey[sourceId]}
                                         type={props.type[sourceId]}
                                         isBusy={props.isBusy[sourceId]}
-                                        dtFormat={props.dtFormat[sourceId]} fmaxitems={props.fmaxitems[sourceId]}
+                                        dtFormat={props.dtFormat[sourceId]} fpagesize={props.fpagesize[sourceId]}
                                         sortColumn={props.sortColumn[sourceId]}
                                         downloadFormat={props.downloadFormat[sourceId]}
                                         onShowShare={showShare}

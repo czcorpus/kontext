@@ -16,8 +16,6 @@ pyJWT >= 2.6.0
 lxml >= 3.4
 Markdown >= 3.4.1
 openpyxl >= 3.0.10
-# aioredis will be part of redis in the future
-aioredis >= 2.0.1
 redis >= 4.3.4
 uvloop >= 0.16.0
 mysql-connector-python >= 8.4.0, < 9.0.0
