@@ -177,6 +177,10 @@ def calculate_freqs_bg_sync(args: FreqCalcArgs, corp: AbstractKCorpus, conc: PyC
     This is a blocking variant of calculate_freqs_bg which requires a concordance
     instance to be already available. This is mostly intended for passing sub-calculations
     to separate threads.
+
+    Please note that due to Manatee-open limitations, the function cannot paginate
+    its output. So typically we store the full result into cache and implement the pagination
+    there. Here we're limited just by args.flimit (which means each flimit is cached separately).
     """
     if not conc.finished():
         raise UnfinishedConcordanceError(
@@ -221,7 +225,8 @@ async def calculate_freqs(args: FreqCalcArgs):
     """
     Calculates a frequency distribution based on a defined concordance and frequency-related arguments.
     The class is able to cache the data in a background process/task. This prevents KonText to calculate
-    (via Manatee) full frequency list again and again (e.g. if user moves from page to page).
+    (via Manatee) full frequency list again and again (e.g. if user moves from page to page). The caching
+    is in fact crucial as Manatee itself does not support offset in freq. results.
     """
     if args.fcrit and len(args.fcrit) > 1 and args.fpage > 1:
         raise CalcArgsAssertionError(
@@ -232,7 +237,6 @@ async def calculate_freqs(args: FreqCalcArgs):
         worker = bgcalc.calc_backend_client(settings)
         res = await worker.send_task(
             'calculate_freqs', object.__class__, args=(args,), time_limit=TASK_TIME_LIMIT)
-        # worker task caches the value AFTER the result is returned (see worker.py)
         tmp_result: Union[None, Exception, FreqCalcResult] = await res.get()
 
         if tmp_result is None:
@@ -246,11 +250,11 @@ async def calculate_freqs(args: FreqCalcArgs):
                 raise BgCalcError('Failed to get expected freqs result')
 
     lastpage = None
-    fstart = (args.fpage - 1) * args.fmaxitems
+    fstart = (args.fpage - 1) * args.fpagesize
     ans = []
     for i, freq_block in enumerate(calc_result.freqs):
-        items_per_page = args.fmaxitems
-        fend = args.fmaxitems * args.fpage + 1
+        items_per_page = args.fpagesize
+        fend = args.fpagesize * args.fpage + 1
         lastpage = 1 if freq_block.Size < fend else 0
         ans.append(dict(
             Total=freq_block.Size,
@@ -260,7 +264,7 @@ async def calculate_freqs(args: FreqCalcArgs):
             SkippedEmpty=freq_block.SkippedEmpty,
             NoRelSorting=freq_block.NoRelSorting,
             fcrit=args.fcrit[i]))
-    return dict(lastpage=lastpage, data=ans, fstart=fstart, fmaxitems=args.fmaxitems, conc_size=calc_result.conc_size)
+    return dict(lastpage=lastpage, data=ans, fstart=fstart, fmaxitems=args.fpagesize, conc_size=calc_result.conc_size)
 
 
 def compute_norms(corp: AbstractKCorpus, struct: str, subcpath: str):

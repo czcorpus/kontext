@@ -50,10 +50,10 @@ def create_freq_calc_args(
         subcpath=subcpath,
         user_id=user_id,
         freq_sort='freq',
-        pagesize=10000,  # TODO
-        fmaxitems=10000,
         cutoff=0,
         flimit=flimit_override if flimit_override is not None else pquery.min_freq,
+        fpage=1,
+        fpagesize=10000,
         q=raw_queries[conc_id],
         collator_locale=collator_locale,
         rel_mode=0 if '.' in attr else 1)

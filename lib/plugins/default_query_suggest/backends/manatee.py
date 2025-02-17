@@ -46,17 +46,16 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
         args = bgcalc.freqs.FreqCalcArgs(
             corpname=corp.corpname,
             subcname=corp.subcorpus_id,
-            subcpath=[],
+            subcpath=None,
             user_id=user_id,
-            pagesize=100,
             cutoff=0,
             flimit=1,
             fcrit=[fcrit],
+            fpage=1,
+            fpagesize=100,
             rel_mode=1,
             freq_sort='freq',
-            collator_locale='en_US',  # TODO use data provided by corparch plg
-            fmaxitems=1,
-            fpage=1)
+            collator_locale='en_US')  # TODO use data provided by corparch plg
         freqs = [conc.xfreq_dist(
             cr, args.flimit, args.freq_sort, args.rel_mode, args.collator_locale)
             for cr in args.fcrit]

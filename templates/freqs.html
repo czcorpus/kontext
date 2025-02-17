@@ -31,7 +31,7 @@ __conf.CTFreqFormProps = {{ ctfreq_form_args|to_json }};
 __conf.CollFormProps = {{ coll_form_args|to_json }};
 {%if freq_type in ('tokens', 'text-types') %}
 __conf.FreqResultData = {{ Blocks|to_json }};
-__conf.FreqItemsPerPage = {{ fmaxitems|to_json }};
+__conf.FreqItemsPerPage = {{ fpagesize|to_json }};
 __conf.FreqDefaultView = {{ fdefault_view|to_json }};
 __conf.CurrentPage = {{ fpage|to_json }};
 __conf.FreqCrit = {{ fcrit|to_json }};

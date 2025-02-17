@@ -23,20 +23,19 @@ from conclib.freq import FreqData
 class FreqCalcArgs:
     """
     Collects all the required arguments passed around when
-    calculating frequency distribution
+    calculating frequency distribution.
     """
     user_id: int
     corpname: str
     collator_locale: str
-    pagesize: int
     flimit: int
     fcrit: Union[List[str], Tuple[str, ...]]
     freq_sort: str
     rel_mode: int  # 0, 1 # TODO should be bool
-    fmaxitems: int
+    fpage: int
+    fpagesize: int
     subcname: Optional[str] = None
     subcpath: Optional[str] = None
-    fpage: Optional[int] = 1  # ??
     cutoff: Optional[int] = 0
     q: Optional[List[str]] = field(default_factory=list)
 

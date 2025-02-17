@@ -55,7 +55,7 @@ export interface FreqResultResponse extends AjaxConcResponse {
     freq_ipm_warn_enabled:boolean;
     FCrit:Array<{fcrit:string}>;
     fcrit:Array<{fcrit:string}>;
-    fmaxitems:number;
+    fpagesize:number;
     concsize:number;
 }
 

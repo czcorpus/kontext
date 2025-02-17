@@ -410,7 +410,7 @@ class FreqPage {
                                 isEmpty: true
                             }))
                         ),
-                    fmaxitems: this.layoutModel.getConf<number>('FreqItemsPerPage'),
+                    fpagesize: this.layoutModel.getConf<number>('FreqItemsPerPage'),
                     freqLoader: this.freqLoader,
                     forcedParams,
                     alphaLevel,

@@ -108,7 +108,7 @@ class GeneralOptionsArgs:
     kwpagesize: int = field(default=25, metadata=mk_metdata(Persistence.PERSISTENT))
 
     # frequency
-    fmaxitems: int = field(default=50, metadata=mk_metdata())
+    fpagesize: int = field(default=50, metadata=mk_metdata())
     fdefault_view: str = field(default='tables', metadata=mk_metdata(Persistence.PERSISTENT))
 
     # pquery
