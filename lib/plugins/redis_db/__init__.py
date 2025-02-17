@@ -30,7 +30,7 @@ import asyncio
 import logging
 from typing import Awaitable, Callable
 
-import aioredis
+from redis import asyncio as aioredis
 import async_timeout
 import ujson as json
 from plugin_types.general_storage import KeyValueStorage
