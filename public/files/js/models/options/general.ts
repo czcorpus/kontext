@@ -38,7 +38,7 @@ interface GeneralOptionsArgsSubmit {
     ctxunit:string;
     line_numbers:boolean;
     wlpagesize:number;
-    fmaxitems:number;
+    fpagesize:number;
     fdefault_view:FreqResultViews;
     citemsperpage:number;
     pqueryitemsperpage:number;
@@ -56,7 +56,7 @@ export interface GeneralViewOptionsModelState {
 
     wlpagesize:Kontext.FormValue<string>;
 
-    fmaxitems:Kontext.FormValue<string>;
+    fpagesize:Kontext.FormValue<string>;
 
     refMaxWidth:Kontext.FormValue<string>;
 
@@ -88,7 +88,7 @@ type DebouncedActions =
     typeof Actions.GeneralSetPageSize |
     typeof Actions.GeneralSetContextSize |
     typeof Actions.GeneralSetWlPageSize |
-    typeof Actions.GeneralSetFmaxItems |
+    typeof Actions.GeneralSetFpageSize |
     typeof Actions.GeneralSetCitemsPerPage |
     typeof Actions.GeneralSetPQueryitemsPerPage |
     typeof Actions.GeneralSetSubcListPageSize |
@@ -119,7 +119,7 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                 lineNumbers: false,
                 useRichQueryEditor: false,
                 wlpagesize: Kontext.newFormValue('0', true),
-                fmaxitems: Kontext.newFormValue('0', true),
+                fpagesize: Kontext.newFormValue('0', true),
                 fdefaultView: 'charts',
                 citemsperpage: Kontext.newFormValue('0', true),
                 pqueryitemsperpage: Kontext.newFormValue('0', true),
@@ -196,8 +196,8 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                         isInvalid: false,
                         isRequired: true
                     };
-                    state.fmaxitems = {
-                        value: action.payload.data.fmaxitems + '',
+                    state.fpagesize = {
+                        value: action.payload.data.fpagesize + '',
                         isInvalid: false,
                         isRequired: true
                     };
@@ -309,11 +309,11 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
         );
 
         this.addActionHandler(
-            Actions.GeneralSetFmaxItems,
+            Actions.GeneralSetFpageSize,
             (state, action) => {
-                state.fmaxitems.value = action.payload.value;
+                state.fpagesize.value = action.payload.value;
                 if (action.payload.debounced) {
-                    state.fmaxitems = this.validateGt1Value(state.fmaxitems, action.payload.value);
+                    state.fpagesize = this.validateGt1Value(state.fpagesize, action.payload.value);
 
                 } else {
                     this.debouncedAction$.next(action);
@@ -406,7 +406,7 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                                     refMaxWidth: parseInt(state.refMaxWidth.value),
                                     newCtxSize: parseInt(state.newCtxSize.value),
                                     wlpagesize: parseInt(state.wlpagesize.value),
-                                    fmaxitems: parseInt(state.fmaxitems.value),
+                                    fpagesize: parseInt(state.fpagesize.value),
                                     citemsperpage: parseInt(state.citemsperpage.value),
                                     pqueryitemsperpage: parseInt(state.pqueryitemsperpage.value),
                                     subcpagesize: parseInt(state.subcpagesize.value),
@@ -515,7 +515,7 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
             ctxunit: state.ctxUnit,
             line_numbers: state.lineNumbers,
             wlpagesize: parseInt(state.wlpagesize.value),
-            fmaxitems: parseInt(state.fmaxitems.value),
+            fpagesize: parseInt(state.fpagesize.value),
             fdefault_view: state.fdefaultView,
             citemsperpage: parseInt(state.citemsperpage.value),
             pqueryitemsperpage: parseInt(state.pqueryitemsperpage.value),

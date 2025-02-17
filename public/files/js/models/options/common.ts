@@ -27,7 +27,7 @@ export interface ViewOptsResponse extends Kontext.AjaxResponse {
     ctxunit:string;
     line_numbers:boolean;
     wlpagesize:number;
-    fmaxitems:number;
+    fpagesize:number;
     fdefault_view:FreqResultViews;
     citemsperpage:number;
     pqueryitemsperpage:number;
@@ -44,7 +44,7 @@ export interface GeneralOptionsShared {
     refMaxWidth:number;
     newCtxSize:number;
     wlpagesize:number;
-    fmaxitems:number;
+    fpagesize:number;
     citemsperpage:number;
     pqueryitemsperpage:number;
     subcpagesize:number;

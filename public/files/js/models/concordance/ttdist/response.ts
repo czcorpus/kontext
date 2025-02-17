@@ -43,9 +43,7 @@ export interface FreqData {
     Blocks:Array<FreqBlock>;
     paging:number;
     concsize:number;
-    fmaxitems:number;
-    quick_from_line:number;
-    quick_to_line:number;
+    fpagesize:number;
 }
 
 export interface Reduce extends Kontext.AjaxResponse {
