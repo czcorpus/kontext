@@ -73,11 +73,11 @@ export class Actions {
         name: 'GENERAL_VIEW_OPTIONS_SET_WLPAGESIZE'
     };
 
-    static GeneralSetFmaxItems:Action<{
+    static GeneralSetFpageSize:Action<{
         value:string;
         debounced?:boolean;
     }> = {
-        name: 'GENERAL_VIEW_OPTIONS_SET_FMAXITEMS'
+        name: 'GENERAL_VIEW_OPTIONS_SET_FPAGE_SIZE'
     };
 
     static GeneralSetFDefaultView:Action<{

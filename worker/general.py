@@ -69,6 +69,7 @@ from action.argmapping.subcorpus import (
     CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs)
 from action.argmapping.wordlist import WordlistFormArgs
 from bgcalc import coll_calc, freqs, keywords, pquery, subc_calc, wordlist
+from bgcalc.freqs import FreqCalcArgs
 from bgcalc.errors import WorkerTaskException
 from corplib import CorpusFactory
 from corplib.abstract import SubcorpusIdent
@@ -196,7 +197,7 @@ async def clean_colls_cache():
 # ----------------------------- FREQUENCY DISTRIBUTION ------------------------
 
 
-async def calculate_freqs(args):
+async def calculate_freqs(args: FreqCalcArgs):
     return await freqs.calculate_freqs_bg(args)
 
 

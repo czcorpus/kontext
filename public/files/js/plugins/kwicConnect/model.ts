@@ -547,7 +547,7 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
             flimit,
             fpage: 1,
             freq_sort: 'freq',
-            fmaxitems: KwicConnectModel.UNIQ_KWIC_FREQ_PAGESIZE,
+            fpagesize: KwicConnectModel.UNIQ_KWIC_FREQ_PAGESIZE,
             freqlevel: undefined,
             format: 'json'
         };

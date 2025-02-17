@@ -278,16 +278,16 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         );
     };
 
-    // ------------- <TRFmaxitemsInput /> ---------------------
+    // ------------- <TRFpageSizeInput /> ---------------------
 
-    const TRFmaxitemsInput:React.FC<{
+    const TRFpageSizeInput:React.FC<{
         value:Kontext.FormValue<string>;
 
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch<typeof Actions.GeneralSetFmaxItems>({
-                name: Actions.GeneralSetFmaxItems.name,
+            dispatcher.dispatch<typeof Actions.GeneralSetFpageSize>({
+                name: Actions.GeneralSetFpageSize.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -343,7 +343,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     // ------------- <FieldsetFreqDistrib /> ---------------------
 
     const FieldsetFreqDistrib:React.FC<{
-        fmaxItems:Kontext.FormValue<string>;
+        fpagesize:Kontext.FormValue<string>;
         fdefaultView:FreqResultViews;
 
     }> = (props) => {
@@ -354,7 +354,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 </legend>
                 <S.ResultRangeAndPagingTable>
                     <tbody>
-                        <TRFmaxitemsInput value={props.fmaxItems} />
+                        <TRFpageSizeInput value={props.fpagesize} />
                         <TRDefaultView value={props.fdefaultView} />
                     </tbody>
                 </S.ResultRangeAndPagingTable>
@@ -613,7 +613,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                     refMaxWidth={this.props.refMaxWidth}
                                     useRichQueryEditor={this.props.useRichQueryEditor} />
                                 <FieldsetWordlist wlPageSize={this.props.wlpagesize}  />
-                                <FieldsetFreqDistrib fmaxItems={this.props.fmaxitems}
+                                <FieldsetFreqDistrib fpagesize={this.props.fpagesize}
                                     fdefaultView={this.props.fdefaultView} />
                                 <FieldsetColl citemsPerPage={this.props.citemsperpage} />
                                 <FieldsetPquery resultsPerPage={this.props.pqueryitemsperpage} />

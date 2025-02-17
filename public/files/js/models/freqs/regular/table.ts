@@ -639,7 +639,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                                     this.pageModel,
                                     block,
                                     parseInt(state.currentPage[block.fcrit]),
-                                    data.fmaxitems,
+                                    data.fpagesize,
                                     state.alphaLevel
                                 ),
                                 sourceId,

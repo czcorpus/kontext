@@ -24,8 +24,6 @@ from dataclasses_json import dataclass_json
 import manatee
 import plugins
 import settings
-from action.argmapping.wordlist import WordlistFormArgs
-from bgcalc import wordlist
 from corplib.corpus import AbstractKCorpus
 from kwiclib.common import tokens2strclass
 

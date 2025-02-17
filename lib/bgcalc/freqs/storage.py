@@ -17,6 +17,7 @@ import os
 from dataclasses import dataclass
 from functools import wraps
 from typing import Callable, Coroutine, List, Optional, Tuple, TypedDict, Union
+import logging
 
 import settings
 import ujson as json
@@ -91,8 +92,8 @@ def find_cached_result(args: FreqCalcArgs) -> Tuple[Optional[FreqCalcResult], st
             common_md = CommonMetadata.from_dict(json.loads(fr.readline()))
             data = FreqCalcResult(freqs=[], conc_size=common_md.conc_size)
             blocks = common_md.num_blocks
-            first_line = (args.fpage - 1) * args.fmaxitems
-            last_line = first_line + args.fmaxitems - 1
+            first_line = (args.fpage - 1) * args.fpagesize
+            last_line = first_line + args.fpagesize - 1
             for _ in range(blocks):
                 block_md = BlockMetadata.from_dict(json.loads(fr.readline()))
                 freq = FreqData(
@@ -112,14 +113,19 @@ def find_cached_result(args: FreqCalcArgs) -> Tuple[Optional[FreqCalcResult], st
 
 def stored_to_fs(func: Callable[[FreqCalcArgs], Coroutine[None, None, FreqCalcResult]]):
     """
-    A decorator for storing freq merge results (as CSV files). Please note that this is not just
+    A decorator for storing freq merge results (as JSONL files). Please note that this is not just
     caching but rather an essential part of the query processing. Without this decorator, KonText
     cannot return the result - i.e. the result data must be stored to disk to be readable by a client.
+    Please note that the function also checks for data size (num. of result rows) and in case it is
+    more than MAX_DATA_LEN_DIRECT_PROVIDING, it sets the result to None (attr `freqs`) and instead
+    sets the `data_path` argument so client can read the data directly from a corresponding file.
     """
     @wraps(func)
     async def wrapper(args: FreqCalcArgs) -> FreqCalcResult:
         data, cache_path = find_cached_result(args)
         if data is None:
+            logging.getLogger(__name__).debug(
+                '@stored_to_fs - cache miss for crit: {}, q: {}, corp: {}'.format(args.fcrit, args.q, args.corpname))
             cache_dir = _cache_dir_path(args)
             if not os.path.isdir(cache_dir):
                 os.makedirs(cache_dir)

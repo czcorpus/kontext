@@ -49,7 +49,7 @@ export interface FreqChartsModelArgs {
     freqCritAsync:Array<AttrItem>;
     formProps:FreqFormInputs;
     initialData:Array<ResultBlock|EmptyResultBlock>|undefined;
-    fmaxitems:number;
+    fpagesize:number;
     freqLoader:FreqDataLoader;
     forcedParams:{[sourceId:string]:{[key:string]:any}};
     alphaLevel:Maths.AlphaLevel;
@@ -83,7 +83,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
 
     constructor({
         dispatcher, pageModel, freqType, freqCrit, freqCritAsync, formProps,
-        initialData, fmaxitems, freqLoader, forcedParams, alphaLevel
+        initialData, fpagesize, freqLoader, forcedParams, alphaLevel
     }:FreqChartsModelArgs) {
         const allCrits = List.concat(freqCritAsync, freqCrit);
         super(
@@ -152,10 +152,10 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     ),
                     Dict.fromEntries()
                 ),
-                fmaxitems: pipe(
+                fpagesize: pipe(
                     allCrits,
                     List.map(
-                        k => tuple(k.n, newFormValue((forcedParams[k.n]?.fmaxitems || fmaxitems) + '', true))
+                        k => tuple(k.n, newFormValue((forcedParams[k.n]?.fpagesize || fpagesize) + '', true))
                     ),
                     Dict.fromEntries()
                 ),
@@ -351,7 +351,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     state.shareLink = storedState.shareLink;
                     state.type = storedState.type;
                     state.dataKey = storedState.dataKey;
-                    state.fmaxitems = storedState.fmaxitems;
+                    state.fpagesize = storedState.fpagesize;
                     state.dtFormat = storedState.dtFormat;
                     state.downloadFormat = storedState.downloadFormat;
                 }
@@ -428,21 +428,21 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     state.isError[action.payload.sourceId] = null;
 
                 } else {
-                    state.fmaxitems[action.payload.sourceId].value = action.payload.value;
-                    if (validateGzNumber(state.fmaxitems[action.payload.sourceId].value)) {
-                        state.fmaxitems[action.payload.sourceId].isInvalid = false;
-                        state.fmaxitems[action.payload.sourceId].errorDesc = undefined;
+                    state.fpagesize[action.payload.sourceId].value = action.payload.value;
+                    if (validateGzNumber(state.fpagesize[action.payload.sourceId].value)) {
+                        state.fpagesize[action.payload.sourceId].isInvalid = false;
+                        state.fpagesize[action.payload.sourceId].errorDesc = undefined;
                         this.debouncedAction$.next(action);
 
                     } else {
-                        state.fmaxitems[action.payload.sourceId].isInvalid = true;
-                        state.fmaxitems[action.payload.sourceId].errorDesc = this.pageModel.translate('options__value_must_be_gt_0');
+                        state.fpagesize[action.payload.sourceId].isInvalid = true;
+                        state.fpagesize[action.payload.sourceId].errorDesc = this.pageModel.translate('options__value_must_be_gt_0');
                     }
                 }
 
             },
             (state, action, dispatch) => {
-                if (validateGzNumber(state.fmaxitems[action.payload.sourceId].value)) {
+                if (validateGzNumber(state.fpagesize[action.payload.sourceId].value)) {
                     if (action.payload.debouncedFor) {
                         this.dispatchLoad(
                             this.freqLoader.loadPage(
@@ -621,7 +621,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                                     this.pageModel,
                                     block,
                                     1,
-                                    data.fmaxitems,
+                                    data.fpagesize,
                                     state.alphaLevel
                                 ),
                                 sourceId,
@@ -662,7 +662,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                 flimit: state.flimit,
                 alpha_level: state.alphaLevel,
 
-                fmaxitems: parseInt(state.fmaxitems[sourceId].value),
+                fpagesize: parseInt(state.fpagesize[sourceId].value),
                 chart_type: state.type[sourceId],
                 data_key: state.dataKey[sourceId],
                 freq_sort: state.sortColumn[sourceId],
@@ -683,7 +683,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                 state.sortColumn[fcrit],
             fpage: 1,
             freqlevel: 1,
-            fmaxitems: parseInt(state.fmaxitems[fcrit].value),
+            fpagesize: parseInt(state.fpagesize[fcrit].value),
             format: 'json',
         };
     }
