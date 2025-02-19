@@ -833,7 +833,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                         ...this.pageModel.getConcArgs(),
                         q: [
                             '~' + baseOnConcId,
-                            op ? `${op.opid}${op.arg}` : ''
+                            op ? `${op.opid}${op.args}` : ''
                         ]
                     };
                     observer.next(this.pageModel.createActionUrl('view', args));

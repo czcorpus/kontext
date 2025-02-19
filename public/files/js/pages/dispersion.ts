@@ -233,9 +233,12 @@ export class DispersionPage {
             freqViews: freqFormViews,
             mainMenuModel: this.layoutModel.getModels().mainMenuModel
         });
-
-        const qProps = new QueryProps(
-            queryFormArgs.curr_queries[this.layoutModel.getCorpusIdent().id]);
+        const rawQuery = pipe(
+            this.layoutModel.getConf<Array<Kontext.QueryOperation>>('queryOverview') || [],
+            List.head(),
+            x => x.args
+        );
+        const qProps = new QueryProps(rawQuery);
         this.layoutModel.renderReactComponent(
             analysisViews.AnalysisFrame,
             window.document.getElementById('analysis-forms-mount'),

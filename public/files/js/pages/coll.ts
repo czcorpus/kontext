@@ -34,7 +34,7 @@ import { init as freqFormInit } from '../views/freqs/forms.js';
 import { init as queryOverviewInit } from '../views/query/overview/index.js';
 import { TextTypesModel } from '../models/textTypes/main.js';
 import { IndirectQueryReplayModel } from '../models/query/replay/indirect.js';
-import { List, tuple } from 'cnc-tskit';
+import { List, pipe, tuple } from 'cnc-tskit';
 import { CollResultsSaveModel } from '../models/coll/save.js';
 import { CollResultData, CollResultHeading } from '../models/coll/common.js';
 import { CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/twoDimension/common.js';
@@ -193,8 +193,12 @@ export class CollPage {
             freqViews: freqFormViews,
             mainMenuModel: this.layoutModel.getModels().mainMenuModel
         });
-        const qProps = new QueryProps(
-            queryFormArgs.curr_queries[this.layoutModel.getCorpusIdent().id]);
+        const rawQuery = pipe(
+            this.layoutModel.getConf<Array<Kontext.QueryOperation>>('queryOverview') || [],
+            List.head(),
+            x => x.args
+        );
+        const qProps = new QueryProps(rawQuery);
         this.layoutModel.renderReactComponent(
             analysisViews.AnalysisFrame,
             window.document.getElementById('analysis-forms-mount'),

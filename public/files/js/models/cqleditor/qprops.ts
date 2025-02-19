@@ -36,9 +36,8 @@ export class QueryProps {
     private parsedQuery:ParsedQuery|undefined;
 
     constructor(query:string) {
-        this.query = query;
+        this.query = query.replace(/^([a-z]+,)?(.+)$/, '$2');
     }
-
 
     private process() {
         this.parsedQuery = highlightSyntaxStatic({
@@ -72,9 +71,5 @@ export class QueryProps {
             List.some(v => v)
         );
     }
-
-
-
-
 
 }

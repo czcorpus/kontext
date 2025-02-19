@@ -1166,8 +1166,13 @@ export class ViewPage {
                 'ConcFormsArgs'
             );
             const queryFormArgs = fetchQueryFormArgs(concFormArgs);
-            const qProps = new QueryProps(
-                queryFormArgs.curr_queries[this.layoutModel.getCorpusIdent().id]);
+
+            const rawQuery = pipe(
+                this.layoutModel.getConf<Array<Kontext.QueryOperation>>('queryOverview') || [],
+                List.head(),
+                x => x.args
+            );
+            const qProps = new QueryProps(rawQuery);
             const lineViewProps = this.initModels(
                 queryFormArgs,
                 this.initTokenConnect()
