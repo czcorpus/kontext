@@ -354,45 +354,39 @@ export function init(
             x => x ? x.length : 0
         );
 
-        React.useEffect(
-            () => {
-                const container = ref.current;
-                container.select();
-                const svg = container.querySelector('svg');
-                const svgURL = new XMLSerializer().serializeToString(svg);
-                const svgBlob = new Blob([svgURL], {type: "image/svg+xml;charset=utf-8"});
-                svgBlob.text().then(
-                    value => {
-                        dispatcher.dispatch<typeof GlobalActions.SetChartDownloadSVG>({
-                            name: GlobalActions.SetChartDownloadSVG.name,
-                            payload: {
-                                sourceId: `${FreqChartsSaveFormModel.SVG_SAVE_ID_PREFIX}${props.sourceId}`,
-                                value,
-                                type: props.type,
-                                // the maxLabelLength is for server to correct issues with text overlapping the view
-                                args: {maxLabelLength}
-                            }
-                        })
-                    },
-                    error => {
-                        dispatcher.dispatch(
-                            GlobalActions.SetChartDownloadSVG,
-                            error
-                        )
-                    }
-                );
-            }
-        );
-
         const handleDownload = () => {
-            dispatcher.dispatch<typeof GlobalActions.ConvertChartSVG>({
-                name: GlobalActions.ConvertChartSVG.name,
-                payload: {
-                    sourceId: `${FreqChartsSaveFormModel.SVG_SAVE_ID_PREFIX}${props.sourceId}`,
-                    format: props.downloadFormat,
-                    chartType: props.type
+            const container = ref.current;
+            if (!container) {
+                return;
+            }
+            const svg = container.querySelector('svg');
+            console.log('container: ', container)
+            console.log('svg: ', svg)
+            const svgURL = new XMLSerializer().serializeToString(svg);
+            const svgBlob = new Blob([svgURL], {type: "image/svg+xml;charset=utf-8"});
+            svgBlob.text().then(
+                value => {
+                    dispatcher.dispatch<typeof GlobalActions.ConvertChartSVG>({
+                        name: GlobalActions.ConvertChartSVG.name,
+                        payload: {
+                            sourceId: `${FreqChartsSaveFormModel.SVG_SAVE_ID_PREFIX}${props.sourceId}`,
+                            format: props.downloadFormat,
+                            chartType: props.type,
+                            data: value,
+                            args: {maxLabelLength}
+                        }
+                    });
+                },
+                error => {
+                    dispatcher.dispatch<typeof GlobalActions.ConvertChartSVG>({
+                        name: GlobalActions.ConvertChartSVG.name,
+                        error
+                    });
                 }
-            });
+            );
+
+
+
         }
 
         const _dispatchFilter = (url) => {
@@ -432,63 +426,75 @@ export function init(
 
             switch (props.type)  {
                 case 'bar':
-                    return <ResponsiveContainer width="95%" height={List.size(props.data.Items)*17+60}>
-                        <BarChart data={transformDataForErrorBars(props.data)} layout='vertical' ref={ref} barGap="7" onClick={handleBarChartFilter}>
-                            <CartesianGrid strokeDasharray='3 3'/>
-                            <XAxis type='number' height={50}>
-                                <Label value={xUnits} position="insideBottom" />
-                            </XAxis>
-                            <YAxis type="category" interval={0} dataKey={v => v.Word.join(' ')}
-                                width={Math.max(60, Math.min(BAR_CHART_MAX_LABEL_LENGTH, maxLabelLength) * 7)}
-                                tickFormatter={value => Strings.shortenText(value, BAR_CHART_MAX_LABEL_LENGTH)} />
-                            <Tooltip formatter={tooltipFormatter}/>
-                            <Bar dataKey={props.dataKey} fill={theme.colorLogoBlue} isAnimationActive={false} barSize={14}>
-                                <ErrorBar dataKey={confidenceKey} width={0} strokeWidth={3} stroke={theme.colorLogoPink} opacity={0.8} direction="x" />
-                            </Bar>
-                        </BarChart>
-                    </ResponsiveContainer>;
+                    return (
+                        <div ref={ref}>
+                            <ResponsiveContainer width="95%" height={List.size(props.data.Items)*17+60}>
+                                <BarChart data={transformDataForErrorBars(props.data)} layout='vertical' barGap="7" onClick={handleBarChartFilter}>
+                                    <CartesianGrid strokeDasharray='3 3'/>
+                                    <XAxis type='number' height={50}>
+                                        <Label value={xUnits} position="insideBottom" />
+                                    </XAxis>
+                                    <YAxis type="category" interval={0} dataKey={v => v.Word.join(' ')}
+                                        width={Math.max(60, Math.min(BAR_CHART_MAX_LABEL_LENGTH, maxLabelLength) * 7)}
+                                        tickFormatter={value => Strings.shortenText(value, BAR_CHART_MAX_LABEL_LENGTH)} />
+                                    <Tooltip formatter={tooltipFormatter}/>
+                                    <Bar dataKey={props.dataKey} fill={theme.colorLogoBlue} isAnimationActive={false} barSize={14}>
+                                        <ErrorBar dataKey={confidenceKey} width={0} strokeWidth={3} stroke={theme.colorLogoPink} opacity={0.8} direction="x" />
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    );
                 case 'cloud':
                     return (
-                        <div className="cloud-wrapper">
+                        <div className="cloud-wrapper" ref={ref}>
                             <globalComponents.ResponsiveWrapper render={(width, height) =>
                                 <WordCloud width={width} height={height} data={props.data.Items} onClick={handleWordCloudChartFilter}
-                                        dataTransform={dataTransform(props.dataKey)} font={theme.monospaceFontFamily} ref={ref} />}
+                                        dataTransform={dataTransform(props.dataKey)} font={theme.monospaceFontFamily} />}
                                 />
                         </div>
                     );
                 case 'timeline': {
-                    return <ResponsiveContainer width="95%" height={300}>
-                        <ComposedChart data={props.data.Items} ref={ref} onClick={handleTimelineChartFilter}>
-                            <CartesianGrid strokeDasharray='3 3'/>
-                            <XAxis type='number' height={50} dataKey={v => v.Word.join(' | ')} allowDecimals={false} domain={['dataMin', 'dataMax']}>
-                                <Label value={he.translate(`freq__chart_date_${props.dtFormat}`)} position="insideBottom" />
-                            </XAxis>
-                            <YAxis type="number">
-                                <Label value={xUnits} angle={-90} position="insideLeft" style={{textAnchor: 'middle'}} />
-                            </YAxis>
-                            <Tooltip />
-                            <Line dataKey={props.dataKey} strokeWidth={3} stroke={theme.colorLogoBlue}/>
-                            <Area dataKey={confidenceKey} strokeWidth={3} stroke={theme.colorLightPink} fill={theme.colorLightPink}/>
-                        </ComposedChart>
-                    </ResponsiveContainer>;
+                    return (
+                        <div ref={ref}>
+                            <ResponsiveContainer width="95%" height={300}>
+                                <ComposedChart data={props.data.Items} onClick={handleTimelineChartFilter}>
+                                    <CartesianGrid strokeDasharray='3 3'/>
+                                    <XAxis type='number' height={50} dataKey={v => v.Word.join(' | ')} allowDecimals={false} domain={['dataMin', 'dataMax']}>
+                                        <Label value={he.translate(`freq__chart_date_${props.dtFormat}`)} position="insideBottom" />
+                                    </XAxis>
+                                    <YAxis type="number">
+                                        <Label value={xUnits} angle={-90} position="insideLeft" style={{textAnchor: 'middle'}} />
+                                    </YAxis>
+                                    <Tooltip />
+                                    <Line dataKey={props.dataKey} strokeWidth={3} stroke={theme.colorLogoBlue}/>
+                                    <Area dataKey={confidenceKey} strokeWidth={3} stroke={theme.colorLightPink} fill={theme.colorLightPink}/>
+                                </ComposedChart>
+                            </ResponsiveContainer>
+                        </div>
+                    );
                 }
                 case 'timescatter':
-                    return <ResponsiveContainer width="95%" height={300}>
-                        <ScatterChart ref={ref}>
-                            <CartesianGrid strokeDasharray='3 3'/>
-                            <XAxis type='number' height={50} dataKey={v => v.Word.join(' | ')} allowDecimals={false} domain={['dataMin', 'dataMax']}>
-                                <Label value={he.translate(`freq__chart_date_${props.dtFormat}`)} position="insideBottom" />
-                            </XAxis>
-                            <YAxis type="number">
-                                <Label value={xUnits} angle={-90} position="insideLeft" style={{textAnchor: 'middle'}}  />
-                            </YAxis>
-                            <Tooltip formatter={tooltipFormatter}/>
-                            <Scatter dataKey={props.dataKey} data={transformDataForErrorBars(props.data)} onClick={handleScatterChartFilter}
-                                    fill={theme.colorLogoBlue} isAnimationActive={false} legendType="wye">
-                                <ErrorBar dataKey={confidenceKey} width={0} strokeWidth={2} stroke={theme.colorLogoPink} opacity={0.8} direction="y" />
-                            </Scatter>
-                        </ScatterChart>
-                    </ResponsiveContainer>;
+                    return (
+                        <div ref={ref}>
+                            <ResponsiveContainer width="95%" height={300}>
+                                <ScatterChart>
+                                    <CartesianGrid strokeDasharray='3 3'/>
+                                    <XAxis type='number' height={50} dataKey={v => v.Word.join(' | ')} allowDecimals={false} domain={['dataMin', 'dataMax']}>
+                                        <Label value={he.translate(`freq__chart_date_${props.dtFormat}`)} position="insideBottom" />
+                                    </XAxis>
+                                    <YAxis type="number">
+                                        <Label value={xUnits} angle={-90} position="insideLeft" style={{textAnchor: 'middle'}}  />
+                                    </YAxis>
+                                    <Tooltip formatter={tooltipFormatter}/>
+                                    <Scatter dataKey={props.dataKey} data={transformDataForErrorBars(props.data)} onClick={handleScatterChartFilter}
+                                            fill={theme.colorLogoBlue} isAnimationActive={false} legendType="wye">
+                                        <ErrorBar dataKey={confidenceKey} width={0} strokeWidth={2} stroke={theme.colorLogoPink} opacity={0.8} direction="y" />
+                                    </Scatter>
+                                </ScatterChart>
+                            </ResponsiveContainer>
+                        </div>
+                    );
                 default:
                     return <div>ERROR: unknown chart type <strong>{props.type}</strong></div>;
             }

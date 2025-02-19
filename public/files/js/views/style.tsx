@@ -47,3 +47,25 @@ export const KeyboardShortcuts = styled.div`
         }
     }
 `;
+
+
+// -------------- <AnalysisFrame /> ------------------------------------
+
+export const AnalysisFrame = styled.div`
+
+`;
+
+
+// -------------- <AdhocSubcWarning /> ---------------------------------
+
+
+export const AdhocSubcWarning = styled.div`
+
+    display: flex;
+    align-items: center;
+
+    > * {
+        padding: 0.7em;
+        margin: 0;
+    }
+`;

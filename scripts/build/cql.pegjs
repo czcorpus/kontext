@@ -27,11 +27,11 @@ WithinOrContaining =
     }
 
 GlobPart =
-    GlobCond (_ BINAND _ GlobCond)*
+    GlobCond (_ BINAND _ GlobCond)* {}
 
 GlobCond =
-    NUMBER DOT AttName _ NOT? EQ _ NUMBER DOT AttName
-    / KW_FREQ LPAREN _ NUMBER DOT AttName _ RPAREN NOT? _ ( EQ / LEQ / GEQ / LSTRUCT / RSTRUCT ) _ NUMBER
+    NUMBER DOT AttName _ NOT? EQ _ NUMBER DOT AttName {}
+    / KW_FREQ LPAREN _ NUMBER DOT AttName _ RPAREN NOT? _ ( EQ / LEQ / GEQ / LSTRUCT / RSTRUCT ) _ NUMBER {}
 
 WithinContainingPart =
     s:Sequence {
@@ -57,33 +57,35 @@ Structure =
     }
 
 NumberedPosition =
-    NUMBER COLON OnePosition
+    NUMBER COLON OnePosition {}
 
 Position =
-    OnePosition / NumberedPosition
+    OnePosition / NumberedPosition {}
 
 OnePosition =
-    LBRACKET _ AttValList? _ RBRACKET
-    / RegExp
-    / TEQ NUMBER? RegExp
-    / KW_MU
-    / MuPart
+    LBRACKET _ AttValList? _ RBRACKET {}
+    / RegExp {}
+    / TEQ NUMBER? RegExp {}
+    / KW_MU {}
+    / MuPart {}
 
-// -------------------- meet/union query --------------------
+// -------------------- meet/union query -----------------------------
 
 MuPart =
-    LPAREN _ (UnionOp / MeetOp) _ RPAREN
+    LPAREN _ (UnionOp / MeetOp) _ RPAREN {}
 
 Integer =
-    NUMBER / NNUMBER
+    NUMBER  {}
+    / NNUMBER {}
 
 MeetOp =
-    KW_MEET _ Position _ Position _ (Integer _ Integer)?
+    KW_MEET _ Position _ Position _ (Integer _ Integer)? {}
 
 UnionOp =
-    KW_UNION _ Position _ Position
+    KW_UNION _ Position _ Position {}
 
 // -------------------- regular expression query --------------------
+
 Sequence =
     s1:Seq sList:(_ BINOR _ Seq)* {
         return [s1].concat(sList).flatMap(x => x)
@@ -94,7 +96,7 @@ Sequence =
 
 Seq =
     NOT? r1:Repetition rList:(_ Repetition)* {
-        return [r1].concat(rList)
+        return [r1].concat(rList.map(v => v[1]))
     }
 
 Repetition =
@@ -123,14 +125,14 @@ OpenStructTag =
     }
 
 CloseStructTag =
-    LSTRUCT SLASH _ Structure RSTRUCT
+    LSTRUCT SLASH _ Structure RSTRUCT {}
 
 AtomQuery =
-    Position
-    / LPAREN _ Sequence (_ NOT? (KW_WITHIN / KW_CONTAINING) _ WithinContainingPart)* _ RPAREN
+    Position {}
+    / LPAREN _ Sequence (_ NOT? (KW_WITHIN / KW_CONTAINING) _ WithinContainingPart)* _ RPAREN {}
 
 AlignedPart =
-    AttName COLON _ Sequence  // parallel alignment
+    AttName COLON _ Sequence {}  // parallel alignment
 
 AttValList =
     ava:AttValAnd avaList:(_ BINOR _ AttValAnd)* {
@@ -155,9 +157,9 @@ AttVal =
             attValue: v
         }
     }
-    / POSNUM NUMBER DASH NUMBER
-    / POSNUM NUMBER
-    / NOT AttVal
+    / POSNUM NUMBER DASH NUMBER {}
+    / POSNUM NUMBER {}
+    / NOT AttVal {}
     / LPAREN _ al:AttValList _ RPAREN {
         return al
     }
@@ -170,10 +172,10 @@ AttVal =
     }
 
 WithinNumber =
-    NUMBER
+    NUMBER {}
 
 RepOpt =
-    STAR / PLUS / QUEST / LBRACE NUMBER (COMMA NUMBER?)? RBRACE
+    STAR / PLUS / QUEST / LBRACE NUMBER (COMMA NUMBER?)? RBRACE {}
 
 AttName =
     ATTR_CHARS {
@@ -186,15 +188,16 @@ AttName =
 // ----------------- Phrase (a query input mode) ------------------------
 
 PhraseQuery =
-    RegExpRaw (_ RegExpRaw)*
+    RegExpRaw (_ RegExpRaw)* {}
 
 // ---------------- Not a Regular expression string (for strict equal expressions) ---
 
 RawString =
-    QUOT SimpleString QUOT / QUOT QUOT
+    QUOT SimpleString QUOT  {}
+    / QUOT QUOT {}
 
 SimpleString =
-    (AnyLetter / NO_RG_ESCAPED / NO_RG_SPEC)+
+    (AnyLetter / NO_RG_ESCAPED / NO_RG_SPEC)+ {}
 
 NO_RG_SPEC =
     '\{' / '\}' / '\(' / '\)' / '\[' / '\]' / '\?' / '\!' / '\.' / '\*' / '\+' / '\^' / '\$' / '\|'
@@ -213,50 +216,53 @@ RegExp =
     }
 
 RegExpRaw =
-    (RgLook / RgGrouped / RgSimple)+
+    (RgLook / RgGrouped / RgSimple)+ {}
 
 RgGrouped =
-    LPAREN _ RegExpRaw (BINOR RegExpRaw?)*  _ RPAREN
+    LPAREN _ RegExpRaw (BINOR RegExpRaw?)*  _ RPAREN {}
 
 RgSimple =
-    (RgRange / RgChar / RgAlt / RgPosixClass)+
+    (RgRange / RgChar / RgAlt / RgPosixClass)+ {}
 
 RgPosixClass =
-    LBRACKET LBRACKET COLON POSIX_CHAR_CLS COLON RBRACKET RBRACKET
+    LBRACKET LBRACKET COLON POSIX_CHAR_CLS COLON RBRACKET RBRACKET {}
 
 // negative/positive lookbehind/lookahead
 RgLook =
-    LPAREN _ RgLookOperator RegExpRaw _ RPAREN
+    LPAREN _ RgLookOperator RegExpRaw _ RPAREN {}
 
 RgLookOperator =
-    QUEST LSTRUCT NOT / QUEST LSTRUCT EQ / QUEST NOT / QUEST EQ
+    QUEST LSTRUCT NOT  {}
+    / QUEST LSTRUCT EQ  {}
+    / QUEST NOT  {}
+    / QUEST EQ {}
 
 
 RgAlt =
-    LBRACKET RG_CARET? RgAltVal+ RBRACKET
+    LBRACKET RG_CARET? RgAltVal+ RBRACKET {}
 
 RgAltVal =
-    AnyLetter DASH AnyLetter /
-    RgChar /
-    BINOR /
-    QUOT /
-    LBRACE /
-    RBRACE /
-    LPAREN /
-    RPAREN /
-    DASH
+    AnyLetter DASH AnyLetter {}
+    / RgChar {}
+    / BINOR {}
+    / QUOT {}
+    / LBRACE {}
+    / RBRACE {}
+    / LPAREN {}
+    / RPAREN {}
+    / DASH {}
 
 RgChar =
-    AnyLetter /
-    RG_ESCAPED /
-    RG_REPEAT /
-    RG_QM /
-    RG_ANY /
-    RG_OP /
-    RG_NON_LETTER /
-    RG_NON_SPEC /
-    RG_AMP /
-    RG_UNICODE_PROP
+    AnyLetter {}
+    / RG_ESCAPED {}
+    / RG_REPEAT {}
+    / RG_QM {}
+    / RG_ANY {}
+    / RG_OP {}
+    / RG_NON_LETTER {}
+    / RG_NON_SPEC {}
+    / RG_AMP {}
+    / RG_UNICODE_PROP {}
 
 RG_CARET =
      "^"
@@ -290,10 +296,11 @@ POSIX_CHAR_CLS =
 
 // {n}, {n,}, {n,m}
 RgRange =
-    LBRACE RgRangeSpec RBRACE
+    LBRACE RgRangeSpec RBRACE {}
 
 RgRangeSpec =
-    NUMBER COMMA NUMBER? / NUMBER
+    NUMBER COMMA NUMBER?  {}
+    / NUMBER {}
 
 AnyLetter =
     LETTER {}

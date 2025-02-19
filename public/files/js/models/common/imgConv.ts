@@ -22,15 +22,9 @@ import { Dict } from 'cnc-tskit';
 import { StatelessModel, IActionQueue } from 'kombo';
 import { DownloadType, PageModel, UnsupportedBlob } from '../../app/page.js';
 import { Actions } from '../common/actions.js';
-import { FreqChartsAvailableTypes } from '../freqs/common.js';
 
 
 export interface ImageConversionModelState {
-    data:{[sourceId:string]:{
-        src:string;
-        type:FreqChartsAvailableTypes;
-        serverArgs:{[k:string]:string|number};
-    }};
 }
 
 
@@ -39,21 +33,8 @@ export class ImageConversionModel extends StatelessModel<ImageConversionModelSta
     private layoutModel:PageModel;
 
     constructor(dispatcher:IActionQueue, layoutModel:PageModel) {
-        super(dispatcher, {
-            data: {}
-        });
+        super(dispatcher, {});
         this.layoutModel = layoutModel;
-
-        this.addActionHandler(
-            Actions.SetChartDownloadSVG,
-            (state, action) => {
-                state.data[action.payload.sourceId] = {
-                    src: action.payload.value,
-                    type: action.payload.type,
-                    serverArgs: action.payload.args ? action.payload.args : {}
-                };
-            }
-        );
 
         this.addActionHandler(
             Actions.ConvertChartSVG,
@@ -63,24 +44,27 @@ export class ImageConversionModel extends StatelessModel<ImageConversionModelSta
                         this.layoutModel.showMessage('error', this.layoutModel.translate('global__func_not_supp_by_the_browser'));
                         return;
                     }
-                    if (!state.data[action.payload.sourceId]) {
-                        this.layoutModel.showMessage('error', `Chart data ${action.payload.sourceId} not available. Known data: ${Dict.keys(state.data).join(', ')}`)
+                    if (action.error) {
+                        this.layoutModel.showMessage('error', action.error);
                         return;
                     }
-                    const { src, type, serverArgs } = state.data[action.payload.sourceId];
+                    if (!action.payload.data) {
+                        this.layoutModel.showMessage('error', `Chart data ${action.payload.sourceId} not available.`)
+                        return;
+                    }
                     this.layoutModel.bgDownload({
                         format: action.payload.format.split('-')[0],
                         datasetType: DownloadType.CHART,
                         url: this.layoutModel.createActionUrl(
                             'tools/convert_chart_svg',
                             {
-                                ...serverArgs,
-                                chartType: type,
+                                ...action.payload.args,
+                                chartType: action.payload.chartType,
                                 outFormat: action.payload.format
                             }
                         ),
                         contentType: action.payload.format.startsWith('png') ? 'image/png' : 'image/svg+xml',
-                        args: src // the naming is a bit confusing here
+                        args: action.payload.data // the naming is a bit confusing here
                     }).subscribe();
             }
         );

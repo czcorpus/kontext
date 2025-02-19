@@ -311,9 +311,10 @@ export function init(
             (evt) => {
                 if (ref) {
                     const elm = ref.current;
-                    elm.select();
-                    elm.style.overflow = 'auto';
-                    elm.style.width = `${(calcAutoWidth(props.autoWidth)).toFixed()}px`;
+                    if (elm) {
+                        elm.style.overflow = 'auto';
+                        elm.style.width = `${(calcAutoWidth(props.autoWidth)).toFixed()}px`;
+                    }
                 }
             } :
             (evt:UIEvent) => undefined;
@@ -326,16 +327,18 @@ export function init(
 
         const windowResizeHandler = () => {
             const elm = ref.current;
-            elm.select();
-            resizeFn(elm);
+            if (elm) {
+                resizeFn(elm);
+            }
         }
 
         React.useEffect(() => {
                 window.addEventListener('resize', resizeFn);
                 if (props.onReady) {
                     const elm = ref.current;
-                    elm.select();
-                    props.onReady(elm);
+                    if (elm) {
+                        props.onReady(elm);
+                    }
                 }
                 return () => {
                     window.removeEventListener('resize', windowResizeHandler);

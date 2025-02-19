@@ -29,6 +29,7 @@ import { FreqDataRowsModel } from '../../../models/freqs/regular/table.js';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Actions } from '../../../models/freqs/regular/actions.js';
 import * as S from './style.js';
+import * as S2 from '../../style.js';
 import { FreqChartsModel } from '../../../models/freqs/regular/freqCharts.js';
 import { FreqDataRowsModelState, FreqViewProps, isEmptyResultBlock } from '../../../models/freqs/regular/common.js';
 import { alphaToCoeffFormatter, FreqResultViews } from '../../../models/freqs/common.js';
@@ -332,6 +333,15 @@ export function init(
                 )}
                 {props.saveFormActive ?
                     <saveViews.SaveFreqForm onClose={handleSaveFormClose} /> :
+                    null
+                }
+                {props.concHasAdhocQuery ?
+                    <S2.AdhocSubcWarning>
+                        <globalComponents.StatusIcon status="warning" />
+                        <p>
+                            {he.translate('global__concordance_is_based_on_adhoc_subc_warning')}
+                        </p>
+                    </S2.AdhocSubcWarning> :
                     null
                 }
             </div>

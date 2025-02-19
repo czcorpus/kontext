@@ -153,7 +153,7 @@ export const MinFreqInputLabel = styled.label`
 
 export const FrequencyForm = styled.div`
 
-padding-left: 1em;
+    padding-left: 1em;
     padding-right: 1em;
 
     .freq-form {
@@ -162,6 +162,10 @@ padding-left: 1em;
         fieldset {
             margin-top: 0.4em;
             padding: 1em 0.7em;
+        }
+
+        .buttons {
+            margin-top: 1em;
         }
 
         table.struct-attr-list {

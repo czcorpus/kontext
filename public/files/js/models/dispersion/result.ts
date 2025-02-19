@@ -28,7 +28,6 @@ import { PageModel } from '../../app/page.js';
 import { ChartExportFormat } from '../../types/kontext.js';
 import { Actions } from './actions.js';
 import { validateGzNumber } from '../base.js';
-import { stackOffsetExpand } from 'd3';
 
 
 export interface DispersionDataRow {

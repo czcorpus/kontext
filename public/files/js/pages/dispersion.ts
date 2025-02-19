@@ -44,8 +44,9 @@ import { TextTypesModel } from '../models/textTypes/main.js';
 import { Freq2DTableModel } from '../models/freqs/twoDimension/table2d.js';
 import { FreqCTResultsSaveModel } from '../models/freqs/twoDimension/save.js';
 import { importInitialTTData, TTInitialData } from '../models/textTypes/common.js';
-import { ConcFormArgs } from '../models/query/formArgs.js';
+import { ConcFormArgs, QueryFormArgsResponse } from '../models/query/formArgs.js';
 import { fetchQueryFormArgs } from '../models/query/first.js';
+import { QueryProps } from '../models/cqleditor/qprops.js';
 
 
 
@@ -80,11 +81,10 @@ export class DispersionPage {
 
     }
 
-    private initTTModel(ttData:TTInitialData):[TextTypesModel, Array<TextTypes.AnyTTSelection>] {
-        const concFormArgs = this.layoutModel.getConf<{[ident:string]:ConcFormArgs}>(
-            'ConcFormsArgs'
-        );
-        const queryFormArgs = fetchQueryFormArgs(concFormArgs);
+    private initTTModel(
+        ttData:TTInitialData,
+        queryFormArgs:QueryFormArgsResponse
+    ):[TextTypesModel, Array<TextTypes.AnyTTSelection>] {
         const attributes = importInitialTTData(ttData, {});
         const ttModel = new TextTypesModel({
             dispatcher: this.layoutModel.dispatcher,
@@ -100,7 +100,11 @@ export class DispersionPage {
 
     private initAnalysisViews():void {
         const ttData = this.layoutModel.getConf<TTInitialData>('textTypesData');
-        const [,ttSelection] = this.initTTModel(ttData);
+        const concFormArgs = this.layoutModel.getConf<{[ident:string]:ConcFormArgs}>(
+            'ConcFormsArgs'
+        );
+        const queryFormArgs = fetchQueryFormArgs(concFormArgs);
+        const [,ttSelection] = this.initTTModel(ttData, queryFormArgs);
         const attrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList');
 
         // -------------------- freq form -------------------
@@ -230,11 +234,14 @@ export class DispersionPage {
             mainMenuModel: this.layoutModel.getModels().mainMenuModel
         });
 
+        const qProps = new QueryProps(
+            queryFormArgs.curr_queries[this.layoutModel.getCorpusIdent().id]);
         this.layoutModel.renderReactComponent(
             analysisViews.AnalysisFrame,
             window.document.getElementById('analysis-forms-mount'),
             {
-                initialFreqFormVariant: 'dispersion' as Kontext.FreqModuleType
+                initialFreqFormVariant: 'dispersion' as Kontext.FreqModuleType,
+                concHasAdhocQuery: qProps.containsAdhocSubcorp()
             }
         );
     }

@@ -47,6 +47,7 @@ export interface CollResulModelArgs {
     sortFn:string;
     cattr:string;
     currPage:number;
+    concHasAdhocQuery:boolean;
 }
 
 export interface CollResultModelState {
@@ -63,6 +64,7 @@ export interface CollResultModelState {
     sortFn:string;
     cattr:string;
     saveFormVisible:boolean;
+    concHasAdhocQuery:boolean;
 }
 
 /**
@@ -76,7 +78,8 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
 
     constructor({
             dispatcher, layoutModel, initialData, resultHeading,
-            pageSize, saveLinesLimit, unfinished, sortFn, cattr, currPage}:CollResulModelArgs) {
+            pageSize, saveLinesLimit, unfinished, sortFn, cattr,
+            currPage, concHasAdhocQuery}:CollResulModelArgs) {
         super(
             dispatcher,
             {
@@ -92,7 +95,8 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
                 quickSaveRowLimit: 0,
                 sortFn: sortFn,
                 cattr: cattr,
-                saveFormVisible: false
+                saveFormVisible: false,
+                concHasAdhocQuery
             }
         );
         this.layoutModel = layoutModel;

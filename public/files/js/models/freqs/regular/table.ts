@@ -49,6 +49,7 @@ export interface FreqDataRowsModelArgs {
     freqLoader:FreqDataLoader;
     forcedParams:{[sourceId:string]:{[key:string]:any}};
     alphaLevel:Maths.AlphaLevel;
+    concHasAdhocQuery:boolean;
 }
 
 function getPositionalTagAttrs(pageModel:PageModel): Array<string> {
@@ -138,7 +139,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
 
     constructor({
         dispatcher, pageModel, freqType, freqCrit, freqCritAsync, formProps,
-        initialData, currentPage, freqLoader, forcedParams, alphaLevel
+        initialData, currentPage, freqLoader, forcedParams, alphaLevel,
+        concHasAdhocQuery
     }:FreqDataRowsModelArgs) {
         const allCrit = List.concat(freqCrit, freqCritAsync);
         super(
@@ -200,7 +202,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 displayConfidence: false,
                 shareLink: null,
                 flimit: parseInt(formProps.flimit) || 0,
-                shareWidgetIsBusy: false
+                shareWidgetIsBusy: false,
+                concHasAdhocQuery
             }
         );
         this.pageModel = pageModel;

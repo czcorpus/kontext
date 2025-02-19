@@ -57,9 +57,9 @@ export const DataRowTR = styled.tr`
 
 // -------------- <ValueTD /> --------------
 
-export const ValueTD = styled.td<{ monospace: boolean }>`
+export const ValueTD = styled.td<{ $useMonospace: boolean }>`
 
-    font-family: ${props => props.monospace ? theme.monospaceFontFamily : theme.defaultFontFamily};
+    font-family: ${props => props.$useMonospace ? theme.monospaceFontFamily : theme.defaultFontFamily};
 
 `;
 

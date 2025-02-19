@@ -113,29 +113,20 @@ export class Actions {
         name: 'CONC_ARGS_UPDATED'
     };
 
-    /**
-     *  this is typically triggered by SVG producing component's side effect
-     */
-    static SetChartDownloadSVG:Action<{
+    static ConvertChartSVG:Action<{
         /**
          * SourceId must fully identify the source. In case of multiple views storing
          * data here it is advised to use additional prefixes, e.g. 'freq_tables:doc.genre 0'
          */
         sourceId:string;
-        value:string;
-        type:FreqChartsAvailableTypes;
-        args?:{[k:string]:string|number};
-    }> = {
-        name: 'GLOBAL__SET_CHART_DOWNLOAD_SVG'
-    }
-
-    static ConvertChartSVG:Action<{
-
-        sourceId:string;
 
         format:Kontext.ChartExportFormat;
 
         chartType:FreqChartsAvailableTypes;
+
+        data:string;
+
+        args?:{[k:string]:string|number};
 
     }> = {
         name: 'GLOBAL_CONVERT_CHART_SVG'
