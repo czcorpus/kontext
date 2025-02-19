@@ -592,9 +592,13 @@ class FreqPage {
                 'ConcFormsArgs'
             );
             const queryFormArgs = fetchQueryFormArgs(concFormArgs);
+            const rawQuery = pipe(
+                this.layoutModel.getConf<Array<Kontext.QueryOperation>>('queryOverview') || [],
+                List.head(),
+                x => x.args
+            );
             const [,ttSelection] = this.initTTModel(ttData, queryFormArgs);
-            const qProps = new QueryProps(
-                queryFormArgs.curr_queries[this.layoutModel.getCorpusIdent().id]);
+            const qProps = new QueryProps(rawQuery);
             this.initAnalysisViews(
                 ttSelection, ttData.bib_id_attr, ttData.bib_label_attr, qProps);
             this.initQueryOpNavigation();

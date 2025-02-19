@@ -437,7 +437,7 @@ export interface QueryOperation {
     /**
      * contains
      */
-    arg:string;
+    args:string;
 
     /**
      * Result size in tokens after this operation
