@@ -19,13 +19,16 @@
  */
 
 import * as React from 'react';
+import { List } from 'cnc-tskit';
+
 import * as Kontext from '../types/kontext.js';
 import { FormsViews as CollFormsViews } from './coll/forms.js';
 import { FormsViews as FreqFormsViews } from './freqs/forms.js';
 import { IActionDispatcher, IModel, BoundWithProps } from 'kombo';
 import { MainMenuModelState } from '../models/mainMenu/index.js';
 import { Actions as MainMenuActions } from '../models/mainMenu/actions.js';
-import { List } from 'cnc-tskit';
+import * as S from './style.js';
+
 
 export interface AnalysisModuleArgs {
     dispatcher:IActionDispatcher;
@@ -37,6 +40,7 @@ export interface AnalysisModuleArgs {
 
 export interface AnalysisFrameProps {
     initialFreqFormVariant:Kontext.FreqModuleType;
+    concHasAdhocQuery:boolean;
 }
 
 export interface FormsViews {
@@ -51,24 +55,19 @@ export function init({dispatcher, he, collViews, freqViews,
 
     // ------------------------- <AnalysisFrame /> ---------------------------
 
-    class AnalysisFrame extends React.PureComponent<AnalysisFrameProps & MainMenuModelState> {
+    const AnalysisFrame:React.FC<AnalysisFrameProps & MainMenuModelState> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._handleCloseClick = this._handleCloseClick.bind(this);
-        }
-
-        _renderContents() {
-            switch ((this.props.activeItem || {actionName: null}).actionName) {
+        const renderContents = () => {
+            switch ((props.activeItem || {actionName: null}).actionName) {
                 case MainMenuActions.ShowCollForm.name:
                     return <collViews.CollForm />;
                 case MainMenuActions.ShowFreqForm.name:
-                    return <freqViews.FrequencyForm initialFreqFormVariant={this.props.initialFreqFormVariant} />;
+                    return <freqViews.FrequencyForm initialFreqFormVariant={props.initialFreqFormVariant} />;
             }
-        }
+        };
 
-        _getTitle() {
-            switch ((this.props.activeItem || {actionName: null}).actionName) {
+        const getTitle = () => {
+            switch ((props.activeItem || {actionName: null}).actionName) {
                 case MainMenuActions.ShowCollForm.name:
                     return he.translate('coll__form_heading');
                 case MainMenuActions.ShowFreqForm.name:
@@ -76,41 +75,52 @@ export function init({dispatcher, he, collViews, freqViews,
                 default:
                     return '?';
             }
-        }
+        };
 
-        _activeItemIsOurs() {
+        const activeItemIsOurs = () => {
             const actions = [
                 MainMenuActions.ShowCollForm.name,
                 MainMenuActions.ShowFreqForm.name
             ];
-            return this.props.activeItem !== null
-                    && List.some(v => v === this.props.activeItem.actionName, actions);
-        }
+            return props.activeItem !== null
+                    && List.some(v => v === props.activeItem.actionName, actions);
+        };
 
-        _handleCloseClick() {
+        const handleCloseClick = () => {
             dispatcher.dispatch<typeof MainMenuActions.ClearActiveItem>({
                 name: MainMenuActions.ClearActiveItem.name
             });
-        }
+        };
 
-        render() {
-            if (this._activeItemIsOurs()) {
-                return (
-                    <layoutViews.ModalOverlay onCloseKey={this._handleCloseClick}>
-                        <layoutViews.CloseableFrame onCloseClick={this._handleCloseClick}
-                                label={this._getTitle()} scrollable={true}>
-                            {this._renderContents()}
-                        </layoutViews.CloseableFrame>
-                    </layoutViews.ModalOverlay>
-                );
+        if (activeItemIsOurs()) {
+            return (
+                <layoutViews.ModalOverlay onCloseKey={handleCloseClick}>
+                    <layoutViews.CloseableFrame onCloseClick={handleCloseClick}
+                            label={getTitle()} scrollable={true}>
+                        <S.AnalysisFrame>
+                            {renderContents()}
 
-            } else {
-                return null;
-            }
+                            {props.concHasAdhocQuery ?
+                                <div className="warning-section">
+                                    <layoutViews.StatusIcon status="warning" />
+                                    <p>
+                                        {he.translate('global__concordance_is_based_on_adhoc_subc_warning')}
+                                    </p>
+                                </div> :
+                                null
+                            }
+                        </S.AnalysisFrame>
+                    </layoutViews.CloseableFrame>
+                </layoutViews.ModalOverlay>
+            );
+
+        } else {
+            return null;
         }
     }
 
-    const BoundAnalysisFrame = BoundWithProps<AnalysisFrameProps, MainMenuModelState>(AnalysisFrame, mainMenuModel);
+    const BoundAnalysisFrame = BoundWithProps<AnalysisFrameProps, MainMenuModelState>(
+        AnalysisFrame, mainMenuModel);
 
     return {
         AnalysisFrame: BoundAnalysisFrame

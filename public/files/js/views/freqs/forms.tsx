@@ -47,7 +47,7 @@ interface FrequencyFormState {
 }
 
 export interface FormsViews {
-    FrequencyForm:React.ComponentClass<FrequencyFormProps>;
+    FrequencyForm:React.FC<FrequencyFormProps>;
 }
 
 
@@ -67,23 +67,27 @@ export function init(
 
     // ---------------------- <FrequencyForm /> ---------------------
 
-    class FrequencyForm extends React.Component<FrequencyFormProps, FrequencyFormState> {
+    const FrequencyForm:React.FC<FrequencyFormProps> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this.state = {formType: this.props.initialFreqFormVariant};
-            this._handleSubmitClick = this._handleSubmitClick.bind(this);
-            this._handleFormSwitch = this._handleFormSwitch.bind(this);
-        }
+        const [state, updateState] = React.useState<FrequencyFormState>({
+            formType: props.initialFreqFormVariant
+        });
 
-        _handleFormSwitch(value) {
-            this.setState({
+        const items:Array<{id:Kontext.FreqModuleType; label:string}> = [
+            {id: 'tokens', label: he.translate('freq__sel_form_type_ml')},
+            {id: 'text-types', label: he.translate('freq__sel_form_type_tt')},
+            {id: 'dispersion', label: he.translate('freq__sel_form_type_dp')},
+            {id: '2-attribute', label: he.translate('freq__sel_form_type_ct')}
+        ];
+
+        const handleFormSwitch = (value) => {
+            updateState({
                 formType: value
             });
-        }
+        };
 
-        _handleSubmitClick() {
-            switch (this.state.formType) {
+        const handleSubmitClick = () => {
+            switch (state.formType) {
                 case 'tokens':
                     dispatcher.dispatch<typeof ActionsRF.MLSubmit>({
                         name: ActionsRF.MLSubmit.name
@@ -105,40 +109,31 @@ export function init(
                         payload: {reloadPage: true}
                     });
             }
-        }
+        };
 
-        render() {
-            const items:Array<{id:Kontext.FreqModuleType; label:string}> = [
-                {id: 'tokens', label: he.translate('freq__sel_form_type_ml')},
-                {id: 'text-types', label: he.translate('freq__sel_form_type_tt')},
-                {id: 'dispersion', label: he.translate('freq__sel_form_type_dp')},
-                {id: '2-attribute', label: he.translate('freq__sel_form_type_ct')}
-            ];
+        return (
+            <S.FrequencyForm>
+                <form className="freq-form">
+                    <layoutViews.TabView
+                        className="FreqFormSelector"
+                        defaultId={state.formType}
+                        callback={handleFormSwitch}
+                        items={items} >
 
-            return (
-                <S.FrequencyForm>
-                    <form className="freq-form">
-                        <layoutViews.TabView
-                            className="FreqFormSelector"
-                            defaultId={this.state.formType}
-                            callback={this._handleFormSwitch}
-                            items={items} >
+                        <freqForms.MLFreqForm />
+                        <freqForms.TTFreqForm />
+                        <DispersionForm />
+                        <ctFreqForm.CTFreqForm />
+                    </layoutViews.TabView>
 
-                            <freqForms.MLFreqForm />
-                            <freqForms.TTFreqForm />
-                            <DispersionForm />
-                            <ctFreqForm.CTFreqForm />
-                        </layoutViews.TabView>
-
-                        <div className="buttons">
-                            <button className="default-button" type="button" onClick={this._handleSubmitClick}>
-                                {he.translate('freq__make_freq_list_btn')}
-                            </button>
-                        </div>
-                    </form>
-                </S.FrequencyForm>
-            );
-        }
+                    <div className="buttons">
+                        <button className="default-button" type="button" onClick={handleSubmitClick}>
+                            {he.translate('freq__make_freq_list_btn')}
+                        </button>
+                    </div>
+                </form>
+            </S.FrequencyForm>
+        );
     }
 
 

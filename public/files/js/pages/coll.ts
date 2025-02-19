@@ -41,9 +41,10 @@ import { CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/twoD
 import { Actions } from '../models/coll/actions.js';
 import { DispersionResultModel } from '../models/dispersion/result.js';
 import { importInitialTTData, TTInitialData } from '../models/textTypes/common.js';
-import { ConcFormArgs } from '../models/query/formArgs.js';
+import { ConcFormArgs, QueryFormArgsResponse } from '../models/query/formArgs.js';
 import { fetchQueryFormArgs } from '../models/query/first.js';
 import { transferActionToViewPage } from '../app/navigation/interpage.js';
+import { QueryProps } from '../models/cqleditor/qprops.js';
 
 
 /**
@@ -122,7 +123,11 @@ export class CollPage {
 
         const ctFormInputs = this.layoutModel.getConf<CTFormInputs>('CTFreqFormProps');
         const ttData = this.layoutModel.getConf<TTInitialData>('textTypesData');
-        const [tt, ttSelections] = this.initTextTypesModel(ttData);
+        const concFormArgs = this.layoutModel.getConf<{[ident:string]:ConcFormArgs}>(
+            'ConcFormsArgs'
+        );
+        const queryFormArgs = fetchQueryFormArgs(concFormArgs);
+        const [tt, ttSelections] = this.initTextTypesModel(ttData, queryFormArgs);
         const ctFormProps:CTFormProperties = {
             attrList: attrs,
             structAttrList: Kontext.structsAndAttrsToStructAttrList(this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs')),
@@ -188,11 +193,15 @@ export class CollPage {
             freqViews: freqFormViews,
             mainMenuModel: this.layoutModel.getModels().mainMenuModel
         });
+
+        const qProps = new QueryProps(
+            queryFormArgs.curr_queries[this.layoutModel.getCorpusIdent().id]);
         this.layoutModel.renderReactComponent(
             analysisViews.AnalysisFrame,
             window.document.getElementById('analysis-forms-mount'),
             {
-                initialFreqFormVariant: 'tokens' as Kontext.FreqModuleType
+                initialFreqFormVariant: 'tokens' as Kontext.FreqModuleType,
+                concHasAdhocQuery: qProps.containsAdhocSubcorp()
             }
         );
 
@@ -306,11 +315,11 @@ export class CollPage {
         }).subscribe();
     }
 
-    initTextTypesModel(ttData:TTInitialData):[TextTypesModel, Array<TextTypes.AnyTTSelection>] {
-        const concFormArgs = this.layoutModel.getConf<{[ident:string]:ConcFormArgs}>(
-            'ConcFormsArgs'
-        );
-        const queryFormArgs = fetchQueryFormArgs(concFormArgs);
+    initTextTypesModel(
+        ttData:TTInitialData,
+        queryFormArgs:QueryFormArgsResponse
+    ):[TextTypesModel, Array<TextTypes.AnyTTSelection>] {
+
         const attributes = importInitialTTData(ttData, {});
         const ttModel = new TextTypesModel({
             dispatcher: this.layoutModel.dispatcher,

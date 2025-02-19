@@ -92,6 +92,7 @@ import { DispersionResultModel } from '../models/dispersion/result.js';
 import { AnyTTSelection } from '../types/textTypes.js';
 import { ShuffleModel } from '../models/query/shuffle.js';
 import { ActionUrlCodes } from '../app/navigation/interpage.js';
+import { QueryProps } from '../models/cqleditor/qprops.js';
 
 
 export class QueryModels {
@@ -805,7 +806,8 @@ export class ViewPage {
     initAnalysisViews(
         ttSelections:Array<AnyTTSelection>,
         bibIdAttr:string,
-        bibLabelAttr:string
+        bibLabelAttr:string,
+        queryProps:QueryProps
     ):void {
         const attrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList');
         // ------------------ coll ------------
@@ -916,7 +918,8 @@ export class ViewPage {
             this.analysisViews.AnalysisFrame,
             window.document.getElementById('analysis-forms-mount'),
             {
-                initialFreqFormVariant: 'tokens' as Kontext.FreqModuleType
+                initialFreqFormVariant: 'tokens' as Kontext.FreqModuleType,
+                concHasAdhocQuery: queryProps.containsAdhocSubcorp()
             }
         );
     }
@@ -1163,7 +1166,8 @@ export class ViewPage {
                 'ConcFormsArgs'
             );
             const queryFormArgs = fetchQueryFormArgs(concFormArgs);
-
+            const qProps = new QueryProps(
+                queryFormArgs.curr_queries[this.layoutModel.getCorpusIdent().id]);
             const lineViewProps = this.initModels(
                 queryFormArgs,
                 this.initTokenConnect()
@@ -1186,7 +1190,8 @@ export class ViewPage {
             this.initSwitchMainCorpForm();
             this.initSampleForm(this.queryModels.switchMcModel);
             this.initQueryOverviewArea(tagHelperPlg);
-            this.initAnalysisViews(ttInitialData, ttData.bib_id_attr, ttData.bib_label_attr);
+            this.initAnalysisViews(
+                ttInitialData, ttData.bib_id_attr, ttData.bib_label_attr, qProps);
             this.layoutModel.initKeyShortcuts();
             this.updateHistory();
             if (this.layoutModel.getConf<boolean>('Unfinished')) {
@@ -1197,10 +1202,9 @@ export class ViewPage {
                 this.viewModels.lineSelectionModel
             );
 
-            const tokensLinking = this.layoutModel.pluginTypeIsActive(PluginName.TOKENS_LINKING) ?
-                tokensLinkingInit(
-                    this.layoutModel.pluginApi()
-                ) : null;
+            if (this.layoutModel.pluginTypeIsActive(PluginName.TOKENS_LINKING)) {
+                tokensLinkingInit(this.layoutModel.pluginApi());
+            }
 
             this.renderLines(
                 {

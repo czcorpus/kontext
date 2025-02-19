@@ -45,7 +45,7 @@ import { CTFormInputs, CTFormProperties, CTFreqResultData,
     AlignTypes } from '../models/freqs/twoDimension/common.js';
 import { Actions } from '../models/freqs/regular/actions.js';
 import { Block, FreqResultViews } from '../models/freqs/common.js';
-import { ConcFormArgs } from '../models/query/formArgs.js';
+import { ConcFormArgs, QueryFormArgsResponse } from '../models/query/formArgs.js';
 import { FreqChartsModel } from '../models/freqs/regular/freqCharts.js';
 import { FreqDataLoader } from '../models/freqs/regular/common.js';
 import { init as viewFreqCommonInit } from '../views/freqs/common.js';
@@ -56,6 +56,7 @@ import { FreqChartsSaveFormModel } from '../models/freqs/regular/saveChart.js';
 import { importInitialTTData, TTInitialData } from '../models/textTypes/common.js';
 import { TabWrapperModel } from '../models/freqs/regular/tabs.js';
 import { transferActionToViewPage } from '../app/navigation/interpage.js';
+import { QueryProps } from '../models/cqleditor/qprops.js';
 
 /**
  *
@@ -105,7 +106,8 @@ class FreqPage {
     private initAnalysisViews(
         ttSelection:Array<TextTypes.AnyTTSelection>,
         bibIdAttr:string,
-        bibLabelAttr:string
+        bibLabelAttr:string,
+        queryProps:QueryProps
     ):void {
         const attrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList');
 
@@ -236,7 +238,8 @@ class FreqPage {
             analysisViews.AnalysisFrame,
             window.document.getElementById('analysis-forms-mount'),
             {
-                initialFreqFormVariant: this.layoutModel.getConf<Kontext.FreqModuleType>('FreqType')
+                initialFreqFormVariant: this.layoutModel.getConf<Kontext.FreqModuleType>('FreqType'),
+                concHasAdhocQuery: queryProps.containsAdhocSubcorp()
             }
         );
     }
@@ -470,11 +473,10 @@ class FreqPage {
         );
     }
 
-    initTTModel(ttData:TTInitialData):[TextTypesModel, Array<TextTypes.AnyTTSelection>] {
-        const concFormArgs = this.layoutModel.getConf<{[ident:string]:ConcFormArgs}>(
-            'ConcFormsArgs'
-        );
-        const queryFormArgs = fetchQueryFormArgs(concFormArgs);
+    initTTModel(
+        ttData:TTInitialData,
+        queryFormArgs:QueryFormArgsResponse
+    ):[TextTypesModel, Array<TextTypes.AnyTTSelection>] {
         const attributes = importInitialTTData(ttData, {});
         const ttModel = new TextTypesModel({
             dispatcher: this.layoutModel.dispatcher,
@@ -584,8 +586,15 @@ class FreqPage {
                 transferActionToViewPage(this.layoutModel)
             );
             const ttData = this.layoutModel.getConf<TTInitialData>('textTypesData');
-            const [,ttSelection] = this.initTTModel(ttData);
-            this.initAnalysisViews(ttSelection, ttData.bib_id_attr, ttData.bib_label_attr);
+            const concFormArgs = this.layoutModel.getConf<{[ident:string]:ConcFormArgs}>(
+                'ConcFormsArgs'
+            );
+            const queryFormArgs = fetchQueryFormArgs(concFormArgs);
+            const [,ttSelection] = this.initTTModel(ttData, queryFormArgs);
+            const qProps = new QueryProps(
+                queryFormArgs.curr_queries[this.layoutModel.getCorpusIdent().id]);
+            this.initAnalysisViews(
+                ttSelection, ttData.bib_id_attr, ttData.bib_label_attr, qProps);
             this.initQueryOpNavigation();
             this.initHelp();
             this.initFreqResult();
