@@ -46,7 +46,7 @@ class KontextLogFormatter(jsonlogger.JsonFormatter):
             record.__dict__['exception'] = {
                 'id': hashlib.sha1(str(uuid.uuid1()).encode('ascii')).hexdigest(),
                 'type': type(ex).__name__,
-                'stack': [s.strip() for s in traceback.format_tb(st)]
+                'stack': [ s.strip() for s2 in traceback.format_tb(st) for s in s2.split('\n')]
             }
         return super().format(record)
 
