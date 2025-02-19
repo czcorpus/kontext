@@ -104,14 +104,14 @@ export function init(
     // ----------------------- <DataRow /> --------------------------------
 
     const DataRow:React.FC<{
-        data: ResultItem;
-        monospaceCols: Array<boolean>;
-        displayConfidence: boolean;
+        data:ResultItem;
+        monospaceCols:Array<boolean>;
+        displayConfidence:boolean;
     }> = (props) => (
         <S.DataRowTR>
             <td className="num">{props.data.idx + 1}</td>
             <DataRowPNFilter pfilter={props.data.pfilter} nfilter={props.data.nfilter} />
-            {List.map((w, i) => <S.ValueTD key={i} monospace={props.monospaceCols[i]}>{w}</S.ValueTD>, props.data.Word)}
+            {List.map((w, i) => <S.ValueTD key={i} $useMonospace={props.monospaceCols[i]}>{w}</S.ValueTD>, props.data.Word)}
             <td className="num">
                 {he.formatNumber(props.data.freq)}
             </td>

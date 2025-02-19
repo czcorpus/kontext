@@ -101,12 +101,12 @@ export function init({dispatcher, he, collViews, freqViews,
                             {renderContents()}
 
                             {props.concHasAdhocQuery ?
-                                <div className="warning-section">
+                                <S.AdhocSubcWarning>
                                     <layoutViews.StatusIcon status="warning" />
                                     <p>
                                         {he.translate('global__concordance_is_based_on_adhoc_subc_warning')}
                                     </p>
-                                </div> :
+                                </S.AdhocSubcWarning> :
                                 null
                             }
                         </S.AnalysisFrame>

@@ -28,6 +28,7 @@ import { CollResultsSaveModel } from '../../../models/coll/save.js';
 import { CollResultRow, CollResultHeadingCell } from '../../../models/coll/common.js';
 import { Actions } from '../../../models/coll/actions.js';
 import * as S from './style.js';
+import * as S2 from '../../style.js';
 
 
 export interface CollResultViewProps {
@@ -52,6 +53,8 @@ export function init(
         utils,
         collSaveModel
     });
+
+    const layoutViews = utils.getLayoutViews();
 
     // ---------------- <TDPosNegFilterLink /> ------------------------
 
@@ -319,40 +322,42 @@ export function init(
 
     // ---------------- <CollResultView /> ------------------------
 
-    class CollResultView extends React.PureComponent<CollResultViewProps & CollResultModelState> {
+    const CollResultView:React.FC<CollResultViewProps & CollResultModelState> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._handleSaveFormClose = this._handleSaveFormClose.bind(this);
-        }
-
-        _handleSaveFormClose() {
+        const handleSaveFormClose = () => {
             dispatcher.dispatch<typeof Actions.ResultCloseSaveForm>({
                 name: Actions.ResultCloseSaveForm.name
             });
-        }
+        };
 
-        render() {
-            return (
-                <S.CollResultView>
-                    {this.props.saveFormVisible ?
-                        <saveViews.SaveCollForm onClose={this._handleSaveFormClose} saveLinesLimit={this.props.saveLinesLimit} />
-                        : null
-                    }
-                    {this.props.calcStatus < 100 ?
-                        <CalcStatusBar status={this.props.calcStatus} /> :
-                        (<div>
-                            <Pagination currPageInput={this.props.currPageInput}
-                                currPage={this.props.currPage}
-                                isWaiting={this.props.isWaiting} hasNextPage={this.props.hasNextPage} />
-                            <DataTable rows={this.props.data} heading={this.props.heading}
-                                    lineOffset={this.props.pageSize * (this.props.currPage - 1)} sortFn={this.props.sortFn}
-                                    cattr={this.props.cattr} />
-                        </div>)
-                    }
-                </S.CollResultView>
-            );
-        }
+        return (
+            <S.CollResultView>
+                {props.saveFormVisible ?
+                    <saveViews.SaveCollForm onClose={handleSaveFormClose} saveLinesLimit={props.saveLinesLimit} />
+                    : null
+                }
+                {props.calcStatus < 100 ?
+                    <CalcStatusBar status={props.calcStatus} /> :
+                    (<div>
+                        <Pagination currPageInput={props.currPageInput}
+                            currPage={props.currPage}
+                            isWaiting={props.isWaiting} hasNextPage={props.hasNextPage} />
+                        <DataTable rows={props.data} heading={props.heading}
+                                lineOffset={props.pageSize * (props.currPage - 1)} sortFn={props.sortFn}
+                                cattr={props.cattr} />
+                    </div>)
+                }
+                {props.concHasAdhocQuery ?
+                    <S2.AdhocSubcWarning>
+                        <layoutViews.StatusIcon status="warning" />
+                        <p>
+                            {utils.translate('global__concordance_is_based_on_adhoc_subc_warning')}
+                        </p>
+                    </S2.AdhocSubcWarning> :
+                    null
+                }
+            </S.CollResultView>
+        );
     }
 
     return {

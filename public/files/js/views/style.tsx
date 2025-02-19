@@ -53,14 +53,19 @@ export const KeyboardShortcuts = styled.div`
 
 export const AnalysisFrame = styled.div`
 
-    .warning-section {
-        display: flex;
-        align-items: center;
+`;
 
-        > * {
-            padding: 0.7em;
-            margin: 0;
-        }
+
+// -------------- <AdhocSubcWarning /> ---------------------------------
+
+
+export const AdhocSubcWarning = styled.div`
+
+    display: flex;
+    align-items: center;
+
+    > * {
+        padding: 0.7em;
+        margin: 0;
     }
-
 `;

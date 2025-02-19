@@ -315,7 +315,7 @@ class FreqPage {
         }).subscribe();
     }
 
-    private initFreqResult():void {
+    private initFreqResult(queryProps:QueryProps):void {
         switch (this.layoutModel.getConf<Kontext.FreqModuleType>('FreqType')) {
             case 'tokens':
             case 'text-types':
@@ -359,6 +359,7 @@ class FreqPage {
                     freqLoader: this.freqLoader,
                     forcedParams,
                     alphaLevel,
+                    concHasAdhocQuery: queryProps.containsAdhocSubcorp()
                 });
 
                 this.saveTablesModel = new FreqResultsSaveModel({
@@ -417,6 +418,7 @@ class FreqPage {
                     freqLoader: this.freqLoader,
                     forcedParams,
                     alphaLevel,
+                    concHasAdhocQuery: queryProps.containsAdhocSubcorp()
                 });
                 const freqResultView = resultViewFactory(
                     this.layoutModel.dispatcher,
@@ -597,7 +599,7 @@ class FreqPage {
                 ttSelection, ttData.bib_id_attr, ttData.bib_label_attr, qProps);
             this.initQueryOpNavigation();
             this.initHelp();
-            this.initFreqResult();
+            this.initFreqResult(qProps);
             this.setupBackButtonListening();
             this.layoutModel.initKeyShortcuts();
         });

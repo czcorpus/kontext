@@ -43,34 +43,6 @@ export function init(
 
     const globalComponents = he.getLayoutViews();
 
-    const storeChartData = (ref:React.RefObject<HTMLElement>) => {
-        const container = ref.current;
-        if (container instanceof Text || !container) {
-            return;
-        }
-        const svg = container.querySelector('svg');
-        const svgURL = new XMLSerializer().serializeToString(svg);
-        const svgBlob = new Blob([svgURL], {type: "image/svg+xml;charset=utf-8"});
-        svgBlob.text().then(
-            value => {
-                dispatcher.dispatch<typeof GlobalActions.SetChartDownloadSVG>({
-                    name: GlobalActions.SetChartDownloadSVG.name,
-                    payload: {
-                        sourceId: 'dispersion',
-                        value,
-                        type: 'bar',
-                    }
-                })
-            },
-            error => {
-                dispatcher.dispatch(
-                    GlobalActions.SetChartDownloadSVG,
-                    error
-                )
-            }
-        );
-    }
-
 
     // ---------------------- <DownloadFormatSelector /> --------------
 
@@ -104,10 +76,7 @@ export function init(
 
     }> = ({ data, width, height }) => {
 
-        const ref = React.useRef(null);
-        React.useEffect(() => {storeChartData(ref)});
-
-        return <BarChart data={data} width={width} height={height} ref={ref} >
+        return <BarChart data={data} width={width} height={height}>
             <CartesianGrid strokeDasharray="3 3" />
             <Bar dataKey="freq" isAnimationActive={false} fill={theme.colorLogoBlue} barSize={List.size(data) === 1 ? 100 : null} />
             <XAxis dataKey="position" type="number" unit="%" domain={[0, 100]} allowDataOverflow={true} />
@@ -120,15 +89,35 @@ export function init(
 
     const DispersionResults:React.FC<DispersionResultModelState> = (props) => {
 
+        const ref = React.useRef(null);
+
         const handleDownload = () => {
-            dispatcher.dispatch<typeof GlobalActions.ConvertChartSVG>({
-                name: GlobalActions.ConvertChartSVG.name,
-                payload: {
-                    sourceId: 'dispersion',
-                    format: props.downloadFormat,
-                    chartType: 'bar'
+            const container = ref.current;
+            if (container instanceof Text || !container) {
+                return;
+            }
+            const svg = container.querySelector('svg');
+            const svgURL = new XMLSerializer().serializeToString(svg);
+            const svgBlob = new Blob([svgURL], {type: "image/svg+xml;charset=utf-8"});
+            svgBlob.text().then(
+                value => {
+                    dispatcher.dispatch<typeof GlobalActions.ConvertChartSVG>({
+                        name: GlobalActions.ConvertChartSVG.name,
+                        payload: {
+                            sourceId: 'dispersion',
+                            format: props.downloadFormat,
+                            data: value,
+                            chartType: 'bar',
+                        }
+                    })
+                },
+                error => {
+                    dispatcher.dispatch(
+                        GlobalActions.ConvertChartSVG,
+                        error
+                    )
                 }
-            });
+            );
         }
 
         const handleResolutionChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
@@ -139,7 +128,7 @@ export function init(
         }
 
         return (
-            <S.FreqDispersionSection>
+            <S.FreqDispersionSection ref={ref}>
                 <S.FreqDispersionParamFieldset>
                     <label htmlFor='resolution-input'>{he.translate('dispersion__resolution')}:</label>
                     <globalComponents.ValidatedItem invalid={props.resolution.isInvalid} errorDesc={props.resolution.errorDesc}>

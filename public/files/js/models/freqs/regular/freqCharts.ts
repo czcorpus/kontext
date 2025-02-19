@@ -53,6 +53,7 @@ export interface FreqChartsModelArgs {
     freqLoader:FreqDataLoader;
     forcedParams:{[sourceId:string]:{[key:string]:any}};
     alphaLevel:Maths.AlphaLevel;
+    concHasAdhocQuery:boolean;
 }
 
 type DebouncedActions =
@@ -83,7 +84,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
 
     constructor({
         dispatcher, pageModel, freqType, freqCrit, freqCritAsync, formProps,
-        initialData, fpagesize, freqLoader, forcedParams, alphaLevel
+        initialData, fpagesize, freqLoader, forcedParams, alphaLevel, concHasAdhocQuery
     }:FreqChartsModelArgs) {
         const allCrits = List.concat(freqCritAsync, freqCrit);
         super(
@@ -190,7 +191,8 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                 saveFormActive: false,
                 shareLink: null,
                 flimit: parseInt(formProps.flimit) || 0,
-                shareWidgetIsBusy: false
+                shareWidgetIsBusy: false,
+                concHasAdhocQuery
             }
         );
 

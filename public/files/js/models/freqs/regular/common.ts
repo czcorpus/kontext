@@ -111,6 +111,7 @@ export interface BaseFreqModelState {
      * flimit is a derived value from TabWrapperModel
      */
     flimit:number;
+    concHasAdhocQuery:boolean;
 }
 
 export interface FreqDataRowsModelState extends BaseFreqModelState {

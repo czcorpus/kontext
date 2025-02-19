@@ -193,7 +193,6 @@ export class CollPage {
             freqViews: freqFormViews,
             mainMenuModel: this.layoutModel.getModels().mainMenuModel
         });
-
         const qProps = new QueryProps(
             queryFormArgs.curr_queries[this.layoutModel.getCorpusIdent().id]);
         this.layoutModel.renderReactComponent(
@@ -219,6 +218,7 @@ export class CollPage {
             sortFn: this.layoutModel.getConf<CollFormProps>('CollFormProps').csortfn,
             cattr: this.layoutModel.getConf<CollFormProps>('CollFormProps').cattr,
             currPage: this.layoutModel.getConf<number>('CurrentPage'),
+            concHasAdhocQuery: qProps.containsAdhocSubcorp()
         });
 
         this.collResultSaveModel = new CollResultsSaveModel({
