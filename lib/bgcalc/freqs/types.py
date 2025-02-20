@@ -34,6 +34,7 @@ class FreqCalcArgs:
     freq_sort: str
     rel_mode: int  # 0, 1 # TODO should be bool
     fmaxitems: int
+    fpagesize: Optional[int] = 100  # this makes the class compatible with our production RQ worker
     subcname: Optional[str] = None
     subcpath: Optional[str] = None
     fpage: Optional[int] = 1  # ??
