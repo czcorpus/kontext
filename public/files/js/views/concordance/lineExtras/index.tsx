@@ -258,7 +258,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             }>(
             (acc, x) => {
                 const currLen = x ? x.length : 4; // placeholder takes space too
-                if (acc.shortenedAt > 0) {
+                if (acc.shortenedAt !== -1) {
                     return {
                         ...acc,
                         i: acc.i + 1,
@@ -269,8 +269,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                         )
                     };
                 }
-                let chunk:string;
-                if (acc.total + currLen > maxWidth && acc.shortenedAt == 0) {
+                let chunk:string|undefined;
+                if (acc.total + currLen > maxWidth && acc.shortenedAt === -1) {
                     if (maxWidth - acc.total > 0) {
                         acc.shortenedAt = acc.i;
                         chunk = Strings.shortenText(x, maxWidth - acc.total, '');
@@ -293,7 +293,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                     )
                 };
             },
-            {total: 0, shortenedAt: 0, i: 0, text: []},
+            {total: 0, shortenedAt: -1, i: 0, text: []},
             data
         );
     }
@@ -309,7 +309,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                     onClick={()=>props.refsDetailClickHandler(props.corpusId, props.tokenNumber, props.lineIdx)}>
                 {pipe(
                     normLabels.text,
-                    List.filter((_, i) => normLabels.shortenedAt > 0 ? i <= normLabels.shortenedAt : true),
+                    List.filter((_, i) => normLabels.shortenedAt !== -1 ? i <= normLabels.shortenedAt : true),
                     List.map(
                         (x, i) => x.t ?
                             <React.Fragment key={`item:${i}:${x.t}`}>
@@ -322,7 +322,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                             </React.Fragment>
                     )
                 )}
-                {normLabels.shortenedAt > 0 ? '\u2026' : ''}
+                {normLabels.shortenedAt !== -1 ? '\u2026' : ''}
             </a>
         );
     };
