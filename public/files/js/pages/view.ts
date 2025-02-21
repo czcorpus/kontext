@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../vendor.d.ts/soundmanager.d.ts" />
-
 import { List, tuple, Dict, pipe } from 'cnc-tskit';
 
 import { KontextPage } from '../app/main.js';
