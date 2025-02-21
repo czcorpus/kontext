@@ -203,7 +203,6 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
         this.layoutModel = layoutModel;
         this.tokenConnectPlg = tokenConnectPlg;
         this.audioPlayer = new AudioPlayer(
-            this.layoutModel.createStaticUrl('misc/soundmanager2/'),
             () => {
                 this.changeState(state => {
                     state.audioPlayerStatus = this.audioPlayer.getStatus()

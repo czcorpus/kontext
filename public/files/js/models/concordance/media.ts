@@ -18,9 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/soundmanager.d.ts" />
-
-import SoundManager from 'vendor/SoundManager';
+import { Howl } from 'howler';
 import { List } from 'cnc-tskit';
 import { ajax } from 'rxjs/ajax';
 
@@ -39,11 +37,9 @@ export interface PlayerStatus {
  */
 export class AudioPlayer {
 
-    private soundManager:typeof SoundManager;
+    private sound:Howl;
 
     private status:PlayerStatus;
-
-    private playSessionId:string = 'kontext-playback';
 
     private itemsToPlay:Array<string>;
 
@@ -60,7 +56,6 @@ export class AudioPlayer {
     private whilePlaying:()=>void;
 
     constructor(
-        sm2FilesURL:string,
         onPlay:()=>void,
         onStop:()=>void,
         onError:()=>void,
@@ -72,22 +67,41 @@ export class AudioPlayer {
             position: 0,
             waveform: []
         };
-        this.soundManager = SoundManager;
-        this.soundManager.ontimeout = function (status) {
-            console.error(status); // TODO
-        }
-        this.soundManager.setup({
-            url: sm2FilesURL,
-            flashVersion: 9,
-            debugMode : false,
-            preferFlash : false
-        });
         this.itemsToPlay = [];
         this.waveformSources = [];
         this.onPlay = onPlay;
         this.onStop = onStop;
         this.onError = onError;
         this.whilePlaying = whilePlaying;
+    }
+
+    private getExtensionFromURL(url: string):string {
+        const urlParams = new URLSearchParams(new URL(url).search);
+        const chunk = urlParams.get('chunk');
+        if (chunk) {
+            return chunk.split('.').pop() as string;
+        }
+
+        return url.split('.').pop() as string;
+    }
+
+    private updateStatus(playback:PlaybackStatus):void {
+        if (playback === 'error') {
+            this.status = {
+                playback: playback,
+                duration: 0,
+                position: 0,
+                waveform: [],
+            };
+            
+        } else {
+            this.status = {
+                playback: playback,
+                duration: this.sound.duration(),
+                position: this.sound.seek(),
+                waveform: this.status.waveform,
+            };
+        }
     }
 
     start(itemsToPlay?:Array<string>, waveformSources?:Array<string>):void {
@@ -101,108 +115,83 @@ export class AudioPlayer {
         }
 
         const parent = this;
-        const sound = this.soundManager.createSound({
-            id: this.playSessionId,
-            url: List.head(this.itemsToPlay),
-            autoLoad: true,
-            stream: true,
-            autoPlay: false,
-            volume: 100,
-            onload: (bSuccess) => {
-                if (!bSuccess) {
-                    this.status = {
-                        playback: 'error',
-                        duration: 0,
-                        position: 0,
-                        waveform: []
-                    };
-                    this.onError();
-                }
-            },
-            onplay: function () {
-                parent.status = {
-                    playback: 'play',
-                    duration: this['duration'] as number,
-                    position: this['position'] as number,
-                    waveform: parent.status.waveform
-                };
+        this.sound = new Howl({
+            src: [List.head(this.itemsToPlay)],
+            autoplay: false,
+            volume: 1.0,
+            format: [this.getExtensionFromURL(List.head(this.itemsToPlay))],
+            onload: function () {
+                parent.updateStatus('play');
                 parent.onPlay();
             },
-            onfinish: () => {
-                this.status = {
-                    playback: 'stop',
-                    duration: this['duration'] as number,
-                    position: this['position'] as number,
-                    waveform: this.status.waveform
-                };
-                this.soundManager.destroySound(this.playSessionId);
-                if (!List.empty(this.itemsToPlay)) {
-                    this.soundManager.destroySound(this.playSessionId); // TODO do we need this (again)?
-                    this.start();
-
+            onplay: function () {
+                parent.updateStatus('play');
+                parent.onPlay();
+            },
+            onend: function () {
+                parent.updateStatus('stop');
+                if (!List.empty(parent.itemsToPlay)) {
+                    parent.start();
                 } else {
-                    this.onStop();
+                    parent.onStop();
                 }
             },
-            whileplaying: function () {
-                parent.status = {
-                    playback: 'play',
-                    duration: this['duration'] as number,
-                    position: this['position'] as number,
-                    waveform: parent.status.waveform
-                };
+            onstop: function () {
+                parent.onStop();
+            },
+            onloaderror: function () {
+                parent.updateStatus('error');
+                parent.onError();
+            },
+            onplayerror: function () {
+                parent.updateStatus('error');
+                parent.onError();
+            },
+            onplaying: function () {
+                parent.updateStatus('play');
                 parent.whilePlaying();
-            }
+            },
         });
 
         this.currentWaveformSource = List.head(this.waveformSources);
         if (this.currentWaveformSource) {
             ajax<number[]>(this.currentWaveformSource).subscribe(
                 next => {
-                    this.status = {...this.status, waveform: next.response};
+                    this.status = { ...this.status, waveform: next.response };
                 }
             );
         }
 
         this.waveformSources = List.shift(this.waveformSources);
         this.itemsToPlay = List.shift(this.itemsToPlay);
-        sound.play();
+        this.sound.play();
     }
 
     play():void {
-        if (this.status.playback === 'stop') {
-            this.soundManager.play(this.playSessionId);
-            this.status = {...this.status, playback: 'play'};
-
-        } else if (this.status.playback === 'pause') {
-            this.soundManager.play(this.playSessionId);
-            this.status = {...this.status, playback: 'play'};
+        if (this.sound && this.status.playback !== 'play') {
+            this.sound.play();
+            this.updateStatus('play');
         }
     }
 
     pause():void {
-        if (this.status.playback === 'pause') {
-            this.soundManager.play(this.playSessionId);
-            this.status = {...this.status, playback: 'play'};
-
-        } else if (this.status.playback === 'play') {
-            this.soundManager.pause(this.playSessionId);
-            this.status = {...this.status, playback: 'pause'};
+        if (this.sound && this.status.playback === 'play') {
+            this.sound.pause();
+            this.updateStatus('pause');
         }
     }
 
     stop():void {
-        this.soundManager.stop(this.playSessionId);
-        this.soundManager.destroySound(this.playSessionId);
-        this.itemsToPlay = [];
+        if (this.sound) {
+            this.sound.unload();
+            this.itemsToPlay = [];
+        }
     }
 
     setPosition(offset: number): void {
-        const lastPlayback = this.status.playback
-        this.soundManager.setPosition(this.playSessionId, offset);
-        if (lastPlayback === 'pause') {
-            this.soundManager.pause(this.playSessionId);
-            this.status = {...this.status, playback: 'pause'};
+        if (this.sound) {
+            this.sound.seek(offset);
+            this.updateStatus(this.status.playback);
         }
     }
 

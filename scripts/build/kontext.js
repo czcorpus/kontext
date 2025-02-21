@@ -161,7 +161,6 @@ export function loadModulePathMap (confDoc, jsPath, cssPath, isTypecheck) {
         'translations': translatPath,
         'views': path.resolve(jsPath, 'views'),
         //'vendor/intl-messageformat': path.resolve(jsPath, 'vendor/intl-messageformat.js'),
-        'vendor/SoundManager' : path.resolve(jsPath, 'vendor/soundmanager2.min.js'),
         'cqlParser/parser': cqlParserPath,
         'misc/keyboardLayouts': path.resolve(jsPath, 'kb-layouts.json'),
         'styles': cssPath
