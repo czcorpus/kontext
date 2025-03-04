@@ -51,14 +51,14 @@ export class AudioPlayer {
 
     private onPlay:()=>void;
 
-    private onError:()=>void;
+    private onError:(err:Error)=>void;
 
     private whilePlaying:()=>void;
 
     constructor(
         onPlay:()=>void,
         onStop:()=>void,
-        onError:()=>void,
+        onError:(err:Error)=>void,
         whilePlaying:()=>void,
     ) {
         this.status = {
@@ -120,13 +120,10 @@ export class AudioPlayer {
             autoplay: false,
             volume: 1.0,
             format: [this.getExtensionFromURL(List.head(this.itemsToPlay))],
-            onload: function () {
-                parent.updateStatus('play');
-                parent.onPlay();
-            },
             onplay: function () {
                 parent.updateStatus('play');
                 parent.onPlay();
+                requestAnimationFrame(parent.animationUpdate.bind(parent));
             },
             onend: function () {
                 parent.updateStatus('stop');
@@ -139,17 +136,13 @@ export class AudioPlayer {
             onstop: function () {
                 parent.onStop();
             },
-            onloaderror: function () {
+            onloaderror: function (soundId, err) {
                 parent.updateStatus('error');
-                parent.onError();
+                parent.onError(err);               
             },
-            onplayerror: function () {
+            onplayerror: function (soundId, err) {
                 parent.updateStatus('error');
-                parent.onError();
-            },
-            onplaying: function () {
-                parent.updateStatus('play');
-                parent.whilePlaying();
+                parent.onError(err);
             },
         });
 
@@ -183,8 +176,10 @@ export class AudioPlayer {
 
     stop():void {
         if (this.sound) {
+            this.sound.stop();
             this.sound.unload();
             this.itemsToPlay = [];
+            this.waveformSources = [];
         }
     }
 
@@ -197,5 +192,13 @@ export class AudioPlayer {
 
     getStatus():PlayerStatus {
         return this.status;
+    }
+
+    animationUpdate():void {
+        this.updateStatus(this.status.playback);
+        this.whilePlaying();
+        if (this.sound.playing()) {
+            requestAnimationFrame(this.animationUpdate.bind(this));
+        }
     }
 }

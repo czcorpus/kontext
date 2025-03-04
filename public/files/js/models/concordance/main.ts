@@ -308,31 +308,31 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         this.audioPlayer = new AudioPlayer(
             () => {
                 this.changeState(state => {
-                    state.audioPlayerStatus = this.getAudioPlayerStatus()
+                    state.audioPlayerStatus = this.getAudioPlayerStatus();
+                    state.forceScroll = window.pageYOffset;
                 });
             },
             () => {
                 this.setStopStatus();
                 this.changeState(state => {
-                    state.audioPlayerStatus = this.getAudioPlayerStatus()
+                    state.audioPlayerStatus = this.getAudioPlayerStatus();
                 });
             },
-            () => {
+            (err) => {
                 this.changeState(state => {
-                    state.forceScroll = window.scrollY
+                    state.forceScroll = window.pageYOffset;
                 });
-                this.audioPlayer.stop();
                 this.setStopStatus();
                 this.changeState(state => {
-                    state.audioPlayerStatus = this.getAudioPlayerStatus()
+                    state.audioPlayerStatus = this.getAudioPlayerStatus();
                 });
                 this.layoutModel.showMessage('error',
                         this.layoutModel.translate('concview__failed_to_play_audio'));
             },
             () => {
                 this.changeState(state => {
-                    state.audioPlayerStatus = this.getAudioPlayerStatus(),
-                    state.forceScroll = window.scrollY
+                    state.audioPlayerStatus = this.getAudioPlayerStatus();
+                    state.forceScroll = window.pageYOffset;
                 });
             }
         );

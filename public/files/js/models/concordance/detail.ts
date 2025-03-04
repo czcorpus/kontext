@@ -211,7 +211,7 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
             () => {
                 this.handlePlayerControls('stop');
             },
-            () => {
+            (err) => {
                 this.audioPlayer.stop();
                 this.changeState(state => {
                     state.audioPlayerStatus = this.audioPlayer.getStatus()
@@ -910,11 +910,11 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                 });
             break;
             case 'stop':
+                this.audioPlayer.stop();
                 this.changeState(state => {
                     state.playingRowIdx = null;
                     state.audioPlayerStatus = null;
                 });
-                this.audioPlayer.stop();
             break;
         }
     }
