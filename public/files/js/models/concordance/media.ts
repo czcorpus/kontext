@@ -120,6 +120,9 @@ export class AudioPlayer {
             autoplay: false,
             volume: 1.0,
             format: [this.getExtensionFromURL(List.head(this.itemsToPlay))],
+            onload: function () {
+                parent.updateStatus('stop');
+            },
             onplay: function () {
                 parent.updateStatus('play');
                 parent.onPlay();
@@ -130,7 +133,7 @@ export class AudioPlayer {
                 if (!List.empty(parent.itemsToPlay)) {
                     parent.start();
                 } else {
-                    parent.onStop();
+                    parent.stop();
                 }
             },
             onstop: function () {
@@ -161,14 +164,14 @@ export class AudioPlayer {
     }
 
     play():void {
-        if (this.sound && this.status.playback !== 'play') {
+        if (this.sound && !this.sound.playing()) {
             this.sound.play();
             this.updateStatus('play');
         }
     }
 
     pause():void {
-        if (this.sound && this.status.playback === 'play') {
+        if (this.sound && this.sound.playing()) {
             this.sound.pause();
             this.updateStatus('pause');
         }

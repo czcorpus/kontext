@@ -308,31 +308,25 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         this.audioPlayer = new AudioPlayer(
             () => {
                 this.changeState(state => {
-                    state.audioPlayerStatus = this.getAudioPlayerStatus();
-                    state.forceScroll = window.pageYOffset;
+                    state.audioPlayerStatus = this.audioPlayer.getStatus();
                 });
             },
             () => {
-                this.setStopStatus();
                 this.changeState(state => {
-                    state.audioPlayerStatus = this.getAudioPlayerStatus();
+                    this.setStopStatus(state);
+                    state.audioPlayerStatus = this.audioPlayer.getStatus();
                 });
             },
             (err) => {
                 this.changeState(state => {
-                    state.forceScroll = window.pageYOffset;
+                    this.setStopStatus(state);
+                    state.audioPlayerStatus = this.audioPlayer.getStatus();
                 });
-                this.setStopStatus();
-                this.changeState(state => {
-                    state.audioPlayerStatus = this.getAudioPlayerStatus();
-                });
-                this.layoutModel.showMessage('error',
-                        this.layoutModel.translate('concview__failed_to_play_audio'));
+                this.layoutModel.showMessage('error', this.layoutModel.translate('concview__failed_to_play_audio'));
             },
             () => {
                 this.changeState(state => {
-                    state.audioPlayerStatus = this.getAudioPlayerStatus();
-                    state.forceScroll = window.pageYOffset;
+                    state.audioPlayerStatus = this.audioPlayer.getStatus();
                 });
             }
         );
@@ -406,12 +400,9 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         this.addActionHandler(
             Actions.PlayAudioSegment,
             action => {
-                this.changeState(state => {
-                    state.forceScroll = window.scrollY;
-                });
                 this.playAudio(action.payload.linkIds);
                 this.changeState(state => {
-                    state.audioPlayerStatus = this.getAudioPlayerStatus()
+                    state.audioPlayerStatus = this.audioPlayer.getStatus();
                 });
             }
         );
@@ -420,12 +411,19 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             Actions.AudioPlayerClickControl,
             action => action.payload.playerId === ConcordanceModel.AUDIO_PLAYER_ID,
             action => {
+                switch (action.payload.action) {
+                    case 'play':
+                        this.audioPlayer.play();
+                    break;
+                    case 'pause':
+                        this.audioPlayer.pause();
+                    break;
+                    case 'stop':
+                        this.audioPlayer.stop();
+                    break;
+                }
                 this.changeState(state => {
-                    state.forceScroll = window.scrollY
-                });
-                this.handlePlayerControls(action.payload.action);
-                this.changeState(state => {
-                    state.audioPlayerStatus = this.getAudioPlayerStatus()
+                    state.audioPlayerStatus = this.audioPlayer.getStatus()
                 });
             }
         );
@@ -434,12 +432,9 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             Actions.AudioPlayerSetPosition,
             action => action.payload.playerId === ConcordanceModel.AUDIO_PLAYER_ID,
             action => {
-                this.changeState(state => {
-                    state.forceScroll = window.scrollY
-                });
                 this.audioPlayer.setPosition(action.payload.offset);
                 this.changeState(state => {
-                    state.audioPlayerStatus = this.getAudioPlayerStatus()
+                    state.audioPlayerStatus = this.audioPlayer.getStatus()
                 });
             }
         );
@@ -447,9 +442,9 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         this.addActionHandler(
             Actions.AudioPlayersStop,
             action => {
-                this.handlePlayerControls('stop');
+                this.audioPlayer.stop();
                 this.changeState(state => {
-                    state.audioPlayerStatus = this.getAudioPlayerStatus()
+                    state.audioPlayerStatus = this.audioPlayer.getStatus()
                 });
             }
         );
@@ -1636,9 +1631,9 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
     }
 
     private playAudio(linkIds:Array<string>):void {
-        this.setStopStatus(); // stop anything playing right now
         const activeChunkId = List.last(linkIds);
         this.changeState(state => {
+            this.setStopStatus(state);
             state.playerAttachedLink = activeChunkId;
             // let's get an active line - there can be only one even if we play multiple chunks
             const activeLine = this.findActiveLineIdx(state);
@@ -1669,39 +1664,19 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         }
     }
 
-    private setStopStatus():void {
-        this.audioPlayer.stop();
-        if (this.state.playerAttachedLink) {
-            this.changeState(
-                state => {
-                    const playingLineIdx = this.findActiveLineIdx(state);
-                    const modLine = this.state.lines[playingLineIdx]; // TODO clone?
-                    state.lines[playingLineIdx] = modLine;
-                    const playingChunk = this.findChunks(state, this.state.playerAttachedLink)[0];
-                    if (playingChunk) {
-                        playingChunk.showAudioPlayer = false;
+    private setStopStatus(state):void {
+        if (state.playerAttachedLink) {
+            const playingLineIdx = this.findActiveLineIdx(state);
+            const modLine = this.state.lines[playingLineIdx]; // TODO clone?
+            state.lines[playingLineIdx] = modLine;
+            const playingChunk = this.findChunks(state, this.state.playerAttachedLink)[0];
+            if (playingChunk) {
+                playingChunk.showAudioPlayer = false;
 
-                    } else {
-                        throw new Error(`Failed to find playing chunk "${this.state.playerAttachedLink}"`);
-                    }
-                    state.playerAttachedLink = null;
-                }
-            );
-        }
-    }
-
-    private handlePlayerControls(action:AudioPlayerActions) {
-        switch (action) {
-            case 'play':
-                this.audioPlayer.play();
-            break;
-            case 'pause':
-                this.audioPlayer.pause();
-            break;
-            case 'stop':
-                this.audioPlayer.stop();
-                this.setStopStatus();
-            break;
+            } else {
+                throw new Error(`Failed to find playing chunk "${this.state.playerAttachedLink}"`);
+            }
+            state.playerAttachedLink = null;
         }
     }
 
@@ -1732,10 +1707,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
     private setLineFocus(state:ConcordanceModelState, lineIdx:number, focus:boolean):void {
         this.resetLineFocus(state);
         state.lines[lineIdx].hasFocus = focus;
-    }
-
-    getAudioPlayerStatus():PlayerStatus {
-        return this.audioPlayer.getStatus();
     }
 
     getSaveModel():ConcSaveModel {

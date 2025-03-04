@@ -209,15 +209,15 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                 });
             },
             () => {
-                this.handlePlayerControls('stop');
-            },
-            (err) => {
-                this.audioPlayer.stop();
                 this.changeState(state => {
                     state.audioPlayerStatus = this.audioPlayer.getStatus()
                 });
-                this.layoutModel.showMessage('error',
-                        this.layoutModel.translate('concview__failed_to_play_audio'));
+            },
+            (err) => {
+                this.changeState(state => {
+                    state.audioPlayerStatus = this.audioPlayer.getStatus()
+                });
+                this.layoutModel.showMessage('error', this.layoutModel.translate('concview__failed_to_play_audio'));
             },
             () => {
                 this.changeState(state => {
@@ -521,7 +521,20 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
             Actions.AudioPlayerClickControl.name,
             action => action.payload.playerId === ConcDetailModel.AUDIO_PLAYER_ID,
             action => {
-                this.handlePlayerControls(action.payload.action);
+                switch (action.payload.action) {
+                    case 'play':
+                        this.audioPlayer.play();
+                    break;
+                    case 'pause':
+                        this.audioPlayer.pause();
+                    break;
+                    case 'stop':
+                        this.audioPlayer.stop();
+                    break;
+                }
+                this.changeState(state => {
+                    state.audioPlayerStatus = this.audioPlayer.getStatus()
+                });
             }
         );
 
@@ -539,7 +552,7 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
         this.addActionHandler<typeof Actions.AudioPlayersStop>(
             Actions.AudioPlayersStop.name,
             action => {
-                this.handlePlayerControls('stop');
+                this.audioPlayer.stop();
             }
         );
 
@@ -893,30 +906,6 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
 
     static supportsSpeechView(state:ConcDetailModelState):boolean {
         return !!state.speechOpts.speakerIdAttr;
-    }
-
-    private handlePlayerControls(action:AudioPlayerActions) {
-        switch (action) {
-            case 'play':
-                this.audioPlayer.play();
-                this.changeState(state => {
-                    state.audioPlayerStatus = this.audioPlayer.getStatus();
-                });
-            break;
-            case 'pause':
-                this.audioPlayer.pause();
-                this.changeState(state => {
-                    state.audioPlayerStatus = this.audioPlayer.getStatus();
-                });
-            break;
-            case 'stop':
-                this.audioPlayer.stop();
-                this.changeState(state => {
-                    state.playingRowIdx = null;
-                    state.audioPlayerStatus = null;
-                });
-            break;
-        }
     }
 }
 
