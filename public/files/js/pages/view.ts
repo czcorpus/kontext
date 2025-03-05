@@ -91,6 +91,7 @@ import { AnyTTSelection } from '../types/textTypes.js';
 import { ShuffleModel } from '../models/query/shuffle.js';
 import { ActionUrlCodes } from '../app/navigation/interpage.js';
 import { QueryProps } from '../models/cqleditor/qprops.js';
+import { AudioPlayerModel } from '../models/audioPlayer/model.js';
 
 
 export class QueryModels {
@@ -1026,6 +1027,7 @@ export class ViewPage {
             (err:Error)=>{}
         );
 
+        this.viewModels.audioPlayerModel = new AudioPlayerModel(this.layoutModel, this.layoutModel.dispatcher);
         this.viewModels.lineViewModel = new ConcordanceModel(
             this.layoutModel,
             this.layoutModel.dispatcher,

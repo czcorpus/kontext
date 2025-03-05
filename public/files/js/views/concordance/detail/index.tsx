@@ -30,6 +30,7 @@ import { RefsDetailModel, RefsDetailModelState } from '../../../models/concordan
 import { Actions } from '../../../models/concordance/actions.js';
 import { DetailExpandPositions } from '../../../models/concordance/common.js';
 import * as S from './style.js';
+import { AudioPlayerModel } from 'js/models/audioPlayer/model.js';
 
 
 export interface RefDetailProps {
@@ -54,12 +55,13 @@ export interface DetailModuleArgs {
     he:Kontext.ComponentHelpers;
     concDetailModel:ConcDetailModel;
     refsDetailModel:RefsDetailModel;
+    audioPlayerModel:AudioPlayerModel;
 }
 
-export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailModuleArgs):DetailViews {
+export function init({dispatcher, he, concDetailModel, refsDetailModel, audioPlayerModel}:DetailModuleArgs):DetailViews {
 
     const layoutViews = he.getLayoutViews();
-    const SpeechView = initSpeechViews(dispatcher, he, concDetailModel);
+    const SpeechView = initSpeechViews(dispatcher, he, concDetailModel, audioPlayerModel);
 
     // ------------------------- <CustomPopupBox /> ---------------------------
 

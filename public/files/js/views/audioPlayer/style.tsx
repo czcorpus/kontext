@@ -20,13 +20,13 @@
 
 import { styled } from 'styled-components';
 import { keyframes } from 'styled-components';
-import * as theme from '../../theme/default/index.js';
+import * as theme from '../theme/default/index.js';
 
-import mediaPlayIcon from '../../../../img/media_play.svg';
-import mediaPauseIcon from '../../../../img/media_pause.svg';
-import mediaStopIcon from '../../../../img/media_stop.svg';
-import mediaPlaySIcon from '../../../../img/media_play_s.svg';
-import mediaPauseSIcon from '../../../../img/media_pause_s.svg';
+import mediaPlayIcon from '../../../img/media_play.svg';
+import mediaPauseIcon from '../../../img/media_pause.svg';
+import mediaStopIcon from '../../../img/media_stop.svg';
+import mediaPlaySIcon from '../../../img/media_play_s.svg';
+import mediaPauseSIcon from '../../../img/media_pause_s.svg';
 
 
 const playBlink = keyframes`

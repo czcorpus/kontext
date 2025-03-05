@@ -19,18 +19,18 @@
  */
 
 import * as React from 'react';
-import { IActionDispatcher } from 'kombo';
+import { BoundWithProps, IActionDispatcher } from 'kombo';
 
-import * as Kontext from '../../../types/kontext.js';
-import { PlayerStatus } from '../../../models/concordance/media.js';
-import { Actions } from '../../../models/concordance/actions.js';
+import * as Kontext from '../../types/kontext.js';
+import { PlayerStatus } from '../../models/audioPlayer/player.js';
+import { AudioPlayerModel, AudioPlayerModelState } from '../../models/audioPlayer/model.js';
+import { Actions } from '../../models/audioPlayer/actions.js';
 import * as S from './style.js';
 import { List, Time } from 'cnc-tskit';
 
 
 export interface AudioPlayerProps {
     playerId: string;
-    status: PlayerStatus;
 }
 
 
@@ -39,7 +39,7 @@ export interface MediaViews {
 }
 
 
-export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):MediaViews {
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, audioPlayerModel:AudioPlayerModel):MediaViews {
 
     // ------------------------- <ProgressBar /> ---------------------------
 
@@ -92,7 +92,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
             dispatcher.dispatch<typeof Actions.AudioPlayerSetPosition>({
                 name: Actions.AudioPlayerSetPosition.name,
                 payload: {
-                    playerId: props.playerId,
                     offset: position
                 }
             });
@@ -116,13 +115,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
 
     // ------------------------- <AudioPlayer /> ---------------------------
 
-    class AudioPlayer extends React.Component<AudioPlayerProps> {
+    class AudioPlayer extends React.Component<AudioPlayerProps & AudioPlayerModelState> {
 
         _handleControlClick(action) {
             dispatcher.dispatch<typeof Actions.AudioPlayerClickControl>({
                 name: Actions.AudioPlayerClickControl.name,
                 payload: {
-                    playerId: this.props.playerId,
                     action: action
                 }
             });
@@ -171,6 +169,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
     }
 
     return {
-        AudioPlayer: AudioPlayer
+        AudioPlayer: BoundWithProps(AudioPlayer, audioPlayerModel)
     };
 }

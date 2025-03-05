@@ -47,9 +47,9 @@ export class AudioPlayer {
 
     private currentWaveformSource:string;
 
-    private onStop:()=>void;
-
     private onPlay:()=>void;
+
+    private onStop:(finish:boolean)=>void;
 
     private onError:(err:Error)=>void;
 
@@ -57,7 +57,7 @@ export class AudioPlayer {
 
     constructor(
         onPlay:()=>void,
-        onStop:()=>void,
+        onStop:(finish:boolean)=>void,
         onError:(err:Error)=>void,
         whilePlaying:()=>void,
     ) {
@@ -65,7 +65,7 @@ export class AudioPlayer {
             playback: 'stop',
             duration: 0,
             position: 0,
-            waveform: []
+            waveform: [],
         };
         this.itemsToPlay = [];
         this.waveformSources = [];
@@ -88,7 +88,7 @@ export class AudioPlayer {
     private updateStatus(playback:PlaybackStatus):void {
         if (playback === 'error') {
             this.status = {
-                playback: playback,
+                playback: 'error',
                 duration: 0,
                 position: 0,
                 waveform: [],
@@ -133,11 +133,11 @@ export class AudioPlayer {
                 if (!List.empty(parent.itemsToPlay)) {
                     parent.start();
                 } else {
-                    parent.stop();
+                    parent.onStop(true);
                 }
             },
             onstop: function () {
-                parent.onStop();
+                parent.onStop(false);
             },
             onloaderror: function (soundId, err) {
                 parent.updateStatus('error');

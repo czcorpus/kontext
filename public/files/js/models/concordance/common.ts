@@ -181,11 +181,6 @@ export interface ConcLineSelection {
 export type LineSelections = {[queryHash:string]:ConcLineSelection};
 
 /**
- * AudioPlayerActions specifies status of the audio player.
- */
-export type AudioPlayerActions = 'play'|'pause'|'stop';
-
-/**
  * DetailExpandPositions defines which side of
  * a respective KWIC detail is expanded (left vs. right).
  */

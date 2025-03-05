@@ -37,9 +37,9 @@ import {
     ConcToken,
     Token} from '../../../models/concordance/common.js';
 import * as S from './style.js';
-import { PlayerStatus } from '../../../models/concordance/media.js';
 import { SentenceToken } from '../../../types/plugins/syntaxViewer.js';
 import { Actions as TokensLinkingActions } from '../../../types/plugins/tokensLinking.js';
+import { AudioPlayerModel } from '../../../models/audioPlayer/model.js';
 
 
 export interface LinesModuleArgs {
@@ -48,6 +48,7 @@ export interface LinesModuleArgs {
     lineModel:ConcordanceModel;
     lineSelectionModel:LineSelectionModel;
     concDetailModel:ConcDetailModel;
+    audioPlayerModel:AudioPlayerModel;
 }
 
 
@@ -58,9 +59,9 @@ export interface LinesViews {
 const ATTR_SEPARATOR = '/';
 
 
-export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModuleArgs):LinesViews {
+export function init({dispatcher, he, lineModel, lineSelectionModel, audioPlayerModel}:LinesModuleArgs):LinesViews {
 
-    const extras = lineExtrasViewsInit(dispatcher, he, lineModel);
+    const extras = lineExtrasViewsInit(dispatcher, he, lineModel, audioPlayerModel);
 
     function getViewModeClass(mode:ViewOptions.AttrViewMode):string {
         switch (mode) {
@@ -352,7 +353,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         attrViewMode:ViewOptions.AttrViewMode;
         tokenConnectClickHandler:(corpusId:string, tokenNumber:number, kwicLength:number, lineIdx:number)=>void;
         tokensLinkingClickHandler?:(corpusId:string, tokenNumber:number, lineIdx:number, tokenLength:number)=>void;
-        audioPlayerStatus:PlayerStatus;
         dehighlightHandler:(tokenId:number)=>void;
         textDirectionRTL:boolean;
 
@@ -410,7 +410,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                         <LeftChunk key={`lc-${i}`} i={i} itemList={props.output.left} item={item}
                                     kwicTokenNum={props.output.tokenNumber} lineIdx={props.lineIdx}
                                     supportsTokenConnect={props.supportsTokenConnect}
-                                    attrViewMode={props.attrViewMode} audioPlayerStatus={props.audioPlayerStatus}
+                                    attrViewMode={props.attrViewMode}
                                     dehighlightHandler={props.dehighlightHandler}
                             />,
                         ' '
@@ -426,7 +426,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                                 prevBlockClosed={List.get(-1, props.output.left)}
                                 hasKwic={hasKwic} lineIdx={props.lineIdx} attrViewMode={props.attrViewMode}
                                 supportsTokenConnect={props.supportsTokenConnect}
-                                kwicTokenNum={props.output.tokenNumber} audioPlayerStatus={props.audioPlayerStatus}
+                                kwicTokenNum={props.output.tokenNumber}
                                 dehighlightHandler={props.dehighlightHandler}
                             />,
                         ' '
@@ -448,7 +448,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                             lineIdx={props.lineIdx}
                             supportsTokenConnect={props.supportsTokenConnect}
                             attrViewMode={props.attrViewMode}
-                            audioPlayerStatus={props.audioPlayerStatus}
                             dehighlightHandler={props.dehighlightHandler}
                         />
                 ],
@@ -472,26 +471,24 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         kwicTokenNum:number;
         supportsTokenConnect:boolean;
         attrViewMode:ViewOptions.AttrViewMode;
-        audioPlayerStatus:PlayerStatus;
         dehighlightHandler:(tokenId:number) => void;
 
     }> = (props) => {
         return <>
             {props.i > 0 && props.itemList[props.i - 1].closeLink ?
                 <extras.AudioLink t="+" lineIdx={props.lineIdx}
-                                chunks={[props.itemList[props.i - 1], props.item]}
-                                audioPlayerStatus={props.audioPlayerStatus}/> :
+                                chunks={[props.itemList[props.i - 1], props.item]} /> :
                 null
             }
             {props.item.openLink ?
-                <extras.AudioLink t="L" lineIdx={props.lineIdx} chunks={[props.item]} audioPlayerStatus={props.audioPlayerStatus}/> :
+                <extras.AudioLink t="L" lineIdx={props.lineIdx} chunks={[props.item]} /> :
                 null
             }
             <NonKwicText data={props.item} idx={props.i} position="l"
                             kwicTokenNum={props.kwicTokenNum} supportsTokenConnect={props.supportsTokenConnect}
                             attrViewMode={props.attrViewMode} dehighlightHandler={props.dehighlightHandler}/>
             {props.item.closeLink ?
-                <extras.AudioLink t="R" lineIdx={props.lineIdx} chunks={[props.item]} audioPlayerStatus={props.audioPlayerStatus} /> :
+                <extras.AudioLink t="R" lineIdx={props.lineIdx} chunks={[props.item]} /> :
                 null
             }
         </>;
@@ -509,7 +506,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         hasKwic:boolean;
         attrViewMode:ViewOptions.AttrViewMode;
         supportsTokenConnect:boolean;
-        audioPlayerStatus:PlayerStatus;
         dehighlightHandler:(tokenId:number) => void;
 
     }> = (props) => {
@@ -518,13 +514,11 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         const renderFirst = () => {
             if (prevClosed && props.item.openLink) {
                 return <extras.AudioLink t="+" lineIdx={props.lineIdx}
-                                    chunks={[prevClosed, props.item]}
-                                    audioPlayerStatus={props.audioPlayerStatus} />;
+                                    chunks={[prevClosed, props.item]} />;
 
             } else if (props.i > 0 && props.itemList[props.i - 1].closeLink) {
                 return <extras.AudioLink t="+" lineIdx={props.lineIdx}
-                                    chunks={[props.itemList[props.i - 1], props.item]}
-                                    audioPlayerStatus={props.audioPlayerStatus} />;
+                                    chunks={[props.itemList[props.i - 1], props.item]} />;
             }
             return null;
         }
@@ -567,7 +561,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         lineIdx:number;
         supportsTokenConnect:boolean;
         attrViewMode:ViewOptions.AttrViewMode;
-        audioPlayerStatus:PlayerStatus;
         dehighlightHandler:(tokenId:number) => void;
 
     }> = (props) => {
@@ -577,11 +570,11 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         const renderFirst = () => {
             if (prevClosed && props.item.openLink) {
                 return <extras.AudioLink t="+" lineIdx={props.lineIdx}
-                            chunks={[prevClosed, props.item]} audioPlayerStatus={props.audioPlayerStatus} />;
+                            chunks={[prevClosed, props.item]} />;
 
             } else if (props.i > 0 && props.itemList[props.i - 1].closeLink) {
                 return <extras.AudioLink t="+" lineIdx={props.lineIdx}
-                            chunks={[props.itemList[props.i - 1], props.item]} audioPlayerStatus={props.audioPlayerStatus} />;
+                            chunks={[props.itemList[props.i - 1], props.item]} />;
             }
             return null;
         };
@@ -589,14 +582,14 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         return <>
             {renderFirst()}
             {props.item.openLink ?
-                <extras.AudioLink t="L" lineIdx={props.lineIdx} chunks={[props.item]} audioPlayerStatus={props.audioPlayerStatus}/> :
+                <extras.AudioLink t="L" lineIdx={props.lineIdx} chunks={[props.item]} /> :
                 null
             }
             <NonKwicText data={props.item} idx={props.i} position="r"
                         kwicTokenNum={props.kwicTokenNum} supportsTokenConnect={props.supportsTokenConnect}
                         attrViewMode={props.attrViewMode} dehighlightHandler={props.dehighlightHandler}/>
             {props.item.closeLink ?
-                <extras.AudioLink t="R" lineIdx={props.lineIdx} chunks={[props.item]} audioPlayerStatus={props.audioPlayerStatus}/> :
+                <extras.AudioLink t="R" lineIdx={props.lineIdx} chunks={[props.item]} /> :
                 null
             }
         </>;
@@ -622,7 +615,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         data:ConcLine;
         groupColor:string|undefined;
         groupTextColor:string|undefined;
-        audioPlayerStatus:PlayerStatus;
         tokensLinkingHandler?:(
             corpusId:string,
             tokenNumber:number,
@@ -713,7 +705,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                             <LeftChunk key={`lc-${i}`} i={i} itemList={corpusOutput.left} item={item}
                                     kwicTokenNum={corpusOutput.tokenNumber}
                                     lineIdx={this.props.lineIdx} supportsTokenConnect={this.props.supportsTokenConnect}
-                                    attrViewMode={this.props.attrViewMode} audioPlayerStatus={this.props.audioPlayerStatus}
+                                    attrViewMode={this.props.attrViewMode}
                                     dehighlightHandler={this._handleDehighlightClick(corpname, this.props.lineIdx)}
                             />,
                             ' '
@@ -727,7 +719,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                                     attrViewMode={this.props.attrViewMode}
                                     supportsTokenConnect={this.props.supportsTokenConnect}
                                     kwicTokenNum={corpusOutput.tokenNumber}
-                                    audioPlayerStatus={this.props.audioPlayerStatus}
                                     dehighlightHandler={this._handleDehighlightClick(corpname, this.props.lineIdx)}
                             />,
                             ' '
@@ -739,7 +730,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                             <RightChunk key={`rc-${i}`} i={i} item={item} itemList={corpusOutput.right}
                                     kwicTokenNum={corpusOutput.tokenNumber} prevBlockClosed={List.get(-1, corpusOutput.kwic)}
                                     lineIdx={this.props.lineIdx} supportsTokenConnect={this.props.supportsTokenConnect}
-                                    attrViewMode={this.props.attrViewMode} audioPlayerStatus={this.props.audioPlayerStatus}
+                                    attrViewMode={this.props.attrViewMode}
                                     dehighlightHandler={this._handleDehighlightClick(corpname, this.props.lineIdx)}
                             />
                         ], corpusOutput.right)}
@@ -762,7 +753,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                             tokenConnectClickHandler={this._detailClickHandler}
                             tokensLinkingClickHandler={this.props.tokensLinkingHandler}
                             attrViewMode={this.props.attrViewMode}
-                            audioPlayerStatus={this.props.audioPlayerStatus}
                             dehighlightHandler={this._handleDehighlightClick(corpname, this.props.lineIdx)}
                             textDirectionRTL={this.props.textDirectionRTL}
                         />;
@@ -960,7 +950,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                         emptyRefValPlaceholder={props.emptyRefValPlaceholder}
                         supportsSyntaxView={props.supportsSyntaxView}
                         supportsTokenConnect={props.supportsTokenConnect}
-                        audioPlayerStatus={props.audioPlayerStatus}
                         tokensLinkingHandler={props.supportsTokensLinking ? tokensLinkingHandler : null}
                         textDirectionRTL={props.textDirectionRTL}
                     />
