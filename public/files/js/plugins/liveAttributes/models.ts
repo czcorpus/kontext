@@ -173,7 +173,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                                     poscount: data.poscount,
                                     filterData,
                                     selectedTypes: selections,
-                                    bibAttrValsAreListed: Array.isArray(data.attr_values[state.bibIdAttr]),
+                                    bibAttrValsAreListed: state.bibLabelAttr && Array.isArray(data.attr_values[state.bibIdAttr]),
                                     isSubcorpDefinitionFilter: false,
                                 }
                             );
@@ -722,7 +722,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                             poscount: data.poscount,
                             filterData: this.importFilter(data.attr_values),
                             selectedTypes: state.subcorpDefinition,
-                            bibAttrValsAreListed: Array.isArray(data.attr_values[state.bibIdAttr]),
+                            bibAttrValsAreListed: state.bibLabelAttr && Array.isArray(data.attr_values[state.bibIdAttr]),
                             isSubcorpDefinitionFilter: true,
                         }
                     );
