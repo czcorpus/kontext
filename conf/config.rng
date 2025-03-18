@@ -394,11 +394,6 @@
                         </element>
                     </optional>
                     <optional>
-                        <element name="enabled_websockets">
-                            <ref name="boolValues" />
-                        </element>
-                    </optional>
-                    <optional>
                         <element name="csp_domains">
                             <a:documentation>
                                 Whitelisted resources domains
