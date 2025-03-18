@@ -20,6 +20,7 @@ import logging
 import ssl
 import urllib.parse
 from typing import Any, Dict, List, Tuple, Union
+from action.errors import UserReadableException
 
 import aiohttp
 from sanic import Sanic
@@ -70,7 +71,7 @@ class HTTPRequester:
                 raise HTTPUnauthorized()
             return (await response.read()).decode('utf-8'), status.is_found
         else:
-            raise HTTPRequesterException(f'HTTP client response error {status}')
+            raise UserReadableException(f'The service responded with error code {status}')
 
     @staticmethod
     def enc_val(s):
