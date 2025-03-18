@@ -83,7 +83,7 @@ from views.root import bp as root_bp
 from views.subcorpus import bp as subcorpus_bp
 from views.tools import bp as tools_bp
 from views.user import bp as user_bp
-from views.websocket import bp as websocket_bp
+from views.sse import bp as sse_bp
 from views.wordlist import bp as wordlist_bp
 from views.tt_select import bp as tt_select_bp
 
@@ -160,8 +160,7 @@ application.blueprint(subcorpus_bp)
 application.blueprint(fcs_common_bp)
 application.blueprint(fcs_v1_bp)
 application.blueprint(tt_select_bp)
-if settings.get_bool('global', 'enabled_websockets'):
-    application.blueprint(websocket_bp)
+application.blueprint(sse_bp)
 setup_plugins()
 install_plugin_actions(application)
 
@@ -220,6 +219,7 @@ async def server_init(app: Sanic, loop: asyncio.BaseEventLoop):
 
 @application.listener('after_server_start')
 async def run_receiver(app: Sanic, loop: asyncio.BaseEventLoop):
+    return
     async def receiver():
         # signal handler propagates received signals between all Sanic workers
         async def signal_handler(msg: str):
@@ -233,8 +233,8 @@ async def run_receiver(app: Sanic, loop: asyncio.BaseEventLoop):
 
     logging.getLogger(__name__).debug("Starting receiver %s", app.m.pid)
     receiver = loop.create_task(receiver(), name=app.m.pid)
-    # wait so receiver gains controll and can raise exception
-    await asyncio.sleep(0.1)
+    # wait so receiver gains control and can raise exception
+    await asyncio.sleep(0.5)
     try:
         receiver.result()
     except NotImplementedError:
@@ -298,9 +298,10 @@ async def store_jwt(request: Request, response: HTTPResponse):
             or request.headers.get('x-forwarded-proto') == 'https'
         )
     )
-    for p in plugins.runtime:
-        if hasattr(p.instance, 'on_response'):
-            await p.instance.on_response()
+    if response.content_type != 'text/event-stream':
+        for p in plugins.runtime:
+            if hasattr(p.instance, 'on_response'):
+                await p.instance.on_response()
 
 
 @application.signal('kontext.internal.reset')

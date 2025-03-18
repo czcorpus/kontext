@@ -74,7 +74,7 @@ adapters, authentication method, corpus listing widgets, HTTP session management
 ### Docker
 
 Running KonText as a set of Docker containers is the most convenient and flexible way. Docker Compose V2 is required. To run a basic
-configuration instance (i.e. no MySQL/MariaDB server, no WebSocket server) use:
+configuration instance (i.e. no MySQL/MariaDB server) use:
 
 ```shell
 docker compose up

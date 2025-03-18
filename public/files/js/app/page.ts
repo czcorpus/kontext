@@ -23,7 +23,6 @@ import { createRoot, Root } from 'react-dom/client';
 import { ITranslator, IFullActionControl, StatelessModel } from 'kombo';
 import { catchError, map, tap } from 'rxjs/operators';
 import { Observable, Subject, of as rxOf } from 'rxjs';
-import { webSocket } from 'rxjs/webSocket';
 import { List, HTTP, tuple, pipe, URL as CURL } from 'cnc-tskit';
 
 import * as PluginInterfaces from '../types/plugins/index.js';
@@ -503,8 +502,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      * Undefined/null/empty string values and their respective names
      * are left out.
      */
-    createActionUrl<T>(path:string, args?:T, websocket?:boolean):string {
-        return this.appNavig.createActionUrl(path, args, websocket);
+    createActionUrl<T>(path:string, args?:T):string {
+        return this.appNavig.createActionUrl(path, args);
     }
 
     /**
@@ -743,21 +742,24 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
         return ans !== undefined ? ans : dflt;
     }
 
-    supportsWebSocket():boolean {
-        return window['WebSocket'] !== undefined && this.getConf('enabledWebsockets');
-    }
-
-    openWebSocket<T, U>(path:string='', args?:{}):[Subject<T>, Observable<U>] {
+    openEventSource<U>(path:string, detectComplete:(v:U) => boolean, args?:{}):Observable<U> {
         const params = args ?
                 '?' + pipe(args, CURL.valueToPairs(), List.map(([k, v]) => `${k}=${v}`)).join('&') :
                 '';
         const url = new URL(path + params);
-        const ws = webSocket<any>(url.href);
-        const input = new Subject<T>();
-        input.subscribe(ws);
-        const output = new Subject<U>();
-        ws.subscribe(output);
-        return tuple(input, output);
+        const es = new EventSource(url.href);
+        return new Observable<U>(
+            (observer) => {
+                es.onmessage = (evt:MessageEvent) => {
+                    const payload:U = JSON.parse(evt.data);
+                    observer.next(payload);
+                    if (detectComplete(payload)) {
+                        observer.complete();
+                        es.close();
+                    }
+                }
+            }
+        );
     }
 
     unregisterAllModels():void {

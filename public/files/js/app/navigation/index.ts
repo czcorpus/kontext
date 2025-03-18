@@ -152,7 +152,7 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
      * Undefined/null/empty string values and their respective names
      * are left out.
      */
-    createActionUrl<T>(path:string, args?:T, websocket?:boolean):string {
+    createActionUrl<T>(path:string, args?:T):string {
         if (typeof path !== 'string') {
             throw new Error(`Cannot create action url. Invalid path: ${path}`);
         }
@@ -167,9 +167,6 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
         const url = this.conf.getConf('rootPath') +
             (path.indexOf('/') === 0 ? path.substring(1) : path) +
             (urlArgs ? '?' + urlArgs : '');
-        if (websocket) {
-            return url.replace('https', 'wss').replace('http', 'ws');
-        }
         return url;
     }
 

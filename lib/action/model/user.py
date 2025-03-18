@@ -437,8 +437,6 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
         result['help_links'] = settings.get_help_links(self._req.ui_lang)
         result['integration_testing_env'] = settings.get_bool(
             'global', 'integration_testing_env', '0')
-        result['enabled_websockets'] = settings.get_bool('global', 'enabled_websockets', '0')
-
         result['issue_reporting_action'] = None
         with plugins.runtime.ISSUE_REPORTING as irp:
             result['issue_reporting_action'] = irp.export_report_action(self.plugin_ctx).to_dict()

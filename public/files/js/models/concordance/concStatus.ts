@@ -71,59 +71,19 @@ export class HitReloader {
             );
         };
 
-        if (this.layoutModel.supportsWebSocket()) {
-            const args = this.layoutModel.getConcArgs();
-            const [_, concCacheStatusSocket] = this.layoutModel.openWebSocket<undefined, ConcStatus>(
-                this.layoutModel.createActionUrl<ConcServerArgs>('ws/conc_cache_status', args, true)
-            );
-            concCacheStatusSocket.subscribe({
-                next: response => {
-                    applyData(response);
-                },
-                error: err => {
-                    if (err instanceof CloseEvent) {
-                        if (err.code > 1001) {
-                            this.layoutModel.showMessage('error', err.reason);
-                            this.layoutModel.dispatcher.dispatch(Actions.AsyncCalculationFailed);
-                        }
-                    } else {
-                        this.layoutModel.showMessage('error', err);
-                        this.layoutModel.dispatcher.dispatch(Actions.AsyncCalculationFailed);
-                    }
-                },
-            });
+        const args = this.layoutModel.getConcArgs();
+        this.layoutModel.openEventSource<ConcStatus>(
+            this.layoutModel.createActionUrl<ConcServerArgs>('conc_cache_status', args),
+            (v) => v.finished
 
-        } else {
-            rxOf(HitReloader.CHECK_CONC_DECAY).pipe(
-                expand(
-                    (interval) => rxOf(interval * HitReloader.CHECK_CONC_DECAY)
-                ),
-                take(100), // just a safe limit
-                concatMap(v => rxOf(v).pipe(delay(v * 1000))),
-                concatMap(
-                    (interval) => zip(
-                        this.layoutModel.ajax$<ConcStatus>(
-                            HTTP.Method.GET,
-                            this.layoutModel.createActionUrl('get_conc_cache_status'),
-                            this.layoutModel.getConcArgs()
-                        ),
-                        rxOf(interval)
-                    )
-                ),
-                takeWhile(
-                    ([response, interval]) => interval < HitReloader.CHECK_CONC_MAX_WAIT &&
-                        !response.finished,
-                    true // true => emit also the last item (which is the first to breaks the predicate)
-                ),
-            ).subscribe({
-                next: ([response,]) => {
-                    applyData(response);
-                },
-                error: (err) => {
-                    this.layoutModel.dispatcher.dispatch(Actions.AsyncCalculationFailed);
-                    this.layoutModel.showMessage('error', err);
-                }
-            });
-        }
+        ).subscribe({
+            next: response => {
+                applyData(response);
+            },
+            error: err => {
+                this.layoutModel.showMessage('error', err);
+                this.layoutModel.dispatcher.dispatch(Actions.AsyncCalculationFailed);
+            },
+        });
     }
 }

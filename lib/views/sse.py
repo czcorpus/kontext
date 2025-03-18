@@ -14,9 +14,10 @@
 
 import asyncio
 import aiohttp
-from typing import Optional, Type, TypeVar
+from typing import Type, TypeVar
 
 import settings
+import plugins
 import ujson as json
 from action.krequest import KRequest
 from action.model import ModelsSharedData
@@ -24,18 +25,18 @@ from action.model.abstract import AbstractPageModel, AbstractUserModel
 from action.model.concordance import ConcActionModel
 from action.model.user import UserActionModel
 from action.props import ActionProps
-from bgcalc.task import AsyncTaskStatus
-from sanic import Blueprint, Request, Sanic, Websocket
+from sanic import Blueprint, Request, Sanic, text
 from views.concordance import _get_conc_cache_status
 from views.root import _check_task_status
 
-bp = Blueprint('websocket', 'ws')
+bp = Blueprint('eventsource')
 
 T = TypeVar('T')
 
 # intervals in seconds
-WEBSOCKET_TASK_CHECK_INTERVAL = 1
-WEBSOCKET_CONC_CHECK_INTERVAL = 1
+TASK_CHECK_INTERVAL = 1
+CONC_CHECK_INTERVAL = 1
+MAX_STREAMING_ITERATIONS = 1000
 
 
 def _is_authorized_to_execute_action(amodel: AbstractPageModel, aprops: ActionProps):
@@ -74,48 +75,54 @@ async def _init_action_model(req: Request, action_model: Type[T], access_level: 
         return amodel
 
 
-async def _prepare_websocket_amodel(req: Request, ws: Websocket, amodel: Type[T], access_level: int) -> T:
-    try:
-        return await _init_action_model(req, amodel, access_level)
-
-    except PermissionError:
-        await ws.close(code=1008, reason='Access forbidden - please log-in.')
-
-
-async def _send_status(amodel, task_id: str, ws: Websocket) -> Optional[AsyncTaskStatus]:
-    task = await _check_task_status(amodel, task_id)
-    if task:
-        await ws.send(json.dumps(task.to_dict()))
-    else:
-        await ws.close(reason=f'task {task_id} not found')
-    return task
-
-
-@bp.websocket('/task_status')
-async def check_tasks_status(req: Request, ws: Websocket):
-    amodel = await _prepare_websocket_amodel(req, ws, UserActionModel, 1)
+@bp.route('/task_status')
+async def check_tasks_status(req: Request):
+    amodel = await _init_action_model(req, UserActionModel, 1)
     task_id = req.args.get('taskId')
     if not task_id:
-        await ws.close(code=1007, reason='Missing `taskId` parameter.')
+        return text('task not found', status=404)
 
-    task = await _send_status(amodel, task_id, ws)
-    while task and not task.is_finished():
-        await asyncio.sleep(WEBSOCKET_TASK_CHECK_INTERVAL)
-        task = await _send_status(amodel, task_id, ws)
+    response = await req.respond(
+        content_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive"
+        }
+    )
+    task = await _check_task_status(amodel, task_id)
+    await response.send(f"data: {json.dumps(task.to_dict())}\n\n")
+    i = 0
+    while task and not task.is_finished() and i < MAX_STREAMING_ITERATIONS:
+        await asyncio.sleep(TASK_CHECK_INTERVAL)
+        task = await _check_task_status(amodel, task_id)
+        await response.send(f"data: {json.dumps(task.to_dict())}\n\n")
+        i += 1
+    # now we must manually close plug-ins as Sanic's response middleware
+    # does not wait for the stream end.
+    for p in plugins.runtime:
+        if hasattr(p.instance, 'on_response'):
+            await p.instance.on_response()
 
 
-@bp.websocket('/conc_cache_status')
-async def conc_cache_status(req: Request, ws: Websocket):
-    amodel = await _prepare_websocket_amodel(req, ws, ConcActionModel, 0)
-    while True:
-        try:
-            response = await _get_conc_cache_status(amodel)
-        except Exception as e:
-            # close wont be handled as error on frontend
-            await ws.fail_connection(code=1011, reason=str(e))
-        await ws.send(json.dumps(response))
+@bp.route('/conc_cache_status')
+async def conc_cache_status(req: Request):
+    amodel = await _init_action_model(req, ConcActionModel, 0)
+    response = await req.respond(
+        content_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive"
+        }
+    )
 
-        if response['finished']:
-            await ws.close()
-        else:
-            await asyncio.sleep(WEBSOCKET_CONC_CHECK_INTERVAL)
+    for i in range(MAX_STREAMING_ITERATIONS):
+        status = await _get_conc_cache_status(amodel)
+        await response.send(f"data: {json.dumps(status)}\n\n")
+        if status['finished']:
+            break
+        await asyncio.sleep(CONC_CHECK_INTERVAL)
+    # now we must manually close plug-ins as Sanic's response middleware
+    # does not wait for the stream end.
+    for p in plugins.runtime:
+        if hasattr(p.instance, 'on_response'):
+            await p.instance.on_response()
