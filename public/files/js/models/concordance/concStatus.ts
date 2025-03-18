@@ -18,9 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { of as rxOf, zip } from 'rxjs';
-import { expand, takeWhile, delay, concatMap, take } from 'rxjs/operators';
-import { HTTP } from 'cnc-tskit';
 import { PageModel } from "../../app/page.js";
 import { Actions } from './actions.js';
 import * as Kontext from '../../types/kontext.js';
@@ -45,10 +42,6 @@ export interface ConcStatus extends Kontext.AjaxResponse {
 export class HitReloader {
 
     private readonly layoutModel:PageModel;
-
-    private static CHECK_CONC_DECAY = 1.08;
-
-    private static CHECK_CONC_MAX_WAIT = 500;
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;

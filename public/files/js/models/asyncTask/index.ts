@@ -24,9 +24,8 @@ import { Observable, of as rxOf } from 'rxjs';
 import { List, HTTP, pipe, Dict } from 'cnc-tskit';
 
 import * as Kontext from '../../types/kontext.js';
-import { concatMap, map, takeWhile, tap } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 import { Actions } from './actions.js';
-import { taskCheckTimer } from './common.js';
 import { DownloadType, isDownloadType, PageModel } from '../../app/page.js';
 import { AjaxError } from 'rxjs/ajax';
 
@@ -44,13 +43,8 @@ interface DeleteTaskResponse extends Kontext.AjaxResponse {
     data:Array<Kontext.AsyncTaskInfo>;
 }
 
-interface CheckTaskStatusResponse extends Kontext.AjaxResponse {
-    data:Kontext.AsyncTaskInfo;
-}
-
 export interface AsyncTaskCheckerState {
     asyncTasks:Array<Kontext.AsyncTaskInfo>;
-    asyncTaskCheckerInterval:number;
     removeFinishedOnSubmit:boolean;
     overviewVisible:boolean;
 }
@@ -67,8 +61,6 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
 
     private readonly pageModel:PageModel;
 
-    static CHECK_INTERVAL = 5000;
-
     constructor(
         dispatcher:IFullActionControl,
         pageModel:PageModel,
@@ -78,7 +70,6 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
             dispatcher,
             {
                 asyncTasks: [...currTasks],
-                asyncTaskCheckerInterval: AsyncTaskChecker.CHECK_INTERVAL,
                 removeFinishedOnSubmit: false,
                 overviewVisible: false
             }
