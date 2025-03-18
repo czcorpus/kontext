@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../vendor.d.ts/soundmanager.d.ts" />
-
 import { List, tuple, Dict, pipe } from 'cnc-tskit';
 
 import { KontextPage } from '../app/main.js';
@@ -93,6 +91,7 @@ import { AnyTTSelection } from '../types/textTypes.js';
 import { ShuffleModel } from '../models/query/shuffle.js';
 import { ActionUrlCodes } from '../app/navigation/interpage.js';
 import { QueryProps } from '../models/cqleditor/qprops.js';
+import { AudioPlayerModel } from '../models/audioPlayer/model.js';
 
 
 export class QueryModels {
@@ -1028,6 +1027,7 @@ export class ViewPage {
             (err:Error)=>{}
         );
 
+        this.viewModels.audioPlayerModel = new AudioPlayerModel(this.layoutModel, this.layoutModel.dispatcher);
         this.viewModels.lineViewModel = new ConcordanceModel(
             this.layoutModel,
             this.layoutModel.dispatcher,

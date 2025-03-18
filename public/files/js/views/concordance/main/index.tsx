@@ -47,6 +47,8 @@ import { LineSelectionModes } from '../../../models/concordance/common.js';
 import { Actions as ViewOptionsActions } from '../../../models/options/actions.js';
 import { Actions as UserActions } from '../../../models/user/actions.js';
 import * as S from './style.js';
+import { AudioPlayerModel } from '../../../models/audioPlayer/model.js';
+import { Actions as AudioPlayerActions } from '../../../models/audioPlayer/actions.js';
 
 
 export class ViewPageModels {
@@ -54,6 +56,7 @@ export class ViewPageModels {
     lineViewModel:ConcordanceModel;
     concSummaryModel:ConcSummaryModel;
     concDetailModel:ConcDetailModel;
+    audioPlayerModel:AudioPlayerModel;
     refsDetailModel:RefsDetailModel;
     userInfoModel:IModel<Record<string, unknown>>;
     collFormModel:CollFormModel;
@@ -106,6 +109,7 @@ export function init({
     lineSelectionModel,
     lineViewModel,
     concDetailModel,
+    audioPlayerModel,
     refsDetailModel,
     usageTipsModel,
     concSummaryModel,
@@ -125,13 +129,15 @@ export function init({
         he: he,
         lineModel: lineViewModel,
         lineSelectionModel: lineSelectionModel,
-        concDetailModel: concDetailModel
+        concDetailModel: concDetailModel,
+        audioPlayerModel: audioPlayerModel,
     });
     const concDetailViews = concDetailViewsInit({
         dispatcher: dispatcher,
         he: he,
         concDetailModel: concDetailModel,
-        refsDetailModel: refsDetailModel
+        refsDetailModel: refsDetailModel,
+        audioPlayerModel: audioPlayerModel,
     });
     const concSaveViews = concSaveViewsInit(dispatcher, he, lconcSaveModel);
     const extendedInfoViews = extendedInfoViewsInit({dispatcher, he, ttDistModel, usageTipsModel, dashboardModel});
@@ -622,13 +628,12 @@ export function init({
         };
 
         const handleDetailCloseClick = () => {
-            dispatcher.dispatch<typeof Actions.AudioPlayerClickControl>({
-                name: Actions.AudioPlayerClickControl.name,
-                payload: {
-                    action: 'stop',
+            dispatcher.dispatch(
+                AudioPlayerActions.StopAudio,
+                {                    
                     playerId: ConcDetailModel.AUDIO_PLAYER_ID
                 }
-            });
+            );
             dispatcher.dispatch<typeof Actions.ResetDetail>({
                 name: Actions.ResetDetail.name
             });

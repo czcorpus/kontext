@@ -25,11 +25,11 @@ import { List, Strings, pipe } from 'cnc-tskit';
 import * as Kontext from '../../../types/kontext.js';
 import { ConcordanceModel } from '../../../models/concordance/main.js';
 import { ConcLinesStorage } from '../../../models/concordance/selectionStorage.js';
-import { init as initMediaViews } from '../media/index.js';
+import { init as initMediaViews } from '../../audioPlayer/index.js';
 import { Actions } from '../../../models/concordance/actions.js';
 import { LineSelectionModes, TextChunk } from '../../../models/concordance/common.js';
 import * as S from './style.js';
-import { PlayerStatus } from '../../../models/concordance/media.js';
+import { AudioPlayerModel } from '../../../models/audioPlayer/model.js';
 
 
 export interface LineExtrasViews {
@@ -38,7 +38,6 @@ export interface LineExtrasViews {
         lineIdx:number;
         chunks:Array<TextChunk>;
         t:string; // TODO enum
-        audioPlayerStatus:PlayerStatus;
     }>;
 
     TdLineSelection:React.FC<{
@@ -68,9 +67,9 @@ export interface LineExtrasViews {
 }
 
 
-export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, lineModel:ConcordanceModel) {
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, lineModel:ConcordanceModel, audioPlayerModel:AudioPlayerModel) {
 
-    const mediaViews = initMediaViews(dispatcher, he);
+    const mediaViews = initMediaViews(dispatcher, he, audioPlayerModel);
     const layoutViews = he.getLayoutViews();
 
     // ------------------------- <AudioLink /> ---------------------------
@@ -83,9 +82,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         };
 
         const handleClick = () => {
-            dispatcher.dispatch<typeof Actions.AudioPlayersStop>({
-                name: Actions.AudioPlayersStop.name
-            });
             dispatcher.dispatch<typeof Actions.PlayAudioSegment>({
                 name: Actions.PlayAudioSegment.name,
                 payload: {
@@ -116,7 +112,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                 <span>
                     <S.AudioLink onClick={handleClick}>{getChar()}</S.AudioLink>
                     <span style={{position: 'absolute',  marginTop: '2em'}}>
-                        <mediaViews.AudioPlayer playerId={ConcordanceModel.AUDIO_PLAYER_ID} status={props.audioPlayerStatus}/>
+                        <mediaViews.AudioPlayer playerId={ConcordanceModel.AUDIO_PLAYER_ID} />
                     </span>
                 </span>
             );

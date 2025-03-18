@@ -25,17 +25,19 @@ import { Speech, ConcDetailModel, ConcDetailModelState } from '../../../models/c
 import * as Kontext from '../../../types/kontext.js';
 import { Actions } from '../../../models/concordance/actions.js';
 import { Color, pipe, List, Dict } from 'cnc-tskit';
-import { init as initMediaViews } from '../media/index.js';
-import { PlayerStatus } from '../../../models/concordance/media.js';
+import { init as initMediaViews } from '../../audioPlayer/index.js';
+import { PlayerStatus } from '../../../models/audioPlayer/player.js';
+import { AudioPlayerModel } from '../../../models/audioPlayer/model.js';
 
 
 export function init(
     dispatcher:IActionDispatcher,
     he:Kontext.ComponentHelpers,
-    concDetailModel:ConcDetailModel
+    concDetailModel:ConcDetailModel,
+    audioPlayerModel:AudioPlayerModel
 ):React.ComponentClass<{}> {
 
-    const mediaViews = initMediaViews(dispatcher, he);
+    const mediaViews = initMediaViews(dispatcher, he, audioPlayerModel);
 
     function exportMetadata(data:{[k:string]:unknown}) {
         if (!Dict.empty(data)) {
@@ -121,7 +123,6 @@ export function init(
     class PlaybackIcon extends React.Component<{
         isPlaying: boolean;
         allowPlayer:boolean;
-        audioPlayerStatus: PlayerStatus;
         setFocusFn:(v:boolean)=>void;
         handleClick:()=>void;
     }> {
@@ -142,10 +143,10 @@ export function init(
 
         render() {
             return (
-                this.props.isPlaying && this.props.audioPlayerStatus ?
+                this.props.isPlaying ?
                     this.props.allowPlayer ?
                         <div>
-                            <mediaViews.AudioPlayer playerId={ConcDetailModel.AUDIO_PLAYER_ID} status={this.props.audioPlayerStatus} />
+                            <mediaViews.AudioPlayer playerId={ConcDetailModel.AUDIO_PLAYER_ID} />
                         </div> :
                         null :
                 <span className="play-audio" onMouseOver={this._handleMouseOver} onMouseOut={this._handleMouseOut}>
@@ -165,7 +166,6 @@ export function init(
         isPlaying:boolean;
         data: Array<{ class: string; str: string }>;
         allowPlayer:boolean;
-        audioPlayerStatus:PlayerStatus;
         handleClick:()=>void;
     },
     {
@@ -193,8 +193,7 @@ export function init(
                     <PlaybackIcon handleClick={this.props.handleClick}
                                 isPlaying={this.props.isPlaying}
                                 setFocusFn={this._setFocus}
-                                allowPlayer={this.props.allowPlayer}
-                                audioPlayerStatus={this.props.audioPlayerStatus} />
+                                allowPlayer={this.props.allowPlayer} />
                     : null}
                 </div>
             );
@@ -208,7 +207,6 @@ export function init(
         speech:Speech;
         isPlaying:boolean;
         canStartPlayback:boolean;
-        audioPlayerStatus:PlayerStatus;
         handlePlayClick:()=>void;
 
     }> = (props) => {
@@ -231,8 +229,7 @@ export function init(
                             handleClick={props.handlePlayClick}
                             isPlaying={props.isPlaying}
                             canStartPlayback={props.canStartPlayback}
-                            allowPlayer={true}
-                            audioPlayerStatus={props.audioPlayerStatus} />
+                            allowPlayer={true} />
                 </td>
             </tr>
         );
@@ -245,7 +242,6 @@ export function init(
         speeches:Array<Speech>;
         isPlaying:boolean;
         canStartPlayback:boolean;
-        audioPlayerStatus:PlayerStatus;
         handlePlayClick:()=>void;
 
     }> = (props) => {
@@ -279,8 +275,7 @@ export function init(
                                 handleClick={props.handlePlayClick}
                                 isPlaying={props.isPlaying}
                                 canStartPlayback={props.canStartPlayback}
-                                allowPlayer={i === List.size(props.speeches)-1}
-                                audioPlayerStatus={props.audioPlayerStatus} />)}
+                                allowPlayer={i === List.size(props.speeches)-1} />)}
                 </td>
             </tr>
         );
@@ -297,9 +292,6 @@ export function init(
         }
 
         _handlePlayClick(segments, rowIdx) {
-            dispatcher.dispatch<typeof Actions.AudioPlayersStop>({
-                name: Actions.AudioPlayersStop.name
-            });
             dispatcher.dispatch<typeof Actions.PlaySpeech>({
                 name: Actions.PlaySpeech.name,
                 payload: {
@@ -327,8 +319,7 @@ export function init(
                                     idx={i}
                                     handlePlayClick={this._handlePlayClick.bind(this, List.head(item).segments, i)}
                                     isPlaying={this.props.playingRowIdx === i}
-                                    canStartPlayback={this._canStartPlayback(List.head(item))}
-                                    audioPlayerStatus={this.props.audioPlayerStatus} />;
+                                    canStartPlayback={this._canStartPlayback(List.head(item))} />;
 
                     } else if (item.length > 1) {
                         return <TROverlappingSpeeches
@@ -337,8 +328,7 @@ export function init(
                                     idx={i}
                                     handlePlayClick={this._handlePlayClick.bind(this, List.head(item).segments, i)}
                                     isPlaying={this.props.playingRowIdx === i}
-                                    canStartPlayback={this._canStartPlayback(List.head(item))}
-                                    audioPlayerStatus={this.props.audioPlayerStatus} />;
+                                    canStartPlayback={this._canStartPlayback(List.head(item))} />;
 
                     } else {
                         return null;

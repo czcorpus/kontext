@@ -19,7 +19,7 @@
  */
 
 import { Action } from 'kombo';
-import { AudioPlayerActions, DetailExpandPositions, LineSelectionModes, LineSelValue,
+import { DetailExpandPositions, LineSelectionModes, LineSelValue,
     AjaxConcResponse, LineGroupId, RefsColumn, PaginationActions, LineGroupChartData,
     ConcViewMode, HighlightInfo } from './common.js';
 import * as TextTypes from '../../types/textTypes.js';
@@ -83,24 +83,6 @@ export class Actions {
         linkIds:Array<string>;
     }> = {
         name: 'CONCORDANCE_PLAY_AUDIO_SEGMENT'
-    };
-
-    static AudioPlayerClickControl:Action<{
-        playerId:string;
-        action:AudioPlayerActions;
-    }> = {
-        name: 'AUDIO_PLAYER_CLICK_CONTROL'
-    };
-
-    static AudioPlayerSetPosition:Action<{
-        playerId:string;
-        offset:number;
-    }> = {
-        name: 'AUDIO_PLAYER_SET_POSITION'
-    };
-
-    static AudioPlayersStop:Action<{}> = {
-        name: 'AUDIO_PLAYERS_STOP'
     };
 
     static ChangePage:Action<{

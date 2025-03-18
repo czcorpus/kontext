@@ -26,10 +26,9 @@ import copy from 'copy-to-clipboard';
 import * as ViewOptions from '../../types/viewOptions.js';
 import { PageModel } from '../../app/page.js';
 import { ConclineSectionOps } from './line.js';
-import { AudioPlayer, PlayerStatus } from './media.js';
 import { ConcSaveModel } from './save.js';
 import { Actions as ViewOptionsActions } from '../options/actions.js';
-import { CorpColumn, ViewConfiguration, AudioPlayerActions, AjaxConcResponse,
+import { CorpColumn, ViewConfiguration, AjaxConcResponse,
     ServerPagination, ServerLineData, LineGroupId, attachColorsToIds,
     mapIdToIdWithColors, Line, TextChunk, PaginationActions, ConcViewMode,
     HighlightWords, ConcQueryResponse, KWICSection} from './common.js';
@@ -38,6 +37,7 @@ import { Actions, ConcGroupChangePayload,
 import { Actions as MainMenuActions } from '../mainMenu/actions.js';
 import { Block } from '../freqs/common.js';
 import { highlightConcLineTokens, importLines } from './transform.js';
+import { Actions as AudioPlayerActions } from '../audioPlayer/actions.js';
 
 /**
  * HighlightAttrMatch specifies a single global (per page)
@@ -138,7 +138,7 @@ export interface ConcordanceModelState {
 
     subcName:string;
 
-    playerAttachedLink:string|null;
+    playerAttachedLinks:string[]|null;
 
     pagination:ServerPagination;
 
@@ -190,8 +190,6 @@ export interface ConcordanceModelState {
 
     forceScroll:number|null;
 
-    audioPlayerStatus:PlayerStatus;
-
     mergedAttrs:Array<[string, number]>;
 
     mergedCtxAttrs:Array<[string, number]>;
@@ -224,8 +222,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
     private readonly layoutModel:PageModel;
 
     private readonly saveModel:ConcSaveModel;
-
-    private readonly audioPlayer:AudioPlayer;
 
     /**
      * Note: substitutes "isBusy". Also compare with unfinishedCalculation.
@@ -270,7 +266,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 useSafeFont: lineViewProps.useSafeFont,
                 busyWaitSecs: 0,
                 supportsSyntaxView: lineViewProps.supportsSyntaxView,
-                playerAttachedLink: null,
+                playerAttachedLinks: null,
                 showAnonymousUserWarn: lineViewProps.anonymousUser,
                 supportsTokenConnect: lineViewProps.supportsTokenConnect,
                 supportsTokensLinking: lineViewProps.supportsTokensLinking,
@@ -286,7 +282,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 lineSelOptionsVisible: false,
                 syntaxViewVisible: false,
                 forceScroll: null,
-                audioPlayerStatus: null,
                 mergedAttrs: lineViewProps.mergedAttrs,
                 mergedCtxAttrs: lineViewProps.mergedAttrs,
                 alignCommonPosAttrs: lineViewProps.alignCommonPosAttrs,
@@ -305,38 +300,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         );
         this.layoutModel = layoutModel;
         this.saveModel = saveModel;
-        this.audioPlayer = new AudioPlayer(
-            this.layoutModel.createStaticUrl('misc/soundmanager2/'),
-            () => {
-                this.changeState(state => {
-                    state.audioPlayerStatus = this.getAudioPlayerStatus()
-                });
-            },
-            () => {
-                this.setStopStatus();
-                this.changeState(state => {
-                    state.audioPlayerStatus = this.getAudioPlayerStatus()
-                });
-            },
-            () => {
-                this.changeState(state => {
-                    state.forceScroll = window.scrollY
-                });
-                this.audioPlayer.stop();
-                this.setStopStatus();
-                this.changeState(state => {
-                    state.audioPlayerStatus = this.getAudioPlayerStatus()
-                });
-                this.layoutModel.showMessage('error',
-                        this.layoutModel.translate('concview__failed_to_play_audio'));
-            },
-            () => {
-                this.changeState(state => {
-                    state.audioPlayerStatus = this.getAudioPlayerStatus(),
-                    state.forceScroll = window.scrollY
-                });
-            }
-        );
         this.runBusyTimer = (currTimer:Subscription):Subscription => {
             if (currTimer) {
                 currTimer.unsubscribe();
@@ -360,7 +323,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 if (action.error) {
                     this.changeState(state => {
                         state.unfinishedCalculation = false;
-                        state.playerAttachedLink = null;
+                        state.playerAttachedLinks = null;
                     });
 
                 } else {
@@ -372,7 +335,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                             state.maincorp = action.payload.changeMaincorp;
                         }
                         state.unfinishedCalculation = false;
-                        state.playerAttachedLink = null;
+                        state.playerAttachedLinks = null;
                         this.reapplyTokenLinkHighlights(state);
                     });
                     this.pushHistoryState({
@@ -408,50 +371,61 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             Actions.PlayAudioSegment,
             action => {
                 this.changeState(state => {
+                    // hide previous audio player if visible
+                    if (state.playerAttachedLinks !== null) {
+                        this.hideAudioPlayer(state);
+                    }
+                    state.playerAttachedLinks = action.payload.linkIds;
                     state.forceScroll = window.scrollY;
                 });
-                this.playAudio(action.payload.linkIds);
-                this.changeState(state => {
-                    state.audioPlayerStatus = this.getAudioPlayerStatus()
-                });
-            }
+                const playChunks = this.findChunks(this.state, ...action.payload.linkIds);
+                if (!List.empty(playChunks)) {
+                    this.dispatchSideEffect(
+                        AudioPlayerActions.PlayAudio,
+                        {
+                            playerId: ConcordanceModel.AUDIO_PLAYER_ID,
+                            audioLinks: pipe(
+                                playChunks,
+                                List.map(item => this.createAudioLink('audio', item)),
+                                List.filter(item => !!item)
+                            ),
+                            waveformLinks: pipe(
+                                playChunks,
+                                List.map(item => this.createAudioLink('audio_waveform', item)),
+                                List.filter(item => !!item)
+                            )
+                        }
+                    );
+        
+                } else {
+                    throw new Error('No chunks to play');
+                }
+            },
         );
 
         this.addActionSubtypeHandler(
-            Actions.AudioPlayerClickControl,
-            action => action.payload.playerId === ConcordanceModel.AUDIO_PLAYER_ID,
+            AudioPlayerActions.StatusChange,
+            _ => this.state.playerAttachedLinks !== null,
             action => {
-                this.changeState(state => {
-                    state.forceScroll = window.scrollY
-                });
-                this.handlePlayerControls(action.payload.action);
-                this.changeState(state => {
-                    state.audioPlayerStatus = this.getAudioPlayerStatus()
-                });
-            }
-        );
-
-        this.addActionSubtypeHandler(
-            Actions.AudioPlayerSetPosition,
-            action => action.payload.playerId === ConcordanceModel.AUDIO_PLAYER_ID,
-            action => {
-                this.changeState(state => {
-                    state.forceScroll = window.scrollY
-                });
-                this.audioPlayer.setPosition(action.payload.offset);
-                this.changeState(state => {
-                    state.audioPlayerStatus = this.getAudioPlayerStatus()
-                });
-            }
-        );
-
-        this.addActionHandler(
-            Actions.AudioPlayersStop,
-            action => {
-                this.handlePlayerControls('stop');
-                this.changeState(state => {
-                    state.audioPlayerStatus = this.getAudioPlayerStatus()
-                });
+                switch (action.payload.status) {
+                    case 'play':
+                        if (action.payload.activePlayerId === ConcordanceModel.AUDIO_PLAYER_ID) {
+                            this.changeState(state => {
+                                state.forceScroll = window.scrollY;
+                                this.showAudioPlayer(state);
+                            });
+                        }
+                    break;
+                    case 'stop':                        
+                    case 'error':
+                        if (action.payload.activePlayerId !== ConcordanceModel.AUDIO_PLAYER_ID) {
+                            this.changeState(state => {
+                                state.forceScroll = window.scrollY;
+                                this.hideAudioPlayer(state)
+                            });
+                        }
+                    break;
+                }
             }
         );
 
@@ -1612,7 +1586,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
     private findActiveLineIdx(state:ConcordanceModelState):number {
         for (let i = 0; i < state.lines.length; i += 1) {
             for (let j = 0; j < state.lines[i].languages.length; j += 1) {
-                if (ConclineSectionOps.findChunk(state.lines[i].languages[j], state.playerAttachedLink)) {
+                if (ConclineSectionOps.findChunk(state.lines[i].languages[j], List.last(state.playerAttachedLinks))) {
                     return i;
                 }
             }
@@ -1636,74 +1610,28 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         return [];
     }
 
-    private playAudio(linkIds:Array<string>):void {
-        this.setStopStatus(); // stop anything playing right now
-        const activeChunkId = List.last(linkIds);
-        this.changeState(state => {
-            state.playerAttachedLink = activeChunkId;
-            // let's get an active line - there can be only one even if we play multiple chunks
-            const activeLine = this.findActiveLineIdx(state);
-            const fakeChangedLine = state.lines[activeLine];
-            state.lines[activeLine] = fakeChangedLine
-            const playChunks = this.findChunks(state, ...linkIds);
-            if (!List.empty(playChunks)) {
-                List.last(playChunks).showAudioPlayer = true
-
-            } else {
-                throw new Error('No chunks to play');
-            }
-        });
-        const playChunks = this.findChunks(this.state, ...linkIds);
-        if (!List.empty(playChunks)) {
-            this.audioPlayer.start(
-                pipe(
-                    playChunks,
-                    List.map(item => this.createAudioLink('audio', item)),
-                    List.filter(item => !!item)
-                ),
-                pipe(
-                    playChunks,
-                    List.map(item => this.createAudioLink('audio_waveform', item)),
-                    List.filter(item => !!item)
-                )
-            );
-        }
+    private showAudioPlayer(state:ConcordanceModelState):void {
+        const activeLine = this.findActiveLineIdx(state);
+        const fakeChangedLine = state.lines[activeLine];
+        state.lines[activeLine] = fakeChangedLine
+        const playChunks = this.findChunks(state, ...state.playerAttachedLinks);
+        List.last(playChunks).showAudioPlayer = true;
+        state.forceScroll = window.scrollY;
     }
 
-    private setStopStatus():void {
-        this.audioPlayer.stop();
-        if (this.state.playerAttachedLink) {
-            this.changeState(
-                state => {
-                    const playingLineIdx = this.findActiveLineIdx(state);
-                    const modLine = this.state.lines[playingLineIdx]; // TODO clone?
-                    state.lines[playingLineIdx] = modLine;
-                    const playingChunk = this.findChunks(state, this.state.playerAttachedLink)[0];
-                    if (playingChunk) {
-                        playingChunk.showAudioPlayer = false;
+    private hideAudioPlayer(state:ConcordanceModelState):void {
+        const playingLineIdx = this.findActiveLineIdx(state);
+        const modLine = this.state.lines[playingLineIdx]; // TODO clone?
+        state.lines[playingLineIdx] = modLine;
+        const playingChunk = List.last(this.findChunks(state, ...state.playerAttachedLinks));
+        if (playingChunk) {
+            playingChunk.showAudioPlayer = false;
 
-                    } else {
-                        throw new Error(`Failed to find playing chunk "${this.state.playerAttachedLink}"`);
-                    }
-                    state.playerAttachedLink = null;
-                }
-            );
+        } else {
+            throw new Error(`Failed to find playing chunk "${List.last(state.playerAttachedLinks)}"`);
         }
-    }
-
-    private handlePlayerControls(action:AudioPlayerActions) {
-        switch (action) {
-            case 'play':
-                this.audioPlayer.play();
-            break;
-            case 'pause':
-                this.audioPlayer.pause();
-            break;
-            case 'stop':
-                this.audioPlayer.stop();
-                this.setStopStatus();
-            break;
-        }
+        state.playerAttachedLinks = null;
+        state.forceScroll = window.scrollY;
     }
 
     isUnfinishedCalculation():boolean {
@@ -1733,10 +1661,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
     private setLineFocus(state:ConcordanceModelState, lineIdx:number, focus:boolean):void {
         this.resetLineFocus(state);
         state.lines[lineIdx].hasFocus = focus;
-    }
-
-    getAudioPlayerStatus():PlayerStatus {
-        return this.audioPlayer.getStatus();
     }
 
     getSaveModel():ConcSaveModel {
