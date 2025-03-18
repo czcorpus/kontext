@@ -38,7 +38,6 @@
         </conc_dashboard_modules>
         <integration_testing_env>true</integration_testing_env>
         <jwt_secret>cypress_testing_secret</jwt_secret>
-        <enabled_websockets>0</enabled_websockets>
     </global>
     <calc_backend>
         <type>rq</type>

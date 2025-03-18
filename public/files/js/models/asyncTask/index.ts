@@ -268,70 +268,28 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
     }
 
     private startWatchingTask(task:Kontext.AsyncTaskInfo) {
-        if (this.pageModel.supportsWebSocket()) {
-            const [,statusSocket] = this.pageModel.openWebSocket<
-                undefined,
-                Kontext.AsyncTaskInfo
-            >(
-                this.pageModel.createActionUrl<{taskId: string}>(
-                    'ws/task_status',
-                    {taskId: task.ident},
-                    true,
-                )
-            );
-            statusSocket.subscribe({
-                next: data => {
-                    this.changeState(state => {
-                        this.updateTasksStatus(state, data);
-                    });
-                    this.dispatchSideEffect(
-                        Actions.AsyncTasksChecked,
-                        {tasks: this.state.asyncTasks},
-                    );
-                },
-                error: err => {
-                    if (err instanceof CloseEvent) {
-                        if (err.code > 1001) {
-                            this.pageModel.showMessage('error', err.reason);
+        this.pageModel.openEventSource<Kontext.AsyncTaskInfo>(
+            this.pageModel.createActionUrl<{taskId: string}>(
+                'task_status',
+                {taskId: task.ident}
+            ),
+            (v:Kontext.AsyncTaskInfo) => v.status === 'SUCCESS' || v.status === 'FAILURE'
 
-                        } else {
-                            this.pageModel.showMessage('warning', err.reason);
-                        }
+        ).subscribe({
+            next: data => {
+                this.changeState(state => {
+                    this.updateTasksStatus(state, data);
+                });
+                this.dispatchSideEffect(
+                    Actions.AsyncTasksChecked,
+                    {tasks: this.state.asyncTasks},
+                );
+            },
+            error: err => {
+                this.pageModel.showMessage('error', err);
+            }
+        });
 
-                    } else {
-                        this.pageModel.showMessage('error', err);
-                    }
-                }
-            });
-
-        } else {
-            taskCheckTimer().pipe(
-                concatMap(
-                    _ => this.pageModel.ajax$<CheckTaskStatusResponse>(
-                        HTTP.Method.GET,
-                        this.pageModel.createActionUrl('check_tasks_status', {task_id: task.ident}),
-                        {}
-                    )
-                ),
-                takeWhile(
-                    (ans, i) => ans.data.status !== 'FAILURE' && ans.data.status !== 'SUCCESS',
-                    true // inclusive
-                )
-            ).subscribe({
-                next: data => {
-                    this.changeState(state => {
-                        this.updateTasksStatus(state, data.data);
-                    });
-                    this.dispatchSideEffect(
-                        Actions.AsyncTasksChecked,
-                        {tasks: this.state.asyncTasks},
-                    );
-                },
-                error: error => {
-                    this.pageModel.showMessage('error', error);
-                }
-            });
-        }
     }
 
     init():void {
