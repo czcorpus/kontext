@@ -54,7 +54,6 @@ class _FilterFormArgs:
     use_regexp: bool = False
     has_lemma: bool = False
     tagsets: List[TagsetInfo] = field(default_factory=list)
-    within: bool = False
     no_query_history: bool = False
 
 
@@ -88,7 +87,6 @@ class FilterFormArgs(ConcFormArgs[_FilterFormArgs], AbstractRawQueryDecoder):
         self.data.filtpos_unit = data['filtpos_unit']
         self.data.inclkwic = data['inclkwic']
         self.data.qmcase = data['qmcase']
-        self.data.within = data.get('within')
         self.data.default_attr = data['default_attr']
         self.data.use_regexp = data.get('use_regexp', False)
         self.data.no_query_history = data.get('no_query_history', False)

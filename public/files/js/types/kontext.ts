@@ -505,6 +505,17 @@ export enum ConcFormTypes {
     SAMPLE = 'sample',
     SHUFFLE = 'shuffle',
     SWITCHMC = 'switchmc',
+
+    /**
+     * When user wants to switch the primary corpus and the aligned one
+     * is without a query, we need to enter a query for it first.
+     * This is rather a pseudo-operation as the server does not recognize it
+     * directly. It is handled by query replay model as a two step action:
+     * 1) rewrite the initial query to include the added aligned query
+     * 2) attach "switch maincorp" operation
+     */
+    MISSING_ACQ = 'missing-acq',
+
     SUBHITS = 'subhits',
 
     /**

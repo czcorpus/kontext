@@ -120,7 +120,6 @@ export interface FilterServerArgs extends ConcServerArgs {
     query:string;
     queryParsed:SubmitEncodedSimpleTokens|undefined;
     qmcase:boolean;
-    within:boolean;
     default_attr:string|Array<string>;
     use_regexp:boolean;
     no_query_history?:boolean;

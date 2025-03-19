@@ -63,7 +63,6 @@ export interface FilterFormProperties extends GeneralQueryFormProperties {
     currFilfposUnitValues:{[sourceId:string]:string};
     currFiltposValues:{[sourceId:string]:string};
     currFiltposUnitValues:{[sourceId:string]:string};
-    withinArgValues:{[sourceId:string]:boolean};
     opLocks:{[sourceId:string]:boolean};
     hasLemma:{[sourceId:string]:boolean};
     tagsets:Array<PluginInterfaces.TagHelper.TagsetInfo>;
@@ -140,8 +139,6 @@ export interface FilterFormModelState extends QueryFormModelState {
      */
     inclkwicValues:{[key:string]:boolean};
 
-    withinArgs:{[key:string]:boolean};
-
     hasLemma:{[key:string]:boolean};
 
     /**
@@ -155,7 +152,6 @@ export interface FilterFormModelState extends QueryFormModelState {
 
     tagsets:Array<PluginInterfaces.TagHelper.TagsetInfo>;
 
-    changeMaincorp:string;
 
     syncInitialArgs:formArgs.FilterFormArgs;
 }
@@ -402,7 +398,6 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                     List.map(item => tuple(item, null)),
                     Dict.fromEntries()
                 ),
-                withinArgs: {...props.withinArgValues},
                 hasLemma: {...props.hasLemma},
                 inputLanguage: props.inputLanguage,
                 isAnonymousUser: props.isAnonymousUser,
@@ -452,7 +447,6 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 isBusy: false,
                 simpleQueryDefaultAttrs: props.simpleQueryDefaultAttrs,
                 isLocalUiLang: props.isLocalUiLang,
-                changeMaincorp: undefined,
                 syncInitialArgs,
                 compositionModeOn: false
         });
@@ -460,10 +454,6 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
         this.addActionHandler<typeof MainMenuActions.ShowFilter>(
             MainMenuActions.ShowFilter.name,
             action => {
-                this.changeState(state => {
-                    state.changeMaincorp = action.payload.maincorp
-                });
-
                 this.syncFrom(rxOf({...this.state.syncInitialArgs, ...action.payload})).subscribe({
                     error: (err) => {
                         this.pageModel.showMessage('error',
@@ -593,7 +583,6 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                                 name: ConcActions.AddedNewOperation.name,
                                 payload: {
                                     concId: data.conc_persistence_op_id,
-                                    changeMaincorp: this.state.changeMaincorp,
                                     data
                                 }
                             });
@@ -719,7 +708,6 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                             state.filtposUnitValues[filterId] = data.filtpos_unit;
                             state.inclkwicValues[filterId] = data.inclkwic;
                             state.tagsets = data.tagsets;
-                            state.withinArgs[filterId] = data.within;
                             state.lposValues[filterId] = data.lpos;
                             state.hasLemma[filterId] = data.has_lemma;
                             state.opLocks[filterId] = false;
@@ -776,7 +764,6 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             filtpos: this.state.filtposValues[filterId].value,
             filtpos_unit: this.state.filtposUnitValues[filterId],
             inclkwic: this.state.inclkwicValues[filterId],
-            within: this.state.withinArgs[filterId],
             ...this.pageModel.getConcArgs(),
             q: ['~' + concId]
         }

@@ -102,7 +102,6 @@ export class SwitchMainCorpModel extends StatefulModel<SwitchMainCorpModelState>
             }
         );
 
-
         this.addActionHandler(
             Actions.SwitchMcFormSubmit,
             action => {

@@ -30,7 +30,7 @@ import { RefsDetailModel, RefsDetailModelState } from '../../../models/concordan
 import { Actions } from '../../../models/concordance/actions.js';
 import { DetailExpandPositions } from '../../../models/concordance/common.js';
 import * as S from './style.js';
-import { AudioPlayerModel } from 'js/models/audioPlayer/model.js';
+import { AudioPlayerModel } from '../../../models/audioPlayer/model.js';
 
 
 export interface RefDetailProps {

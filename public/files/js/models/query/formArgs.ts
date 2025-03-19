@@ -91,7 +91,6 @@ export interface FilterFormArgs extends ConcFormArgs {
     use_regexp:boolean;
     tagsets:Array<PluginInterfaces.TagHelper.TagsetInfo>;
     lpos:string;
-    within:boolean; // used when switching to an aligned corp without specific query (true)
     has_lemma:boolean;
 }
 
