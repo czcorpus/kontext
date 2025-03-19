@@ -88,10 +88,17 @@ export interface QueryHelpProps {
 }
 
 
+export interface MissingALQProps {
+    maincorp:string;
+    tagHelperViews:{[key:string]:PluginInterfaces.TagHelper.View};
+}
+
+
 export interface MainViews {
     QueryForm:React.ComponentClass<QueryFormProps>;
     QueryFormLite:React.ComponentClass<QueryFormLiteProps>;
     QueryHelp:React.ComponentClass<QueryHelpProps>;
+    MissingAlignedQueryForm:React.ComponentClass<MissingALQProps>;
 }
 
 
@@ -606,9 +613,59 @@ export function init({
         );
     };
 
+    // --------------------------
+
+    const MissingAlignedQueryForm:React.FC<FirstQueryFormModelState & MissingALQProps> = (props) => {
+
+        const handleSubmit = () => {
+            dispatcher.dispatch<typeof Actions.BranchQuery>({
+                name: Actions.BranchQuery.name,
+                payload: {
+                    operationIdx: 0,
+                    setMainCorp: props.maincorp
+                }
+            });
+        };
+
+        return (
+            <S.QueryForm>
+                <div>
+                    <div className="form">
+                        <div className="query">
+                        <inputViews.TRQueryInputField
+                                widgets={props.supportedWidgets[props.maincorp]}
+                                sourceId={props.maincorp}
+                                corpname={props.maincorp}
+                                wPoSList={props.wPoSList}
+                                lposValue={props.lposValues[props.maincorp]}
+                                forcedAttr={props.forcedAttr}
+                                attrList={props.attrList}
+                                tagHelperView={props.tagHelperViews[props.maincorp]}
+                                tagsets={props.tagsets[props.maincorp]}
+                                inputLanguage={props.inputLanguages[props.maincorp]}
+                                onEnterKey={handleSubmit}
+                                useRichQueryEditor={props.useRichQueryEditor}
+                                takeFocus={true}
+                                qsuggPlugin={querySuggest} />
+                        </div>
+                    </div>
+                    <div className="buttons">
+                        {props.isBusy ?
+                            <layoutViews.AjaxLoaderBarImage /> :
+                            <button type="button" className="default-button" onClick={handleSubmit}>
+                                {he.translate('global__proceed')}
+                            </button>
+                        }
+                    </div>
+                </div>
+            </S.QueryForm>
+        )
+    }
+
     return {
         QueryForm: BoundWithProps<QueryFormProps, FirstQueryFormModelState>(QueryForm, queryModel),
         QueryFormLite: BoundWithProps<QueryFormLiteProps, FirstQueryFormModelState>(QueryFormLite, queryModel),
-        QueryHelp: BoundWithProps<QueryHelpProps, QueryHelpModelState>(QueryHelp, queryHelpModel)
+        QueryHelp: BoundWithProps<QueryHelpProps, QueryHelpModelState>(QueryHelp, queryHelpModel),
+        MissingAlignedQueryForm: BoundWithProps<MissingALQProps, FirstQueryFormModelState>(MissingAlignedQueryForm, queryModel)
     };
 }

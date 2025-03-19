@@ -56,6 +56,18 @@ export class Actions {
 
     static BranchQuery: Action<{
         operationIdx:number;
+
+        /**
+         * If specified, then the replay model
+         * will insert an additional information to
+         * the end of the operation chain setting
+         * main corpus.
+         *
+         * This is a specific functionality used
+         * only when setting the main corp.
+         * on an aligned corpus without its query
+         */
+        setMainCorp?:string|undefined;
     }> = {
         name: 'BRANCH_QUERY'
     };

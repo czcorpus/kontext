@@ -708,7 +708,8 @@ export class ViewPage {
                 SortFormView: this.sortFormViews.SortForm,
                 SampleForm: this.miscQueryOpsViews.SampleForm,
                 ShuffleForm: this.miscQueryOpsViews.ShuffleForm,
-                SwitchMainCorpForm: this.miscQueryOpsViews.SwitchMainCorpForm
+                SwitchMainCorpForm: this.miscQueryOpsViews.SwitchMainCorpForm,
+                MissingAlignedQueryForm: this.queryFormViews.MissingAlignedQueryForm
             },
             queryReplayModel: this.queryModels.queryReplayModel,
             mainMenuModel: this.layoutModel.getModels().mainMenuModel,

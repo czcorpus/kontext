@@ -583,4 +583,10 @@ export class Actions {
     static CloseAlignAttrsMismatchModal:Action<{}> = {
         name: 'CONCORDANCE_CLOSE_ALIGN_ATTRS_MISMATCH_MODAL'
     };
+
+    static ShowMissingAlignedQueryForm:Action<{
+        maincorp:string;
+    }> = {
+        name: 'CONCORDANCE_SHOW_MISSING_ALIGNED_QUERY_FORM'
+    };
 }

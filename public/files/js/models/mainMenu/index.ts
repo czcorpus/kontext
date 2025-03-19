@@ -268,45 +268,34 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
             }
         );
 
-        this.addActionHandler(
-            Actions.ShowSort,
-            (state, action) => {
-                state.activeItem = {
-                    actionName: action.name,
-                    actionArgs: action.payload
-                };
-            }
-        ).reduceAlsoOn(
-            Actions.ApplyShuffle.name,
-            Actions.ShowSample.name,
-            Actions.OverviewShowQueryInfo.name,
-            Actions.MakeConcLinkPersistent.name,
-            Actions.UndoLastQueryOp.name,
-            Actions.FilterApplySubhitsRemove.name,
-            Actions.FilterApplyFirstOccurrencesInDocs.name,
-            Actions.FilterApplyFirstOccurrencesInSentences.name,
-            Actions.ShowFreqForm.name,
-            Actions.ShowCollForm.name,
-            ConcActions.SwitchKwicSentMode.name,
-            Actions.ShowAttrsViewOptions.name,
-            Actions.ShowGeneralViewOptions.name,
-            Actions.ShowCitationInfo.name,
-            Actions.ShowKeyShortcuts.name,
-            Actions.ShowQueryHistory.name
-        );
+        this.addMultiActionHandler(
+            [
+                Actions.ShowSort,
+                Actions.ShowFilter,
+                Actions.ApplyShuffle,
+                Actions.ShowSample,
+                Actions.OverviewShowQueryInfo,
+                Actions.MakeConcLinkPersistent,
+                Actions.UndoLastQueryOp,
+                Actions.FilterApplySubhitsRemove,
+                Actions.FilterApplyFirstOccurrencesInDocs,
+                Actions.FilterApplyFirstOccurrencesInSentences,
+                Actions.ShowFreqForm,
+                Actions.ShowCollForm,
+                ConcActions.SwitchKwicSentMode,
+                ConcActions.ShowMissingAlignedQueryForm,
+                Actions.ShowAttrsViewOptions,
+                Actions.ShowGeneralViewOptions,
+                Actions.ShowCitationInfo,
+                Actions.ShowKeyShortcuts,
+                Actions.ShowQueryHistory
 
-        this.addActionHandler(
-            Actions.ShowFilter,
+            ],
             (state, action) => {
                 state.activeItem = {
                     actionName: action.name,
                     actionArgs: action.payload
                 };
-            },
-            (_, action, __) => {
-                if (action.payload.within) {
-                    this.pageModel.updateConcArgs({maincorp: action.payload.maincorp});
-                }
             }
         );
 

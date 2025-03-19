@@ -174,22 +174,20 @@ export function init({dispatcher, he, lineModel, lineSelectionModel, audioPlayer
 
     }> = (props) => {
 
-        const handleSetMainCorpClick = (corpusId) => {
-            if (props.corpsWithKwic.indexOf(corpusId) > -1) {
+        const handleSetMainCorpClick = (maincorp:string) => {
+            if (props.corpsWithKwic.indexOf(maincorp) > -1) {
                 dispatcher.dispatch<typeof Actions.ChangeMainCorpus>({
                     name: Actions.ChangeMainCorpus.name,
                     payload: {
-                        maincorp: corpusId
+                        maincorp
                     }
                 });
 
             } else {
-                dispatcher.dispatch<typeof MainMenuActions.ShowFilter>({
-                    name: MainMenuActions.ShowFilter.name,
+                dispatcher.dispatch<typeof Actions.ShowMissingAlignedQueryForm>({
+                    name: Actions.ShowMissingAlignedQueryForm.name,
                     payload: {
-                        pnfilter: 'p',
-                        within: true,
-                        maincorp: corpusId
+                        maincorp
                     }
                 });
             }

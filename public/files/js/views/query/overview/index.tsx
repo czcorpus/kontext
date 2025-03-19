@@ -31,7 +31,7 @@ import { Actions } from '../../../models/query/actions.js';
 import { Actions as MainMenuActions } from '../../../models/mainMenu/actions.js';
 import { Actions as ConcActions } from '../../../models/concordance/actions.js';
 import { ShuffleFormProps, SampleFormProps, SwitchMainCorpFormProps } from '../miscActions.js';
-import { QueryFormLiteProps, QueryFormProps } from '../first/index.js';
+import { MissingALQProps, QueryFormLiteProps, QueryFormProps } from '../first/index.js';
 import { FilterFormProps, SubHitsFormProps, FirstHitsFormProps} from '../filter/index.js';
 import { SortFormProps } from '../sort/index.js';
 import { MainMenuModelState } from '../../../models/mainMenu/index.js';
@@ -67,6 +67,7 @@ export interface OverviewModuleArgs {
         SampleForm:React.ComponentClass<SampleFormProps>;
         ShuffleForm:React.ComponentClass<ShuffleFormProps>;
         SwitchMainCorpForm:React.ComponentClass<SwitchMainCorpFormProps>;
+        MissingAlignedQueryForm:React.ComponentClass<MissingALQProps>;
     };
     queryReplayModel:QueryReplayModel|IndirectQueryReplayModel;
     mainMenuModel:IModel<MainMenuModelState>;
@@ -157,6 +158,8 @@ export function init({
                 return he.translate('query__operation_name_subhits');
             case Kontext.ConcFormTypes.FIRSTHITS:
                 return he.translate('query__operation_name_firsthits');
+            case Kontext.ConcFormTypes.MISSING_ACQ:
+                return he.translate('query__operation_name_missing_acq')
             default:
                 return null;
         }
@@ -688,6 +691,11 @@ export function init({
                 case MainMenuActions.ShowSwitchMc.name:
                     return <viewDeps.SwitchMainCorpForm {...props.switchMcFormProps}
                                             formType={Kontext.ConcFormTypes.SWITCHMC} />;
+                case ConcActions.ShowMissingAlignedQueryForm.name:
+                    return <viewDeps.MissingAlignedQueryForm
+                                    // TODO untyped actionArgs
+                        maincorp={props.menuActiveItem.actionArgs['maincorp']}
+                        tagHelperViews={{[props.menuActiveItem.actionArgs['maincorp']]:props.filterFormProps.tagHelperView}} />;
                 default:
                     return <div>??</div>;
             }
@@ -702,7 +710,8 @@ export function init({
                 [MainMenuActions.ShowSwitchMc.name]: () => tuple(Kontext.ConcFormTypes.SWITCHMC, null),
                 [MainMenuActions.FilterApplySubhitsRemove.name]: () => tuple(Kontext.ConcFormTypes.SUBHITS, null),
                 [MainMenuActions.FilterApplyFirstOccurrencesInDocs.name]: () => tuple(Kontext.ConcFormTypes.FIRSTHITS, null),
-                [MainMenuActions.FilterApplyFirstOccurrencesInSentences.name]: () => tuple(Kontext.ConcFormTypes.FIRSTHITS, null)
+                [MainMenuActions.FilterApplyFirstOccurrencesInSentences.name]: () => tuple(Kontext.ConcFormTypes.FIRSTHITS, null),
+                [ConcActions.ShowMissingAlignedQueryForm.name]: () => tuple(Kontext.ConcFormTypes.MISSING_ACQ, null)
             };
             const [ident, subtype] = m[props.menuActiveItem.actionName](props.menuActiveItem.actionArgs);
             const opname = formTypeToTitle(ident, subtype);
@@ -737,6 +746,7 @@ export function init({
                 MainMenuActions.ApplyShuffle.name,
                 MainMenuActions.ShowSample.name,
                 MainMenuActions.ShowFilter.name,
+                ConcActions.ShowMissingAlignedQueryForm.name,
                 MainMenuActions.FilterApplySubhitsRemove.name,
                 MainMenuActions.FilterApplyFirstOccurrencesInDocs.name,
                 MainMenuActions.FilterApplyFirstOccurrencesInSentences.name

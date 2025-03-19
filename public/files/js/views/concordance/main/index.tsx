@@ -628,12 +628,12 @@ export function init({
         };
 
         const handleDetailCloseClick = () => {
-            dispatcher.dispatch(
-                AudioPlayerActions.StopAudio,
-                {                    
+            dispatcher.dispatch<typeof AudioPlayerActions.StopAudio>({
+                name: AudioPlayerActions.StopAudio.name,
+                payload: {
                     playerId: ConcDetailModel.AUDIO_PLAYER_ID
                 }
-            );
+            });
             dispatcher.dispatch<typeof Actions.ResetDetail>({
                 name: Actions.ResetDetail.name
             });

@@ -152,7 +152,6 @@ export interface FilterFormModelState extends QueryFormModelState {
 
     tagsets:Array<PluginInterfaces.TagHelper.TagsetInfo>;
 
-    changeMaincorp:string;
 
     syncInitialArgs:formArgs.FilterFormArgs;
 }
@@ -448,7 +447,6 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 isBusy: false,
                 simpleQueryDefaultAttrs: props.simpleQueryDefaultAttrs,
                 isLocalUiLang: props.isLocalUiLang,
-                changeMaincorp: undefined,
                 syncInitialArgs,
                 compositionModeOn: false
         });
@@ -456,10 +454,6 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
         this.addActionHandler<typeof MainMenuActions.ShowFilter>(
             MainMenuActions.ShowFilter.name,
             action => {
-                this.changeState(state => {
-                    state.changeMaincorp = action.payload.maincorp
-                });
-
                 this.syncFrom(rxOf({...this.state.syncInitialArgs, ...action.payload})).subscribe({
                     error: (err) => {
                         this.pageModel.showMessage('error',
@@ -589,7 +583,6 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                                 name: ConcActions.AddedNewOperation.name,
                                 payload: {
                                     concId: data.conc_persistence_op_id,
-                                    changeMaincorp: this.state.changeMaincorp,
                                     data
                                 }
                             });

@@ -267,7 +267,8 @@ class FreqPage {
                 SortFormView: null,
                 SampleForm: null,
                 ShuffleForm: null,
-                SwitchMainCorpForm: null
+                SwitchMainCorpForm: null,
+                MissingAlignedQueryForm: null
             },
             queryReplayModel: this.queryReplayModel,
             mainMenuModel: this.layoutModel.getModels().mainMenuModel,
