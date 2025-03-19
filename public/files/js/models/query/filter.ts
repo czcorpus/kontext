@@ -63,7 +63,6 @@ export interface FilterFormProperties extends GeneralQueryFormProperties {
     currFilfposUnitValues:{[sourceId:string]:string};
     currFiltposValues:{[sourceId:string]:string};
     currFiltposUnitValues:{[sourceId:string]:string};
-    withinArgValues:{[sourceId:string]:boolean};
     opLocks:{[sourceId:string]:boolean};
     hasLemma:{[sourceId:string]:boolean};
     tagsets:Array<PluginInterfaces.TagHelper.TagsetInfo>;
@@ -139,8 +138,6 @@ export interface FilterFormModelState extends QueryFormModelState {
      * Include kwic checkbox
      */
     inclkwicValues:{[key:string]:boolean};
-
-    withinArgs:{[key:string]:boolean};
 
     hasLemma:{[key:string]:boolean};
 
@@ -402,7 +399,6 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                     List.map(item => tuple(item, null)),
                     Dict.fromEntries()
                 ),
-                withinArgs: {...props.withinArgValues},
                 hasLemma: {...props.hasLemma},
                 inputLanguage: props.inputLanguage,
                 isAnonymousUser: props.isAnonymousUser,
@@ -719,7 +715,6 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                             state.filtposUnitValues[filterId] = data.filtpos_unit;
                             state.inclkwicValues[filterId] = data.inclkwic;
                             state.tagsets = data.tagsets;
-                            state.withinArgs[filterId] = data.within;
                             state.lposValues[filterId] = data.lpos;
                             state.hasLemma[filterId] = data.has_lemma;
                             state.opLocks[filterId] = false;
@@ -776,7 +771,6 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             filtpos: this.state.filtposValues[filterId].value,
             filtpos_unit: this.state.filtposUnitValues[filterId],
             inclkwic: this.state.inclkwicValues[filterId],
-            within: this.state.withinArgs[filterId],
             ...this.pageModel.getConcArgs(),
             q: ['~' + concId]
         }
