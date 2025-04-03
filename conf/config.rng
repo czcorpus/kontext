@@ -112,10 +112,6 @@
                             <a:documentation>Path to a logo</a:documentation>
                             <text />
                         </element>
-                        <element name="logo_mouseover">
-                            <a:documentation>Path to a logo (mouseover variant)</a:documentation>
-                            <text />
-                        </element>
                         <element name="logo_href">
                             <a:documentation>Logo link activated on click</a:documentation>
                             <text />
