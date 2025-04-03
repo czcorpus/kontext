@@ -247,7 +247,7 @@
         "global__menu_waiting_item": "waiting for complete calculation",
         "global__back": "back",
         "global__help": "Help",
-        "global__concordance_is_based_on_adhoc_subc_warning": "The current concordance is based on an ad-hoc sub-corpus (text types are directly part of the search query), which means that calculations of relative frequencies and collocations will take the whole corpus as a basis. If you want to calculate values only against your selected text types, create a named subcorpus.",
+        "global__concordance_is_based_on_adhoc_subc_warning": "The current concordance is based on a subcorpus that has not been created and saved using the \u201CCreate new subcorpus\u201D function. This means that relative frequencies and collocations are calculated against the whole corpus. If you want to calculate values only against your selected text categories, please start with creating a named subcorpus.",
         "linesel__remove_selected_lines": "Remove selected lines",
         "linesel__remove_all_but_selected_lines": "Keep only selected lines",
         "linesel__clear_the_selection": "Clear the selection",
