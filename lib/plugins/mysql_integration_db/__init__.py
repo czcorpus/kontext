@@ -92,16 +92,13 @@ class MySqlIntegrationDb(
             'Please check table kontext_integration_env')
 
     async def on_request(self):
-        logging.getLogger(__name__).warning('============== MYSQL ON_REQUEST !!!!')
         curr = self._db_conn.get()
         if not curr:
             self._db_conn.set(await self.create_connection())
-            logging.getLogger(__name__).warning('======== CREATING CONNECTION: {}'.format(self._db_conn.get()))
 
     async def on_response(self):
         curr = self._db_conn.get()
         if curr:
-            logging.getLogger(__name__).warning('################ CLOSING CONNECTION !!!!')
             await curr.close()
 
 
