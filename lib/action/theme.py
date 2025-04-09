@@ -23,11 +23,6 @@ from sanic import Sanic
 def apply_theme(data, app: Sanic, translate: Callable[[str], str]):
     theme_name = settings.get('theme', 'name')
     logo_img = settings.get('theme', 'logo')
-    if settings.contains('theme', 'logo_mouseover'):
-        logo_alt_img = settings.get('theme', 'logo_mouseover')
-    else:
-        logo_alt_img = logo_img
-
     if settings.contains('theme', 'logo_href'):
         logo_href = str(settings.get('theme', 'logo_href'))
     else:
@@ -45,12 +40,14 @@ def apply_theme(data, app: Sanic, translate: Callable[[str], str]):
                                theme_favicon.startswith('https://'))):
         theme_favicon = os.path.join(public_files_path, theme_name, theme_favicon)
 
+    if not logo_img.startswith('http://') and not logo_img.startswith('https://'):
+        logo_path = os.path.normpath(os.path.join(public_files_path, 'themes', theme_name, logo_img))
+    else:
+        logo_path = logo_img
+
     data['theme'] = dict(
         name=settings.get('theme', 'name'),
-        logo_path=os.path.normpath(os.path.join(
-            public_files_path, 'themes', theme_name, logo_img)),
-        logo_mouseover_path=os.path.normpath(os.path.join(
-            public_files_path, 'themes', theme_name, logo_alt_img)),
+        logo_path=logo_path,
         logo_href=logo_href,
         logo_title=logo_title,
         logo_inline_css=settings.get('theme', 'logo_inline_css', ''),

@@ -79,8 +79,6 @@ export class Actions {
 
     static ShowFilter:Action<{
         pnfilter:'p'|'n';
-        within?:boolean;
-        maincorp?:string;
     }> = {
         name: 'MAIN_MENU_SHOW_FILTER'
     }

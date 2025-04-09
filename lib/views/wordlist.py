@@ -160,7 +160,7 @@ async def view_result(amodel: WordlistActionModel, req: KRequest):
         result['wlattr_label'] = amodel.curr_wlform_args.wlattr
         logging.getLogger(__name__).warning(f'wlattr_label set failed: {e}')
 
-    result['freq_figure'] = req.translate(amodel.FREQ_FIGURES.get('frq', '?'))
+    result['freq_figure'] = req.translate(amodel.FREQ_FIGURES.get(amodel.curr_wlform_args.wlnums, '?'))
 
     amodel.add_save_menu_item(
         'CSV', save_format='csv',

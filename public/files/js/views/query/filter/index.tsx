@@ -302,53 +302,6 @@ export function init({
             }
         }
 
-        _renderForm() {
-            if (this.props.withinArgs[this.props.filterId]) {
-                return this._renderSwitchMaincorpForm();
-
-            } else {
-                return this._renderFullForm();
-            }
-        }
-
-        _renderSwitchMaincorpForm() {
-
-            return (
-                <QS.QueryForm>
-                    <div onKeyDown={this._keyEventHandler}>
-                        <div className="form">
-                            <div className="query">
-                                <inputViews.TRQueryInputField
-                                    widgets={this.props.supportedWidgets[this.props.filterId]}
-                                    sourceId={this.props.filterId}
-                                    corpname={this.props.corpname}
-                                    wPoSList={this.props.wPoSList}
-                                    lposValue={this.props.lposValues[this.props.filterId]}
-                                    forcedAttr={this.props.forcedAttr}
-                                    attrList={this.props.attrList}
-                                    tagHelperView={this.props.tagHelperView}
-                                    tagsets={this.props.tagsets}
-                                    inputLanguage={this.props.inputLanguage}
-                                    useRichQueryEditor={this.props.useRichQueryEditor}
-                                    onEnterKey={this._handleSubmit}
-                                    qsuggPlugin={querySuggest} />
-                            </div>
-                        </div>
-                        <div className="buttons">
-                            {this.props.isBusy ?
-                                <layoutViews.AjaxLoaderBarImage /> :
-                                <button type="button" className="default-button" onClick={this._handleSubmit}>
-                                    {this.props.operationIdx !== undefined ?
-                                        he.translate('global__proceed')
-                                        : he.translate('query__search_btn')}
-                                </button>
-                            }
-                        </div>
-                    </div>
-                </QS.QueryForm>
-            );
-        }
-
         _renderFullForm() {
             const opts = [
                 <RangeSelector
@@ -422,7 +375,7 @@ export function init({
                 );
 
             } else {
-                return this._renderForm();
+                return this._renderFullForm();
             }
         }
     }

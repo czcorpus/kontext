@@ -507,7 +507,6 @@ export class ViewPage {
             currFiltposUnitValues: fetchArgs<string>(item => item.filtpos_unit),
             currInclkwicValues: fetchArgs<boolean>(item => item.inclkwic),
             tagsets: this.concFormsInitialArgs.filter.tagsets,
-            withinArgValues: fetchArgs<boolean>(item => !!item.within),
             forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
             attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
             structAttrList: Kontext.structsAndAttrsToStructAttrList(this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs')),
@@ -709,7 +708,8 @@ export class ViewPage {
                 SortFormView: this.sortFormViews.SortForm,
                 SampleForm: this.miscQueryOpsViews.SampleForm,
                 ShuffleForm: this.miscQueryOpsViews.ShuffleForm,
-                SwitchMainCorpForm: this.miscQueryOpsViews.SwitchMainCorpForm
+                SwitchMainCorpForm: this.miscQueryOpsViews.SwitchMainCorpForm,
+                MissingAlignedQueryForm: this.queryFormViews.MissingAlignedQueryForm
             },
             queryReplayModel: this.queryModels.queryReplayModel,
             mainMenuModel: this.layoutModel.getModels().mainMenuModel,

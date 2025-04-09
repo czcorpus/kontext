@@ -136,8 +136,7 @@ __conf.UsesAppBar = {%if app_bar %}true{% else %}false{% endif %};
                 src="{{ theme.logo_path  }}"
                 alt="Kontext logo"
                 title="{{ theme.logo_title }}"
-                style="{{ theme.logo_inline_css }}"
-                data-alt-img="{{ theme.logo_mouseover_path }}" /></a>
+                style="{{ theme.logo_inline_css }}" /></a>
             <div id="main-menu-mount">
                 <ul id="menu-level-1">
                 {% for menu_item in static_menu %}<li class="{% if menu_item.disabled %}disabled{% endif %}"><a class="trigger menu-link"

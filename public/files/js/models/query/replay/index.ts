@@ -417,6 +417,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                             contextData,
                             action.payload.operationIdx,
                             ttData,
+                            action.payload.setMainCorp,
                             dispatch
                         )
                     )
@@ -902,6 +903,10 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
      * a chain of Observables based on these stored operations.
      *
      * @param changedOpIdx the last operation of the pipeline
+     * @param setMainCorp is a very specialized parameter used solely with the
+     * ConcFormTypes.MISSING_ACQ where we rewrite the initial query to include a new
+     * query for the aligned corpus and then we need to inject operation "set main corpus"
+     * because that is actually the thing user wanted to do
      * @return an observable containing all the operations of the chain; an item of the chain
      * can be either an object containing a response of the operation returned by server or a
      * function containing a side-effect local action (typically - the last operation contains
@@ -912,6 +917,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
         queryContext:QueryContextArgs,
         changedOpIdx:number,
         ttSelection:ExportedSelection,
+        setMainCorp:string|undefined,
         dispatch:SEDispatcher
     ):Observable<AjaxConcResponse> {
         const args = {
@@ -977,7 +983,29 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 rxOf(null)
             ),
             concatMap(
-                last => last
+                last => {
+                    if (setMainCorp) {
+                        return last.pipe(
+                            concatMap(
+                                resp => {
+                                    return this.switchMcModel.syncFrom(
+                                        rxOf({
+                                            form_type: Kontext.ConcFormTypes.SWITCHMC,
+                                            op_key: resp.conc_persistence_op_id,
+                                            maincorp: setMainCorp
+                                        })
+                                    )
+                                }
+                            ),
+                            concatMap(
+                                v => this.switchMcModel.submitQuery(v.op_key, v.op_key)
+                            )
+                        )
+
+                    } else {
+                        return last;
+                    }
+                }
             )
         );
     }
