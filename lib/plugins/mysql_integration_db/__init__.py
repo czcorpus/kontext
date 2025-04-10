@@ -118,7 +118,6 @@ class MySqlIntegrationDb(
     @asynccontextmanager
     async def connection(self) -> Generator[MySQLConnectionAbstract, None, None]:
         curr = self._db_conn.get()
-        logging.getLogger(__name__).warning('======== GETTING CONNECTION: {}'.format(self._db_conn.get()))
         if not curr:
             raise RuntimeError('No database connection')
         try:
