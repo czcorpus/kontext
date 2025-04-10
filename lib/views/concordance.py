@@ -870,14 +870,8 @@ async def filter(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         else:
             raise ConcordanceQueryParamsError(req.translate('No query entered.'))
     cql_query += ' '.join([f'within <{nq[0]} {nq[1]} />' for nq in texttypes])
-    if ff_args.data.within:
-        within_query = f' within {maincorp}:({cql_query})'
-        amodel.args.q[0] += within_query
-        amodel.args.q.append(f'x-{maincorp}')
-    else:
-        within_query = ''
-        amodel.args.q.append(
-            f'{ff_args.data.pnfilter}{ff_args.data.filfpos}{ff_args.data.filfpos_unit} {ff_args.data.filtpos}{ff_args.data.filtpos_unit} {rank} {cql_query}')
+    amodel.args.q.append(
+        f'{ff_args.data.pnfilter}{ff_args.data.filfpos}{ff_args.data.filfpos_unit} {ff_args.data.filtpos}{ff_args.data.filtpos_unit} {rank} {cql_query}')
 
     amodel.on_query_store(store_last_op)
     resp.set_http_status(201)
@@ -885,11 +879,8 @@ async def filter(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         return await view_conc(amodel, req, resp, 0, req.session_get('user', 'id'))
     except Exception as ex:
         logging.getLogger(__name__).error(f'Failed to apply filter: {ex}')
-        if ff_args.data.within:
-            amodel.args.q[0] = amodel.args.q[0][:-len(within_query)]
-        else:
-            del amodel.args.q[-1]
-        raise
+        del amodel.args.q[-1]
+        raise ex
 
 
 @bp.route('/quick_filter', methods=['POST'])
