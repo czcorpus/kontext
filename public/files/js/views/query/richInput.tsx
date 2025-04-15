@@ -76,7 +76,6 @@ export function init(
             this.ffKeyDownHandler = this.ffKeyDownHandler.bind(this);
             this.contentEditable = new ContentEditable<HTMLSpanElement>(props.refObject);
             this.handlePaste = this.handlePaste.bind(this);
-            this.handleSelect = this.handleSelect.bind(this);
             this.handleCompositionStart = this.handleCompositionStart.bind(this);
             this.handleCompositionEnd = this.handleCompositionEnd.bind(this);
         }
@@ -217,21 +216,6 @@ export function init(
             }
         }
 
-        private handleSelect() {
-            if (!this.props.compositionModeOn) {
-                const [anchorIdx, focusIdx] = this.contentEditable.getRawSelection();
-                dispatcher.dispatch<typeof Actions.QueryInputSelectText>({
-                    name: Actions.QueryInputSelectText.name,
-                    payload: {
-                        sourceId: this.props.sourceId,
-                        formType: this.props.formType,
-                        anchorIdx,
-                        focusIdx
-                    }
-                });
-            }
-        }
-
         private handleCompositionStart() {
             dispatcher.dispatch<typeof Actions.SetCompositionMode>({
                 name: Actions.SetCompositionMode.name,
@@ -277,6 +261,7 @@ export function init(
             if (he.browserInfo.isFirefox()) {
                 this.props.refObject.current.addEventListener('keydown', this.ffKeyDownHandler);
             }
+
         }
 
         componentWillUnmount() {
@@ -295,7 +280,6 @@ export function init(
                         onKeyUp={this.handleKeyUp}
                         onClick={this.handleClick}
                         onPaste={this.handlePaste}
-                        onSelect={this.handleSelect}
                         onCompositionStart={this.handleCompositionStart}
                         onCompositionEnd={this.handleCompositionEnd}
                         dangerouslySetInnerHTML={{__html: this.props.queries[this.props.sourceId].queryHtml}} />
