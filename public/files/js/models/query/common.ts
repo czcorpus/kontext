@@ -941,6 +941,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                         }];
                 this.changeState(state => {
                     state.suggestionsLoading[sourceId] = {};
+                    state.queries[sourceId] = queryObj;
                 });
 
                 List.forEach(
