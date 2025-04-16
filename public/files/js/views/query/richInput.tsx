@@ -240,17 +240,11 @@ export function init(
         }
 
         componentDidUpdate(prevProps:RichInputProps & QueryFormModelState, _:unknown) {
-            const prevQueryObj = prevProps.queries[this.props.sourceId];
             const queryObj = this.props.queries[this.props.sourceId];
-            if (prevQueryObj.rawAnchorIdx !== queryObj.rawAnchorIdx ||
-                        prevQueryObj.rawFocusIdx !== queryObj.rawFocusIdx ||
-                        prevQueryObj.query !== queryObj.query ||
-                        !strictEqualParsedQueries(prevQueryObj, queryObj)) {
-                this.contentEditable.reapplySelection(
-                    queryObj.rawAnchorIdx,
-                    queryObj.rawFocusIdx
-                );
-            }
+            this.contentEditable.reapplySelection(
+                queryObj.rawAnchorIdx,
+                queryObj.rawFocusIdx
+            );
         }
 
         componentDidMount() {
