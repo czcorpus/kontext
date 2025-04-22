@@ -63,7 +63,8 @@ export interface TRQueryInputFieldProps {
     forcedAttr:string;
     attrList:Array<Kontext.AttrItem>;
     onEnterKey:()=>void;
-    takeFocus?:boolean;
+    hasFocus:boolean;
+    isSingleInstance:boolean;
     qsuggPlugin:PluginInterfaces.QuerySuggest.IPlugin;
     isNested?:boolean;
     customOptions?:Array<React.ReactElement<{span:number}>>;
@@ -915,12 +916,8 @@ export function init({
 
     class TRQueryInputField extends React.PureComponent<TRQueryInputFieldProps & QueryFormModelState> {
 
-        private _queryInputElement:React.RefObject<HTMLInputElement|HTMLTextAreaElement>;
-
         constructor(props) {
             super(props);
-            this._queryInputElement = React.createRef();
-            this._handleInputChange = this._handleInputChange.bind(this);
             this._toggleHistoryWidget = this._toggleHistoryWidget.bind(this);
             this._toggleStructureWidget = this._toggleStructureWidget.bind(this);
             this.handleReqHistory = this.handleReqHistory.bind(this);
@@ -929,21 +926,7 @@ export function init({
             this.handleQueryOptsClick = this.handleQueryOptsClick.bind(this);
         }
 
-        _handleInputChange(evt:React.ChangeEvent<HTMLTextAreaElement|HTMLInputElement|HTMLPreElement>) {
-            if (evt.target instanceof HTMLTextAreaElement || evt.target instanceof HTMLInputElement) {
-                dispatcher.dispatch<typeof Actions.QueryInputSetQuery>({
-                    name: Actions.QueryInputSetQuery.name,
-                    payload: {
-                        formType: this.props.formType,
-                        sourceId: this.props.sourceId,
-                        query: evt.target.value,
-                        rawAnchorIdx: this._queryInputElement.current.selectionStart,
-                        rawFocusIdx: this._queryInputElement.current.selectionEnd,
-                        insertRange: null
-                    }
-                });
-            }
-        }
+
 
         _toggleHistoryWidget() {
             dispatcher.dispatch<typeof HistoryActions.ToggleQueryHistoryWidget>({
@@ -954,9 +937,6 @@ export function init({
                     querySupertype: 'conc',
                 }
             });
-            if (!this.props.historyVisible[this.props.sourceId] && this._queryInputElement.current) {
-                this._queryInputElement.current.focus();
-            }
         }
 
         _toggleStructureWidget() {
@@ -978,19 +958,6 @@ export function init({
                     sourceId: this.props.sourceId
                 }
             });
-        }
-
-        componentDidMount() {
-            if (this.props.takeFocus && this._queryInputElement.current) {
-                this._queryInputElement.current.focus();
-            }
-        }
-
-        componentDidUpdate(prevProps, prevState) {
-            if (prevProps.historyVisible[this.props.sourceId] && !this.props.historyVisible &&
-                    this._queryInputElement.current) {
-                this._queryInputElement.current.focus();
-            }
         }
 
         handleReqHistory():void {
@@ -1019,7 +986,6 @@ export function init({
                     tokenIdx: this.props.suggestionsVisible[this.props.sourceId]
                 }
             });
-            this._queryInputElement.current.focus();
         }
 
         _renderInput() {
@@ -1029,36 +995,34 @@ export function init({
                     return this.props.useRichQueryEditor ?
                         <richInputViews.RichInput
                                 sourceId={this.props.sourceId}
-                                refObject={this._queryInputElement as React.RefObject<HTMLSpanElement>}
                                 hasHistoryWidget={this.props.widgets.indexOf('history') > -1}
                                 historyIsVisible={this.props.historyVisible[this.props.sourceId]}
                                 onReqHistory={this.handleReqHistory}
                                 onEsc={this.handleInputEscKeyDown}
-                                takeFocus={this.props.takeFocus} /> :
+                                isSingleInstance={this.props.isSingleInstance}
+                                hasFocus={this.props.hasFocus} /> :
                         <richInputViews.RichInputFallback
                                 sourceId={this.props.sourceId}
-                                refObject={this._queryInputElement as React.RefObject<HTMLInputElement>}
                                 hasHistoryWidget={this.props.widgets.indexOf('history') > -1}
                                 historyIsVisible={this.props.historyVisible[this.props.sourceId]}
                                 onReqHistory={this.handleReqHistory}
-                                onEsc={this.handleInputEscKeyDown}
-                                takeFocus={this.props.takeFocus} />
+                                onEsc={this.handleInputEscKeyDown} />
                 case 'advanced':
                     return this.props.useRichQueryEditor ?
                         <cqlEditorViews.CQLEditor
                                 formType={this.props.formType}
                                 sourceId={this.props.sourceId}
                                 corpname={this.props.corpname}
-                                takeFocus={this.props.takeFocus}
+                                hasFocus={this.props.hasFocus}
                                 onReqHistory={this.handleReqHistory}
                                 onEsc={this.handleInputEscKeyDown}
                                 hasHistoryWidget={this.props.widgets.indexOf('history') > -1}
                                 historyIsVisible={this.props.historyVisible[this.props.sourceId]}
-                                inputRef={this._queryInputElement as React.RefObject<HTMLPreElement>} /> :
+                                isSingleInstance={this.props.isSingleInstance} /> :
                         <cqlEditorViews.CQLEditorFallback
                                 formType={this.props.formType}
                                 sourceId={this.props.sourceId}
-                                inputRef={this._queryInputElement as React.RefObject<HTMLTextAreaElement>}
+                                isSingleInstance={this.props.isSingleInstance}
                                 onReqHistory={this.handleReqHistory}
                                 onEsc={this.handleInputEscKeyDown}
                                 hasHistoryWidget={this.props.widgets.indexOf('history') > -1}

@@ -46,6 +46,7 @@ export interface AlignedCorporaProps {
     alignedCorpora:Array<string>;
     subcorpus:string|undefined;
     subcAligned:Array<string>;
+    activeCorpus:string;
     queries:{[key:string]:AnyQuery};
     supportedWidgets:{[key:string]:Array<string>};
     wPoSList:Array<{n:string; v:string}>;
@@ -107,6 +108,7 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
      */
     const AlignedCorpBlock:React.FC<{
         corpname:string;
+        activeCorpus:string;
         queries:{[corpus:string]:AnyQuery};
         label:string;
         widgets:Array<string>;
@@ -193,6 +195,8 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                         onEnterKey={props.onEnterKey}
                         tagHelperView={props.tagHelperView}
                         tagsets={props.tagsets}
+                        isSingleInstance={false}
+                        hasFocus={props.activeCorpus === props.corpname}
                         qsuggPlugin={null}
                         isNested={true}
                         customOptions={[
@@ -322,6 +326,7 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                                 forcedAttr={props.forcedAttr}
                                 attrList={props.attrList}
                                 tagHelperView={props.tagHelperViews[item]}
+                                activeCorpus={props.activeCorpus}
                                 inputLanguage={props.inputLanguages[item]}
                                 hasLemmaAttr={props.hasLemmaAttr[item]}
                                 useRichQueryEditor={props.useRichQueryEditor}

@@ -26,25 +26,30 @@ import { QueryFormModel, QueryFormModelState } from '../../models/query/common.j
 import { Actions } from '../../models/query/actions.js';
 import { ContentEditable } from './contentEditable.js';
 import { Keyboard } from 'cnc-tskit';
-import { strictEqualParsedQueries } from '../../models/query/query.js';
 
 
 interface RichInputProps {
     sourceId:string;
-    refObject:React.RefObject<HTMLSpanElement>;
     hasHistoryWidget:boolean;
     historyIsVisible:boolean;
-    takeFocus:boolean;
+    hasFocus:boolean;
+
+    /**
+     * Specifies whether the input has a single visible instance
+     * (e.g. a filter).
+     * If true, then we don't have to deal with focus switching.
+     * Otherwise (aligned corpra), we have to track focus and
+     * change the "activeCorpus" property.
+     */
+    isSingleInstance:boolean;
     onReqHistory:()=>void;
     onEsc:()=>void;
 }
 
 interface RichInputFallbackProps {
     sourceId:string;
-    refObject:React.RefObject<HTMLInputElement>;
     hasHistoryWidget:boolean;
     historyIsVisible:boolean;
-    takeFocus:boolean;
     onReqHistory:()=>void;
     onEsc:()=>void;
 }
@@ -65,6 +70,8 @@ export function init(
 
     class RichInput extends React.PureComponent<RichInputProps & QueryFormModelState> {
 
+        private readonly inputRef:React.RefObject<HTMLSpanElement>;
+
         private readonly contentEditable:ContentEditable<HTMLSpanElement>;
 
         constructor(props) {
@@ -74,10 +81,12 @@ export function init(
             this.handleKeyUp = this.handleKeyUp.bind(this);
             this.handleClick = this.handleClick.bind(this);
             this.ffKeyDownHandler = this.ffKeyDownHandler.bind(this);
-            this.contentEditable = new ContentEditable<HTMLSpanElement>(props.refObject);
             this.handlePaste = this.handlePaste.bind(this);
             this.handleCompositionStart = this.handleCompositionStart.bind(this);
             this.handleCompositionEnd = this.handleCompositionEnd.bind(this);
+            this.handleInputFocus = this.handleInputFocus.bind(this);
+            this.inputRef = React.createRef<HTMLSpanElement>();
+            this.contentEditable = new ContentEditable<HTMLSpanElement>(this.inputRef);
         }
 
         private newInputDispatch(evt:React.ChangeEvent<HTMLInputElement>|React.CompositionEvent<HTMLInputElement>) {
@@ -96,6 +105,16 @@ export function init(
             });
         }
 
+        private handleInputFocus() {
+            if (!this.props.isSingleInstance) {
+                dispatcher.dispatch(
+                    Actions.QueryInputSetFocusInput,
+                    {
+                        corpname: this.props.sourceId
+                    }
+                )
+            }
+        }
 
         private handleInputChange(evt:React.ChangeEvent<HTMLInputElement>) {
             if (!this.props.compositionModeOn) {
@@ -180,7 +199,7 @@ export function init(
 
         private findLinkParent(elm:HTMLElement):HTMLElement {
             let curr = elm;
-            while (curr !== this.props.refObject.current) {
+            while (curr !== this.inputRef.current) {
                 if (curr.nodeName === 'A') {
                     return curr;
                 }
@@ -202,7 +221,7 @@ export function init(
                     }
                 });
 
-            } else if (this.props.refObject.current) {
+            } else if (this.inputRef.current) {
                 const [rawAnchorIdx, rawFocusIdx] = this.contentEditable.getRawSelection();
                 dispatcher.dispatch<typeof Actions.QueryInputMoveCursor>({
                     name: Actions.QueryInputMoveCursor.name,
@@ -240,27 +259,35 @@ export function init(
         }
 
         componentDidUpdate(prevProps:RichInputProps & QueryFormModelState, _:unknown) {
-            const queryObj = this.props.queries[this.props.sourceId];
-            this.contentEditable.reapplySelection(
-                queryObj.rawAnchorIdx,
-                queryObj.rawFocusIdx
-            );
+            if (this.props.hasFocus) {
+                const queryObj = this.props.queries[this.props.sourceId];
+                this.contentEditable.reapplySelection(
+                    queryObj.rawAnchorIdx,
+                    queryObj.rawFocusIdx
+                );
+            }
         }
 
         componentDidMount() {
-            if (this.props.takeFocus && this.props.refObject.current) {
-                this.props.refObject.current.focus();
+            if (this.inputRef.current) {
+                this.inputRef.current.addEventListener('focus', this.handleInputFocus);
+                if (this.props.hasFocus) {
+                    this.inputRef.current.focus();
+                }
             }
-
             if (he.browserInfo.isFirefox()) {
-                this.props.refObject.current.addEventListener('keydown', this.ffKeyDownHandler);
+                this.inputRef.current.addEventListener('keydown', this.ffKeyDownHandler);
             }
 
         }
 
         componentWillUnmount() {
             if (he.browserInfo.isFirefox()) {
-                this.props.refObject.current.removeEventListener('keydown', this.ffKeyDownHandler);
+                this.inputRef.current.removeEventListener('keydown', this.ffKeyDownHandler);
+            }
+
+            if (this.inputRef.current) {
+                this.inputRef.current.removeEventListener('focus', this.handleInputFocus);
             }
         }
 
@@ -268,7 +295,7 @@ export function init(
             return (
                 <span className="simple-input" contentEditable={true}
                         spellCheck={false}
-                        ref={this.props.refObject}
+                        ref={this.inputRef}
                         onInput={this.handleInputChange}
                         onKeyDown={this.handleKeyDown}
                         onKeyUp={this.handleKeyUp}
@@ -285,10 +312,13 @@ export function init(
 
     class RichInputFallback extends React.Component<RichInputFallbackProps & QueryFormModelState> {
 
+        private refObject:React.RefObject<HTMLInputElement>;
+
         constructor(props) {
             super(props);
             this.handleInputChange = this.handleInputChange.bind(this);
             this.handleKeyDown = this.handleKeyDown.bind(this);
+            this.refObject = React.createRef();
         }
 
         private handleInputChange(evt:React.ChangeEvent<HTMLInputElement>) {
@@ -298,8 +328,8 @@ export function init(
                     formType: this.props.formType,
                     sourceId: this.props.sourceId,
                     query: evt.target.value,
-                    rawAnchorIdx: this.props.refObject.current.selectionStart,
-                    rawFocusIdx: this.props.refObject.current.selectionEnd,
+                    rawAnchorIdx: this.refObject.current.selectionStart,
+                    rawFocusIdx: this.refObject.current.selectionEnd,
                     insertRange: null
                 }
             });
@@ -320,7 +350,7 @@ export function init(
         render() {
             return <input className="simple-input" type="text"
                     spellCheck={false}
-                    ref={this.props.refObject}
+                    ref={this.refObject}
                     value={this.props.queries[this.props.sourceId].query}
                     onChange={this.handleInputChange}
                     onKeyDown={this.handleKeyDown} />;

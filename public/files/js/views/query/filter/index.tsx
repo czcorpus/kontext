@@ -344,7 +344,8 @@ export function init({
                                     inputLanguage={this.props.inputLanguage}
                                     useRichQueryEditor={this.props.useRichQueryEditor}
                                     onEnterKey={this._handleSubmit}
-                                    takeFocus={true}
+                                    isSingleInstance={true}
+                                    hasFocus={true}
                                     qsuggPlugin={querySuggest}
                                     customOptions={opts} />
                             </div>
