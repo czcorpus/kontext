@@ -1364,7 +1364,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
 
     private isPossibleQueryTypeMismatch(sourceId:string):[Error|undefined, QueryType] {
         const query = this.state.queries[sourceId];
-        if (query.qtype === 'advanced') {
+        if (query.qtype === 'advanced' && query.query) {
             return tuple(this.validateAdvancedQuery(query), query.qtype);
         }
         return tuple(undefined, 'simple');
