@@ -190,7 +190,7 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
 }
 
 const create:PluginInterfaces.TagHelper.Factory = (pluginApi) => {
-    if (pluginApi.pluginTypeIsActive(PluginName.SYNTAX_VIEWER)) {
+    if (pluginApi.pluginTypeIsActive(PluginName.TAGHELPER)) {
         return new TagHelperPlugin(pluginApi);
     }
     return new EmptyTagHelperPlugin(pluginApi.dispatcher());
