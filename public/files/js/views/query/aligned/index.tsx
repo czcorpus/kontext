@@ -95,17 +95,6 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
     }
 
     // ------------------ <AlignedCorpBlock /> -----------------------------
-    /*
-     TODO, important note: I had to define this component as stateful
-     even if it has no state to prevent problems with React production
-     build where React always re-render this component (even if props
-     were the same, incl. object references). This has been causing
-     loss of input/select/etc. focus when interacting with form elements
-     inside this component. And this almost "formal" change helped.
-     Maybe it's a React bug. It would be nice to isolate the error
-     but the logic behind query form is already quite complicated so
-     it would take same time.
-     */
     const AlignedCorpBlock:React.FC<{
         corpname:string;
         activeCorpus:string;
