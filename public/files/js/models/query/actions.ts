@@ -299,6 +299,12 @@ export class Actions {
         name: 'QUERY_INPUT_APPEND_QUERY'
     };
 
+    static QueryInputSetFocusInput:Action<{
+        corpname:string;
+    }> = {
+        name: 'QUERY_INPUT_SET_FOCUS_INPUT'
+    };
+
     static QueryInputInsertAtCursor: Action<{
         formType:QueryFormType;
         sourceId:string;

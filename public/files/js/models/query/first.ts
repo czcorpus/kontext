@@ -261,6 +261,11 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
 
     corpora:Array<string>;
 
+    /**
+     * activeCorpus is used to track focus properly
+     */
+    activeCorpus:string;
+
     availableAlignedCorpora:Array<Kontext.AttrItem>;
 
     subcorpList:Array<Kontext.SubcorpListItem>;
@@ -396,6 +401,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 shuffleForbidden: false,
                 shuffleConcByDefault: props.shuffleConcByDefault,
                 queries,
+                activeCorpus: List.head(corpora),
                 cqlEditorMessages: {},
                 downArrowTriggersHistory: pipe(
                     props.corpora,
@@ -755,6 +761,15 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             action => {
                 this.changeState(state => {
                     state.quickSubcorpVisible = false;
+                });
+            }
+        );
+
+        this.addActionHandler(
+            Actions.QueryInputSetFocusInput,
+            action => {
+                this.changeState(state => {
+                    state.activeCorpus = action.payload.corpname;
                 });
             }
         );

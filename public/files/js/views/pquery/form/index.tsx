@@ -281,17 +281,17 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
                             <cqlEditorViews.CQLEditor
                                     formType={Kontext.ConcFormTypes.QUERY}
                                     sourceId={props.sourceId}
+                                    isSingleInstance={false}
                                     corpname={props.corpname}
-                                    takeFocus={false}
+                                    hasFocus={false}
                                     onReqHistory={() => undefined}
                                     onEsc={() => undefined}
                                     hasHistoryWidget={false}
-                                    historyIsVisible={false}
-                                    inputRef={queryInputElement} /> :
+                                    historyIsVisible={false} /> :
                             <cqlEditorViews.CQLEditorFallback
                                     formType={Kontext.ConcFormTypes.QUERY}
                                     sourceId={props.sourceId}
-                                    inputRef={queryInputElement}
+                                    isSingleInstance={false}
                                     onReqHistory={() => undefined}
                                     onEsc={() => undefined}
                                     hasHistoryWidget={false}
@@ -353,17 +353,17 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
                                     formType={Kontext.ConcFormTypes.QUERY}
                                     sourceId={props.sourceId}
                                     corpname={props.corpname}
-                                    takeFocus={false}
+                                    hasFocus={false}
                                     onReqHistory={() => undefined}
                                     onEsc={() => undefined}
                                     hasHistoryWidget={false}
                                     historyIsVisible={false}
-                                    inputRef={queryInputElement}
+                                    isSingleInstance={false}
                                     minHeightEm={10} /> :
                             <cqlEditorViews.CQLEditorFallback
                                     formType={Kontext.ConcFormTypes.QUERY}
                                     sourceId={props.sourceId}
-                                    inputRef={queryInputElement}
+                                    isSingleInstance={false}
                                     onReqHistory={() => undefined}
                                     onEsc={() => undefined}
                                     hasHistoryWidget={false}
