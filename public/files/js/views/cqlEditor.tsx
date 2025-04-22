@@ -36,10 +36,10 @@ export interface CQLEditorProps {
     formType:QueryFormType;
     sourceId:string;
     corpname:string;
-    takeFocus:boolean;
+    hasFocus:boolean;
     hasHistoryWidget:boolean;
     historyIsVisible:boolean;
-    inputRef:React.RefObject<HTMLPreElement>;
+    isSingleInstance:boolean;
     minHeightEm?:number;
     onReqHistory:()=>void;
     onEsc:()=>void;
@@ -50,7 +50,7 @@ export interface CQLEditorFallbackProps {
     sourceId:string;
     hasHistoryWidget:boolean;
     historyIsVisible:boolean;
-    inputRef:React.RefObject<HTMLTextAreaElement>;
+    isSingleInstance:boolean;
     minHeightEm?:number;
     onReqHistory:()=>void;
     onEsc:()=>void;
@@ -78,11 +78,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     class CQLEditorFallback extends React.PureComponent<CQLEditorFallbackProps &
             QueryFormModelState> {
 
+        private inputRef:React.RefObject<HTMLTextAreaElement>;
+
         constructor(props) {
             super(props);
             this.handleKeyDown = this.handleKeyDown.bind(this);
             this.inputKeyUpHandler = this.inputKeyUpHandler.bind(this);
             this.handleInputChange = this.handleInputChange.bind(this);
+            this.inputRef = React.createRef();
         }
 
         private inputKeyUpHandler(evt) {
@@ -93,8 +96,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     payload: {
                         formType: this.props.formType,
                         sourceId: this.props.sourceId,
-                        rawAnchorIdx: this.props.inputRef.current.selectionStart,
-                        rawFocusIdx: this.props.inputRef.current.selectionEnd
+                        rawAnchorIdx: this.inputRef.current.selectionStart,
+                        rawFocusIdx: this.inputRef.current.selectionEnd
                     }
                 });
             }
@@ -119,8 +122,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     formType: this.props.formType,
                     sourceId: this.props.sourceId,
                     query: evt.target.value,
-                    rawAnchorIdx: this.props.inputRef.current.selectionStart,
-                    rawFocusIdx: this.props.inputRef.current.selectionEnd,
+                    rawAnchorIdx: this.inputRef.current.selectionStart,
+                    rawFocusIdx: this.inputRef.current.selectionEnd,
                     insertRange: null
                 }
             });
@@ -128,7 +131,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         render():React.ReactElement<{}> {
             return <textarea className="cql-input" rows={2} cols={60} name="cql"
-                                ref={this.props.inputRef}
+                                ref={this.inputRef}
                                 value={this.props.queries[this.props.sourceId].query}
                                 onChange={this.handleInputChange}
                                 onKeyDown={this.handleKeyDown}
@@ -143,6 +146,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     class CQLEditor extends React.PureComponent<(CQLEditorProps & CQLEditorCoreState)> {
 
+        private inputRef:React.RefObject<HTMLPreElement>;
+
         private readonly contentEditable:ContentEditable<HTMLPreElement>;
 
         constructor(props) {
@@ -154,7 +159,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             this.handleSelect = this.handleSelect.bind(this);
             this.handleCompositionStart = this.handleCompositionStart.bind(this);
             this.handleCompositionEnd = this.handleCompositionEnd.bind(this);
-            this.contentEditable = new ContentEditable<HTMLPreElement>(this.props.inputRef);
+            this.handleInputFocus = this.handleInputFocus.bind(this);
+            this.inputRef = React.createRef();
+            this.contentEditable = new ContentEditable<HTMLPreElement>(this.inputRef);
         }
 
         private newInputDispatch() {
@@ -172,6 +179,17 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     insertRange: null
                 }
             });
+        }
+
+        private handleInputFocus() {
+            if (!this.props.isSingleInstance) {
+                dispatcher.dispatch(
+                    Actions.QueryInputSetFocusInput,
+                    {
+                        corpname: this.props.sourceId
+                    }
+                );
+            }
         }
 
         private handleInputChange() {
@@ -205,7 +223,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         private findLinkParent(elm:HTMLElement):HTMLElement {
             let curr = elm;
-            while (curr !== this.props.inputRef.current) {
+            while (curr !== this.inputRef.current) {
                 if (curr.nodeName === 'A') {
                     return curr;
                 }
@@ -354,12 +372,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         componentDidUpdate(prevProps, prevState) {
-            const prevQueryObj = prevProps.queries[this.props.sourceId];
+           if (this.props.hasFocus) {
             const queryObj = this.props.queries[this.props.sourceId];
-            if (prevQueryObj.rawAnchorIdx !== queryObj.rawAnchorIdx ||
-                        prevQueryObj.rawFocusIdx !== queryObj.rawFocusIdx ||
-                        prevQueryObj.query !== queryObj.query ||
-                        !strictEqualParsedQueries(prevQueryObj, queryObj)) {
                 this.contentEditable.reapplySelection(
                     queryObj.rawAnchorIdx,
                     queryObj.rawFocusIdx
@@ -368,23 +382,29 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         componentDidMount() {
-            if (this.props.takeFocus && this.props.inputRef.current) {
-                this.props.inputRef.current.focus();
-                const queryObj = this.props.queries[this.props.sourceId];
-                this.contentEditable.reapplySelection(
-                    queryObj.rawAnchorIdx,
-                    queryObj.rawFocusIdx
-                );
+            if (this.inputRef.current) {
+                this.inputRef.current.addEventListener('focus', this.handleInputFocus);
+                if (this.props.hasFocus) {
+                    this.inputRef.current.focus();
+                    const queryObj = this.props.queries[this.props.sourceId];
+                    this.contentEditable.reapplySelection(
+                        queryObj.rawAnchorIdx,
+                        queryObj.rawFocusIdx
+                    );
+                }
             }
 
             if (he.browserInfo.isFirefox()) {
-                this.props.inputRef.current.addEventListener('keydown', this.ffKeyDownHandler);
+                this.inputRef.current.addEventListener('keydown', this.ffKeyDownHandler);
             }
         }
 
         componentWillUnmount() {
+            if (this.inputRef.current) {
+                this.inputRef.current.removeEventListener('focus', this.handleInputFocus);
+            }
             if (he.browserInfo.isFirefox()) {
-                this.props.inputRef.current.removeEventListener('keydown', this.ffKeyDownHandler);
+                this.inputRef.current.removeEventListener('keydown', this.ffKeyDownHandler);
             }
         }
 
@@ -399,7 +419,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 onCompositionEnd={this.handleCompositionEnd}
                                 onClick={this.handleEditorClick}
                                 className="cql-input"
-                                ref={this.props.inputRef}
+                                ref={this.inputRef}
                                 dangerouslySetInnerHTML={
                                     {__html: this.props.queries[this.props.sourceId].queryHtml || ''}}
                                 onKeyDown={this.inputKeyDownHandler}

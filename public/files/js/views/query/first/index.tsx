@@ -258,7 +258,8 @@ export function init({
                                 inputLanguage={props.inputLanguages[primaryCorpname]}
                                 onEnterKey={handleSubmit}
                                 useRichQueryEditor={props.useRichQueryEditor}
-                                takeFocus={true}
+                                hasFocus={primaryCorpname === props.activeCorpus}
+                                isSingleInstance={false}
                                 qsuggPlugin={querySuggest} />
                         </div>
                     </div>
@@ -281,6 +282,7 @@ export function init({
                                 useRichQueryEditor={props.useRichQueryEditor}
                                 tagHelperViews={props.tagHelperViews}
                                 tagsets={props.tagsets}
+                                activeCorpus={props.activeCorpus}
                                 onEnterKey={handleSubmit} />
                         : null
                     }
@@ -504,6 +506,8 @@ export function init({
                                 tagHelperView={this.props.tagHelperView}
                                 inputLanguage={this.props.inputLanguages[this.props.corpname]}
                                 onEnterKey={this._handleSubmit}
+                                hasFocus={this.props.corpname === this.props.activeCorpus}
+                                isSingleInstance={false}
                                 useRichQueryEditor={this.props.useRichQueryEditor}
                                 qsuggPlugin={querySuggest}
                                 tagsets={this.props.tagsets[this.props.corpname]} />
@@ -645,7 +649,8 @@ export function init({
                                 inputLanguage={props.inputLanguages[props.maincorp]}
                                 onEnterKey={handleSubmit}
                                 useRichQueryEditor={props.useRichQueryEditor}
-                                takeFocus={true}
+                                isSingleInstance={true}
+                                hasFocus={true}
                                 qsuggPlugin={querySuggest} />
                         </div>
                     </div>
