@@ -175,7 +175,10 @@ WithinNumber =
     NUMBER {}
 
 RepOpt =
-    STAR / PLUS / QUEST / LBRACE NUMBER (COMMA NUMBER?)? RBRACE {}
+    STAR {}
+    / PLUS {}
+    / QUEST {}
+    / LBRACE NUMBER (COMMA NUMBER?)? RBRACE {}
 
 AttName =
     ATTR_CHARS {
