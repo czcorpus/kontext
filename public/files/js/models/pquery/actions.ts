@@ -201,6 +201,10 @@ export class Actions {
         name: 'PQUERY_RESULT_APPLY_QUICK_FILTER_ARGS_READY'
     };
 
+    static isResultApplyQuickFilterArgsReady(a:Action):a is typeof Actions.ResultApplyQuickFilterArgsReady {
+        return a.name === Actions.ResultApplyQuickFilterArgsReady.name;
+    }
+
     static SetExpressionRoleType:Action<{
         sourceId:string;
         value:Kontext.PqueryExpressionRoles;
@@ -215,7 +219,10 @@ export class Actions {
         name: 'PQUERY_SET_EXPRESSION_ROLE_RATIO'
     };
 
-    static isResultApplyQuickFilterArgsReady(a:Action):a is typeof Actions.ResultApplyQuickFilterArgsReady {
-        return a.name === Actions.ResultApplyQuickFilterArgsReady.name;
-    }
+    static SetActiveEditor:Action<{
+        sourceId:string;
+    }> = {
+        name: 'PQUERY_SET_ACTIVE_EDITOR'
+    };
+
 }

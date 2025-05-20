@@ -373,7 +373,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         componentDidUpdate(prevProps, prevState) {
            if (this.props.hasFocus) {
-            const queryObj = this.props.queries[this.props.sourceId];
+                const queryObj = this.props.queries[this.props.sourceId];
                 this.contentEditable.reapplySelection(
                     queryObj.rawAnchorIdx,
                     queryObj.rawFocusIdx

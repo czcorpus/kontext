@@ -211,8 +211,38 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
         minFreq:Kontext.FormValue<string>;
         concStatus:ConcStatus;
         expressionRole:ExpressionRoleType;
+        isActive:boolean;
 
     }> = (props) => {
+
+        const editorWrapper = React.useRef(null);
+
+        React.useEffect(
+            () => {
+                const handleFocusChange = () => {
+                    const activeElm = document.activeElement;
+                    if (editorWrapper.current && (editorWrapper.current === activeElm || editorWrapper.current.contains(activeElm))) {
+                        dispatcher.dispatch<typeof Actions.SetActiveEditor>({
+                            name: Actions.SetActiveEditor.name,
+                            payload: {
+                                sourceId: props.sourceId
+                            }
+                        });
+                    }
+                }
+
+                document.addEventListener('focusin', handleFocusChange);
+                document.addEventListener('mousedown', handleFocusChange);
+                document.addEventListener('keyup', handleFocusChange);
+
+                return () => {
+                    document.removeEventListener('focusin', handleFocusChange);
+                    document.removeEventListener('mousedown', handleFocusChange);
+                    document.removeEventListener('keyup', handleFocusChange);
+                };
+            },
+            []
+        );
 
         const handleExpressionRoleTypeChange = (evt) => {
             dispatcher.dispatch<typeof Actions.SetExpressionRoleType>({
@@ -240,7 +270,7 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
             });
         };
 
-        const queryInputElement = React.useRef(null);
+
 
         return (
             <QS.QueryArea>
@@ -276,14 +306,14 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
                         }
                     </S.MinFreqField>
                     <div />
-                    <div className="query">
+                    <div className="query" ref={editorWrapper}>
                         {props.useRichQueryEditor ?
                             <cqlEditorViews.CQLEditor
                                     formType={Kontext.ConcFormTypes.QUERY}
                                     sourceId={props.sourceId}
                                     isSingleInstance={false}
                                     corpname={props.corpname}
-                                    hasFocus={false}
+                                    hasFocus={props.isActive}
                                     onReqHistory={() => undefined}
                                     onEsc={() => undefined}
                                     hasHistoryWidget={false}
@@ -493,6 +523,7 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
                                             numQueries={Dict.size(props.queries)}
                                             useRichQueryEditor={props.useRichQueryEditor}
                                             expressionRole={query.expressionRole}
+                                            isActive={props.activeEditorId === sourceId}
                                             minFreq={props.minFreq} /> :
                                     <FullEditorDiv key={sourceId} sourceId={sourceId}
                                         corpname={props.corpname}
