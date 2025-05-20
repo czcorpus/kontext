@@ -128,6 +128,7 @@ export interface PqueryFormModelState {
     usesubcorp:string;
     pqueryType:Kontext.PqueryType;
     maxNumQueries:number;
+    activeEditorId:string;
     queries:ParadigmaticQueriesStorage; // pquery block -> query
     downArrowTriggersHistory:{[sourceId:string]:boolean};
     cqlEditorMessages:{[sourceId:string]:Array<string>};
@@ -173,6 +174,7 @@ export function newModelState(
         usesubcorp,
         pqueryType: 'split',
         maxNumQueries: MAX_NUM_PARTIAL_QUERIES,
+        activeEditorId: createSourceId(0),
         queries: pipe(
             List.repeat<[string, ParadigmaticPartialQuery]>(
                 idx => tuple(
@@ -450,6 +452,7 @@ export function storedQueryToModel(
         usesubcorp: sq.usesubcorp,
         pqueryType: sq.pquery_type,
         maxNumQueries: MAX_NUM_PARTIAL_QUERIES,
+        activeEditorId: createSourceId(0),
         queries: Dict.fromEntries(queries),
         downArrowTriggersHistory: pipe(
             queries,

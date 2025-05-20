@@ -316,16 +316,22 @@ PQType =
     LBRACE _ Query _ RBRACE
 
 PQLimit =
-    NUMBER DOT NUMBER / DOT NUMBER / NUMBER
+    NUMBER DOT NUMBER {}
+    / DOT NUMBER {}
+    / NUMBER {}
 
 PQAlways =
-    QUEST LBRACE _ Query _ RBRACE / QUEST PQLimit LBRACE _ Query _ RBRACE
+    QUEST LBRACE _ Query _ RBRACE {}
+    / QUEST PQLimit LBRACE _ Query _ RBRACE {}
 
 PQNever =
-    NOT LBRACE _ Query _ RBRACE / NOT PQLimit LBRACE _ Query _ RBRACE
+    NOT LBRACE _ Query _ RBRACE
+    / NOT PQLimit LBRACE _ Query _ RBRACE {}
 
 PQSet =
-    PQType / PQAlways / PQNever
+    PQType {}
+    / PQAlways {}
+    / PQNever {}
 
 PQuery =
     PQSet (_ BINAND BINAND _ PQSet)*
