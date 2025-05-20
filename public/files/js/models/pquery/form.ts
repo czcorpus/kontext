@@ -473,6 +473,17 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                 })
             }
         );
+
+        this.addActionHandler(
+            Actions.SetActiveEditor,
+            action => {
+                this.changeState(
+                    state => {
+                        state.activeEditorId = action.payload.sourceId;
+                    }
+                );
+            }
+        );
     }
 
     private getPositionRange(state:PqueryFormModelState): string {
