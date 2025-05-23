@@ -275,6 +275,15 @@ export function init(
 
         return (
             <div className="FreqResultView">
+                {props.concHasAdhocQuery ?
+                    <S2.AdhocSubcWarning>
+                        <globalComponents.StatusIcon status="warning" />
+                        <p>
+                            {he.translate('global__concordance_is_based_on_adhoc_subc_warning')}
+                        </p>
+                    </S2.AdhocSubcWarning> :
+                    null
+                }
                 <S.TableViewToolbar>
                     <span>
                         <label htmlFor="display-confidence">{he.translate('freq__confidence_toggle')}</label>
@@ -333,15 +342,6 @@ export function init(
                 )}
                 {props.saveFormActive ?
                     <saveViews.SaveFreqForm onClose={handleSaveFormClose} /> :
-                    null
-                }
-                {props.concHasAdhocQuery ?
-                    <S2.AdhocSubcWarning>
-                        <globalComponents.StatusIcon status="warning" />
-                        <p>
-                            {he.translate('global__concordance_is_based_on_adhoc_subc_warning')}
-                        </p>
-                    </S2.AdhocSubcWarning> :
                     null
                 }
             </div>

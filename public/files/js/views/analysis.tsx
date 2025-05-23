@@ -98,8 +98,6 @@ export function init({dispatcher, he, collViews, freqViews,
                     <layoutViews.CloseableFrame onCloseClick={handleCloseClick}
                             label={getTitle()} scrollable={true}>
                         <S.AnalysisFrame>
-                            {renderContents()}
-
                             {props.concHasAdhocQuery ?
                                 <S.AdhocSubcWarning>
                                     <layoutViews.StatusIcon status="warning" />
@@ -109,6 +107,7 @@ export function init({dispatcher, he, collViews, freqViews,
                                 </S.AdhocSubcWarning> :
                                 null
                             }
+                            {renderContents()}
                         </S.AnalysisFrame>
                     </layoutViews.CloseableFrame>
                 </layoutViews.ModalOverlay>
