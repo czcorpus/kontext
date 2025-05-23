@@ -63,6 +63,8 @@ export const AdhocSubcWarning = styled.div`
 
     display: flex;
     align-items: center;
+    max-width: 80em;
+    margin-bottom: 1em;
 
     > * {
         padding: 0.7em;
