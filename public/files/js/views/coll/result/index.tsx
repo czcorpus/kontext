@@ -336,6 +336,15 @@ export function init(
                     <saveViews.SaveCollForm onClose={handleSaveFormClose} saveLinesLimit={props.saveLinesLimit} />
                     : null
                 }
+                {props.concHasAdhocQuery ?
+                    <S2.AdhocSubcWarning>
+                        <layoutViews.StatusIcon status="warning" />
+                        <p>
+                            {utils.translate('global__concordance_is_based_on_adhoc_subc_warning')}
+                        </p>
+                    </S2.AdhocSubcWarning> :
+                    null
+                }
                 {props.calcStatus < 100 ?
                     <CalcStatusBar status={props.calcStatus} /> :
                     (<div>
@@ -346,15 +355,6 @@ export function init(
                                 lineOffset={props.pageSize * (props.currPage - 1)} sortFn={props.sortFn}
                                 cattr={props.cattr} />
                     </div>)
-                }
-                {props.concHasAdhocQuery ?
-                    <S2.AdhocSubcWarning>
-                        <layoutViews.StatusIcon status="warning" />
-                        <p>
-                            {utils.translate('global__concordance_is_based_on_adhoc_subc_warning')}
-                        </p>
-                    </S2.AdhocSubcWarning> :
-                    null
                 }
             </S.CollResultView>
         );
