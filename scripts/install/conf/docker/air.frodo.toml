@@ -8,7 +8,7 @@ tmp_dir = "tmp"
 
 [build]
 # Just plain old shell command. You could use `make` as well.
-cmd = "PATH=$PATH:/usr/local/go/bin:/root/go/bin && make swagger && make build"
+cmd = "make build"
 # Binary file yields from `cmd`.
 bin = "frodo"
 # Customize binary.
