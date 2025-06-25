@@ -314,7 +314,8 @@ class XMLExport(AbstractExport):
             self._document.add_multilang_line(lang_rows, self._corpnames, line_num)
 
     async def write_conc(self, amodel: ConcActionModel, data: KwicPageData, args: SaveConcArgs):
-        self._document = ConcDocument()
+        if self._document is None:
+            self._document = ConcDocument()
         aligned_corpora = [
             amodel.corp,
             *[(await amodel.cf.get_corpus(c)) for c in amodel.args.align if c],
@@ -345,7 +346,7 @@ class XMLExport(AbstractExport):
             if 'Align' in line:
                 lang_rows += self._process_lang(
                     line['Align'], left_key, kwic_key, right_key, False, amodel.args.attr_vmode, data.merged_attrs, data.merged_ctxattrs)
-            self._writerow(row_num if args.numbering else None, *lang_rows)
+            self._writerow(row_num + args.numbering_offset if args.numbering else None, *lang_rows)
 
     async def write_coll(self, amodel: ConcActionModel, data: CalculateCollsResult, args: SavecollArgs):
         self._document = CollDocument()
