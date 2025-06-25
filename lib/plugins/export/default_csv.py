@@ -129,7 +129,7 @@ class CSVExport(AbstractExport):
             if 'Align' in line:
                 lang_rows += self._process_lang(
                     line['Align'], left_key, kwic_key, right_key, False, amodel.args.attr_vmode, data.merged_attrs, data.merged_ctxattrs)
-            self._writerow(row_num if args.numbering else None, *lang_rows)
+            self._writerow(row_num + args.numbering_offset if args.numbering else None, *lang_rows)
 
     async def write_coll(self, amodel: ConcActionModel, data: CalculateCollsResult, args: SavecollArgs):
         if args.colheaders or args.heading:
