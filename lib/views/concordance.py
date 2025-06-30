@@ -50,7 +50,7 @@ from action.model.concordance import ConcActionModel
 from action.model.concordance.linesel import LinesGroups
 from action.model.corpus import CorpusActionModel
 from action.model.user import UserActionModel
-from action.response import KResponse
+from action.response import KResponse, bytes_stream
 from action.result.concordance import QueryAction
 from bgcalc import calc_backend_client
 from bgcalc.errors import CalcTaskNotFoundError
@@ -1308,7 +1308,9 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
                         amodel.plugin_ctx,
                         corpus_info.tokens_linking.providers,
                         [amodel.args.corpname] + amodel.args.align)
+
                 data = kwic.kwicpage(kwic_args)
+
                 maxcontext = int(amodel.corp.get_conf('MAXCONTEXT'))
                 if maxcontext:
                     for line in data.Lines:
@@ -1317,7 +1319,7 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
                 if len(data.Lines) > 0:
                     await writer.write_conc(amodel, data, req.mapped_args)
             output = writer.raw_content()
-        return output
+        return bytes_stream(output)
 
     except Exception as e:
         resp.set_header('Content-Type', 'text/html')

@@ -14,11 +14,14 @@
 # GNU General Public License for more details.
 
 import logging
-from typing import Dict, Iterable, List, Tuple, TypeVar, Generic, Optional
+from typing import Dict, Iterable, List, Tuple, TypeVar, Generic, Optional, Union
 from urllib.parse import urlparse
 from sanic.helpers import STATUS_CODES
 from dataclasses import dataclass
 from datetime import datetime
+from sanic.response import ResponseStream
+from mimetypes import guess_type
+from io import BytesIO
 
 from action.errors import ForbiddenException
 from action.templating import ResultType
@@ -211,3 +214,44 @@ class KResponse(Generic[T]):
         for k, v in sorted([x for x in list(self._headers.items()) if bool(x[1])], key=lambda item: item[0]):
             ans[k] = v
         return ans
+
+
+async def bytes_stream(
+        data: Union[bytes, str],
+        status: int = 200,
+        chunk_size: int = 4096,
+        mime_type: Optional[str] = None,
+        headers: Optional[dict[str, str]] = None,
+        filename: Optional[str] = None,
+) -> ResponseStream:
+    """
+    Return a streaming response object with bytes data.
+    """
+    headers = headers or {}
+    if filename:
+        headers.setdefault(
+            "Content-Disposition", f'attachment; filename="{filename}"'
+        )
+        mime_type = mime_type or guess_type(filename)[0] or "application/octet-stream"
+    else:
+        mime_type = mime_type or "application/octet-stream"
+
+    async def _streaming_fn(response):
+        # Create a BytesIO object from the bytes data
+        if isinstance(data, str):
+            bytes_data = data.encode('utf-8')
+        else:
+            bytes_data = data
+        bytes_io = BytesIO(bytes_data)
+        while True:
+            content = bytes_io.read(chunk_size)
+            if len(content) < 1:
+                break
+            await response.write(content)
+
+    return ResponseStream(
+        streaming_fn=_streaming_fn,
+        status=status,
+        headers=headers,
+        content_type=mime_type,
+    )
