@@ -201,6 +201,7 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
     private submit():void {
         const args = {
             ...this.layoutModel.getConcArgs(),
+            refs: undefined, // we use stored user options on server to keep url short (these are the same anyway)
             saveformat: this.state.saveformat,
             from_line: this.state.fromLine.value,
             to_line: this.state.toLine.value,
