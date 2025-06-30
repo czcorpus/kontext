@@ -1308,16 +1308,14 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
                         amodel.plugin_ctx,
                         corpus_info.tokens_linking.providers,
                         [amodel.args.corpname] + amodel.args.align)
-
                 data = kwic.kwicpage(kwic_args)
-
                 maxcontext = int(amodel.corp.get_conf('MAXCONTEXT'))
                 if maxcontext:
                     for line in data.Lines:
                         if len(line["Kwic"]) > maxcontext:
                             raise UnavailableForLegalReasons('KWIC too large')
-                    if len(data.Lines) > 0:
-                        await writer.write_conc(amodel, data, req.mapped_args)
+                if len(data.Lines) > 0:
+                    await writer.write_conc(amodel, data, req.mapped_args)
             output = writer.raw_content()
         return output
 
