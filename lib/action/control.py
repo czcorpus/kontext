@@ -16,11 +16,14 @@
 import json
 import logging
 import secrets
+from inspect import iscoroutine
 from functools import wraps
 from typing import (
     Any, Awaitable, Callable, Coroutine, Dict, Optional, Tuple, Type, Union)
 
 import aiohttp
+from sanic.response import ResponseStream
+
 import settings
 from action.argmapping.action import create_mapped_args
 from action.errors import (
@@ -284,31 +287,32 @@ def http_action(
                         amodel.disable_menu_on_forbidden_corpus()
                 if not aprops.return_type:
                     aprops.return_type = 'template'
-
-            if resp.result is None:
-                resp_body = None
+            if iscoroutine(resp.result):   # TODO this is not a very good test for what we want (here we expect Sanic response classes)
+                return await resp.result
             else:
-                resp_body = await _output_result(
-                    app=application,
-                    action_model=amodel,
-                    action_props=aprops,
-                    tpl_engine=application.ctx.templating,
-                    translate=req.translate,
-                    resp=resp)
-            out = HTTPResponse(
-                body=resp_body,
-                status=resp.http_status_code,
-                headers=resp.output_headers(aprops.return_type))
-            for cookie in resp.get_cookies():
-                out.add_cookie(
-                    key=cookie.name,
-                    value=cookie.value,
-                    path=cookie.path,
-                    expires=cookie.expires,
-                    samesite=cookie.same_site,
-                    secure=cookie.secure
-                )
-            return out
+                resp_body = None
+                if resp.result is not None:
+                    resp_body = await _output_result(
+                        app=application,
+                        action_model=amodel,
+                        action_props=aprops,
+                        tpl_engine=application.ctx.templating,
+                        translate=req.translate,
+                        resp=resp)
+                out = HTTPResponse(
+                    body=resp_body,
+                    status=resp.http_status_code,
+                    headers=resp.output_headers(aprops.return_type))
+                for cookie in resp.get_cookies():
+                    out.add_cookie(
+                        key=cookie.name,
+                        value=cookie.value,
+                        path=cookie.path,
+                        expires=cookie.expires,
+                        samesite=cookie.same_site,
+                        secure=cookie.secure
+                    )
+                return out
 
         return wrapper
     return decorator
