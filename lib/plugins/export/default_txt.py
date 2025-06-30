@@ -71,6 +71,7 @@ class TXTExport(AbstractExport):
         output['to_line'] = min(args.to_line, data.concsize)
         output['heading'] = args.heading
         output['numbering'] = args.numbering
+        output['numbering_offset'] = args.numbering_offset
         output['align_kwic'] = args.align_kwic
         output['human_corpname'] = amodel.corp.human_readable_corpname
         output['usesubcorp'] = amodel.args.usesubcorp
@@ -89,7 +90,7 @@ class TXTExport(AbstractExport):
         amodel.update_output_with_group_info(output)
 
         template = self._template_env.get_template('txt_conc.jinja2')
-        self._data = await template.render_async(output)
+        self._data += await template.render_async(output)
 
     async def write_coll(self, amodel: ConcActionModel, data: CalculateCollsResult, args: SavecollArgs):
         output = asdict(data)

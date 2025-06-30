@@ -75,6 +75,11 @@ from texttypes.model import TextTypeCollector
 bp = Blueprint('concordance')
 
 
+MAX_SINGLE_CHUNK_SAVE_CONC_SIZE = 10000
+SAVE_CONC_CHUNK_SIZE = 2000
+
+
+
 @bp.route('/first_form')
 @http_action(action_model=BaseActionModel)
 async def first_form(_, req: KRequest, resp: KResponse):
@@ -1225,6 +1230,7 @@ class SaveConcArgs:
     saveformat: str = 'txt'
     heading: int = 0
     numbering: int = 0
+    numbering_offset: int = 0
     align_kwic: int = 0
     from_line: int = 0
     to_line: IntOpt = -1
@@ -1251,6 +1257,9 @@ def _get_ipm_base_set_desc(corp: AbstractKCorpus, contains_within, translate: Ca
 @http_action(
     access_level=2, action_model=ConcActionModel, mapped_args=SaveConcArgs, return_type='plain')
 async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: KResponse):
+    def mkfilename(suffix):
+        return f'{amodel.args.corpname}-concordance.{suffix}'
+
     try:
         corpus_info = await amodel.get_corpus_info(amodel.args.corpname)
         amodel.apply_viewmode(corpus_info.sentence_struct)
@@ -1261,34 +1270,17 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
         amodel.apply_linegroups(conc)
         kwic = Kwic(amodel.corp, conc)
         conc.switch_aligned(os.path.basename(amodel.args.corpname))
-        from_line = int(req.mapped_args.from_line)
-        to_line = conc.size() if req.mapped_args.to_line < 0 else min(req.mapped_args.to_line, conc.size())
 
-        kwic_args = KwicPageArgs(asdict(amodel.args), base_attr=amodel.BASE_ATTR)
-        kwic_args.speech_attr = await amodel.get_speech_segment()
-        kwic_args.fromp = 1
-        kwic_args.pagesize = to_line - (from_line - 1)
-        kwic_args.line_offset = (from_line - 1)
-        kwic_args.labelmap = {}
-        kwic_args.alignlist = [(await amodel.cf.get_corpus(c)) for c in amodel.args.align if c]
-        kwic_args.leftctx = amodel.args.leftctx
-        kwic_args.rightctx = amodel.args.rightctx
-        kwic_args.structs = amodel.get_struct_opts()
-        with plugins.runtime.TOKENS_LINKING as tl:
-            kwic_args.internal_attrs = await tl.get_required_attrs(
-                amodel.plugin_ctx,
-                corpus_info.tokens_linking.providers,
-                [amodel.args.corpname] + amodel.args.align)
+        if len(amodel.args.align) == 0 and conc.size() < MAX_SINGLE_CHUNK_SAVE_CONC_SIZE:
+            line_range_chunks = [(
+                int(req.mapped_args.from_line) - 1,
+                conc.size() - 1 if req.mapped_args.to_line < 0 else min(req.mapped_args.to_line, conc.size()) - 1
+            )]
+        else:
+            line_range_chunks = []
+            for i in range(req.mapped_args.from_line-1, req.mapped_args.to_line-1, SAVE_CONC_CHUNK_SIZE):
+                line_range_chunks.append((i, i+SAVE_CONC_CHUNK_SIZE))
 
-        data = kwic.kwicpage(kwic_args)
-
-        maxcontext = int(amodel.corp.get_conf('MAXCONTEXT'))
-        if maxcontext:
-            for line in data.Lines:
-                if len(line["Kwic"]) > maxcontext:
-                    raise UnavailableForLegalReasons('KWIC too large')
-
-        def mkfilename(suffix): return f'{amodel.args.corpname}-concordance.{suffix}'
         with plugins.runtime.EXPORT as export:
             writer = export.load_plugin(req.mapped_args.saveformat, req.locale)
 
@@ -1297,8 +1289,35 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
                 'Content-Disposition',
                 f'attachment; filename="{mkfilename(req.mapped_args.saveformat)}"')
 
-            if len(data.Lines) > 0:
-                await writer.write_conc(amodel, data, req.mapped_args)
+            for from_line, to_line in line_range_chunks:
+                if from_line > 0:
+                    req.mapped_args.heading = 0
+                req.mapped_args.numbering_offset = from_line
+                kwic_args = KwicPageArgs(asdict(amodel.args), base_attr=amodel.BASE_ATTR)
+                kwic_args.speech_attr = await amodel.get_speech_segment()
+                kwic_args.fromp = 1
+                kwic_args.pagesize = to_line - from_line
+                kwic_args.line_offset = from_line
+                kwic_args.labelmap = {}
+                kwic_args.alignlist = [(await amodel.cf.get_corpus(c)) for c in amodel.args.align if c]
+                kwic_args.leftctx = amodel.args.leftctx
+                kwic_args.rightctx = amodel.args.rightctx
+                kwic_args.structs = amodel.get_struct_opts()
+                with plugins.runtime.TOKENS_LINKING as tl:
+                    kwic_args.internal_attrs = await tl.get_required_attrs(
+                        amodel.plugin_ctx,
+                        corpus_info.tokens_linking.providers,
+                        [amodel.args.corpname] + amodel.args.align)
+
+                data = kwic.kwicpage(kwic_args)
+
+                maxcontext = int(amodel.corp.get_conf('MAXCONTEXT'))
+                if maxcontext:
+                    for line in data.Lines:
+                        if len(line["Kwic"]) > maxcontext:
+                            raise UnavailableForLegalReasons('KWIC too large')
+                    if len(data.Lines) > 0:
+                        await writer.write_conc(amodel, data, req.mapped_args)
             output = writer.raw_content()
         return output
 

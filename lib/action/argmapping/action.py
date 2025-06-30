@@ -14,7 +14,7 @@
 # GNU General Public License for more details.
 
 
-from dataclasses import fields
+from dataclasses import fields, MISSING
 from typing import List, NewType, Optional, Type, TypeVar
 
 from action.errors import UserReadableException
@@ -26,6 +26,12 @@ StrOpt = NewType('StrOpt', Optional[str])
 ListStrOpt = NewType('ListStrOpt', List[str])
 IntOpt = NewType('IntOpt', Optional[int])
 ListIntOpt = NewType('ListIntOpt', List[int])
+
+
+def is_optional_field(field_obj):
+    has_default = field_obj.default is not MISSING
+    has_default_factory = field_obj.default_factory is not MISSING
+    return has_default or has_default_factory
 
 
 def create_mapped_args(tp: Type, req: Request):
@@ -43,6 +49,8 @@ def create_mapped_args(tp: Type, req: Request):
             v = req.form.get(mk, [])
         if mtype == str:
             if len(v) == 0:
+                if is_optional_field(field):
+                    continue
                 raise UserReadableException(f'Missing request argument {mk}')
             if len(v) > 1:
                 raise UserReadableException(f'Argument {mk} is cannot be multi-valued')
@@ -54,6 +62,8 @@ def create_mapped_args(tp: Type, req: Request):
                 data[mk] = v[0]
         elif mtype == List[str]:
             if len(v) == 0:
+                if is_optional_field(field):
+                    continue
                 raise UserReadableException(f'Missing request argument {mk}')
             data[mk] = v
         elif mtype == ListStrOpt:
@@ -61,6 +71,8 @@ def create_mapped_args(tp: Type, req: Request):
                 data[mk] = v
         elif mtype == int:
             if len(v) == 0:
+                if is_optional_field(field):
+                    continue
                 raise UserReadableException(f'Missing request argument {mk}')
             elif len(v) > 1:
                 raise UserReadableException(f'Argument {mk} is cannot be multi-valued')
@@ -72,6 +84,8 @@ def create_mapped_args(tp: Type, req: Request):
                 data[mk] = int(v[0])
         elif mtype == List[int]:
             if len(v) == 0:
+                if is_optional_field(field):
+                    continue
                 raise UserReadableException(f'Missing request argument {mk}')
             data[mk] = [int(x) for x in v]
         elif mtype == ListIntOpt:

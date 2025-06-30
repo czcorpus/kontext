@@ -20,6 +20,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 -#}
 
 {% if heading -%}
+## KWIC lines:
+
 # Corpus: {{ human_corpname }}
 {% if usesubcorp %}# Subcorpus: {{ usesubcorp }}{% endif -%}
 # Hits: {{ concsize | formatnumber }}
@@ -29,11 +31,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 # {{ desc.op }}: {{ desc.arg }} {{ desc.size | formatnumber }}
 {% endfor %}
 {% endif -%} {# END of heading -#}
-## KWIC lines:
-
 {% for line in Lines -%}
 {# main concordances -#}
-{% if numbering %}{{ loop.index }}) {% endif %}{% if num_lines_in_groups > 0 %}{{ line.linegroup }}{% endif -%}
+{% if numbering %}{{ loop.index + numbering_offset }}) {% endif %}{% if num_lines_in_groups > 0 %}{{ line.linegroup }}{% endif -%}
 {{ line.ref }} | {% if align_kwic %}{{ line.leftspace }}{% endif -%}
 {{ line.Left|rejectattr("class", "equalto", "strc")|map(attribute="str")|join(" ") }} <{{ line.Kwic|map(attribute="str")|join(" ") }}> {% if align_kwic %}{{kwic_spaces[loop.index-1]}}{% endif %}{{ line.Right|rejectattr("class", "equalto", "strc")|map(attribute="str")|join(" ") -}}
 {% if align_kwic %}{{ line.rightspace }}{% endif %}
