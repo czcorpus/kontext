@@ -75,6 +75,11 @@ from texttypes.model import TextTypeCollector
 bp = Blueprint('concordance')
 
 
+MAX_SINGLE_CHUNK_SAVE_CONC_SIZE = 10000
+SAVE_CONC_CHUNK_SIZE = 2000
+
+
+
 @bp.route('/first_form')
 @http_action(action_model=BaseActionModel)
 async def first_form(_, req: KRequest, resp: KResponse):
@@ -1266,15 +1271,15 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
         kwic = Kwic(amodel.corp, conc)
         conc.switch_aligned(os.path.basename(amodel.args.corpname))
 
-        if len(amodel.args.align) == 0:
+        if len(amodel.args.align) == 0 and conc.size() < MAX_SINGLE_CHUNK_SAVE_CONC_SIZE:
             line_range_chunks = [(
                 int(req.mapped_args.from_line) - 1,
                 conc.size() - 1 if req.mapped_args.to_line < 0 else min(req.mapped_args.to_line, conc.size()) - 1
             )]
         else:
             line_range_chunks = []
-            for i in range(req.mapped_args.from_line-1, req.mapped_args.to_line-1, 2000):
-                line_range_chunks.append((i, i+2000))
+            for i in range(req.mapped_args.from_line-1, req.mapped_args.to_line-1, SAVE_CONC_CHUNK_SIZE):
+                line_range_chunks.append((i, i+SAVE_CONC_CHUNK_SIZE))
 
         with plugins.runtime.EXPORT as export:
             writer = export.load_plugin(req.mapped_args.saveformat, req.locale)
