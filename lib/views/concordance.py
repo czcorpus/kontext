@@ -255,9 +255,6 @@ async def view_conc(
             if align_info.part_of_ml_corpus:
                 ml_position_filters[align] = corpus_info.ml_position_filter
 
-    if amodel.args.refs is None:  # user did not set this at all (!= user explicitly set '')
-        amodel.args.refs = amodel.corp.get_conf('SHORTREF')
-
     if amodel.args.fromp < 1:
         raise UserReadableException(req.translate('Invalid page number'))
     if amodel.args.pagesize < 1:
