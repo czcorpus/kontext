@@ -313,6 +313,11 @@ class CorpusActionModel(UserActionModel):
                 await self._redirect_old_subcorpus(err, q_loaded)
             else:
                 raise err
+
+        # special 'refs' arg treatment making sure the value is available to all URL handlers
+        if self.args.refs is None:
+            self.args.refs = self.corp.get_conf('SHORTREF')
+
         # Restrict usage of special URL argument '_usesubcorp' we use to upgrade URLs with deprecated subc. access.
         # Please note that here we know, the 'usesubcorp' has already been set at the beginning of pre_dispatch
         # to the value of '_usesubcorp' arg.
