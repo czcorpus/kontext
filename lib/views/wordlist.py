@@ -26,7 +26,7 @@ from action.control import http_action
 from action.errors import ImmediateRedirectException
 from action.krequest import KRequest
 from action.model.wordlist import WordlistActionModel, WordlistError
-from action.response import KResponse
+from action.response import KResponse, bytes_stream
 from bgcalc import calc_backend_client
 from bgcalc.errors import BgCalcError
 from bgcalc.freqs import build_arf_db, build_arf_db_status
@@ -272,7 +272,7 @@ async def savewl(amodel: WordlistActionModel, req: KRequest[WordlistSaveFormArgs
 
         await writer.write_wordlist(amodel, data, args)
         output = writer.raw_content()
-    return output
+    return bytes_stream(output)
 
 
 @bp.route('/process')
