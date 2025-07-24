@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2017 Charles University, Faculty of Arts,
- *                    Institute of the Czech National Corpus
+ *                    Department of Linguistics
  * Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
  * Copyright (c) 2018 Kira Droganova
  *

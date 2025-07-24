@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2017 Charles University in Prague, Faculty of Arts,
- *                    Institute of the Czech National Corpus
+ * Copyright (c) 2017 Charles University, Faculty of Arts,
+ *                    Department of Linguistics
  * Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or

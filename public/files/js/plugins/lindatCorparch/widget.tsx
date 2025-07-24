@@ -2,7 +2,7 @@
  * Copyright (c) 2016 Charles University, Faculty of Mathematics and Physics,
  *                    Institute of Formal and Applied Linguistics
  * Copyright (c) 2016 Charles University, Faculty of Arts,
- *                    Institute of the Czech National Corpus
+ *                    Department of Linguistics
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

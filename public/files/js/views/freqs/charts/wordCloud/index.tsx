@@ -1,6 +1,6 @@
 /*
  * Copyright 2019 Tomas Machalek <tomas.machalek@gmail.com>
- * Copyright 2019 Institute of the Czech National Corpus,
+ * Copyright 2019 Department of Linguistics,
  *                Faculty of Arts, Charles University
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
