@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2016 Charles University in Prague, Faculty of Arts,
- *                    Institute of the Czech National Corpus
+ * Copyright (c) 2016 Charles University, Faculty of Arts,
+ *                    Department of Linguistics
  * Copyright (c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
@@ -93,7 +93,7 @@ export class AudioPlayer {
                 position: 0,
                 waveform: [],
             };
-            
+
         } else {
             this.status = {
                 playback: playback,
@@ -141,7 +141,7 @@ export class AudioPlayer {
             },
             onloaderror: function (soundId, err) {
                 parent.updateStatus('error');
-                parent.onError(err);               
+                parent.onError(err);
             },
             onplayerror: function (soundId, err) {
                 parent.updateStatus('error');

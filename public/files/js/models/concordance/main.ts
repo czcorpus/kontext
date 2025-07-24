@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2016 Charles University, Faculty of Arts,
- *                    Institute of the Czech National Corpus
+ *                    Department of Linguistics
  * Copyright (c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
@@ -396,7 +396,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                             )
                         }
                     );
-        
+
                 } else {
                     throw new Error('No chunks to play');
                 }
@@ -416,7 +416,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                             });
                         }
                     break;
-                    case 'stop':                        
+                    case 'stop':
                     case 'error':
                         if (action.payload.activePlayerId !== ConcordanceModel.AUDIO_PLAYER_ID) {
                             this.changeState(state => {
