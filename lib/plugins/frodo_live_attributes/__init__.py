@@ -1,5 +1,5 @@
-# Copyright (c) 2022 Charles University in Prague, Faculty of Arts,
-#                    Institute of the Czech National Corpus
+# Copyright (c) 2022 Charles University, Faculty of Arts,
+#                    Department of Linguistics
 # Copyright (c) 2022 Tomas Machalek <tomas.machalek@gmail.com>
 # Copyright (c) 2022 Martin Zimandl <martin.zimandl@gmail.com>
 #

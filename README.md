@@ -12,7 +12,7 @@
 
 ## Introduction
 
-KonText is an **advanced corpus query interface** and corpus data **integration platform** built around corpus search engine [Manatee-open](http://nlp.fi.muni.cz/trac/noske). It is written in Python 3 and TypeScript and it runs on any major Linux distribution. The development is maintained by the [Institute of the Czech National Corpus](http://ucnk.ff.cuni.cz/).
+KonText is an **advanced corpus query interface** and corpus data **integration platform** built around corpus search engine [Manatee-open](http://nlp.fi.muni.cz/trac/noske). It is written in Python 3 and TypeScript and it runs on any major Linux distribution. The development is maintained by the [Department of Linguistics, Faculty of Arts, Charles University](http://ucnk.ff.cuni.cz/).
 
 ## Features
 
@@ -114,7 +114,7 @@ Please refer to our [Wiki](https://github.com/czcorpus/kontext/wiki/Development-
 
 ## Notable users
 
-* [Institute of the Czech National Corpus](https://kontext.korpus.cz/)
+* [Department of Linguistics, Faculty of Arts, Charles University](https://kontext.korpus.cz/)
 * [LINDAT/CLARIAH-CZ](https://ufal.mff.cuni.cz/lindat-kontext)
 * [CLARIN-PL](https://kontext.clarin-pl.eu/)
 * [CLARIN-SI](https://www.clarin.si/kontext/)

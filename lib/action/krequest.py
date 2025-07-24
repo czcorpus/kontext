@@ -1,6 +1,6 @@
 # Copyright (c) 2014 Tomas Machalek <tomas.machalek@gmail.com>
 # Copyright (c) 2014 Charles University, Faculty of Arts,
-#                    Institute of the Czech National Corpus
+#                    Department of Linguistics
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License

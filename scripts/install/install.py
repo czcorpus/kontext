@@ -1,5 +1,5 @@
 # Copyright (c) 2021 Charles University, Faculty of Arts,
-#                    Institute of the Czech National Corpus
+#                    Department of Linguistics
 # Copyright (c) 2021 Martin Zimandl <martin.zimandlk@gmail.com>
 # Copyright (c) 2021 Tomas Machalek <tomas.machalek@gmail.com>
 #
@@ -87,20 +87,20 @@ if __name__ == "__main__":
         subprocess.check_call(['locale-gen', 'en_US.UTF-8'], stdout=stdout)
         subprocess.check_call(['apt-get', 'update', '-y'], stdout=stdout)
         subprocess.check_call(['apt-get', 'install', '-y'] + REQUIREMENTS, stdout=stdout)
-        
+
         # create virtual environment
         venv_path, venv_bin_path = None, ''
         if not args.no_venv:
             venv_path = os.path.join(KONTEXT_PATH, 'venv')
             venv.create(venv_path, with_pip=True, symlinks=True)
             venv_bin_path = os.path.join(venv_path, 'bin')
-        
+
         # install python packages
         subprocess.check_call([os.path.join(venv_bin_path, 'python3'), '-m', 'pip', 'install', 'pip' '--upgrade'],
                               stdout=stdout)
         subprocess.check_call([os.path.join(venv_bin_path, 'pip3'), 'install', 'simplejson', 'signalfd', '-r', 'requirements.txt'],
                               cwd=KONTEXT_PATH, stdout=stdout)
-        
+
         # install node.js
         env_variables = os.environ.copy()
         nvm_dir = env_variables['NVM_DIR'] = "/usr/local/nvm"
@@ -125,13 +125,13 @@ if __name__ == "__main__":
     steps.SetupKontext(
         kontext_path=KONTEXT_PATH, kontext_conf=KONTEXT_INSTALL_CONF,
         scheduler_conf=SCHEDULER_INSTALL_CONF, stdout=stdout, stderr=stderr, npm_path=npm_path).run()
-    
+
     # redis is installed in virtual environment
     if args.no_venv:
         steps.SetupDefaultUsers(KONTEXT_PATH, stdout, stderr).run()
     else:
         subprocess.check_call([os.path.join(venv_bin_path, 'python3'), steps.__file__, 'SetupDefaultUsers'])
-        
+
 
     # finalize instalation
     print('Initializing Rq...')

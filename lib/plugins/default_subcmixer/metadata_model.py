@@ -1,4 +1,5 @@
-# Copyright (c) 2015 Institute of the Czech National Corpus
+# Copyright (c) 2015 Charles University, Faculty of Arts,
+#                    Department of Linguistics
 # Copyright (c) 2015 Martin Stepan <martin.stepan@ff.cuni.cz>,
 #                    Tomas Machalek <tomas.machalek@gmail.com>
 # This program is free software; you can redistribute it and/or

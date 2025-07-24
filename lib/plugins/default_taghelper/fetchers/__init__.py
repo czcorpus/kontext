@@ -1,5 +1,5 @@
 # Copyright (c) 2019 Charles University, Faculty of Arts,
-#                    Institute of the Czech National Corpus
+#                    Department of Linguistics
 # Copyright (c) 2019 Martin Zimandl <martin.zimandl@gmail.com>
 # Copyright (c) 2019 Tomas Machalek <tomas.machalek@gmail.com>
 #

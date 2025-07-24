@@ -1,5 +1,5 @@
-# Copyright (c) 2013 Charles University in Prague, Faculty of Arts,
-#                    Institute of the Czech National Corpus
+# Copyright (c) 2013 Charles University, Faculty of Arts,
+#                    Department of Linguistics
 # Copyright (c) 2013 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
@@ -370,10 +370,10 @@ class QueryHistory(AbstractQueryHistory):
             else:
                 new_list.append(item)
                 preserved_history += 1
-            
+
             if preserved_history >= self.preserve_amount:
                 break
-    
+
         for item in new_list:
             await self.db.list_append(tmp_key, item)
         await self.db.rename(tmp_key, data_key)
