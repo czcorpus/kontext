@@ -1,5 +1,5 @@
 # Copyright (c) 2024 Charles University, Faculty of Arts,
-#                    Institute of the Czech National Corpus
+#                    Department of Linguistics
 # Copyright (c) 2024 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or

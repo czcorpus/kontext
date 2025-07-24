@@ -1,4 +1,5 @@
-# Copyright 2014 Institute of the Czech National Corpus
+# Copyright 2014 Charles University, Faculty of Arts,
+#                Department of Linguistics
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.

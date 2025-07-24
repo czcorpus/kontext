@@ -1,4 +1,5 @@
-# Copyright (c) 2022 Institute of the Czech National Corpus
+# Copyright (c) 2022 Charles University, Faculty of Arts,
+#                    Department of Linguistics
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -86,7 +87,7 @@ class AuthConf:
 
 class CentralAuth(AbstractRemoteAuth):
     """
-    A custom authentication class for the Institute of the Czech National Corpus
+    A custom authentication class for the Department of Linguistics
     """
 
     def __init__(self, db: DatabaseBackend, auth_conf: AuthConf):

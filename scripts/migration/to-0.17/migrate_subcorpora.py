@@ -1,5 +1,5 @@
 # Copyright (c) 2022 Charles University, Faculty of Arts,
-#                    Institute of the Czech National Corpus
+#                    Department of Linguistics
 # Copyright (c) 2022 Martin Zimandl <martin.zimandl@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
@@ -228,7 +228,7 @@ if __name__ == "__main__":
         help='ID used for unknown user/author', default='1')
     parser.add_argument(
         '--env-ucnk', action='store_true',
-        help='Set environment to UCNK (likely suitable only for the Institute of the Czech National Corpus)')
+        help='Set environment to UCNK (likely suitable only for the Department of Linguistics)')
     args = parser.parse_args()
 
     initializer.init_plugin('integration_db')

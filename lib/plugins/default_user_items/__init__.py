@@ -1,5 +1,5 @@
 # Copyright (c) 2015 Charles University, Faculty of Arts,
-#                    Institute of the Czech National Corpus
+#                    Department of Linguistics
 # Copyright (c) 2015 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
@@ -154,7 +154,7 @@ class UserItems(AbstractUserItems):
                     with plugins.runtime.SUBC_STORAGE as sa:
                         subc = await sa.get_info(fav.subcorpus_id)
                         fav.subcorpus_name = subc.name
-                    fav.name = f'{fav.name} / {fav.subcorpus_name}' 
+                    fav.name = f'{fav.name} / {fav.subcorpus_name}'
             ans = l10n.sort(ans, plugin_ctx.user_lang, key=lambda itm: itm.name, reverse=False)
         return ans
 

@@ -1,5 +1,5 @@
 # Copyright (c) 2021 Charles University, Faculty of Arts,
-#                    Institute of the Czech National Corpus
+#                    Department of Linguistics
 # Copyright (c) 2021 Martin Zimandl <martin.zimandl@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
@@ -109,7 +109,7 @@ class MySQLUserItems(AbstractUserItems):
                     c['name'] = cinfo.name
                 fav.name = ' || '.join(c['name'] for c in fav.corpora)
                 if fav.subcorpus_name is not None:
-                    fav.name = f'{fav.name} / {fav.subcorpus_name}' 
+                    fav.name = f'{fav.name} / {fav.subcorpus_name}'
             ans = l10n.sort(ans, plugin_ctx.user_lang, key=lambda itm: itm.name, reverse=False)
         return ans
 
