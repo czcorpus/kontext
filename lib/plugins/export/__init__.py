@@ -34,7 +34,7 @@ from bgcalc.coll_calc import CalculateCollsResult
 from bgcalc.keywords import KeywordsResult
 from bgcalc.pquery.storage import PqueryDataLine
 from kwiclib import AttrRole
-from kwiclib.common import KwicPageData, MergedPosAttrs
+from kwiclib.common import KwicPageData
 from views.colls import SavecollArgs
 from views.concordance import SaveConcArgs
 from views.freqs import SavefreqArgs
