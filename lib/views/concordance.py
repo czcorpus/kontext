@@ -1293,7 +1293,7 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
                 kwic_args = KwicPageArgs(asdict(amodel.args), base_attr=amodel.BASE_ATTR)
                 kwic_args.speech_attr = await amodel.get_speech_segment()
                 kwic_args.fromp = 1
-                kwic_args.pagesize = to_line - from_line
+                kwic_args.pagesize = to_line - from_line + 1
                 kwic_args.line_offset = from_line
                 kwic_args.labelmap = {}
                 kwic_args.alignlist = [(await amodel.cf.get_corpus(c)) for c in amodel.args.align if c]
