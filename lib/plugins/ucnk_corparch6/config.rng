@@ -40,24 +40,7 @@
                     This can be omitted in case we want our plug-in to read mysql connection
                     information from a compatible [auth] plug-in.
                 </a:documentation>
-                <element name="mysql_host">
-                    <text />
-                </element>
-                <element name="mysql_db">
-                    <text />
-                </element>
-                <element name="mysql_user">
-                    <text />
-                </element>
-                <element name="mysql_passwd">
-                    <text />
-                </element>
-                <element name="mysql_retry_delay">
-                    <data type="integer" />
-                </element>
-                <element name="mysql_retry_attempts">
-                    <data type="integer" />
-                </element>
+                <externalRef href="../common/mysql.rng" />
             </optional>
             <optional>
                 <element name="prefer_vlo_metadata">
