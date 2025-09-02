@@ -37,6 +37,10 @@ class ConcordanceQueryParamsError(ConcordanceSpecificationError):
     pass
 
 
+class ConcordanceQueryAttrError(ConcordanceSpecificationError):
+    pass
+
+
 class EmptyParallelCorporaIntersection(ConcordanceSpecificationError):
     pass
 
@@ -79,7 +83,7 @@ def extract_manatee_error(err: Exception) -> Optional[ConcordanceException]:
         elif 'AttrNotFound' in msg:
             srch = re.match(r'AttrNotFound \(([^)]+)\)', msg)
             attr = srch.group(1) if srch else '??'
-            return ConcordanceQueryParamsError(f'Attribute not found: {attr}')
+            return ConcordanceQueryAttrError(f'Attribute not found: {attr}')
         else:
             return ConcordanceException(msg)
     return None
