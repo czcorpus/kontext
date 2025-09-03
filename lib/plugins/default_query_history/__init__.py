@@ -216,7 +216,7 @@ class QueryHistory(AbstractQueryHistory):
         data = await self.db.list_get(self._mk_key(user_id))
         if limit is None:
             limit = len(data)
-        data = list(reversed(data))[offset:(offset + limit)]
+        data = list(sorted(data, key=lambda v: v['created'], reverse=True))[offset:(offset + limit)]
         full_data = []
 
         corpora = CorpusCache(corpus_factory)
@@ -321,6 +321,7 @@ class QueryHistory(AbstractQueryHistory):
                 tmp['aligned'] = []
                 tmp['name'] = None
                 full_data.append(tmp)
+
         if from_date:
             from_date = [int(d) for d in from_date.split('-')]
             from_date = time.mktime(
