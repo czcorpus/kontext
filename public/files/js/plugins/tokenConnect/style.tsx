@@ -68,7 +68,7 @@ export const TokenConnectContainer = styled.div`
 
 `;
 
-export const DisplayLinkRenderer = styled.div`
+export const DisplayLinkRenderer = styled.ul`
 
     a {
         text-decoration: underline;
