@@ -18,6 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
+import re
 
 from plugin_types.token_connect import AbstractBackend, BackendException
 from plugins.common.http import HTTPRequester
@@ -28,6 +29,9 @@ class DisplayLinkBackend(AbstractBackend):
     """
     DisplayLink just shows a clickable link to an external service. I.e. the plug-in does not
     load any content from the target service in this case.
+    The function handles CNC multi-values (pipe-separated strings) properly - N values leads
+    to N independent links.
+
     """
 
     def __init__(self, conf, provider_id, db, ttl):
@@ -40,22 +44,40 @@ class DisplayLinkBackend(AbstractBackend):
     async def fetch(self, plugin_ctx, corpora, maincorp, token_id, num_tokens, query_args, lang, is_anonymous, context=None, cookies=None):
         attr = self._conf['posAttrs'][0]
         value = query_args[attr]
+        ans = []
         if value:
-            proto_pref = 'https://' if bool(self._conf['ssl']) is True else 'http://'
-            server = self._conf['server']
-            path = self._conf['path']
-            link = f'{proto_pref}{server}{path}'.format(**query_args)
-            label = self.fetch_localized_prop('_label', lang)
-            if label:
-                label = label.format(**query_args)
-            return dict(link=link, label=label), True
-        return dict(), False
+            for atom_value in value.split('|'):
+                qa = dict(query_args)
+                proto_pref = 'https://' if bool(self._conf['ssl']) is True else 'http://'
+                server = self._conf['server']
+                path = self._conf['path']
+                qa[attr] = atom_value  # solving multi-value issue here
+                link = f'{proto_pref}{server}{path}'.format(**qa)
+                label = self.fetch_localized_prop('_label', lang)
+                if label:
+                    label = label.format(**qa)
+                ans.append(dict(link=link, label=label))
+        return ans, len(ans) > 0
 
 
 class LemurLinkBackend(DisplayLinkBackend):
 
     def supports_multi_tokens(self):
         return False
+
+    async def fetch(self, plugin_ctx, corpora, maincorp, token_id, num_tokens, query_args, lang, is_anonymous,
+                    context=None, cookies=None):
+        """
+        In the Lemur attrib. values, special suffixes are used which must be first removed before we
+        proceed to the default "fetch" implementation. But we must also respect possible multi-values.
+        """
+        mwe_lemma = query_args.get('mwe_lemma', '')
+        tmp = []
+        for item in mwe_lemma.split('|'):
+            norm = re.sub(r'_[A-Z]{5,}$', '', item)
+            tmp.append(norm)
+        query_args['mwe_lemma'] = '|'.join(tmp)
+        return await super().fetch(plugin_ctx, corpora, maincorp, token_id, num_tokens, query_args, lang, is_anonymous, context, cookies)
 
 
 class HTTPBackend(AbstractBackend):
