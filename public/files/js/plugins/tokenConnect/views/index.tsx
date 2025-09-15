@@ -23,10 +23,11 @@ import * as Kontext from '../../../types/kontext.js';
 import { IActionDispatcher } from 'kombo';
 import { init as ftInit, FormattedTextRendererProps } from './formattedText.js';
 import * as S from '../style.js';
+import { Ident, List } from 'cnc-tskit';
 
 
 export interface Views {
-    DisplayLinkRenderer:React.FC<{data: {link: string; label?:string};}>;
+    DisplayLinkRenderer:React.FC<{data: Array<{link: string; label?:string}>}>;
     RawHtmlRenderer:React.FC<{data: Array<[string, string]>}>;
     SimpleTabularRenderer:React.FC<{data: Array<Array<[string, string]>>}>;
     DescriptionListRenderer:React.FC<{data: Array<[string, string]>}>;
@@ -55,16 +56,26 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
 
     // ------------- <DisplayLinkRenderer /> -------------------------------
 
-    const DisplayLinkRenderer:Views['DisplayLinkRenderer'] = ({data:{link, label}}) => (
-        <S.DisplayLinkRenderer>
-            {link ?
-                <a target="_blank" className="external" href={link}>
-                    {label ? label : link}
-                </a> :
-                <span className="not-avail">[N/A]</span>
-            }
-        </S.DisplayLinkRenderer>
-    );
+    const DisplayLinkRenderer:Views['DisplayLinkRenderer'] = (props) => {
+        return (
+            <S.DisplayLinkRenderer>
+                {List.map(
+                    (link, i) => (
+                        <li key={`item:${i}:${Ident.hashCode(link.link)}`}>
+                        {link.link ?
+
+                            <a target="_blank" className="external" href={link.link}>
+                                {link.label ? link.label : link.link}
+                            </a> :
+                            <span className="not-avail">[N/A]</span>
+                        }
+                        </li>
+                    ),
+                    props.data || []
+                )}
+            </S.DisplayLinkRenderer>
+        );
+    }
 
     // ------------- <RawHtmlRenderer /> -------------------------------
 
