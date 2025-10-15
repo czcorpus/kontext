@@ -219,28 +219,48 @@ async def server_init(app: Sanic, loop: asyncio.BaseEventLoop):
 
 @application.listener('after_server_start')
 async def run_receiver(app: Sanic, loop: asyncio.BaseEventLoop):
-    return
+    ready_event = asyncio.Event()
+    startup_error = None
+
     async def receiver():
+        nonlocal startup_error
         # signal handler propagates received signals between all Sanic workers
         async def signal_handler(msg: str):
+            logging.getLogger(__name__).warning('>>> soft reset signal received <<<')
             await app.dispatch(msg)
             return False  # returns if receiver should stop
 
-        with plugins.runtime.DB as db:
-            await db.subscribe_channel(SIGNAL_CHANNEL_ID, signal_handler)
-            logging.getLogger(__name__).debug(
-                "Worker `%s` subscribed to `%s`", app.m.pid, SIGNAL_CHANNEL_ID)
+        try:
+            with plugins.runtime.DB as db:
+                ready_event.set()
+                await db.subscribe_channel(SIGNAL_CHANNEL_ID, signal_handler)
+        except NotImplementedError as e:
+            startup_error = e
+            if not ready_event.is_set():
+                ready_event.set()
+        except Exception as e:
+            startup_error = e
+            if not ready_event.is_set():
+                ready_event.set()
+            raise
 
     logging.getLogger(__name__).debug("Starting receiver %s", app.m.pid)
     receiver = loop.create_task(receiver(), name=app.m.pid)
-    # wait so receiver gains control and can raise exception
-    await asyncio.sleep(0.5)
-    try:
-        receiver.result()
-    except NotImplementedError:
-        logging.info("DB subscribe_channel not implemented, crossworker signal handler disabled")
-    except Exception as e:
-        logging.error("Error while running receiver", exc_info=e)
+    await ready_event.wait()
+
+    if startup_error:
+        if isinstance(startup_error, NotImplementedError):
+            logging.info("DB plug-in subscribe_channel not implemented, cross-worker signal handler disabled")
+            receiver.cancel()
+            return
+        else:
+            logging.error("Error while running receiver", exc_info=startup_error)
+            receiver.cancel()
+            raise startup_error
+
+    logging.getLogger(__name__).debug(
+        "Worker %s successfully subscribed to redis pub/sub channel %s", app.m.pid, SIGNAL_CHANNEL_ID)
+
     app.ctx.receiver = receiver
 
 
