@@ -185,9 +185,10 @@ export function init({
         filfposUnitValue:string;
         filtposValue:Kontext.FormValue<string>;
         filtposUnitValue:string;
-
+        onFocusChange:(hasFocus:boolean)=>void;
 
     }> = (props) => {
+
         const handleToFromRangeValChange = (pos) => (evt) => {
             dispatcher.dispatch<typeof Actions.FilterInputSetRange>({
                 name: Actions.FilterInputSetRange.name,
@@ -199,8 +200,21 @@ export function init({
             });
         };
 
+        const handleFocus = () => {
+            props.onFocusChange(true);
+        };
+
+        const handleBlur = (e) => {
+            // Check if focus is moving to another element within this component
+            // If not, then the child component is losing focus entirely
+            if (!e.currentTarget.contains(e.relatedTarget)) {
+                props.onFocusChange(false);
+            }
+        };
+
+
         return (
-            <S.RangeSelector>
+            <S.RangeSelector onFocus={handleFocus} onBlur={handleBlur}>
                 <label>{he.translate('query__qfilter_range_srch_th')} </label>
                 <label>
                     {he.translate('query__qfilter_range_from')}:{'\u00a0'}
@@ -256,27 +270,23 @@ export function init({
 
     // -------- <FilterForm /> ---------------------------------------
 
-    class FilterForm extends React.PureComponent<FilterFormProps & FilterFormModelState> {
+    const FilterForm:React.FC<FilterFormProps & FilterFormModelState> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._keyEventHandler = this._keyEventHandler.bind(this);
-            this._handleSubmit = this._handleSubmit.bind(this);
-        }
+        const [focusElsewhere, setFocusElsewhere] = React.useState(false);
 
-        _keyEventHandler(evt) {
+        const _keyEventHandler = (evt) => {
             if (evt.key === Keyboard.Value.ENTER && !evt.ctrlKey && !evt.shiftKey) {
-                if (this.props.operationIdx !== undefined) {
+                if (props.operationIdx !== undefined) {
                     dispatcher.dispatch<typeof Actions.BranchQuery>({
                         name: Actions.BranchQuery.name,
-                        payload: {operationIdx: this.props.operationIdx}
+                        payload: {operationIdx: props.operationIdx}
                     });
 
                 } else {
                     dispatcher.dispatch<typeof Actions.ApplyFilter>({
                         name: Actions.ApplyFilter.name,
                         payload: {
-                            filterId: this.props.filterId
+                            filterId: props.filterId
                         }
                     });
                 }
@@ -285,76 +295,82 @@ export function init({
             }
         }
 
-        _handleSubmit() {
-            if (this.props.operationIdx !== undefined) {
+        const _handleSubmit = () => {
+            if (props.operationIdx !== undefined) {
                 dispatcher.dispatch<typeof Actions.BranchQuery>({
                     name: Actions.BranchQuery.name,
-                    payload: {operationIdx: this.props.operationIdx}
+                    payload: {operationIdx: props.operationIdx}
                 });
 
             } else {
                 dispatcher.dispatch<typeof Actions.ApplyFilter>({
                     name: Actions.ApplyFilter.name,
                     payload: {
-                        filterId: this.props.filterId
+                        filterId: props.filterId
                     }
                 });
             }
         }
 
-        _renderFullForm() {
+        const handleChildFocusChange = (v:boolean) => {
+            setFocusElsewhere(v);
+        };
+
+        const _renderFullForm = () => {
             const opts = [
                 <RangeSelector
-                    filterId={this.props.filterId}
-                    filfposValue={this.props.filfposValues[this.props.filterId]}
-                    filfposUnitValue={this.props.filfposUnitValues[this.props.filterId]}
-                    filtposValue={this.props.filtposValues[this.props.filterId]}
-                    filtposUnitValue={this.props.filfposUnitValues[this.props.filterId]} />,
+                    filterId={props.filterId}
+                    filfposValue={props.filfposValues[props.filterId]}
+                    filfposUnitValue={props.filfposUnitValues[props.filterId]}
+                    filtposValue={props.filtposValues[props.filterId]}
+                    filtposUnitValue={props.filfposUnitValues[props.filterId]}
+                    onFocusChange={handleChildFocusChange}
+                     />,
                 <InclKWicCheckbox
-                    value={this.props.inclkwicValues[this.props.filterId]}
-                    filterId={this.props.filterId} />
+                    value={props.inclkwicValues[props.filterId]}
+                    filterId={props.filterId} />
             ];
-            if (this.props.pnFilterValues[this.props.filterId] === 'p') {
+            if (props.pnFilterValues[props.filterId] === 'p') {
                 opts.push(<HighlightTokenSelector
-                            filterId={this.props.filterId}
-                            value={this.props.filflValues[this.props.filterId]} />);
+                            filterId={props.filterId}
+                            value={props.filflValues[props.filterId]} />);
             }
 
             return (
                 <QS.QueryForm>
-                    <div onKeyDown={this._keyEventHandler}>
+                    <div onKeyDown={_keyEventHandler}>
                         <div className="form primary-language">
-                            {this.props.filterId === '__new__' ?
+                            {props.filterId === '__new__' ?
                                 null :
-                                <FilterTypeSelector value={this.props.pnFilterValues[this.props.filterId]}
-                                        inclKwic={this.props.inclkwicValues[this.props.filterId]}
-                                        sourceId={this.props.filterId} />
+                                <FilterTypeSelector value={props.pnFilterValues[props.filterId]}
+                                        inclKwic={props.inclkwicValues[props.filterId]}
+                                        sourceId={props.filterId} />
                             }
                             <div>
                                 <inputViews.TRQueryInputField
-                                    widgets={this.props.supportedWidgets[this.props.filterId]}
-                                    sourceId={this.props.filterId}
-                                    corpname={this.props.corpname}
-                                    wPoSList={this.props.wPoSList}
-                                    lposValue={this.props.lposValues[this.props.filterId]}
-                                    forcedAttr={this.props.forcedAttr}
-                                    attrList={this.props.attrList}
-                                    tagHelperView={this.props.tagHelperView}
-                                    tagsets={this.props.tagsets}
-                                    inputLanguage={this.props.inputLanguage}
-                                    useRichQueryEditor={this.props.useRichQueryEditor}
-                                    onEnterKey={this._handleSubmit}
+                                    widgets={props.supportedWidgets[props.filterId]}
+                                    sourceId={props.filterId}
+                                    corpname={props.corpname}
+                                    wPoSList={props.wPoSList}
+                                    lposValue={props.lposValues[props.filterId]}
+                                    forcedAttr={props.forcedAttr}
+                                    attrList={props.attrList}
+                                    tagHelperView={props.tagHelperView}
+                                    tagsets={props.tagsets}
+                                    inputLanguage={props.inputLanguage}
+                                    useRichQueryEditor={props.useRichQueryEditor}
+                                    onEnterKey={_handleSubmit}
                                     isSingleInstance={true}
-                                    hasFocus={true}
+                                    hasFocus={!focusElsewhere}
                                     qsuggPlugin={querySuggest}
                                     customOptions={opts} />
                             </div>
                         </div>
                         <div className="buttons">
-                            {this.props.isBusy ?
+                            {props.isBusy ?
                                 <layoutViews.AjaxLoaderBarImage /> :
-                                <button type="button" className="default-button" onClick={this._handleSubmit}>
-                                    {this.props.operationIdx !== undefined ?
+                                <button type="button" className="default-button" onClick={_handleSubmit}>
+                                    {props.operationIdx !== undefined ?
                                         he.translate('global__proceed')
                                         : he.translate('query__search_btn')}
                                 </button>
@@ -365,19 +381,17 @@ export function init({
             );
         }
 
-        render() {
-            if (this.props.opLocks[this.props.filterId]) {
-                return (
-                    <div>
-                        <img src={he.createStaticUrl('img/info-icon.svg')} alt={he.translate('global__info_icon')}
-                                style={{verticalAlign: 'middle', marginLeft: '0.7em'}} />
-                        {he.translate('query__operation_is_automatic_and_cannot_be_changed')}
-                    </div>
-                );
+        if (props.opLocks[props.filterId]) {
+            return (
+                <div>
+                    <img src={he.createStaticUrl('img/info-icon.svg')} alt={he.translate('global__info_icon')}
+                            style={{verticalAlign: 'middle', marginLeft: '0.7em'}} />
+                    {he.translate('query__operation_is_automatic_and_cannot_be_changed')}
+                </div>
+            );
 
-            } else {
-                return this._renderFullForm();
-            }
+        } else {
+            return _renderFullForm();
         }
     }
 
