@@ -60,8 +60,8 @@ class ConcCacheStatus:
     cachefile: Optional[str] = field(default=None)
     readable: bool = field(default=False)
     pid: int = field(default_factory=lambda: os.getpid())
-    created: int = field(default_factory=lambda: int(time.time()))
-    last_upd: int = field(default_factory=lambda: int(time.time()))
+    created: float = field(default_factory=lambda: time.time())
+    last_upd: float = field(default_factory=lambda: time.time())
 
     def __post_init__(self, error: Optional[List[str]]):
         self._error = ConcCacheStatus.deserialize_error(error)
@@ -118,7 +118,7 @@ class ConcCacheStatus:
         t1 = time.time()
         if not self.finished and t1 - self.last_upd > time_limit:
             self._error = ConcCacheStatusException(
-                f'Wait limit for initial data exceeded (waited {t1 - self.last_upd} '
+                f'Wait limit for initial data exceeded (waited {t1 - self.last_upd:.2f} '
                 f', limit: {time_limit})')
             self.finished = True
 
@@ -138,7 +138,7 @@ class ConcCacheStatus:
         self.readable = kw.get('readable', self.readable)
         self.pid = kw.get('pid', self.pid)
         self.created = kw.get('created', self.created)
-        self.last_upd = int(time.time())
+        self.last_upd = time.time()
         return self
 
     @staticmethod
