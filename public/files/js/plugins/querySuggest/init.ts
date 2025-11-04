@@ -27,9 +27,7 @@ import { init as initView, SuggestionsViews } from './view.js';
 import { isEmptyResponse, Model } from './model.js';
 import {
     isBasicFrontend, isPosAttrPairRelFrontend, isErrorFrontend, isPosAttrPairRelClickPayload,
-    KnownRenderers, isCncExtendedSublemmaFrontendClickPayload, isCncExtendedSublemmaFrontend,
-    isCncExhaustiveQueryInfoFrontend,
-    isCncExhaustiveQueryInfoFrontendClickPayload,
+    KnownRenderers, isCncExtendedSublemmaFrontendClickPayload, isCncExtendedSublemmaFrontend
 } from './frontends.js';
 import { AnyProviderInfo, isEnabledFor } from './providers.js';
 import { AnyQuery, QuerySuggestion } from '../../models/query/query.js';
@@ -148,16 +146,6 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
                 query.qmcase = true;
             }
 
-        } else if (provInfo.rendererId === KnownRenderers.EXHAUSTIVE_QUERY_EVAL &&
-                isCncExhaustiveQueryInfoFrontendClickPayload(value)) {
-            this.pluginApi.dispatcher().dispatch<typeof GlobalActions.SwitchCorpus>({
-                name: GlobalActions.SwitchCorpus.name,
-                payload: {
-                    corpora: [value.corpname],
-                    subcorpus: null
-                }
-            });
-
         } else {
             throw new Error(`Failed to apply click operation with renderer ${provInfo.rendererId} and data ${JSON.stringify(value)}`);
         }
@@ -183,14 +171,6 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
         } else if (isCncExtendedSublemmaFrontend(dr)) {
             return createElement(this.views.cncExtendedSublemma, {
                 ...dr.contents,
-                isShortened: dr.isShortened,
-                itemClickHandler: value => itemClickHandler(dr.providerId, value)
-            });
-
-        } else if (isCncExhaustiveQueryInfoFrontend(dr)) {
-            return createElement(this.views.exhaustiveQuery, {
-                problematic: dr.contents.problematic,
-                altCorpus: dr.contents.alt_corpus,
                 isShortened: dr.isShortened,
                 itemClickHandler: value => itemClickHandler(dr.providerId, value)
             });

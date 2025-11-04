@@ -62,6 +62,7 @@ import { IPluginApi } from '../types/plugins/common.js';
 import { FreqResultViews } from '../models/freqs/common.js';
 import { PageMount } from './mounts.js';
 import { CorpusInfoModel } from '../models/common/corpusInfo.js';
+import { FormatXMLElementFn, PrimitiveType } from 'intl-messageformat';
 
 
 export enum DownloadType {
@@ -464,6 +465,13 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      */
     translate(msg:string, values?:any):string {
         return this.l10n.translate(msg, values);
+    }
+
+     translateRich(
+            msg: string,
+            values?: Record<string, PrimitiveType | React.ReactNode | FormatXMLElementFn<React.ReactNode>>
+    ): string | React.ReactNode | Array<string | React.ReactNode> {
+        return this.l10n.translateRich(msg, values);
     }
 
     formatNumber(v:number, fractionDigits:number=2):string {

@@ -13,7 +13,7 @@
 # GNU General Public License for more details.
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Optional
 
 import plugins
 from action.argmapping.conc.base import ConcFormArgs
@@ -56,6 +56,10 @@ class _QueryFormArgs:
     cutoff: int = 0
     """defines a cut-off for large concordances"""
 
+    treat_as_slow_query: bool = False
+
+    alt_corpus: Optional[str] = None
+
 
 def _corp_mapping(corpora: List[str], v: Any = None) -> Dict[str, Any]:
     return {c: v for c in corpora}
@@ -74,7 +78,11 @@ class QueryFormArgs(ConcFormArgs[_QueryFormArgs], AbstractRawQueryDecoder):
             await self._add_corpus_metadata(corp)
         return self
 
-    def __init__(self, plugin_ctx: AbstractCorpusPluginCtx, corpora: List[str], persist: bool):
+    def __init__(
+            self,
+            plugin_ctx: AbstractCorpusPluginCtx,
+            corpora: List[str],
+            persist: bool):
         super().__init__(persist)
         self._plugin_ctx = plugin_ctx
         self.data = _QueryFormArgs(
@@ -115,6 +123,8 @@ class QueryFormArgs(ConcFormArgs[_QueryFormArgs], AbstractRawQueryDecoder):
     def update_by_user_query(self, data, bib_mapping):
         self._test_data_type(data, 'type', 'concQueryArgs')
         self.data.asnc = data.get('async', False)
+        self.data.treat_as_slow_query = data.get('treat_as_slow_query', False)
+        self.data.alt_corpus = data.get('alt_corpus', None)
         self.data.no_query_history = data.get('no_query_history', False)
         self.data.shuffle = data.get('shuffle', False)
         for query in data['queries']:

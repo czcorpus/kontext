@@ -60,17 +60,11 @@ class TaskWrapper:
 
 # ----------------------------- CONCORDANCE -----------------------------------
 
-@as_sync
-@handle_custom_exception
-async def conc_register(user_id, corpus_ident, corp_cache_key, query, cutoff, time_limit):
-    return await general.conc_register(
-        TaskWrapper(get_current_job()), user_id, corpus_ident, corp_cache_key, query, cutoff, time_limit, worker)
-
 
 @as_sync
 @handle_custom_exception
-async def conc_calculate(initial_args, user_id, corpus_ident, corp_cache_key, query, cutoff):
-    return await general.conc_calculate(TaskWrapper(get_current_job()), initial_args, user_id, corpus_ident, corp_cache_key, query, cutoff)
+async def conc_streamed_calculate(initial_args, user_id, corpus_ident, corp_cache_key, query, cutoff):
+    return await general.conc_streamed_calculate(TaskWrapper(get_current_job()), initial_args, user_id, corpus_ident, corp_cache_key, query, cutoff)
 
 
 @as_sync

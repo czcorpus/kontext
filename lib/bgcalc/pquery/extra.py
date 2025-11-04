@@ -24,7 +24,7 @@ from bgcalc.freqs import calculate_freqs_bg_sync
 from bgcalc.pquery import (
     SUBTASK_TIMEOUT_SECS, create_freq_calc_args, extract_freqs)
 from bgcalc.pquery.storage import stored_to_fs
-from conclib.calc import require_existing_conc
+from bgcalc.conc import require_existing_conc
 from corplib import CorpusFactory
 from corplib.abstract import SubcorpusIdent
 

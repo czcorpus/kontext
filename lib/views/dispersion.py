@@ -22,7 +22,7 @@ from action.errors import ImmediateRedirectException, UserReadableException
 from action.krequest import KRequest
 from action.model.concordance import ConcActionModel
 from action.response import KResponse
-from conclib.calc import require_existing_conc
+from bgcalc.conc import require_existing_conc
 from conclib.errors import ConcNotFoundException
 from conclib.pyconc import PyConc
 from dataclasses_json import dataclass_json

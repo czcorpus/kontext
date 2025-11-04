@@ -503,6 +503,15 @@ export interface ViewConfiguration {
     Unfinished:boolean;
 
     /**
+     * This is an externally obtained flag marking the query
+     * as possibly slow. In such case, KonText will show some
+     * warnings and/or recommendations regarding the search.
+     */
+    TreatAsSlowQuery:boolean;
+
+    AltCorpus:string;
+
+    /**
      * If true then we don't have to notify
      * user that the calculation will take quite a long time
      * as we are able to calc. the stuff quicker

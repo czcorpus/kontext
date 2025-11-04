@@ -27,8 +27,8 @@ import { List, HTTP, Ident, Dict, pipe, id, tuple } from 'cnc-tskit';
 import { map, tap, concatMap, mergeMap, scan } from 'rxjs/operators';
 import { Actions as QueryActions } from '../../models/query/actions.js';
 import { cutLongResult, isBasicFrontend, isPosAttrPairRelFrontend, listAttrs1ToExtend,
-    mergeResults, isErrorFrontend, filterOutTrivialSuggestions, isCncExtendedSublemmaFrontend,
-    isCncExhaustiveQueryInfoFrontend} from './frontends.js';
+    mergeResults, isErrorFrontend, filterOutTrivialSuggestions, isCncExtendedSublemmaFrontend
+} from './frontends.js';
 import { AnyProviderInfo, supportsRequest } from './providers.js';
 import { Actions } from './actions.js';
 import { QuerySuggestion, QueryType } from '../../models/query/query.js';
@@ -111,9 +111,6 @@ export function isEmptyResponse<T>(v:QuerySuggestion<T>):boolean {
 
     } else if (isCncExtendedSublemmaFrontend(v)) {
         return Dict.empty(v.contents.data);
-
-    } else if (isCncExhaustiveQueryInfoFrontend(v)) {
-        return !v.contents;
 
     } else if (isErrorFrontend(v)) {
         return false;

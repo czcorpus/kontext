@@ -26,7 +26,7 @@ import { List, pipe, Dict } from 'cnc-tskit';
 import { Model } from './model.js';
 
 import * as S from './style.js';
-import { PosAttrPairRelFrontendClickHanlder, KnownRenderers, CncExtendedSublemmaFrontendClickHandler, CncExhaustiveQueryInfoFrontendClickPayload } from './frontends.js';
+import { PosAttrPairRelFrontendClickHanlder, KnownRenderers, CncExtendedSublemmaFrontendClickHandler } from './frontends.js';
 
 
 export interface BasicRendererProps {
@@ -62,13 +62,6 @@ export interface CncExtendedSublemmaRendererProps {
     itemClickHandler:CncExtendedSublemmaFrontendClickHandler;
 }
 
-export interface CncExhaustiveQueryInfoRendererProps {
-    problematic:boolean;
-    altCorpus:string;
-    isShortened:boolean;
-    itemClickHandler:(value:CncExhaustiveQueryInfoFrontendClickPayload)=>void;
-}
-
 
 export interface SuggestionsViews {
     [KnownRenderers.BASIC]:React.FC<BasicRendererProps>;
@@ -76,7 +69,6 @@ export interface SuggestionsViews {
     [KnownRenderers.UNSUPPORTED]:React.FC<UnsupportedRendererProps>;
     [KnownRenderers.POS_ATTR_PAIR_REL]:React.FC<PosAttrPairRelRendererProps>;
     [KnownRenderers.CNC_EXTENDED_SUBLEMMA]:React.FC<CncExtendedSublemmaRendererProps>;
-    [KnownRenderers.EXHAUSTIVE_QUERY_EVAL]:React.FC<CncExhaustiveQueryInfoRendererProps>;
 }
 
 
@@ -312,38 +304,11 @@ export function init(
         </S.PosAttrPairRelRenderer>
     };
 
-
-    const CncExhaustiveQueryInfoRenderer:React.FC<CncExhaustiveQueryInfoRendererProps> = (props) => {
-
-        const handler = e => props.itemClickHandler(
-            {
-                corpname:props.altCorpus,
-                renderer: KnownRenderers.EXHAUSTIVE_QUERY_EVAL
-            }
-        );
-
-        return <S.ExhaustiveQueryInfo>
-            <p>{he.translate('defaultTD__exhaustiveQueryWarn')}</p>
-            {props.altCorpus ?
-                <>
-                    <p>
-                        <a onClick={handler}>{he.translate('defaultTD__exhaustiveQueryAltCorpLink_{corpname}', {corpname: props.altCorpus})}</a>
-                        {'\u00a0'}
-                        ({he.translate('defaultTD__recomm_corp_link_note')})
-                    </p>
-                </> :
-                null
-            }
-        </S.ExhaustiveQueryInfo>;
-
-    };
-
     return {
         [KnownRenderers.BASIC]: BasicRenderer,
         [KnownRenderers.POS_ATTR_PAIR_REL]: PosAttrPairRelRenderer,
         [KnownRenderers.CNC_EXTENDED_SUBLEMMA]: CncExtendedSublemmaRenderer,
         [KnownRenderers.ERROR]: ErrorRenderer,
-        [KnownRenderers.EXHAUSTIVE_QUERY_EVAL]: CncExhaustiveQueryInfoRenderer,
         [KnownRenderers.UNSUPPORTED]: UnsupportedRenderer,
     }
 

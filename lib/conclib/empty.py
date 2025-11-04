@@ -24,21 +24,30 @@ from corplib.corpus import AbstractKCorpus
 
 class InitialConc:
     """
-    InitialConc represents a concordance which has always zero rows
-    but it is also expected to be calculated further. It is sometimes
-    used by KonText as an initial replacement for the manatee.Concordance
+    InitialConc represents a concordance which has always zero rows,
+    but it is also expected to be calculated further. It is used by KonText
+    as an initial replacement for the manatee.Concordance
     in case it is reasonable to expect the actual calculation to take a long time
-    before any (initial few rows) data arrives. In such case, the frontend uses
-    InitialConc while the backend worker calculates actual data.
+    before any (initial few rows) data arrive.
     """
 
-    def __init__(self, corp: AbstractKCorpus, cache_path: Optional[str] = None, finished: bool = False):
+    def __init__(
+            self,
+            corp: AbstractKCorpus,
+            cache_path: Optional[str] = None,
+            finished: bool = False,
+            handle_as_slow_query: bool = False):
         self._corp = corp
         self._cache_path = cache_path
         self._finished = finished
+        self._handle_as_slow_query = handle_as_slow_query
 
     def corp(self):
         return self._corp
+
+    @property
+    def handle_as_slow_query(self):
+        return self._handle_as_slow_query
 
     @property
     def orig_corp(self):

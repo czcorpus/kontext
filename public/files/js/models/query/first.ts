@@ -22,7 +22,7 @@
 
 import { IFullActionControl } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
-import { tap, map, concatMap, reduce } from 'rxjs/operators';
+import { tap, map, concatMap, reduce, catchError } from 'rxjs/operators';
 import { Dict, tuple, List, pipe, HTTP, Rx } from 'cnc-tskit';
 
 import * as Kontext from '../../types/kontext.js';
@@ -30,7 +30,8 @@ import * as TextTypes from '../../types/textTypes.js';
 import { PageModel } from '../../app/page.js';
 import { QueryContextModel } from './context.js';
 import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState,
-    ConcQueryArgs, QueryContextArgs, determineSupportedWidgets, getTagBuilderSupport, suggestionsEnabled } from './common.js';
+    ConcQueryArgs, QueryContextArgs, determineSupportedWidgets, getTagBuilderSupport, suggestionsEnabled,
+    ConcPreflightResponse} from './common.js';
 import { Actions } from './actions.js';
 import { Actions as GenOptsActions } from '../options/actions.js';
 import { Actions as TTActions } from '../../models/textTypes/actions.js';
@@ -40,7 +41,8 @@ import { IUnregistrable } from '../common/common.js';
 import * as PluginInterfaces from '../../types/plugins/index.js';
 import { ConcQueryResponse, ConcServerArgs } from '../concordance/common.js';
 import { AdvancedQuery, advancedToSimpleQuery, AnyQuery, AnyQuerySubmit, parseSimpleQuery, isAdvancedQuery,
-    QueryType, SimpleQuery, simpleToAdvancedQuery} from './query.js';
+    QueryType, SimpleQuery, simpleToAdvancedQuery,
+    isSimpleQuery} from './query.js';
 import { ajaxErrorMapped } from '../../app/navigation/index.js';
 import { AttrHelper } from '../cqleditor/attrs.js';
 import { highlightSyntaxStatic, isTokenlessQuery } from '../cqleditor/parser.js';
@@ -100,8 +102,8 @@ interface CreateSubmitArgsArgs {
     contextFormArgs:QueryContextArgs;
     async:boolean;
     ttSelection:TextTypes.ExportedSelection;
+    preflight?:ConcPreflightResponse;
     noQueryHistory?:boolean;
-    useAltCorp?:boolean;
 }
 
 /**
@@ -145,7 +147,9 @@ export const fetchQueryFormArgs = (data:{[ident:string]:ConcFormArgs}):
             fc_lemword: '',
             fc_pos_type: 'none',
             fc_pos_wsize: [-1, 1],
-            fc_pos: []
+            fc_pos: [],
+            treat_as_slow_query: false,
+            alt_corpus: undefined
         };
     }
 };
@@ -189,7 +193,8 @@ function importUserQueries(
                     query,
                     querySuperType: 'conc',
                     he: {
-                        translate: (s:string, values?:any) => s
+                        translate: (s:string, values?:any) => s,
+                        translateRich: (s:string, values?:any) => s
                     },
                     wrapLongQuery: false
                 });
@@ -327,8 +332,6 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
      alignCommonPosAttrs:Array<string>;
 
      concPreflight:Kontext.PreflightConf|null;
-
-     suggestAltCorpVisible:boolean;
 }
 
 
@@ -475,8 +478,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 concViewPosAttrs: props.concViewPosAttrs,
                 alignCommonPosAttrs: props.alignCommonPosAttrs,
                 compositionModeOn: false,
-                concPreflight: props.concPreflight,
-                suggestAltCorpVisible: false
+                concPreflight: props.concPreflight
         });
 
         this.addActionSubtypeHandler(
@@ -504,29 +506,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 this.changeState(state => {
                     state.queries[action.payload.corpname].include_empty = action.payload.value;
                 });
-            }
-        );
-
-        this.addActionHandler(
-            Actions.ShowSuggestAltCorp,
-            action => {
-                this.changeState(
-                    state => {
-                        state.isBusy = false;
-                        state.suggestAltCorpVisible = true;
-                    }
-                );
-            }
-        );
-
-        this.addActionHandler(
-            Actions.CloseSuggestAltCorp,
-            action => {
-                this.changeState(
-                    state => {
-                        state.suggestAltCorpVisible = false;
-                    }
-                );
             }
         );
 
@@ -574,38 +553,36 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                         {ttSelections: undefined, contextData: undefined}
                     ),
                     concatMap(
-                        ({ttSelections, contextData}) => {
-                            return rxOf({
-                                contextData,
-                                ttSelections,
-                                preflightAlert: false,
-                            });
-                        }
+                        ({ttSelections, contextData}) => this.doPreflightReq().pipe(
+                            map(
+                                resp => ({
+                                    ttSelections,
+                                    contextData,
+                                    preflight: resp
+                                })
+                            )
+                        )
                     ),
                     concatMap(
-                        ({ttSelections, contextData, preflightAlert}) => {
+                        ({ttSelections, contextData, preflight}) => {
                             let err:Error;
                             err = this.testQueryTypeMismatch();
                             if (err !== null) {
                                 throw err;
                             }
-                            return Rx.zippedWith(
-                                preflightAlert,
-                                preflightAlert ?
-                                    rxOf({ response: null, messages: [] }) :
-                                    this.submitQuery(contextData, true, ttSelections, undefined, action.payload.useAltCorp)
+                            return this.submitQuery(
+                                contextData,
+                                true,
+                                ttSelections,
+                                preflight,
+                                undefined
                             );
                         }
                     )
 
                 ).subscribe({
-                    next: ([{response, messages}, preflightAlert]) => {
-                        if (preflightAlert) {
-                            this.dispatchSideEffect(
-                                Actions.ShowSuggestAltCorp
-                            )
-
-                        } else if (response === null) {
+                    next: ({response, messages}) => {
+                        if (response === null) {
                             if (!List.empty(messages)) {
                                 List.forEach(
                                     ([msgType, msg]) => {
@@ -778,6 +755,65 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
     disableDefaultShuffling():void {
         this.changeState(state => {
             state.shuffleForbidden = true;
+        });
+    }
+
+    private queriesToPreflightCQL(queries:Array<AnyQuery>):string {
+        const cqlChunks = List.map(
+            (queryObj) => {
+                const cql = isSimpleQuery(queryObj) ?
+                    pipe(
+                        Array.isArray(queryObj.default_attr) ? queryObj.default_attr : [queryObj.default_attr],
+                        List.map(
+                            attr => `${attr}="${queryObj.query}"`
+                        ),
+                        x => tuple(queryObj.corpname, '[' + x.join(' | ') + ']')
+                    ) :
+                    tuple(queryObj.corpname, queryObj.query);
+                return cql;
+            },
+            queries
+        );
+        const rest = pipe(
+            cqlChunks,
+            v => List.size(v) > 1 ? List.tail(v) : [],
+            List.map(([corpname, q]) => `within ${corpname}: ${q}`),
+            List.join(() => ' ')
+        );
+        return encodeURIComponent(`${cqlChunks[0][1]} ${rest}`.trim());
+    }
+
+    private doPreflightReq():Observable<ConcPreflightResponse> {
+        const queries = pipe(
+                this.state.corpora,
+                List.map(
+                    corp => this.state.queries[corp]
+                ),
+                List.filter(
+                    v => v.query && (v.qtype === 'advanced' || v.qtype === 'simple' && v.use_regexp)
+                ),
+            );
+        if (this.state.concPreflight.eval_api_url && !List.empty(queries)) {
+            const encQuery = this.queriesToPreflightCQL(queries);
+            return this.pageModel.ajax$<ConcPreflightResponse>(
+                HTTP.Method.GET,
+                `${this.state.concPreflight.eval_api_url}/cql/${this.state.concPreflight.corpname}?q=${encQuery}`,
+                {}
+
+            ).pipe(
+                catchError(
+                    err => rxOf({
+                        altCorpus: null,
+                        votes: [],
+                        isSlowQuery: false
+                    })
+                )
+            )
+        }
+        return rxOf({
+            altCorpus: null,
+            votes: [],
+            isSlowQuery: false
         });
     }
 
@@ -1014,7 +1050,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         async,
         ttSelection,
         noQueryHistory,
-        useAltCorp
+        preflight
     }:CreateSubmitArgsArgs):ConcQueryArgs {
         const currArgs = this.pageModel.getConcArgs();
         const args:ConcQueryArgs = {
@@ -1035,6 +1071,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             context: contextFormArgs,
             async,
             no_query_history: !!noQueryHistory,
+            treat_as_slow_query: preflight ? !!preflight.isSlowQuery : false,
+            alt_corpus: preflight ? preflight.altCorpus : null
         };
 
         if (this.state.corpora.length > 1) {
@@ -1046,56 +1084,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             this.state.corpora
         );
 
-        if (useAltCorp) {
-            const corp = this.pageModel.getCorpusIdent();
-            args.queries = List.map(
-                query => {
-                    if (query.corpname == corp.name) {
-                        query.corpname = this.state.concPreflight.alt_corp;
-                    }
-                    return query;
-                },
-                args.queries,
-            );
-        }
-
         return args;
     }
-
-    createPreflightArgs(
-        contextFormArgs:QueryContextArgs,
-        ttSelection:TextTypes.ExportedSelection,
-        preflightSubc:Kontext.PreflightConf
-    ):ConcQueryArgs {
-
-        const currArgs = this.pageModel.getConcArgs();
-        const args:ConcQueryArgs = {
-            type: 'concQueryArgs',
-            usesubcorp: preflightSubc.subc,
-            viewmode: 'kwic',
-            pagesize: currArgs.pagesize,
-            attrs: currArgs.attrs,
-            attr_vmode: currArgs.attr_vmode,
-            base_viewattr: currArgs.base_viewattr,
-            ctxattrs: currArgs.ctxattrs,
-            structs: currArgs.structs,
-            refs: currArgs.refs,
-            fromp: currArgs.fromp || 0,
-            shuffle: this.state.shuffleConcByDefault && !this.state.shuffleForbidden,
-            queries: [],
-            text_types: this.disableRestrictSearch(this.state) ? {} : ttSelection,
-            context: contextFormArgs,
-            async: false
-        };
-        args.queries = [
-            this.exportQuery({
-                ...this.state.queries[this.state.corpora[0]],
-                corpname: preflightSubc.corpname
-            })
-        ];
-        return args;
-    }
-
 
     createViewUrl(concId:string, args:ConcServerArgs, retJson:boolean, async:boolean):string {
         return this.pageModel.createActionUrl(
@@ -1113,8 +1103,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         contextFormArgs:QueryContextArgs,
         async:boolean,
         ttSelection:TextTypes.ExportedSelection,
+        preflight?:ConcPreflightResponse,
         noQueryHistory?:boolean,
-        useAltCorp?:boolean,
     ):Observable<SubmitQueryResult> {
 
         return this.pageModel.ajax$<ConcQueryResponse>(
@@ -1128,7 +1118,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 async,
                 ttSelection,
                 noQueryHistory,
-                useAltCorp,
+                preflight,
             }),
             {
                 contentType: 'application/json'

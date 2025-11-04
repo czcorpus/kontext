@@ -24,6 +24,7 @@ import * as CoreViews from '../types/coreViews/index.js';
 import { PageModel } from './page.js';
 import { debounceTime, fromEvent, map, Observable } from 'rxjs';
 import { ScreenProps } from '../views/document/responsiveWrapper.js';
+import { FormatXMLElementFn, PrimitiveType } from 'intl-messageformat';
 
 /**
  * ComponentTools provide a set of runtime functions
@@ -59,6 +60,13 @@ export class ComponentTools {
 
     translate(s:string, values?:any):string {
         return this.pageModel.translate(s, values);
+    }
+
+    translateRich(
+        msg: string,
+        values?: Record<string, PrimitiveType | React.ReactNode | FormatXMLElementFn<React.ReactNode>>
+    ): string | React.ReactNode | Array<string | React.ReactNode> {
+        return this.pageModel.translateRich(msg, values);
     }
 
     createActionLink<T>(path:string, args?:T):string {

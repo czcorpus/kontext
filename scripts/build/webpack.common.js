@@ -47,7 +47,6 @@ export default {
         entry: {
             coll: mkpath('js/pages/coll.ts'),
             corplist: mkpath('js/pages/corplist.ts'),
-            fcs: mkpath('js/pages/fcs.ts'),
             query: mkpath('js/pages/query.ts'),
             pquery: mkpath('js/pages/pquery.ts'),
             pqueryResult: mkpath('js/pages/pqueryResult.ts'),

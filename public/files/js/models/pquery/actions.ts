@@ -30,7 +30,6 @@ import { DataSaveFormat } from '../../app/navigation/save.js';
 export class Actions {
 
     static SubmitQuery:Action<{
-        altCorp?:string;
     }> = {
         name: 'PQUERY_SUBMIT_QUERY'
     };
@@ -42,10 +41,6 @@ export class Actions {
 
     }> = {
         name: 'PQUERY_SUBMIT_QUERY_DONE'
-    };
-
-    static CloseSuggestAltCorp:Action<{}> = {
-        name: 'PQUERY_CLOSE_SUGGEST_ALT_CORP'
     };
 
     static isSubmitQueryDone(a:Action):a is typeof Actions.SubmitQueryDone {

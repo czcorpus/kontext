@@ -255,7 +255,10 @@ export class QueryPage {
                 ),
                 concViewPosAttrs: this.getConf<ConcServerArgs>('currentArgs').attrs,
                 alignCommonPosAttrs: this.getConf<Array<string>>('AlignCommonPosAttrs'),
-                concPreflight: this.getConf<Kontext.PreflightConf|null>('concPreflight')
+                concPreflight: {
+                    corpname: this.layoutModel.getCorpusIdent().id,
+                    eval_api_url: this.layoutModel.getConf<string>('ConcPreflightApiUrl'),
+                }
             }
         });
     }

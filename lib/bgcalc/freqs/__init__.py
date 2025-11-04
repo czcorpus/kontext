@@ -34,7 +34,7 @@ from bgcalc.errors import BgCalcError, UnfinishedConcordanceError
 from bgcalc.freqs.storage import find_cached_result, stored_to_fs
 from bgcalc.freqs.types import Freq2DCalcArgs, FreqCalcArgs, FreqCalcResult
 from bgcalc.task import AsyncTaskStatus
-from conclib.calc import require_existing_conc
+from bgcalc.conc import require_existing_conc
 from conclib.pyconc import PyConc
 from corplib.abstract import SubcorpusIdent
 from corplib.corpus import AbstractKCorpus, KCorpus

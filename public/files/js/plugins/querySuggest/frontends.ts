@@ -21,7 +21,6 @@
 
 import { Dict, List, pipe } from 'cnc-tskit';
 import { QuerySuggestion } from '../../models/query/query.js';
-import { CncExhaustiveQueryInfoRendererProps } from './view.js';
 
 
 export enum KnownRenderers {
@@ -29,7 +28,6 @@ export enum KnownRenderers {
     ERROR = 'error',
     POS_ATTR_PAIR_REL = 'posAttrPairRel',
     CNC_EXTENDED_SUBLEMMA = 'cncExtendedSublemma',
-    EXHAUSTIVE_QUERY_EVAL = 'exhaustiveQuery',
     UNSUPPORTED = 'unsupported'
 }
 
@@ -124,30 +122,6 @@ export interface CncExtendedSublemmaFrontendClickHandler {
     (value:CncExtendedSublemmaFrontendClickPayload):void;
 }
 
-// ------------------------
-
-export interface CncExhaustiveQueryInfoFrontend extends QuerySuggestion<{
-    problematic:boolean;
-    alt_corpus:string;
-}> {
-    isActive:boolean;
-}
-
-export function isCncExhaustiveQueryInfoFrontend(
-    v:QuerySuggestion<unknown>
-
-):v is CncExhaustiveQueryInfoFrontend {
-    return isDataAndRenderer(v) && v['rendererId'] === KnownRenderers.EXHAUSTIVE_QUERY_EVAL;
-}
-
-export interface CncExhaustiveQueryInfoFrontendClickPayload {
-    corpname:string;
-    renderer:KnownRenderers.EXHAUSTIVE_QUERY_EVAL;
-}
-
-export function isCncExhaustiveQueryInfoFrontendClickPayload(v:any):v is CncExhaustiveQueryInfoFrontendClickPayload {
-    return v['renderer'] === KnownRenderers.EXHAUSTIVE_QUERY_EVAL;
-}
 
 // -----------------------
 
