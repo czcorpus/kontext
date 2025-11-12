@@ -31,7 +31,7 @@ ujson >= 5.3.1
 setproctitle >= 1.2.2
 markupsafe >= 2.1.1
 
-rq-scheduler >= 0.11.0
-rq >= 1.10.1
+rq-scheduler >= 0.14.0
+rq >= 2.6.0
 
 sox>=1.4.1,<1.5.0 # install failed with sox>=1.5.0, numpy required error message
