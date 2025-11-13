@@ -55,10 +55,10 @@ class FreqCalcResult:
     """
     conc_size: int
     freqs: Optional[List[FreqData]]
-    data_path: Optional[str] = None  # data_path and freqs should be mutually exclusive
+    fs_stored_data: bool
 
     def contains_direct_data(self):
-        return self.freqs is not None
+        return self.fs_stored_data is False
 
 @dataclass
 class Freq2DCalcArgs:
