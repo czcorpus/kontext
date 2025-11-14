@@ -6,7 +6,7 @@ python-json-logger >= 2.0.7
 tzdata >= 2023.3
 PyICU >= 1.5
 babel >= 2.9.1
-jinja2 >= 2.11.3
+jinja2 >= 3.1.6
 secure-cookie >= 0.1.0
 setuptools ==78.1.1
 sanic >= 24.12.0
@@ -19,7 +19,7 @@ openpyxl >= 3.0.10
 redis >= 4.3.4
 async_timeout >= 5.0.1
 uvloop >= 0.16.0
-mysql-connector-python >= 8.4.0, < 9.0.0
+mysql-connector-python >= 9.5.0
 aiofiles >= 0.8.0
 aiocsv >= 1.2.2
 aiohttp >= 3.10.2
