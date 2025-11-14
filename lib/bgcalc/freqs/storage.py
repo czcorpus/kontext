@@ -151,7 +151,7 @@ def stored_to_fs(func: Callable[[FreqCalcArgs], Coroutine[None, None, FreqCalcRe
                     for item in block.Items:
                         bw.write(json.dumps(item.to_dict()) + '\n')
                 if data_len >= MAX_DATA_LEN_DIRECT_PROVIDING:
-                    data.data_path = cache_path
+                    data.fs_stored_data = True
                     data.freqs = None
         return data
     return wrapper
