@@ -57,8 +57,6 @@ class FreqCalcResult:
     freqs: Optional[List[FreqData]]
     fs_stored_data: Optional[bool] = False
 
-    def contains_direct_data(self):
-        return self.fs_stored_data is False
 
 @dataclass
 class Freq2DCalcArgs:
