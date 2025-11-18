@@ -241,13 +241,16 @@ async def calculate_freqs(args: FreqCalcArgs):
 
         if tmp_result is None:
             raise BgCalcError('Failed to get freqs result')
+
         elif isinstance(tmp_result, Exception):
             raise tmp_result
-        calc_result = tmp_result
-        if not calc_result.contains_direct_data():
-            calc_result, _ = find_cached_result(args)
-            if calc_result is None:
-                raise BgCalcError('Failed to get expected freqs result')
+
+        elif isinstance(tmp_result, FreqCalcResult):
+            calc_result = tmp_result
+            if calc_result.fs_stored_data:
+                calc_result, _ = find_cached_result(args)
+                if calc_result is None:
+                    raise BgCalcError('Failed to get expected freqs result')
 
     lastpage = None
     fstart = (args.fpage - 1) * args.fpagesize
