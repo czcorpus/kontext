@@ -25,6 +25,7 @@ from bgcalc.pquery import (
 from bgcalc.pquery.storage import stored_to_fs
 from bgcalc.errors import BgCalcError
 from bgcalc.freqs.storage import find_cached_result
+from bgcalc.freqs.types import FreqCalcResult
 from conclib.calc import require_existing_conc
 from corplib import CorpusFactory
 from corplib.abstract import SubcorpusIdent
@@ -71,9 +72,9 @@ async def calc_merged_freqs_worker(
 
     # merge frequencies of individual realizations
     merged = defaultdict(lambda: [])
-    results = await asyncio.gather(f.get(timeout=SUBTASK_TIMEOUT_SECS) for f in specif_futures)
-    for freq_table, args in zip(results, specif_args):
-        if not freq_table.contains_direct_data():
+    specif_results: List[FreqCalcResult] = await asyncio.gather(f.get(timeout=SUBTASK_TIMEOUT_SECS) for f in specif_futures)
+    for freq_table, args in zip(specif_results, specif_args):
+        if freq_table.fs_stored_data:
             freq_table, _ = find_cached_result(args)
             if freq_table is None:
                 raise BgCalcError('Failed to get expected freqs result')
@@ -88,14 +89,13 @@ async def calc_merged_freqs_worker(
         # ask for the results of the "(almost) never"
         # and filter out values with too high ratio of "opposite examples"
         complements = defaultdict(lambda: 0)
-        results = await asyncio.gather(f.get(timeout=SUBTASK_TIMEOUT_SECS) for f in cond1_futures)
-        for cond1_item, args in zip(results, cond1_args):
-            result = cond1_item.result()
-            if not result.contains_direct_data():
+        cond1_results: List[FreqCalcResult] = await asyncio.gather(f.get(timeout=SUBTASK_TIMEOUT_SECS) for f in cond1_futures)
+        for freq_table, args in zip(cond1_results, cond1_args):
+            if freq_table.fs_stored_data:
                 result, _ = find_cached_result(args)
                 if result is None:
                     raise BgCalcError('Failed to get expected freqs result')
-            for v, freq in extract_freqs(cond1_item.result()):
+            for v, freq in extract_freqs(freq_table):
                 complements[v] += freq
         for k in [k2 for k2 in merged.keys() if k2 in complements]:
             ratio = complements[k] / (sum(merged[k]) + complements[k])
@@ -105,8 +105,8 @@ async def calc_merged_freqs_worker(
     if cond2_future is not None:
         # ask for the results of the "(almost) always"
         # and filter out values found as extra instances too many times in the superset
-        result = await cond2_future.get(timeout=SUBTASK_TIMEOUT_SECS)
-        if not result.contains_direct_data():
+        result: FreqCalcResult = await cond2_future.get(timeout=SUBTASK_TIMEOUT_SECS)
+        if result.fs_stored_data:
             result, _ = find_cached_result(cond2_args)
             if result is None:
                 raise BgCalcError('Failed to get expected freqs result')
@@ -164,6 +164,7 @@ async def calc_merged_freqs_threaded(
                 conc = await require_existing_conc(corp, freq_args.q, freq_args.cutoff)
                 cond1_futures.append(executor.submit(
                     calculate_freqs_bg_sync, freq_args, corp, conc))
+
         # calculate auxiliary data (the superset here) for the "(almost) always" condition
         cond2_future = None
         if pquery.conc_superset:
@@ -183,6 +184,7 @@ async def calc_merged_freqs_threaded(
         for w in list(merged.keys()):
             if len(merged[w]) < len(pquery.conc_ids):  # all the realizations must be present
                 del merged[w]
+
         if len(cond1_futures) > 0:
             # ask for the results of the "(almost) never"
             # and filter out values with too high ratio of "opposite examples"
@@ -194,6 +196,7 @@ async def calc_merged_freqs_threaded(
                 ratio = complements[k] / (sum(merged[k]) + complements[k])
                 if ratio * 100 > pquery.conc_subset_complements.max_non_matching_ratio:
                     del merged[k]
+
         if cond2_future is not None:
             # ask for the results of the "(almost) always"
             # and filter out values found as extra instances too many times in the superset
