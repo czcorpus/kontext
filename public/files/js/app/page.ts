@@ -113,7 +113,7 @@ export class UnsupportedBlob implements Blob {
         return Promise.reject(UnsupportedBlob.translate('global__func_not_supp_by_the_browser'));
     }
 
-    bytes(): Promise<Uint8Array> {
+    bytes(): Promise<Uint8Array<ArrayBuffer>> {
         return Promise.reject(UnsupportedBlob.translate('global__func_not_supp_by_the_browser'));
     }
 }

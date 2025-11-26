@@ -417,7 +417,7 @@ export function init(
                 const ttRgt = he.formatNumber(props.payload[props.dataKey]+props.payload[confidenceKey][1], 3);
                 const rel = he.formatNumber(props.payload[props.dataKey]);
                 const msg = he.translate('freq__chart_p_filter_tooltip');
-                const ttStyle:CSSProperties = {
+                const ttStyle:React.CSSProperties = {
                     color: theme.colorLightText,
                     fontSize: '0.8em'
                 };
