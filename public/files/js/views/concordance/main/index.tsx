@@ -94,12 +94,11 @@ export interface MainViews {
 }
 
 
-function secs2hms(v:number) {
-    const h = Math.floor(v / 3600);
+function secs2ms(v:number) {
     const m = Math.floor((v % 3600) / 60);
     const s = v % 60;
     const lz = (v:number) => v < 10 ? `0${v.toFixed()}` : v.toFixed();
-    return `${lz(h)}:${lz(m)}:${lz(s)}`;
+    return `${lz(m)}:${lz(s)}`;
 }
 
 
@@ -615,6 +614,63 @@ export function init({
         );
     };
 
+    // ------------------------- <WaitingForConc /> ----------------------------
+
+    const WaitingForConc:React.FC<{
+        treatAsSlowQuery:boolean;
+        busyWaitSecs:number;
+        alternativeCorpus:string|undefined;
+
+    }> = (props) => {
+        return (
+            <S.WaitingForConc>
+                {props.treatAsSlowQuery ?
+                    <div className="cqlizer-note">
+                        <div className="messages">
+                            <div className="icon">
+                                <img src={he.createStaticUrl('img/hourglass.svg')} />
+                                <span className="excl">!</span>
+                            </div>
+                            <p>
+                                <span>
+                                    {he.translateRich('concview__this_is_a_possibly_slow_query',
+                                        {strong: (chunks) => <strong key="chunks">{chunks}</strong>}
+                                    )}
+                                </span>
+                                {props.alternativeCorpus ?
+                                    <>
+                                        <br />
+                                        <span dangerouslySetInnerHTML={{
+                                            __html: he.translateRich(
+                                                'concview__altcorp_suggested_{alt_corpus}',
+                                                {
+                                                    alt_corpus: props.alternativeCorpus,
+                                                    strong: (chunks) => `<strong>${chunks}</strong>`
+                                                }
+                                            )}} />
+                                    </> :
+                                    null
+                                }
+                            </p>
+                        </div>
+                        <p className="timer">
+                            ({he.translate('concview__waiting_elapsed_time')}:{'\u00a0'}
+                            <span className="counter">{secs2ms(props.busyWaitSecs)}</span>)
+                        </p>
+                    </div> :
+                    <div className="loader">
+                        <p>{he.translate('concview__waiting_for_data')}</p>
+                        <p><layoutViews.AjaxLoaderImage /></p>
+                        <p className="timer">
+                            ({he.translate('concview__waiting_elapsed_time')}:{'\u00a0'}
+                            <span className="counter">{secs2ms(props.busyWaitSecs)}</span>)
+                        </p>
+                    </div>
+                }
+            </S.WaitingForConc>
+        );
+    }
+
     // ------------------------- <ConcordanceView /> ---------------------------
 
     const ConcordanceView:React.FC<
@@ -695,11 +751,10 @@ export function init({
                 </S.ConcTopBar>
                 <S.ConclinesWrapper>
                     {props.lines.length === 0 && props.unfinishedCalculation ?
-                        <div className="no-data">
-                            <p>{he.translate('concview__waiting_for_data')}</p>
-                            <p>({he.translate('concview__waiting_elapsed_time')}:{'\u00a0'}{secs2hms(props.busyWaitSecs)})</p>
-                            <p><layoutViews.AjaxLoaderImage /></p>
-                        </div> :
+                        <WaitingForConc
+                            busyWaitSecs={props.busyWaitSecs}
+                            treatAsSlowQuery={props.treatAsSlowQuery}
+                            alternativeCorpus={props.altCorpus} /> :
                         <linesViews.ConcLines {...props} />
                     }
                 </S.ConclinesWrapper>

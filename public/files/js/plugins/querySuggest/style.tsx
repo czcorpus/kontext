@@ -105,11 +105,3 @@ export const PosAttrPairRelRenderer = styled.div`
         }
     }
 `;
-
-// ------------------ <ExhaustiveQueryInfo /> --------------------------------
-
-export const ExhaustiveQueryInfo = styled.div`
-    font-size: 90%;
-    color: ${theme.colorLightText};
-    padding: 0.2em;
-`;

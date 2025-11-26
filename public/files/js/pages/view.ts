@@ -954,7 +954,9 @@ export class ViewPage {
 
     private initModels(
         queryFormArgs:formArgs.QueryFormArgsResponse,
-        tokenConnect:PluginInterfaces.TokenConnect.IPlugin
+        tokenConnect:PluginInterfaces.TokenConnect.IPlugin,
+        treatAsSlow:boolean,
+        altCorpus:string
     ):ViewConfiguration {
 
         const concSummaryProps:ConcSummary = {
@@ -1011,6 +1013,8 @@ export class ViewPage {
             mergedAttrs: this.layoutModel.getConf<Array<[string, number]>>('MergedAttrs'),
             mergedCtxAttrs: this.layoutModel.getConf<Array<[string, number]>>('MergedCtxAttrs'),
             alignCommonPosAttrs: this.layoutModel.getConf<Array<string>>('AlignCommonPosAttrs'),
+            TreatAsSlowQuery: treatAsSlow,
+            AltCorpus: altCorpus,
         };
 
         this.viewModels = new ViewPageModels();
@@ -1166,16 +1170,23 @@ export class ViewPage {
                 'ConcFormsArgs'
             );
             const queryFormArgs = fetchQueryFormArgs(concFormArgs);
-
             const rawQuery = pipe(
                 this.layoutModel.getConf<Array<Kontext.QueryOperation>>('queryOverview') || [],
                 List.head(),
                 x => x.args
             );
             const qProps = new QueryProps(rawQuery);
+            const treatAsSlowSrch = Dict.find(
+                (v, _) => {
+                    return formArgs.isQueryFormArgs(v) && v.treat_as_slow_query;
+                },
+                concFormArgs
+            );
             const lineViewProps = this.initModels(
                 queryFormArgs,
-                this.initTokenConnect()
+                this.initTokenConnect(),
+                treatAsSlowSrch && formArgs.isQueryFormArgs(treatAsSlowSrch[1]) ? treatAsSlowSrch[1].treat_as_slow_query : false,
+                treatAsSlowSrch && formArgs.isQueryFormArgs(treatAsSlowSrch[1]) ? treatAsSlowSrch[1].alt_corpus : null,
             );
 
             this.concViews = concViewsInit({

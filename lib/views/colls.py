@@ -25,7 +25,7 @@ from action.model.concordance import ConcActionModel
 from action.response import KResponse
 from bgcalc.coll_calc import (
     CalculateCollsResult, CollCalcArgs, calculate_colls)
-from conclib.calc import require_existing_conc
+from bgcalc.conc import require_existing_conc
 from conclib.errors import ConcNotFoundException
 from main_menu import MainMenu
 from sanic import Blueprint

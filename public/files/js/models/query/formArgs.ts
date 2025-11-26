@@ -66,6 +66,8 @@ export interface QueryFormArgs extends ConcFormArgs {
     fc_pos_type:CtxLemwordType;
     fc_pos_wsize:[number, number];
     fc_pos:Array<string>;
+    treat_as_slow_query:boolean;
+    alt_corpus:string;
 }
 
 export function isQueryFormArgs(args:ConcFormArgs):args is QueryFormArgs {

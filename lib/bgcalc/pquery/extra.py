@@ -26,7 +26,7 @@ from bgcalc.pquery.storage import stored_to_fs
 from bgcalc.errors import BgCalcError
 from bgcalc.freqs.storage import find_cached_result
 from bgcalc.freqs.types import FreqCalcResult
-from conclib.calc import require_existing_conc
+from bgcalc.conc import require_existing_conc
 from corplib import CorpusFactory
 from corplib.abstract import SubcorpusIdent
 

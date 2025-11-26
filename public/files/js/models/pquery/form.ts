@@ -86,24 +86,12 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                 this.changeState(state => {
                     state.isBusy = true;
                     state.calcProgress = 0;
-
-                    if (action.payload.altCorp) {
-                        state.queries = Dict.map(
-                            (v, _) => ({
-                                ...v, corpname: action.payload.altCorp
-                            }),
-                            state.queries
-                        );
-                        state.corpname = action.payload.altCorp;
-                        state.usesubcorp = undefined;
-                    }
-
                     const partialQueries = this.partializeQueries(state);
                     state.concWait = Dict.map(_ => 'running', partialQueries);
                 });
 
                 const partialQueries = this.partializeQueries(this.state);
-                this.submitForm(this.state, partialQueries, !!action.payload.altCorp).subscribe({
+                this.submitForm(this.state, partialQueries).subscribe({
                     next: (task) => {
                         this.dispatchSideEffect(
                             Actions.SubmitQueryDone,
@@ -783,24 +771,9 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
 
     private submitForm(
         state:PqueryFormModelState,
-        partialQueries:{[sourceId:string]:ParadigmaticPartialQuery},
-        usesAltCorpus:boolean
+        partialQueries:{[sourceId:string]:ParadigmaticPartialQuery}
     ):Observable<Kontext.AsyncTaskInfo<AsyncTaskArgs>|null> {
-        if (usesAltCorpus === undefined) {
-            return rxOf(...pipe(
-                partialQueries,
-                Dict.toEntries()
-            )).pipe(
-                concatMap(
-                    v => v ?
-                        this.submitQueries(state, partialQueries) :
-                        rxOf(null)
-                )
-            );
-
-        } else {
             return this.submitQueries(state, partialQueries);
-        }
     }
 
     private submitFreqIntersection(

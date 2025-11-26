@@ -56,15 +56,8 @@ export interface CncExtendedSublemmaProviderInfo extends ProviderInfo<{
     rendererId:KnownRenderers.CNC_EXTENDED_SUBLEMMA;
 }
 
-export interface CncExhaustiveQueryInfoProviderInfo extends ProviderInfo<{
-
-}> {
-    rendererId:KnownRenderers.EXHAUSTIVE_QUERY_EVAL;
-}
-
-
 export type AnyProviderInfo = BasicProviderInfo | PosAttrPairRelProviderInfo |
-    CncExtendedSublemmaProviderInfo | CncExhaustiveQueryInfoProviderInfo;
+    CncExtendedSublemmaProviderInfo;
 
 
 export function supportsRequest(info:AnyProviderInfo, req:PluginInterfaces.QuerySuggest.SuggestionArgs):boolean {
@@ -75,9 +68,6 @@ export function supportsRequest(info:AnyProviderInfo, req:PluginInterfaces.Query
             return info.conf.attr1 === req.posAttr || info.conf.attr2 === req.posAttr || !req.posAttr;
         case KnownRenderers.CNC_EXTENDED_SUBLEMMA:
             return info.conf.lemma === req.posAttr || info.conf.sublemma === req.posAttr || !req.posAttr;
-        case KnownRenderers.EXHAUSTIVE_QUERY_EVAL:
-            return req.queryType === 'simple' && req.valueSubformat === 'regexp' ||
-                req.queryType === 'advanced';
         default:
             return false;
     }

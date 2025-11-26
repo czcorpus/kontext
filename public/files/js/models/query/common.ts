@@ -84,9 +84,17 @@ export interface ConcQueryArgs {
     text_types:TextTypes.ExportedSelection;
     context:QueryContextArgs;
     async:boolean;
+    treat_as_slow_query?:boolean;
+    alt_corpus?:string;
     no_query_history?:boolean;
     cutoff?:number;
     type:'concQueryArgs';
+}
+
+export interface ConcPreflightResponse {
+    isSlowQuery:boolean;
+    altCorpus:string;
+    votes:Array<{ votes:Array<number>; result:number; }>;
 }
 
 export interface SampleServerArgs extends ConcServerArgs {

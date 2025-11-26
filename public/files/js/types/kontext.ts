@@ -31,6 +31,7 @@ import { SearchHistoryModel } from '../models/searchHistory/index.js';
 import { ScreenProps } from '../views/document/responsiveWrapper.js';
 import { Dict, List, pipe } from 'cnc-tskit';
 import { CorpusInfoModel } from '../models/common/corpusInfo.js';
+import { FormatXMLElementFn, PrimitiveType } from 'intl-messageformat';
 
 
 /**
@@ -283,6 +284,11 @@ export interface Translator {
      * JSON file.
      */
     translate(s:string, values?:any):string;
+
+    translateRich(
+        msg: string,
+        values?: Record<string, PrimitiveType | React.ReactNode | FormatXMLElementFn<React.ReactNode>>
+    ): string | React.ReactNode | Array<string | React.ReactNode>;
 }
 
 /**
@@ -539,7 +545,5 @@ export type ChartExportFormat = 'png' | 'svg' | 'png-print' | 'pdf';
 
 export interface PreflightConf {
     corpname:string;
-    subc:string;
-    threshold_ipm:number;
-    alt_corp:string;
+    eval_api_url:string;
 }

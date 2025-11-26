@@ -85,15 +85,7 @@ CREATE TABLE kontext_parallel_corpus (
   PRIMARY KEY (id)
 ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
-CREATE TABLE kontext_alt_corpus (
-  corpus_name varchar(63) NOT NULL,
-  alt_corpus_name varchar(63) NOT NULL,
-  UNIQUE KEY corpora_name_uniq (corpus_name),
-  CONSTRAINT alt_corpora_corpus_name FOREIGN KEY (corpus_name) REFERENCES kontext_corpus (name),
-  CONSTRAINT alt_corpora_alt_corpus_name FOREIGN KEY (alt_corpus_name) REFERENCES kontext_corpus (name)
-) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-
--- ------------------------------- ARTICLE ------------------------
+------------------------------ ARTICLE ------------------------
 
 CREATE TABLE kontext_article (
     id INTEGER PRIMARY KEY NOT NULL,

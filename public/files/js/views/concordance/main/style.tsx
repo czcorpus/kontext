@@ -284,13 +284,92 @@ export const ConclinesWrapper = styled.div`
         height: 24px;
         margin: 2em auto 2em auto;
     }
+`;
 
-    .no-data {
+// ---------------- <WaitingForConc /> --------------------
+
+export const WaitingForConc = styled.div`
+
+    @keyframes blink {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0;
+        }
+    }
+
+    margin: 5em;
+
+    .loader {
         text-align: center;
 
         img {
             display: inline-block;
             margin: 2em;
+        }
+
+        .counter {
+            color: ${theme.colorLogoPink};
+        }
+    }
+
+    .cqlizer-note {
+
+        display: flex;
+        flex-direction: column;
+
+        .timer {
+            text-align: center;
+            font-size: 1.5em;
+
+            .counter {
+                color: ${theme.colorLogoPink};
+            }
+        }
+
+        .messages {
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            .icon {
+
+                display: flex;
+                padding: 1em 2.5em 1em 1em;
+                animation: blink 3s ease-in-out infinite;
+
+                img {
+                    display: block;
+                    margin: 0;
+                    padding: 0 0.2em 0 0;
+                    width: 2.4em;
+                }
+
+                .excl {
+                    font-size: 4em;
+                    font-weight: bold;
+                    color: ${theme.colorLogoBlue};
+                }
+            }
+
+            .loader-icon {
+
+                display: block;
+
+                img {
+                    display: block;
+                    margin: 0;
+                    padding: 0 2.1em 0 0;
+                    width: 3em;
+                }
+            }
+
+            p {
+                font-size: 1.3em;
+                max-width: 25em;
+            }
         }
     }
 `;

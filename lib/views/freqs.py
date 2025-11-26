@@ -37,7 +37,7 @@ from action.model.user import UserActionModel
 from action.response import KResponse
 from bgcalc.freqs import calculate_freq2d, calculate_freqs
 from bgcalc.freqs.types import Freq2DCalcArgs, FreqCalcArgs
-from conclib.calc import require_existing_conc
+from bgcalc.conc import require_existing_conc
 from conclib.errors import ConcNotFoundException, ConcordanceQueryParamsError
 from conclib.freq import MLFreqArgs, multi_level_crit
 from conclib.search import get_conc

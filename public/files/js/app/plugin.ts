@@ -26,6 +26,7 @@ import { DownloadType, PageModel } from './page.js';
 import { ConcServerArgs } from '../models/concordance/common.js';
 import { IPluginApi } from '../types/plugins/common.js';
 import { Root } from 'react-dom/client';
+import { FormatXMLElementFn, PrimitiveType } from 'intl-messageformat';
 
 
 export enum PluginName {
@@ -85,6 +86,13 @@ export class PluginApi implements IPluginApi {
 
     translate(msg:string, values?:any) {
         return this.pageModel.translate(msg, values);
+    }
+
+    translateRich(
+        msg: string,
+        values?: Record<string, PrimitiveType | React.ReactNode | FormatXMLElementFn<React.ReactNode>>
+    ): string | React.ReactNode | Array<string | React.ReactNode> {
+        return this.pageModel.translateRich(msg, values);
     }
 
     formatNumber(v, fractionDigits:number=2) {

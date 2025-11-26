@@ -263,6 +263,16 @@
                             </a:documentation>
                         </element>
                     </optional>
+                    <optional>
+                        <element name="conc_preflight_api_url">
+                            <text />
+                            <a:documentation>
+                                If specified then KonText will use it to evaluate queries right before
+                                actual query is performed. In case the query is evaluated as 'slow',
+                                a warning is shown.
+                            </a:documentation>
+                        </element>
+                    </optional>
                     <element name="upload_cache_dir">
                         <a:documentation>A path where uploaded file (e.g. pos./neg. filter words)
                         are temporarily stored before being processed</a:documentation>
