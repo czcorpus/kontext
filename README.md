@@ -73,7 +73,7 @@ adapters, authentication method, corpus listing widgets, HTTP session management
 
 ### Docker
 
-Running KonText as a set of Docker containers is the most convenient and flexible way. Docker Compose V2 is required. To run a basic
+Running KonText as a set of Docker containers is the most convenient and flexible way. Docker Compose v2 is required. To run a basic
 configuration instance (i.e. no MySQL/MariaDB server) use:
 
 ```shell
@@ -94,7 +94,7 @@ docker compose -f docker-compose.yml -f docker-compose.mysql.yml --env-file .env
 #### Key requirements
 
 * Python *3.6* (or newer)
-* [Manatee](http://nlp.fi.muni.cz/trac/noske) corpus search engine - version *2.167.8* and onwards (for KonText *v0.17*, Manatee *v2.2xx* is recommended)
+* [Manatee](http://nlp.fi.muni.cz/trac/noske) corpus search engine - version *2.167.8* and onwards (for KonText *v0.17+*, Manatee *v2.2xx* is recommended)
 * a key-value storage
     * [Redis](http://redis.io/) (recommended), [SQLite](https://sqlite.org/) (supported), custom implementations possible
 * a task queue - [Rq](https://python-rq.org/)
