@@ -422,7 +422,8 @@ function importQueries(pqueryForm:FreqIntersectionArgs, concQueries:ConcQueries)
                 query: query.query,
                 querySuperType: pqueryForm.pquery_type === 'full' ? 'pquery' : 'conc',
                 he: {
-                    translate: (s:string, values?:any) => s
+                    translate: (s:string, values?:any) => s,
+                    translateRich: (s: string, values?:any) => s
                 }
             });
             query.queryHtml = parsed.highlighted;

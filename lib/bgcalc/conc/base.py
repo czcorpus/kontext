@@ -101,7 +101,7 @@ class GeneralWorker:
             ans.arf = result_arf
         return ans
 
-    def compute_conc(self, corp: AbstractKCorpus, q: Tuple[str, ...], cutoff: int) -> PyConc:
+    def create_conc_instance(self, corp: AbstractKCorpus, q: Tuple[str, ...], cutoff: int) -> PyConc:
         start_time = time.time()
         q = tuple(q)
         if q[0][0] != 'R':
@@ -109,7 +109,7 @@ class GeneralWorker:
         else:
             raise NotImplementedError('Function "online sample" is not supported')
         logging.getLogger(__name__).debug(
-            f'compute_conc({corp.corpname}, [{", ".join(q)}]) '
+            f'create_conc_instance({corp.corpname}, [{", ".join(q)}]) '
             f'-> {(time.time() - start_time):.4f}')
         return ans_conc
 

@@ -21,8 +21,9 @@
 /// <reference path="../vendor.d.ts/translations.d.ts" />
 
 import translations from 'translations';
-import { IntlMessageFormat } from 'intl-messageformat';
+import { FormatXMLElementFn, IntlMessageFormat, PrimitiveType } from 'intl-messageformat';
 import { ITranslator } from 'kombo';
+import * as React from 'react';
 
 
 interface DateTimeFormatOpts {
@@ -51,20 +52,40 @@ export class L10n implements ITranslator {
         this.helpLinks = {...helpLinks};
     }
 
+    translate(msg:string, values?:{[key:string]:string|number|boolean}):string {
+        if (msg) {
+            const tmp = this.translations[msg];``
+            if (tmp) {
+                try {
+                    const format = new IntlMessageFormat(this.translations[msg], this.uiLang);
+                    return format.format(values) + '';
+
+                } catch (e) {
+                    console.error('Failed to translate message ', msg, e);
+                    return tmp;
+                }
+            }
+            return msg;
+        }
+        return '';
+    }
+
     /**
      * Translate a message identified by a provided key.
      * Null/undefined messages are translated into
      * an empty string. Non-translated keys are passed
      * as they are.
      */
-    translate(msg:string, values?:{[key:string]:string|number|boolean}):string {
+    translateRich(
+        msg: string,
+        values?: Record<string, PrimitiveType | React.ReactNode | FormatXMLElementFn<React.ReactNode>>
+    ): string | React.ReactNode | Array<string | React.ReactNode> {
         if (msg) {
             const tmp = this.translations[msg];
             if (tmp) {
                 try {
-                    const format = new IntlMessageFormat(this.translations[msg], this.uiLang);
-                    return format.format(values) + '';
-
+                    const format = new IntlMessageFormat(tmp, this.uiLang);
+                    return format.format(values);
                 } catch (e) {
                     console.error('Failed to translate ', msg, e);
                     return tmp;

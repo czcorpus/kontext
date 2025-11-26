@@ -28,7 +28,7 @@ import manatee
 import plugins
 import settings
 from bgcalc.errors import CalcTaskNotFoundError
-from conclib.calc.base import GeneralWorker
+from bgcalc.conc.base import GeneralWorker
 from conclib.empty import InitialConc
 from conclib.errors import (
     ConcCalculationStatusException, ConcNotFoundException, UnreadableConcordanceException, extract_manatee_error)
@@ -259,7 +259,7 @@ async def find_cached_conc_base(
     return ans
 
 
-class ConcCalculation(GeneralWorker):
+class ConcStreamedCalculation(GeneralWorker):
 
     def __init__(self, task_id, cache_factory=None):
         """
@@ -291,7 +291,7 @@ class ConcCalculation(GeneralWorker):
             if not initial_args['already_running']:
                 # The conc object bellow is asynchronous; i.e. you obtain it immediately but it may
                 # not be ready yet (this is checked by the 'finished()' method).
-                conc = self.compute_conc(corpus_obj, query, cutoff)
+                conc = self.create_conc_instance(corpus_obj, query, cutoff)
                 sleeptime = 0.1
                 time.sleep(sleeptime)
                 cachefile = initial_args['cachefile']
@@ -339,7 +339,8 @@ class ConcCalculation(GeneralWorker):
 class ConcSyncCalculation(GeneralWorker):
     """
     A worker for calculating a concordance synchronously (from Manatee API point of view)
-    but still in background.
+    but still in the worker. This is needed when an initial query contains additional operations
+    like shuffle.
 
     Please note that the worker expects you to create required concordance cache
     mapping records.
@@ -353,6 +354,10 @@ class ConcSyncCalculation(GeneralWorker):
         self.corpus_obj = None
         self.cache_map = None
         self.conc_dir = conc_dir
+
+    def _normalize_permissions(self, path: str):
+        if os.path.isfile(path) and os.getuid() == os.stat(path).st_uid:
+            os.chmod(path, 0o664)
 
     async def _mark_calc_states_err(
             self, corp_cache_key: Optional[str], query: Tuple[str, ...], cutoff: int, from_idx: int, err: BaseException):
@@ -374,7 +379,7 @@ class ConcSyncCalculation(GeneralWorker):
                         corp_cache_key, query[:i + 1], cutoff,
                         ConcCacheStatus(task_id=self._task_id), overwrite=True)
                 calc_status = await self.cache_map.get_calc_status(corp_cache_key, query[:1], cutoff)
-                conc = self.compute_conc(self.corpus_obj, query[:1], cutoff)
+                conc = self.create_conc_instance(self.corpus_obj, query[:1], cutoff)
                 conc.sync()
                 conc.save(calc_status.cachefile)
                 os.chmod(calc_status.cachefile, 0o664)
@@ -390,8 +395,7 @@ class ConcSyncCalculation(GeneralWorker):
             else:
                 for i in range(calc_from, len(query)):
                     await self.cache_map.add_to_map(
-                        corp_cache_key, query[:i +
-                                              1], cutoff, ConcCacheStatus(task_id=self._task_id),
+                        corp_cache_key, query[:i + 1], cutoff, ConcCacheStatus(task_id=self._task_id),
                         overwrite=True)
         except Exception as ex:
             logging.getLogger(__name__).error(ex)

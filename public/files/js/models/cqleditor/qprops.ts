@@ -21,6 +21,7 @@
 import { List, pipe } from 'cnc-tskit';
 import { highlightSyntaxStatic, ParsedQuery } from './parser.js';
 import { ComponentHelpers } from '../../types/kontext.js';
+import { FormatXMLElementFn, PrimitiveType } from 'intl-messageformat';
 
 
 /**
@@ -44,7 +45,13 @@ export class QueryProps {
             query: this.query,
             querySuperType: 'conc',
             he: {
-                translate(s:string, values?:any):string { return s; }
+                translate(s:string, values?:any):string { return s; },
+                translateRich(
+                    msg: string,
+                    values?: Record<string, PrimitiveType | React.ReactNode | FormatXMLElementFn<React.ReactNode>>
+                ): string | React.ReactNode | Array<string | React.ReactNode> {
+                    return msg;
+                }
             },
             wrapLongQuery: false
         });

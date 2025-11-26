@@ -54,7 +54,7 @@ from action.response import KResponse, bytes_stream
 from action.result.concordance import QueryAction
 from bgcalc import calc_backend_client
 from bgcalc.errors import CalcTaskNotFoundError
-from conclib.calc import cancel_conc_task
+from bgcalc.conc import cancel_conc_task
 from conclib.empty import InitialConc
 from conclib.errors import (
     ConcordanceException, ConcordanceQueryAttrError, ConcordanceQueryParamsError,
@@ -103,6 +103,7 @@ async def query(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 
     out['subcorp_tt_structure'] = None
     out['subcorp_aligned'] = []
+    out['conc_preflight_api_url'] = settings.get('global', 'conc_preflight_api_url')
     corp_ident = amodel.corp.portable_ident
     if isinstance(corp_ident, SubcorpusIdent):
         with plugins.runtime.SUBC_STORAGE as sr:
@@ -232,7 +233,12 @@ async def get_conc_cache_status(amodel: ConcActionModel, req: KRequest, resp: KR
 
 
 async def view_conc(
-        amodel: ConcActionModel, req: KRequest, resp: KResponse, asnc: int, user_id: int, disable_auclp=False):
+        amodel: ConcActionModel,
+        req: KRequest,
+        resp: KResponse,
+        asnc: int,
+        user_id: int,
+        disable_auclp=False):
     """
     Args:
         amodel:

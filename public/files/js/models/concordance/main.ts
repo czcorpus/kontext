@@ -154,6 +154,10 @@ export interface ConcordanceModelState {
      */
     unfinishedCalculation:boolean;
 
+    treatAsSlowQuery:boolean;
+
+    altCorpus:string;
+
     concSize:number;
 
     concId:string;
@@ -295,7 +299,9 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 ),
                 tokenLinks: List.map(_ => ({}), lineViewProps.CorporaColumns),
                 textDirectionRTL: layoutModel.getConf<boolean>('TextDirectionRTL'),
-                shareLinkProps:null
+                shareLinkProps:null,
+                treatAsSlowQuery: lineViewProps.TreatAsSlowQuery,
+                altCorpus: lineViewProps.AltCorpus
             }
         );
         this.layoutModel = layoutModel;

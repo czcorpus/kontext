@@ -173,7 +173,10 @@ function importFormValues(src:any, sourceId?:string):{[key:string]:AnyQuery} {
                         const parsed = highlightSyntaxStatic({
                             query,
                             querySuperType: 'conc',
-                            he: {translate: id}
+                            he: {
+                                translate: id,
+                                translateRich: (msg: any, v: any) => msg
+                            }
                         });
                         return tuple<string, AdvancedQuery>(
                             filter,
@@ -231,7 +234,10 @@ function importFormValues(src:any, sourceId?:string):{[key:string]:AnyQuery} {
         const parsed = highlightSyntaxStatic({
             query,
             querySuperType: 'conc',
-            he: {translate: id}
+            he: {
+                translate: id,
+                translateRich: (msg: any, v: any) => msg
+            }
         });
         return {
             [sourceId]: src.query_type === 'advanced' ?

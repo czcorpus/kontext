@@ -27,7 +27,7 @@ import bgcalc.freqs
 import corplib
 import settings
 from bgcalc.errors import UnfinishedConcordanceError
-from conclib.calc import require_existing_conc
+from bgcalc.conc import require_existing_conc
 from corplib.abstract import SubcorpusIdent
 from corplib.errors import MissingSubCorpFreqFile
 

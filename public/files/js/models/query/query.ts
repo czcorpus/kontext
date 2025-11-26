@@ -174,7 +174,7 @@ export function simpleToAdvancedQuery(q:SimpleQuery, defaultAttr:string):Advance
     const parsed = highlightSyntaxStatic({
         query,
         querySuperType: 'conc',
-        he: {translate: id}
+        he: {translate: id, translateRich: (s:string, values?:any) => s}
     });
     return {
         corpname: q.corpname,

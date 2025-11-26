@@ -74,8 +74,6 @@ from views.colls import bp as colls_bp
 from views.concordance import bp as conc_bp
 from views.corpora import bp as corpora_bp
 from views.dispersion import bp as dispersion_bp
-from views.fcs import bp_common as fcs_common_bp
-from views.fcs import bp_v1 as fcs_v1_bp
 from views.freqs import bp as freqs_bp
 from views.keywords import bp as keywords_bp
 from views.options import bp as options_bp
@@ -158,8 +156,6 @@ application.blueprint(options_bp)
 application.blueprint(pquery_bp)
 application.blueprint(tools_bp)
 application.blueprint(subcorpus_bp)
-application.blueprint(fcs_common_bp)
-application.blueprint(fcs_v1_bp)
 application.blueprint(tt_select_bp)
 application.blueprint(sse_bp)
 setup_plugins()

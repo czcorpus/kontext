@@ -549,6 +549,7 @@ export function generate(
 ) {
     const helpers = {
         translate : (x, v) => x.replace(/[_-]/g, ' '),
+        translateRich: (x, v) => x.replace(/[_-]/g, ' '),
         createStaticUrl : x => `../../../${x}`,
         createActionLink : x => x,
         getConf : k => null,
