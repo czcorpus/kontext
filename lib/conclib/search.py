@@ -262,13 +262,13 @@ async def get_conc(
             else:
                 conc = await _get_sync_conc_no_worker(
                     worker=worker, corp=corp, q=q, cutoff=cutoff)
-                # save additional concordance actions to cache (e.g. sample)
-                await perform_tail_ops(
-                    worker=worker,
-                    corp=corp,
-                    base_conc=conc,
-                    calc_from=1,
-                    q=q,
-                    cutoff=cutoff)
+        # save additional concordance actions to cache (e.g. sample)
+        await perform_tail_ops(
+            worker=worker,
+            corp=corp,
+            base_conc=conc,
+            calc_from=1,
+            q=q,
+            cutoff=cutoff)
 
     return conc
