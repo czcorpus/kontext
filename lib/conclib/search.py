@@ -162,9 +162,6 @@ async def _get_sync_conc_no_worker(
 
 
 def _should_be_bg_query(corp: AbstractKCorpus, query: Tuple[str, ...], asnc: int, handle_as_slow: bool) -> bool:
-    # TODO !!!!!!
-    return True
-    # DEBUG !!!
     if asnc > 1 or handle_as_slow:
         return True
     return (len(query) > 1 and asnc == 1 and (
