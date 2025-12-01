@@ -63,6 +63,8 @@ import { FreqResultViews } from '../models/freqs/common.js';
 import { PageMount } from './mounts.js';
 import { CorpusInfoModel } from '../models/common/corpusInfo.js';
 import { FormatXMLElementFn, PrimitiveType } from 'intl-messageformat';
+import { PublicSubcorpListModel } from '../models/subcorp/listPublic.js';
+import { SubcorpListItem } from '../models/subcorp/list.js';
 
 
 export enum DownloadType {
@@ -171,6 +173,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
 
     private searchHistoryModel:SearchHistoryModel;
 
+    private publicSubcorpModel:PublicSubcorpListModel;
+
     qsuggPlugin:PluginInterfaces.QuerySuggest.IPlugin;
 
     /**
@@ -210,7 +214,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             asyncTaskInfoModel: this.asyncTaskChecker,
             mainMenuModel: this.mainMenuModel,
             corpusSwitchModel: this.appNavig.corpusSwitchModel,
-            searchHistoryModel: this.searchHistoryModel
+            searchHistoryModel: this.searchHistoryModel,
+            publicSubcModel: this.publicSubcorpModel
         };
     }
 
@@ -896,6 +901,15 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                 mainMenuModel: this.mainMenuModel,
                 searchHistoryModel: this.searchHistoryModel
             });
+
+            this.publicSubcorpModel = new PublicSubcorpListModel(
+                this.dispatcher,
+                this,
+                this.getConf<Array<SubcorpListItem>>('PublicSubcData') || [],
+                this.getConf<number>('publicSubcMinQuerySize'),
+                this.getConf<boolean>('publicSubcOnlyCurrCorp'),
+                this.getCorpusIdent().id
+            );
 
             this.renderLayoutReactComponent(
                 qhViews.HistoryContainer,

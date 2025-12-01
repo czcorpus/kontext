@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { IActionDispatcher, BoundWithProps } from 'kombo';
+import { IActionDispatcher, BoundWithProps, useModel } from 'kombo';
 
 import * as Kontext from '../../../types/kontext.js';
 import { CorplistWidgetModel, FavListItem, CorplistWidgetModelState } from '../widget.js';
@@ -28,6 +28,8 @@ import { SearchKeyword, SearchResultRow } from '../search.js';
 import { Actions } from '../actions.js';
 import { Keyboard, Strings, List } from 'cnc-tskit';
 import { CorpusSwitchModel } from '../../../models/common/corpusSwitch.js';
+import { init as subcInit } from './subcorp.js';
+import { PublicSubcorpListModel } from '../../../models/subcorp/listPublic.js';
 import * as S from './style.js';
 import * as S2 from '../commonStyle.js';
 
@@ -37,10 +39,7 @@ export interface WidgetViewModuleArgs {
     util:Kontext.ComponentHelpers;
     widgetModel:CorplistWidgetModel;
     corpusSwitchModel:CorpusSwitchModel;
-}
-
-export interface WidgetViews {
-
+    publicSubcModel:PublicSubcorpListModel;
 }
 
 
@@ -48,10 +47,12 @@ export function init({
     dispatcher,
     util,
     widgetModel,
+    publicSubcModel,
     corpusSwitchModel}:WidgetViewModuleArgs
-):React.ComponentClass<{widgetId:string}, CorplistWidgetModelState> {
+):React.FC<{widgetId:string}> {
 
     const layoutViews = util.getLayoutViews();
+    const {SubcorpWidget, SubcorpSelection} = subcInit(dispatcher, util, widgetModel, publicSubcModel);
 
     // ----------------------- <FavStar /> --------------------------------------
 
@@ -310,19 +311,22 @@ export function init({
         };
 
         return (
-            <div className="menu">
-                <span>
-                    <a data-func="my-corpora" className={props.activeTab === 0 ? 'current' : null}
-                            onClick={clickHandler(0)}>
-                        {util.translate('defaultCorparch__my_list')}
-                    </a>
-                    {'\u00a0|\u00a0'}
-                    <a data-func="search" className={props.activeTab === 1 ? 'current' : null}
-                            onClick={clickHandler(1)}>
-                        {util.translate('defaultCorparch__other_corpora')}
-                    </a>
-                </span>
-            </div>
+            <S.TabMenu>
+                <a data-func="my-corpora" className={props.activeTab === 0 ? 'current' : null}
+                        onClick={clickHandler(0)}>
+                    {util.translate('defaultCorparch__my_list')}
+                </a>
+                <span className="separ">|</span>
+                <a data-func="search" className={props.activeTab === 1 ? 'current' : null}
+                        onClick={clickHandler(1)}>
+                    {util.translate('defaultCorparch__other_corpora')}
+                </a>
+                <span className="separ">|</span>
+                <a data-func="public-subcorpora" className={props.activeTab === 2 ? 'current' : null}
+                    onClick={clickHandler(2)}>
+                    {util.translate('defaultCorparch__public_subcorpora')}
+                </a>
+            </S.TabMenu>
         );
     };
 
@@ -526,14 +530,18 @@ export function init({
         };
 
         return (
-            <p className={`tt-suggestion${props.hasFocus ? ' focus' : ''}`}>
+            <S.TTSuggestion className={props.hasFocus ? ' focus' : ''}>
                 <a onClick={handleClick}>
                     {props.data.name}
                 </a>
-                {'\u00a0'}
-                <span className="num">
-                    {props.data.size_info}
-                </span>
+                {props.data.size > 0 ?
+                    <span className="metadata">
+                        (<span className="label">{util.translate('global__size')}:</span>
+                        <span>{props.data.size_info}</span>
+                        )
+                    </span> :
+                    null
+                }
                 {
                     props.data.found_in.length > 0 ?
                         <span className="found-in">,{'\u00a0'}
@@ -541,7 +549,7 @@ export function init({
                         </span>
                     : null
                 }
-            </p>
+            </S.TTSuggestion>
         );
     };
 
@@ -578,7 +586,7 @@ export function init({
 
     }> = (props) => {
         return (
-            <div>
+            <S.SearchTab>
                 <div>
                     {List.map(
                         item => <SearchKeyword widgetId={props.widgetId} key={item.id} {...item} />,
@@ -590,18 +598,22 @@ export function init({
                     </div>
                 </div>
                 <div className="autocomplete-wrapper">
-                    <SearchInput widgetId={props.widgetId} value={props.currSearchPhrase} handleTab={props.handleTab} />
+                    <div className="input-wrapper">
+                        <SearchInput widgetId={props.widgetId} value={props.currSearchPhrase} handleTab={props.handleTab} />
+                    </div>
                     <SearchLoaderBar isActive={props.isWaitingForSearchResults} />
-                    {props.currSearchResult.length > 0 ?
-                        <S.TTMenu>
+                </div>
+                {props.currSearchResult.length > 0 ?
+                    <S.TTMenu>
+                        <ul className="tt-search-list">
                             {props.currSearchResult.map((item, i) =>
                                     <SearchResultRow widgetId={props.widgetId} key={item.id} data={item}
                                             hasFocus={i === props.focusedRowIdx} />)}
-                        </S.TTMenu> :
-                        null
-                    }
-                </div>
-            </div>
+                        </ul>
+                    </S.TTMenu> :
+                    null
+                }
+            </S.SearchTab>
         );
     };
 
@@ -639,68 +651,22 @@ export function init({
         );
     };
 
-    // ------------------------------- <SubcorpSelection /> -----------------------------
-
-    const SubcorpSelection:React.FC<{
-        widgetId:string;
-        corpusName:string;
-        currSubcorpus:string;
-        subcName:string;
-        availSubcorpora:Array<Kontext.SubcorpListItem>;
-
-    }> = (props) => {
-
-        const handleSubcorpChange = (evt:React.ChangeEvent<HTMLSelectElement>) => {
-            const srch = List.find(
-                x => x.v === evt.target.value,
-                props.availSubcorpora
-            );
-            dispatcher.dispatch(
-                Actions.WidgetSubcorpusSelected,
-                {
-                    widgetId: props.widgetId,
-                    subcorpus: srch.v,
-                }
-            );
-        };
-
-        return (
-            <span id="subcorp-selector-wrapper">
-                <select id="subcorp-selector" name="usesubcorp" value={props.currSubcorpus ? props.currSubcorpus : ''}
-                        onChange={handleSubcorpChange}>
-                    {List.map(
-                        item => <option key={item.v} value={item.v}>{item.n}</option>,
-                        props.availSubcorpora
-                    )}
-                </select>
-            </span>
-        )
-    };
-
     // ------------------------- <CorplistWidget /> -------------------------------
 
-    class CorplistWidget extends React.PureComponent<{widgetId:string} & CorplistWidgetModelState> {
+    const CorplistWidget:React.FC<{widgetId:string}> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._handleCloseClick = this._handleCloseClick.bind(this);
-            this._handleTabSwitch = this._handleTabSwitch.bind(this);
-            this._handleOnShow = this._handleOnShow.bind(this);
-            this._handleKeypress = this._handleKeypress.bind(this);
-            this._handleWidgetButtonClick = this._handleWidgetButtonClick.bind(this);
-            this._handleAreaClick = this._handleAreaClick.bind(this);
-        }
+        const state = useModel(widgetModel);
 
-        _handleKeypress(evt) {
-            if (this.props.isVisible) {
+        const _handleKeypress = (evt) => {
+            if (state.isVisible) {
                 switch (evt.key) {
                     case Keyboard.Value.TAB:
-                        this._handleTabSwitch(1 - this.props.activeTab);
+                        _handleTabSwitch((state.activeTab + 1)  % 3);
                         evt.preventDefault();
                         evt.stopPropagation();
                     break;
                     case Keyboard.Value.ESC:
-                        this._handleCloseClick();
+                        _handleCloseClick();
                         evt.preventDefault();
                         evt.stopPropagation();
                     break;
@@ -708,120 +674,131 @@ export function init({
             }
         }
 
-        _handleOnShow() {
+        const _handleOnShow = () => {
             dispatcher.dispatch<typeof Actions.WidgetShow>({
                 name: Actions.WidgetShow.name,
                 payload: {
-                    widgetId: this.props.widgetId
+                    widgetId: props.widgetId
                 }
             });
         }
 
-        _handleCloseClick() {
+        const _handleCloseClick = () => {
             dispatcher.dispatch<typeof Actions.WidgetHide>({
                 name: Actions.WidgetHide.name,
                 payload: {
-                    widgetId: this.props.widgetId
+                    widgetId: props.widgetId
                 }
             });
         }
 
-        _handleWidgetButtonClick() {
-            if (this.props.isVisible) {
-                this._handleCloseClick();
+        const _handleWidgetButtonClick = () => {
+            if (state.isVisible) {
+                _handleCloseClick();
 
             } else {
-                this._handleOnShow();
+                _handleOnShow();
             }
         }
 
-        _handleTabSwitch(v:number) {
+        const _handleTabSwitch = (v:number) => {
             dispatcher.dispatch<typeof Actions.WidgetSetActiveTab>({
                 name: Actions.WidgetSetActiveTab.name,
                 payload: {
-                    widgetId: this.props.widgetId,
+                    widgetId: props.widgetId,
                     value: v,
                 }
             });
         }
 
-        _handleAreaClick() {
+        const _handleAreaClick = () => {
             dispatcher.dispatch<typeof Actions.WidgetSetActiveTab>({
                 name: Actions.WidgetSetActiveTab.name,
                 payload: {
-                    widgetId: this.props.widgetId,
-                    value: this.props.activeTab,
+                    widgetId: props.widgetId,
+                    value: state.activeTab,
                 }
             });
         }
 
-        _renderWidget() {
+        const renderActiveWidget = () => {
+            switch (state.activeTab) {
+                case 0:
+                    return <ListsTab widgetId={props.widgetId}
+                            dataFav={state.dataFav} dataFeat={state.dataFeat}
+                            anonymousUser={state.anonymousUser}
+                            activeListItem={state.activeListItem} />;
+                case 1:
+                    return <SearchTab widgetId={props.widgetId}
+                            availSearchKeywords={state.availSearchKeywords}
+                            isWaitingForSearchResults={state.isWaitingForSearchResults}
+                            currSearchResult={state.currSearchResult}
+                            currSearchPhrase={state.currSearchPhrase}
+                            hasSelectedKeywords={List.find(
+                                x => x.selected, state.availSearchKeywords) !== undefined}
+                            focusedRowIdx={state.focusedRowIdx} />
+                case 2:
+                    return <SubcorpWidget widgetId={props.widgetId} minSrchQuerySize={3} />
+                    /* TODO !!!!!! we need proper value for minSrchQuerySize */
+                default:
+                    return null;
+            }
+        }
+
+        const _renderWidget = () => {
             return (
                 <layoutViews.PopupBox customClass="active-widget"
-                        onCloseClick={this._handleCloseClick}
-                        onAreaClick={this._handleAreaClick}
-                        keyPressHandler={this._handleKeypress}>
-                    <TabMenu onItemClick={this._handleTabSwitch} activeTab={this.props.activeTab}
-                                onEscKey={this._handleCloseClick} />
-                    {this.props.activeTab === 0 ?
-                        <ListsTab widgetId={this.props.widgetId}
-                                dataFav={this.props.dataFav} dataFeat={this.props.dataFeat}
-                                anonymousUser={this.props.anonymousUser}
-                                activeListItem={this.props.activeListItem} /> :
-                        <SearchTab widgetId={this.props.widgetId}
-                                availSearchKeywords={this.props.availSearchKeywords}
-                                isWaitingForSearchResults={this.props.isWaitingForSearchResults}
-                                currSearchResult={this.props.currSearchResult}
-                                currSearchPhrase={this.props.currSearchPhrase}
-                                hasSelectedKeywords={List.find(
-                                    x => x.selected, this.props.availSearchKeywords) !== undefined}
-                                focusedRowIdx={this.props.focusedRowIdx} />
-                    }
+                        onCloseClick={_handleCloseClick}
+                        onAreaClick={_handleAreaClick}
+                        keyPressHandler={_handleKeypress}
+                        customStyle={{minHeight: '12em', minWidth: '50em', display: 'flex', flexDirection: 'column'}}
+                        >
+                    <TabMenu onItemClick={_handleTabSwitch} activeTab={state.activeTab}
+                                onEscKey={_handleCloseClick} />
+                    <div style={{flexGrow: '1'}}>
+                        {renderActiveWidget()}
+                    </div>
                     <div className="footer">
                         <span>
-                            {this.props.activeTab === 0 ?
-                                util.translate('defaultCorparch__hit_tab_to_see_other') :
-                                util.translate('defaultCorparch__hit_tab_to_see_fav')}
+                            {util.translate('defaultCorparch__hit_tab_to_cycle_sections')}
                         </span>
                     </div>
                 </layoutViews.PopupBox>
             );
         }
 
-        render() {
-            return (
-                <S.CorplistWidget>
-                    <div>
-                        <CorpusButton
-                            corpusIdent={this.props.corpusIdent}
-                            onClick={this._handleWidgetButtonClick}
-                            isWidgetVisible={this.props.isVisible}
-                            isBusy={this.props.isBusyButton} />
-                        {this.props.isVisible ? this._renderWidget() : null}
-                        {this.props.availableSubcorpora.length > 0 ?
-                            (<span>
-                                <strong className="subc-separator">{'\u00a0/\u00a0'}</strong>
-                                <SubcorpSelection
-                                    widgetId={this.props.widgetId}
-                                    corpusName={this.props.corpusIdent.id}
-                                    currSubcorpus={this.props.corpusIdent.usesubcorp}
-                                    subcName={this.props.corpusIdent.subcName}
-                                    availSubcorpora={this.props.availableSubcorpora} />
+        return (
+            <S.CorplistWidget>
+                <div>
+                    <CorpusButton
+                        corpusIdent={state.corpusIdent}
+                        onClick={_handleWidgetButtonClick}
+                        isWidgetVisible={state.isVisible}
+                        isBusy={state.isBusyButton} />
+                    {state.isVisible ? _renderWidget() : null}
+                    {state.availableSubcorpora.length > 0 ?
+                        (<span>
+                            <strong className="subc-separator">{'\u00a0/\u00a0'}</strong>
+                            <SubcorpSelection
+                                widgetId={props.widgetId}
+                                    corpusName={state.corpusIdent.id}
+                                    currSubcorpus={state.corpusIdent.usesubcorp}
+                                    subcName={state.corpusIdent.subcName}
+                                    availSubcorpora={state.availableSubcorpora} />
                             </span>) :
                             null
-                        }
-                        {!this.props.anonymousUser ?
-                            <StarComponent widgetId={this.props.widgetId}
-                                currFavitemId={this.props.currFavitemId} isBusy={this.props.isBusyWidget} /> :
-                            null
-                        }
-                    </div>
-                </S.CorplistWidget>
-            );
-        }
+                    }
+                    {!state.anonymousUser ?
+                        <StarComponent widgetId={props.widgetId}
+                            currFavitemId={state.currFavitemId} isBusy={state.isBusyWidget} /> :
+                        null
+                    }
+                </div>
+            </S.CorplistWidget>
+        );
     }
 
 
-    return BoundWithProps<{widgetId:string}, CorplistWidgetModelState>(CorplistWidget, widgetModel);
+    return CorplistWidget;
 
 }

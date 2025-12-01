@@ -91,7 +91,7 @@ export class Plugin implements PluginInterfaces.Corparch.IPlugin {
         targetAction:string,
         onCorpusSelection:PluginInterfaces.Corparch.CorpusSelectionHandler,
         initialData?:InitialWidgetData
-    ):React.ComponentClass<{widgetId:string}> {
+    ):React.FC<{widgetId:string}> {
 
         this.treeModel = new TreeWidgetModel(
             this.pluginApi,

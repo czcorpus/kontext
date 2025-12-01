@@ -248,6 +248,7 @@
         "global__back": "zpět",
         "global__help": "Nápověda",
         "global__concordance_is_based_on_adhoc_subc_warning": "Aktuální konkordance je založena na subkorpusu, který nebyl vytvořen pomocí funkce \u201CVytvořit nový subkorpus\u201D, což znamená, že výpočty relativních frekvencí a kolokací berou jako základ celý korpus. Chcete-li počítat hodnoty jen vůči vámi vybraným kategoriím textu, je nejdříve potřeba vytvořit pojmenovaný subkorpus.",
+        "global__date": "datum",
         "linesel__remove_selected_lines": "Odstranit vybrané řádky",
         "linesel__remove_all_but_selected_lines": "Ponechat pouze vybrané řádky",
         "linesel__clear_the_selection": "Zrušit označení řádků",

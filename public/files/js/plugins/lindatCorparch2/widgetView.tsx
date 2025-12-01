@@ -22,7 +22,7 @@ import * as Kontext from '../../types/kontext.js';
 import { FavListItem, CorplistWidgetModelState, CorplistWidgetModel } from './widget.js';
 import { CorplistItem } from './common.js';
 import { SearchKeyword, SearchResultRow } from './search.js';
-import { IActionDispatcher, BoundWithProps, Bound } from 'kombo';
+import { IActionDispatcher, BoundWithProps, Bound, useModel } from 'kombo';
 import { Actions } from './actions.js';
 import { Actions as GlobalActions } from '../../models/common/actions.js';
 import { CorpusSwitchModel, CorpusSwitchModelState } from '../../models/common/corpusSwitch.js';
@@ -42,7 +42,7 @@ export function init({
     util,
     widgetModel,
     corpusSwitchModel}:WidgetViewModuleArgs
-):React.ComponentClass<{widgetId:string}> {
+):React.FC<{widgetId:string}> {
 
     const layoutViews = util.getLayoutViews();
 
@@ -615,99 +615,91 @@ export function init({
 
     // ------------------------- <CorplistWidget /> -------------------------------
 
-    class CorplistWidget extends React.PureComponent<{widgetId:string} & CorplistWidgetModelState> {
+    const CorplistWidget:React.FC<{widgetId:string}> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._handleCloseClick = this._handleCloseClick.bind(this);
-            this._handleTabSwitch = this._handleTabSwitch.bind(this);
-            this._handleOnShow = this._handleOnShow.bind(this);
-            this._handleKeypress = this._handleKeypress.bind(this);
-            this._handleWidgetButtonClick = this._handleWidgetButtonClick.bind(this);
-            this._handleAreaClick = this._handleAreaClick.bind(this);
-        }
+        const state = useModel(widgetModel);
 
-        _handleKeypress(evt) {
-            if (this.props.isVisible) {
+        const _handleKeypress = (evt) => {
+            if (state.isVisible) {
                 switch (evt.key) {
                     case Keyboard.Value.TAB:
-                        this._handleTabSwitch(1 - this.props.activeTab);
+                        _handleTabSwitch(1 - state.activeTab);
                         evt.preventDefault();
                         evt.stopPropagation();
                     break;
                     case Keyboard.Value.ESC:
-                        this._handleCloseClick();
+                        _handleCloseClick();
                         evt.preventDefault();
                         evt.stopPropagation();
                     break;
                 }
             }
-        }
+        };
 
-        _handleOnShow() {
+        const _handleOnShow = () => {
             dispatcher.dispatch<typeof Actions.WidgetShow>({
                 name: Actions.WidgetShow.name,
                 payload: {}
             });
-        }
+        };
 
-        _handleCloseClick() {
+        const _handleCloseClick = () => {
             dispatcher.dispatch<typeof Actions.WidgetHide>({
                 name: Actions.WidgetHide.name,
                 payload: {}
             });
-        }
+        };
 
-        _handleWidgetButtonClick() {
-            if (this.props.isVisible) {
-                this._handleCloseClick();
+        const _handleWidgetButtonClick = () => {
+            if (state.isVisible) {
+                _handleCloseClick();
 
             } else {
-                this._handleOnShow();
+                _handleOnShow();
             }
-        }
+        };
 
-        _handleTabSwitch(v) {
+        const _handleTabSwitch = (v) => {
             dispatcher.dispatch<typeof Actions.WidgetSetActiveTab>({
                 name: Actions.WidgetSetActiveTab.name,
                 payload: {
                     value: v
                 }
             });
-        }
+        };
 
-        _handleAreaClick() {
+        const _handleAreaClick = () => {
             dispatcher.dispatch<typeof Actions.WidgetSetActiveTab>({
                 name: Actions.WidgetSetActiveTab.name,
                 payload: {
-                    value: this.props.activeTab
+                    value: state.activeTab
                 }
             });
         }
 
-        _renderWidget() {
+        const _renderWidget = () => {
             return (
                 <layoutViews.PopupBox customClass="corplist-widget"
-                        onCloseClick={this._handleCloseClick}
-                        onAreaClick={this._handleAreaClick}
-                        keyPressHandler={this._handleKeypress}>
-                    <TabMenu onItemClick={this._handleTabSwitch} activeTab={this.props.activeTab}
-                                onEscKey={this._handleCloseClick} />
-                    {this.props.activeTab === 0 ?
-                        <ListsTab dataFav={this.props.dataFav} dataFeat={this.props.dataFeat}
-                                anonymousUser={this.props.anonymousUser}
-                                activeListItem={this.props.activeListItem} /> :
-                        <SearchTab availSearchKeywords={this.props.availSearchKeywords}
-                                isWaitingForSearchResults={this.props.isWaitingForSearchResults}
-                                currSearchResult={this.props.currSearchResult}
-                                currSearchPhrase={this.props.currSearchPhrase}
-                                hasSelectedKeywords={this.props.availSearchKeywords.find(x => x.selected) !== undefined}
-                                focusedRowIdx={this.props.focusedRowIdx}
-                                handleTab={this._handleCloseClick} />
+                        onCloseClick={_handleCloseClick}
+                        onAreaClick={_handleAreaClick}
+                        keyPressHandler={_handleKeypress}>
+                    <TabMenu onItemClick={_handleTabSwitch} activeTab={state.activeTab}
+                                onEscKey={_handleCloseClick} />
+                    {state.activeTab === 0 ?
+                        <ListsTab dataFav={state.dataFav} dataFeat={state.dataFeat}
+                                anonymousUser={state.anonymousUser}
+                                activeListItem={state.activeListItem} /> :
+                        <SearchTab availSearchKeywords={state.availSearchKeywords}
+                                isWaitingForSearchResults={state.isWaitingForSearchResults}
+                                currSearchResult={state.currSearchResult}
+                                currSearchPhrase={state.currSearchPhrase}
+                                hasSelectedKeywords={state.availSearchKeywords.find(x => x.selected) !== undefined}
+                                focusedRowIdx={state.focusedRowIdx}
+                                handleTab={_handleCloseClick} />
                     }
                     <div className="footer">
                         <span>
-                            {this.props.activeTab === 0 ?
+                            {state.activeTab === 0 ?
                                 util.translate('lindatCorparch2__hit_tab_to_see_other') :
                                 util.translate('lindatCorparch2__hit_tab_to_see_fav')}
                         </span>
@@ -716,37 +708,35 @@ export function init({
             );
         }
 
-        render() {
-            return (
-                <S.CorplistWidget>
-                    <div>
-                        <BoundCorpusButton
-                            corpusIdent={this.props.corpusIdent}
-                            onClick={this._handleWidgetButtonClick}
-                            isWidgetVisible={this.props.isVisible} />
-                        {this.props.isVisible ? this._renderWidget() : null}
-                        {this.props.availableSubcorpora.length > 0 ?
-                            (<span>
-                                <strong className="subc-separator">{'\u00a0/\u00a0'}</strong>
-                                <SubcorpSelection
-                                    corpusName={this.props.corpusIdent.id}
-                                    currSubcorpus={this.props.currSubcorpus}
-                                    subcName={this.props.currSubcorpusOrigName}
-                                    availSubcorpora={this.props.availableSubcorpora} />
-                            </span>) :
-                            null
-                        }
-                        {!this.props.anonymousUser ?
-                            <StarComponent currFavitemId={this.props.currFavitemId} /> :
-                            null
-                        }
-                    </div>
-                </S.CorplistWidget>
-            );
-        }
+        return (
+            <S.CorplistWidget>
+                <div>
+                    <BoundCorpusButton
+                        corpusIdent={state.corpusIdent}
+                        onClick={_handleWidgetButtonClick}
+                        isWidgetVisible={state.isVisible} />
+                    {state.isVisible ? _renderWidget() : null}
+                    {state.availableSubcorpora.length > 0 ?
+                        (<span>
+                            <strong className="subc-separator">{'\u00a0/\u00a0'}</strong>
+                            <SubcorpSelection
+                                corpusName={state.corpusIdent.id}
+                                currSubcorpus={state.currSubcorpus}
+                                subcName={state.currSubcorpusOrigName}
+                                availSubcorpora={state.availableSubcorpora} />
+                        </span>) :
+                        null
+                    }
+                    {!state.anonymousUser ?
+                        <StarComponent currFavitemId={state.currFavitemId} /> :
+                        null
+                    }
+                </div>
+            </S.CorplistWidget>
+        );
     }
 
 
-    return BoundWithProps<{widgetId:string}, CorplistWidgetModelState>(CorplistWidget, widgetModel);
+    return CorplistWidget;
 
 }
