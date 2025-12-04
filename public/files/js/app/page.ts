@@ -472,6 +472,10 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
         return this.l10n.translate(msg, values);
     }
 
+    translateRuntimeValue(groupId: string, value: string): string {
+        return this.l10n.translateRuntimeValue(groupId, value);
+    }
+
      translateRich(
             msg: string,
             values?: Record<string, PrimitiveType | React.ReactNode | FormatXMLElementFn<React.ReactNode>>

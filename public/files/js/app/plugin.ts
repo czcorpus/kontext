@@ -88,6 +88,10 @@ export class PluginApi implements IPluginApi {
         return this.pageModel.translate(msg, values);
     }
 
+    translateRuntimeValue(groupId: string, value: string): string {
+        return this.pageModel.translateRuntimeValue(groupId, value);
+    }
+
     translateRich(
         msg: string,
         values?: Record<string, PrimitiveType | React.ReactNode | FormatXMLElementFn<React.ReactNode>>
