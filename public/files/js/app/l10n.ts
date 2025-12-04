@@ -70,6 +70,10 @@ export class L10n implements ITranslator {
         return '';
     }
 
+    translateRuntimeValue(groupId: string, value: string): string {
+        return `${groupId}/${value}`;
+    }
+
     /**
      * Translate a message identified by a provided key.
      * Null/undefined messages are translated into

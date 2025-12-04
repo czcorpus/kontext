@@ -48,7 +48,7 @@
     "diff": "^7.0.0",
     "howler": "^2.2.4",
     "intl-messageformat": "^10.7.18",
-    "kombo": "^1.2.0",
+    "kombo": "^1.3.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-is": "^19.0.0",

@@ -60,6 +60,7 @@ export interface BasePlugin {
     resetMenuActiveItemAndNotify():void;
     getHelpLink(ident:string):string;
     setLocationPost<T>(path:string, args:T, blankWindow?:boolean):void;
+    translateRuntimeValue(groupId: string, value: string): string;
 
     /**
      * Download data from server. Once finished,
