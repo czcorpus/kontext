@@ -248,6 +248,7 @@
         "global__back": "back UNTRANSLATED",
         "global__help": "Help UNTRANSLATED",
         "global__concordance_is_based_on_adhoc_subc_warning": "The current concordance is based on a subcorpus that has not been created and saved using the \u201CCreate new subcorpus\u201D function. This means that relative frequencies and collocations are calculated against the whole corpus. If you want to calculate values only against your selected text categories, please start with creating a named subcorpus. UNTRANSLATED",
+        "global__date": "date UNTRANSLATED",
         "linesel__remove_selected_lines": "Skasuj ôznaczōne linije",
         "linesel__remove_all_but_selected_lines": "Ôstŏw ino ôznaczōne linije",
         "linesel__clear_the_selection": "Wysnŏż wybōr",

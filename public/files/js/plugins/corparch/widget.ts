@@ -306,6 +306,19 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
+        this.addActionSubtypeHandler(
+            Actions.WidgetExternalListItemClicked,
+            action => action.payload.widgetId === this.widgetId,
+            (state, action) => {
+                state.isBusyButton = true;
+                state.isVisible = false;
+                state.focusedRowIdx = -1;
+            },
+            (state, action, dispatch) => {
+                 this.onItemClick([action.payload.corpname], action.payload.subcorpus);
+            }
+        )
+
         this.addActionHandler(
             Actions.WidgetFavItemAdd,
             (state, action) => {

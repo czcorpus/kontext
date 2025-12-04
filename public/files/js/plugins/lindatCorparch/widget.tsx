@@ -29,7 +29,7 @@ import * as S from './style.js';
 
 
 export interface Views {
-    CorptreeWidget:React.ComponentClass<{widgetId:string}>;
+    CorptreeWidget:React.FC<{widgetId:string}>;
 }
 
 
@@ -147,72 +147,66 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------------------- <CorptreeWidget /> -------------------------------
 
-    class CorptreeWidget extends React.Component<{
+    const CorptreeWidget:React.FC<{
         widgetId:string;
-    }, {
-        active:boolean,
-        data:Node,
-        currentCorpus:Kontext.FullCorpusIdent;
-    }> {
+    }> = (props) => {
 
-        private modelSubscription:Subscription;
+        const [state, setState] = React.useState<
+        {
+            active:boolean,
+            data:Node,
+            currentCorpus:Kontext.FullCorpusIdent;
+        }>({
+            active: false,
+            data: treeModel.getData(),
+            currentCorpus: treeModel.getCorpusIdent()
+        });
 
-        constructor(props) {
-            super(props);
-            this.state = {
-                active: false,
-                data: treeModel.getData(),
-                currentCorpus: treeModel.getCorpusIdent()
-            };
-            this._buttonClickHandler = this._buttonClickHandler.bind(this);
-            this._changeListener = this._changeListener.bind(this);
-        }
-
-        _buttonClickHandler() {
-            if (!this.state.active && this.state.data.size === 0) {
-                dispatcher.dispatch({
-                    name: 'TREE_CORPARCH_GET_DATA',
-                    payload: {}
-                });
-
-            } else {
-                this.setState({active: !this.state.active, data: this.state.data});
-            }
-        }
-
-        _changeListener() {
-            this.setState({
+        const _changeListener = () => {
+            setState({
                 active: true,
                 data: treeModel.getData(),
                 currentCorpus: treeModel.getCorpusIdent()
             });
         }
 
-        componentDidMount() {
-            this.modelSubscription = treeModel.addListener(this._changeListener);
+        React.useEffect(
+            () => {
+                const subscription = treeModel.addListener(_changeListener);
+                return () => {
+                    subscription.unsubscribe();
+                }
+            },
+            []
+        )
+
+        const _buttonClickHandler = () => {
+            if (!state.active && state.data.size === 0) {
+                dispatcher.dispatch({
+                    name: 'TREE_CORPARCH_GET_DATA',
+                    payload: {}
+                });
+
+            } else {
+                setState({active: !state.active, data: state.data, currentCorpus: state.currentCorpus});
+            }
         }
 
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
-        render() {
-            return (
-                <S.CorpTreeWidget>
-                    <button className="switch" type="button" onClick={this._buttonClickHandler}>
-                        {this.state.currentCorpus.name}
-                    </button>
-                    <input type="hidden" name="corpname" value={this.state.currentCorpus.id} />
-                    {this.state.active ?
-                            <WidgetItemList
-                                htmlClass="corp-tree"
-                                name=""
-                                corplist={this.state.data.corplist} /> :
-                            null
-                    }
-                </S.CorpTreeWidget>
-            );
-        }
+        return (
+            <S.CorpTreeWidget>
+                <button className="switch" type="button" onClick={_buttonClickHandler}>
+                    {state.currentCorpus.name}
+                </button>
+                <input type="hidden" name="corpname" value={state.currentCorpus.id} />
+                {state.active ?
+                        <WidgetItemList
+                            htmlClass="corp-tree"
+                            name=""
+                            corplist={state.data.corplist} /> :
+                        null
+                }
+            </S.CorpTreeWidget>
+        );
     }
 
     return {

@@ -255,18 +255,21 @@ export class Actions {
 
     static SetSearchQuery:Action<{
         value:string;
+        widgetId?:string;
     }> = {
         name: 'PUBSUBC_SET_SEARCH_QUERY'
     }
 
     static SubmitSearchQuery:Action<{
         query:string;
+        widgetId?:string;
     }> = {
         name: 'PUBSUBC_SUBMIT_SEARCH_QUERY'
     }
 
     static DataLoadDone:Action<{
         data:LoadDataResponse;
+        widgetId?:string;
     }> = {
         name: 'PUBSUBC_DATA_LOAD_DONE'
     }
@@ -276,6 +279,11 @@ export class Actions {
         id:string;
     }> = {
         name: 'PUBSUBC_USE_IN_QUERY'
+    }
+
+    static PubSubcToggleOnlyCurrCorpus:Action<{
+    }> = {
+        name: 'PUBSUBC_TOGGLE_ONLY_CURR_CORPUS'
     }
 
     static FormWithinLineAdded:Action<{

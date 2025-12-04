@@ -241,6 +241,10 @@ class MySQLSubcArchive(AbstractSubcArchive):
             where.append(f'(t1.id LIKE %s OR t2.{self._bconf.user_table_lastname_col} LIKE %s)')
             args.extend([v, v])
 
+        if filter_args.corpname:
+            where.append(f't1.corpus_name = %s')
+            args.append(filter_args.corpname)
+
         if limit is None:
             limit = 1000000000
         args.extend((limit, offset))

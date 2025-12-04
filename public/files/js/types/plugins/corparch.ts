@@ -101,7 +101,7 @@ export interface CorpusSelectionHandler {
     (corpora:Array<string>, subcorpId:string):void;
 }
 
-export type WidgetView = React.ComponentClass<{
+export type WidgetView = React.FC<{
     widgetId:string;
 }>;
 
@@ -142,7 +142,7 @@ export interface IPlugin extends IUnregistrable, BasePlugin {
         serverAction:string,
         onCorpusSelection:CorpusSelectionHandler,
         initialData?:InitialWidgetData,
-    ):React.ComponentClass<{widgetId:string}>;
+    ):React.FC<{widgetId:string}>;
 
     initCorplistPageComponents(initialData:any):ICorplistPage;
 }

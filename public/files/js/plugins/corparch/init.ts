@@ -56,7 +56,7 @@ export class Plugin implements PluginInterfaces.Corparch.IPlugin {
         _:string,
         onCorpusSelection:PluginInterfaces.Corparch.CorpusSelectionHandler,
         initialData?:InitialWidgetData,
-    ):React.ComponentClass<{widgetId:string}> {
+    ):React.FC<{widgetId:string}> {
         const pluginData = this.pluginApi.getConf<any>('pluginData')['corparch'] || {}; // TODO type
         const favData:Array<ServerFavlistItem> = pluginData['favorite'] || [];
         const featData = pluginData['featured'] || [];
@@ -86,7 +86,8 @@ export class Plugin implements PluginInterfaces.Corparch.IPlugin {
             dispatcher: this.pluginApi.dispatcher(),
             util: this.pluginApi.getComponentHelpers(),
             widgetModel: this.model,
-            corpusSwitchModel: this.pluginApi.getModels().corpusSwitchModel
+            corpusSwitchModel: this.pluginApi.getModels().corpusSwitchModel,
+            publicSubcModel: this.pluginApi.getModels().publicSubcModel
         });
     }
 

@@ -60,6 +60,7 @@ class SubcListFilterArgs:
     active_only: IntOpt = 1
     archived_only: IntOpt = 0
     published_only: IntOpt = 0
+    corpname: StrOpt = None
     pattern: StrOpt = None
     ia_query: StrOpt = None
 

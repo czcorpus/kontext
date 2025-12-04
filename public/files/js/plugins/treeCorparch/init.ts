@@ -223,7 +223,7 @@ class Plugin {
         _:string,
         onCorpusSelection:PluginInterfaces.Corparch.CorpusSelectionHandler,
         initialData?:InitialWidgetData
-    ):React.ComponentClass<{widgetId:string}> {
+    ):React.FC<{widgetId:string}> {
         this.treeModel = new TreeWidgetModel(
             this.pluginApi,
             this.pluginApi.getCorpusIdent(),

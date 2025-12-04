@@ -51,7 +51,7 @@ class ParadigmaticQueryPage {
         this.layoutModel = layoutModel;
     }
 
-    private initCorplistComponent():[React.ComponentClass, PluginInterfaces.Corparch.IPlugin, string] {
+    private initCorplistComponent():[React.FC, PluginInterfaces.Corparch.IPlugin, string] {
         const plg = corplistComponent(this.layoutModel.pluginApi());
         const widgetId = Ident.puid();
         return tuple(
