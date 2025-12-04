@@ -28,8 +28,7 @@ import { Actions as SubcActions } from '../../../models/subcorp/actions.js';
 import { List } from 'cnc-tskit';
 import * as S from './style.js';
 import { PublicSubcorpListModel } from '../../../models/subcorp/listPublic.js';
-import { Actions as GlobalActions } from '../../../models/common/actions.js';
-import { SubcorpListItem } from 'js/models/subcorp/list.js';
+import { SubcorpListItem } from '../../../models/subcorp/list.js';
 
 
 export function init(
