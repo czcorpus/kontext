@@ -20,9 +20,7 @@
 
 import { PageModel } from '../app/page.js';
 import { init as viewInit } from '../views/subcorp/listPublic.js';
-import { PublicSubcorpListModel } from '../models/subcorp/listPublic.js';
 import { KontextPage } from '../app/main.js';
-import { SubcorpListItem } from '../models/subcorp/list.js';
 
 
 class PubSubcorpPage {
@@ -35,16 +33,10 @@ class PubSubcorpPage {
 
     init():void {
         this.layoutModel.init(true, [], () => {
-            const model = new PublicSubcorpListModel(
-                this.layoutModel.dispatcher,
-                this.layoutModel,
-                this.layoutModel.getConf<Array<SubcorpListItem>>('Data'),
-                this.layoutModel.getConf<number>('MinQuerySize'),
-            );
             const views = viewInit(
                 this.layoutModel.dispatcher,
                 this.layoutModel.getComponentHelpers(),
-                model
+                this.layoutModel.getModels().publicSubcModel
             )
             this.layoutModel.renderReactComponent(
                 views.ListPublic,

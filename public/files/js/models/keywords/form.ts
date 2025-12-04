@@ -260,7 +260,7 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
                     this.layoutModel.getConf<string>('currentAction'),
                     {
                         corpname: this.layoutModel.getCorpusIdent().id,
-                        usesubcorp: this.layoutModel.getCorpusIdent().subcName || undefined,
+                        usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp || undefined,
                         ref_corpname: state.refCorp,
                         ref_usesubcorp: state.refSubcorp || undefined
                     },

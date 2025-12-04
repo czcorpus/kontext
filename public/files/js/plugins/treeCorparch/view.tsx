@@ -19,7 +19,7 @@
 import * as React from 'react';
 import * as Kontext from '../../types/kontext.js';
 import { TreeWidgetModel, TreeWidgetModelState } from './init.js';
-import { IActionDispatcher, BoundWithProps } from 'kombo';
+import { IActionDispatcher, BoundWithProps, useModel } from 'kombo';
 import { Actions, Corplist, itemIsCorplist } from './common.js';
 import { List } from 'cnc-tskit';
 
@@ -36,7 +36,7 @@ export interface CorptreePageComponentProps {
 
 
 export interface Views {
-    CorptreeWidget:React.ComponentClass<CorptreeWidgetProps, TreeWidgetModelState>;
+    CorptreeWidget:React.FC<CorptreeWidgetProps>;
     CorptreePageComponent:React.ComponentClass<CorptreePageComponentProps, TreeWidgetModelState>;
     FilterPageComponent:React.FC<{}>;
 }
@@ -139,15 +139,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------------------- <CorptreeWidget /> -------------------------------
 
-    class CorptreeWidget extends React.PureComponent<CorptreeWidgetProps & TreeWidgetModelState> {
+    const CorptreeWidget:React.FC<CorptreeWidgetProps> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._buttonClickHandler = this._buttonClickHandler.bind(this);
-        }
+        const state = useModel(treeModel);
 
-        _buttonClickHandler() {
-            if (!this.props.active) {
+
+        const _buttonClickHandler = () => {
+            if (!state.active) {
                 dispatcher.dispatch<typeof Actions.GetData>({name: Actions.GetData.name});
 
             } else {
@@ -155,18 +153,16 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             }
         }
 
-        render() {
-            return (
-                <S.CorpTreeWidget>
-                    <button className="switch util-button" type="button" onClick={this._buttonClickHandler}
-                            title={this.props.corpusIdent.name}>
-                        {this.props.corpusIdent.id}
-                    </button>
-                    {this.props.active ? <ItemList htmlClass="corp-tree"
-                        corplist={this.props.data} nodeActive={this.props.nodeActive} /> : null}
-                </S.CorpTreeWidget>
-            );
-        }
+        return (
+            <S.CorpTreeWidget>
+                <button className="switch util-button" type="button" onClick={_buttonClickHandler}
+                        title={state.corpusIdent.name}>
+                    {state.corpusIdent.id}
+                </button>
+                {state.active ? <ItemList htmlClass="corp-tree"
+                    corplist={state.data} nodeActive={state.nodeActive} /> : null}
+            </S.CorpTreeWidget>
+        );
     }
 
     // ----------------------- <CorptreePageComponent /> -----------------
@@ -194,7 +190,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }
 
     return {
-        CorptreeWidget: BoundWithProps<CorptreeWidgetProps, TreeWidgetModelState>(CorptreeWidget, treeModel),
+        CorptreeWidget,
         CorptreePageComponent: BoundWithProps<CorptreePageComponentProps, TreeWidgetModelState>(CorptreePageComponent, treeModel),
         FilterPageComponent: FilterPageComponent
     };

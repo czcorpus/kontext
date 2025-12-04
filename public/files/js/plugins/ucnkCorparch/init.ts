@@ -71,7 +71,7 @@ class Plugin extends DCPlugin {
         targetAction:string,
         onCorpusSelection:PluginInterfaces.Corparch.CorpusSelectionHandler,
         initialData?:InitialWidgetData
-    ):React.ComponentClass<{widgetId:string}> {
+    ):React.FC<{widgetId:string}> {
         return super.createWidget(widgetId, targetAction, onCorpusSelection, initialData);
     }
 }

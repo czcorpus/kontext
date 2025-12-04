@@ -56,6 +56,7 @@ export interface SubcorpListItem {
     author_fullname: string;
     created:Date;
     size:number;
+    size_info:string|undefined;
     is_draft:boolean;
     public_description:string;
     bib_id_attr:string;

@@ -32,6 +32,7 @@ import { ScreenProps } from '../views/document/responsiveWrapper.js';
 import { Dict, List, pipe } from 'cnc-tskit';
 import { CorpusInfoModel } from '../models/common/corpusInfo.js';
 import { FormatXMLElementFn, PrimitiveType } from 'intl-messageformat';
+import { PublicSubcorpListModel } from '../models/subcorp/listPublic.js';
 
 
 /**
@@ -355,6 +356,7 @@ export interface LayoutModel {
     asyncTaskInfoModel:AsyncTaskChecker,
     mainMenuModel:MainMenuModel;
     corpusSwitchModel:CorpusSwitchModel;
+    publicSubcModel:PublicSubcorpListModel;
     searchHistoryModel:SearchHistoryModel;
 }
 

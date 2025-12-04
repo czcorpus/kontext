@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { styled } from 'styled-components';
+import { styled, css } from 'styled-components';
 import * as theme from '../../../views/theme/default/index.js';
 
 
@@ -52,18 +52,25 @@ export const CorplistWidget = styled.div`
     }
 
     div.autocomplete-wrapper {
+        display: flex;
+        align-items: center;
         margin: 1em 1em 1em 0;
         padding-bottom: 0.7em;
+        padding-top: 0.7em;
         border: ${theme.inputBorderStyle};
         border-radius: ${theme.inputBorderRadius};
+
+        .input-wrapper {
+            margin-left: 0.7em;
+            flex-grow: 1;
+        }
     }
 
 
     .tt-input {
         display: block;
-        margin: 0 auto;
-        width: 90%;
-        padding: 0.3em 0.7em;
+        width: 25rem;
+        padding: 0.3em 0.7em 0.3em 0.7em;
         font-size: 1.2em;
         border-style: solid;
         border-width: 0 0 1px 0;
@@ -139,20 +146,6 @@ export const CorplistWidget = styled.div`
         display: inline-block;
     }
 
-    .menu {
-        margin: 0 0 10pt 0;
-        text-align: center;
-
-        a {
-            text-decoration: none;
-        }
-
-        a.current {
-            text-decoration: underline;
-            font-weight: bold;
-        }
-    }
-
     .ajax-loader {
 
         height: 2em;
@@ -165,13 +158,6 @@ export const CorplistWidget = styled.div`
         }
     }
 
-    .input-wrapper {
-        position: relative;
-        left: -24px;
-    }
-
-
-
     table.favorite-list,
     table.featured-list {
         display: inline-block;
@@ -181,6 +167,8 @@ export const CorplistWidget = styled.div`
 
         th {
             font-weight: bold;
+            font-size: 1.1em;
+            padding-bottom: 0.5em;
         }
 
         .DelItemIcon img {
@@ -245,8 +233,17 @@ export const CorplistWidget = styled.div`
         }
     }
 
+    div.tables {
+        border-width: 1px 0 0 0;
+        border-style: solid;
+        border-color: ${theme.colorLightGrey};
+        padding-top: 1em;
+    }
+
     div.tables:focus {
-        border: none;
+        border-width: 1px 0 0 0;
+        border-style: solid;
+        border-color: ${theme.colorLightGrey};
         outline: none;
     }
 
@@ -275,48 +272,153 @@ export const CorplistWidget = styled.div`
     }
 `;
 
+// --------------- <TabMenu /> ----------------------------------------
+
+export const TabMenu = styled.div`
+
+    display: flex;
+    justify-content: center;
+    font-size: 1.1em;
+
+    margin: 0 0 10pt 0;
+    text-align: center;
+
+    a {
+        text-decoration: none;
+        color: ${theme.colorDefaultText};
+    }
+
+    a.current {
+        text-decoration: underline;
+        font-weight: bold;
+        text-decoration-color: ${theme.colorLogoBlue};
+    }
+
+    span.separ {
+        padding-left: 0.7em;
+        padding-right: 0.7em;
+    }
+`;
+
+// ----
+
+const ttSearchListCommon = css`
+
+    max-height: 15em;
+    overflow-y: auto;
+    list-style-type: none;
+    margin: 0.7em 0 0 0;
+    padding: 0;
+
+    li {
+
+        a {
+            padding: 0.3em 0.4em 0 0.4em;
+        }
+    }
+`;
+
+// ------------------ <SearchTab /> -------------------------------------
+
+export const SearchTab = styled.div`
+
+    ul.tt-search-list {
+        ${ttSearchListCommon};
+    }
+`;
+
+// --------------- <SubcorpWidget /> ------------------------------------
+
+export const SubcorpWidget = styled.div`
+
+    .filter {
+        display: flex;
+    }
+
+    ul.tt-search-list {
+        ${ttSearchListCommon};
+    }
+
+    .subc-ident {
+        font-weight: bold;
+    }
+`;
+
+// --------------- <CurrCorpCheckbox /> ---------------------------------
+
+export const CurrCorpCheckbox = styled.div`
+
+    display: flex;
+    margin-right: 1em;
+
+    input {
+        margin-right: 0.7em;
+    }
+`;
+
+// --------------- <PubSubcMetadata /> ----------------------------------
+
+export const PubSubcMetadata = styled.span`
+
+    display: flex;
+    align-items: flex-end;
+    margin-left: 0.5em;
+
+    .label {
+        color: ${theme.colorLightText};
+        font-size: 0.7em;
+        margin-right: 0.3em;
+    }
+
+    .label:not(:first-of-type) {
+        margin-left: 0.7em;
+    }
+`;
+
+// --------------- <TTSuggestion /> -------------------------------------
+
+export const TTSuggestion = styled.li`
+
+    display: flex;
+    align-items: flex-end;
+    margin: 0;
+    padding-bottom: 0.2em;
+    font-size: 1.3em;
+
+    .metadata {
+        margin-left: 0.5em;
+    }
+
+    a {
+        text-decoration: none;
+        color: inherit;
+        font-weight: bold;
+    }
+
+    a:hover {
+        color: ${theme.colorLogoBlue};
+    }
+
+    .found-in {
+        display: inline-block;
+        color: ${theme.colorLightText};
+        font-size: 70%;
+    }
+
+    .label {
+        color: ${theme.colorLightText};
+        font-size: 0.7em;
+        margin-right: 0.3em;
+    }
+
+`;
+
 // --------------- <TTMenu /> --------------------------------------------------
 
 export const TTMenu = styled.div`
 
-    margin-left: 1em;
-    padding: 0.3em 1em 0.3em 1em;
-
     .tt-suggestion.focus a {
         background-color: ${theme.colorWhitelikeBlue};
-    }
-
-    .tt-suggestion {
-
-        margin: 0;
-        padding-bottom: 0.2em;
-        font-size: 1.3em;
-        text-align: left;
-
-        span.num {
-            font-size: 70%;
-            padding-left: 0.2em;
-        }
-
-        a {
-            display: inline-block;
-            padding-left: 0.4em;
-            padding-top: 0.2em;
-            padding-bottom: 0.2em;
-            padding-right: 0.4em;
-            text-decoration: none;
-            color: inherit;
-        }
-
-        a:hover {
-            background-color: ${theme.colorWhitelikeBlue};
-        }
-
-        .found-in {
-            display: inline-block;
-            color: ${theme.colorLightText};
-            font-size: 70%;
-        }
     }
 
     .hint {

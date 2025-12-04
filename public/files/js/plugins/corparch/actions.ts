@@ -185,6 +185,21 @@ export class Actions {
         name: 'DEFAULT_CORPARCH_WIDGET_SEARCH_RESULT_ITEM_CLICKED'
     };
 
+    /**
+     * WidgetExternalListItemClicked is used when the widget must
+     * resolve external lists' clicks (i.e. lists not controlled
+     * by widget's own model). This applies e.g. for public subcorpora
+     * lists which have their own model but the change must be registered
+     * by the widget so it switches.
+     */
+    static WidgetExternalListItemClicked:Action<{
+        widgetId:string;
+        corpname:string;
+        subcorpus:string|undefined;
+    }> = {
+        name: 'DEFAULT_CORPARCH_WIDGET_EXTERNAL_LIST_ITEM_CLICKED'
+    }
+
     static WidgetFavItemRemove:Action<{
         widgetId:string;
         itemId:string;
@@ -224,4 +239,5 @@ export class Actions {
     }> = {
         name: 'DEFAULT_CORPARCH_WIDGET_SUBCORPUS_SELECTED'
     }
+
 }

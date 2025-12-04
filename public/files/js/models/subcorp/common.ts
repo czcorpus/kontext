@@ -36,6 +36,7 @@ export interface SubcorpusServerRecord {
     author_id:number;
     author_fullname:string;
     size:number;
+    size_info:string|undefined;
     is_draft:number;
     created:number;
     archived:number|undefined;
@@ -196,6 +197,7 @@ export function importServerSubcList(data:Array<SubcorpusServerRecord>):Array<Su
         corpus_name: item.corpus_name,
         author_fullname: item.author_fullname,
         size: item.size,
+        size_info: item.size_info,
         is_draft: item.is_draft === 1 ? true : false,
         created: new Date(item.created * 1000),
         archived: item.archived ? new Date(item.archived * 1000) : undefined,

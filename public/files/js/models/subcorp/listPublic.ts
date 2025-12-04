@@ -38,6 +38,8 @@ export interface PublicSubcorpListState {
     data:Array<SubcorpListItem>;
     searchQuery:string;
     minQuerySize:number;
+    onlyCurrCorpus:boolean;
+    corpname:string;
 }
 
 export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListState> {
@@ -52,7 +54,9 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
         dispatcher:IActionDispatcher,
         pageModel:PageModel,
         data:Array<SubcorpListItem>,
-        minQuerySize:number
+        minQuerySize:number,
+        onlyCurrCorpus:boolean,
+        corpname:string
     ) {
         super(
             dispatcher,
@@ -60,7 +64,9 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
                 isBusy: false,
                 data,
                 searchQuery: '',
-                minQuerySize
+                minQuerySize,
+                corpname,
+                onlyCurrCorpus
             }
         );
         this.autoSubmitTrigger = new Subject<string>();
@@ -109,6 +115,7 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
                             dispatch<typeof Actions.DataLoadDone>({
                                 name: Actions.DataLoadDone.name,
                                 payload: {
+                                    widgetId: action.payload.widgetId,
                                     data
                                 }
                             });
@@ -138,8 +145,8 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
             }
         );
 
-        this.addActionHandler<typeof Actions.UseInQuery>(
-            Actions.UseInQuery.name,
+        this.addActionHandler(
+            Actions.UseInQuery,
             null,
             (state, action, dispatch) => {
                 window.location.href = this.pageModel.createActionUrl(
@@ -150,8 +157,17 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
                     }
                 );
             }
-
         );
+
+        this.addActionHandler(
+            Actions.PubSubcToggleOnlyCurrCorpus,
+            (state, action) => {
+                state.onlyCurrCorpus = !state.onlyCurrCorpus;
+            },
+            (state, action, dispatch) => {
+                this.autoSubmitTrigger.next(state.searchQuery);
+            }
+        )
     }
 
     private loadData(state:PublicSubcorpListState):Observable<LoadDataResponse> {
@@ -162,6 +178,7 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
             {
                 format: 'json',
                 ia_query: state.searchQuery,
+                corpname: state.onlyCurrCorpus ? state.corpname : undefined,
                 offset: 0, // TODO
                 limit: 20, // TODO
             }

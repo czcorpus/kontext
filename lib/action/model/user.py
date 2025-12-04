@@ -448,6 +448,9 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
         with plugins.runtime.QUERY_HISTORY as qh:
             result['supports_query_history_fulltext'] = qh.supports_fulltext_search()
 
+        result['public_subc_min_query_size'] = 3
+        result['public_subc_only_curr_corp'] = False
+
         if self.user_is_anonymous():
             disabled_set = set(self.disabled_menu_items)
             self.disabled_menu_items = tuple(disabled_set.union(

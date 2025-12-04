@@ -26,6 +26,7 @@ import aiofiles
 from dataclasses_json import config, dataclass_json
 from manatee import Concordance, Corpus, SubCorpus
 from manatee import create_subcorpus as m_create_subcorpus
+import l10n
 
 from ..abstract import SubcorpusIdent
 from ..corpus import AbstractKCorpus, KCorpus
@@ -110,6 +111,10 @@ class SubcorpusRecord(SubcorpusIdent):
     bib_id_attr: Optional[str] = None
     bib_label_attr: Optional[str] = None
     aligned: List[str] = field(default_factory=list)
+    size_info: Optional[str] = None
+
+    def __post_init__(self):
+        self.size_info = l10n.simplify_num(self.size)
 
 
 class KSubcorpus(KCorpus):

@@ -607,11 +607,11 @@ class CorpusActionModel(UserActionModel):
         with plugins.runtime.QUERY_PERSISTENCE as qp:
             result['conc_url_ttl_days'] = qp.get_conc_ttl_days(self.session_get('user', 'id'))
 
+        result['public_subc_only_curr_corp'] = True
         result['max_dispersion_resulution'] = 1000
         for k in asdict(self.args):
             if k not in result:
                 result[k] = getattr(self.args, k)
-
         return result
 
     def get_struct_opts(self) -> str:
