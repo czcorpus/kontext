@@ -54,7 +54,7 @@ export const CorplistWidget = styled.div`
     div.autocomplete-wrapper {
         display: flex;
         align-items: center;
-        margin: 1em 1em 1em 0;
+        margin: 0 1em 1em 0;
         padding-bottom: 0.7em;
         padding-top: 0.7em;
         border: ${theme.inputBorderStyle};
@@ -285,10 +285,9 @@ export const CorplistWidget = styled.div`
 export const TabMenu = styled.div`
 
     display: flex;
-    justify-content: center;
     font-size: 1.1em;
 
-    margin: 0 0 10pt 0;
+    margin: 0 0 10pt 1em;
     text-align: center;
 
     a {
