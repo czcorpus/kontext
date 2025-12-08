@@ -389,6 +389,7 @@ export const PubSubcMetadata = styled.span`
         color: ${theme.colorLightText};
         font-size: 0.7em;
         margin-right: 0.3em;
+        padding-bottom: 0.1em;
     }
 
     .label:not(:first-of-type) {
@@ -424,6 +425,7 @@ export const TTSuggestion = styled.li`
         color: ${theme.colorLightText};
         font-size: 0.7em;
         margin-right: 0.3em;
+        padding-bottom: 0.1em;
     }
 
 `;
