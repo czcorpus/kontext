@@ -103,6 +103,14 @@ export const CorplistWidget = styled.div`
             position: absolute;
         }
     }
+
+    .contents {
+        flex-grow: 1;
+        margin-left:  1em;
+        margin-right: 2em;
+        margin-bottom: 1em;
+    }
+
     .footer {
         text-align: center;
         color: ${theme.colorLightText};
@@ -294,10 +302,20 @@ export const TabMenu = styled.div`
         text-decoration-color: ${theme.colorLogoBlue};
     }
 
+    a::after {
+        content: attr(data-text);
+        font-weight: bold;
+        visibility: hidden;
+        height: 0;
+        display: block;
+    }
+
     span.separ {
         padding-left: 0.7em;
         padding-right: 0.7em;
     }
+
+
 `;
 
 // ----
@@ -311,10 +329,13 @@ const ttSearchListCommon = css`
     padding: 0;
 
     li {
-
         a {
             padding: 0.3em 0.4em 0 0.4em;
         }
+    }
+
+    li.focus a {
+        background-color: ${theme.colorWhitelikeBlue};
     }
 `;
 
@@ -362,7 +383,7 @@ export const PubSubcMetadata = styled.span`
 
     display: flex;
     align-items: flex-end;
-    margin-left: 0.5em;
+    margin-left: 0.2em;
 
     .label {
         color: ${theme.colorLightText};
@@ -397,12 +418,6 @@ export const TTSuggestion = styled.li`
 
     a:hover {
         color: ${theme.colorLogoBlue};
-    }
-
-    .found-in {
-        display: inline-block;
-        color: ${theme.colorLightText};
-        font-size: 70%;
     }
 
     .label {

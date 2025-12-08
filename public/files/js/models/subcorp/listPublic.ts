@@ -23,7 +23,7 @@ import * as Kontext from '../../types/kontext.js';
 import { StatelessModel, IActionDispatcher } from 'kombo';
 import { Observable, Subject } from 'rxjs';
 import { Actions } from './actions.js';
-import { HTTP } from 'cnc-tskit';
+import { Dict, HTTP } from 'cnc-tskit';
 import { debounceTime } from 'rxjs/operators';
 import { importServerSubcList, SubcorpusServerRecord } from './common.js';
 import { SubcorpListItem } from './list.js';
@@ -40,6 +40,7 @@ export interface PublicSubcorpListState {
     minQuerySize:number;
     onlyCurrCorpus:boolean;
     corpname:string;
+    focusedRowIdx:{[widgetId:string]:number};
 }
 
 export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListState> {
@@ -66,7 +67,8 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
                 searchQuery: '',
                 minQuerySize,
                 corpname,
-                onlyCurrCorpus
+                onlyCurrCorpus,
+                focusedRowIdx: {},
             }
         );
         this.autoSubmitTrigger = new Subject<string>();
@@ -167,7 +169,17 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
             (state, action, dispatch) => {
                 this.autoSubmitTrigger.next(state.searchQuery);
             }
-        )
+        );
+
+        this.addActionHandler(
+            Actions.PubSubcFocusSearchRow,
+            (state, action) => {
+                const curr = Dict.hasKey(action.payload.widgetId, state.focusedRowIdx) ?
+                    state.focusedRowIdx[action.payload.widgetId] :
+                    -1;
+                state.focusedRowIdx[action.payload.widgetId] = Math.abs((curr + action.payload.inc) % state.data.length);
+            }
+        );
     }
 
     private loadData(state:PublicSubcorpListState):Observable<LoadDataResponse> {
