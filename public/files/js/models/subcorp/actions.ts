@@ -286,6 +286,13 @@ export class Actions {
         name: 'PUBSUBC_TOGGLE_ONLY_CURR_CORPUS'
     }
 
+    static PubSubcFocusSearchRow:Action<{
+        widgetId:string;
+        inc:number;
+    }> = {
+        name: 'PUBSUBC_FOCUS_SEARCH_ROW'
+    };
+
     static FormWithinLineAdded:Action<{
         structureName:string;
         negated:boolean;

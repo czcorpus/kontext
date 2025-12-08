@@ -70,10 +70,6 @@ export function init(he:Kontext.ComponentHelpers) {
                         <h2 className="subcorpus-name">
                             {props.data.corpname}{'\u00a0/\u00a0'}<strong>{props.data.name}</strong>
                         </h2>
-                        (<a href={he.createActionLink('query', {corpname: props.data.corpname, usesubcorp: props.data.usesubcorp})}
-                            className='kontext-link'>
-                            {he.translate('global__use_in_query')}
-                        </a>)
                     </> :
                     null
                 }
@@ -100,6 +96,13 @@ export function init(he:Kontext.ComponentHelpers) {
                         null
                     }
                 </dl>
+                <div>
+                    <form action={he.createActionLink('query')}>
+                        <input type="hidden" name="corpname" value={props.data.corpname} />
+                        <input type="hidden" name="usesubcorp" value={props.data.usesubcorp} />
+                        <button className="default-button" type="submit">{he.translate('global__use_in_query')}</button>
+                    </form>
+                </div>
             </S.SubcorpusInfo>
         );
     };
