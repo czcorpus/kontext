@@ -25,7 +25,7 @@ import * as Kontext from '../../../types/kontext.js';
 import { CorplistWidgetModel } from '../widget.js';
 import { Actions } from '../actions.js';
 import { Actions as SubcActions } from '../../../models/subcorp/actions.js';
-import { List } from 'cnc-tskit';
+import { Keyboard, List, pipe, Strings } from 'cnc-tskit';
 import * as S from './style.js';
 import { PublicSubcorpListModel } from '../../../models/subcorp/listPublic.js';
 import { SubcorpListItem } from '../../../models/subcorp/list.js';
@@ -34,10 +34,9 @@ import { SubcorpListItem } from '../../../models/subcorp/list.js';
 export function init(
     dispatcher:IActionDispatcher,
     util:Kontext.ComponentHelpers,
-    widgetModel:CorplistWidgetModel,
     publicSubcModel:PublicSubcorpListModel,
 ):{
-    SubcorpWidget: React.FC<{widgetId:string, minSrchQuerySize:number;}>,
+    SubcorpWidget: React.FC<{widgetId:string}>,
     SubcorpSelection: React.FC<{
         widgetId:string;
         corpusName:string;
@@ -52,12 +51,22 @@ export function init(
 
 // ------------------------------ <PubSubcMetadata /> -------------------
 
+    const shortenFullName = (nm:string):string => {
+        const items = nm.split(/\s+/);
+        const shortened = pipe(
+            items,
+            List.slice(0, -1),
+            List.map((v, i) => v.substring(0, 1) + '. '),
+        );
+        return shortened.join('') + List.last(items);
+    };
+
     const PubSubcMetadata:React.FC<{
         data:SubcorpListItem;
 
     }> = ({data}) => (
         <S.PubSubcMetadata>
-            (<span className="label">{util.translate('pubsubclist__author')}:</span>{data.author_fullname},
+            (<span className="label">{util.translate('pubsubclist__author')}:</span>{shortenFullName(data.author_fullname)},
             <span className="label">{util.translate('global__size')}:</span>{data.size_info || data.size},
             <span className="label">{util.translate('global__date')}:</span>{util.formatDate(data.created)})
         </S.PubSubcMetadata>
@@ -89,7 +98,7 @@ export function init(
 
     const SubcorpWidget:React.FC<{
         widgetId:string;
-        minSrchQuerySize:number;
+        handleTab?:()=>void;
     }> = (props) => {
 
         const state = useModel(publicSubcModel);
@@ -116,6 +125,38 @@ export function init(
             });
         };
 
+        const focusedRowIdx = state.focusedRowIdx[props.widgetId];
+
+        const handleKeyDown = (evt) => {
+            switch (evt.key) {
+                case Keyboard.Value.DOWN_ARROW:
+                case Keyboard.Value.UP_ARROW:
+                    dispatcher.dispatch<typeof SubcActions.PubSubcFocusSearchRow>({
+                        name: SubcActions.PubSubcFocusSearchRow.name,
+                        payload: {
+                            widgetId: props.widgetId,
+                            inc: evt.key === Keyboard.Value.DOWN_ARROW ? 1 : -1
+                        }
+                    });
+                    evt.stopPropagation();
+                    evt.preventDefault();
+                break;
+                case Keyboard.Value.ENTER:
+                    const curr = state.data[focusedRowIdx];
+                    handleItemClick(curr.corpus_name, curr.id)();
+                    evt.stopPropagation();
+                    evt.preventDefault();
+                break;
+                case Keyboard.Value.TAB:
+                    if (props.handleTab) {
+                        props.handleTab();
+                        evt.stopPropagation();
+                        evt.preventDefault();
+                    }
+                break;
+            }
+        };
+
         return (
             <S.SubcorpWidget>
                 <div className="autocomplete-wrapper">
@@ -124,18 +165,25 @@ export function init(
                             value={state.searchQuery}
                             placeholder={util.translate('defaultCorparch__publicSubcAuthorOrIdentifier')}
                             onChange={handleInput}
+                            onKeyDown={handleKeyDown}
                             ref={item => item ? item.focus() : null}  />
                     </div>
                     <CurrCorpCheckbox widgetId={props.widgetId} checked={state.onlyCurrCorpus} />
                 </div>
                 <ul className="tt-search-list">
                 {List.map(
-                    item => (
-                        <S.TTSuggestion key={item.id} className="tt-suggestion">
-                            <a className="subc-ident" onClick={handleItemClick(item.corpus_name, item.id)}>{item.corpus_name} / {item.name}</a>
-                            <PubSubcMetadata data={item} />
-                        </S.TTSuggestion>
-                    ),
+                    (item, idx) => {
+                        const shortenedSubcname = Strings.shortenText(item.name, 30);
+                        return (
+                            <S.TTSuggestion key={item.id} className={`tt-suggestion ${focusedRowIdx === idx ? 'focus' : ''}`}>
+                                <a className="subc-ident" onClick={handleItemClick(item.corpus_name, item.id)}
+                                        title={item.name.length > 30 ? item.name : null}>
+                                    {item.corpus_name} / {shortenedSubcname}
+                                </a>
+                                <PubSubcMetadata data={item} />
+                            </S.TTSuggestion>
+                        )
+                    },
                     state.data
                 )}
                 </ul>

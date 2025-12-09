@@ -52,7 +52,7 @@ export function init({
 ):React.FC<{widgetId:string}> {
 
     const layoutViews = util.getLayoutViews();
-    const {SubcorpWidget, SubcorpSelection} = subcInit(dispatcher, util, widgetModel, publicSubcModel);
+    const {SubcorpWidget, SubcorpSelection} = subcInit(dispatcher, util, publicSubcModel);
 
     // ----------------------- <FavStar /> --------------------------------------
 
@@ -241,9 +241,16 @@ export function init({
                             {util.translate('defaultCorparch__featured_corpora')}
                         </th>
                     </tr>
-                    {props.data.map((item, i) =>
-                            <TRFeaturedItem widgetId={props.widgetId} key={item.id} data={item}
-                                    isActive={i === props.activeIdx} />)}
+                    {List.empty(props.data) ?
+                        <tr><td colSpan={2}>N/A</td></tr> :
+                        List.map(
+                            (item, i) => (
+                                <TRFeaturedItem widgetId={props.widgetId} key={item.id} data={item}
+                                    isActive={i === props.activeIdx} />
+                            ),
+                            props.data
+                        )
+                    }
                 </tbody>
             </table>
         );
@@ -313,17 +320,17 @@ export function init({
         return (
             <S.TabMenu>
                 <a data-func="my-corpora" className={props.activeTab === 0 ? 'current' : null}
-                        onClick={clickHandler(0)}>
+                        onClick={clickHandler(0)} data-text={util.translate('defaultCorparch__my_list')}>
                     {util.translate('defaultCorparch__my_list')}
                 </a>
                 <span className="separ">|</span>
                 <a data-func="search" className={props.activeTab === 1 ? 'current' : null}
-                        onClick={clickHandler(1)}>
+                        onClick={clickHandler(1)} data-text={util.translate('defaultCorparch__other_corpora')}>
                     {util.translate('defaultCorparch__other_corpora')}
                 </a>
                 <span className="separ">|</span>
                 <a data-func="public-subcorpora" className={props.activeTab === 2 ? 'current' : null}
-                    onClick={clickHandler(2)}>
+                    onClick={clickHandler(2)} data-text={util.translate('defaultCorparch__public_subcorpora')}>
                     {util.translate('defaultCorparch__public_subcorpora')}
                 </a>
             </S.TabMenu>
@@ -538,16 +545,16 @@ export function init({
                     <span className="metadata">
                         (<span className="label">{util.translate('global__size')}:</span>
                         <span>{props.data.size_info}</span>
+                        { props.data.found_in.length > 0 ?
+                            <>
+                                ,{'\u00a0'}<span className="label">{util.translate('defaultCorparch__found_in')}:</span>
+                                <span>{props.data.found_in.map(foundIn => util.translate(foundIn))}</span>
+                            </>
+                        : null
+                        }
                         )
                     </span> :
                     null
-                }
-                {
-                    props.data.found_in.length > 0 ?
-                        <span className="found-in">,{'\u00a0'}
-                            {props.data.found_in.map(foundIn => util.translate(foundIn))}
-                        </span>
-                    : null
                 }
             </S.TTSuggestion>
         );
@@ -593,9 +600,12 @@ export function init({
                         props.availSearchKeywords
                     )}
                     {props.hasSelectedKeywords ? <ResetKeyword widgetId={props.widgetId}/> : null}
-                    <div className="labels-hint">
-                        {util.translate('defaultCorparch__hold_ctrl_for_multiple')}
-                    </div>
+                    {List.empty(props.availSearchKeywords) ?
+                        null :
+                        <div className="labels-hint">
+                            {util.translate('defaultCorparch__hold_ctrl_for_multiple')}
+                        </div>
+                    }
                 </div>
                 <div className="autocomplete-wrapper">
                     <div className="input-wrapper">
@@ -738,8 +748,7 @@ export function init({
                                 x => x.selected, state.availSearchKeywords) !== undefined}
                             focusedRowIdx={state.focusedRowIdx} />
                 case 2:
-                    return <SubcorpWidget widgetId={props.widgetId} minSrchQuerySize={3} />
-                    /* TODO !!!!!! we need proper value for minSrchQuerySize */
+                    return <SubcorpWidget widgetId={props.widgetId} />
                 default:
                     return null;
             }
@@ -751,11 +760,17 @@ export function init({
                         onCloseClick={_handleCloseClick}
                         onAreaClick={_handleAreaClick}
                         keyPressHandler={_handleKeypress}
-                        customStyle={{minHeight: '12em', minWidth: '50em', display: 'flex', flexDirection: 'column'}}
+                        customStyle={{
+                            minHeight: '12em',
+                            minWidth: '50em',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            padding: '0.7em 0 0 0'
+                        }}
                         >
                     <TabMenu onItemClick={_handleTabSwitch} activeTab={state.activeTab}
                                 onEscKey={_handleCloseClick} />
-                    <div style={{flexGrow: '1'}}>
+                    <div className="contents">
                         {renderActiveWidget()}
                     </div>
                     <div className="footer">
