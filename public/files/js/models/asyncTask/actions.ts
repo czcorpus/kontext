@@ -72,6 +72,12 @@ export class Actions {
         name: 'ASYNC_TASKS_CHECKED'
     };
 
+    static AsyncTasksWatch:Action<{
+        ident:string;
+    }> = {
+        name: 'ASYNC_TASKS_WATCH'
+    };
+
     static isAsyncTasksChecked(a:Action):a is typeof Actions.AsyncTasksChecked {
         return a.name === Actions.AsyncTasksChecked.name;
     }
