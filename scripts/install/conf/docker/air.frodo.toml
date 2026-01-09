@@ -20,7 +20,7 @@ exclude_dir = []
 # Watch these directories if you specified.
 include_dir = []
 # Exclude files.
-exclude_file = []
+exclude_file = ["docs/docs.go"]
 # It's not necessary to trigger build each time file changes if it's too frequent.
 delay = 1000 # ms
 # Stop to run old binary when build errors occur.

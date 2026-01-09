@@ -196,24 +196,24 @@ export function init({
                     {props.manateeIsCustomCNC ?
                         <>
                             <label htmlFor="kw-filter">{he.translate('kwords__filter_type')}:</label>
-                            <select id="kw-filter" value={props.scoreType} onChange={handleFilterTypeChange}>
+                            <select id="kw-filter" value={props.filterType} onChange={handleFilterTypeChange}>
                                 <option value="logL">Log-likelihood</option>
                                 <option value="chi2">Chi-square</option>
                                 <option value="din">{he.translate('kwords__effect_size')}</option>
                             </select>
 
                             <label htmlFor="kw-minfreq">{he.translate('kwords__min_filter')}:</label>
-                            <layoutViews.ValidatedItem invalid={props.wlMinFreqInput.isInvalid}
-                                    errorDesc={props.wlMinFreqInput.errorDesc}
+                            <layoutViews.ValidatedItem invalid={props.filterMinValue.isInvalid}
+                                    errorDesc={props.filterMinValue.errorDesc}
                                     htmlClass="freq">
-                                <input id="kw-minfreq" type="text" value={props.wlMinFreqInput.value} onChange={handleMinFilter} />
+                                <input id="kw-minfreq" type="text" value={props.filterMinValue.value} onChange={handleMinFilter} />
                             </layoutViews.ValidatedItem>
 
                             <label htmlFor="kw-maxfreq">{he.translate('kwords__max_filter')}:</label>
-                            <layoutViews.ValidatedItem invalid={props.wlMaxFreqInput.isInvalid}
-                                    errorDesc={props.wlMaxFreqInput.errorDesc}
+                            <layoutViews.ValidatedItem invalid={props.filterMaxValue.isInvalid}
+                                    errorDesc={props.filterMaxValue.errorDesc}
                                     htmlClass="freq">
-                                <input id="kw-maxfreq" type="text" value={props.wlMaxFreqInput.value} onChange={handleMaxFilter} />
+                                <input id="kw-maxfreq" type="text" value={props.filterMaxValue.value} onChange={handleMaxFilter} />
                             </layoutViews.ValidatedItem>
                         </> :
                         null}

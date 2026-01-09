@@ -82,7 +82,6 @@ export interface KeywordsFormModelArgs {
         wlpat:string;
         score_type:ScoreType;
         include_nonwords:boolean;
-        filter_type:ScoreType;
     };
 }
 
@@ -127,7 +126,7 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
                 focusCorpusAttrs,
                 manateeIsCustomCNC: layoutModel.getConf<boolean>('manateeIsCustomCNC'),
                 includeNonWords: initialArgs.include_nonwords,
-                filterType: initialArgs ? initialArgs.filter_type : 'din',
+                filterType: 'logL',
                 filterMinValue: newFormValue('', true),
                 filterMaxValue: newFormValue('', true),
             }
@@ -423,7 +422,7 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
             return {
                 ...formItem,
                 isInvalid: true,
-                errorDesc: this.layoutModel.translate('global__invalid_float_number_value')
+                errorDesc: this.layoutModel.translate('global__invalid_number_value')
             };
         } else {
             return {
@@ -489,8 +488,8 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
             wltype: 'simple',
             score_type: state.scoreType,
             filter_type: state.filterType,
-            filter_min_value: state.filterMinValue.value ? parseFloat(state.filterMinValue.value) : 0,
-            filter_max_value: state.filterMaxValue.value ? parseFloat(state.filterMaxValue.value) : 0,
+            filter_min_value: parseFloat(state.filterMinValue.value),
+            filter_max_value: parseFloat(state.filterMaxValue.value),
         }
     }
 

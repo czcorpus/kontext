@@ -1017,6 +1017,9 @@
         "kwords__undefined_value_explained": "Due to the zero frequency in the reference corpus, the corresponding calculation cannot be applied",
         "kwords__max_list_size_explained_{limit}": "The result list is limited to at most {limit, plural, one{# item} few{# items} other{# items}}",
         "kwords__no_result": "No matching result",
-        "kwords__query_again": "modify the query"
+        "kwords__query_again": "modify the query",
+        "kwords__filter_type": "Filter by",
+        "kwords__min_filter": "Min. filter value",
+        "kwords__max_filter": "Max. filter value"
     }
 }
