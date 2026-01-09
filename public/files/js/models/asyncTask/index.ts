@@ -85,7 +85,9 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                     List.forEach(
                         newTask => {
                             const updated = List.find(t => t.ident === newTask.ident, this.state.asyncTasks);
-                            updatedList.push(updated ? updated : newTask);
+                            if (List.find(t => t.ident === newTask.ident, updatedList) === undefined) {
+                                updatedList.push(updated ? updated : newTask);
+                            }
                         },
                         action.payload.tasks
                     );
@@ -154,12 +156,19 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                         state.asyncTasks.push(newTask);
                     });
                     if (!Dict.hasValue(newTask.category, DownloadType)) {
-                        this.startWatchingTask(newTask);
+                        this.startWatchingTask(newTask.ident);
                     }
 
                 } else {
                     this.pageModel.showMessage('error', action.error);
                 }
+            }
+        );
+
+        this.addActionHandler(
+            Actions.AsyncTasksWatch,
+            action => {
+                this.startWatchingTask(action.payload.ident);
             }
         );
 
@@ -258,11 +267,11 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
         return List.filter(taskIsFinished, state.asyncTasks);
     }
 
-    private startWatchingTask(task:Kontext.AsyncTaskInfo) {
+    private startWatchingTask(ident:string) {
         this.pageModel.openEventSource<Kontext.AsyncTaskInfo>(
             this.pageModel.createActionUrl<{taskId: string}>(
                 'task_status',
-                {taskId: task.ident}
+                {taskId: ident}
             ),
             (v:Kontext.AsyncTaskInfo) => v.status === 'SUCCESS' || v.status === 'FAILURE'
 
@@ -290,7 +299,7 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                 // exclude download tasks
                 List.filter(v => !Dict.hasValue(v.category, DownloadType)),
                 List.forEach(item => {
-                    this.startWatchingTask(item);
+                    this.startWatchingTask(item.ident);
                 })
             );
         }

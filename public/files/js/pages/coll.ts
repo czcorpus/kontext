@@ -309,13 +309,13 @@ export class CollPage {
         );
     }
 
-    setDownloadLink(name:string, format:string, url:string, args?:any) {
+    setDownloadLink(name:string, format:string, urlConstructor:(taskId:string) => string, args?:any) {
         this.layoutModel.bgDownload({
             name,
             format,
             datasetType: DownloadType.COLL,
             contentType: 'text/plain',
-            url,
+            urlConstructor,
             args,
         }).subscribe();
     }

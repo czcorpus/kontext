@@ -20,10 +20,12 @@ import os
 import re
 import time
 from dataclasses import asdict, dataclass
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Set, Union
 
 import conclib
 import corplib
+from bgcalc.task import AsyncTaskStatus
+import bgcalc
 import mailing
 import plugins
 import settings
@@ -1237,6 +1239,7 @@ class SaveConcArgs:
     align_kwic: int = 0
     from_line: int = 0
     to_line: IntOpt = -1
+    task_id: str = ''
 
 
 def _get_ipm_base_set_desc(corp: AbstractKCorpus, contains_within, translate: Callable[[str], str]):
@@ -1259,7 +1262,7 @@ def _get_ipm_base_set_desc(corp: AbstractKCorpus, contains_within, translate: Ca
 @bp.route('/saveconc')
 @http_action(
     access_level=2, action_model=ConcActionModel, mapped_args=SaveConcArgs, return_type='plain')
-async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: KResponse):
+async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: KResponse):    
     def mkfilename(suffix):
         return f'{amodel.args.corpname}-concordance.{suffix}'
 
@@ -1292,6 +1295,7 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
                 'Content-Disposition',
                 f'attachment; filename="{mkfilename(req.mapped_args.saveformat)}"')
 
+            long_lines: Set[int] = set()
             for from_line, to_line in line_range_chunks:
                 if from_line > 0:
                     req.mapped_args.heading = 0
@@ -1316,12 +1320,18 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
 
                 maxcontext = int(amodel.corp.get_conf('MAXCONTEXT'))
                 if maxcontext:
-                    for line in data.Lines:
+                    for i, line in enumerate(data.Lines, from_line+1):
                         if len(line["Kwic"]) > maxcontext:
-                            raise UnavailableForLegalReasons('KWIC too large')
+                            line["Kwic"] = line["Kwic"][:maxcontext] + [{'str': '...'}]
+                            long_lines.add(i)
                 if len(data.Lines) > 0:
                     await writer.write_conc(amodel, data, req.mapped_args)
+
             output = writer.raw_content()
+            
+        worker = bgcalc.calc_backend_client(settings)
+        notification = f'KWIC exceeds max allowed length; Shortened lines: {", ".join(map(str, sorted(long_lines)))}' if long_lines else None
+        await worker.send_task('notification', object.__class__, (notification,), task_id = req.mapped_args.task_id)
         return bytes_stream(output)
 
     except Exception as e:

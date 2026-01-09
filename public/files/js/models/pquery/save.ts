@@ -189,7 +189,7 @@ export class PqueryResultsSaveModel extends StatefulModel<PqueryResultsSaveModel
         this.saveLinkFn(
             undefined,
             this.state.saveformat,
-            this.layoutModel.createActionUrl(
+            taskId => this.layoutModel.createActionUrl(
                 'pquery/download',
                 {
                     q: '~' + pqueryResultArgs.queryId,
@@ -199,7 +199,8 @@ export class PqueryResultsSaveModel extends StatefulModel<PqueryResultsSaveModel
                     colheaders: this.state.includeColHeaders,
                     heading: this.state.includeHeading,
                     from_line: this.state.fromLine.value,
-                    to_line: isNaN(parseInt(this.state.toLine.value)) ? '' : this.state.toLine.value
+                    to_line: isNaN(parseInt(this.state.toLine.value)) ? '' : this.state.toLine.value,
+                    task_id: taskId,
                 }
             )
         );

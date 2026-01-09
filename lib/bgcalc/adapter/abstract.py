@@ -39,7 +39,7 @@ class AbstractBgClient(abc.ABC):
 
     @abc.abstractmethod
     async def send_task(
-            self, name, ans_type: Type[T], args=None, time_limit=None, soft_time_limit=None) -> AbstractResultWrapper:
+            self, name, ans_type: Type[T], args=None, time_limit=None, soft_time_limit=None, task_id=None) -> AbstractResultWrapper:
         pass
 
     @abc.abstractmethod

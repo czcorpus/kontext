@@ -26,7 +26,7 @@ from bgcalc.freqs.types import FreqCalcArgs, FreqCalcResult
 from conclib.freq import FreqData, FreqItem
 from dataclasses_json import dataclass_json
 
-MAX_DATA_LEN_DIRECT_PROVIDING = 500
+MAX_DATA_LEN_DIRECT_PROVIDING = 10
 
 
 def _cache_dir_path(args: FreqCalcArgs) -> str:

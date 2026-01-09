@@ -20,7 +20,7 @@
 
 import os
 import sys
-from typing import Union, Callable
+from typing import Optional, Union, Callable
 
 import redis
 import uvloop
@@ -167,6 +167,15 @@ async def create_subcorpus(
     finally:
         await plugins.runtime.INTEGRATION_DB.instance.on_aio_task_exit()
 
+# ----------------------------- EMPTY --------------------------------------
+
+
+@as_sync
+@handle_custom_exception
+async def notification(message: Optional[str] = None):
+    if message:
+        raise Exception(message)
+    return
 
 # ----------------------------- PLUG-IN TASKS ---------------------------------
 

@@ -206,7 +206,7 @@ export class CollResultsSaveModel extends StatelessModel<CollResultsSaveModelSta
                 this.saveLinkFn(
                     undefined,
                     state.saveformat,
-                    this.layoutModel.createActionUrl('savecoll', args)
+                    taskId => this.layoutModel.createActionUrl('savecoll', {task_id: taskId, ...args}),
                 );
             }
         );
