@@ -32,6 +32,9 @@ class KeywordsFormArgs:
     wltype: str = 'simple'
     include_nonwords: str = '0'
     score_type: Optional[str] = None
+    filter_type: Optional[str] = None
+    filter_min_value: Optional[str] = None
+    filter_max_value: Optional[str] = None
 
     def update_by_user_query(self, data):
         self.corpname = data['corpname']
@@ -47,6 +50,9 @@ class KeywordsFormArgs:
         self.wltype = data['wltype']
         self.include_nonwords = data['include_nonwords']
         self.score_type = data['score_type']
+        self.filter_type = data.get('filter_type')
+        self.filter_min_value = data.get('filter_min_value')
+        self.filter_max_value = data.get('filter_max_value')
 
     def to_dict(self) -> Dict[str, Any]:
         return {k: v for k, v in asdict(self).items() if not k.startswith('_')}
