@@ -519,3 +519,6 @@ msgstr "unknown UNTRANSLATED"
 
 msgid "ID {} is not available"
 msgstr "ID {} is not available UNTRANSLATED"
+
+msgid "Some downloaded lines exceeded the maximum length permitted by copyright protection rules and have been truncated"
+msgstr "Some downloaded lines exceeded the maximum length permitted by copyright protection rules and have been truncated UNTRANSLATED"

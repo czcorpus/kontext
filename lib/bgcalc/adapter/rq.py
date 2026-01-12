@@ -114,7 +114,7 @@ class ResultWrapper(AbstractResultWrapper[T]):
                     break
                 elif self._job.is_failed:
                     self._job.refresh()
-                    self.result = self._infer_error(self._job.exc_info, self._job.id)
+                    self.result = self._infer_error(self._job.latest_result(), self._job.id)
                     break
                 elif timeout and total_time > timeout:
                     self.result = Exception(f'Task result timeout: {self._job}')
