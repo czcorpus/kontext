@@ -53,6 +53,12 @@ export class Actions {
         name: 'KEYWORDS_SET_SCORE_TYPE'
     };
 
+    static SetFilterType:Action<{
+        value: ScoreType
+    }> = {
+        name: 'KEYWORDS_SET_FILTER_TYPE'
+    };
+
     static RegisterPrecalcTasks:Action<{
         tasks:Array<AsyncTaskInfo<{}>>;
     }> = {
@@ -66,11 +72,25 @@ export class Actions {
         name: 'KEYWORDS_SET_MIN_FREQ'
     };
 
+    static SetMinFilter:Action<{
+        value:string;
+        debounced?:boolean;
+    }> = {
+        name: 'KEYWORDS_SET_MIN_FILTER'
+    };
+
     static SetMaxFreq:Action<{
         value:string;
         debounced?:boolean;
     }> = {
         name: 'KEYWORDS_SET_MAX_FREQ'
+    };
+
+    static SetMaxFilter:Action<{
+        value:string;
+        debounced?:boolean;
+    }> = {
+        name: 'KEYWORDS_SET_MAX_FILTER'
     };
 
     static ResultSetPage:Action<{
