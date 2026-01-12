@@ -13,7 +13,7 @@
 # GNU General Public License for more details.
 
 import abc
-from typing import Generic, Type, TypeVar, Union
+from typing import Generic, Type, TypeVar, Union, Optional
 
 T = TypeVar('T')
 
@@ -27,6 +27,11 @@ class AbstractResultWrapper(abc.ABC, Generic[T]):
     @property
     @abc.abstractmethod
     def status(self) -> str:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def func_name(self) -> Optional[str]:
         pass
 
     @property

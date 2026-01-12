@@ -375,7 +375,13 @@ export interface AsyncTaskInfo<T=GeneralProps> {
     category:string;
     status:AsyncTaskStatus;
     created:number;
-    error:string; // = Worker's "result" property in case status == 'FAILURE'
+
+    /**
+     * message is either an additional/optional end-user information about the task
+     * if everything went well or an error message in case of status 'FAILURE'
+     * (Worker's "result" property converted to a string)
+     */
+    message:string;
     args:T;
     url:string;
 }

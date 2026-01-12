@@ -18,7 +18,7 @@ import logging
 import re
 import sys
 from dataclasses import dataclass
-from typing import Any, List, Type, TypeVar, Union
+from typing import Any, List, Type, TypeVar, Union, Optional
 
 import ujson as json
 from action.errors import UserReadableException
@@ -129,6 +129,12 @@ class ResultWrapper(AbstractResultWrapper[T]):
         if self._job and self._job.get_status():
             return ResultWrapper.status_map[self._job.get_status()]
         return 'FAILURE'
+
+    @property
+    def func_name(self) -> Optional[str]:
+        if self._job:
+            return self._job.func_name
+        return None
 
     @property
     def id(self):

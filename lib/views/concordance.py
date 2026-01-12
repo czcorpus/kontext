@@ -1262,7 +1262,7 @@ def _get_ipm_base_set_desc(corp: AbstractKCorpus, contains_within, translate: Ca
 @bp.route('/saveconc')
 @http_action(
     access_level=2, action_model=ConcActionModel, mapped_args=SaveConcArgs, return_type='plain')
-async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: KResponse):    
+async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: KResponse):
     def mkfilename(suffix):
         return f'{amodel.args.corpname}-concordance.{suffix}'
 
@@ -1318,7 +1318,7 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
 
                 data = kwic.kwicpage(kwic_args)
 
-                maxcontext = int(amodel.corp.get_conf('MAXCONTEXT'))
+                maxcontext = 5 #int(amodel.corp.get_conf('MAXCONTEXT'))
                 if maxcontext:
                     for i, line in enumerate(data.Lines, from_line+1):
                         if len(line["Kwic"]) > maxcontext:
@@ -1328,10 +1328,17 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
                     await writer.write_conc(amodel, data, req.mapped_args)
 
             output = writer.raw_content()
-            
+
+        notification = None
         worker = bgcalc.calc_backend_client(settings)
-        notification = f'KWIC exceeds max allowed length; Shortened lines: {", ".join(map(str, sorted(long_lines)))}' if long_lines else None
-        await worker.send_task('notification', object.__class__, (notification,), task_id = req.mapped_args.task_id)
+        if len(long_lines) > 0:
+            msg = req.translate('Some downloaded lines exceeded the maximum length permitted by copyright protection rules and have been truncated')
+            long_lines = sorted(long_lines)
+            if len(long_lines) <= 20:
+                notification = '{}: {}'.format(msg, ", ".join(map(str, long_lines)))
+            else:
+                notification = '{}: {},... ({}: {})'.format(msg,  ", ".join(map(str, long_lines[:20])), req.translate('total'), len(long_lines))
+        await worker.send_task('notification', object.__class__, (notification,), task_id=req.mapped_args.task_id)
         return bytes_stream(output)
 
     except Exception as e:

@@ -585,7 +585,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                 this.pluginApi.bgDownload({
                     format: state.documentListSaveFormat,
                     datasetType: DownloadType.DOCUMENT_LIST,
-                    url: this.pluginApi.createActionUrl(
+                    urlConstructor: () => this.pluginApi.createActionUrl(
                         'save_document_list',
                         {
                             lattr: pipe(

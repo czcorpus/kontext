@@ -608,3 +608,6 @@ msgstr "ID {} není k dispozici"
 
 msgid "Some downloaded lines exceeded the maximum length permitted by copyright protection rules and have been truncated"
 msgstr "Některé stažené řádky překročily maximální délku povolenou z hlediska ochrany autorských děl a byly zkráceny"
+
+msgid "total"
+msgstr "celkem"

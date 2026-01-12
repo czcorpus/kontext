@@ -377,7 +377,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                             });
                             this.layoutModel.showMessage(
                                 'error',
-                                `Paradigmatic query task failed: ${this.state.task.error}`
+                                `Paradigmatic query task failed: ${this.state.task.message}`
                             );
                         }
                     }

@@ -293,7 +293,6 @@ export const TooltipBox = styled.section`
                 max-width: 0;
                 overflow: hidden;
                 text-overflow: ellipsis;
-                white-space: nowrap;
             }
 
             td.status {

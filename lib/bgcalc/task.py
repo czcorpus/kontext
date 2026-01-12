@@ -49,7 +49,11 @@ class AsyncTaskStatus:
     category: str
     args: Dict[str, Any] = field(default_factory=dict)
     created: float = field(default_factory=lambda: time.time())
-    error: Optional[str] = None
+
+    message: Optional[str] = None
+    """message can be either an additional information regarding the finished job or an error "
+     message in case the task finished as FAILURE"""
+
     url: Optional[str] = None
     auto_redirect: Optional[bool] = None
 
@@ -74,4 +78,4 @@ class AsyncTaskStatus:
     def __eq__(self, __o: 'AsyncTaskStatus') -> bool:
         if self.ident != __o.ident:
             raise TypeError('Comparing tasks with different IDs')
-        return self.label == __o.label and self.status == __o.status and self.error == __o.error and self.url == __o.url
+        return self.label == __o.label and self.status == __o.status and self.message == __o.message and self.url == __o.url

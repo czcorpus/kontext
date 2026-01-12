@@ -416,7 +416,7 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
         this.pageModel.bgDownload({
             format,
             datasetType: DownloadType.FREQ2D,
-            url: this.pageModel.createActionUrl('export_freqct', args),
+            urlConstructor: () => this.pageModel.createActionUrl('export_freqct', args),
             contentType: 'application/json',
             args: this.exportData()
         }).subscribe();
