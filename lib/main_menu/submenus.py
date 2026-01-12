@@ -169,7 +169,8 @@ class Filter:
 
     filter_subhits: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
-            MainMenu.FILTER('subhits'), 'Remove nested matches', 'MAIN_MENU_FILTER_APPLY_SUBHITS_REMOVE', curr_conc=True)
+            MainMenu.FILTER('subhits'), 'Remove nested matches', 'MAIN_MENU_FILTER_APPLY_SUBHITS_REMOVE', curr_conc=True
+        ).enable_if(lambda d: len(d.get('aligned_corpora', [])) == 0)
     )
 
     filter_each_first_doc: EventTriggeringItem = field(
