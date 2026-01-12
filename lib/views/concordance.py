@@ -1318,7 +1318,7 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
 
                 data = kwic.kwicpage(kwic_args)
 
-                maxcontext = 5 #int(amodel.corp.get_conf('MAXCONTEXT'))
+                maxcontext = int(amodel.corp.get_conf('MAXCONTEXT'))
                 if maxcontext:
                     for i, line in enumerate(data.Lines, from_line+1):
                         if len(line["Kwic"]) > maxcontext:
