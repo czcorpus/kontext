@@ -148,7 +148,7 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                         created: action.payload.created ? action.payload.created : new Date().getTime() / 1000,
                         label: action.payload.label,
                         category: action.payload.category,
-                        error: action.payload.error,
+                        message: action.payload.message,
                         args: action.payload.args ? action.payload.args : {},
                         url: action.payload.url ? action.payload.url : undefined
                     };
@@ -186,7 +186,7 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                             ...old,
                             status: action.payload.status,
                             ident: action.payload.ident,
-                            error: action.error ? this.decodeError(old, action.error) : undefined
+                            message: action.error ? this.decodeError(old, action.error) : undefined
                         };
                         if ((old.status === 'PENDING' || old.status === 'STARTED')
                                 && (state.asyncTasks[srchIdx].status === 'FAILURE' ||
@@ -258,7 +258,7 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
 
             } else {
                 srch.status = incoming.status;
-                srch.error = incoming.error;
+                srch.message = incoming.message;
             }
 
         } else {

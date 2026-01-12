@@ -438,7 +438,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                                 category: task.category,
                                 status: task.status,
                                 created: task.created,
-                                error: task.error,
+                                message: task.message,
                                 args: task.args,
                                 url: undefined
                             } as PayloadType<typeof ATActions.InboxAddAsyncTask>

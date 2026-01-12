@@ -55,7 +55,7 @@ export class ImageConversionModel extends StatelessModel<ImageConversionModelSta
                     this.layoutModel.bgDownload({
                         format: action.payload.format.split('-')[0],
                         datasetType: DownloadType.CHART,
-                        url: this.layoutModel.createActionUrl(
+                        urlConstructor: (taskId:string) => this.layoutModel.createActionUrl(
                             'tools/convert_chart_svg',
                             {
                                 ...action.payload.args,

@@ -173,9 +173,14 @@ async def create_subcorpus(
 @as_sync
 @handle_custom_exception
 async def notification(message: Optional[str] = None):
-    if message:
-        raise Exception(message)
-    return
+    """
+    important note: in case the function is renamed, the
+    UserActionModel.update_async_task_status method must be
+    updated accordingly as it checks for the notification function
+    and handles it in a special way.
+    """
+    return dict(message=message)
+
 
 # ----------------------------- PLUG-IN TASKS ---------------------------------
 
