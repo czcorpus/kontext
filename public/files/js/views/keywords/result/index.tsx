@@ -21,7 +21,7 @@
 
 
 import * as React from 'react';
-import { Bound, IActionDispatcher } from 'kombo';
+import { Bound, IActionDispatcher, useModel } from 'kombo';
 
 import * as Kontext from '../../../types/kontext.js';
 import { KeywordsResultModel, KeywordsResultState } from '../../../models/keywords/result.js';
@@ -44,7 +44,7 @@ export function init({
     he,
     keywordsResultModel,
     saveModel,
-}:KeywordsResultViewArgs):React.ComponentClass<{}> {
+}:KeywordsResultViewArgs):React.FC {
 
     const layoutViews = he.getLayoutViews();
 
@@ -89,7 +89,9 @@ export function init({
         }
     }
 
-    const KeywordsResult:React.FC<KeywordsResultState> = (props) => {
+    const KeywordsResult:React.FC = (props) => {
+
+        const state = useModel(keywordsResultModel);
 
         const _handleSaveFormClose = () => {
             dispatcher.dispatch<typeof Actions.ResultCloseSaveForm>({
@@ -104,16 +106,16 @@ export function init({
             );
         };
 
-        const buildQ = (value:string) => `aword,[${props.attr}="${value}"]`;
+        const buildQ = (value:string) => `aword,[${state.attr}="${value}"]`;
 
-        if (props.data.length === 0) {
+        if (state.data.length === 0) {
             return (
                 <S.KeywordsResult>
                     <p className="no-result">
                         <strong>{he.translate('kwords__no_result')}</strong>
                     </p>
                     <p className="modify">
-                        (<a href={he.createActionLink('keywords/form', {q: `~${props.queryId}`})}>
+                        (<a href={he.createActionLink('keywords/form', {q: `~${state.queryId}`})}>
                             {he.translate('kwords__query_again')}
                         </a>)
                     </p>
@@ -125,19 +127,19 @@ export function init({
 
                 <dl className="corpora">
                     <dt>{he.translate('kwords__focus_corpus')}:</dt>
-                    <dd>{props.focusCorpname} {props.focusSubcorpname ? ` / ${props.focusSubcorpname}` : ''}</dd>
+                    <dd>{state.focusCorpname} {state.focusSubcorpname ? ` / ${state.focusSubcorpname}` : ''}</dd>
                     <dt>{he.translate('kwords__reference_corpus')}:</dt>
-                    <dd>{props.refCorpname} {props.refSubcorpId ? ` / ${props.refSubcorpId}` : ''}</dd>
+                    <dd>{state.refCorpname} {state.refSubcorpId ? ` / ${state.refSubcorpId}` : ''}</dd>
                 </dl>
                 <div className="ktx-pagination">
                     <S.PNote>
-                        {he.translate('kwords__max_list_size_explained_{limit}', {limit: props.maxItems})}
+                        {he.translate('kwords__max_list_size_explained_{limit}', {limit: state.maxItems})}
                     </S.PNote>
                     <S.PaginatorWrapper>
                         <layoutViews.SimplePaginator
-                            isLoading={props.isLoading}
-                            currentPage={`${props.kwpage}`}
-                            totalPages={props.totalPages}
+                            isLoading={state.isLoading}
+                            currentPage={`${state.kwpage}`}
+                            totalPages={state.totalPages}
                             handlePageChange={handlePageChange} />
                     </S.PaginatorWrapper>
                 </div>
@@ -147,11 +149,11 @@ export function init({
                         <tr>
                             <th />
                             <th>{he.translate('kwords__result_word_hd')}</th>
-                            {props.manateeIsCustomCNC ?
+                            {state.manateeIsCustomCNC ?
                                 <>
-                                    <SortableCol text={he.translate('kwords__score_col_logL')} value="logL" kwsort={props.kwsort}/>
-                                    <SortableCol text={he.translate('kwords__score_col_chi2')} value="chi2" kwsort={props.kwsort}/>
-                                    <SortableCol text={he.translate('kwords__effect_size')} value="din" kwsort={props.kwsort}/>
+                                    <SortableCol text={he.translate('kwords__score_col_logL')} value="logL" kwsort={state.kwsort}/>
+                                    <SortableCol text={he.translate('kwords__score_col_chi2')} value="chi2" kwsort={state.kwsort}/>
+                                    <SortableCol text={he.translate('kwords__effect_size')} value="din" kwsort={state.kwsort}/>
                                 </> :
                                 <th>{he.translate('kwords__score_col_hd')}</th>
                             }
@@ -166,9 +168,9 @@ export function init({
                             List.map(
                                 (kw, i) => (
                                     <tr key={`item:${kw.item}`}>
-                                        <td>{(props.kwpage-1)*props.kwpagesize + i + 1}.</td>
+                                        <td>{(state.kwpage-1)*state.kwpagesize + i + 1}.</td>
                                         <td className="kword">{kw.item}</td>
-                                        {props.manateeIsCustomCNC ?
+                                        {state.manateeIsCustomCNC ?
                                             <>
                                                 <td className="num"><PossiblyNaNValue v={kw.logL} /></td>
                                                 <td className="num">{he.formatNumber(kw.chi2, 2)}</td>
@@ -179,30 +181,45 @@ export function init({
                                         <td className="num">{he.formatNumber(kw.frq1, 0)}</td>
                                         <td>
                                             <a title={he.translate('global__pnfilter_label_p')} href={he.createActionLink('create_view',
-                                                props.focusSubcorpId ?
-                                                    {corpname: props.focusCorpname, usesubcorp: props.focusSubcorpId, q: buildQ(kw.item)} :
-                                                    {corpname: props.focusCorpname, q: buildQ(kw.item)}
+                                                state.focusSubcorpId ?
+                                                    {corpname: state.focusCorpname, usesubcorp: state.focusSubcorpId, q: buildQ(kw.item)} :
+                                                    {corpname: state.focusCorpname, q: buildQ(kw.item)}
                                             )}> p </a>
                                         </td>
                                         <td className="num">{he.formatNumber(kw.frq2, 0)}</td>
                                         <td>
                                             <a title={he.translate('global__pnfilter_label_p')} href={he.createActionLink('create_view',
-                                            props.refSubcorpId ?
-                                                {corpname: props.refCorpname, usesubcorp: props.refSubcorpId, q: buildQ(kw.item)} :
-                                                {corpname: props.refCorpname, q: buildQ(kw.item)}
+                                            state.refSubcorpId ?
+                                                {corpname: state.refCorpname, usesubcorp: state.refSubcorpId, q: buildQ(kw.item)} :
+                                                {corpname: state.refCorpname, q: buildQ(kw.item)}
                                             )}> p </a>
                                         </td>
                                         <td className="num">{he.formatNumber(kw.rel_frq1, 2)}</td>
                                         <td className="num">{he.formatNumber(kw.rel_frq2, 2)}</td>
                                     </tr>
                                 ),
-                                props.data
+                                state.data
                             )
                         }
                     </tbody>
                 </table>
 
-                {props.saveFormActive ?
+                {state.dinRankingWarning ?
+                <div className="din-waring">
+                    <layoutViews.StatusIcon status="warning" />
+                    <div className="text">
+                    {he.translateRich(
+                        'kwords__din_warning',
+                        {
+                            strong: (chunks) => <strong>{chunks}</strong>,
+                            p: (chunks) => <p>{chunks}</p>
+                        }
+                    )}
+                    </div>
+                </div> :
+                null
+                }
+                {state.saveFormActive ?
                     <saveViews.SavePqueryForm onClose={_handleSaveFormClose} /> :
                     null}
             </S.KeywordsResult>
@@ -210,6 +227,6 @@ export function init({
     }
 
 
-    return Bound(KeywordsResult, keywordsResultModel);
+    return KeywordsResult;
 
 }

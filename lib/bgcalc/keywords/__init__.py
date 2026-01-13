@@ -85,6 +85,7 @@ KeywordsResultType = Union[List[KeywordLine], List[CNCKeywordLine]]
 class KeywordsResult:
     total: int
     data: KeywordsResultType
+    din_ranking_warning: bool = False
 
 
 async def require_existing_keywords(form: KeywordsFormArgs, offset: int, limit: int) -> KeywordsResult:
@@ -94,7 +95,16 @@ async def require_existing_keywords(form: KeywordsFormArgs, offset: int, limit: 
     else:
         data = load_cached_partial(path, offset, limit)
         LineDataClass = CNCKeywordLine if manatee_is_custom_cnc else KeywordLine
-        return KeywordsResult(data[0], [LineDataClass.from_dict(item) for item in data[1]])
+        ans = KeywordsResult(data[0], [LineDataClass.from_dict(item) for item in data[1]])
+        if form.ref_corpname == form.corpname and form.usesubcorp and not form.ref_usesubcorp:
+            num_same_freq = 0
+            for row in ans.data:
+                if row.frq1 == row.frq2:
+                    num_same_freq += 1
+            if num_same_freq > 1:
+                ans.din_ranking_warning = True
+        return ans
+
 
 
 def cached(f):

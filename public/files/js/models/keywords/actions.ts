@@ -107,6 +107,7 @@ export class Actions {
 
     static ResultPageLoadDone:Action<{
         data:Array<Keyword>;
+        dinRankingWarning:boolean;
         page:number;
         sort:string;
     }> = {
@@ -171,5 +172,10 @@ export class Actions {
         value:boolean;
     }> = {
         name: 'KEYWORDS_SET_INCLUDE_NONWORDS'
+    };
+
+    static KeywordsToggleFilterFieldset:Action<{
+    }> = {
+        name: 'KEYWORDS_TOGGLE_FILTER_FIELDSET'
     };
 }
