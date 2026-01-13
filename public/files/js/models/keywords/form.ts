@@ -54,6 +54,7 @@ export interface KeywordsFormState {
     filterType:ScoreType;
     filterMinValue:FormValue<string>;
     filterMaxValue:FormValue<string>;
+    filterVisible:boolean;
 }
 
 export interface KeywordsFormCorpSwitchPreserve {
@@ -129,6 +130,7 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
                 filterType: 'logL',
                 filterMinValue: newFormValue('', true),
                 filterMaxValue: newFormValue('', true),
+                filterVisible: false
             }
         );
         this.layoutModel = layoutModel;
@@ -375,6 +377,13 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
                         );
                     }
                 }
+            }
+        );
+
+        this.addActionHandler(
+            Actions.KeywordsToggleFilterFieldset,
+            (state, action) => {
+                state.filterVisible = !state.filterVisible;
             }
         );
     }
