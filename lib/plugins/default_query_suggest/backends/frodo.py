@@ -60,7 +60,7 @@ class FrodoBackend(AbstractBackend[Dict[str, CncSublemmaSuggestion]]):
                 if subl['value'] not in merged[lemma][0]:
                     merged[lemma][0][subl['value']] = 0
                 merged[lemma][0][subl['value']] += int(subl.get('count', 0))
-            merged[lemma][1].add(lemma) # item['value']) TODO
+            merged[lemma][1].add(item.get('found_in'))
         ans = CncSublemmaSuggestion(
             attrs=(self._conf['lemma'], self._conf['sublemma'], self._conf.get('word')),
             value=value.lower() if value else None,
