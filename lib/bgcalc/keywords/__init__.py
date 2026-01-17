@@ -184,7 +184,7 @@ async def keywords(
     if manatee_is_custom_cnc():
         manatee_params += f';{args.score_type}' if args.score_type in CNC_SCORE_TYPES else ';default'
         if args.filter_type and args.filter_type in CNC_SCORE_TYPES:
-            manatee_params += f';{args.filter_type}/{'' if args.filter_min_value is None else args.filter_min_value}/{'' if args.filter_max_value is None else args.filter_max_value}'
+            manatee_params += f';{args.filter_type}/{"" if args.filter_min_value is None else args.filter_min_value}/{"" if args.filter_max_value is None else args.filter_max_value}'
 
     keyword = Keyword(
         corp.unwrap(), ref_corp.unwrap(), c_wl, rc_wl,
