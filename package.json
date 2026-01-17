@@ -3,7 +3,7 @@
   "type": "module",
   "description": "An advanced web front-end for the Manatee-open corpus search engine",
   "license": "GPL-2.0",
-  "version": "0.20.3",
+  "version": "0.20.4",
   "repository": {
     "type": "git",
     "url": "https://github.com/czcorpus/kontext"
