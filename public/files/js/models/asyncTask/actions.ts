@@ -47,7 +47,7 @@ export class Actions {
         status?:Kontext.AsyncTaskStatus;
         created?:number;
         args?:unknown;
-        error?:string;
+        message?:string;
         url?:string;
         auto_redirect?:boolean;
     }> = {
@@ -70,6 +70,12 @@ export class Actions {
         tasks:Array<Kontext.AsyncTaskInfo<unknown>>;
     }> = {
         name: 'ASYNC_TASKS_CHECKED'
+    };
+
+    static AsyncTasksWatch:Action<{
+        ident:string;
+    }> = {
+        name: 'ASYNC_TASKS_WATCH'
     };
 
     static isAsyncTasksChecked(a:Action):a is typeof Actions.AsyncTasksChecked {

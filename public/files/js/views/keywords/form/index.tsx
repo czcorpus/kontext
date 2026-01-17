@@ -21,13 +21,14 @@
 
 
 import * as React from 'react';
-import { Bound, IActionDispatcher } from 'kombo';
+import { IActionDispatcher, useModel } from 'kombo';
 
 import * as Kontext from '../../../types/kontext.js';
 import * as S from './style.js';
 import * as PluginInterfaces from '../../../types/plugins/index.js';
+import * as theme from '../../theme/default/index.js';
 import { Actions } from '../../../models/keywords/actions.js';
-import { KeywordsFormModel, KeywordsFormState } from '../../../models/keywords/form.js';
+import { KeywordsFormModel } from '../../../models/keywords/form.js';
 import { List } from 'cnc-tskit';
 
 
@@ -50,9 +51,22 @@ export function init({
     RefCorpWidget,
     refCorpWidgetId,
     keywordsFormModel,
-}:KeywordsFormViewArgs):React.ComponentClass<{}> {
+}:KeywordsFormViewArgs):React.FC {
 
     const layoutViews = he.getLayoutViews();
+
+    const statTestToLabel = (v: string):string => {
+        switch (v) {
+            case 'logL':
+                return "Log-likelihood"
+            case 'chi2':
+                return he.translate('kwords__chi_square');
+            case 'din':
+                return he.translate('kwords__effect_size');
+            default:
+                return '??';
+        }
+    };
 
 
     // --------------- <IncludeNonWordsCheckbox /> ------------------------
@@ -73,30 +87,143 @@ export function init({
 
         return (
             <>
-                <label htmlFor="wl-include-non-words-checkbox">
-                    {he.translate('wordlist__incl_non_word_label')}:
-                </label>
-                <S.IncludeNonWordsCheckboxSpan>
-                    <layoutViews.ToggleSwitch checked={props.value} onChange={handleChange}
-                        id="wl-include-non-words-checkbox"/>
-                </S.IncludeNonWordsCheckboxSpan>
+                <div>
+                    <label htmlFor="wl-include-non-words-checkbox">
+                        {he.translate('wordlist__incl_non_word_label')}:
+                    </label>
+                </div>
+                <S.IncludeNonWordsCheckbox>
+                    <S.IncludeNonWordsCheckboxSpan>
+                        <layoutViews.ToggleSwitch htmlClass="toggle" checked={props.value} onChange={handleChange}
+                            id="wl-include-non-words-checkbox"/>
+                    </S.IncludeNonWordsCheckboxSpan>
+                </S.IncludeNonWordsCheckbox>
             </>
         );
     };
 
 
-    const KeywordsForm:React.FC<KeywordsFormState> = (props) => {
+    // ------------------ <KeywordsFilterFieldset /> -------------------------------
 
-        const handleAttrChange = (evt:React.ChangeEvent<HTMLSelectElement>) => {
-            dispatcher.dispatch(
-                Actions.SetAttr,
-                {value: evt.target.value}
-            );
-        };
+    const KeywordsFilterFieldset:React.FC = (props) => {
+
+        const state = useModel(keywordsFormModel);
 
         const handlePatternChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
             dispatcher.dispatch(
                 Actions.SetPattern,
+                {value: evt.target.value}
+            );
+        };
+
+        const handleFilterTypeChange = (evt:React.ChangeEvent<HTMLSelectElement>) => {
+            dispatcher.dispatch(
+                Actions.SetFilterType,
+                {value: evt.target.value}
+            );
+        };
+        const handleMinFreq = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch(
+                Actions.SetMinFreq,
+                {value: evt.target.value}
+            );
+        };
+
+        const handleMaxFreq = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch(
+                Actions.SetMaxFreq,
+                {value: evt.target.value}
+            );
+        };
+
+        const handleMinFilter = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch(
+                Actions.SetMinFilter,
+                {value: evt.target.value}
+            );
+        };
+
+        const handleMaxFilter = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch(
+                Actions.SetMaxFilter,
+                {value: evt.target.value}
+            );
+        };
+
+        return (
+            <S.KeywordsFilterFieldset>
+                <div>
+                    <label htmlFor="kw-pattern">{he.translate('kwords__pattern')}:</label>
+                </div>
+                <div>
+                    <input id="kw-pattern" className="pattern" onChange={handlePatternChange} type='text' value={state.pattern}/>
+                </div>
+
+                <div>
+                    <label htmlFor="kw-minfreq">{he.translate('kwords__min_freq')}:</label>
+                </div>
+                <div>
+                    <layoutViews.ValidatedItem invalid={state.wlMinFreqInput.isInvalid}
+                            errorDesc={state.wlMinFreqInput.errorDesc}
+                            htmlClass="freq">
+                        <input id="kw-minfreq" type="text" value={state.wlMinFreqInput.value} onChange={handleMinFreq} />
+                    </layoutViews.ValidatedItem>
+                </div>
+
+                <div>
+                    <label htmlFor="kw-maxfreq">{he.translate('kwords__max_freq')}:</label>
+                </div>
+                <div>
+                    <layoutViews.ValidatedItem invalid={state.wlMaxFreqInput.isInvalid}
+                            errorDesc={state.wlMaxFreqInput.errorDesc}
+                            htmlClass="freq">
+                        <input id="kw-maxfreq" type="text" value={state.wlMaxFreqInput.value} onChange={handleMaxFreq} />
+                    </layoutViews.ValidatedItem>
+                </div>
+
+                <IncludeNonWordsCheckbox value={state.includeNonWords} />
+
+                <div>
+                    <label htmlFor="kw-minfreq">{he.translate('kwords__min_filter')} </label>
+                    <select id="kw-filter" value={state.filterType} onChange={handleFilterTypeChange}>
+                        <option value="logL">{statTestToLabel('logL')}</option>
+                        <option value="chi2">{statTestToLabel('chi2')}</option>
+                        <option value="din">{statTestToLabel('din')}</option>
+                    </select>:
+                </div>
+                <div>
+                    <layoutViews.ValidatedItem invalid={state.filterMinValue.isInvalid}
+                            errorDesc={state.filterMinValue.errorDesc}
+                            htmlClass="freq">
+                        <input id="kw-minfreq" type="text" value={state.filterMinValue.value} onChange={handleMinFilter} />
+                    </layoutViews.ValidatedItem>
+                </div>
+
+                <div>
+                    <label htmlFor="kw-maxfreq">{he.translate('kwords__max_filter')} </label>
+                    <span className="min-score">{statTestToLabel(state.filterType)}</span>:
+                </div>
+                <div>
+                    <layoutViews.ValidatedItem invalid={state.filterMaxValue.isInvalid}
+                            errorDesc={state.filterMaxValue.errorDesc}
+                            htmlClass="freq">
+                        <input id="kw-maxfreq" type="text" value={state.filterMaxValue.value} onChange={handleMaxFilter} />
+                    </layoutViews.ValidatedItem>
+                </div>
+            </S.KeywordsFilterFieldset>
+        );
+    }
+
+
+    // ------------------ <KeywordsForm /> ---------------------------------
+
+    const KeywordsForm:React.FC = (props) => {
+
+        const state = useModel(keywordsFormModel);
+
+        const handleAttrChange = (evt:React.ChangeEvent<HTMLSelectElement>) => {
+            dispatcher.dispatch(
+                Actions.SetAttr,
                 {value: evt.target.value}
             );
         };
@@ -112,18 +239,8 @@ export function init({
             dispatcher.dispatch(Actions.SubmitQuery);
         };
 
-        const handleMinFreq = (evt:React.ChangeEvent<HTMLInputElement>) => {
-            dispatcher.dispatch(
-                Actions.SetMinFreq,
-                {value: evt.target.value}
-            );
-        };
-
-        const handleMaxFreq = (evt:React.ChangeEvent<HTMLInputElement>) => {
-            dispatcher.dispatch(
-                Actions.SetMaxFreq,
-                {value: evt.target.value}
-            );
+        const handleFilterExpand = () => {
+            dispatcher.dispatch(Actions.KeywordsToggleFilterFieldset);
         };
 
         return (
@@ -136,45 +253,43 @@ export function init({
                 </div>
                 <S.MainFieldset>
                     <label htmlFor="kw-attribute">{he.translate('global__attribute')}:</label>
-                    <select id="kw-attribute" value={props.attr} onChange={handleAttrChange}>
-                        {List.map(
-                            item => <option key={item.n} value={item.n}>{item.label}</option>,
-                            props.availAttrs
-                        )}
-                    </select>
+                    <div>
+                        <select id="kw-attribute" value={state.attr} onChange={handleAttrChange}>
+                            {List.map(
+                                item => <option key={item.n} value={item.n}>{item.label}</option>,
+                                state.availAttrs
+                            )}
+                        </select>
+                    </div>
 
-                    <label htmlFor="kw-pattern">{he.translate('kwords__pattern')}:</label>
-                    <input id="kw-pattern" className="pattern" onChange={handlePatternChange} type='text' value={props.pattern}/>
-
-                    {props.manateeIsCustomCNC ?
-                        <label htmlFor="kw-score">{he.translate('kwords__score_type')}:</label>:
+                    {state.manateeIsCustomCNC ?
+                        <label htmlFor="kw-score">{he.translate('kwords__score_type')}</label> :
                         null}
-                    {props.manateeIsCustomCNC ?
-                        <select id="kw-score" value={props.scoreType} onChange={handleScoreTypeChange}>
-                            <option value="logL">Log-likelihood</option>
-                            <option value="chi2">Chi-square</option>
-                            <option value="din">{he.translate('kwords__effect_size')}</option>
-                        </select> :
+                    {state.manateeIsCustomCNC ?
+                        <div>
+                            <select id="kw-score" value={state.scoreType} onChange={handleScoreTypeChange}>
+                                <option value="logL">{statTestToLabel('logL')}</option>
+                                <option value="chi2">{statTestToLabel('chi2')}</option>
+                                <option value="din">{statTestToLabel('din')}</option>
+                            </select>
+                        </div> :
                         null}
-
-                    <label htmlFor="kw-minfreq">{he.translate('kwords__min_freq')}:</label>
-                    <layoutViews.ValidatedItem invalid={props.wlMinFreqInput.isInvalid}
-                            errorDesc={props.wlMinFreqInput.errorDesc}
-                            htmlClass="freq">
-                        <input id="kw-minfreq" type="text" value={props.wlMinFreqInput.value} onChange={handleMinFreq} />
-                    </layoutViews.ValidatedItem>
-
-                    <label htmlFor="kw-maxfreq">{he.translate('kwords__max_freq')}:</label>
-                    <layoutViews.ValidatedItem invalid={props.wlMaxFreqInput.isInvalid}
-                            errorDesc={props.wlMaxFreqInput.errorDesc}
-                            htmlClass="freq">
-                        <input id="kw-maxfreq" type="text" value={props.wlMaxFreqInput.value} onChange={handleMaxFreq} />
-                    </layoutViews.ValidatedItem>
-                    <IncludeNonWordsCheckbox value={props.includeNonWords} />
                 </S.MainFieldset>
+                <theme.ExpandableSectionLabel id="kw-filters">
+                    <layoutViews.ExpandButton isExpanded={state.filterVisible} onClick={handleFilterExpand} />
+                    <a onClick={handleFilterExpand}>
+                        {he.translate('kwords__filter_section_header')}
+                    </a>
+                    <div>
+                        {state.manateeIsCustomCNC && state.filterVisible ?
+                        <KeywordsFilterFieldset /> :
+                        null
+                        }
+                    </div>
+                </theme.ExpandableSectionLabel>
                 <div className="buttons">
                     {
-                        props.isBusy ?
+                        state.isBusy ?
                             <img className="ajax-loader" src={he.createStaticUrl('img/ajax-loader-bar.gif')}
                                 alt={he.translate('global__loading')} title={he.translate('global__loading')} /> :
                             <button type='button' className="default-button" onClick={handleSubmit}>{he.translate('query__search_btn')}</button>
@@ -185,6 +300,6 @@ export function init({
     }
 
 
-    return Bound(KeywordsForm, keywordsFormModel);
+    return KeywordsForm;
 
 }

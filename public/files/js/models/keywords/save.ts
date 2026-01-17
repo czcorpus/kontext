@@ -189,7 +189,7 @@ export class KeywordsResultsSaveModel extends StatefulModel<KeywordsResultsSaveM
         this.saveLinkFn(
             undefined,
             this.state.saveformat,
-            this.layoutModel.createActionUrl(
+            taskId => this.layoutModel.createActionUrl(
                 'keywords/download',
                 {
                     q: '~' + keywordsResultArgs.queryId,
@@ -197,8 +197,9 @@ export class KeywordsResultsSaveModel extends StatefulModel<KeywordsResultsSaveM
                     colheaders: this.state.includeColHeaders,
                     heading: this.state.includeHeading,
                     from_line: this.state.fromLine.value,
-                    to_line: isNaN(parseInt(this.state.toLine.value)) ? '' : this.state.toLine.value
-                }
+                    to_line: isNaN(parseInt(this.state.toLine.value)) ? '' : this.state.toLine.value,
+                    task_id: taskId,
+                },
             )
         );
     }

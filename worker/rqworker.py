@@ -20,7 +20,7 @@
 
 import os
 import sys
-from typing import Union, Callable
+from typing import Optional, Union, Callable
 
 import redis
 import uvloop
@@ -166,6 +166,20 @@ async def create_subcorpus(
         return await general.create_subcorpus(user_id, specification, subcorpus_id, path)
     finally:
         await plugins.runtime.INTEGRATION_DB.instance.on_aio_task_exit()
+
+# ----------------------------- EMPTY --------------------------------------
+
+
+@as_sync
+@handle_custom_exception
+async def notification(message: Optional[str] = None):
+    """
+    important note: in case the function is renamed, the
+    UserActionModel.update_async_task_status method must be
+    updated accordingly as it checks for the notification function
+    and handles it in a special way.
+    """
+    return dict(message=message)
 
 
 # ----------------------------- PLUG-IN TASKS ---------------------------------

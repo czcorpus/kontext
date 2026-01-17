@@ -54,12 +54,12 @@ export class WordlistPage {
         this.layoutModel = layoutModel;
     }
 
-    setDownloadLink(name:string, format:string, url:string, args:WordlistSaveArgs):void {
+    setDownloadLink(name:string, format:string, urlConstructor:(taskId:string) => string, args:WordlistSaveArgs):void {
         this.layoutModel.bgDownload({
             name,
             format,
             datasetType: DownloadType.WORDLIST,
-            url,
+            urlConstructor,
             contentType: 'text/plain',
             args,
         }).subscribe();

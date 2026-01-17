@@ -27,6 +27,8 @@ import * as theme from '../../theme/default/index.js';
 
 export const KeywordsForm = styled.form`
 
+    margin: 1.5em;
+
     .corp-sel {
         display: grid;
         grid-template-columns: 10em 100%;
@@ -34,6 +36,9 @@ export const KeywordsForm = styled.form`
         align-items: center;
     }
 
+    #kw-filters {
+        margin: 0 0 2em 0;
+    }
 `;
 
 // ---------------- <MainFieldset /> --------------------------------------------
@@ -41,20 +46,16 @@ export const KeywordsForm = styled.form`
 export const MainFieldset = styled.div`
 
     display: grid;
-    grid-template-columns: 10em 1fr;
+    grid-template-columns: 10em auto;
     grid-gap: 0.7em;
     align-items: center;
     margin-top: 3.4em;
     margin-bottom: 1.6em;
-    max-width: 20em;
 
-    .freq input[type=text] {
-        width: 4em;
-    }
-
-    .pattern {
-        font-size: 1.4em;
-        font-family: ${theme.monospaceFontFamily};
+    fieldset {
+        border-spacing: 0;
+        border: 1px solid ${theme.colorLightFrame};
+        border-radius: ${theme.borderRadiusDefault};
     }
 
 `;
@@ -65,5 +66,41 @@ export const MainFieldset = styled.div`
 export const IncludeNonWordsCheckboxSpan = styled.span`
     input[type='checkbox'] {
         margin: 0;
+    }
+`;
+
+// ---------------- <KeywordsFilterFieldset /> -----------------------------------
+
+
+export const KeywordsFilterFieldset = styled.fieldset`
+    width: 100%;
+    display: grid;
+    grid-template-columns: 19em auto;
+    grid-gap: 0.7em;
+    margin-top: 0.5em;
+    margin-bottom: 1.6em;
+    padding: 1.5em 2em;
+
+    .freq input[type=text] {
+        width: 4em;
+    }
+
+    .pattern {
+        font-size: 1.4em;
+        font-family: ${theme.monospaceFontFamily};
+    }
+
+    span.min-score {
+        color: ${theme.colorDefaultText};
+    }
+`;
+
+// ----------------- <IncludeNonWordsCheckbox /> ---------------------------------
+
+export const IncludeNonWordsCheckbox = styled.div`
+
+    .toggle {
+        width: 2em;
+        height: 2em;
     }
 `;

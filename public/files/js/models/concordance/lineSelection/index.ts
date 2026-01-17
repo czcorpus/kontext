@@ -608,7 +608,7 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
                 this.layoutModel.bgDownload({
                     format: 'xlsx',
                     datasetType: DownloadType.LINE_SELECTION,
-                    url: this.layoutModel.createActionUrl('export_line_groups_chart'),
+                    urlConstructor: taskId => this.layoutModel.createActionUrl('export_line_groups_chart', {task_id: taskId}),
                     contentType: 'application/json',
                     args: {
                         title: this.layoutModel.translate('linesel__saved_line_groups_heading'),

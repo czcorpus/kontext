@@ -88,7 +88,7 @@ export function isDownloadType(s:string):s is DownloadType {
 }
 
 export interface SaveLinkHandler<T = any> {
-    (name:string, format:string, url:string, args?:T):void;
+    (name:string, format:string, urlConstructor:(taskId:string) => string, args?:T):void;
 }
 
 export class UnsupportedBlob implements Blob {
@@ -321,12 +321,12 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      *
      */
     bgDownload<T=Kontext.AjaxArgs>(
-        {name, format, datasetType, url, contentType, args}:
+        {name, format, datasetType, urlConstructor, contentType, args}:
         {
             name?:string,
             format:string,
             datasetType:DownloadType,
-            url:string,
+            urlConstructor:(taskId:string) => string,
             contentType:string,
             args?:T
         }):Observable<string> {
@@ -337,7 +337,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             return `kontext-${name ? name + '-' : ''}${datasetType}-${dt}.${format}`;
         }
 
-        const taskId = `${new Date().getTime()}:${url}`;
+        const taskId = `${new Date().getTime()}.${datasetType}`;
+        const url = urlConstructor(taskId);
         const method = () => { // TODO this is an antipattern (should be part of download types)
             if (
                 datasetType === DownloadType.FREQ2D ||
@@ -381,13 +382,23 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                         );
 
                     } else {
-                        this.dispatcher.dispatch(
-                            ATActions.InboxUpdateAsyncTask,
-                            {
-                                ident: taskId,
-                                status: 'SUCCESS'
-                            }
-                        );
+                        if (datasetType === DownloadType.CONCORDANCE) {
+                            this.dispatcher.dispatch(
+                                ATActions.AsyncTasksWatch,
+                                {
+                                    ident: taskId,
+                                },
+                            );
+
+                        } else {
+                            this.dispatcher.dispatch(
+                                ATActions.InboxUpdateAsyncTask,
+                                {
+                                    ident: taskId,
+                                    status: 'SUCCESS'
+                                }
+                            );
+                        }
                     }
                 }
             ),

@@ -169,18 +169,18 @@ export class PluginApi implements IPluginApi {
             name,
             format,
             datasetType,
-            url,
+            urlConstructor,
             contentType,
-            args}:
-        {
+            args,
+        }: {
             name?:string,
             format:string,
             datasetType:DownloadType,
-            url:string,
+            urlConstructor:(taskId:string) => string,
             contentType:string,
             args?:T
         }
     ):Observable<string> {
-        return this.pageModel.bgDownload({name, format, datasetType, url, contentType, args});
+        return this.pageModel.bgDownload({name, format, datasetType, urlConstructor, contentType, args});
     }
 }

@@ -51,6 +51,10 @@ export interface KeywordsFormState {
     precalcTasks:Array<AsyncTaskInfo<{}>>;
     includeNonWords:boolean;
     manateeIsCustomCNC:boolean;
+    filterType:ScoreType;
+    filterMinValue:FormValue<string>;
+    filterMaxValue:FormValue<string>;
+    filterVisible:boolean;
 }
 
 export interface KeywordsFormCorpSwitchPreserve {
@@ -61,6 +65,9 @@ export interface KeywordsFormCorpSwitchPreserve {
     scoreType:ScoreType;
     wlMinFreqInput:FormValue<string>;
     wlMaxFreqInput:FormValue<string>;
+    filterType:ScoreType;
+    filterMinValue:FormValue<string>;
+    filterMaxValue:FormValue<string>;
 }
 
 export interface KeywordsFormModelArgs {
@@ -119,7 +126,11 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
                 availAttrs,
                 focusCorpusAttrs,
                 manateeIsCustomCNC: layoutModel.getConf<boolean>('manateeIsCustomCNC'),
-                includeNonWords: initialArgs.include_nonwords
+                includeNonWords: initialArgs.include_nonwords,
+                filterType: 'logL',
+                filterMinValue: newFormValue('', true),
+                filterMaxValue: newFormValue('', true),
+                filterVisible: false
             }
         );
         this.layoutModel = layoutModel;
@@ -217,6 +228,49 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
             (state, action) => {
                 if (action.payload.debounced && state.wlMaxFreqInput.errorDesc) {
                     this.layoutModel.showMessage('error', state.wlMaxFreqInput.errorDesc);
+                }
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SetFilterType,
+            (state, action) => {
+                state.filterType = action.payload.value;
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SetMinFilter,
+            (state, action) => {
+                state.filterMinValue.value = action.payload.value;
+                if (action.payload.debounced) {
+                    state.filterMinValue = this.validateFilterValue(state.filterMinValue, action.payload.value);
+
+                } else {
+                    this.debouncedAction$.next(action);
+                }
+            },
+            (state, action) => {
+                if (action.payload.debounced && state.filterMinValue.errorDesc) {
+                    this.layoutModel.showMessage('error', state.filterMinValue.errorDesc);
+                }
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SetMaxFilter,
+            (state, action) => {
+                state.filterMaxValue.value = action.payload.value;
+                if (action.payload.debounced) {
+                    state.filterMaxValue = this.validateFilterValue(state.filterMaxValue, action.payload.value);
+
+                } else {
+                    this.debouncedAction$.next(action);
+                }
+            },
+            (state, action) => {
+                if (action.payload.debounced && state.filterMaxValue.errorDesc) {
+                    this.layoutModel.showMessage('error', state.filterMaxValue.errorDesc);
                 }
             }
         );
@@ -325,6 +379,13 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
                 }
             }
         );
+
+        this.addActionHandler(
+            Actions.KeywordsToggleFilterFieldset,
+            (state, action) => {
+                state.filterVisible = !state.filterVisible;
+            }
+        );
     }
 
     getRegistrationId():string {
@@ -365,6 +426,22 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
         }
     }
 
+    private validateFilterValue(formItem:FormValue<string>, input:string):FormValue<string> {
+        if (isNaN(parseFloat(input))) {
+            return {
+                ...formItem,
+                isInvalid: true,
+                errorDesc: this.layoutModel.translate('global__invalid_number_value')
+            };
+        } else {
+            return {
+                ...formItem,
+                isInvalid: false,
+                errorDesc: undefined
+            };
+        }
+    }
+
     private serialize(state:KeywordsFormState):KeywordsFormCorpSwitchPreserve {
         return {
             refCorp: state.refCorp,
@@ -373,7 +450,10 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
             pattern: state.pattern,
             scoreType: state.scoreType,
             wlMinFreqInput: {...state.wlMinFreqInput},
-            wlMaxFreqInput: {...state.wlMaxFreqInput}
+            wlMaxFreqInput: {...state.wlMaxFreqInput},
+            filterType: state.filterType,
+            filterMinValue: {...state.filterMinValue},
+            filterMaxValue: {...state.filterMaxValue},
         };
     }
 
@@ -396,6 +476,9 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
             state.scoreType = data.scoreType;
             state.wlMinFreqInput = data.wlMinFreqInput;
             state.wlMaxFreqInput = data.wlMaxFreqInput;
+            state.filterType = data.filterType;
+            state.filterMinValue = data.filterMinValue;
+            state.filterMaxValue = data.filterMaxValue;
         }
     }
 
@@ -413,6 +496,9 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
             wlpat: state.pattern,
             wltype: 'simple',
             score_type: state.scoreType,
+            filter_type: state.filterType,
+            filter_min_value: parseFloat(state.filterMinValue.value),
+            filter_max_value: parseFloat(state.filterMaxValue.value),
         }
     }
 

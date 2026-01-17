@@ -19,11 +19,11 @@
  */
 
 import { IFullActionControl } from 'kombo';
-import { Maths, List, pipe, tuple, Dict } from 'cnc-tskit';
+import { Maths, List, pipe, tuple } from 'cnc-tskit';
 
 import { PageModel, DownloadType } from '../../../app/page.js';
 import { GeneralFreq2DModel, CTFreqCell, GeneralFreq2DModelState, importAvailAlphaLevels } from './generalDisplay.js';
-import { CTFormProperties, roundFloat, FreqFilterQuantities, FreqQuantities, CTFreqResultData } from './common.js';
+import { CTFormProperties, roundFloat, FreqQuantities, CTFreqResultData } from './common.js';
 import { Actions } from './actions.js';
 
 /**
@@ -320,7 +320,7 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel<Freq2DFlatViewModelS
         this.pageModel.bgDownload({
             format,
             datasetType: DownloadType.FREQ2D,
-            url: this.pageModel.createActionUrl('export_freqct', args),
+            urlConstructor: () => this.pageModel.createActionUrl('export_freqct', args),
             contentType: 'application/json',
             args: this.exportData()
         }).subscribe();

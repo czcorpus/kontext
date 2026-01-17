@@ -256,8 +256,8 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                                         created: new Date(1000 * action.payload.task.created),
                                         finished: action.payload.task.status === 'FAILURE' ||
                                             action.payload.task.status === 'SUCCESS',
-                                        error: action.payload.task.error ?
-                                                new Error(action.payload.task.error) : undefined
+                                        error: action.payload.task.message && action.payload.task.status === 'FAILURE' ?
+                                                new Error(action.payload.task.message) : undefined
                                     },
                                     state.processedItems
                                 );
@@ -572,7 +572,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                 name: item.label,
                 corpusName: item.args['corpname'],
                 created: new Date(item.created * 1000),
-                error: item.status === 'FAILURE' ? new Error(item.error) : undefined,
+                error: item.status === 'FAILURE' ? new Error(item.message) : undefined,
                 finished: item.status === 'FAILURE' || item.status === 'SUCCESS'
             }))
         );

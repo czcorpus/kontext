@@ -328,15 +328,23 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
         returns:
             True if job was found (and updated) else False
         """
+
         worker = bgcalc.calc_backend_client(settings)
         aresult = worker.AsyncResult(curr_at.ident)
         if aresult:
             curr_at.status = aresult.status
             if curr_at.status == 'FAILURE':
                 result = await aresult.get(timeout=2)
-                curr_at.error = str(result)
-                if not curr_at.error:
-                    curr_at.error = result.__class__.__name__
+                if not curr_at.message:
+                    curr_at.message = result.__class__.__name__
+                else:
+                    curr_at.message = str(result)
+            # `notification` is a special type of empty job used for
+            # passing messages about other background activities
+            # that are not worker Jobs per se.
+            elif aresult.func_name == 'rqworker.notification':
+                result = await aresult.get(timeout=1)
+                curr_at.message = result.get('message') if isinstance(result, dict) else getattr(result, 'message', None)
             self._check_task_timeout(curr_at)
             return True
         else:
@@ -382,8 +390,10 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
         task_limit = settings.get_int('calc_backend', 'task_time_limit')
         if (task.status == 'PENDING' or task.status == 'STARTED') and now - task.created > task_limit:
             task.status = 'FAILURE'
-            if not task.error:
-                task.error = 'task time limit exceeded'
+            if task.message is None:
+                task.message = 'task time limit exceeded'
+            else:
+                task.message = f'{task.message}; task time limit exceeded'
 
     async def store_async_task(self, async_task_status) -> List[AsyncTaskStatus]:
         at_list = [t for t in (await self.get_async_tasks()) if t.status != 'FAILURE']

@@ -13,7 +13,7 @@
 # GNU General Public License for more details.
 
 import abc
-from typing import Generic, Type, TypeVar, Union
+from typing import Generic, Type, TypeVar, Union, Optional
 
 T = TypeVar('T')
 
@@ -31,6 +31,11 @@ class AbstractResultWrapper(abc.ABC, Generic[T]):
 
     @property
     @abc.abstractmethod
+    def func_name(self) -> Optional[str]:
+        pass
+
+    @property
+    @abc.abstractmethod
     def id(self) -> str:
         pass
 
@@ -39,7 +44,7 @@ class AbstractBgClient(abc.ABC):
 
     @abc.abstractmethod
     async def send_task(
-            self, name, ans_type: Type[T], args=None, time_limit=None, soft_time_limit=None) -> AbstractResultWrapper:
+            self, name, ans_type: Type[T], args=None, time_limit=None, soft_time_limit=None, task_id=None) -> AbstractResultWrapper:
         pass
 
     @abc.abstractmethod

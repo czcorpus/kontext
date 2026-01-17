@@ -28,7 +28,7 @@ import settings
 from action.argmapping.action import create_mapped_args
 from action.errors import (
     AlignedCorpusForbiddenException, CorpusForbiddenException,
-    ForbiddenException, ImmediateRedirectException, UserReadableException)
+    ForbiddenException, ImmediateRedirectException, UnavailableForLegalReasons, UserReadableException)
 from action.krequest import KRequest
 from action.model import ModelsSharedData
 from action.model.abstract import AbstractPageModel, AbstractUserModel
