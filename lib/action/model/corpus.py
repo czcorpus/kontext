@@ -52,7 +52,7 @@ from texttypes.model import TextTypes
 
 T = TypeVar('T')
 
-async def empty_query_store(s, uh, res):
+async def empty_query_store(s, uh, resp):
     pass
 
 
@@ -91,8 +91,8 @@ class CorpusActionModel(UserActionModel):
 
         self._auto_generated_conc_ops: List[Tuple[int, ConcFormArgs]] = []
 
-        self._on_query_store: List[Callable[[List[str], Optional[int],
-                                             Dict[str, Any]], Awaitable[None]]] = [empty_query_store]
+        self._on_query_store: List[
+            Callable[[List[str], Optional[int], KResponse[Dict[str, Any]]], Awaitable[None]]] = [empty_query_store]
 
         self._tt_cache = shared_data.tt_cache
 
@@ -120,7 +120,7 @@ class CorpusActionModel(UserActionModel):
     def active_q_data(self):
         return self._active_q_data
 
-    def on_query_store(self, fn: Callable[[List[str], Optional[int], Any], Awaitable[None]]):
+    def on_query_store(self, fn: Callable[[List[str], Optional[int], KResponse[Dict[str, Any]]], Awaitable[None]]):
         """
         Register a function called after a query (conc, pquery, wordlist) has been stored.
         The function arguments are:

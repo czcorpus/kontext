@@ -144,7 +144,7 @@ class ParadigmaticQueryActionModel(CorpusActionModel):
                     user_id=self.session_get('user', 'id'),
                     query_id=query_id, q_supertype='pquery')
                 for fn in self._on_query_store:
-                    await fn([query_id], ts, resp.result)
+                    await fn([query_id], ts, resp)
 
     def _add_save_menu_item(self, label: str, save_format: Optional[str] = None, hint: Optional[str] = None):
         if save_format is None:

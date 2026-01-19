@@ -270,7 +270,7 @@ class ConcActionModel(CorpusActionModel):
                 history_ts = None
             for fn in self._on_query_store:
                 if callable(fn):
-                    await fn(next_query_keys, history_ts, resp.result)
+                    await fn(next_query_keys, history_ts, resp)
             self._output_last_op_id(
                 next_query_keys[-1] if len(next_query_keys) else None, resp.result)
 
