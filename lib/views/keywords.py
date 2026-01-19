@@ -139,8 +139,8 @@ async def create_result(amodel: KeywordsActionModel, form_args: KeywordsFormArgs
 
     amodel.set_curr_kwform_args(form_args)
 
-    async def on_query_store(query_ids, history_ts, result):
-        result['kw_query_id'] = query_ids[0]
+    async def on_query_store(query_ids, history_ts, resp):
+        resp.result['kw_query_id'] = query_ids[0]
         if history_ts:
             amodel.store_last_search('kwords', query_ids[0])
 
@@ -215,7 +215,7 @@ async def restore(amodel: KeywordsActionModel, req: KRequest, _: KResponse):
         'get_keywords', object.__class__,
         args=(amodel.corp.portable_ident, ref_corp_ident, amodel.curr_kwform_args.to_dict(), KW_MAX_LIST_SIZE))
 
-    async def on_query_store(query_ids, history_ts, result):
+    async def on_query_store(query_ids, history_ts, resp):
         async_task = AsyncTaskStatus(
             status=async_res.status, ident=async_res.id,
             category=AsyncTaskStatus.CATEGORY_KWORDS,
@@ -224,7 +224,7 @@ async def restore(amodel: KeywordsActionModel, req: KRequest, _: KResponse):
             url=req.create_url('keywords/result', dict(q=f'~{query_ids[0]}')),
             auto_redirect=True)
         await amodel.store_async_task(async_task)
-        result['task'] = async_task.to_dict()
+        resp.result['task'] = async_task.to_dict()
 
     amodel.on_query_store(on_query_store)
 

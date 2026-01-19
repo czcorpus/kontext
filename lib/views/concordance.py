@@ -142,9 +142,10 @@ async def query(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     action_model=ConcActionModel)
 async def query_submit(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 
-    async def store_last_op(conc_ids: List[str], history_ts: Optional[int], _):
+    async def store_last_op(conc_ids: List[str], history_ts: Optional[int], resp:KResponse[Dict[str, Any]]):
         if history_ts:
             amodel.store_last_search('conc', conc_ids[0])
+            resp.set_header('Location', req.create_url('view', dict(q=f'~{conc_ids[0]}')))
 
     amodel.clear_prev_conc_params()
     ans = {}
@@ -190,8 +191,6 @@ async def query_submit(amodel: ConcActionModel, req: KRequest, resp: KResponse):
             raise ex
     ans['conc_args'] = amodel.get_mapped_attrs(ConcArgsMapping)
     ans['conc_args']['cutoff'] = amodel.args.cutoff
-    url = req.create_url('view', ans['conc_args'])
-    resp.set_header('Location', url)
     return ans
 
 
@@ -850,7 +849,7 @@ async def filter(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     """
     Positive/Negative filter
     """
-    async def store_last_op(conc_ids: List[str], history_ts: Optional[int], _):
+    async def store_last_op(conc_ids: List[str], history_ts: Optional[int], resp):
         if history_ts:
             amodel.store_last_search('conc:filter', conc_ids[0])
 
