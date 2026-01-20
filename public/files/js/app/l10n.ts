@@ -54,7 +54,7 @@ export class L10n implements ITranslator {
 
     translate(msg:string, values?:{[key:string]:string|number|boolean}):string {
         if (msg) {
-            const tmp = this.translations[msg];``
+            const tmp = this.translations[msg];
             if (tmp) {
                 try {
                     const format = new IntlMessageFormat(this.translations[msg], this.uiLang);
