@@ -62,7 +62,7 @@ class DefaultTokensLinking(AbstractTokensLinking):
         return [self._providers[ident] for ident in provider_ids]
 
     async def is_enabled_for(self, plugin_ctx, corpora):
-        if len(corpora) == 0:
+        if len(corpora) < 2:
             return False
         corpus_info = await self._corparch.get_corpus_info(plugin_ctx, corpora[0])
         tst = [p.enabled_for_corpora([corpora[0]] + plugin_ctx.aligned_corpora)

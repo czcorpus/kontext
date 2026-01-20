@@ -19,7 +19,7 @@
  */
 
 import * as PluginInterfaces from '../../types/plugins/index.js';
-import { StatefulModel, IFullActionControl, ExtractPayload } from 'kombo';
+import { StatefulModel, IFullActionControl } from 'kombo';
 import { IPluginApi } from '../../types/plugins/common.js';
 import { Dict, HTTP, List, Rx, pipe, tuple } from 'cnc-tskit';
 import { AjaxResponse } from '../../types/kontext.js';
@@ -71,8 +71,6 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
             }
         );
         this.pluginApi = pluginApi;
-
-
 
         this.addActionHandler(
             PluginInterfaces.TokensLinking.Actions.FetchInfo,
