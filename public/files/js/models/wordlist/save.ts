@@ -271,7 +271,7 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
         this.saveLinkFn(
             undefined,
             state.saveFormat,
-            taskId => this.layoutModel.createActionUrl('wordlist/savewl', {task_id: taskId, submitArgs}),
+            taskId => this.layoutModel.createActionUrl('wordlist/savewl', {task_id: taskId, ...submitArgs}),
         );
         // TODO
         return rxOf({});
