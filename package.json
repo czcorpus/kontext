@@ -21,7 +21,7 @@
     "install": "^0.13.0",
     "merge": "~2.1.1",
     "mini-css-extract-plugin": "^2.9.2",
-    "npm": "^11.0.0",
+    "npm": "^11.8.0",
     "peggy": "^4.2.0",
     "progress-bar-webpack-plugin": "^2.1.0",
     "script-launcher": "^1.37.3",
