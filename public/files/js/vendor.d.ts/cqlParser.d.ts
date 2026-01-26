@@ -63,13 +63,9 @@ declare module "cqlParser/parser" {
         repetitionType: 'atom-query'|'close-struct-tag'
     }
 
-    export interface Seq {
-        repetitionList: Array<RepetitionOther>;
-    }
+    export type Seq = Array<RepetitionOther>;
 
-    export interface Sequence {
-        seqList:Array<Seq>;
-    }
+    export type Sequence = Array<Seq>;
 
     export interface Structure {
         structName:string;

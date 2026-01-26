@@ -19,7 +19,7 @@
  */
 
 import { IFullActionControl, StatefulModel } from 'kombo';
-import { Observable, throwError, of as rxOf } from 'rxjs';
+import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 
 import * as Kontext from '../../../types/kontext.js';

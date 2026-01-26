@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Color, pipe, List } from 'cnc-tskit';
+import { Color, pipe, List, Dict } from 'cnc-tskit';
 import * as Kontext from '../../types/kontext.js';
 import * as ViewOptions from '../../types/viewOptions.js';
 import { DataSaveFormat } from '../../app/navigation/save.js';
@@ -606,6 +606,36 @@ export function attachColorsToIds<T, U>(ids:Array<T>, idMapper:(item:T)=>number,
 
 export function mapIdToIdWithColors(id:number, fgColor:string, bgColor:string):LineGroupId {
     return {id, fgColor, bgColor};
+}
+
+/**
+ * The function searches for lines containing the same first KWIC token ID.
+ * This may happen in case of overlapping matches (e.g. [upos="ADV"] vs. "way way better").
+ *
+ * We detect this only for the actually visible conc. lines so it is ok perform
+ * this on the client side.
+ *
+ * @param lines
+ * @returns
+ */
+export function detectNonUniqueKWICs(lines:Array<Line>):boolean {
+    return pipe(
+        lines,
+        List.foldl(
+            (acc, curr) => {
+                if (acc[curr.languages[0].tokenNumber] === undefined) {
+                    acc[curr.languages[0].tokenNumber] = 0;
+                }
+                acc[curr.languages[0].tokenNumber] += 1;
+                return acc;
+            },
+            {},
+        ),
+        Dict.toEntries(),
+        List.some(
+            ([, count]) => count > 1
+        )
+    );
 }
 
 
