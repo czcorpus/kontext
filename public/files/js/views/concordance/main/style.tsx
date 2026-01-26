@@ -239,6 +239,7 @@ export const LineSelectionOps = styled.div`
 
     flex-grow: 1;
     display: flex;
+    align-items: center;
 
     .lines-selection {
         white-space: nowrap;
@@ -248,6 +249,16 @@ export const LineSelectionOps = styled.div`
             vertical-align: middle;
             width: 1em;
         }
+    }
+
+    .kwic-warning img {
+        display: block;
+        width: 1em;
+        margin-left: 0.4em;
+    }
+
+    .util-button {
+        font-size: 0.9em;
     }
 `;
 

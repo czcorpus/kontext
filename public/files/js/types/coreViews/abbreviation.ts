@@ -21,9 +21,11 @@
 
 export interface Props {
     value:string;
-    desc:string;
+    desc?:string;
     customStyle?:{[key:string]:string};
+    hideLabelInDescription?:boolean;
     url?:string;
+    children?:React.ReactNode;
 }
 
-export type Component = React.ComponentClass<Props>;
+export type Component = React.FC<Props>;

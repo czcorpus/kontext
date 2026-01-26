@@ -31,7 +31,8 @@ import { Actions as ViewOptionsActions } from '../options/actions.js';
 import { CorpColumn, ViewConfiguration, AjaxConcResponse,
     ServerPagination, ServerLineData, LineGroupId, attachColorsToIds,
     mapIdToIdWithColors, Line, TextChunk, PaginationActions, ConcViewMode,
-    HighlightWords, ConcQueryResponse, KWICSection} from './common.js';
+    HighlightWords, ConcQueryResponse, KWICSection,
+    detectNonUniqueKWICs} from './common.js';
 import { Actions, ConcGroupChangePayload,
     PublishLineSelectionPayload } from './actions.js';
 import { Actions as MainMenuActions } from '../mainMenu/actions.js';
@@ -108,6 +109,8 @@ export function mergeHighlightItems(
 export interface ConcordanceModelState {
 
     lines:Array<Line>;
+
+    hasNonUniqueKWICs:boolean;
 
     highlightWordsStore:{[posAttr:string]:HighlightWords};
 
@@ -242,6 +245,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         initialData:Array<ServerLineData>,
     ) {
         const viewAttrs = layoutModel.getConcArgs().attrs;
+        const lines = importLines(initialData, viewAttrs.indexOf(lineViewProps.baseViewAttr) - 1, lineViewProps.mergedAttrs, lineViewProps.mergedCtxAttrs);
         super(
             dispatcher,
             {
@@ -258,7 +262,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 concSize: lineViewProps.concSummary.concSize,
                 concId: layoutModel.getConf<string>('concPersistenceOpId'),
                 baseViewAttr: lineViewProps.baseViewAttr,
-                lines: importLines(initialData, viewAttrs.indexOf(lineViewProps.baseViewAttr) - 1, lineViewProps.mergedAttrs, lineViewProps.mergedCtxAttrs),
+                lines,
+                hasNonUniqueKWICs: detectNonUniqueKWICs(lines),
                 highlightWordsStore: {},
                 highlightedMatches: [],
                 highlightedMatchConcId: null,

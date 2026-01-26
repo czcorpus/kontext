@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { IActionDispatcher, BoundWithProps, IModel, Bound } from 'kombo';
+import { IActionDispatcher, BoundWithProps, IModel, Bound, useModel } from 'kombo';
 import { List, pipe, tuple } from 'cnc-tskit';
 
 import * as Kontext from '../../../types/kontext.js';
@@ -188,9 +188,12 @@ export function init({
     interface LineSelectionOpsProps {
         numLinesInLockedGroups:number;
         visible:boolean;
+        hasNonUniqueKWICs:boolean;
     }
 
-    const _LineSelectionOps:React.FC<LineSelectionOpsProps & LineSelectionModelState> = (props) => {
+    const LineSelectionOps:React.FC<LineSelectionOpsProps> = (props) => {
+
+        const state = useModel(lineSelectionModel);
 
         const _selectChangeHandler = (event) => {
             dispatcher.dispatch(
@@ -214,13 +217,13 @@ export function init({
         };
 
         const _getMsgStatus = () => {
-            if (props.isLocked) {
+            if (state.isLocked) {
                 return tuple(
                     he.createStaticUrl('img/info-icon.svg'),
                     he.translate('linesel__you_have_saved_line_groups')
                 );
 
-            } else if (LineSelectionModel.numSelectedItems(props) > 0) {
+            } else if (LineSelectionModel.numSelectedItems(state) > 0) {
                 return tuple(
                     he.createStaticUrl('/img/warning-icon.svg'),
                     he.translate('linesel__you_have_unsaved_line_sel')
@@ -233,16 +236,15 @@ export function init({
 
         const _renderNumSelected = () => {
             const numSel = props.numLinesInLockedGroups > 0 ?
-                props.numLinesInLockedGroups : LineSelectionModel.numSelectedItems(props);
+                props.numLinesInLockedGroups : LineSelectionModel.numSelectedItems(state);
             const [statusImg, elmTitle] = _getMsgStatus();
             if (numSel > 0) {
                 return (
                     <span className="lines-selection" title={elmTitle}>
                         {'\u00A0'}
-                        (<a key="numItems" onClick={_selectMenuTriggerHandler}>
+                        <a key="numItems" className="util-button" onClick={_selectMenuTriggerHandler}>
                         <span className="value">{numSel}</span>
                         {'\u00A0'}{he.translate('concview__num_sel_lines')}</a>
-                        )
                         {statusImg ?
                             <img src={statusImg} alt="" title="" /> : null}
                     </span>
@@ -257,27 +259,45 @@ export function init({
             <S.LineSelectionOps>
                 {he.translate('concview__line_sel')}:{'\u00A0'}
                 <select className="selection-mode-switch"
-                        disabled={props.isLocked}
+                        disabled={state.isLocked}
                         onChange={_selectChangeHandler}
-                        defaultValue={LineSelectionModel.actualSelection(props).mode}>
+                        defaultValue={LineSelectionModel.actualSelection(state).mode}>
                     <option value="simple">{he.translate('concview__line_sel_simple')}</option>
                     <option value="groups">{he.translate('concview__line_sel_groups')}</option>
                 </select>
                 {_renderNumSelected()}
                 {props.visible ?
                     <LineSelectionMenu
-                            mode={LineSelectionModel.actualSelection(props).mode}
-                            isBusy={props.isBusy}
-                            isLocked={props.isLocked}
+                            mode={LineSelectionModel.actualSelection(state).mode}
+                            isBusy={state.isBusy}
+                            isLocked={state.isLocked}
                             onCloseClick={_closeMenuHandler}
-                            canSendEmail={!!props.emailDialogCredentials}
-                            corpusId={props.corpusId} />
+                            canSendEmail={!!state.emailDialogCredentials}
+                            corpusId={state.corpusId} />
                     :  null}
+                {props.hasNonUniqueKWICs ?
+                    <>
+                        <span className="separ">|</span>
+                        <layoutViews.Abbreviation
+                            hideLabelInDescription={true}
+                            value={he.translate('concview__non_uniq_kwic_label')}
+                            customStyle={{maxWidth: '20em'}}>
+                                {he.translateRich(
+                                    'concview__non_uniq_kwic_warn',
+                                    {
+                                        strong: (chunks) => <strong>{chunks}</strong>,
+                                        code: (chunks) => <code>{chunks}</code>,
+                                        p: (chunks) => <p>{chunks}</p>
+                                    }
+                                )}
+                        </layoutViews.Abbreviation>
+                        <layoutViews.StatusIcon status='warning' htmlClass='kwic-warning' />
+                    </> :
+                    null
+                }
             </S.LineSelectionOps>
         );
     }
-
-    const LineSelectionOps = BoundWithProps<LineSelectionOpsProps, LineSelectionModelState>(_LineSelectionOps, lineSelectionModel);
 
     // ------------------------- <ShareConcordanceWidget /> ----------------
 
@@ -500,16 +520,20 @@ export function init({
         sortIdx:Array<{page:number; label:string}>;
     }
 
-    const _ConcToolbarWrapper:React.FC<ConcToolbarWrapperProps & LineSelectionModelState> = (props) => (
-        <S.ConcToolbarWrapper>
-            <LineSelectionOps
-                    visible={props.lineSelOpsVisible}
-                    numLinesInLockedGroups={props.numLinesInLockedGroups} />
-            <paginationViews.Paginator SortIdx={props.sortIdx} />
-        </S.ConcToolbarWrapper>
-    );
+    const ConcToolbarWrapper:React.FC<ConcToolbarWrapperProps> = (props) => {
 
-    const ConcToolbarWrapper = BoundWithProps<ConcToolbarWrapperProps, LineSelectionModelState>(_ConcToolbarWrapper, lineSelectionModel);
+        const state = useModel(lineViewModel);
+
+        return (
+            <S.ConcToolbarWrapper>
+                <LineSelectionOps
+                        visible={props.lineSelOpsVisible}
+                        numLinesInLockedGroups={props.numLinesInLockedGroups}
+                        hasNonUniqueKWICs={state.hasNonUniqueKWICs} />
+                <paginationViews.Paginator SortIdx={props.sortIdx} />
+            </S.ConcToolbarWrapper>
+        );
+    };
 
     // ------------------------- <AnonymousUserLoginPopup /> ---------------------------
 
