@@ -418,10 +418,13 @@ export const Abbrevation = styled.span`
 
     display: inline-block;
     text-decoration: none;
-    cursor: help;
     border-color: ${theme.colorDefaultText};
     border-style: dotted;
     border-width: 0 0 1px 0;
+
+    abbr {
+        cursor: help;
+    }
 `;
 
 // ---------------- <ErrorBoundary /> --------------------------------------
