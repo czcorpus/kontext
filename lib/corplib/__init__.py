@@ -35,7 +35,7 @@ from plugin_types.corparch.corpus import (
 from .corpus import AbstractKCorpus, KCorpus
 from .errors import (
     CorpusInstantiationError, MissingSubCorpFreqFile, VirtualSubcFreqFileError)
-from .fallback import EmptyCorpus
+from .fallback import EmptyCorpus, ErrorCorpus
 from .subcorpus import KSubcorpus
 
 TYPO_CACHE_KEY = 'cached_registry_typos'
@@ -125,6 +125,12 @@ class CorpusFactory:
             return self._cache[cache_key]
 
         corp = manatee.Corpus(registry_file)
+        data_path = corp.get_conf('PATH')
+        if not os.path.exists(data_path):
+            return ErrorCorpus(
+                RuntimeError(f'corpus data path does not exist: {data_path}'),
+                corpname,
+            )
 
         # NOTE: line corp.cm = self (as present in NoSke and older KonText versions) has
         # been causing file descriptor leaking for some operations (e.g. corp.get_attr).
