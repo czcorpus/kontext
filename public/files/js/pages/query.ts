@@ -316,7 +316,7 @@ export class QueryPage {
         this.layoutModel.init(true, [], () => {
             this.queryHintModel = new UsageTipsModel(
                 this.layoutModel.dispatcher,
-                this.layoutModel.translate.bind(this.layoutModel)
+                this.layoutModel.translateRich.bind(this.layoutModel)
             );
             this.withinBuilderModel = new WithinBuilderModel(
                 this.layoutModel.dispatcher,

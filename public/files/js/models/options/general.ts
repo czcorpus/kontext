@@ -37,6 +37,7 @@ interface GeneralOptionsArgsSubmit {
     newctxsize:number;
     ctxunit:string;
     line_numbers:boolean;
+    fixed_aux_columns:boolean;
     wlpagesize:number;
     fpagesize:number;
     fdefault_view:FreqResultViews;
@@ -69,6 +70,8 @@ export interface GeneralViewOptionsModelState {
     ctxUnit:string;
 
     lineNumbers:boolean;
+
+    fixedAuxColumns:boolean;
 
     useRichQueryEditor:boolean;
 
@@ -117,6 +120,7 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                 refMaxWidth: Kontext.newFormValue('0', true),
                 ctxUnit: '',
                 lineNumbers: false,
+                fixedAuxColumns: false,
                 useRichQueryEditor: false,
                 wlpagesize: Kontext.newFormValue('0', true),
                 fpagesize: Kontext.newFormValue('0', true),
@@ -191,6 +195,7 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                     };
                     state.ctxUnit = action.payload.data.ctxunit;
                     state.lineNumbers = action.payload.data.line_numbers;
+                    state.fixedAuxColumns = action.payload.data.fixed_aux_columns;
                     state.wlpagesize = {
                         value: action.payload.data.wlpagesize + '',
                         isInvalid: false,
@@ -285,6 +290,13 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
             Actions.GeneralSetLineNums,
             (state, action) => {
                 state.lineNumbers = action.payload.value;
+            }
+        );
+
+        this.addActionHandler(
+            Actions.GeneralSetFixAuxColumns,
+            (state, action) => {
+                state.fixedAuxColumns = action.payload.value;
             }
         );
 
@@ -402,6 +414,7 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                                 name: Actions.GeneralSubmitDone.name,
                                 payload: {
                                     showLineNumbers: state.lineNumbers,
+                                    fixedAuxColumns: state.fixedAuxColumns,
                                     pageSize: parseInt(state.pageSize.value),
                                     refMaxWidth: parseInt(state.refMaxWidth.value),
                                     newCtxSize: parseInt(state.newCtxSize.value),
@@ -514,6 +527,7 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
             newctxsize: parseInt(state.newCtxSize.value),
             ctxunit: state.ctxUnit,
             line_numbers: state.lineNumbers,
+            fixed_aux_columns: state.fixedAuxColumns,
             wlpagesize: parseInt(state.wlpagesize.value),
             fpagesize: parseInt(state.fpagesize.value),
             fdefault_view: state.fdefaultView,

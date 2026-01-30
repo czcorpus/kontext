@@ -26,6 +26,7 @@ export interface ViewOptsResponse extends Kontext.AjaxResponse {
     newctxsize:number;
     ctxunit:string;
     line_numbers:boolean;
+    fixed_aux_columns:boolean;
     wlpagesize:number;
     fpagesize:number;
     fdefault_view:FreqResultViews;
@@ -40,6 +41,7 @@ export interface ViewOptsResponse extends Kontext.AjaxResponse {
 
 export interface GeneralOptionsShared {
     showLineNumbers:boolean;
+    fixedAuxColumns:boolean;
     pageSize:number;
     refMaxWidth:number;
     newCtxSize:number;

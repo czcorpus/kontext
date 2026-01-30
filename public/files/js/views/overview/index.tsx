@@ -388,10 +388,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         </tr>
                         <tr>
                             <th>
-                                <span className="key-button">e</span>
+                                <span className="key-button">a</span>
                                 -
                             </th>
-                            <td>{he.translate('global__key_shortcut_toggle_extended_info')}</td>
+                            <td>{he.translate('global__key_shortcut_toggle_conc_aux_column')}</td>
                         </tr>
                         <tr>
                             <th>

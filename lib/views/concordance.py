@@ -352,6 +352,7 @@ async def view_conc(
     out['conc_line_max_group_num'] = settings.get_int('global', 'conc_line_max_group_num', 99)
     out['aligned_corpora'] = amodel.args.align
     out['line_numbers'] = amodel.args.line_numbers if amodel.args.line_numbers else False
+    out['fixed_aux_columns'] = amodel.args.fixed_aux_columns if amodel.args.fixed_aux_columns else False
     out['speech_segment'] = await amodel.get_speech_segment()
     out['speaker_id_attr'] = corpus_info.speaker_id_attr.split(
         '.') if corpus_info.speaker_id_attr else None

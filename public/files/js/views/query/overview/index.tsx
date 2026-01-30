@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { IActionDispatcher, BoundWithProps, IModel } from 'kombo';
+import { IActionDispatcher, BoundWithProps, IModel, useModel } from 'kombo';
 import { List, tuple } from 'cnc-tskit';
 
 import { init as basicOverviewInit } from '../basicOverview/index.js';
@@ -111,8 +111,8 @@ export interface NonViewPageQueryToolbarProps {
 }
 
 export interface OverviewViews {
-    QueryToolbar:React.ComponentClass<QueryToolbarProps>;
-    NonViewPageQueryToolbar:React.ComponentClass<NonViewPageQueryToolbarProps>;
+    QueryToolbar:React.FC<QueryToolbarProps>;
+    NonViewPageQueryToolbar:React.FC<NonViewPageQueryToolbarProps>;
 }
 
 
@@ -456,7 +456,9 @@ export function init({
         shuffleFormProps:ShuffleFormProps;
     }
 
-    const QueryOverview:React.FC<QueryOverviewProps & QueryReplayModelState> = (props) => {
+    const QueryOverview:React.FC<QueryOverviewProps> = (props) => {
+
+        const state = useModel(queryReplayModel) as QueryReplayModelState;
 
 
         const handleEditClick = (operationIdx:number) => () => {
@@ -527,10 +529,10 @@ export function init({
 
         return (
             <div>
-                {props.overviewVisible ?
-                        <basicOverviewViews.QueryOverviewTable data={props.operations} /> :
+                {state.overviewVisible ?
+                        <basicOverviewViews.QueryOverviewTable data={state.operations} /> :
                         null}
-                {props.branchReplayIsRunning ? <QueryReplayView /> : null}
+                {state.branchReplayIsRunning ? <QueryReplayView /> : null}
 
                 <Style_QueryOverviewBarUL>
                     {props.humanCorpname ?
@@ -549,20 +551,20 @@ export function init({
                                 idx={i}
                                 cutoff={props.cutoff}
                                 item={item}
-                                numOps={List.size(props.operations)}
+                                numOps={List.size(state.operations)}
                                 clickHandler={handleEditClick(i)}
-                                hasOpenEditor={props.editedOperationIdx === i && !props.branchReplayIsRunning}
-                                editorProps={props.editedOperationIdx === i ? getEditorProps(i, item.opid) : null}
+                                hasOpenEditor={state.editedOperationIdx === i && !state.branchReplayIsRunning}
+                                editorProps={state.editedOperationIdx === i ? getEditorProps(i, item.opid) : null}
                                 closeEditorHandler={handleEditorClose}
-                                isLoading={props.branchReplayIsRunning}
-                                modeRunFullQuery={props.stopAfterOpIdx === null}
+                                isLoading={state.branchReplayIsRunning}
+                                modeRunFullQuery={state.stopAfterOpIdx === null}
                                 shuffleMinResultWarning={props.shuffleFormProps.shuffleMinResultWarning}
-                                groupsSelected={props.groupsSelected} />
+                                groupsSelected={state.groupsSelected} />
                         ),
-                        props.operations
+                        state.operations
                     )}
-                    {props.groupsSelected ? '\u00a0' : null}
-                    {props.groupsSelected ?
+                    {state.groupsSelected ? '\u00a0' : null}
+                    {state.groupsSelected ?
                         <S.GroupIndicator onClick={handleGroupsClick} aria-label={he.translate('concview__op_result_has_groups')}
                                 title={he.translate('concview__op_result_has_groups')}>
                             <S.Rect color='red' />
@@ -577,11 +579,6 @@ export function init({
             </div>
         );
     }
-
-    const BoundQueryOverview = BoundWithProps
-        <QueryOverviewProps, QueryReplayModelState|IndirectQueryReplayModelState>(
-            QueryOverview, queryReplayModel);
-
 
     // ------------------------ <RedirectingQueryOverview /> -------------------------------
 
@@ -738,9 +735,11 @@ export function init({
 
     // ------------------------ <QueryToolbar /> --------------------------------
 
-    class QueryToolbar extends React.PureComponent<QueryToolbarProps & MainMenuModelState>  {
+    const QueryToolbar:React.FC<QueryToolbarProps> = (props) => {
 
-        _renderOperationForm() {
+        const state = useModel(mainMenuModel);
+
+        const _renderOperationForm = () => {
             const actions = [
                 MainMenuActions.ShowSort.name,
                 MainMenuActions.ApplyShuffle.name,
@@ -751,19 +750,19 @@ export function init({
                 MainMenuActions.FilterApplyFirstOccurrencesInDocs.name,
                 MainMenuActions.FilterApplyFirstOccurrencesInSentences.name
             ];
-            if (this.props.activeItem !== null &&
-                    List.findIndex(v => v === this.props.activeItem.actionName, actions) > -1) {
-                return <BoundAppendOperationOverlay {...this.props}
-                            menuActiveItem={this.props.activeItem} />;
+            if (state.activeItem !== null &&
+                    List.findIndex(v => v === state.activeItem.actionName, actions) > -1) {
+                return <BoundAppendOperationOverlay {...props}
+                            menuActiveItem={state.activeItem} />;
 
             } else {
                 return null;
             }
         }
 
-        _renderSaveForm() {
-            if (this.props.activeItem) {
-                switch (this.props.activeItem.actionName) {
+        const _renderSaveForm = () => {
+            if (state.activeItem) {
+                switch (state.activeItem.actionName) {
                     case MainMenuActions.MakeConcLinkPersistent.name:
                         return <PermalinkView />;
                 }
@@ -771,41 +770,35 @@ export function init({
             return null;
         }
 
-        render() {
-            return (
-                <div>
-                    <BoundQueryOverview {...this.props} />
-                    {this._renderOperationForm()}
-                    {this._renderSaveForm()}
-                </div>
-            );
-        }
+        return (
+            <div>
+                <QueryOverview {...props} />
+                {_renderOperationForm()}
+                {_renderSaveForm()}
+            </div>
+        );
     }
-
-    const BoundQueryToolbar = BoundWithProps<
-        QueryToolbarProps, MainMenuModelState
-    >(QueryToolbar, mainMenuModel);
 
     // ------------------------ <NonViewPageQueryToolbar /> --------------------------------
 
-    const NonViewPageQueryToolbar:React.FC<NonViewPageQueryToolbarProps & QueryReplayModelState> =
-    (props) => (
-        <div>
-            <RedirectingQueryOverview {...props} ops={props.operations} />
-            {props.overviewVisible ?
-                <basicOverviewViews.QueryOverviewTable data={props.operations} /> :
-                null
-            }
-        </div>
-    );
+    const NonViewPageQueryToolbar:React.FC<NonViewPageQueryToolbarProps> = (props) => {
 
-    const BoundNonViewPageQueryToolbar = BoundWithProps<
-            NonViewPageQueryToolbarProps, QueryReplayModelState|IndirectQueryReplayModelState
-    >(NonViewPageQueryToolbar, queryReplayModel);
+        const state = useModel(queryReplayModel);
+
+        return (
+            <div>
+                <RedirectingQueryOverview {...props} ops={state.operations} />
+                {state.overviewVisible ?
+                    <basicOverviewViews.QueryOverviewTable data={state.operations} /> :
+                    null
+                }
+            </div>
+        );
+    };
 
 
     return {
-        QueryToolbar: BoundQueryToolbar,
-        NonViewPageQueryToolbar: BoundNonViewPageQueryToolbar
+        QueryToolbar,
+        NonViewPageQueryToolbar
     };
 }

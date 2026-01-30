@@ -197,7 +197,20 @@ export const ConcSummary = styled.div`
 
 export const ConcTopBar = styled(ConcVerticalBar)`
 
+    display: flex;
+    flex-direction: column;
     padding: 0.3em 0 0 0;
+
+    .aux-col-control {
+        display: flex;
+        align-items: center;
+        padding-left: 1em;
+        padding-bottom: 0.2em;
+
+        .zero {
+            width: 3em;
+        }
+    }
 
     .info-level::after {
         content: "";
@@ -211,7 +224,6 @@ export const ConcTopBar = styled(ConcVerticalBar)`
         color: #00A8E8;
         padding-left: 0.3em;
         padding-right: 0.3em;
-        vertical-align: middle;
     }
 
     .selection-mode-switch {
@@ -420,5 +432,32 @@ export const AttrMismatchModalContents = styled.div`
         padding-top: 1em;
     }
 
+`;
 
+// --------------- <AuxColumnSwitcher /> ----------------------
+
+export const AuxColumnSwitcher = styled.span`
+
+    display: flex;
+    align-items: center;
+
+    a {
+        display: block;
+
+        img {
+            display: block;
+        }
+    }
+`;
+
+// --------------- <ConcHints /> ------------------------------
+
+export const ConcHints = styled(theme.UIHints)`
+    margin-bottom: 0.2em;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    background-color: transparent;
+    border: none;
+    flex-grow: 1;
 `;

@@ -55,22 +55,22 @@ export const AudioLinkDisabled = styled.span`
 `;
 
 
-// ---- <ManualSelectionTd /> ------------------------
+// ---- <ManualSelection /> ------------------------
 
-export const ManualSelectionTd = styled.td`
+export const ManualSelection = styled.span`
 
     padding-right: 0.2em;
-    width: 3em;
+    margin-right: 0.4em;
+    margin-left: 0.4em;
     text-align: right;
 
     input {
+        width: 3em;
         font-size: 0.9em;
         margin: 0;
     }
 
     input[type="checkbox"] {
-        margin-right: 0.5em;
-        vertical-align: middle;
     }
 
     input.error {

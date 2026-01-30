@@ -36,6 +36,32 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 }
 </style>
 {% endif %}
+<style>
+    #conc-top-bar .tmp-contents {
+        background-color: #e2dfdb;
+        width: 90%;
+        margin-bottom: 1em;
+        margin-top: 2em;
+        margin-left: 1em;
+        min-height: 5em;
+        border-radius: 7px;
+        box-shadow: 0 0 3px #A0A0A0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    #conc-top-bar .tmp-contents .info-level {
+        background-color: #e8e5e1;
+        height: 5em;
+    }
+
+    #conc-top-bar .tmp-contents .content {
+        min-height: 45em;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+</style>
 {% endblock %}
 
 {% block bodyonload %}
@@ -47,6 +73,7 @@ __conf.KWICCorps = {{ KWICCorps|to_json }};
 __conf.ViewMode = {{ viewmode|default(none, true)|to_json }};
 __conf.AttrViewMode = {{ attr_vmode|default(none, true)|to_json }};
 __conf.ShowLineNumbers = {% if line_numbers %}true{% else %}false{% endif %};
+__conf.FixedAuxColums = {% if fixed_aux_columns %}true{% else %}false{% endif %};
 __conf.Pagination = {{ pagination|to_json }};
 __conf.FromPage = {% if fromp %}{{ fromp|to_json }}{% else %}0{% endif %};
 __conf.Lines = {{ Lines|to_json }};
@@ -107,8 +134,14 @@ viewPage.init(__conf);
 {% block concordance %}
 <a id="download-link" style="display:none"></a>
 <div id="conc-dashboard-mount">
-    <div id="conc-top-bar"><div class="info-level">-</div></div>
-    <img class="root-loader" src="{{ files_path }}/img/ajax-loader.gif" title="{{ translate("Loading...") }}" alt="{{ translate("Loading...") }}" />
-    <div id="conc-bottom-bar">-</div>
+    <div id="conc-top-bar">
+        <div class="tmp-contents">
+            <div class="info-level"> </div>
+            <div class="content">
+                <img class="root-loader" src="{{ files_path }}/img/ajax-loader.gif" title="{{ translate("Loading...") }}" alt="{{ translate("Loading...") }}" />
+            </div>
+        </div>
+    </div>
+    <div id="conc-bottom-bar"> </div>
 </div>
 {% endblock %}

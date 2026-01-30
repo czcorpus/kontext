@@ -98,6 +98,7 @@ class GeneralOptionsArgs:
     kwicleftctx: str = field(default='-10', metadata=mk_metdata(Persistence.PERSISTENT))
     kwicrightctx: str = field(default='10', metadata=mk_metdata(Persistence.PERSISTENT))
     line_numbers: bool = field(default=False, metadata=mk_metdata(Persistence.PERSISTENT))
+    fixed_aux_columns: bool = field(default=False, metadata=mk_metdata(Persistence.PERSISTENT))
     shuffle: int = field(default=0, metadata=mk_metdata(Persistence.PERSISTENT))
     rich_query_editor: bool = field(default=True, metadata=mk_metdata(Persistence.PERSISTENT))
     ref_max_width: int = field(default=40, metadata=mk_metdata(Persistence.PERSISTENT))

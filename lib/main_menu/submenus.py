@@ -269,6 +269,12 @@ class View:
             'CONCORDANCE_SWITCH_KWIC_SENT_MODE', key_code=86)  # key = 'v'
     )
 
+    aux_col_switch: EventTriggeringItem = field(
+        default_factory=lambda: EventTriggeringItem(
+            MainMenu.VIEW('toggle-aux-column'), 'Show/hide left column',
+            'CONCORDANCE_TOGGLE_AUX_COLUMN', key_code=65)  # key = 'a'
+    )
+
     view_structs_attrs: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
             MainMenu.VIEW('structs-attrs'), 'Corpus-specific settings',

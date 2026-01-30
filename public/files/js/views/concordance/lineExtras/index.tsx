@@ -32,6 +32,12 @@ import * as S from './style.js';
 import { AudioPlayerModel } from '../../../models/audioPlayer/model.js';
 
 
+
+export interface RefsClickHandler {
+    (corpusId:string, lineIdx:number, tokenNumber:number):void;
+}
+
+
 export interface LineExtrasViews {
 
     AudioLink:React.FC<{
@@ -62,7 +68,7 @@ export interface LineExtrasViews {
         data:Array<string>;
         refMaxWidth:number;
         emptyRefValPlaceholder:string;
-        refsDetailClickHandler:(corpusId:string, tokNum:number, lineIdx:number)=>void;
+        refsDetailClickHandler:RefsClickHandler;
     }>;
 }
 
@@ -139,7 +145,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     }> = (props) => {
 
-        const checkboxChangeHandler = (event) => {
+        const checkboxChangeHandler = React.useCallback((event) => {
             dispatcher.dispatch<typeof Actions.SelectLine>({
                 name: Actions.SelectLine.name,
                 payload: {
@@ -149,7 +155,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                     kwicLength: props.kwicLength
                 }
             });
-        };
+        }, [props.tokenNumber, props.kwicLength]);
 
         return <input type="checkbox" checked={props.groupId !== undefined}
                         onChange={checkboxChangeHandler} />;
@@ -195,7 +201,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                     return <span className="group-id" style={css}>{groupLabel}</span>;
 
                 } else {
-                    return null;
+                    return <span className="group-id">{'\u00a0'}</span>;
                 }
 
             } else if (props.mode === 'simple') {
@@ -208,9 +214,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         };
 
         return (
-            <S.ManualSelectionTd>
+            <S.ManualSelection>
                 {renderInput()}
-            </S.ManualSelectionTd>
+            </S.ManualSelection>
         );
     };
 
@@ -302,7 +308,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             he.translate('concview__click_for_details');
         return (
             <a title={title}
-                    onClick={()=>props.refsDetailClickHandler(props.corpusId, props.tokenNumber, props.lineIdx)}>
+                    onClick={()=>props.refsDetailClickHandler(props.corpusId, props.lineIdx, props.tokenNumber)}>
                 {pipe(
                     normLabels.text,
                     List.filter((_, i) => normLabels.shortenedAt !== -1 ? i <= normLabels.shortenedAt : true),

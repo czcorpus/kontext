@@ -251,3 +251,51 @@ export const ExpandableSectionLabel = styled.h2`
         text-decoration: underline;
     }
 `;
+
+// --------------------- <UIHints /> ----------------------------
+
+export const UIHints = styled.div`
+
+    white-space: initial;
+    padding: 0.3em 0.7em;
+    background-color: #f9f9f9;
+    border-style: solid;
+    border-color: #fefefe;
+    border-width: 0.15em;
+    border-radius: 0.2em;
+    color: ${colorLightText};
+    font-size: 0.9em;
+    line-height: 1.5;
+
+    .hint {
+        display: flex;
+    }
+
+    .tip {
+        text-transform: uppercase;
+        color: ${colorLogoBlue};
+        font-weight: bold;
+        padding-right: 0.7em;
+    }
+
+    .highlight {
+        font-weight: bold;
+    }
+
+    > * {
+        display: inline;
+    }
+
+    .next-hint {
+        padding-left: 0.7em;
+    }
+
+    .next-hint a {
+        color: ${colorLogoBlue};
+        text-decoration: none;
+    }
+
+    .next-hint a:hover {
+        color: ${colorLogoBlue};
+    }
+`;

@@ -589,4 +589,9 @@ export class Actions {
     }> = {
         name: 'CONCORDANCE_SHOW_MISSING_ALIGNED_QUERY_FORM'
     };
+
+    static ToggleAuxColumn:Action<{
+    }> = {
+        name: 'CONCORDANCE_TOGGLE_AUX_COLUMN'
+    };
 }

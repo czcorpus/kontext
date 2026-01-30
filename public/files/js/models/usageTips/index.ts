@@ -25,6 +25,9 @@ import { Actions } from './actions.js';
 import { Actions as QueryActions } from '../query/actions.js';
 import { IUnregistrable } from '../common/common.js';
 import { Actions as GlobalActions } from '../common/actions.js';
+import { FormatXMLElementFn, PrimitiveType } from 'intl-messageformat';
+import React from 'react';
+import { RichTextTranslator } from 'js/app/l10n.js';
 
 
 
@@ -50,16 +53,23 @@ const availableTips = [
 ];
 
 export interface ForcedTip {
-    message:string;
+    message:string | React.ReactNode | Array<string | React.ReactNode>;
     priority:number;
 }
 
 export interface UsageTipsState {
     availableTips:Array<{messageId:string; category:UsageTipCategory[]}>;
-    currentHints:{[key in UsageTipCategory]:string};
+    currentHints:{[key in UsageTipCategory]:string | React.ReactNode | Array<string | React.ReactNode>};
     hintsPointers:{[key in UsageTipCategory]:number};
     forcedTip:ForcedTip|null;
 }
+
+
+const supportedFormatting = {
+    strong: (chunks:Array<React.ReactNode>) => React.createElement('strong', null, chunks),
+    code: (chunks:Array<React.ReactNode>) => React.createElement('code', null, chunks),
+    p: (chunks:Array<React.ReactNode>) => React.createElement('p', null, chunks)
+};
 
 
 /**
@@ -67,9 +77,9 @@ export interface UsageTipsState {
  */
 export class UsageTipsModel extends StatelessModel<UsageTipsState> implements IUnregistrable {
 
-    private translatorFn:(s:string)=>string;
+    private translatorFn:RichTextTranslator;
 
-    constructor(dispatcher:IActionDispatcher, translatorFn:(s:string)=>string) {
+    constructor(dispatcher:IActionDispatcher, translatorFn:RichTextTranslator) {
         const pointers = pipe(
             [UsageTipCategory.CONCORDANCE, UsageTipCategory.QUERY, UsageTipCategory.CQL_QUERY],
             List.map(cat => {
@@ -88,7 +98,10 @@ export class UsageTipsModel extends StatelessModel<UsageTipsState> implements IU
                         const avail = availableTips.filter(v => v.category.includes(cat));
                         return tuple(
                             cat,
-                            avail.length > 0 ? translatorFn(avail[pointers[cat]].messageId) : null
+                            avail.length > 0 ? translatorFn(
+                                avail[pointers[cat]].messageId,
+                                supportedFormatting,
+                            ) : null
                         );
                     }),
                     Dict.fromEntries()
@@ -163,7 +176,9 @@ export class UsageTipsModel extends StatelessModel<UsageTipsState> implements IU
         state.forcedTip = null;
         state.hintsPointers[category] = (curr + 1) % avail.length;
         state.currentHints[category] = this.translatorFn(
-            avail[state.hintsPointers[category]].messageId);
+            avail[state.hintsPointers[category]].messageId,
+            supportedFormatting,
+        );
     }
 
 }
