@@ -955,7 +955,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel, audioPlayer
             );
         };
 
-        const _refsDetailClickHandler:RefsClickHandler = React.useCallback((corpusId, tokenNumber, lineIdx) => {
+        const _refsDetailClickHandler:RefsClickHandler = React.useCallback((corpusId, lineIdx, tokenNumber) => {
             dispatcher.dispatch<typeof Actions.ShowRefDetail>({
                 name: Actions.ShowRefDetail.name,
                 payload: {
