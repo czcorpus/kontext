@@ -172,7 +172,7 @@ export const Rect = styled.span<{color:string}>`
 `;
 
 export const GroupIndicator = styled.a`
-    display: inline-flexbox;
+    display: flex;
     flex-wrap: wrap;
     vertical-align: middle;
     justify-content: space-between;

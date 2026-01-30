@@ -42,13 +42,85 @@ export const ConcLines = styled.table`
     padding-bottom: 20px;
     width: 100%;
 
+`;
+
+
+export const LineTR = styled.tr`
+
+    td.aux-columns {
+
+        text-align: center;
+        vertical-align: middle;
+
+        .wrapper {
+            min-width: 200px;
+            display: flex;
+
+            .line-num {
+                width: 3em;
+            }
+
+            .syntax-tree {
+                width: 1em;
+            }
+        }
+    }
+
+    td.sticky {
+        position: sticky;
+        left: 0;
+        background-color: white;
+        z-index: 1;
+    }
+
+    td.aux-columns.sticky.shrinked {
+
+        padding: 0;
+        cursor: pointer;
+
+        .wrapper {
+            height: 15px;
+            min-width: 25px;
+            padding-right: 5px;
+            justify-content: flex-end;
+            align-items: center;
+        }
+    }
+
+    td.aux-columns.sticky.shrinked::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0.5, 0.15);
+        pointer-events: none;
+    }
+
+    td.sticky:first-child::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: -8px;
+        bottom: 0;
+        width: 8px;
+        pointer-events: none;
+        background: linear-gradient(to right, rgba(0,0,0,0.15), transparent);
+    }
+
     .line-num {
         text-align: right;
         color: ${theme.colorLightText};
     }
 
-    tr:nth-child(2n):not(.active) {
+    &:nth-child(2n):not(.active) {
         background-color: ${theme.colorTableEvenBg};
+
+        td.sticky {
+            background-color: ${theme.colorTableEvenBg};
+            z-index: 1;
+        }
     }
 
     td {
@@ -64,6 +136,7 @@ export const ConcLines = styled.table`
     .group-id {
         font-weight: bold;
         padding: 0.3em;
+        width: 2em;
     }
 
     tr span:not(.ml) .attr {
@@ -72,7 +145,7 @@ export const ConcLines = styled.table`
         font-family: ${theme.monospaceFontFamily};
     }
 
-    mark {
+    span {
         background-color: transparent;
     }
 
@@ -88,24 +161,28 @@ export const ConcLines = styled.table`
         background-color: rgba(0, 100, 255, 0.1);
     }
 
-    td.ref a {
-        text-decoration: none;
-        font-size: 0.85em;
-        cursor: pointer;
-        color: #009EE0;
-        font-weight: bold;
-        max-width: 12em;
-        overflow: hidden;
-        text-overflow: ellipsis;
+    .ref {
+        margin-left: 0.5em;
 
-        ${theme.mediaPhone} {
-            white-space: wrap;
-            padding-right: 1em;
-        }
+        a {
+            text-decoration: none;
+            font-size: 0.85em;
+            cursor: pointer;
+            color: #009EE0;
+            font-weight: bold;
+            max-width: 12em;
+            overflow: hidden;
+            text-overflow: ellipsis;
 
-        ${theme.mediaNoPhone} {
-            white-space: nowrap;
-            padding-right: 2em;
+            ${theme.mediaPhone} {
+                white-space: wrap;
+                padding-right: 1em;
+            }
+
+            ${theme.mediaNoPhone} {
+                white-space: nowrap;
+                padding-right: 2em;
+            }
         }
     }
 
@@ -229,6 +306,19 @@ export const ConcLines = styled.table`
     .warning {
         height: 1em;
         margin-right: 0.1em;
+    }
+
+    .minimized-aux {
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        a {
+            display: block;
+            color: ${theme.colorLogoBlue};
+            text-decoration: none;
+        }
     }
 
 `;

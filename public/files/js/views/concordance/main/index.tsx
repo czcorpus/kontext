@@ -31,7 +31,7 @@ import { init as linesViewInit } from '../lines/index.js';
 import { init as concDetailViewsInit } from '../detail/index.js';
 import { init as concSaveViewsInit } from '../save.js';
 import { init as extendedInfoViewsInit } from '../extendedInfo/index.js';
-import { LineSelectionModel, LineSelectionModelState }
+import { LineSelectionModel }
     from '../../../models/concordance/lineSelection/index.js';
 import { ConcordanceModel, ConcordanceModelState } from '../../../models/concordance/main.js';
 import { ConcDetailModel } from '../../../models/concordance/detail.js';
@@ -40,7 +40,7 @@ import { RefsDetailModel } from '../../../models/concordance/refsDetail.js';
 import { CollFormModel } from '../../../models/coll/collForm.js';
 import { TextTypesDistModel } from '../../../models/concordance/ttdist/model.js';
 import { ConcDashboard, ConcDashboardState } from '../../../models/concordance/dashboard.js';
-import { UsageTipsModel } from '../../../models/usageTips/index.js';
+import { UsageTipCategory, UsageTipsModel } from '../../../models/usageTips/index.js';
 import { MainMenuModelState } from '../../../models/mainMenu/index.js';
 import { Actions } from '../../../models/concordance/actions.js';
 import { LineSelectionModes } from '../../../models/concordance/common.js';
@@ -49,6 +49,7 @@ import { Actions as UserActions } from '../../../models/user/actions.js';
 import * as S from './style.js';
 import { AudioPlayerModel } from '../../../models/audioPlayer/model.js';
 import { Actions as AudioPlayerActions } from '../../../models/audioPlayer/actions.js';
+import { Actions as HintActions } from '../../../models/usageTips/actions.js';
 
 
 export class ViewPageModels {
@@ -219,7 +220,7 @@ export function init({
         const _getMsgStatus = () => {
             if (state.isLocked) {
                 return tuple(
-                    he.createStaticUrl('img/info-icon.svg'),
+                    '',
                     he.translate('linesel__you_have_saved_line_groups')
                 );
 
@@ -509,6 +510,39 @@ export function init({
 
     const BoundConcSummary = Bound<ConcSummaryModelState>(ConcSummary, concSummaryModel)
 
+    // ------------------------- <AuxColumnSwitcher /> ----------------------------
+
+    const AuxColumnSwitcher:React.FC<{
+        auxColVisible:boolean;
+    }> = ({auxColVisible}) => {
+
+        const handleClick = () => {
+            dispatcher.dispatch(
+                Actions.ToggleAuxColumn
+            );
+        };
+
+        const img1 = auxColVisible ?
+            he.createStaticUrl('img/col-expand_s.svg') :
+            he.createStaticUrl('img/col-expand.svg');
+
+        const img2 = auxColVisible ?
+            he.createStaticUrl('img/col-expand.svg') :
+            he.createStaticUrl('img/col-expand_s.svg');
+
+        return (
+            <S.AuxColumnSwitcher>
+                <a onClick={handleClick}>
+                    <layoutViews.ImgWithMouseover
+                            src={img1}
+                            src2={img2}
+                            alt="expand"
+                            style={{width: '1.5em'}} />
+                </a>
+            </S.AuxColumnSwitcher>
+        )
+    };
+
 
     // ------------------------- <ConcToolbarWrapper /> ---------------------------
 
@@ -695,6 +729,45 @@ export function init({
         );
     }
 
+    // -------------- <ConcHints /> --------------------------------------------
+
+    const ConcHints:React.FC = (props) => {
+
+        const state = useModel(usageTipsModel);
+
+        const clickHandler = () => {
+            dispatcher.dispatch(
+                HintActions.NextConcHint,
+            );
+        };
+
+        return (
+            <S.ConcHints>
+                <div className="hint">
+                    <div className="tip">
+                        {state.forcedTip ?
+                            '\u203C\u00a0' + he.translate('global__advice') :
+                            he.translate('global__tip')
+                        }
+                    </div>
+                    <div>
+                    {state.forcedTip ?
+                        state.forcedTip.message :
+                        state.currentHints[UsageTipCategory.CONCORDANCE]
+                    }
+                    </div>
+                </div>
+                <div className="next-hint">
+                    (
+                    <a onClick={clickHandler}>
+                        {he.translate('global__next_tip')}
+                    </a>
+                    )
+                </div>
+            </S.ConcHints>
+        );
+    };
+
     // ------------------------- <ConcordanceView /> ---------------------------
 
     const ConcordanceView:React.FC<
@@ -770,6 +843,11 @@ export function init({
                             numLinesInLockedGroups={props.numItemsInLockedGroups}
                             viewMode={props.attrViewMode}
                             sortIdx={props.SortIdx} />
+                    <div className="aux-col-control">
+                        <AuxColumnSwitcher auxColVisible={props.auxColumnsVisible} />
+                        <ConcHints />
+                        <div className="zero"></div>
+                    </div>
                     {props.showAnonymousUserWarn && props.anonymousUserConcLoginPrompt ?
                         <AnonymousUserLoginPopup onCloseClick={handleAnonymousUserWarning} /> : null}
                 </S.ConcTopBar>
@@ -779,7 +857,7 @@ export function init({
                             busyWaitSecs={props.busyWaitSecs}
                             treatAsSlowQuery={props.treatAsSlowQuery}
                             alternativeCorpus={props.altCorpus} /> :
-                        <linesViews.ConcLines {...props} />
+                        <linesViews.ConcLines />
                     }
                 </S.ConclinesWrapper>
                 <S.ConcBottomBar>

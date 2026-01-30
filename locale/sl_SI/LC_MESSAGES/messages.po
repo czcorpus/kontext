@@ -335,6 +335,9 @@ msgstr "Razvrščanje"
 msgid "Corpus-specific settings"
 msgstr "Specifične nastavitve za korpus"
 
+msgid "Show/hide left column"
+msgstr "Show/hide left column UNTRANSLATED"
+
 msgid "Negative filter (excluding KWIC)"
 msgstr "Negativni filter (brez KWIC)"
 

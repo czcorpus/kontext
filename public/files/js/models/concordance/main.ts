@@ -129,6 +129,10 @@ export interface ConcordanceModelState {
 
     showLineNumbers:boolean;
 
+    fixedAuxColums:boolean;
+
+    auxColumnsVisible:boolean;
+
     kwicCorps:Array<string>;
 
     corporaColumns:Array<CorpColumn>;
@@ -219,6 +223,9 @@ export interface ConcordanceModelState {
 }
 
 
+const LOCAL_STORAGE_AUX_COL_KEY = 'kontext.conc.aux_col';
+
+
 /**
  *
  */
@@ -289,6 +296,10 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 kwicDetailVisible: false,
                 refDetailVisible: false,
                 lineSelOptionsVisible: false,
+                fixedAuxColums: lineViewProps.FixedAuxColums,
+                auxColumnsVisible: localStorage.getItem(LOCAL_STORAGE_AUX_COL_KEY) !== null ?
+                    !!parseInt(localStorage.getItem(LOCAL_STORAGE_AUX_COL_KEY)) :
+                    true,
                 syntaxViewVisible: false,
                 forceScroll: null,
                 mergedAttrs: lineViewProps.mergedAttrs,
@@ -694,6 +705,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         state.showLineNumbers = action.payload.showLineNumbers;
                         state.currentPage = 1;
                         state.refMaxWidth = action.payload.refMaxWidth;
+                        state.fixedAuxColums = action.payload.fixedAuxColumns;
                     });
                     this.loadConcPage().subscribe({
                         next: ([resp,]) => {
@@ -836,16 +848,16 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         this.addActionHandler(
             Actions.SelectLine,
             action => {
+                const s1 = this.state;
                 this.changeState(state => {
                     state.forceScroll = window.scrollY;
-                    state.lines = List.map(
-                        line => ({
-                            ...line,
-                            lineGroup: action.payload.tokenNumber ===
-                                    line.languages[0].tokenNumber ?
-                                        action.payload.value : line.lineGroup}),
-                        state.lines
+                    const srchIdx = List.findIndex(
+                        v => v.languages[0].tokenNumber === action.payload.tokenNumber,
+                        state.lines,
                     );
+                    if (srchIdx > -1) {
+                        state.lines[srchIdx].lineGroup = action.payload.value;
+                    }
                 });
             }
         );
@@ -1089,6 +1101,19 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 );
             }
         );
+
+        this.addActionHandler(
+            Actions.ToggleAuxColumn,
+            action => {
+                const currData = this.state.lines;
+                this.changeState(
+                    state => {
+                        state.auxColumnsVisible = !state.auxColumnsVisible;
+                    }
+                );
+                localStorage.setItem(LOCAL_STORAGE_AUX_COL_KEY, this.state.auxColumnsVisible ? '1' : '0');
+            }
+        );
     }
 
     private highlightTokenLink(
@@ -1169,18 +1194,15 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
     private applyLineSelections(data:PublishLineSelectionPayload):void {
         this.changeState(state => {
             state.forceScroll = window.scrollY;
-            state.lines = List.map(
-                line => {
-                    const srch = List.find(
-                        ([tokenNum,,]) => line.languages[0].tokenNumber === tokenNum,
-                        data.selections
-                    );
-                    return {
-                        ...line,
-                        lineGroup: srch ? srch[2] : line.lineGroup
-                    };
+            List.forEach(
+                ([tokenNum,,lineGroup]) => {
+                    const srchIdx = List.findIndex(x => x.languages[0].tokenNumber === tokenNum, state.lines);
+                    if (srchIdx > -1) {
+                        state.lines[srchIdx].lineGroup = lineGroup;
+                    }
+
                 },
-                state.lines
+                data.selections
             );
         });
     }

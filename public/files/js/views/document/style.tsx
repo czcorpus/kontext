@@ -417,13 +417,13 @@ export const InlineHelp = styled.span`
 export const Abbrevation = styled.span`
 
     display: inline-block;
-    text-decoration: none;
     border-color: ${theme.colorDefaultText};
     border-style: dotted;
     border-width: 0 0 1px 0;
 
     abbr {
         cursor: help;
+        text-decoration: none;
     }
 `;
 

@@ -60,6 +60,12 @@ export class Actions {
         name: 'GENERAL_VIEW_OPTIONS_SET_LINE_NUMS'
     };
 
+    static GeneralSetFixAuxColumns:Action<{
+        value:boolean;
+    }> = {
+        name: 'GENERAL_VIEW_OPTIONS_SET_FIX_AUX_COLUMNS'
+    };
+
     static GeneralSetUseRichQueryEditor:Action<{
         value:boolean;
     }> = {

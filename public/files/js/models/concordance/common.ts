@@ -459,6 +459,8 @@ export interface ViewConfiguration {
 
     ShowLineNumbers:boolean;
 
+    FixedAuxColums:boolean;
+
     KWICCorps:Array<string>;
 
     CorporaColumns:Array<CorpColumn>;

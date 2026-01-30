@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { IActionDispatcher, Bound, StatelessModel } from 'kombo';
+import { IActionDispatcher, StatelessModel, useModel } from 'kombo';
 
 import * as Kontext from '../../../types/kontext.js';
 import { GeneralViewOptionsModelState } from '../../../models/options/general.js';
@@ -30,7 +30,7 @@ import { FreqResultViews } from '../../../models/freqs/common.js';
 
 
 export interface GeneralViews {
-    GeneralOptions:React.ComponentClass<{}>;
+    GeneralOptions:React.FC;
 }
 
 
@@ -134,6 +134,39 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         );
     };
 
+    // ------------- <TRFixAuxiliaryCulumnsCheckbox /> --------------
+
+    const TRFixAuxiliaryCulumnsCheckbox:React.FC<{
+        value:boolean;
+
+    }> = (props) => {
+
+        const handleInputChange = () => {
+            dispatcher.dispatch<typeof Actions.GeneralSetFixAuxColumns>({
+                name: Actions.GeneralSetFixAuxColumns.name,
+                payload: {
+                    value: !props.value
+                }
+            });
+        };
+
+        return (
+            <tr>
+                <th>
+                    <label htmlFor="fix-aux-columns-input">
+                        {he.translate('options__conc_fix_auxiliary_columns')}:
+                    </label>
+                </th>
+                <td align="center">
+                    <layoutViews.ToggleSwitch
+                        id="fix-aux-columns-input"
+                        onChange={handleInputChange}
+                        checked={props.value}/>
+                </td>
+            </tr>
+        );
+    };
+
     // ------------- <TRUseRichQueryEditor /> ---------------------
 
     const TRUseRichQueryEditor:React.FC<{
@@ -206,6 +239,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         newCtxSize:Kontext.FormValue<string>;
         refMaxWidth:Kontext.FormValue<string>;
         lineNumbers:boolean;
+        fixAuxColumns:boolean;
         useRichQueryEditor:boolean;
 
     }> = (props) => {
@@ -219,6 +253,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         <TRConcPageSizeInput value={props.pageSize} />
                         <TRKwicContextSize value={props.newCtxSize} />
                         <TRShowLineNumbersCheckbox value={props.lineNumbers} />
+                        <TRFixAuxiliaryCulumnsCheckbox value={props.fixAuxColumns} />
                         <TrRefMaxWidth value={props.refMaxWidth} />
                         <TRUseRichQueryEditor value={props.useRichQueryEditor} />
                     </tbody>
@@ -596,56 +631,55 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // --------------------- <GeneralOptions /> -------------------------
 
-    class GeneralOptions extends React.PureComponent<GeneralViewOptionsModelState> {
+    const GeneralOptions:React.FC = () => {
 
-        render() {
-            return (
-                <S.GeneralOptions>
-                    <p>
-                        {he.translate('options__this_applies_for_all_the_corpora')}
-                    </p>
-                    <form>
-                        {this.props.loaded ?
-                            <>
-                                <FieldsetConcordance pageSize={this.props.pageSize}
-                                    newCtxSize={this.props.newCtxSize}
-                                    lineNumbers={this.props.lineNumbers}
-                                    refMaxWidth={this.props.refMaxWidth}
-                                    useRichQueryEditor={this.props.useRichQueryEditor} />
-                                <FieldsetWordlist wlPageSize={this.props.wlpagesize}  />
-                                <FieldsetFreqDistrib fpagesize={this.props.fpagesize}
-                                    fdefaultView={this.props.fdefaultView} />
-                                <FieldsetColl citemsPerPage={this.props.citemsperpage} />
-                                <FieldsetPquery resultsPerPage={this.props.pqueryitemsperpage} />
-                                <FieldsetKWords kwPageSize={this.props.kwpagesize} />
-                                <FieldsetSubcList subcPageSize={this.props.subcpagesize} />
-                            </> :
-                            <p className='data-loader'>
-                                <img src={he.createStaticUrl('img/ajax-loader.gif')}
-                                    className="ajax-loader"
-                                    alt={he.translate('global__loading')}
-                                    title={he.translate('global__loading')} />
-                            </p>
-                        }
-                        {this.props.userIsAnonymous ?
-                            <p className="warn">
-                                <layoutViews.StatusIcon status="warning" htmlClass="icon" inline={true} />
-                                {he.translate('global__anon_user_opts_save_warn')}
-                            </p> :
-                            null
-                        }
-                        <div className="buttons">
-                            <SubmitButton modelIsBusy={this.props.isBusy} />
-                        </div>
-                    </form>
-                </S.GeneralOptions>
-            );
-        }
+        const state = useModel(generalOptionsModel);
+
+        return (
+            <S.GeneralOptions>
+                <p>
+                    {he.translate('options__this_applies_for_all_the_corpora')}
+                </p>
+                <form>
+                    {state.loaded ?
+                        <>
+                            <FieldsetConcordance pageSize={state.pageSize}
+                                newCtxSize={state.newCtxSize}
+                                lineNumbers={state.lineNumbers}
+                                fixAuxColumns={state.fixedAuxColumns}
+                                refMaxWidth={state.refMaxWidth}
+                                useRichQueryEditor={state.useRichQueryEditor} />
+                            <FieldsetWordlist wlPageSize={state.wlpagesize}  />
+                            <FieldsetFreqDistrib fpagesize={state.fpagesize}
+                                fdefaultView={state.fdefaultView} />
+                            <FieldsetColl citemsPerPage={state.citemsperpage} />
+                            <FieldsetPquery resultsPerPage={state.pqueryitemsperpage} />
+                            <FieldsetKWords kwPageSize={state.kwpagesize} />
+                            <FieldsetSubcList subcPageSize={state.subcpagesize} />
+                        </> :
+                        <p className='data-loader'>
+                            <img src={he.createStaticUrl('img/ajax-loader.gif')}
+                                className="ajax-loader"
+                                alt={he.translate('global__loading')}
+                                title={he.translate('global__loading')} />
+                        </p>
+                    }
+                    {state.userIsAnonymous ?
+                        <p className="warn">
+                            <layoutViews.StatusIcon status="warning" htmlClass="icon" inline={true} />
+                            {he.translate('global__anon_user_opts_save_warn')}
+                        </p> :
+                        null
+                    }
+                    <div className="buttons">
+                        <SubmitButton modelIsBusy={state.isBusy} />
+                    </div>
+                </form>
+            </S.GeneralOptions>
+        );
     }
 
-    const BoundGeneralOptions = Bound(GeneralOptions, generalOptionsModel);
-
     return {
-        GeneralOptions: BoundGeneralOptions
+        GeneralOptions
     }
 }

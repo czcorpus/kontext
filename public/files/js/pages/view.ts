@@ -355,7 +355,7 @@ export class ViewPage {
     ):void {
         this.queryModels.queryHintModel = new UsageTipsModel(
             this.layoutModel.dispatcher,
-            this.layoutModel.translate.bind(this.layoutModel)
+            this.layoutModel.translateRich.bind(this.layoutModel)
         );
         this.queryModels.withinBuilderModel = new WithinBuilderModel(
             this.layoutModel.dispatcher,
@@ -977,6 +977,7 @@ export class ViewPage {
             RefMaxWidth: this.layoutModel.getConcArgs().ref_max_width,
             AttrViewMode: this.layoutModel.getConf<ViewOptions.AttrViewMode>('AttrViewMode'),
             ShowLineNumbers: this.layoutModel.getConf<boolean>('ShowLineNumbers'),
+            FixedAuxColums: this.layoutModel.getConf<boolean>('FixedAuxColums'),
             KWICCorps: this.layoutModel.getConf<Array<string>>('KWICCorps'),
             CorporaColumns: List.map(
                 v => ({n: v.n, label: v.label, visible: true}),
@@ -1023,7 +1024,7 @@ export class ViewPage {
 
         this.viewModels.usageTipsModel = new UsageTipsModel(
             this.layoutModel.dispatcher,
-            s => this.layoutModel.translate(s)
+            this.layoutModel.translateRich.bind(this.layoutModel)
         );
 
         const lineSelStorage:ConcLinesStorage<LineSelectionModelState> = openStorage(

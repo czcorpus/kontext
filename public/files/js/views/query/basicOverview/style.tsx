@@ -71,10 +71,11 @@ export const QueryOverviewBarUL = styled.ul`
     margin: 0;
     list-style-type: none;
     font-family: ${theme.condensedFontFamily};
+    display: flex;
+    align-items: center;
 
     > li {
-        display: inline-block;
-        margin: 0;
+        margin: 0 0.2em 0 0.2em;
     }
 
     > li a.args {

@@ -284,6 +284,7 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
                 Actions.ShowCollForm,
                 ConcActions.SwitchKwicSentMode,
                 ConcActions.ShowMissingAlignedQueryForm,
+                ConcActions.ToggleAuxColumn,
                 Actions.ShowAttrsViewOptions,
                 Actions.ShowGeneralViewOptions,
                 Actions.ShowCitationInfo,

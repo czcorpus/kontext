@@ -247,50 +247,12 @@ export const SelectedTextTypesLite = styled(AdvancedFormFieldset)`
     }
 `;
 
-// --------------------- <QueryHints /> ----------------------------
+// ------------------- <QueryHints /> ------------------------------------
 
-export const QueryHints = styled.div`
 
-    white-space: initial;
-    padding: 0.3em 0.7em;
+export const QueryHints = styled(theme.UIHints)`
     margin-top: 0.7em;
-    background-color: #f9f9f9;
-    border-style: solid;
-    border-color: #fefefe;
-    border-width: 0.15em;
-    border-radius: 0.2em;
-    color: ${theme.colorLightText};
-    font-size: 0.9em;
     max-width: 50em;
-    line-height: 1.5;
-
-    .tip {
-        text-transform: uppercase;
-        color: ${theme.colorLogoBlue};
-        font-weight: bold;
-        padding-right: 0.7em;
-    }
-
-    .highlight {
-        font-weight: bold;
-    }
-
-    > * {
-        display: inline;
-    }
-
-    .next-hint {
-        padding-left: 0.7em;
-    }
-
-    .next-hint a {
-        color: ${theme.colorLogoBlue};
-        text-decoration: none;
-    }
-
-    .next-hint a:hover {
-        color: ${theme.colorLogoBlue};
-    }
 `;
 
 // ------------------- <QueryToolbox /> --------------------------------
