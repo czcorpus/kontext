@@ -25,9 +25,8 @@ import { Actions } from './actions.js';
 import { Actions as QueryActions } from '../query/actions.js';
 import { IUnregistrable } from '../common/common.js';
 import { Actions as GlobalActions } from '../common/actions.js';
-import { FormatXMLElementFn, PrimitiveType } from 'intl-messageformat';
 import React from 'react';
-import { RichTextTranslator } from 'js/app/l10n.js';
+import { RichTextTranslator } from '../../app/l10n.js';
 
 
 
