@@ -89,7 +89,7 @@ export function init(
             this.contentEditable = new ContentEditable<HTMLSpanElement>(this.inputRef);
         }
 
-        private newInputDispatch(evt:React.ChangeEvent<HTMLSpanElement>|React.CompositionEvent<HTMLSpanElement>) {
+        private newInputDispatch(evt:React.FormEvent<HTMLSpanElement>|React.CompositionEvent<HTMLSpanElement>) {
             const [rawAnchorIdx, rawFocusIdx] = this.contentEditable.getRawSelection();
             const query = this.contentEditable.extractText();
             dispatcher.dispatch<typeof Actions.QueryInputSetQuery>({
@@ -116,7 +116,7 @@ export function init(
             }
         }
 
-        private handleInputChange(evt:React.ChangeEvent<HTMLSpanElement>) {
+        private handleInputChange(evt:React.FormEvent<HTMLSpanElement>) {
             if (!this.props.compositionModeOn) {
                 this.newInputDispatch(evt);
             }
