@@ -25,6 +25,11 @@ import { WideCtxArgs } from '../concordance/common.js';
 import { FreqResultViews } from '../freqs/common.js';
 
 
+type SingleOption<T> = {
+  [K in keyof T]: [K, T[K]]
+}[keyof T];
+
+
 export class Actions {
 
     static GeneralInitalDataLoaded:Action<{
@@ -118,6 +123,18 @@ export class Actions {
         debounced?:boolean;
     }> = {
         name: 'GENERAL_VIEW_OPTIONS_SET_KWPAGESIZE'
+    };
+
+    static GeneralChangeRefMaxWidthAndSubmit:Action<{
+        value:number;
+        isDebounced?:boolean;
+    }> = {
+        name: 'GENERAL_VIEW_OPTIONS_CHANGE_REF_MAX_WIDTH_AND_SUBMIT'
+    };
+
+    static GeneralChangeRefMaxWidthAndSubmitDone:Action<{
+    }> = {
+        name: 'GENERAL_VIEW_OPTIONS_CHANGE_REF_MAX_WIDTH_AND_SUBMIT_DONE'
     };
 
     static GeneralSubmit:Action<{
@@ -229,4 +246,5 @@ export class Actions {
     }> = {
         name: 'VIEW_OPTIONS_CHANGE_QUERY_SUGGESTION_MODE'
     };
+
 }

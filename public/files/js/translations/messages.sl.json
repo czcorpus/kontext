@@ -597,6 +597,7 @@
         "concview__attr_sel_mismatch_question": "Reload the page with the problematic attributes removed? UNTRANSLATED",
         "concview__this_is_a_possibly_slow_query": "This query may take a <strong>long time to process</strong> on a corpus of this size. UNTRANSLATED",
         "concview__altcorp_suggested_{alt_corpus}": "For faster results, try running the query on <strong>{alt_corpus}</strong>, which has similar data but smaller size.",
+        "concview__aux_column_width": "Left column width UNTRANSLATED",
         "concRestore__please_wait_msg": "Prosimo, počakajte. Izvorne konkordance so v pripravi.",
         "concRestore__conc_ready": "Izvorne konkordance so pripravljene. Zahtevana operacija je v obdelavi.",
         "concRestore__result_link": "Če v nekaj minutah niste preusmerjeni na stran z rezultati, poskusite uporabiti naslednjo povezavo",

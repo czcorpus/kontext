@@ -19,8 +19,8 @@
  */
 
 import { ExtractPayload, IFullActionControl, StatefulModel } from 'kombo';
-import { throwError, Observable, interval, Subscription, forkJoin } from 'rxjs';
-import { tap, map, concatMap } from 'rxjs/operators';
+import { throwError, Observable, interval, Subscription, forkJoin, Subject } from 'rxjs';
+import { tap, map, concatMap, debounceTime } from 'rxjs/operators';
 import { List, pipe, HTTP, tuple, Dict, Rx } from 'cnc-tskit';
 import copy from 'copy-to-clipboard';
 import * as ViewOptions from '../../types/viewOptions.js';
@@ -130,8 +130,6 @@ export interface ConcordanceModelState {
     showLineNumbers:boolean;
 
     fixedAuxColums:boolean;
-
-    auxColumnsVisible:boolean;
 
     kwicCorps:Array<string>;
 
@@ -297,9 +295,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 refDetailVisible: false,
                 lineSelOptionsVisible: false,
                 fixedAuxColums: lineViewProps.FixedAuxColums,
-                auxColumnsVisible: localStorage.getItem(LOCAL_STORAGE_AUX_COL_KEY) !== null ?
-                    !!parseInt(localStorage.getItem(LOCAL_STORAGE_AUX_COL_KEY)) :
-                    true,
                 syntaxViewVisible: false,
                 forceScroll: null,
                 mergedAttrs: lineViewProps.mergedAttrs,
@@ -659,6 +654,30 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             Actions.DataWaitTimeInc,
             action => {
                 this.changeState(state => {state.busyWaitSecs = action.payload.idx});
+            }
+        );
+
+        this.addActionHandler(
+            ViewOptionsActions.GeneralChangeRefMaxWidthAndSubmit,
+            action => {
+                this.changeState(
+                    state => {
+                        state.refMaxWidth = action.payload.value;
+                    }
+                )
+            }
+        )
+
+        this.addActionHandler(
+            ViewOptionsActions.GeneralChangeRefMaxWidthAndSubmitDone,
+            action => {
+                this.pushHistoryState({
+                    name: Actions.ReloadConc.name,
+                    payload: {
+                        concId: this.state.concId,
+                        viewMode: this.state.viewMode
+                    }
+                });
             }
         );
 
@@ -1102,18 +1121,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler(
-            Actions.ToggleAuxColumn,
-            action => {
-                const currData = this.state.lines;
-                this.changeState(
-                    state => {
-                        state.auxColumnsVisible = !state.auxColumnsVisible;
-                    }
-                );
-                localStorage.setItem(LOCAL_STORAGE_AUX_COL_KEY, this.state.auxColumnsVisible ? '1' : '0');
-            }
-        );
     }
 
     private highlightTokenLink(

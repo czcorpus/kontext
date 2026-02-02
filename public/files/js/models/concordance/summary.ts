@@ -20,7 +20,7 @@
 
 import { IActionDispatcher, StatelessModel } from 'kombo';
 import { concatMap, map } from 'rxjs/operators';
-import { Actions } from './actions.js';
+import { Actions, isFullReloadConcArgs } from './actions.js';
 import { PageModel } from '../../app/page.js';
 import * as Kontext from '../../types/kontext.js';
 import * as TextTypes from '../../types/textTypes.js';
@@ -112,12 +112,14 @@ export class ConcSummaryModel extends StatelessModel<ConcSummaryModelState> {
         this.addActionHandler(
             Actions.ReloadConc,
             (state, action) => {
-                state.arf = action.payload.arf;
-                state.concSize = action.payload.concSize;
-                state.fullSize = action.payload.fullSize;
-                state.ipm = null;
-                state.queryChainSize = action.payload.queryChainSize;
-                state.corpusIpm = action.payload.corpusIpm;
+                if (isFullReloadConcArgs(action.payload)) {
+                    state.arf = action.payload.arf;
+                    state.concSize = action.payload.concSize;
+                    state.fullSize = action.payload.fullSize;
+                    state.ipm = null;
+                    state.queryChainSize = action.payload.queryChainSize;
+                    state.corpusIpm = action.payload.corpusIpm;
+                }
             }
         )
 

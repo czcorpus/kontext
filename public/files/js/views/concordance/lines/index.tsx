@@ -938,7 +938,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel, audioPlayer
         cols:Array<{n:string; visible:boolean;}>;
         showLineNumbers:boolean;
         fixedAuxColums:boolean;
-        auxColumnsVisible:boolean;
         supportsSyntaxView:boolean;
         numItemsInLockedGroups:number;
         emptyRefValPlaceholder:string;
@@ -948,12 +947,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel, audioPlayer
         tokensLinkingHandler?:tokensLinkinkHandler;
         textDirectionRTL:boolean;
     }> = (props) => {
-
-        const _handleToggleAuxColClick = () => {
-            dispatcher.dispatch(
-                Actions.ToggleAuxColumn
-            );
-        };
 
         const _refsDetailClickHandler:RefsClickHandler = React.useCallback((corpusId, lineIdx, tokenNumber) => {
             dispatcher.dispatch<typeof Actions.ShowRefDetail>({
@@ -985,9 +978,9 @@ export function init({dispatcher, he, lineModel, lineSelectionModel, audioPlayer
 
         return (
             <S.LineTR className={htmlClasses.join(' ')}>
-                <td className={`aux-columns ${props.fixedAuxColums ? 'sticky': ''} ${props.auxColumnsVisible ? '' : 'shrinked'}`}>
-                    <div className="wrapper" onClick={props.auxColumnsVisible ? null : _handleToggleAuxColClick}>
-                        {props.auxColumnsVisible ?
+                <td className={`aux-columns ${props.fixedAuxColums ? 'sticky': ''} ${props.refMaxWidth > 0 ? '' : 'shrinked'}`}>
+                    <div className="wrapper">
+                        {props.refMaxWidth > 0 ?
                             <>
                                 <span className="line-num">
                                     {props.showLineNumbers ? props.data.lineNumber + 1 : null}
@@ -1138,7 +1131,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel, audioPlayer
                         tokensLinkingHandler={state.supportsTokensLinking ? tokensLinkingHandler : null}
                         textDirectionRTL={state.textDirectionRTL}
                         fixedAuxColums={state.fixedAuxColums}
-                        auxColumnsVisible={state.auxColumnsVisible}
                     />
                 },
                 state.lines

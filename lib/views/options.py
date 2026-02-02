@@ -214,7 +214,6 @@ async def viewopts(amodel: UserActionModel, req: KRequest, resp: KResponse):
         kwpagesize=amodel.args.kwpagesize,
     )
 
-
 @bp.route('/viewoptsx', ['POST'])
 @http_action(return_type='json', action_model=UserActionModel)
 async def viewoptsx(amodel: UserActionModel, req: KRequest, resp: KResponse):
@@ -241,6 +240,21 @@ async def viewoptsx(amodel: UserActionModel, req: KRequest, resp: KResponse):
         return {}
     except ValueError as ex:
         raise UserReadableException(ex, code=422)
+
+
+@bp.route('/set-aux-col-width', ['POST'])
+@http_action(return_type='json', action_model=UserActionModel)
+async def setAuxColWidth(amodel: UserActionModel, req: KRequest, resp: KResponse):
+    try:
+        width = int(req.args.get('value'))
+        if width < 0 or width > 100:
+            raise ValueError()
+        amodel.args.ref_max_width = width
+        await amodel.save_options(['ref_max_width'])
+        return {}
+    except ValueError as ex:
+        raise UserReadableException(ex, code=422)
+
 
 
 @bp.route('/toggle_conc_dashboard', ['POST'])

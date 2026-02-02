@@ -40,6 +40,24 @@ export interface PublishLineSelectionPayload {
     mode:LineSelectionModes;
 }
 
+export interface ReloadConcArgs {
+    concId:string;
+    viewMode?:ConcViewMode;
+    isPopState?:boolean;
+}
+
+export interface FullReloadConcArgs extends ReloadConcArgs {
+    arf:number;
+    concSize:number;
+    fullSize:number;
+    corpusIpm:number;
+    queryChainSize:number;
+}
+
+export function isFullReloadConcArgs(args:ReloadConcArgs):args is FullReloadConcArgs {
+    return args['concSize'] !== undefined;
+}
+
 
 export class Actions {
 
@@ -100,16 +118,7 @@ export class Actions {
     /**
      * defines a reload of an already known operation
      */
-    static ReloadConc:Action<{
-        concId:string;
-        arf:number;
-        concSize:number;
-        fullSize:number;
-        corpusIpm:number;
-        queryChainSize:number;
-        isPopState?:boolean;
-        viewMode?:ConcViewMode;
-    }> = {
+    static ReloadConc:Action<ReloadConcArgs|FullReloadConcArgs> = {
         name: 'CONCORDANCE_RELOAD_CONC'
     };
 
@@ -588,10 +597,5 @@ export class Actions {
         maincorp:string;
     }> = {
         name: 'CONCORDANCE_SHOW_MISSING_ALIGNED_QUERY_FORM'
-    };
-
-    static ToggleAuxColumn:Action<{
-    }> = {
-        name: 'CONCORDANCE_TOGGLE_AUX_COLUMN'
     };
 }
