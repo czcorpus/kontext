@@ -264,9 +264,6 @@ msgstr "Dokumenty"
 msgid "Corpus-specific settings"
 msgstr "Korpusová nastavení"
 
-msgid "Show/hide left column"
-msgstr "Zobrazit/schovat levý sloupec"
-
 msgid "Help"
 msgstr "Nápověda"
 

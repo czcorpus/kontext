@@ -254,9 +254,6 @@ msgstr "ID ôd dokumyntōw"
 msgid "Corpus-specific settings"
 msgstr "Sztelōnki korpusōw"
 
-msgid "Show/hide left column"
-msgstr "Show/hide left column UNTRANSLATED"
-
 msgid "Help"
 msgstr "Pōmoc"
 

@@ -21,6 +21,8 @@
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps, IModel, Bound, useModel } from 'kombo';
 import { List, pipe, tuple } from 'cnc-tskit';
+import Slider from 'rc-slider';
+import 'rc-slider/assets/index.css';
 
 import * as Kontext from '../../../types/kontext.js';
 import * as ViewOptions from '../../../types/viewOptions.js';
@@ -513,32 +515,24 @@ export function init({
     // ------------------------- <AuxColumnSwitcher /> ----------------------------
 
     const AuxColumnSwitcher:React.FC<{
-        auxColVisible:boolean;
-    }> = ({auxColVisible}) => {
+        value:number;
+    }> = ({value}) => {
 
-        const handleClick = () => {
+        const changeWidth = (width:number|Array<number>) => {
             dispatcher.dispatch(
-                Actions.ToggleAuxColumn
+                ViewOptionsActions.GeneralChangeRefMaxWidthAndSubmit,
+                {
+                    value: width
+                }
             );
-        };
-
-        const img1 = auxColVisible ?
-            he.createStaticUrl('img/col-expand_s.svg') :
-            he.createStaticUrl('img/col-expand.svg');
-
-        const img2 = auxColVisible ?
-            he.createStaticUrl('img/col-expand.svg') :
-            he.createStaticUrl('img/col-expand_s.svg');
+        }
 
         return (
             <S.AuxColumnSwitcher>
-                <a onClick={handleClick}>
-                    <layoutViews.ImgWithMouseover
-                            src={img1}
-                            src2={img2}
-                            alt="expand"
-                            style={{width: '1.5em'}} />
-                </a>
+                <span className="label" aria-label={he.translate('concview__aux_column_width')} id="left-column-width-slider">
+                    {he.translate('concview__aux_column_width')}:{'\u00a0'}
+                </span>
+                <Slider onChange={changeWidth} defaultValue={value} ariaLabelledByForHandle="left-column-width-slider" />
             </S.AuxColumnSwitcher>
         )
     };
@@ -551,6 +545,7 @@ export function init({
         viewMode:ViewOptions.AttrViewMode;
         lineSelOpsVisible:boolean;
         numLinesInLockedGroups:number;
+        refMaxWidth:number;
         sortIdx:Array<{page:number; label:string}>;
     }
 
@@ -560,6 +555,8 @@ export function init({
 
         return (
             <S.ConcToolbarWrapper>
+                <AuxColumnSwitcher value={props.refMaxWidth} />
+                <span className="separ">|</span>
                 <LineSelectionOps
                         visible={props.lineSelOpsVisible}
                         numLinesInLockedGroups={props.numLinesInLockedGroups}
@@ -741,6 +738,8 @@ export function init({
             );
         };
 
+        const hints = state.currentHints[UsageTipCategory.CONCORDANCE];
+
         return (
             <S.ConcHints>
                 <div className="hint">
@@ -753,7 +752,10 @@ export function init({
                     <div>
                     {state.forcedTip ?
                         state.forcedTip.message :
-                        state.currentHints[UsageTipCategory.CONCORDANCE]
+                        pipe(
+                            Array.isArray(hints) ? hints : [hints],
+                            List.map((hint, i) => <React.Fragment key={`hint:${i}}`}>{hint}</React.Fragment>)
+                        )
                     }
                     </div>
                 </div>
@@ -842,11 +844,11 @@ export function init({
                             canSendEmail={props.canSendEmail}
                             numLinesInLockedGroups={props.numItemsInLockedGroups}
                             viewMode={props.attrViewMode}
-                            sortIdx={props.SortIdx} />
+                            sortIdx={props.SortIdx}
+                            refMaxWidth={props.refMaxWidth}
+                             />
                     <div className="aux-col-control">
-                        <AuxColumnSwitcher auxColVisible={props.auxColumnsVisible} />
                         <ConcHints />
-                        <div className="zero"></div>
                     </div>
                     {props.showAnonymousUserWarn && props.anonymousUserConcLoginPrompt ?
                         <AnonymousUserLoginPopup onCloseClick={handleAnonymousUserWarning} /> : null}

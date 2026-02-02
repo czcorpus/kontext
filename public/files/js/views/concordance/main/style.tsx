@@ -206,10 +206,6 @@ export const ConcTopBar = styled(ConcVerticalBar)`
         align-items: center;
         padding-left: 1em;
         padding-bottom: 0.2em;
-
-        .zero {
-            width: 3em;
-        }
     }
 
     .info-level::after {
@@ -439,20 +435,21 @@ export const AttrMismatchModalContents = styled.div`
 export const AuxColumnSwitcher = styled.span`
 
     display: flex;
-    align-items: center;
+    margin-right: 0.7em;
 
-    a {
-        display: block;
+    .label {
+        margin-right: 0.4em;
+    }
 
-        img {
-            display: block;
-        }
+    .rc-slider {
+        width: 100px;
     }
 `;
 
 // --------------- <ConcHints /> ------------------------------
 
 export const ConcHints = styled(theme.UIHints)`
+    margin-top: 0.7em;
     margin-bottom: 0.2em;
     padding: 0;
     display: flex;

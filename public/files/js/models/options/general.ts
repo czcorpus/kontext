@@ -20,7 +20,7 @@
 
 import { tap } from 'rxjs/operators';
 import { Observable, Subject, debounceTime } from 'rxjs';
-import { IFullActionControl, StatelessModel } from 'kombo';
+import { IFullActionControl, SEDispatcher, StatelessModel } from 'kombo';
 import { HTTP, List } from 'cnc-tskit';
 
 import * as Kontext from '../../types/kontext.js';
@@ -30,6 +30,7 @@ import { Actions } from './actions.js';
 import { ViewOptsResponse } from './common.js';
 import { validateGzNumber } from '../base.js';
 import { FreqResultViews } from '../freqs/common.js';
+import { dispatch } from 'd3';
 
 
 interface GeneralOptionsArgsSubmit {
@@ -104,11 +105,15 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
 
     private static readonly MAX_CTX_SIZE = 100;
 
+    private static readonly AUX_COLUMN_WIDTH_SLIDER_THROTTLE_INTERVAL_MS = 500;
+
     private readonly layoutModel:PageModel;
 
     private readonly submitResponseHandlers:Array<(store:GeneralViewOptionsModel)=>void>;
 
     private readonly debouncedAction$:Subject<DebouncedActions>;
+
+    private readonly debouncedSliderAction$:Subject<typeof Actions.GeneralChangeRefMaxWidthAndSubmit>;
 
     constructor(dispatcher:IFullActionControl, layoutModel:PageModel, userIsAnonymous:boolean) {
         super(
@@ -149,6 +154,18 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
             }
         });
 
+        this.debouncedSliderAction$ = new Subject<typeof Actions.GeneralChangeRefMaxWidthAndSubmit>();
+        this.debouncedSliderAction$.pipe(
+            debounceTime(GeneralViewOptionsModel.AUX_COLUMN_WIDTH_SLIDER_THROTTLE_INTERVAL_MS)
+
+        ).subscribe({
+            next: value => {
+                dispatcher.dispatch({
+                    ...value,
+                    payload: {...value.payload, isDebounced: true}
+                });
+            }
+        });
 
         this.addActionHandler(
             MainMenuActions.ShowGeneralViewOptions,
@@ -388,6 +405,50 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
 
                 } else {
                     this.debouncedAction$.next(action);
+                }
+            }
+        );
+
+        this.addActionHandler(
+            Actions.GeneralChangeRefMaxWidthAndSubmit,
+            (state, action) => {
+                state.refMaxWidth = Kontext.updateFormValue(state.refMaxWidth, {value: '' + action.payload.value});
+                if (!action.payload.isDebounced) {
+                    this.debouncedSliderAction$.next(action);
+                }
+            },
+            (state, action, dispatch) => {
+                if (action.payload.isDebounced) {
+                    this.layoutModel.ajax$<Kontext.AjaxResponse>(
+                        HTTP.Method.POST,
+                        this.layoutModel.createActionUrl(
+                            'options/set-aux-col-width',
+                            {value: action.payload.value}
+                        ),
+                        {},
+                        {contentType: 'application/json'}
+
+                    ).pipe(
+                        tap(d => {
+                            this.layoutModel.updateConcArgs({
+                                ref_max_width: parseInt(state.refMaxWidth.value)
+                            });
+                        })
+
+                    ).subscribe({
+                        next: () => {
+                            dispatch(
+                                Actions.GeneralChangeRefMaxWidthAndSubmitDone
+                            );
+                        },
+                        error: error => {
+                            this.layoutModel.showMessage('error', error);
+                            dispatch(
+                                Actions.GeneralChangeRefMaxWidthAndSubmitDone,
+                                error
+                            );
+                        }
+                    });
                 }
             }
         );

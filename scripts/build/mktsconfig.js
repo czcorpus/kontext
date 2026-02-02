@@ -46,6 +46,7 @@ const tsConfig = {
         noImplicitAny: false,
         module: "node16",
         esModuleInterop: true,
+
         target: "esnext",
         jsx: "react-jsx",
         moduleResolution: "node16",
