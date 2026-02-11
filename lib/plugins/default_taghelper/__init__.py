@@ -36,6 +36,7 @@ element taghelper {
   }
 }
 """
+from dataclasses import dataclass
 from typing import Any, Dict
 
 import plugins
@@ -43,6 +44,7 @@ from action.control import http_action
 from action.errors import UserReadableException
 from action.krequest import KRequest
 from action.model.corpus import CorpusActionModel
+from action.model.user import UserActionModel
 from action.response import KResponse
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.taghelper import (AbstractTaghelper,
@@ -54,6 +56,7 @@ from plugins.default_taghelper.fetchers.positional import \
     PositionalSelectionFetcher
 from plugins.default_taghelper.loaders import NullTagVariantLoader
 from plugins.default_taghelper.loaders.keyval import KeyvalTagVariantLoader
+from plugins.default_taghelper.loaders.kvfrodo import KeyvalFrodoLoader
 from plugins.default_taghelper.loaders.positional import \
     PositionalTagVariantLoader
 from sanic.blueprints import Blueprint
@@ -61,9 +64,9 @@ from sanic.blueprints import Blueprint
 bp = Blueprint('default_taghelper', 'corpora')
 
 
-@bp.route('/ajax_get_tag_variants')
+@bp.route('/ajax_get_tag_variants', methods=['POST'])
 @http_action(return_type='json', action_model=CorpusActionModel)
-async def ajax_get_tag_variants(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
+async def ajax_get_tag_variants(amodel: UserActionModel, req: KRequest, resp: KResponse):
     """
     """
     corpname = req.args.get('corpname')
@@ -71,6 +74,8 @@ async def ajax_get_tag_variants(amodel: CorpusActionModel, req: KRequest, resp: 
 
     fetcher = await plugins.runtime.TAGHELPER.instance.fetcher(amodel.plugin_ctx, corpname, tagset_name)
     values_selection = await fetcher.fetch(req)
+    import logging
+    logging.getLogger(__name__).warning('>>>>>>>>>>>>>>>> values_selection: {}'.format(values_selection))
     try:
         tag_loader = await plugins.runtime.TAGHELPER.instance.loader(amodel.plugin_ctx, corpname, tagset_name)
     except IOError:
@@ -78,9 +83,9 @@ async def ajax_get_tag_variants(amodel: CorpusActionModel, req: KRequest, resp: 
             req.translate('Corpus {corpname} is not supported by this widget.'))
 
     if await fetcher.is_empty(values_selection):
-        ans = await tag_loader.get_initial_values(req.ui_lang, req.translate)
+        ans = await tag_loader.get_initial_values(amodel.plugin_ctx, req.ui_lang, req.translate)
     else:
-        ans = await tag_loader.get_variant(values_selection, req.ui_lang, req.translate)
+        ans = await tag_loader.get_variant(amodel.plugin_ctx, values_selection, req.ui_lang, req.translate)
     return ans
 
 
@@ -104,9 +109,9 @@ class Taghelper(AbstractTaghelper):
                         taglist_path=self._conf['taglist_path'])
                     self._fetchers[(corpus_name, tagset.ident)] = PositionalSelectionFetcher()
                 elif tagset.type == 'keyval':
-                    self._loaders[(corpus_name, tagset.ident)] = KeyvalTagVariantLoader(
+                    self._loaders[(corpus_name, tagset.ident)] = KeyvalFrodoLoader(
                         corpus_name=corpus_name, tagset_name=tagset.ident,
-                        tags_src_dir=self._conf['tags_src_dir'],
+                        frodo_url=self._conf['frodo_url']
                     )
                     self._fetchers[(corpus_name, tagset.ident)] = KeyvalSelectionFetcher()
                 else:
@@ -129,7 +134,7 @@ class Taghelper(AbstractTaghelper):
         for tagset in (await self._corparch.get_corpus_info(plugin_ctx, corpus_name)).tagsets:
             if tagset.ident == tagset_id:
                 loader = await self.loader(plugin_ctx, corpus_name, tagset.ident)
-                return await loader.is_available(plugin_ctx.translate)
+                return await loader.is_available(plugin_ctx, plugin_ctx.translate)
         return False
 
     @staticmethod

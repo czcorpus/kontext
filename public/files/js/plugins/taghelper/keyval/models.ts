@@ -31,54 +31,61 @@ import { IPluginApi } from '../../../types/plugins/common.js';
 
 
 interface DataResponse extends Kontext.AjaxResponse {
-    keyval_tags:{[key:string]:Array<string>};
+    attrs:{[name:string]:Array<string>};
+    udFeats:{[name:string]:Array<string>};
 }
 
-export class FilterRecord {
 
-    readonly name:string;
-
-    readonly value:string;
-
-    constructor(name:string, value:string) {
-        this.name = name;
-        this.value = value;
-    }
-
-    composeString():string {
-        return `${this.name}=${this.value}`;
-    }
-
-    getKeyval():[string, string] {
-        return tuple(this.name, this.value);
-    }
-
-    compare(that:FilterRecord):number {
-        return this.composeString() < that.composeString() ? -1 : 1;
-    }
-
-    equals(rec2:FilterRecord):boolean {
-        return this.name === rec2.name && this.value === rec2.value;
-    }
-
-    setValue(v:string):FilterRecord {
-        return new FilterRecord(this.name, v);
-    }
-}
 
 function composeQuery(data:TagsetStatus):string {
-    return pipe(
-        data.filterFeaturesHistory,
-        List.last(),
-        List.groupBy(x => x.name),
-        List.map(
-            ([recName, groupedRecs]) =>
-                recName === 'POS' ?
-                    `${data.posField}="${groupedRecs.map(x => x.value).join('|')}"` :
-                    `${data.featureField}="${groupedRecs.map(x => x.composeString()).join('|')}"`
+    const attrsQuery = pipe(
+        data.allAttrs,
+        Dict.toEntries(),
+        List.filter(
+            ([, selectableValues]) => List.some(v => v.selected, selectableValues)
         ),
-        List.sorted((v1, v2) => v1.localeCompare(v2))
-    ).join(' & ');
+        List.map(
+            ([name, selectableValues]) => tuple(name, List.filter(v => v.selected, selectableValues))
+        ),
+        List.sorted(([v1,], [v2,]) => v1.localeCompare(v2)),
+        List.map(
+            ([recName, groupedRecs]) => `${recName}="${List.map(r => r.value, groupedRecs).join('|')}"`
+        )
+    );
+    const udQuery = pipe(
+        data.allUdFeats,
+        Dict.toEntries(),
+        List.filter(
+            ([, selectableValues]) => List.some(v => v.selected, selectableValues)
+        ),
+        List.map(
+            ([name, selectableValues]) => tuple(name, List.filter(v => v.selected, selectableValues))
+        ),
+        List.sorted(([v1,], [v2,]) => v1.localeCompare(v2)),
+        List.map(
+            ([recName, groupedRecs]) => `feats="${List.map(r => `${recName}=${r.value}`, groupedRecs).join('|')}"`
+        )
+    );
+    return `[${[...attrsQuery,...udQuery].join(' & ')}]`;
+}
+
+
+export interface SelectableValue {
+    value:string;
+    available:'unavailable'|'available'|'edited';
+    selected:boolean;
+    filteredOut:boolean;
+}
+
+export function selectableValIsVisible(v:SelectableValue):boolean {
+    return v.available !== 'unavailable' && !v.filteredOut;
+}
+
+interface SelectionOperation {
+    attr:string;
+    value:string;
+    isUdFeat:boolean;
+    checked:boolean;
 }
 
 
@@ -97,20 +104,28 @@ export interface TagsetStatus {
      */
     rawPattern:string;
 
-    canUndo:boolean;
-
     // a string-exported variant of the current UD props selection
     generatedQuery:string;
 
     error:Error|null;
 
-    allFeatures:{[key:string]:Array<string>};
+    allAttrs:{[key:string]:Array<SelectableValue>};
 
-    availableFeatures:{[key:string]:Array<string>};
+    /**
+     * filter for both allAttrs and allUdFeats.
+     * Please note that the ud feats are filtered by their name
+     */
+    attrsFilters:{[key:string]:string};
 
-    filterFeaturesHistory:Array<Array<FilterRecord>>;
+    allUdFeats:{[key:string]:Array<SelectableValue>};
 
-    showCategory:string;
+    udFeatsFilters:{[key:string]:string};
+
+    lockedAttrs:{[name:string]:boolean};
+
+    filterFeaturesHistory:Array<null|SelectionOperation>;
+
+    expandedUdFeat:string;
 
     posField:string;
 
@@ -119,23 +134,28 @@ export interface TagsetStatus {
     // where in the current CQL query the resulting
     // expression will by inserted
     queryRange:[number, number];
+
+    locked:boolean;
 }
 
 
 export function createEmptyUDTagsetStatus(tagsetInfo:PluginInterfaces.TagHelper.TagsetInfo, corpname:string):TagsetStatus {
     return {
         corpname,
-        canUndo: false,
         generatedQuery: '',
         rawPattern: '', // not applicable for the current UI
         error: null,
-        allFeatures: {},
-        availableFeatures: {'': []},
-        filterFeaturesHistory: [[]],
-        showCategory: '',
+        allAttrs: {},
+        attrsFilters: {},
+        allUdFeats: {},
+        udFeatsFilters: {},
+        lockedAttrs: {},
+        filterFeaturesHistory: [null],
+        expandedUdFeat: '',
         posField: tagsetInfo.posAttr,
         featureField: tagsetInfo.featAttr,
-        queryRange:[0, 0]
+        queryRange:[0, 0],
+        locked: false
     };
 }
 
@@ -157,18 +177,24 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
         this.pluginApi = pluginApi;
         this.tagsetId = tagsetId;
 
-        this.addActionSubtypeHandler<typeof Actions.KVSelectCategory>(
-            Actions.KVSelectCategory.name,
+        this.addActionSubtypeHandler(
+            Actions.KVToggleUDFeat,
             action => action.payload.tagsetId === this.tagsetId,
             action => {
                 this.changeState(state => {
-                    state.data[action.payload.sourceId].showCategory = action.payload.value;
+                    const curr = state.data[action.payload.sourceId].expandedUdFeat;
+                    if (curr === action.payload.value) {
+                        state.data[action.payload.sourceId].expandedUdFeat = undefined;
+
+                    } else {
+                        state.data[action.payload.sourceId].expandedUdFeat = action.payload.value;
+                    }
                 });
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.GetInitialData>(
-            Actions.GetInitialData.name,
+        this.addActionSubtypeHandler(
+            Actions.GetInitialData,
             action => action.payload.tagsetId === this.tagsetId,
             action => {
                 this.changeState(state => {
@@ -191,10 +217,10 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
                             payload: {
                                 tagsetId: this.tagsetId,
                                 sourceId: action.payload.sourceId,
-                                result: data
+                                attrs: data.attrs,
+                                udFeats: data.udFeats
                             }
                         },
-                        false,
                         action.payload.sourceId
                     );
 
@@ -209,19 +235,47 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.KVGetInitialDataDone>(
-            Actions.KVGetInitialDataDone.name,
+        this.addActionSubtypeHandler(
+            Actions.KVGetInitialDataDone,
             action => action.payload.tagsetId === this.tagsetId,
             action => {
                 this.changeState(state => {
                     if (!action.error) {
-                        state.data[action.payload.sourceId].availableFeatures = action.payload.result;
-                        state.data[action.payload.sourceId].allFeatures = action.payload.result;
-                        state.data[action.payload.sourceId].showCategory = pipe(
-                            action.payload.result,
-                            Dict.keys(),
-                            List.sorted((v1, v2) => v1.localeCompare(v2)),
-                            List.head()
+                        state.data[action.payload.sourceId].allAttrs = pipe(
+                            action.payload.attrs,
+                            Dict.map(
+                                (values, k) => List.map(
+                                    value => ({
+                                        value,
+                                        available: 'available',
+                                        selected: false,
+                                        filteredOut: false
+                                    }),
+                                    values
+                                )
+                            )
+                        );
+                        state.data[action.payload.sourceId].attrsFilters = Dict.map(
+                            (v, k) => '',
+                            action.payload.attrs
+                        );
+                        state.data[action.payload.sourceId].allUdFeats = pipe(
+                            action.payload.udFeats,
+                            Dict.map(
+                                (values, k) => List.map(
+                                    value => ({
+                                        value,
+                                        available: 'available',
+                                        selected: false,
+                                        filteredOut: false
+                                    }),
+                                    values
+                                )
+                            )
+                        );
+                        state.data[action.payload.sourceId].udFeatsFilters = Dict.map(
+                            (v, k) => '',
+                            action.payload.udFeats
                         );
 
                     } else {
@@ -232,8 +286,64 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.KVGetInitialDataNOP>(
-            Actions.KVGetInitialDataNOP.name,
+        this.addActionHandler(
+            Actions.KVSetAttrFilter,
+            action => {
+                this.changeState(
+                    state => {
+                        state.data[action.payload.sourceId].attrsFilters[action.payload.attr] = action.payload.value;
+                        if (action.payload.attr == 'ud') {
+                            state.data[action.payload.sourceId].allUdFeats = Dict.map(
+                                (items, attr) => {
+                                    if (attr.toLowerCase().includes(action.payload.value) ||
+                                            List.some(v => v.value.toLowerCase().includes(action.payload.value), items)) {
+                                        List.forEach(
+                                            item => {
+                                                item.filteredOut = false;
+                                            },
+                                            items
+                                        )
+
+                                    } else {
+                                        List.forEach(
+                                            item => {
+                                                item.filteredOut = true;
+                                            },
+                                            items
+                                        )
+                                    }
+                                    return items
+                                },
+                                state.data[action.payload.sourceId].allUdFeats
+                            );
+
+                        } else {
+                            state.data[action.payload.sourceId].allAttrs[action.payload.attr] = List.map(
+                                item => ({
+                                    ...item,
+                                    filteredOut: !item.value.toLowerCase().includes(action.payload.value.toLowerCase())
+                                }),
+                                state.data[action.payload.sourceId].allAttrs[action.payload.attr]
+                            );
+                        }
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            Actions.KVSetUDFeatsFilter,
+            action => {
+                this.changeState(
+                    state => {
+                        state.data[action.payload.sourceId].udFeatsFilters[action.payload.attr] = action.payload.value;
+                    }
+                );
+            }
+        );
+
+        this.addActionSubtypeHandler(
+            Actions.KVGetInitialDataNOP,
             action => action.payload.tagsetId === this.tagsetId,
             action => {
                 this.changeState(state => {
@@ -242,107 +352,223 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.KVGetFilteredDataDone>(
-            Actions.KVGetFilteredDataDone.name,
+        this.addActionSubtypeHandler(
+            Actions.KVGetFilteredDataDone,
             action => action.payload.tagsetId === this.tagsetId,
             action => {
                 this.changeState(state => {
+                    const data = state.data[action.payload.sourceId];
                     if (action.error) {
-                        state.data[action.payload.sourceId].error = action.error;
+                        data.error = action.error;
 
                     } else {
-                        const reset = Dict.map(
-                            _ => [],
-                            state.data[action.payload.sourceId].availableFeatures
-                        )
-                        state.data[action.payload.sourceId].availableFeatures = {
-                            ...reset, ...action.payload.result};
+                        Dict.forEach(
+                            (items, attr) => {
+                                List.forEach(
+                                    item => {
+                                        item.available = (() => {
+                                            if (List.find(
+                                                v => v === item.value,
+                                                action.payload.attrs[attr] || []
+                                                ) !== undefined) {
+                                                return 'available';
+
+                                            } else if (action.payload.activeAttr === attr && (
+                                                    item.available === 'available' || item.available === 'edited')) {
+                                                return 'edited';
+                                            }
+                                            item.selected = false;
+                                            return 'unavailable';
+                                        })()
+                                    },
+                                    items
+                                )
+                            },
+                            data.allAttrs
+                        );
+                        Dict.forEach(
+                            (items, attr) => {
+                                List.forEach(
+                                    item => {
+                                        item.available = (() => {
+                                            if (List.find(
+                                                v => v === item.value,
+                                                action.payload.udFeats[attr] || []
+                                            ) !== undefined) {
+                                                return 'available';
+
+                                            } else if (!!action.payload.activeUdFeat && (
+                                                    item.available === 'available' || item.available === 'edited')) {
+                                                return 'edited';
+                                            }
+                                            return 'unavailable';
+                                        })()
+                                    },
+                                    items
+                                )
+                            },
+                            data.allUdFeats
+                        );
+                        data.generatedQuery = composeQuery(data);
                     }
                     state.isBusy = false;
                 });
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.KVAddFilter>(
-            Actions.KVAddFilter.name,
+        this.addActionSubtypeHandler(
+            Actions.KVAddFilter,
             action => action.payload.tagsetId === this.tagsetId,
             action => {
                 this.changeState(state => {
-                    const filter = new FilterRecord(
-                        action.payload.name,
-                        action.payload.value
-                    );
-                    const filterFeatures = List.last(state.data[action.payload.sourceId].filterFeaturesHistory);
-                    state.isBusy = true;
-                    if (List.every(x => !x.equals(filter), filterFeatures)) {
-                        filterFeatures.push(filter);
-                        state.data[action.payload.sourceId].filterFeaturesHistory.push(filterFeatures);
-                        state.data[action.payload.sourceId].canUndo = true;
-                        state.data[action.payload.sourceId].generatedQuery = composeQuery(
-                            state.data[action.payload.sourceId]);
+                    if (action.payload.isUdFeat) {
+                        const srch = List.find(
+                            v => v.value === action.payload.value,
+                            state.data[action.payload.sourceId].allUdFeats[action.payload.name]
+                        );
+                        if (srch) {
+                            srch.selected = true;
+                        }
+
+                    } else {
+                        const srch = List.find(
+                            v => v.value === action.payload.value,
+                            state.data[action.payload.sourceId].allAttrs[action.payload.name]
+                        );
+                        if (srch) {
+                            srch.selected = true;
+                        }
                     }
+                    state.data[action.payload.sourceId].filterFeaturesHistory.push({
+                        attr: action.payload.name,
+                        value: action.payload.value,
+                        checked: true,
+                        isUdFeat: action.payload.isUdFeat
+                    });
                 });
-                this.updateFeatures(action.payload.sourceId);
-            }
-        );
-
-        this.addActionSubtypeHandler<typeof Actions.KVRemoveFilter>(
-            Actions.KVRemoveFilter.name,
-            action => action.payload.tagsetId === this.tagsetId,
-            action => {
-                const filter = new FilterRecord(
-                    action.payload.name,
-                    action.payload.value
+                this.updateFeatures(
+                    action.payload.sourceId,
+                    action.payload.isUdFeat ? undefined : action.payload.name,
+                    action.payload.isUdFeat ? action.payload.name : undefined
                 );
-                this.changeState(state => {
-                    const filterFeatures = List.last(state.data[action.payload.sourceId].filterFeaturesHistory);
-
-                    const newFilterFeatures = List.filter(
-                        value => !value.equals(filter),
-                        filterFeatures
-                    );
-                    state.data[action.payload.sourceId].filterFeaturesHistory.push(newFilterFeatures);
-                    state.data[action.payload.sourceId].canUndo = true;
-                    state.isBusy = true;
-                    state.data[action.payload.sourceId].generatedQuery = composeQuery(state.data[action.payload.sourceId]);
-                });
-                this.updateFeatures(action.payload.sourceId);
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.Undo>(
-            Actions.Undo.name,
+        this.addActionSubtypeHandler(
+            Actions.KVRemoveFilter,
             action => action.payload.tagsetId === this.tagsetId,
             action => {
+                this.changeState(state => {
+                    if (action.payload.isUdFeat) {
+                        const srch = List.find(
+                            v => v.value === action.payload.value,
+                            state.data[action.payload.sourceId].allUdFeats[action.payload.name]
+                        );
+                        if (srch) {
+                            srch.selected = false;
+                        }
+
+                    } else {
+                        const srch = List.find(
+                            v => v.value === action.payload.value,
+                            state.data[action.payload.sourceId].allAttrs[action.payload.name]
+                        );
+                        if (srch) {
+                            srch.selected = false;
+                        }
+                    }
+                    state.data[action.payload.sourceId].filterFeaturesHistory.push({
+                        attr: action.payload.name,
+                        value: action.payload.value,
+                        checked: false,
+                        isUdFeat: action.payload.isUdFeat
+                    });
+                });
+                this.updateFeatures(
+                    action.payload.sourceId,
+                    action.payload.isUdFeat ? undefined : action.payload.name,
+                    action.payload.isUdFeat ? action.payload.name : undefined
+                );
+            }
+        );
+
+        this.addActionSubtypeHandler(
+            Actions.Undo,
+            action => action.payload.tagsetId === this.tagsetId,
+            action => {
+                if (List.size(this.state.data[action.payload.sourceId].filterFeaturesHistory) === 1) {
+                    this.pluginApi.showMessage('info', 'already at the beginning');
+                    return;
+                }
+                const lastOp = List.last(this.state.data[action.payload.sourceId].filterFeaturesHistory);
                 this.changeState(state => {
                     const data = state.data[action.payload.sourceId];
                     data.filterFeaturesHistory = List.init(data.filterFeaturesHistory);
-                    if (data.filterFeaturesHistory.length === 1) {
-                        data.canUndo = false;
+                    if (lastOp.isUdFeat) {
+                        const srch = List.find(
+                            v => v.value === lastOp.value,
+                            data.allUdFeats[lastOp.attr]
+                        );
+                        if (srch) {
+                            srch.selected = !lastOp.checked;
+                        }
+
+                    } else {
+                        const srch = List.find(
+                            v => v.value === lastOp.value,
+                            data.allAttrs[lastOp.attr]
+                        );
+                        if (srch) {
+                            srch.selected = !lastOp.checked;
+                        }
                     }
                     state.isBusy = true;
                     data.generatedQuery = composeQuery(data);
                 });
-                this.updateFeatures(action.payload.sourceId);
+                this.updateFeatures(
+                    action.payload.sourceId,
+                    lastOp.isUdFeat ? undefined : lastOp.attr,
+                    lastOp.isUdFeat ? lastOp.attr : undefined
+                );
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.Reset>(
-            Actions.Reset.name,
+        this.addActionSubtypeHandler(
+            Actions.Reset,
             action => action.payload.tagsetId === this.tagsetId,
             action => {
                 this.changeState(state => {
                     const data = state.data[action.payload.sourceId];
-                    data.filterFeaturesHistory = [[]];
-                    data.availableFeatures = data.allFeatures;
-                    data.canUndo = false;
+                    data.filterFeaturesHistory = [null];
+                    data.allAttrs = pipe(
+                        data.allAttrs,
+                        Dict.map(
+                            (values, k) => {
+                                return List.map(
+                                    item => ({...item, available: 'available', selected: false}),
+                                    values
+                                )
+                            }
+                        )
+                    );
+                    data.allUdFeats = pipe(
+                        data.allUdFeats,
+                        Dict.map(
+                            (values, k) => {
+                                return List.map(
+                                    item => ({...item, available: 'available', selected: false}),
+                                    values
+                                )
+                            }
+                        )
+                    )
                     data.generatedQuery = composeQuery(data);
                 });
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.SetActiveTag>(
-            Actions.SetActiveTag.name,
+        this.addActionSubtypeHandler(
+            Actions.SetActiveTag,
             action => action.payload.tagsetId === this.tagsetId,
             action => {
                 this.changeState(state => {
@@ -365,10 +591,11 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
                             payload: {
                                 tagsetId: this.tagsetId,
                                 sourceId: action.payload.sourceId,
-                                result: data
+                                attrs: data.attrs,
+                                udFeats: data.udFeats
+
                             }
                         },
-                        false,
                         action.payload.sourceId
                     );
 
@@ -383,8 +610,8 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
             }
         );
 
-        this.addActionHandler<typeof QueryActions.SetActiveInputWidget>(
-            QueryActions.SetActiveInputWidget.name,
+        this.addActionHandler(
+            QueryActions.SetActiveInputWidget,
             action => {
                 this.changeState(state => {
                     if (!Dict.hasKey(action.payload.sourceId, state.data)) {
@@ -397,34 +624,58 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
         );
     }
 
+    private exportFilter(state:UDTagBuilderModelState, sourceId:string) {
+        return {
+            corpname: sourceId,
+            attrs: pipe(
+                state.data[sourceId].allAttrs,
+                Dict.filter(
+                    (items, k) => List.some(v => v.selected, items)
+                ),
+                Dict.map(
+                    (items, k) => pipe(
+                        items,
+                        List.filter(v => v.selected),
+                        List.map(v => v.value)
+                    )
+                )
+            ),
+            udFeats: pipe(
+                state.data[sourceId].allUdFeats,
+                Dict.filter(
+                    (items, k) => List.some(v => v.selected, items)
+                ),
+                Dict.map(
+                    (items, k) => pipe(
+                        items,
+                        List.filter(v => v.selected),
+                        List.map(v => v.value)
+                    )
+                )
+            )
+        }
+    }
 
     private getFilteredFeatures<U>(
-        actionFactory:(data:any, err?:Error)=>Action<U>,
-        useFilter:boolean,
+        actionFactory:(data:DataResponse, err?:Error)=>Action<U>,
         sourceId:string
     ) {
         const baseArgs = {
             corpname: this.state.data[sourceId].corpname,
             tagset: this.state.tagsetInfo.ident
         };
-        const queryArgs = pipe(
-            this.state.data[sourceId].filterFeaturesHistory,
-            List.last(),
-            List.map(x => x.getKeyval()),
-            Dict.fromEntries()
-        );
 
         this.pluginApi.ajax$<DataResponse>(
-            HTTP.Method.GET,
+            HTTP.Method.POST,
             this.pluginApi.createActionUrl(
                 'corpora/ajax_get_tag_variants',
-                useFilter ? {...baseArgs, ...queryArgs} : baseArgs
+                baseArgs
             ),
-            {}
+            {args: JSON.stringify(this.exportFilter(this.state, sourceId))},
 
         ).subscribe({
             next: result => {
-                this.dispatchSideEffect<Action<U>>(actionFactory(result.keyval_tags));
+                this.dispatchSideEffect<Action<U>>(actionFactory(result));
             },
             error: error => {
                 this.dispatchSideEffect(actionFactory(null, error));
@@ -432,7 +683,7 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
         });
     }
 
-    private updateFeatures(sourceId:string):void {
+    private updateFeatures(sourceId:string, activeAttr:string|undefined, activeUdFeat:string|undefined):void {
         this.getFilteredFeatures<typeof Actions.KVGetFilteredDataDone['payload']>(
             (data, err) => err ?
                 {
@@ -445,10 +696,12 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
                     payload: {
                         tagsetId: this.tagsetId,
                         sourceId,
-                        result: data
+                        attrs: data.attrs,
+                        activeAttr,
+                        activeUdFeat,
+                        udFeats: data.udFeats
                     }
                 },
-            true,
             sourceId
         );
     }

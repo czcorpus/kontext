@@ -92,12 +92,12 @@ export class Actions {
         name: 'TAGHELPER_SET_ACTIVE_TAG'
     };
 
-    static KVSelectCategory:Action<{
+    static KVToggleUDFeat:Action<{
         tagsetId:string;
         sourceId:string;
         value:string;
     }> = {
-        name: 'TAGHELPER_SELECT_CATEGORY'
+        name: 'TAGHELPER_TOGGLE_UD_FEAT'
     };
 
     static KVAddFilter:Action<{
@@ -105,6 +105,7 @@ export class Actions {
         sourceId:string;
         name:string;
         value:string;
+        isUdFeat:boolean;
     }> = {
         name: 'TAGHELPER_ADD_FILTER'
     };
@@ -114,6 +115,7 @@ export class Actions {
         sourceId:string;
         name:string;
         value:string;
+        isUdFeat:boolean;
     }> = {
         name: 'TAGHELPER_REMOVE_FILTER'
     };
@@ -121,9 +123,26 @@ export class Actions {
     static KVGetInitialDataDone:Action<{
         tagsetId:string;
         sourceId:string;
-        result:{[key:string]:Array<string>};
+        attrs:{[key:string]:Array<string>};
+        udFeats:{[key:string]:Array<string>};
     }> = {
         name: 'TAGHELPER_KV_GET_INITIAL_DATA_DONE'
+    };
+
+    static KVSetAttrFilter:Action<{
+        sourceId:string;
+        attr:string;
+        value:string;
+    }> = {
+        name: 'TAGHELPER_KW_SET_ATTR_FILTER'
+    };
+
+    static KVSetUDFeatsFilter:Action<{
+        sourceId:string;
+        attr:string;
+        value:string;
+    }> = {
+        name: 'TAGHELPER_KW_SET_UD_FEATS_FILTER'
     };
 
     static KVGetInitialDataNOP:Action<{
@@ -135,7 +154,10 @@ export class Actions {
     static KVGetFilteredDataDone:Action<{
         tagsetId:string;
         sourceId:string;
-        result:{[key:string]:Array<string>};
+        activeAttr?:string;
+        activeUdFeat?:string;
+        attrs:{[key:string]:Array<string>};
+        udFeats:{[key:string]:Array<string>};
     }> = {
         name: 'TAGHELPER_KV_GET_FILTERED_DATA_DONE'
     };

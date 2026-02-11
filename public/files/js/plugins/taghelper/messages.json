@@ -8,7 +8,9 @@
         "taghelper__cannot_parse": "The patterns containing alternations (e.g. \"N.M|N.F\") are not supported.",
         "taghelper__selected_features_label": "Selected features",
         "taghelper__part_of_speech_label": "Part of speech",
-        "taghelper__features_label": "Features"
+        "taghelper__features_label": "Features",
+        "taghelper__filter_attr_placeholder": "Attribute value",
+        "taghelper__filter_ud_feat_placeholder": "Category or value"
     },
     "cs-CZ": {
         "taghelper__create_tag_heading": "Vytvořit / upravit tag",
@@ -19,7 +21,9 @@
         "taghelper__cannot_parse": "Regulární výrazy obsahující alternace (např. \"N.M|N.F\") nejsou podporovány.",
         "taghelper__selected_features_label": "Zvolené vlastnosti",
         "taghelper__part_of_speech_label": "Slovní druh",
-        "taghelper__features_label": "Vlastnosti"
+        "taghelper__features_label": "Vlastnosti",
+        "taghelper__filter_attr_placeholder": "Hodnota atributu",
+        "taghelper__filter_ud_feat_placeholder": "Kategorie nebo hodnota"
     },
     "szl": {
         "taghelper__create_tag_heading": "Create / edit a tag",
@@ -30,7 +34,9 @@
         "taghelper__cannot_parse": "Szymle, co zawiyrajōm alternatywy (bp. \"N.M|N.F\") niy sōm spiyrane.",
         "taghelper__selected_features_label": "Selected features",
         "taghelper__part_of_speech_label": "Part of speech",
-        "taghelper__features_label": "Features"
+        "taghelper__features_label": "Features",
+        "taghelper__filter_attr_placeholder": "Filtrovat podle hodnoty UNTRANSLATED",
+        "taghelper__filter_ud_feat_placeholder": "Category or value UNTRANSLATED"
     },
     "sl-SI": {
         "taghelper__create_tag_heading": "Ustvari / uredi tag",
@@ -41,6 +47,8 @@
         "taghelper__cannot_parse": "Regularni izrazi, ki vsebujejo disjunkcije (npr. \"N.M|N.F\") niso podprti",
         "taghelper__selected_features_label": "Izbrane funkcije",
         "taghelper__part_of_speech_label": "Oblikoskladenjske oznake",
-        "taghelper__features_label": "Funkcije"
+        "taghelper__features_label": "Funkcije",
+        "taghelper__filter_attr_placeholder": "Filtrovat podle hodnoty UNTRANSLATED",
+        "taghelper__filter_ud_feat_placeholder": "Category or value UNTRANSLATED"
     }
 }
