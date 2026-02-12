@@ -250,11 +250,17 @@ def http_action(
                 amodel = BaseActionModel(req, resp, aprops, shared_data)
             try:
                 async with aiohttp.ClientSession() as client:
+                    logging.getLogger(__name__).debug(
+                        f'[http_action] Created HTTP client session for action {action_name}, session: {id(client)}, closed: {client.closed}')
                     req._request.ctx.http_client = client
                     await amodel.init_session()
                     if _is_authorized_to_execute_action(amodel, aprops):
                         await amodel.pre_dispatch(None)
+                        logging.getLogger(__name__).debug(
+                            f'[http_action] Before action {action_name}, session: {id(client)}, closed: {client.closed}')
                         ans = await func(amodel, req, resp)
+                        logging.getLogger(__name__).debug(
+                            f'[http_action] After action {action_name}, session: {id(client)}, closed: {client.closed}')
                         if resp.result and ans:
                             raise RuntimeError(
                                 'Cannot use both KResponse result container and legacy result return')

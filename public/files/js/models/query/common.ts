@@ -1250,6 +1250,12 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
     ):void {
         const queryObj = state.queries[sourceId];
         if (insertRange !== null) {
+            if (insertRange[0] < 0) {
+                insertRange[0] = this.getQueryLength(state, sourceId) + 1 - insertRange[0]
+            }
+            if (insertRange[1] < 0) {
+                insertRange[1] = this.getQueryLength(state, sourceId) + 1 - insertRange[1]
+            }
             queryObj.query = queryObj.query.substring(0, insertRange[0]) + query +
                     queryObj.query.substring(insertRange[1]);
 

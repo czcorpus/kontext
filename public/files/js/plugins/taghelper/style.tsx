@@ -18,14 +18,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { styled } from 'styled-components';
+import { styled, css } from 'styled-components';
 import * as theme from '../../views/theme/default/index.js';
 
+// ----------- <ActiveTagBuilder /> ----------------------------
 
 export const ActiveTagBuilder = styled.div`
-    h3 {
-        display: inline-block;
-        line-height: 1.4em;
+
+    min-width: 800px;
+
+    h2 {
+        font-size: 150%;
+        margin: 0 0 1em 0;
     }
 
     .loader {
@@ -33,23 +37,93 @@ export const ActiveTagBuilder = styled.div`
         vertical-align: middle;
         padding-left: 1em;
     }
+`;
 
-    .buttons {
-        display: flex;
-        align-items: center;
+// -------------------------- attr sel. common --
+
+const attrSelCommon = css`
+
+    > ul {
+        background: #fff;
+        overflow-x: hidden;
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+        font-size: 9pt;
+
+        > li {
+            padding: 0.3em 0.4em;
+        }
+
+        > li.selected {
+            color: ${theme.colorLogoPink};
+        }
+
+        > li li.selected {
+            color: ${theme.colorLogoPink};
+        }
+
+        li label {
+            display: flex;
+            align-items: center;
+
+            input[type="checkbox"] {
+                margin: 0 0.4em 0 0;
+                padding: 0;
+            }
+        }
     }
+`;
 
-    .buttons .separ {
+// ----------- <AttrSelection /> ----------------------------
+
+export const AttrSelection = styled.div`
+
+    ${attrSelCommon};
+
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+
+    > ul {
+        overflow-y: auto;
         flex-grow: 1;
     }
+
 `;
 
-export const PositionList = styled.ul`
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-    font-size: 9pt;
+// ----------- <UDSelection /> -----------------------------
+
+export const UDSelection = styled.div`
+    ${attrSelCommon};
+
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+
+    > ul {
+        overflow-y: auto;
+        flex-grow: 1;
+
+        li {
+            padding: 0.2em 1em 0.2em 0.5em;
+        }
+    }
+
+    > ul > li > ul {
+        list-style-type: none;
+        margin: 0;
+        padding-inline-start: 10px;
+    }
+
+    ul.subcat {
+        margin-top: 0.4em;
+    }
 `;
+
+// ----------- <PositionLine /> ----------------------------
 
 export const PositionLine = styled.li`
 
@@ -114,12 +188,16 @@ export const PositionLine = styled.li`
     }
 `;
 
+// ----------- <PositionValuesWrapper /> ----------------------------
+
 export const PositionValuesWrapper = styled.div`
     overflow-x: hidden;
     overflow-y: auto;
     max-height: 20em;
     flex-grow: 1;
 `;
+
+// ----------- <ValueList /> ----------------------------
 
 export const ValueList = styled.ul`
     columns: 2;
@@ -152,6 +230,8 @@ export const ValueList = styled.ul`
     }
 `;
 
+// ----------- <PostagDisplayBox /> ----------------------------
+
 export const PostagDisplayBox = styled.input`
     display: block;
     box-sizing: border-box;
@@ -180,25 +260,78 @@ export const PostagDisplayBox = styled.input`
     }
 `;
 
-// UD taghelper styles
+// ---------------------------------------------
 
-export const FeatureSelect = styled.div`
-    h4 {
-        margin-bottom: 0.5em;
+const controlButtons = css`
+
+    .buttons {
+
+        margin-top: 2.5em;
+        display: flex;
+
+        .separ {
+            flex-grow: 1;
+        }
+
+        button:not(:first-child) {
+            margin-left: 1em;
+        }
     }
 `;
 
-export const QueryExpression = styled.div`
+// ----------- <PosTagBuilder /> -------------------------
 
-    border: 1px solid #dadada;
-    background-color: #eef7f1;
-    border-radius: 3px;
-    padding: 0.3em;
-    min-height: 3em;
+export const PosTagBuilder = styled.div`
+
+    ${controlButtons};
 `;
+
+// ----------- <FeatureSelect /> ----------------------------
+
+export const FeatureSelect = styled.div`
+
+    height: 600px;
+    display: flex;
+    flex-direction: column;
+
+    .selections {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: 1fr;
+        flex-grow: 1;
+        min-height: 0;
+    }
+
+    ${controlButtons};
+`;
+
+// ----------- <QueryBox /> ----------------------------
+
+export const QueryBox = styled.div`
+    display: flex;
+    align-items: center;
+
+    h3 {
+        margin: 0;
+        padding-right: 1em;
+    }
+
+    .expression {
+        flex-grow: 1;
+        border: 1px solid #dadada;
+        background-color: #eef7f1;
+        border-radius: 3px;
+        padding: 0.3em;
+        min-height: 3em;
+    }
+`;
+
+// ----------- <QueryLine /> ----------------------------
 
 export const QueryLine = styled.ul`
 
+    display: flex;
+    align-items: center;
     margin: 0;
     padding: 0;
 
@@ -261,9 +394,24 @@ export const QueryLine = styled.ul`
     }
 `;
 
-export const CategoryDetail = styled.div`
+// ----------- <CategoryDetail /> ----------------------------
 
+export const CategoryDetail = styled.div`
     margin-right: 2em;
+    margin-top: 1em;
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+
+    h3 {
+        text-align: center;
+        flex-shrink: 0;
+        background-color: ${theme.colorWhitelikeBlue};
+        margin: 0;
+        padding-bottom: 0.4em;
+    }
 
     label {
         padding-left: 0.3em;
@@ -272,18 +420,66 @@ export const CategoryDetail = styled.div`
     input:disabled+label {
         color: #ccc;
     }
-
-    ul li {
-
-        input[type="checkbox"], label {
-            display: inline-block;
-            vertical-align: middle;
-        }
-    }
 `;
+
+// ----------- <CategorySelect /> ----------------------------
 
 export const CategorySelect = styled.div`
     select:disabled+label {
         color: #ccc;
+    }
+`;
+
+// ----------- <AttrFilter /> ---------------------------------
+
+export const AttrFilter = styled.span`
+    display: flex;
+    margin-bottom: 0.3em;
+
+    .icon {
+        padding-right: 0.2em;
+    }
+
+    input {
+        flex-grow: 1;
+        border-width: 0 0 1px 0;
+    }
+`;
+
+// ------------- <UDFeatExpLabel /> ----------------------------
+
+export const UDFeatExpLabel = styled.span`
+
+    display: flex;
+    align-items: center;
+
+    a {
+        display: flex;
+        align-items: center;
+        color: ${theme.colorLogoBlue};
+        text-decoration: none;
+
+        > .img-wrapper {
+
+            cursor: pointer;
+            display: block;
+            width: 1em;
+
+            img {
+                display: block;
+                padding-right: 0.3em;
+            }
+        }
+    }
+
+    .info {
+        flex-grow: 1;
+        text-align: right;
+    }
+
+    .num {
+        display: inline-block;
+        padding-left: 0.2em;
+        padding-right: 0.2em;
     }
 `;

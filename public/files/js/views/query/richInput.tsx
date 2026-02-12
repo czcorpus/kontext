@@ -89,7 +89,7 @@ export function init(
             this.contentEditable = new ContentEditable<HTMLSpanElement>(this.inputRef);
         }
 
-        private newInputDispatch(evt:React.FormEvent<HTMLSpanElement>|React.CompositionEvent<HTMLSpanElement>) {
+        private newInputDispatch() {
             const [rawAnchorIdx, rawFocusIdx] = this.contentEditable.getRawSelection();
             const query = this.contentEditable.extractText();
             dispatcher.dispatch<typeof Actions.QueryInputSetQuery>({
@@ -116,9 +116,9 @@ export function init(
             }
         }
 
-        private handleInputChange(evt:React.FormEvent<HTMLSpanElement>) {
+        private handleInputChange() {
             if (!this.props.compositionModeOn) {
-                this.newInputDispatch(evt);
+                this.newInputDispatch();
             }
         }
 
@@ -255,7 +255,7 @@ export function init(
             });
             // Chrome performs onCompositionEnd action after inputChange
             // we have to dispatch new state here
-            this.newInputDispatch(evt);
+            this.newInputDispatch();
         }
 
         componentDidUpdate(prevProps:RichInputProps & QueryFormModelState, _:unknown) {

@@ -19,21 +19,29 @@
  */
 
 import * as React from 'react';
-import { IActionDispatcher } from 'kombo';
+import { IActionDispatcher, useModel } from 'kombo';
 import { List } from 'cnc-tskit';
 
-import {PositionValue, PositionOptions, PosTagModelState} from './common.js';
+import { PositionValue, PositionOptions } from './common.js';
 import * as Kontext from '../../../types/kontext.js';
 import { Actions } from '../actions.js';
+import { init as buttonsViewInit } from './buttons.js';
+import * as PluginInterfaces from '../../../types/plugins/index.js';
 
 import * as S from '../style.js';
+import { PosTagModel } from './models.js';
 
 
 type CheckboxHandler = (lineIdx:number, value:string, checked:boolean)=>void;
 
 
-export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) {
+export function init(
+    dispatcher:IActionDispatcher,
+    he:Kontext.ComponentHelpers,
+    model:PosTagModel
+) {
 
+    const Buttons = buttonsViewInit(dispatcher, he);
 
     // ------------------------------ <ValueLine /> ----------------------------
 
@@ -181,24 +189,27 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
         };
 
         return (
-            <S.PositionList>
+            <S.AttrSelection>
                 {props.positions.map(
                     (item, i) => <PositionLine key={`${i}:${item.label}`} position={item}
                                                 lineIdx={i} clickHandler={lineClickHandler(i)}
                                                 checkboxHandler={props.checkboxHandler} />)}
-            </S.PositionList>
+            </S.AttrSelection>
         );
     }
 
-    // ------------------------------ <TagBuilder /> ----------------------------
+    // ------------------------------ <PosTagBuilder /> ----------------------------
 
-    const TagBuilder:React.FC<PosTagModelState & {sourceId:string}> = (props) => {
+    const PosTagBuilder:React.FC<PluginInterfaces.TagHelper.ViewProps> = (props) => {
+
+        const state = useModel(model);
+        const data = state.data[props.sourceId];
 
         const checkboxHandler = (lineIdx:number, value:string, checked:boolean) => {
             dispatcher.dispatch<typeof Actions.CheckboxChanged>({
                 name: Actions.CheckboxChanged.name,
                 payload: {
-                    tagsetId: props.tagsetInfo.ident,
+                    tagsetId: state.tagsetInfo.ident,
                     sourceId: props.sourceId,
                     position: lineIdx,
                     value: value,
@@ -208,17 +219,27 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
         };
 
         return (
-            <div>
+            <S.PosTagBuilder>
                 <S.PostagDisplayBox type="text"
-                        value={props.data[props.sourceId].generatedQuery} readOnly />
+                        value={state.data[props.sourceId].generatedQuery} readOnly />
                 <PositionList
-                    positions={props.data[props.sourceId].positions}
+                    positions={state.data[props.sourceId].positions}
                     sourceId={props.sourceId}
-                    tagsetId={props.tagsetInfo.ident}
+                    tagsetId={state.tagsetInfo.ident}
                     checkboxHandler={checkboxHandler} />
-            </div>
+                <Buttons
+                    range={[-1, -1]}
+                    formType={props.formType}
+                    sourceId={props.sourceId}
+                    tagsetId={state.tagsetInfo.ident}
+                    canUndo={data.canUndo}
+                    rawPattern={data.rawPattern}
+                    generatedQuery={data.generatedQuery}
+                    isBusy={state.isBusy}
+                />
+            </S.PosTagBuilder>
         );
     }
 
-    return TagBuilder;
+    return PosTagBuilder;
 }

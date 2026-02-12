@@ -348,7 +348,7 @@ export class PosTagModel extends StatefulModel<PosTagModelState> {
 
     private loadInitialData(sourceId:string):Observable<TagDataResponse> {
         return this.pluginApi.ajax$<TagDataResponse>(
-            HTTP.Method.GET,
+            HTTP.Method.POST,
             this.pluginApi.createActionUrl(
                 'corpora/ajax_get_tag_variants',
                 {
@@ -362,7 +362,7 @@ export class PosTagModel extends StatefulModel<PosTagModelState> {
 
     private updateData(sourceId:string):Observable<TagDataResponse> {
         return this.pluginApi.ajax$<TagDataResponse>(
-            HTTP.Method.GET,
+            HTTP.Method.POST,
             this.pluginApi.createActionUrl(
                 'corpora/ajax_get_tag_variants',
                 {

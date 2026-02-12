@@ -58,24 +58,24 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
         self.taglist_path = taglist_path
         self.initial_values = {}
 
-    async def get_variant(self, user_selection, lang, translate):
+    async def get_variant(self, plugin_ctx, user_selection, lang, translate):
         """
         """
         return await self._calculate_variant(user_selection, lang, translate)
 
-    async def get_initial_values(self, lang, translate):
+    async def get_initial_values(self, plugin_ctx, lang, translate):
         if lang not in self.initial_values:
             try:
-                self.initial_values[lang] = await self._get_initial_values(lang, translate)
+                self.initial_values[lang] = await self._get_initial_values(plugin_ctx, lang, translate)
             except FileNotFoundError:
                 self.initial_values[lang] = {}
 
         return self.initial_values[lang]
 
-    async def is_available(self, translate):
-        return await aiofiles.os.path.exists(self.variants_file_path) and len(await self.get_initial_values('en_US', translate)) > 0
+    async def is_available(self, plugin_ctx, translate):
+        return await aiofiles.os.path.exists(self.variants_file_path) and len(await self.get_initial_values(plugin_ctx,'en_US', translate)) > 0
 
-    async def _get_initial_values(self, lang, translate):
+    async def _get_initial_values(self, plugin_ctx, lang, translate):
         """
         Loads all values as needed to initialize tag-builder widget for the current corpus.
         It means for any tag position all possible values must be returned. Collected

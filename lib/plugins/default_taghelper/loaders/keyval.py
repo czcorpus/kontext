@@ -44,7 +44,7 @@ class KeyvalTagVariantLoader(AbstractTagsetInfoLoader):
         else:
             self.initial_values = []
 
-    async def get_variant(self, filter_values, lang, translate):
+    async def get_variant(self, plugin_ctx, filter_values, lang, translate):
         if self.initial_values is None:
             await self._initialize_tags()
         # possible values with all filters applied
@@ -55,12 +55,12 @@ class KeyvalTagVariantLoader(AbstractTagsetInfoLoader):
             possible_values[filter_key] = (await self._get_possible_values(derived_filter))[filter_key]
         return {'keyval_tags': possible_values}
 
-    async def get_initial_values(self, lang, translate):
+    async def get_initial_values(self, plugin_ctx, lang, translate):
         if self.initial_values is None:
             await self._initialize_tags()
         return {'keyval_tags': await self._get_possible_values()}
 
-    async def is_available(self, translate):
+    async def is_available(self, plugin_ctx, translate):
         return await aiofiles.os.path.exists(self.variants_file_path)
 
     async def _get_possible_values(self, filter_values=None):

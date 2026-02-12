@@ -87,14 +87,14 @@ class AbstractTagsetInfoLoader(abc.ABC, Generic[T, U]):
     """
 
     @abc.abstractmethod
-    async def is_available(self, translate: Callable[[str], str]) -> bool:
+    async def is_available(self, plugin_ctx: AbstractCorpusPluginCtx, translate: Callable[[str], str]) -> bool:
         """
         Return true if the loader is able to provide answers
         (e.g. source data files exist etc.)
         """
 
     @abc.abstractmethod
-    async def get_initial_values(self, lang: str, translate: Callable[[str], str]) -> T:
+    async def get_initial_values(self, plugin_ctx: AbstractCorpusPluginCtx, lang: str, translate: Callable[[str], str]) -> T:
         """
         Return all the possible properties of a respective tagset
         (i.e. all the positions/keys/whatever and their respective
@@ -102,7 +102,7 @@ class AbstractTagsetInfoLoader(abc.ABC, Generic[T, U]):
         """
 
     @abc.abstractmethod
-    async def get_variant(self, user_selection: U, lang: str, translate: Callable[[str], str]) -> T:
+    async def get_variant(self, plugin_ctx: AbstractCorpusPluginCtx, user_selection: U, lang: str, translate: Callable[[str], str]) -> T:
         """
         Based on user selection encoded as a list of tuples [(key1, value1), ...,(keyN, valueN)]
         return a filtered values matching the selected ones.

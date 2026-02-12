@@ -18,6 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from collections import defaultdict
+import json
 
 from plugin_types.taghelper import AbstractValueSelectionFetcher
 
@@ -79,15 +80,7 @@ class KeyvalSelectionFetcher(AbstractValueSelectionFetcher):
 
     async def fetch(self, request):
         # using startswith, because some features can be layered using [], like `Gender[psor]`
-
-        filters = defaultdict(list)
-        # sort filter values by category into lists
-        for key, values in request.args.items():
-            if any(key.startswith(ud_key) for ud_key in UD_KEYS):
-                filters[key].extend(values)
-
-        # we don't want it to be defaultdict anymore so it can raise KeyError
-        return dict(filters)
+        return json.loads(request.form.get('args', '{}'))
 
     async def is_empty(self, val):
         return len(val) == 0
