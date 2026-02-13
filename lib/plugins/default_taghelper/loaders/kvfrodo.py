@@ -36,7 +36,6 @@ class KeyvalFrodoLoader(AbstractTagsetInfoLoader):
         self.frodo_url = frodo_url
 
     async def get_variant(self, plugin_ctx, filter_values, lang, translate):
-        logging.getLogger(__name__).warning('>>>>>>>> [FILTER] >>>> {}'.format(filter_values))
         http_client = plugin_ctx.request.ctx.http_client
         async with http_client.post(
                 urljoin(self.frodo_url, f'/liveTokens/{self.corpus_name}/query'), json=filter_values) as resp:

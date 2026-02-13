@@ -72,6 +72,10 @@ const attrSelCommon = css`
                 padding: 0;
             }
         }
+
+        label.locked {
+            color: ${theme.colorLightText};
+        }
     }
 `;
 
@@ -309,15 +313,15 @@ export const FeatureSelect = styled.div`
 
 export const QueryBox = styled.div`
     display: flex;
-    align-items: center;
+    flex-direction: column;
 
     h3 {
-        margin: 0;
-        padding-right: 1em;
+        margin: 0 0 0 0.1em;
+        font-weight: normal;
+        font-size: 0.9em;
     }
 
     .expression {
-        flex-grow: 1;
         border: 1px solid #dadada;
         background-color: #eef7f1;
         border-radius: 3px;
@@ -331,9 +335,16 @@ export const QueryBox = styled.div`
 export const QueryLine = styled.ul`
 
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     margin: 0;
     padding: 0;
+    list-style-type: none;
+
+    li {
+        margin-top: 0.2em;
+        margin-bottom: 0.2em;
+    }
 
     li.query-button-group.amp {
         padding-left: 0.3em;
@@ -342,61 +353,47 @@ export const QueryLine = styled.ul`
         font-size: 120%;
     }
 
-    li.query-button-group {
-        margin: 0;
-        padding: 0.2em 0;
-        display: inline-block;
+    li.item {
+        border: 1px solid #f18458;
+        border-radius: 3px;
+        background-color: #ffffff;
+        text-decoration: none;
+        color: #f18458;
+        padding: 0;
+        margin-right: 0.1em;
+        margin-bottom: 0.1em;
 
-        ul {
-
-            display: inline-block;
-            margin: 0;
-            padding: 0;
-            list-style-type: none;
-
-            li.item {
-                display: inline-block;
-                border: 1px solid #f18458;
-                border-radius: 3px;
-                background-color: #ffffff;
-                text-decoration: none;
-                color: #f18458;
-                padding: 0;
-                margin-right: 0.1em;
-                margin-bottom: 0.1em;
-
-                span {
-                    padding: 0.3em 0.4em;
-                }
-            }
-
-            li.item:not(:first-child) {
-                margin-left: 0.3em;
-            }
-
-            li.item button {
-                padding: 0.1em 0.4em;
-                border: none;
-                cursor: pointer;
-            }
-
-            li.item button.query-close {
-                font-weight: bold;
-                color: #ffffff;
-                background-color: #f18458;
-            }
-
-            li.item:hover button.query-close {
-                color: #FFF0E8;
-                background-color: #f76b0b;
-            }
+        span {
+            padding: 0.3em 0.4em;
         }
+    }
+
+    li.item:not(:first-child) {
+        margin-left: 0.3em;
+    }
+
+    li.item button {
+        padding: 0.1em 0.4em;
+        border: none;
+        cursor: pointer;
+    }
+
+    li.item button.query-close {
+        font-weight: bold;
+        color: #ffffff;
+        background-color: #f18458;
+    }
+
+    li.item:hover button.query-close {
+        color: #FFF0E8;
+        background-color: #f76b0b;
     }
 `;
 
 // ----------- <CategoryDetail /> ----------------------------
 
 export const CategoryDetail = styled.div`
+
     margin-right: 2em;
     margin-top: 1em;
     background-color: #fff;
@@ -405,14 +402,6 @@ export const CategoryDetail = styled.div`
     min-height: 0;
     height: 100%;
 
-    h3 {
-        text-align: center;
-        flex-shrink: 0;
-        background-color: ${theme.colorWhitelikeBlue};
-        margin: 0;
-        padding-bottom: 0.4em;
-    }
-
     label {
         padding-left: 0.3em;
     }
@@ -420,6 +409,19 @@ export const CategoryDetail = styled.div`
     input:disabled+label {
         color: #ccc;
     }
+
+    .heading {
+
+        display: flex;
+        align-items: center;
+        padding-bottom: 0.4em;
+        background-color: ${theme.colorWhitelikeBlue};
+
+        h3 {
+            margin: 0;
+        }
+    }
+
 `;
 
 // ----------- <CategorySelect /> ----------------------------
@@ -433,8 +435,11 @@ export const CategorySelect = styled.div`
 // ----------- <AttrFilter /> ---------------------------------
 
 export const AttrFilter = styled.span`
+
     display: flex;
+    align-items: center;
     margin-bottom: 0.3em;
+    padding-left: 0.3em;
 
     .icon {
         padding-right: 0.2em;
@@ -443,6 +448,15 @@ export const AttrFilter = styled.span`
     input {
         flex-grow: 1;
         border-width: 0 0 1px 0;
+    }
+
+    input:focus {
+        outline: none;
+    }
+
+    img {
+        width: 1em;
+        display: block;
     }
 `;
 
@@ -482,4 +496,16 @@ export const UDFeatExpLabel = styled.span`
         padding-left: 0.2em;
         padding-right: 0.2em;
     }
+`;
+
+// ------------------- <AttrLockStatus /> ----------------------
+
+export const AttrLockStatus = styled.span`
+
+    img {
+        display: block;
+        margin-right: 0.4em;
+        width: 0.7em;
+    }
+
 `;

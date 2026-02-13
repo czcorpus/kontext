@@ -43,7 +43,9 @@ export function init(
 
         return (
             <S.AttrFilter>
-                <span className="icon">{'\uD83D\uDD0E'}</span>
+                <span className="icon">
+                    <img src={ut.createStaticUrl('img/search.svg')} alt="magnifying glass" />
+                </span>
                 <input type="text" placeholder={filterPlaceholder} value={value} onChange={handleInput} />
             </S.AttrFilter>
         );
@@ -65,9 +67,10 @@ export function init(
             List.filter(v => selectableValIsVisible(v)),
             List.map(value => (
                 <li key={value.value} className={value.selected ? 'selected' : null}>
-                <label>
+                <label className={value.available === 'locked' && !value.selected ? 'locked' : null}>
                     <input
-                        onChange={props.onChangeHandler}
+                        onChange={value.available === 'locked' ? undefined : props.onChangeHandler}
+                        readOnly={value.available === 'locked'}
                         type="checkbox"
                         id={props.categoryName + '-' + value}
                         name={props.categoryName}
@@ -169,10 +172,11 @@ export function init(
                                         List.map(
                                             (v, i) => (
                                                 <li key={`${v.value}:${i}`} className={v.selected ? 'selected' : null}>
-                                                    <label>
+                                                    <label className={v.available === 'locked' && !v.selected ? 'locked' : null}>
                                                         <input type="checkbox"
                                                             checked={v.selected}
-                                                            onChange={props.onChangeHandler}
+                                                            readOnly={v.available === 'locked'}
+                                                            onChange={v.available === 'locked' ? undefined : props.onChangeHandler}
                                                             name={name}
                                                             value={v.value} />
                                                         {v.value}
@@ -207,7 +211,7 @@ export function init(
     }> = (props) => {
         const buttonGroup = pipe(
             props.filterFeaturesCategory,
-            List.sorted(([attName1, f1], [attName2, f2]) => attName1.localeCompare(attName2)),
+            List.sorted(([attName1,], [attName2,]) => attName1.localeCompare(attName2)),
             List.map(([attName, filter]) => (
                 <li key={`${attName}:${filter.value}`} className="item">
                     <span>{filter.value}</span>
@@ -217,12 +221,12 @@ export function init(
             ))
         );
         return (
+            <>
             <li className = "query-button-group">
                 {props.categoryName + ' = '}
-                <ul key="cat-name">
-                    {buttonGroup}
-                </ul>
             </li>
+            {buttonGroup}
+            </>
         );
     }
 
@@ -276,7 +280,22 @@ export function init(
                 </div>
             </S.QueryBox>
         );
-    }
+    };
+
+    // ---------------------------- <AttrLockStatus /> ------------------------------------
+
+    const AttrLockStatus:React.FC<{
+        locked:boolean;
+    }> = ({locked}) => {
+        return (
+            <S.AttrLockStatus>
+                {locked ?
+                    <img src={ut.createStaticUrl('img/locked.svg')} alt="locked" /> :
+                    <img src={ut.createStaticUrl('img/unlocked.svg')} alt="unlocked" />
+                }
+            </S.AttrLockStatus>
+        )
+    };
 
     // ---------------------------- <FeatureSelect /> ---------------------------------
 
@@ -319,7 +338,7 @@ export function init(
                     formType: props.formType,
                     sourceId: props.sourceId,
                     insertRange: [-1, -1],
-                    query: ' ' + data.generatedQuery
+                    query: data.generatedQuery
                 }
             );
             dispatcher.dispatch(
@@ -385,34 +404,49 @@ export function init(
                         handleRemoveFilter={handleRemoveFilter} />
                     <div className="selections">
                         {pipe(
-                            data.allAttrs,
-                            Dict.toEntries(),
+                            data.attrConf,
+                            List.sortedBy(v => v.vertIdx),
                             List.map(
-                                ([key, item], i) => (
-                                    <S.CategoryDetail key={`${i}:${key}`} style={{marginRight: '5em'}}>
-                                        <h3>{key}</h3>
-                                        <AttrSelection
-                                            sourceId={props.sourceId}
-                                            name={key}
-                                            filterValue={data.attrsFilters[key]}
-                                            onChangeHandler={handleCheckboxChange(false)}
-                                            categoryName={key}
-                                            allValues={item || []} />
-                                    </S.CategoryDetail>
-                                )
+                                (attrConf, i) => {
+                                    if (attrConf.isUdFeats) {
+                                        const isLocked = Dict.some((items, _) => List.some(v2 => v2.available === 'locked', items), data.allUdFeats);
+                                        return (
+                                            <S.CategoryDetail key={`${attrConf.name}:${i}`} style={{marginRight: '5em'}}>
+                                                <div className="heading">
+                                                    <AttrLockStatus locked={isLocked} />
+                                                    <h3>{attrConf.name}</h3>
+                                                </div>
+                                                <UDSelection
+                                                    sourceId={props.sourceId}
+                                                    tagsetId={state.tagsetInfo.ident}
+                                                    filterValue={data.attrsFilters['ud']}
+                                                    expandedFeat={data.expandedUdFeat}
+                                                    onChangeHandler={handleCheckboxChange(true)}
+                                                    udFeats={data.allUdFeats} />
+                                            </S.CategoryDetail>
+                                        );
+
+                                    } else {
+                                        const attrValues = data.allAttrs[attrConf.name] || [];
+                                        return (
+                                            <S.CategoryDetail key={`${attrConf.name}:${i}`} style={{marginRight: '5em'}}>
+                                                <div className="heading">
+                                                    <AttrLockStatus locked={List.some(v => v.available === 'locked', attrValues)} />
+                                                    <h3>{attrConf.name}</h3>
+                                                </div>
+                                                <AttrSelection
+                                                    sourceId={props.sourceId}
+                                                    name={attrConf.name}
+                                                    filterValue={data.attrsFilters[attrConf.name]}
+                                                    onChangeHandler={handleCheckboxChange(false)}
+                                                    categoryName={attrConf.name}
+                                                    allValues={attrValues} />
+                                            </S.CategoryDetail>
+                                        )
+                                    }
+                                }
                             )
                         )}
-                        <S.CategoryDetail style={{marginRight: '5em'}}>
-                            <h3>UD</h3>
-                            <UDSelection
-                                sourceId={props.sourceId}
-                                tagsetId={state.tagsetInfo.ident}
-                                filterValue={data.attrsFilters['ud']}
-                                expandedFeat={data.expandedUdFeat}
-                                onChangeHandler={handleCheckboxChange(true)}
-                                udFeats={data.allUdFeats} />
-                        </S.CategoryDetail>
-
                     </div>
                     <div className="buttons">
                         <button

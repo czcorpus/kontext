@@ -19,6 +19,7 @@
  */
 
 import { Action } from 'kombo';
+import { KVAttrConf } from './common.js';
 
 export class Actions {
 
@@ -125,6 +126,7 @@ export class Actions {
         sourceId:string;
         attrs:{[key:string]:Array<string>};
         udFeats:{[key:string]:Array<string>};
+        attrConf:Array<KVAttrConf>;
     }> = {
         name: 'TAGHELPER_KV_GET_INITIAL_DATA_DONE'
     };

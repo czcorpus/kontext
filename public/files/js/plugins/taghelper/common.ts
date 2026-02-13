@@ -26,3 +26,10 @@ export interface TagBuilderBaseState {
 
     isBusy:boolean;
 }
+
+
+export interface KVAttrConf {
+    name:string;
+    vertIdx:number;
+    isUdFeats:boolean;
+}
