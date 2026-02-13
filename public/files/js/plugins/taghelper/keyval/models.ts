@@ -31,10 +31,6 @@ import { IPluginApi } from '../../../types/plugins/common.js';
 import { KVAttrConf } from '../common.js';
 
 
-
-
-
-
 interface DataResponse extends Kontext.AjaxResponse {
     attrs:{[name:string]:Array<string>};
     udFeats:{[name:string]:Array<string>};
@@ -248,49 +244,48 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
             Actions.KVGetInitialDataDone,
             action => action.payload.tagsetId === this.tagsetId,
             action => {
+                if (action.error) {
+                    this.pluginApi.showMessage('error', action.error);
+                    return;
+                }
                 this.changeState(state => {
-                    if (!action.error) {
-                        state.data[action.payload.sourceId].attrConf = action.payload.attrConf;
-                        state.data[action.payload.sourceId].allAttrs = pipe(
-                            action.payload.attrs,
-                            Dict.map(
-                                (values, k) => List.map(
-                                    value => ({
-                                        value,
-                                        available: 'available',
-                                        selected: false,
-                                        filteredOut: false
-                                    }),
-                                    values
-                                )
+                    state.data[action.payload.sourceId].attrConf = action.payload.attrConf;
+                    state.data[action.payload.sourceId].allAttrs = pipe(
+                        action.payload.attrs,
+                        Dict.map(
+                            (values, k) => List.map(
+                                value => ({
+                                    value,
+                                    available: 'available',
+                                    selected: false,
+                                    filteredOut: false
+                                }),
+                                values
                             )
-                        );
-                        state.data[action.payload.sourceId].attrsFilters = Dict.map(
-                            (v, k) => '',
-                            action.payload.attrs
-                        );
-                        state.data[action.payload.sourceId].allUdFeats = pipe(
-                            action.payload.udFeats,
-                            Dict.map(
-                                (values, k) => List.map(
-                                    value => ({
-                                        value,
-                                        available: 'available',
-                                        selected: false,
-                                        filteredOut: false
-                                    }),
-                                    values
-                                )
+                        )
+                    );
+                    state.data[action.payload.sourceId].attrsFilters = Dict.map(
+                        (v, k) => '',
+                        action.payload.attrs
+                    );
+                    state.data[action.payload.sourceId].allUdFeats = pipe(
+                        action.payload.udFeats,
+                        Dict.map(
+                            (values, k) => List.map(
+                                value => ({
+                                    value,
+                                    available: 'available',
+                                    selected: false,
+                                    filteredOut: false
+                                }),
+                                values
                             )
-                        );
-                        state.data[action.payload.sourceId].udFeatsFilters = Dict.map(
-                            (v, k) => '',
-                            action.payload.udFeats
-                        );
-
-                    } else {
-                        state.data[action.payload.sourceId].error = action.error;
-                    }
+                        )
+                    );
+                    state.data[action.payload.sourceId].udFeatsFilters = Dict.map(
+                        (v, k) => '',
+                        action.payload.udFeats
+                    );
                     state.isBusy = false;
                 });
             }
@@ -366,108 +361,107 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
             Actions.KVGetFilteredDataDone,
             action => action.payload.tagsetId === this.tagsetId,
             action => {
+                if (action.error) {
+                    this.pluginApi.showMessage('error', action.error);
+                    return;
+                }
                 this.changeState(state => {
                     const data = state.data[action.payload.sourceId];
-                    if (action.error) {
-                        data.error = action.error;
+                    Dict.forEach(
+                        (items, attr) => {
+                            if (action.payload.activeAttr === attr) {
+                                List.forEach(
+                                    item => {
+                                        if (item.available === 'available') {
+                                            item.available = 'edited';
+                                        }
+                                    },
+                                    items
+                                );
+
+                            } else if (List.some(v => v.available && v.selected, items)) {
+                                List.forEach(
+                                    item => {
+                                        if (item.available !== 'unavailable') {
+                                            item.available = 'locked';
+                                        }
+                                    },
+                                    items
+                                );
+
+                            } else {
+                                List.forEach(
+                                    item => {
+                                        item.available = (() => {
+                                            if (List.find(
+                                                v => v === item.value,
+                                                action.payload.attrs[attr] || []
+                                                ) !== undefined) {
+                                                return 'available';
+                                            }
+                                            item.selected = false;
+                                            return 'unavailable';
+                                        })()
+                                    },
+                                    items
+                                );
+                            }
+                        },
+                        data.allAttrs
+                    );
+                    if (!!action.payload.activeUdFeat) {
+                        Dict.forEach(
+                            (items, attr) => {
+                                List.forEach(
+                                    item => {
+                                        if (item.available === 'available') {
+                                            item.available = 'edited';
+                                        }
+                                    },
+                                    items
+                                )
+                            },
+                            data.allUdFeats
+                        );
+
+                    } else if (Dict.some(items => List.some(v => v.available && v.selected, items), data.allUdFeats)) {
+                        Dict.forEach(
+                            items => {
+                                List.forEach(
+                                    item => {
+                                        if (item.available !== 'unavailable') {
+                                            item.available = 'locked';
+                                        }
+                                    },
+                                    items
+                                );
+                            },
+                            data.allUdFeats
+                        );
 
                     } else {
                         Dict.forEach(
                             (items, attr) => {
-                                if (action.payload.activeAttr === attr) {
-                                    List.forEach(
-                                        item => {
-                                            if (item.available === 'available') {
-                                                item.available = 'edited';
+                                List.forEach(
+                                    item => {
+                                        item.available = (() => {
+                                            if (List.find(
+                                                v => v === item.value,
+                                                action.payload.udFeats[attr] || []
+                                                ) !== undefined) {
+                                                return 'available';
                                             }
-                                        },
-                                        items
-                                    );
-
-                                } else if (List.some(v => v.available && v.selected, items)) {
-                                    List.forEach(
-                                        item => {
-                                            if (item.available !== 'unavailable') {
-                                                item.available = 'locked';
-                                            }
-                                        },
-                                        items
-                                    );
-
-                                } else {
-                                    List.forEach(
-                                        item => {
-                                            item.available = (() => {
-                                                if (List.find(
-                                                    v => v === item.value,
-                                                    action.payload.attrs[attr] || []
-                                                    ) !== undefined) {
-                                                    return 'available';
-                                                }
-                                                item.selected = false;
-                                                return 'unavailable';
-                                            })()
-                                        },
-                                        items
-                                    );
-                                }
+                                            item.selected = false;
+                                            return 'unavailable';
+                                        })()
+                                    },
+                                    items
+                                )
                             },
-                            data.allAttrs
+                            data.allUdFeats
                         );
-                        if (!!action.payload.activeUdFeat) {
-                            Dict.forEach(
-                                (items, attr) => {
-                                    List.forEach(
-                                        item => {
-                                            if (item.available === 'available') {
-                                                item.available = 'edited';
-                                            }
-                                        },
-                                        items
-                                    )
-                                },
-                                data.allUdFeats
-                            );
-
-                        } else if (Dict.some(items => List.some(v => v.available && v.selected, items), data.allUdFeats)) {
-                            Dict.forEach(
-                                items => {
-                                    List.forEach(
-                                        item => {
-                                            if (item.available !== 'unavailable') {
-                                                item.available = 'locked';
-                                            }
-                                        },
-                                        items
-                                    );
-                                },
-                                data.allUdFeats
-                            );
-
-                        } else {
-                            Dict.forEach(
-                                (items, attr) => {
-                                    List.forEach(
-                                        item => {
-                                            item.available = (() => {
-                                                if (List.find(
-                                                    v => v === item.value,
-                                                    action.payload.udFeats[attr] || []
-                                                    ) !== undefined) {
-                                                    return 'available';
-                                                }
-                                                item.selected = false;
-                                                return 'unavailable';
-                                            })()
-                                        },
-                                        items
-                                    )
-                                },
-                                data.allUdFeats
-                            );
-                        }
-                        data.generatedQuery = composeQuery(data);
                     }
+                    data.generatedQuery = composeQuery(data);
                     state.isBusy = false;
                 });
             }

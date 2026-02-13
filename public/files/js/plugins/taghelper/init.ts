@@ -18,13 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { BoundWithProps } from 'kombo';
 import { List, tuple, pipe } from 'cnc-tskit';
 
 import * as PluginInterfaces from '../../types/plugins/index.js';
 import { DataInitSyncModel, PosTagModel } from './positional/models.js';
-import { PosTagModelState, createEmptyPosTagsetStatus } from './positional/common.js';
-import { createEmptyUDTagsetStatus, UDTagBuilderModel, UDTagBuilderModelState } from './keyval/models.js';
+import { createEmptyPosTagsetStatus } from './positional/common.js';
+import { createEmptyUDTagsetStatus, UDTagBuilderModel } from './keyval/models.js';
 import { init as viewInit} from './views.js';
 import { init as ppTagsetViewInit} from './positional/views.js';
 import { init as udTagsetViewInit} from './keyval/views.js';
