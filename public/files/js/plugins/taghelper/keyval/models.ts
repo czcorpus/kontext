@@ -28,13 +28,18 @@ import { Actions } from '../actions.js';
 import * as Kontext from '../../../types/kontext.js';
 import { Actions as QueryActions } from '../../../models/query/actions.js';
 import { IPluginApi } from '../../../types/plugins/common.js';
+import { KVAttrConf } from '../common.js';
+
+
+
+
 
 
 interface DataResponse extends Kontext.AjaxResponse {
     attrs:{[name:string]:Array<string>};
     udFeats:{[name:string]:Array<string>};
+    attrConf:Array<KVAttrConf>;
 }
-
 
 
 function composeQuery(data:TagsetStatus):string {
@@ -72,7 +77,7 @@ function composeQuery(data:TagsetStatus):string {
 
 export interface SelectableValue {
     value:string;
-    available:'unavailable'|'available'|'edited';
+    available:'unavailable'|'available'|'edited'|'locked'|'locked';
     selected:boolean;
     filteredOut:boolean;
 }
@@ -136,6 +141,8 @@ export interface TagsetStatus {
     queryRange:[number, number];
 
     locked:boolean;
+
+    attrConf:Array<KVAttrConf>;
 }
 
 
@@ -155,7 +162,8 @@ export function createEmptyUDTagsetStatus(tagsetInfo:PluginInterfaces.TagHelper.
         posField: tagsetInfo.posAttr,
         featureField: tagsetInfo.featAttr,
         queryRange:[0, 0],
-        locked: false
+        locked: false,
+        attrConf: []
     };
 }
 
@@ -218,7 +226,8 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
                                 tagsetId: this.tagsetId,
                                 sourceId: action.payload.sourceId,
                                 attrs: data.attrs,
-                                udFeats: data.udFeats
+                                udFeats: data.udFeats,
+                                attrConf: data.attrConf
                             }
                         },
                         action.payload.sourceId
@@ -241,6 +250,7 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
             action => {
                 this.changeState(state => {
                     if (!action.error) {
+                        state.data[action.payload.sourceId].attrConf = action.payload.attrConf;
                         state.data[action.payload.sourceId].allAttrs = pipe(
                             action.payload.attrs,
                             Dict.map(
@@ -364,51 +374,98 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
                     } else {
                         Dict.forEach(
                             (items, attr) => {
-                                List.forEach(
-                                    item => {
-                                        item.available = (() => {
-                                            if (List.find(
-                                                v => v === item.value,
-                                                action.payload.attrs[attr] || []
-                                                ) !== undefined) {
-                                                return 'available';
-
-                                            } else if (action.payload.activeAttr === attr && (
-                                                    item.available === 'available' || item.available === 'edited')) {
-                                                return 'edited';
+                                if (action.payload.activeAttr === attr) {
+                                    List.forEach(
+                                        item => {
+                                            if (item.available === 'available') {
+                                                item.available = 'edited';
                                             }
-                                            item.selected = false;
-                                            return 'unavailable';
-                                        })()
-                                    },
-                                    items
-                                )
+                                        },
+                                        items
+                                    );
+
+                                } else if (List.some(v => v.available && v.selected, items)) {
+                                    List.forEach(
+                                        item => {
+                                            if (item.available !== 'unavailable') {
+                                                item.available = 'locked';
+                                            }
+                                        },
+                                        items
+                                    );
+
+                                } else {
+                                    List.forEach(
+                                        item => {
+                                            item.available = (() => {
+                                                if (List.find(
+                                                    v => v === item.value,
+                                                    action.payload.attrs[attr] || []
+                                                    ) !== undefined) {
+                                                    return 'available';
+                                                }
+                                                item.selected = false;
+                                                return 'unavailable';
+                                            })()
+                                        },
+                                        items
+                                    );
+                                }
                             },
                             data.allAttrs
                         );
-                        Dict.forEach(
-                            (items, attr) => {
-                                List.forEach(
-                                    item => {
-                                        item.available = (() => {
-                                            if (List.find(
-                                                v => v === item.value,
-                                                action.payload.udFeats[attr] || []
-                                            ) !== undefined) {
-                                                return 'available';
-
-                                            } else if (!!action.payload.activeUdFeat && (
-                                                    item.available === 'available' || item.available === 'edited')) {
-                                                return 'edited';
+                        if (!!action.payload.activeUdFeat) {
+                            Dict.forEach(
+                                (items, attr) => {
+                                    List.forEach(
+                                        item => {
+                                            if (item.available === 'available') {
+                                                item.available = 'edited';
                                             }
-                                            return 'unavailable';
-                                        })()
-                                    },
-                                    items
-                                )
-                            },
-                            data.allUdFeats
-                        );
+                                        },
+                                        items
+                                    )
+                                },
+                                data.allUdFeats
+                            );
+
+                        } else if (Dict.some(items => List.some(v => v.available && v.selected, items), data.allUdFeats)) {
+                            Dict.forEach(
+                                items => {
+                                    List.forEach(
+                                        item => {
+                                            if (item.available !== 'unavailable') {
+                                                item.available = 'locked';
+                                            }
+                                        },
+                                        items
+                                    );
+                                },
+                                data.allUdFeats
+                            );
+
+                        } else {
+                            Dict.forEach(
+                                (items, attr) => {
+                                    List.forEach(
+                                        item => {
+                                            item.available = (() => {
+                                                if (List.find(
+                                                    v => v === item.value,
+                                                    action.payload.udFeats[attr] || []
+                                                    ) !== undefined) {
+                                                    return 'available';
+                                                }
+                                                item.selected = false;
+                                                return 'unavailable';
+                                            })()
+                                        },
+                                        items
+                                    )
+                                },
+                                data.allUdFeats
+                            );
+                        }
                         data.generatedQuery = composeQuery(data);
                     }
                     state.isBusy = false;
@@ -592,7 +649,8 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
                                 tagsetId: this.tagsetId,
                                 sourceId: action.payload.sourceId,
                                 attrs: data.attrs,
-                                udFeats: data.udFeats
+                                udFeats: data.udFeats,
+                                attrConf: data.attrConf
 
                             }
                         },

@@ -74,8 +74,6 @@ async def ajax_get_tag_variants(amodel: UserActionModel, req: KRequest, resp: KR
 
     fetcher = await plugins.runtime.TAGHELPER.instance.fetcher(amodel.plugin_ctx, corpname, tagset_name)
     values_selection = await fetcher.fetch(req)
-    import logging
-    logging.getLogger(__name__).warning('>>>>>>>>>>>>>>>> values_selection: {}'.format(values_selection))
     try:
         tag_loader = await plugins.runtime.TAGHELPER.instance.loader(amodel.plugin_ctx, corpname, tagset_name)
     except IOError:
