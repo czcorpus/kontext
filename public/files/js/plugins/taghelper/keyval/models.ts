@@ -37,37 +37,65 @@ interface DataResponse extends Kontext.AjaxResponse {
     attrConf:Array<KVAttrConf>;
 }
 
-
 function composeQuery(data:TagsetStatus):string {
-    const attrsQuery = pipe(
+
+    const keyvalToQuery = (name:string, value:string) => {
+        if (value.includes("|")) {
+            return List.map(
+                subVal => `${name}="${subVal}"`,
+                value.split('|')
+            ).join(' & ');
+
+        } else {
+            return `${name}="${value}"`;
+        }
+    };
+
+    const attrs = pipe(
         data.allAttrs,
         Dict.toEntries(),
         List.filter(
             ([, selectableValues]) => List.some(v => v.selected, selectableValues)
-        ),
-        List.map(
-            ([name, selectableValues]) => tuple(name, List.filter(v => v.selected, selectableValues))
-        ),
-        List.sorted(([v1,], [v2,]) => v1.localeCompare(v2)),
-        List.map(
-            ([recName, groupedRecs]) => `${recName}="${List.map(r => r.value, groupedRecs).join('|')}"`
         )
     );
-    const udQuery = pipe(
+    const udAttrs = pipe(
         data.allUdFeats,
         Dict.toEntries(),
         List.filter(
             ([, selectableValues]) => List.some(v => v.selected, selectableValues)
         ),
-        List.map(
-            ([name, selectableValues]) => tuple(name, List.filter(v => v.selected, selectableValues))
-        ),
-        List.sorted(([v1,], [v2,]) => v1.localeCompare(v2)),
-        List.map(
-            ([recName, groupedRecs]) => `feats="${List.map(r => `${recName}=${r.value}`, groupedRecs).join('|')}"`
-        )
     );
-    return `[${[...attrsQuery,...udQuery].join(' & ')}]`;
+
+    const blocks = [];
+    if (!List.empty(attrs)) {
+        blocks.push(
+            pipe(
+                attrs,
+                List.map(
+                    ([name, selectableValues]) => tuple(name, List.filter(v => v.selected, selectableValues))
+                ),
+                List.sorted(([v1,], [v2,]) => v1.localeCompare(v2)),
+                List.map(
+                    ([recName, groupedRecs]) => List.map(r => keyvalToQuery(recName, r.value), groupedRecs).join(' | ')
+                )
+            ).join(' & ')
+        );
+    }
+    if (!List.empty(udAttrs)) {
+        blocks.push(
+            pipe(
+                udAttrs,
+                List.map(
+                    ([name, selectableValues]) => tuple(name, List.filter(v => v.selected, selectableValues))
+                ),
+                List.sorted(([v1,], [v2,]) => v1.localeCompare(v2)),
+                List.map(
+                    ([recName, groupedRecs]) => `feats="${recName}=(${List.map(r => r.value, groupedRecs).join('|')})"`
+                )
+            ).join(' & ')
+        );
+    }
+    return `[${blocks.join(' & ')}]`;
 }
 
 
