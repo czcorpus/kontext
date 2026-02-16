@@ -16,24 +16,21 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from collections import defaultdict
 from urllib.parse import urljoin
-import logging
-
-import aiofiles
-import aiofiles.os
-import ujson as json
-
-from action.plugin.ctx import PluginCtx
 from plugin_types.taghelper import AbstractTagsetInfoLoader
 
 
 class KeyvalFrodoLoader(AbstractTagsetInfoLoader):
+    """
+    KeyvalFrodoLoader uses Frodo backend for obtaining Key-Value tagset information.
+    The class caches its information about backend availability.
+    """
 
     def __init__(self, corpus_name, tagset_name, frodo_url):
         self.corpus_name = corpus_name
         self.tagset_name = tagset_name
         self.frodo_url = frodo_url
+        self._is_available = None
 
     async def get_variant(self, plugin_ctx, filter_values, lang, translate):
         http_client = plugin_ctx.request.ctx.http_client
@@ -49,6 +46,8 @@ class KeyvalFrodoLoader(AbstractTagsetInfoLoader):
             return await resp.json()
 
     async def is_available(self, plugin_ctx, translate):
-        return True  # TODO
-
-
+        if self._is_available is None:
+            resp = await plugin_ctx.request.ctx.http_client.get(
+                urljoin(self.frodo_url, f'/liveTokens/{self.corpus_name}/conf'))
+            self._is_available = resp.status == 200
+        return self._is_available

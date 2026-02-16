@@ -25,11 +25,11 @@ class TagVariantLoaderException(Exception):
 
 class NullTagVariantLoader(AbstractTagsetInfoLoader):
 
-    async def get_variant(self, user_selection, lang, translate):
+    async def get_variant(self, plugin_ctx, user_selection, lang, translate):
         return {}
 
-    async def get_initial_values(self, lang, translate):
+    async def get_initial_values(self, plugin_ctx, lang, translate):
         return {}
 
-    async def is_available(self, translate):
+    async def is_available(self, plugin_ctx, translate):
         return False

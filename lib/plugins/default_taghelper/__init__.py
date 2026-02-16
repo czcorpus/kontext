@@ -21,22 +21,8 @@ A 'taghelper' plug-in implementation. It provides a data-driven, interactive way
 how to create a tag query. Please note that this works only with tag formats with
 fixed positions for defined categories (e.g.: part of speech = character 0,
 gender = character 1, case = character 2,...)
-
-Please note that this module requires a proper Corptree plug-in configuration and data.
-
-Required XML:
-
-element taghelper {
-  element module { "default_taghelper" }
-  element clear_interval {
-    text # TTL - number of seconds
-  }
-  element tags_cache_dir {
-    text #  a path to a dir where files are cached
-  }
-}
 """
-from dataclasses import dataclass
+
 from typing import Any, Dict
 
 import plugins
@@ -55,7 +41,6 @@ from plugins.default_taghelper.fetchers.keyval import KeyvalSelectionFetcher
 from plugins.default_taghelper.fetchers.positional import \
     PositionalSelectionFetcher
 from plugins.default_taghelper.loaders import NullTagVariantLoader
-from plugins.default_taghelper.loaders.keyval import KeyvalTagVariantLoader
 from plugins.default_taghelper.loaders.kvfrodo import KeyvalFrodoLoader
 from plugins.default_taghelper.loaders.positional import \
     PositionalTagVariantLoader
