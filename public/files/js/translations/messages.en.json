@@ -60,6 +60,7 @@
         "global__add_aligned_corpus": "Add a corpus",
         "global__size_warning": "Due to the large size, the concordance has been truncated to the first {size} lines.",
         "global__next_tip": "next tip",
+        "global__hide_tips": "hide",
         "global__no_backup_data": "No backup data available.",
         "global__undelete": "undelete",
         "global__subcorpus_will_be_restored_using_orig_query": "The subcorpus will be created again using the original query.",

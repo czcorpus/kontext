@@ -60,6 +60,7 @@
         "global__add_aligned_corpus": "Přidat korpus",
         "global__size_warning": "Kvůli nadměrnému rozsahu byla konkordance zredukována na prvních {size} řádků.",
         "global__next_tip": "další tip",
+        "global__hide_tips": "schovat",
         "global__no_backup_data": "Záložní data nejsou k dispozici.",
         "global__undelete": "obnovit",
         "global__subcorpus_will_be_restored_using_orig_query": "Subkorpus bude vytvořen znovu s použitím původních parametrů.",

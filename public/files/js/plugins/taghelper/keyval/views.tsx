@@ -407,7 +407,16 @@ export function init(
         };
 
         if (data.error) {
-            return <div>Error: {data.error.message}</div>;
+            return (
+                <S.FeatureSelect>
+                    <div className="error">
+                        <div className="icon">
+                            <span>Error: {data.error.message}</span>
+                            <img src={ut.createStaticUrl('img/config-icon-pink.svg')} />
+                        </div>
+                    </div>
+                </S.FeatureSelect>
+            );
 
         } else {
             const canUndo = List.size(data.filterFeaturesHistory) > 1;

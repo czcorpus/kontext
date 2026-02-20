@@ -61,6 +61,7 @@ export interface UsageTipsState {
     currentHints:{[key in UsageTipCategory]:string | React.ReactNode | Array<string | React.ReactNode>};
     hintsPointers:{[key in UsageTipCategory]:number};
     forcedTip:ForcedTip|null;
+    concHintsVisible:boolean;
 }
 
 
@@ -77,6 +78,8 @@ const supportedFormatting = {
 export class UsageTipsModel extends StatelessModel<UsageTipsState> implements IUnregistrable {
 
     private translatorFn:RichTextTranslator;
+
+    private static readonly CONC_HINTS_STATE_LS_KEY = 'conc-hints-visible';
 
     constructor(dispatcher:IActionDispatcher, translatorFn:RichTextTranslator) {
         const pointers = pipe(
@@ -106,29 +109,43 @@ export class UsageTipsModel extends StatelessModel<UsageTipsState> implements IU
                     Dict.fromEntries()
                 ),
                 availableTips,
-                forcedTip: null
+                forcedTip: null,
+                concHintsVisible: localStorage.getItem(UsageTipsModel.CONC_HINTS_STATE_LS_KEY) === '1'
             }
         );
         this.translatorFn = translatorFn;
 
-        this.addActionHandler<typeof Actions.NextQueryHint>(
-            Actions.NextQueryHint.name,
+        this.addActionHandler(
+            Actions.NextQueryHint,
             (state, action) => {
                 this.setNextHint(state, UsageTipCategory.QUERY);
             }
         );
 
-        this.addActionHandler<typeof Actions.NextCqlQueryHint>(
-            Actions.NextCqlQueryHint.name,
+        this.addActionHandler(
+            Actions.NextCqlQueryHint,
             (state, action) => {
                 this.setNextHint(state, UsageTipCategory.CQL_QUERY);
             }
         );
 
-        this.addActionHandler<typeof Actions.NextConcHint>(
-            Actions.NextConcHint.name,
+        this.addActionHandler(
+            Actions.NextConcHint,
             (state, action) => {
                 this.setNextHint(state, UsageTipCategory.CONCORDANCE);
+            }
+        );
+
+        this.addActionHandler(
+            Actions.ToggleConcHints,
+            (state, action) => {
+                state.concHintsVisible = !state.concHintsVisible;
+            },
+            (state, action, dispatch) => {
+                localStorage.setItem(
+                    UsageTipsModel.CONC_HINTS_STATE_LS_KEY,
+                    state.concHintsVisible ? '1' : '0'
+                );
             }
         );
 
