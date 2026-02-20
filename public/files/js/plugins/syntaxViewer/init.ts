@@ -48,8 +48,6 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
 
     private resizeThrottleTimer:number;
 
-    private corpusSelectHandler:(e)=>void;
-
     private view:React.FC;
 
     constructor(dispatcher:IFullActionControl, pluginApi:IPluginApi) {
@@ -98,15 +96,6 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
                 this.render();
             }
         );
-
-        this.corpusSelectHandler = (e) => {
-            dispatcher.dispatch<typeof Actions.SwitchCorpus>({
-                name: Actions.SwitchCorpus.name,
-                payload: {
-                    corpusId: e.target.value
-                }
-            });
-        };
     }
 
     isActive():boolean {
@@ -182,7 +171,6 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
 
         if (this.state.sentenceTokens.length > 1) {
             const corpusSwitch = window.document.createElement('select');
-            corpusSwitch.onchange = this.corpusSelectHandler;
             List.forEach(
                 (sentenceToken, i) => {
                     const option = window.document.createElement('option');
