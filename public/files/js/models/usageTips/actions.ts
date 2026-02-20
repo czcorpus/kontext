@@ -39,6 +39,12 @@ export class Actions {
         name: 'QUERY_HINTS_NEXT_CONC_HINT'
     };
 
+    static ToggleConcHints:Action<{
+
+    }> = {
+        name: 'QUERY_HINTS_TOGGLE_CONC_HINTS'
+    };
+
     static ForceHint:Action<ForcedTip> = {
         name: 'QUERY_HINTS_FORCE_HINT'
     };

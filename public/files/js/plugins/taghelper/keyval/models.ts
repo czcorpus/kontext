@@ -40,15 +40,7 @@ interface DataResponse extends Kontext.AjaxResponse {
 function composeQuery(data:TagsetStatus):string {
 
     const keyvalToQuery = (name:string, value:string) => {
-        if (value.includes("|")) {
-            return List.map(
-                subVal => `${name}="${subVal}"`,
-                value.split('|')
-            ).join(' & ');
-
-        } else {
-            return `${name}="${value}"`;
-        }
+        return `${name}="${value.replaceAll(/\|/g, '\\|')}"`;
     };
 
     const attrs = pipe(
@@ -77,7 +69,8 @@ function composeQuery(data:TagsetStatus):string {
                 List.sorted(([v1,], [v2,]) => v1.localeCompare(v2)),
                 List.map(
                     ([recName, groupedRecs]) => List.map(r => keyvalToQuery(recName, r.value), groupedRecs).join(' | ')
-                )
+                ),
+                List.map(v => `(${v})`)
             ).join(' & ')
         );
     }
@@ -273,7 +266,13 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
             action => action.payload.tagsetId === this.tagsetId,
             action => {
                 if (action.error) {
-                    this.pluginApi.showMessage('error', action.error);
+                    this.changeState(
+                        state => {
+                            state.isBusy = false;
+                            state.data[action.payload.sourceId].error = action.error;
+                        }
+                    );
+                    this.pluginApi.showMessage('error', `${action.error}`);
                     return;
                 }
                 this.changeState(state => {
@@ -292,6 +291,7 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
                             )
                         )
                     );
+
                     state.data[action.payload.sourceId].attrsFilters = Dict.map(
                         (v, k) => '',
                         action.payload.attrs
@@ -662,6 +662,13 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
                         (data, err) => err ?
                         {
                             name: Actions.KVGetInitialDataDone.name,
+                            payload: {
+                                tagsetId: this.tagsetId,
+                                sourceId: action.payload.sourceId,
+                                attrs: undefined,
+                                udFeats: undefined,
+                                attrConf: undefined
+                            },
                             error: err
 
                         } :
@@ -751,10 +758,18 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
                 'corpora/ajax_get_tag_variants',
                 baseArgs
             ),
+            // due to KonText server-side limitations, we cannot just
+            // use application/json type and pass data directly
             {args: JSON.stringify(this.exportFilter(this.state, sourceId))},
 
         ).subscribe({
             next: result => {
+                if (!result.attrs) {
+                    result.attrs = {};
+                }
+                if (!result.udFeats) {
+                    result.udFeats = {};
+                }
                 this.dispatchSideEffect<Action<U>>(actionFactory(result));
             },
             error: error => {

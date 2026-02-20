@@ -69,6 +69,8 @@ async def ajax_get_tag_variants(amodel: UserActionModel, req: KRequest, resp: KR
         ans = await tag_loader.get_initial_values(amodel.plugin_ctx, req.ui_lang, req.translate)
     else:
         ans = await tag_loader.get_variant(amodel.plugin_ctx, values_selection, req.ui_lang, req.translate)
+    if ans.get('code', 200) >= 400:
+        resp.set_http_status(ans.get('code'))
     return ans
 
 

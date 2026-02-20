@@ -60,6 +60,7 @@
         "global__add_aligned_corpus": "Dodej korpus",
         "global__size_warning": "Skuli srogości kōnkordancyjŏ była przitniyntŏ do piyrszych {size} liniji.",
         "global__next_tip": "nastympnŏ dorada",
+        "global__hide_tips": "hide UNTRANSLATED",
         "global__no_backup_data": "Niy ma żŏdnych danych zapasowych.",
         "global__undelete": "prziwrōć",
         "global__subcorpus_will_be_restored_using_orig_query": "Podkorpus bydzie zaś stworzōny ze użyciym ôryginalnego zapytaniŏ.",

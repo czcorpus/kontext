@@ -307,6 +307,27 @@ export const FeatureSelect = styled.div`
     }
 
     ${controlButtons};
+
+    div.error {
+        height: 100%;
+        display: flex;
+        justify-content: center;
+
+        .icon {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: ${theme.colorLogoPink};
+            font-size: 1.5em;
+
+            img {
+                display: block;
+                width: 3em;
+                margin-left: 0.5em;
+            }
+        }
+    }
 `;
 
 // ----------- <QueryBox /> ----------------------------

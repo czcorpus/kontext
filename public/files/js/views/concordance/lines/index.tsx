@@ -243,9 +243,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel, audioPlayer
 
         return (
             <tr>
-                <td>{/* matches line number column */}</td>
-                <td>{/* matches selection checkbox column */}</td>
-                <td>{/* matches syntax tree column */}</td>
                 {List.map(item => renderCol(item), props.cols)}
             </tr>
         );

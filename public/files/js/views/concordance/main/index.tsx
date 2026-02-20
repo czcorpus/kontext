@@ -738,34 +738,51 @@ export function init({
             );
         };
 
+        const hideClickHandler = () => {
+            dispatcher.dispatch(
+                HintActions.ToggleConcHints
+            );
+        };
+
         const hints = state.currentHints[UsageTipCategory.CONCORDANCE];
 
         return (
-            <S.ConcHints>
-                <div className="hint">
-                    <div className="tip">
-                        {state.forcedTip ?
-                            '\u203C\u00a0' + he.translate('global__advice') :
-                            he.translate('global__tip')
-                        }
-                    </div>
-                    <div>
-                    {state.forcedTip ?
-                        state.forcedTip.message :
-                        pipe(
-                            Array.isArray(hints) ? hints : [hints],
-                            List.map((hint, i) => <React.Fragment key={`hint:${i}}`}>{hint}</React.Fragment>)
-                        )
-                    }
-                    </div>
-                </div>
-                <div className="next-hint">
-                    (
-                    <a onClick={clickHandler}>
-                        {he.translate('global__next_tip')}
+            <S.ConcHints className={state.concHintsVisible ? null : 'collapsed'}>
+                {state.concHintsVisible ?
+                    <>
+                        <div className="hint">
+                            <div className="tip">
+                                {state.forcedTip ?
+                                    '\u203C\u00a0' + he.translate('global__advice') :
+                                    he.translate('global__tip')
+                                }
+                            </div>
+                            <div>
+                            {state.forcedTip ?
+                                state.forcedTip.message :
+                                pipe(
+                                    Array.isArray(hints) ? hints : [hints],
+                                    List.map((hint, i) => <React.Fragment key={`hint:${i}}`}>{hint}</React.Fragment>)
+                                )
+                            }
+                            </div>
+                        </div>
+                        <div className="next-hint">
+                            (
+                            <a onClick={clickHandler}>
+                                {he.translate('global__next_tip')}
+                            </a>{'\u00a0'}/{'\u00a0'}
+                            <a onClick={hideClickHandler}>
+                                {he.translate('global__hide_tips')}
+                            </a>
+                            )
+                        </div>
+                    </> :
+                    <a className="switch" onClick={hideClickHandler}>
+                        <img src={he.createStaticUrl('img/lightbulb-blue.svg')} />
+                        <div className="tip">{he.translate('global__tip')}</div>
                     </a>
-                    )
-                </div>
+                }
             </S.ConcHints>
         );
     };

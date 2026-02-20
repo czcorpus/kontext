@@ -54,6 +54,7 @@
         "global__add_aligned_corpus": "Dodaj korpus",
         "global__size_warning": "Zaradi velikega obsega je bila konkordanca omejena na prvih {size} vrstic.",
         "global__next_tip": "naslednji namig",
+        "global__hide_tips": "hide UNTRANSLATED",
         "global__no_backup_data": "Ni razpoložljivih varnostnih kopij.",
         "global__undelete": "Razveljavi izbris",
         "global__subcorpus_will_be_restored_using_orig_query": "Na podlagi originalne poizvedbe bo podkorpus ponovno ustvarjen.",

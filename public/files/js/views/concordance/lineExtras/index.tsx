@@ -249,7 +249,17 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     // ------------------------- <RefInfo /> ---------------------
 
-    function normalizeLabels(data:Array<string>, maxWidth: number) {
+    interface normalizedLabels {
+        total:number;
+        shortenedAt:number;
+        i:number;
+        text:Array<{t:string; m:string}>;
+    }
+
+    function normalizeLabels(data:Array<string>, maxWidth: number):normalizedLabels {
+        if (maxWidth === 0) {
+            return {total: 0, shortenedAt: -1, i: 0, text: []};
+        }
         return List.foldl<
             string,
             {

@@ -457,4 +457,20 @@ export const ConcHints = styled(theme.UIHints)`
     background-color: transparent;
     border: none;
     flex-grow: 1;
+
+    &.collapsed {
+        justify-content: flex-end;
+
+        a.switch {
+
+            display: flex;
+            align-items: center;
+            color: inherit;
+            text-decoration: inherit;
+
+            img {
+                margin-right: 0.3em;
+            }
+        }
+    }
 `;
