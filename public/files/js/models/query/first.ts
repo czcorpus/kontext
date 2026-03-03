@@ -84,7 +84,7 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
     suggestionsConfigured:boolean;
     simpleQueryDefaultAttrs:{[corpname:string]:Array<string|Array<string>>};
     concViewPosAttrs:Array<string>;
-    alignCommonPosAttrs:Array<string>;
+    alignCommonPosAttrs:Kontext.AlignCommonPosAttrs;
     concPreflight:Kontext.PreflightConf|null;
 }
 
@@ -329,7 +329,7 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
      */
      concViewPosAttrs:Array<string>;
 
-     alignCommonPosAttrs:Array<string>;
+     alignCommonPosAttrs:Kontext.AlignCommonPosAttrs;
 
      concPreflight:Kontext.PreflightConf|null;
 }

@@ -59,7 +59,7 @@ export interface CorpusSwitchResponse extends AjaxConcResponse {
     menuData:any; // TODO type
     Wposlist:Array<any>; // TODO type
     AttrList:Array<any>; // TODO type
-    AlignCommonPosAttrs:Array<string>; // TODO type
+    AlignCommonPosAttrs:Kontext.AlignCommonPosAttrs;
     InputLanguages:{[corpname:string]:string};
     ConcFormsArgs:any; // TODO type
     CurrentSubcorp:string;
@@ -180,7 +180,7 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
                             this.conf.setConf<any>('menuData', data.menuData); // TODO type
                             this.conf.setConf<Array<any>>('Wposlist', data.Wposlist); // TODO type
                             this.conf.setConf<Array<any>>('AttrList', data.AttrList); // TODO type
-                            this.conf.setConf<Array<string>>('AlignCommonPosAttrs', data.AlignCommonPosAttrs);
+                            this.conf.setConf<Kontext.AlignCommonPosAttrs>('AlignCommonPosAttrs', data.AlignCommonPosAttrs);
                             this.conf.setConf<{[corpname:string]:string}>('InputLanguages', data.InputLanguages);
                             this.conf.setConf<any>('ConcFormsArgs', data.ConcFormsArgs); // TODO type
                             this.conf.setConf<string>('CurrentSubcorp', data.CurrentSubcorp);

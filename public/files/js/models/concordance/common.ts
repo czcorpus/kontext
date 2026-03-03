@@ -569,7 +569,7 @@ export interface ViewConfiguration {
 
     mergedCtxAttrs:Array<[string, number]>;
 
-    alignCommonPosAttrs:Array<string>;
+    alignCommonPosAttrs:Kontext.AlignCommonPosAttrs;
 
 }
 

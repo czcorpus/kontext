@@ -299,7 +299,7 @@ async def view_conc(
                     amodel.plugin_ctx, corpus_info.tokens_linking.providers,
                     [amodel.args.corpname] + amodel.args.align)
 
-            kwic = Kwic(amodel.corp, conc)
+            kwic = Kwic(amodel.corp, conc, await amodel.get_all_corp_merged_posattrs())
 
             out['Sort_idx'] = kwic.get_sort_idx(q=amodel.args.q, pagesize=amodel.args.pagesize)
             out.update(asdict(kwic.kwicpage(kwic_args)))
@@ -474,7 +474,7 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
                 kwic_args.internal_attrs = await tl.get_required_attrs(
                     amodel.plugin_ctx, corpus_info.tokens_linking.providers,
                     [amodel.args.corpname] + amodel.args.align)
-            kwic = Kwic(amodel.corp, conc)
+            kwic = Kwic(amodel.corp, conc, await amodel.get_all_corp_merged_posattrs())
             out['Sort_idx'] = kwic.get_sort_idx(q=amodel.args.q, pagesize=amodel.args.pagesize)
             out.update(asdict(kwic.kwicpage(kwic_args)))
             out.update(await amodel.get_conc_sizes(conc))
@@ -1114,7 +1114,7 @@ async def ajax_get_first_line_select_page(amodel: ConcActionModel, req: KRequest
         q=amodel.args.q, fromp=amodel.args.fromp, pagesize=amodel.args.pagesize,
         asnc=False, cutoff=amodel.args.cutoff)
     amodel.apply_linegroups(conc)
-    kwic = Kwic(amodel.corp, conc)
+    kwic = Kwic(amodel.corp, conc, await amodel.get_all_corp_merged_posattrs())
     return {'first_page': int((kwic.get_groups_first_line() - 1) / amodel.args.pagesize) + 1}
 
 
@@ -1274,7 +1274,7 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
             corp=amodel.corp, user_id=req.session_get('user', 'id'), q=amodel.args.q, fromp=amodel.args.fromp,
             pagesize=amodel.args.pagesize, asnc=False, cutoff=amodel.args.cutoff)
         amodel.apply_linegroups(conc)
-        kwic = Kwic(amodel.corp, conc)
+        kwic = Kwic(amodel.corp, conc, await amodel.get_all_corp_merged_posattrs())
         conc.switch_aligned(os.path.basename(amodel.args.corpname))
 
         if len(amodel.args.align) == 0 and conc.size() < MAX_SINGLE_CHUNK_SAVE_CONC_SIZE:

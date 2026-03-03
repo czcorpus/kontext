@@ -453,6 +453,40 @@ class CorpusActionModel(UserActionModel):
         return self._tt if self._tt is not None else TextTypes(
             self.corp, self.corp.corpname, self._tt_cache, self.plugin_ctx)
 
+    async def get_all_corp_merged_posattrs(self):
+        """
+        Generate a list of all attributes from all the corpora respecting
+        the order. (We assume that the ordering is the same in all the corpora).
+        It returns map of corpora and all the attributes with presence flag:
+        {
+          "intercorp_cs": [ ('word', True), ('lemma', True), ('tag', True) ]
+          "intercorp_hs": [ ('word', True), ('lemma', False), ('tag', False) ]
+        }
+        """
+        tmp = [self.corp.get_posattrs()]
+        max_posattrs = len(self.corp.get_posattrs())
+        all_corpora = [self.corp.corpname] + self.args.align
+        for a in self.args.align:
+            align_corp = await self.cf.get_corpus(a)
+            tmp.append(align_corp.get_posattrs())
+            if len(align_corp.get_posattrs()) > max_posattrs:
+                max_posattrs = len(align_corp.get_posattrs())
+        proc_attrs = set()
+        all_attrs = []
+        ans = {}
+        for i in range(max_posattrs):
+            for j in range(len(tmp)):
+                if i >= len(tmp[j]):
+                    continue
+                if tmp[j][i] not in proc_attrs:
+                    all_attrs.append(tmp[j][i])
+                    proc_attrs.add(tmp[j][i])
+        for i, corp in enumerate(all_corpora):
+            ans[corp] = []
+            for attr in all_attrs:
+                ans[corp].append((attr, attr in tmp[i]))
+        return ans
+
     async def _add_corpus_related_globals(self, result, maincorp):
         """
         arguments:
@@ -493,11 +527,7 @@ class CorpusActionModel(UserActionModel):
                 'multisep': maincorp.get_conf(f'{n}.MULTISEP'),
             } for n in maincorp.get_conf('ATTRLIST').split(',') if n]
 
-        align_common_posattrs = set(self.corp.get_posattrs())
-        for a in self.args.align:
-            align_corp = await self.cf.get_corpus(a)
-            align_common_posattrs.intersection_update(align_corp.get_posattrs())
-        result['AlignCommonPosAttrs'] = list(align_common_posattrs)
+        result['AlignCommonPosAttrs'] = await self.get_all_corp_merged_posattrs()
 
         if maincorp.get_conf('FREQTTATTRS'):
             ttcrit_attrs = maincorp.get_conf('FREQTTATTRS')

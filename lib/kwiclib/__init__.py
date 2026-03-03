@@ -213,9 +213,10 @@ class Kwic:
     KWIC related data preparation utilities
     """
 
-    def __init__(self, corpus: AbstractKCorpus, conc: KConc):
+    def __init__(self, corpus: AbstractKCorpus, conc: KConc, all_corp_merged_posattrs: Dict[str, List[Tuple[str, bool]]]):
         self.corpus = corpus
         self.conc = conc
+        self.al_corp_merged_posattrs = all_corp_merged_posattrs
 
     def kwicpage(self, args: KwicPageArgs) -> KwicPageData:
         """
@@ -227,6 +228,9 @@ class Kwic:
         returns:
         KwicPageData converted into a dict
         """
+        attrs = args.attrs.split(',')
+        for corpname, avail in self.al_corp_merged_posattrs.items():
+            self.al_corp_merged_posattrs[corpname] = [x for x in avail if x[0] in attrs]
         args.refs = getattr(args, 'refs', '').replace('.MAP_OUP', '')  # to be removed ...
         try:
             fromp = int(args.fromp)
@@ -236,6 +240,8 @@ class Kwic:
             fromp = 1
 
         out = KwicPageData()
+        out.merged_attrs = list(args.merged_attrs.items())
+        out.merged_ctxattrs = list(args.merged_ctxattrs.items())
         pagination = Pagination()
         pagination.first_page = 1
         out.Lines = self.kwiclines(args.create_kwicline_args(), self.corpus.corpname)
@@ -264,7 +270,7 @@ class Kwic:
         out.concsize = self.conc.size()
 
         if self.corpus.subcorpus_id:
-            out.result_arf = ''
+            out.result_arf = None
         else:
             out.result_arf = round(self.conc.compute_ARF(), 2)
 
@@ -473,7 +479,7 @@ class Kwic:
     def speech_segment_has_audio(self, s):
         return s and s[1]
 
-    def postproc_text_chunk(self, tokens):
+    def postproc_text_chunk(self, tokens, corpname):
         prev = {}
         ans = []
         for item in tokens:
@@ -481,7 +487,16 @@ class Kwic:
                 # there is always one leading `attr_delimiter`
                 attr_delimiter = item['str'][0]
                 # a list is used for future compatibility
-                prev['posattrs'] = item['str'][1:].split(attr_delimiter)
+                tmp = item['str'][1:].split(attr_delimiter)
+                curr_attr_idx = 0
+                full_list = []
+                for attr, avail in self.al_corp_merged_posattrs[corpname][1:]:
+                    if avail:
+                        full_list.append(tmp[curr_attr_idx])
+                        curr_attr_idx += 1
+                    else:
+                        full_list.append('--')
+                prev['posattrs'] = full_list
             else:
                 ans.append(item)
             prev = item
@@ -532,6 +547,7 @@ class Kwic:
             args.speech_segment and args.speech_segment[0] not in args.structs and
             speech_struct_attr_name in all_structs)
         i = args.fromline
+
         while kl.nextline():
             linegroup = kl.get_linegroup()
             if not linegroup:  # manatee returns 0 in case of no group (but None will work too here)
@@ -565,9 +581,9 @@ class Kwic:
                             index += 1
                     ml_positions[side] = pos_list
 
-            leftwords = self.postproc_text_chunk(leftwords)
-            kwicwords = self.postproc_text_chunk(kwicwords)
-            rightwords = self.postproc_text_chunk(rightwords)
+            leftwords = self.postproc_text_chunk(leftwords, corpname)
+            kwicwords = self.postproc_text_chunk(kwicwords, corpname)
+            rightwords = self.postproc_text_chunk(rightwords, corpname)
 
             if args.righttoleft and Kwic.isengword(kwicwords[0]):
                 leftwords, rightwords = Kwic.update_right_to_left(leftwords, rightwords)

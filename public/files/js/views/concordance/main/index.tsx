@@ -612,63 +612,6 @@ export function init({
         </layoutViews.ModalOverlay>
     );
 
-    // ------------------------- <AttrMismatchModal /> --------------------
-
-    const AttrMismatchModal:React.FC<{
-        attrs:Array<string>;
-    }> = ({attrs}) => {
-
-        React.useEffect(
-            () => {
-                dispatcher.dispatch(
-                    ViewOptionsActions.LoadDataInBackground
-                )
-            },
-            []
-        );
-
-        const onCloseClick = () => {
-            dispatcher.dispatch(
-                Actions.CloseAlignAttrsMismatchModal
-            );
-        };
-
-        const onOKClick = () => {
-            dispatcher.dispatch(
-                ViewOptionsActions.UnsetAttributesAndSave,
-                {
-                    attrs
-                }
-            )
-        };
-
-        return (
-            <layoutViews.ModalOverlay onCloseKey={onCloseClick}>
-                <layoutViews.CloseableFrame onCloseClick={onCloseClick}
-                        label={he.translate('concview__attr_selection_problem')}>
-                    <S.AttrMismatchModalContents>
-                        <p>
-                            {he.translate('concview__attr_sel_mismatch_desc')}:
-                        </p>
-                        <p className="attr-list">
-                            <strong>{attrs.join(', ')}</strong>
-                        </p>
-
-                        <p>{he.translate('concview__attr_sel_mismatch_question')}</p>
-                        <p className="buttons">
-                            <button type="button" className="util-button" onClick={onOKClick}>
-                                {he.translate('global__ok')}
-                            </button>
-                            <button type="button" className="util-button cancel" onClick={onCloseClick}>
-                                {he.translate('global__cancel')}
-                            </button>
-                        </p>
-                    </S.AttrMismatchModalContents>
-                </layoutViews.CloseableFrame>
-            </layoutViews.ModalOverlay>
-        );
-    };
-
     // ------------------------- <WaitingForConc /> ----------------------------
 
     const WaitingForConc:React.FC<{
@@ -824,21 +767,8 @@ export function init({
             });
         };
 
-        const alignNonMatchingAttrs = () => {
-            return pipe(
-                props.mergedAttrs,
-                List.filter(
-                    ([item, _]) => List.findIndex(
-                        item2 => item === item2, props.alignCommonPosAttrs) === -1
-                ),
-                List.map(([item, _]) => item)
-            );
-        };
-
         return (
             <S.ConcordanceView>
-                {props.alignAttrsMismatchModalVisible ?
-                    <AttrMismatchModal attrs={alignNonMatchingAttrs()}  /> : null}
                 {props.syntaxViewVisible ?
                     <SyntaxViewPane onCloseClick={handleSyntaxBoxClose} /> : null}
                 {props.kwicDetailVisible ?
