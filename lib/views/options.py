@@ -72,7 +72,7 @@ def _set_new_viewopts(
         raise ValueError('invalid value for pqueryitemsperpage')
     amodel.args.pqueryitemsperpage = pqueryitemsperpage
     amodel.args.rich_query_editor = rich_query_editor
-    if ref_max_width <= 0:
+    if ref_max_width < 0:
         raise ValueError('invalid value for ref_max_width')
     amodel.args.ref_max_width = ref_max_width
     if subcpagesize <= 0:

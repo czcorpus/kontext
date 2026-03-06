@@ -19,8 +19,8 @@
  */
 
 import { ExtractPayload, IFullActionControl, StatefulModel } from 'kombo';
-import { throwError, Observable, interval, Subscription, forkJoin, Subject } from 'rxjs';
-import { tap, map, concatMap, debounceTime } from 'rxjs/operators';
+import { throwError, Observable, interval, Subscription, forkJoin } from 'rxjs';
+import { tap, map, concatMap } from 'rxjs/operators';
 import { List, pipe, HTTP, tuple, Dict, Rx } from 'cnc-tskit';
 import copy from 'copy-to-clipboard';
 import * as ViewOptions from '../../types/viewOptions.js';
@@ -39,6 +39,7 @@ import { Actions as MainMenuActions } from '../mainMenu/actions.js';
 import { Block } from '../freqs/common.js';
 import { highlightConcLineTokens, importLines } from './transform.js';
 import { Actions as AudioPlayerActions } from '../audioPlayer/actions.js';
+import { AlignCommonPosAttrs } from '../../types/kontext.js';
 
 /**
  * HighlightAttrMatch specifies a single global (per page)
@@ -203,9 +204,7 @@ export interface ConcordanceModelState {
 
     mergedCtxAttrs:Array<[string, number]>;
 
-    alignCommonPosAttrs:Array<string>;
-
-    alignAttrsMismatchModalVisible:boolean;
+    alignCommonPosAttrs:AlignCommonPosAttrs;
 
     tokenLinks:Array<{
         [tokenId:string]:{
@@ -247,10 +246,16 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         dispatcher:IFullActionControl,
         saveModel:ConcSaveModel,
         lineViewProps:ViewConfiguration,
-        initialData:Array<ServerLineData>,
+        initialData:Array<ServerLineData>
     ) {
         const viewAttrs = layoutModel.getConcArgs().attrs;
-        const lines = importLines(initialData, viewAttrs.indexOf(lineViewProps.baseViewAttr) - 1, lineViewProps.mergedAttrs, lineViewProps.mergedCtxAttrs);
+        const lines = importLines(
+            initialData,
+            viewAttrs.indexOf(lineViewProps.baseViewAttr) - 1,
+            lineViewProps.mergedAttrs,
+            lineViewProps.mergedCtxAttrs,
+
+        );
         super(
             dispatcher,
             {
@@ -300,14 +305,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 mergedAttrs: lineViewProps.mergedAttrs,
                 mergedCtxAttrs: lineViewProps.mergedAttrs,
                 alignCommonPosAttrs: lineViewProps.alignCommonPosAttrs,
-                alignAttrsMismatchModalVisible: !pipe(
-                    lineViewProps.mergedAttrs,
-                    List.filter(
-                        ([item, _]) => List.findIndex(
-                            item2 => item === item2, lineViewProps.alignCommonPosAttrs) === -1
-                    ),
-                    List.empty()
-                ),
                 tokenLinks: List.map(_ => ({}), lineViewProps.CorporaColumns),
                 textDirectionRTL: layoutModel.getConf<boolean>('TextDirectionRTL'),
                 shareLinkProps:null,
@@ -702,11 +699,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                                     queryChainSize: List.size(resp.query_overview)
                                 }
                             });
-                            this.changeState(
-                                state => {
-                                    this.reevaluateAlignAttrsMismatch(state);
-                                }
-                            )
                         },
                         error: err => {
                             this.layoutModel.showMessage('error', err);
@@ -1107,20 +1099,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addMultiActionHandler(
-            [
-                Actions.CloseAlignAttrsMismatchModal,
-                ViewOptionsActions.UnsetAttributesAndSave
-            ],
-            action => {
-                this.changeState(
-                    state => {
-                        state.alignAttrsMismatchModalVisible = false;
-                    }
-                );
-            }
-        );
-
     }
 
     private highlightTokenLink(
@@ -1161,17 +1139,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                     }
                 }
             )
-        );
-    }
-
-    private reevaluateAlignAttrsMismatch(state:ConcordanceModelState) {
-        state.alignAttrsMismatchModalVisible = !pipe(
-            state.mergedAttrs,
-            List.filter(
-                ([item, _]) => List.findIndex(
-                    item2 => item === item2, state.alignCommonPosAttrs) === -1
-            ),
-            List.empty()
         );
     }
 

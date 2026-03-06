@@ -254,7 +254,7 @@ export class QueryPage {
                     Dict.fromEntries()
                 ),
                 concViewPosAttrs: this.getConf<ConcServerArgs>('currentArgs').attrs,
-                alignCommonPosAttrs: this.getConf<Array<string>>('AlignCommonPosAttrs'),
+                alignCommonPosAttrs: this.getConf<Kontext.AlignCommonPosAttrs>('AlignCommonPosAttrs'),
                 concPreflight: {
                     corpname: this.layoutModel.getCorpusIdent().id,
                     eval_api_url: this.layoutModel.getConf<string>('ConcPreflightApiUrl'),

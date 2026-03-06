@@ -438,7 +438,7 @@ export class ViewPage {
                 Dict.fromEntries()
             ),
             concViewPosAttrs: this.layoutModel.getConf<ConcServerArgs>('currentArgs').attrs,
-            alignCommonPosAttrs: this.layoutModel.getConf<Array<string>>('AlignCommonPosAttrs'),
+            alignCommonPosAttrs: this.layoutModel.getConf<Kontext.AlignCommonPosAttrs>('AlignCommonPosAttrs'),
             concPreflight: this.layoutModel.getConf<Kontext.PreflightConf|null>('concPreflight'),
             bibIdAttr: ttData.bib_id_attr
         };
@@ -1013,7 +1013,7 @@ export class ViewPage {
             ),
             mergedAttrs: this.layoutModel.getConf<Array<[string, number]>>('MergedAttrs'),
             mergedCtxAttrs: this.layoutModel.getConf<Array<[string, number]>>('MergedCtxAttrs'),
-            alignCommonPosAttrs: this.layoutModel.getConf<Array<string>>('AlignCommonPosAttrs'),
+            alignCommonPosAttrs: this.layoutModel.getConf<Kontext.AlignCommonPosAttrs>('AlignCommonPosAttrs'),
             TreatAsSlowQuery: treatAsSlow,
             AltCorpus: altCorpus,
         };

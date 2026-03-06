@@ -74,6 +74,17 @@ export function structsAndAttrsToStructAttrList(structsAndAttrs: StructsAndAttrs
     )
 }
 
+export type AttrAvailability = Array<[string, boolean]>;
+
+/**
+ * AlignCommonPosAttrs specifies which positional attributes are present
+ * in which corpora if we consider an attribute union across all the active
+ * (aligned) corpora.
+ */
+export interface AlignCommonPosAttrs {
+    [corpname:string]:AttrAvailability;
+}
+
 export type ResponseFormat = 'plain'|'json'|'template'|'xml';
 
 export type QuerySupertype = 'conc'|'pquery'|'wlist'|'kwords';

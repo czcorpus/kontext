@@ -139,7 +139,7 @@ export const LineTR = styled.tr`
         width: 2em;
     }
 
-    tr span:not(.ml) .attr {
+    span:not(.ml) .attr {
         font-size: 90%;
         font-weight: bold;
         font-family: ${theme.monospaceFontFamily};
@@ -190,6 +190,29 @@ export const LineTR = styled.tr`
         color: #FFFFFF;
     }
 
+    .lc, .rc, .par {
+
+        .coll {
+            font-style: italic;
+            font-weight: normal;
+            color: ${theme.colorLogoPink};
+        }
+
+        .tail {
+            padding-left: 0.1em;
+            color: ${theme.colorLightText};
+        }
+    }
+
+    .par .col0 {
+        font-style: normal;
+        font-weight: bold;
+
+        .tail {
+            color: ${theme.colorDefaultText};
+        }
+    }
+
     .lc {
         text-align: right;
         white-space: nowrap;
@@ -207,25 +230,22 @@ export const LineTR = styled.tr`
     .kw {
         text-align: center;
         white-space: nowrap;
-    }
 
-    .coll {
-        color: ${theme.colorLogoPink};
-        cursor: pointer;
-    }
+        .coll {
+            color: ${theme.colorLogoPink};
+            cursor: pointer;
+        }
 
-    em.coll {
-        cursor: text;
+        .tail {
+            color: ${theme.colorDefaultText};
+            padding-left: 0.1em;
+        }
     }
 
     .col0 {
         font-weight: bold;
     }
 
-    i.coll {
-        font-style: italic;
-        font-weight: normal;
-    }
 
     .strc {
         color: green;
@@ -285,11 +305,13 @@ export const LineTR = styled.tr`
         background-color: RGBA(138, 195, 218, 0.6);
     }
 
-    td.lc > span.ml, td.rc > span.ml, td.kw > strong.ml, td > em.ml, td.par > span > span.ml, td.par > span > strong.ml {
+    // attributes on a separate line
+
+    td.lc > span.ml, td.rc > span.ml, td > em.ml, td.par > span > span.ml {
         display: inline-flex;
         flex-direction: column;
         justify-content: start;
-        text-align: center;
+        text-align: left;
 
         span.tail {
             color: ${theme.colorLightText};

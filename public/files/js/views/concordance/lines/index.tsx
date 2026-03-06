@@ -312,14 +312,14 @@ export function init({dispatcher, he, lineModel, lineSelectionModel, audioPlayer
                                 alt={he.translate('global__warning_icon')}
                                 title={props.data.description.map(v => he.translate(v)).join('\n')}/> : null}
                         {renderTokens(props.corpname, props.lineIdx, props.data.token, props.dehighlightHandler)}
+                        {props.data.displayPosAttrs.length > 0 ?
+                            <span className="tail attr">
+                                {props.viewMode !== ViewOptions.AttrViewMode.VISIBLE_MULTILINE ? ATTR_SEPARATOR : ''}
+                                {props.data.displayPosAttrs.join(ATTR_SEPARATOR) || '\u00a0'}
+                            </span> :
+                            null
+                        }
                     </span>
-                    {props.data.displayPosAttrs.length > 0 ?
-                        <span className="tail attr">
-                            {props.viewMode !== ViewOptions.AttrViewMode.VISIBLE_MULTILINE ? ATTR_SEPARATOR : ''}
-                            {props.data.displayPosAttrs.join(ATTR_SEPARATOR) || '\u00a0'}
-                        </span> :
-                        null
-                    }
                 </>
             );
         }
