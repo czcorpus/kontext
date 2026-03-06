@@ -450,7 +450,7 @@ export const AuxColumnSwitcher = styled.span`
 
 export const ConcHints = styled(theme.UIHints)`
     margin-top: 0.7em;
-    margin-bottom: 0.2em;
+    margin-bottom: 0.4em;
     padding: 0;
     display: flex;
     justify-content: center;

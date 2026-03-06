@@ -249,12 +249,12 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         initialData:Array<ServerLineData>
     ) {
         const viewAttrs = layoutModel.getConcArgs().attrs;
-        console.log('.>> lineViewProps >>> ', lineViewProps)
         const lines = importLines(
             initialData,
             viewAttrs.indexOf(lineViewProps.baseViewAttr) - 1,
             lineViewProps.mergedAttrs,
-            lineViewProps.mergedCtxAttrs
+            lineViewProps.mergedCtxAttrs,
+
         );
         super(
             dispatcher,

@@ -22,7 +22,7 @@ import { Dict, List, pipe } from 'cnc-tskit';
 import { HighlightWords, KWICSection, Line, PosAttrRole, ServerLineData, ServerTextChunk, TextChunk, Token } from './common.js';
 import { ConclineSectionOps } from './line.js';
 import { defaultBgHighlighted } from '../../views/theme/default/index.js';
-import { AlignCommonPosAttrs, AttrAvailability } from 'js/types/kontext.js';
+import { AlignCommonPosAttrs, AttrAvailability } from '../../types/kontext.js';
 
 
 /**
@@ -38,15 +38,13 @@ function importTextChunk(
     tokenId:number,
     linkId:string,
     startWlIdx:number,
-    roles:Array<[string, number]>,
-    attrAvail:AttrAvailability
+    roles:Array<[string, number]>
 ):TextChunk {
 
     const posattrs = roles.length === 2 ?
         // for single additional attribute all posattr parts are in fact one attr
         [(item.posattrs || []).join('/')] :
         item.posattrs || [];
-    console.log('chunk >>> ', item)
     // there can be tokens containing `/` like `km/h`
     // and stock version of Manatee-open also uses `/` as separator of attrs
     // in this case there will be more items in `item.possattrs` after splitting the attr string
@@ -150,12 +148,10 @@ export function importLines(
     mainAttrIdx:number,
     merged_attrs:Array<[string, number]>,
     merged_ctxattrs:Array<[string, number]>,
-    alignCommonPosAttrs:AlignCommonPosAttrs
 ):Array<Line> {
 
     return List.reduce<ServerLineData, Array<Line>>(
         (acc, item:ServerLineData, lineIdx:number) => {
-            console.log('>>>> item >>> ', item)
             let line:Array<KWICSection> = [];
             let wlIdx = 0;
             const {leftText} = List.reduce<
