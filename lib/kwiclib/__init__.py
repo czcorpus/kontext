@@ -499,10 +499,10 @@ class Kwic:
                 full_list = []
                 for attr, avail in self.all_corp_merged_posattrs[corpname][1:]:
                     if avail:
-                        full_list.append(tmp[curr_attr_idx])
+                        full_list.append(tmp[curr_attr_idx] if tmp[curr_attr_idx] else '-')
                         curr_attr_idx += 1
                     else:
-                        full_list.append('--')
+                        full_list.append('-')
                 prev['posattrs'] = full_list
             elif has_no_attrs:
                 item["posattrs"] = [
