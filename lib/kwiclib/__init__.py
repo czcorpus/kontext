@@ -216,7 +216,7 @@ class Kwic:
     def __init__(self, corpus: AbstractKCorpus, conc: KConc, all_corp_merged_posattrs: Dict[str, List[Tuple[str, bool]]]):
         self.corpus = corpus
         self.conc = conc
-        self.al_corp_merged_posattrs = all_corp_merged_posattrs
+        self.all_corp_merged_posattrs = all_corp_merged_posattrs
 
     def kwicpage(self, args: KwicPageArgs) -> KwicPageData:
         """
@@ -229,8 +229,8 @@ class Kwic:
         KwicPageData converted into a dict
         """
         attrs = args.attrs.split(',')
-        for corpname, avail in self.al_corp_merged_posattrs.items():
-            self.al_corp_merged_posattrs[corpname] = [x for x in avail if x[0] in attrs]
+        for corpname, avail in self.all_corp_merged_posattrs.items():
+            self.all_corp_merged_posattrs[corpname] = [x for x in avail if x[0] in attrs]
         args.refs = getattr(args, 'refs', '').replace('.MAP_OUP', '')  # to be removed ...
         try:
             fromp = int(args.fromp)
@@ -482,6 +482,13 @@ class Kwic:
     def postproc_text_chunk(self, tokens, corpname):
         prev = {}
         ans = []
+        # This is mostly because of parallel corpora with different postattrs sets.
+        # In such case, it can happen that one corpus has no other attributes avail. besides
+        # the 'word' - then Manatee skips the chunk with 'class==attr' and we have to
+        # insert it manually to keep all the tokens structurally same.
+        has_no_attrs = (
+            len([x for x in self.all_corp_merged_posattrs[corpname][1:] if x[1]]) == 0
+        )
         for item in tokens:
             if item.get('class') == 'attr':
                 # there is always one leading `attr_delimiter`
@@ -490,13 +497,18 @@ class Kwic:
                 tmp = item['str'][1:].split(attr_delimiter)
                 curr_attr_idx = 0
                 full_list = []
-                for attr, avail in self.al_corp_merged_posattrs[corpname][1:]:
+                for attr, avail in self.all_corp_merged_posattrs[corpname][1:]:
                     if avail:
                         full_list.append(tmp[curr_attr_idx])
                         curr_attr_idx += 1
                     else:
                         full_list.append('--')
                 prev['posattrs'] = full_list
+            elif has_no_attrs:
+                item["posattrs"] = [
+                    "--" for _ in self.all_corp_merged_posattrs[corpname][1:]
+                ]
+                ans.append(item)
             else:
                 ans.append(item)
             prev = item
