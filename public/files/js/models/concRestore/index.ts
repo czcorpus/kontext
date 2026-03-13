@@ -30,6 +30,7 @@ export interface ConcRestoreModelState {
     nextAction:string;
     nextActionArgs:{[k:string]:string|number|Array<string>|Array<number>};
     nextActionLink:string|undefined;
+    isSlowQUery:boolean;
 }
 
 

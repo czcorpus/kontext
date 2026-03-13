@@ -22,6 +22,7 @@ import * as React from 'react';
 import { IActionDispatcher, Bound } from 'kombo';
 import * as Kontext from '../../types/kontext.js';
 import { ConcRestoreModel, ConcRestoreModelState } from '../../models/concRestore/index.js';
+import { WaitingForConc as S_WaitingForConc } from '../../views/concordance/main/style.js';
 import * as S from './style.js';
 
 
@@ -33,8 +34,29 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         <S.ConcRestore>
             {props.isBusy ?
                 <>
-                    <layoutViews.AjaxLoaderImage />
                     <p>{he.translate('concRestore__please_wait_msg')}</p>
+                    {props.isSlowQUery ?
+                        <S_WaitingForConc>
+                            <div className="cqlizer-note">
+                                <div className="messages">
+                                    <div className="icon">
+                                        <img src={he.createStaticUrl('img/hourglass.svg')} />
+                                        <span className="excl">!</span>
+                                    </div>
+                                    <p>
+                                        <span>
+                                            {he.translateRich('concview__this_is_a_possibly_slow_query',
+                                                {strong: (chunks) => <strong key="chunks">{chunks}</strong>}
+                                            )}
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+                        </S_WaitingForConc> :
+                        <>
+                            <layoutViews.AjaxLoaderImage />
+                        </>
+                    }
                 </> :
                 <div>
                     <p>{he.translate('concRestore__conc_ready')}</p>
