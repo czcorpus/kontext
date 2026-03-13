@@ -47,6 +47,7 @@ class ConcRestorePage {
                     concPersistenceId: this.layoutModel.getConf<string>('concPersistenceOpId'),
                     nextAction: this.layoutModel.getConf<string>('NextAction'),
                     nextActionArgs: this.layoutModel.getConf<{[k:string]:string|number}>('NextActionArgs'),
+                    isSlowQUery: this.layoutModel.getConf<boolean>('TreatAsSlowQuery'),
                     nextActionLink: undefined
                 },
                 this.layoutModel

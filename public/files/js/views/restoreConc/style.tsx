@@ -26,9 +26,14 @@ import * as theme from '../theme/default/index.js';
 
 export const ConcRestore = styled.div`
 
-    text-align: center;
-    font-size: 120%;
-    max-width: 80em;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    p {
+        font-size: 1.5em;
+    }
 
     a.result-link {
         overflow-wrap: break-word;

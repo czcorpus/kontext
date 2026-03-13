@@ -609,7 +609,7 @@
         "concview__attr_sel_mismatch_desc": "Následující vybrané poziční atributy nejsou definovány ve všech zarovnaných korpusech, což může vést k problémům při prezentaci dat",
         "concview__attr_sel_mismatch_question": "Odstranit problémové atributy a zobrazit stránku znovu?",
         "concview__this_is_a_possibly_slow_query": "Zpracování tohoto typu dotazu může na takto velkém korpusu <strong>trvat dlouho.</strong>",
-        "concview__altcorp_suggested_{alt_corpus}": "Pro rychlejší získání výsledků zkuste použít <strong>{alt_corpus}<strong>, který má podobná data a menší velikost.",
+        "concview__altcorp_suggested_{alt_corpus}": "Pro rychlejší získání výsledků zkuste použít <strong>{alt_corpus}</strong>, který má podobná data a menší velikost.",
         "concview__non_uniq_kwic_warn": "<p>Konkordance obsahuje neunikátní KWICy z hlediska čísla prvního tokenu. K tomu typicky dojde při tzv. vnořené shodě, kdy dotazu vyhovují sekvence překrývajících se posloupností slov (např. na dotaz <code>[tag=\"D.*\"]+</code>` vs. text <strong>velmi velmi pěkné</strong>).</p><p>Tento fakt se při manuálním výběru řádků projeví tak, že označením jednoho KWICu se automaticky označí jeho duplicity. U neparalelních korpusů je možno tento problém řešit filtrem <strong>odstranit vnořené shody</strong>. U paralelních korpusů bohužel tato funkce není k dispozici.</p>",
         "concview__non_uniq_kwic_label": "duplicitní začátky KWICů",
         "concview__aux_column_width": "Šířka levého sloupce",

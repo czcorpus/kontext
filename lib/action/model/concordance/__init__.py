@@ -77,6 +77,14 @@ class ConcActionModel(CorpusActionModel):
             self._plugin_ctx = ConcPluginCtx(self, self._req, self._resp, self._plg_shared)
         return self._plugin_ctx
 
+    def get_from_active_q_data(self, prop: str, dflt: Any = None) -> Optional[Any]:
+        """
+        Obtain a form entry or additional metadata from the current (latest) operation.
+        """
+        if not self._active_q_data:
+            return dflt
+        return self._active_q_data.get(prop, dflt)
+
     async def _restore_prev_query_params(self, form):
         loaded = await super()._restore_prev_query_params(form)
         if loaded:

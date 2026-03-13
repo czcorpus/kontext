@@ -171,7 +171,7 @@ async def query_submit(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         conc = await get_conc(
             corp=amodel.corp, user_id=amodel.session_get('user', 'id'), q=amodel.args.q,
             fromp=amodel.args.fromp, pagesize=amodel.args.pagesize, asnc=qinfo.data.asnc,
-            cutoff=qinfo.data.cutoff)
+            cutoff=qinfo.data.cutoff, handle_as_slow_query=qinfo.data.treat_as_slow_query)
         ans['size'] = conc.size()
         ans['finished'] = conc.finished()
         amodel.on_query_store(store_last_op)
@@ -280,10 +280,12 @@ async def view_conc(
 
     conc = InitialConc(amodel.corp, None)
     try:
+        lastop_form = amodel.get_from_active_q_data('lastop_form', {})
+        treat_as_slow = lastop_form.get('treat_as_slow_query')
         conc = await get_conc(
             corp=amodel.corp, user_id=user_id, q=amodel.args.q,
             fromp=amodel.args.fromp, pagesize=amodel.args.pagesize, asnc=asnc,
-            cutoff=amodel.args.cutoff)
+            cutoff=amodel.args.cutoff, handle_as_slow_query=treat_as_slow)
         if conc:
             amodel.apply_linegroups(conc)
             conc.switch_aligned(os.path.basename(amodel.args.corpname))
@@ -456,11 +458,14 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     out = amodel.create_empty_conc_result_dict()
     out['result_shuffled'] = not conclib.conc_is_sorted(amodel.args.q)
     out['items_per_page'] = amodel.args.pagesize
+    lastop_form = amodel.get_from_active_q_data('lastop_form', {})
+    treat_as_slow = lastop_form.get('treat_as_slow_query', False)
+    out['treat_as_slow_query'] = treat_as_slow
     try:
         conc = await get_conc(
             corp=amodel.corp, user_id=amodel.session_get('user', 'id'), q=amodel.args.q,
             fromp=amodel.args.fromp, pagesize=amodel.args.pagesize, asnc=True,
-            cutoff=amodel.args.cutoff)
+            cutoff=amodel.args.cutoff, handle_as_slow_query=treat_as_slow)
         if conc:
             amodel.apply_linegroups(conc)
             conc.switch_aligned(os.path.basename(amodel.args.corpname))
