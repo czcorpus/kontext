@@ -58,6 +58,9 @@ class GetLang(AbstractGetLang):
             ans[c].append(item)
         return ans
 
+    def get_fallback_language(self):
+        return self.fallback_lang
+
     def fetch_current_language(self, source):
         """
         Returns currently selected language
