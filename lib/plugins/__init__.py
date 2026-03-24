@@ -163,6 +163,7 @@ class _ID(Generic[T]):
 
 
 class _Names(object):
+    GETLANG: _ID[AbstractGetLang] = _ID('getlang')
     DB: _ID[KeyValueStorage] = _ID('db')
     INTEGRATION_DB: _ID[IntegrationDatabase] = _ID('integration_db')
     SETTINGS_STORAGE: _ID[AbstractSettingsStorage] = _ID('settings_storage')
@@ -177,7 +178,6 @@ class _Names(object):
     CORPARCH: _ID[AbstractCorporaArchive] = _ID('corparch')
     SUBC_STORAGE: _ID[AbstractSubcArchive] = _ID('subc_storage')
 
-    GETLANG: _ID[AbstractGetLang] = _ID('getlang', optional=True)
     QUERY_HISTORY: _ID[AbstractQueryHistory] = _ID('query_history', optional=True)
     APPLICATION_BAR: _ID[AbstractApplicationBar] = _ID('application_bar', optional=True)
     FOOTER_BAR: _ID[AbstractFootbar] = _ID('footer_bar', optional=True)
@@ -199,11 +199,15 @@ class _Names(object):
         """
         this iterator defines an order in which plug-ins are initialized. Please note that this
         determines possible dependencies between plug-ins when using @inject.
+
+        In case there is a need to change the order or add/remove items, make sure there are
+        no cyclic (e.g. A needs B, B needs C, C needs A) or flipped (e.g. A needs B, but A goes before B)
+        dependencies. In general - simplest and most needed plug-ins should go first.
         """
         return iter([
-            self.DB, self.INTEGRATION_DB, self.SETTINGS_STORAGE, self.AUTH,
+            self.GETLANG, self.DB, self.INTEGRATION_DB, self.SETTINGS_STORAGE, self.AUTH,
             self.QUERY_PERSISTENCE, self.CONC_CACHE, self.EXPORT, self.EXPORT_FREQ2D, self.USER_ITEMS,
-            self.MENU_ITEMS, self.AUDIO_PROVIDER, self.GETLANG, self.CORPARCH, self.SUBC_STORAGE, self.QUERY_HISTORY,
+            self.MENU_ITEMS, self.AUDIO_PROVIDER, self.CORPARCH, self.SUBC_STORAGE, self.QUERY_HISTORY,
             self.APPLICATION_BAR, self.FOOTER_BAR, self.LIVE_ATTRIBUTES, self.TAGHELPER,
             self.SYNTAX_VIEWER, self.SUBCMIXER, self.CHART_EXPORT, self.ISSUE_REPORTING, self.TOKEN_CONNECT,
             self.KWIC_CONNECT, self.TOKENS_LINKING, self.DISPATCH_HOOK, self.QUERY_SUGGEST, self.ACTION_LOG, self.BACKLINKS])

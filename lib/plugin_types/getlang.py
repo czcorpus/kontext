@@ -27,7 +27,7 @@ class AbstractGetLang(abc.ABC):
     """
     This plug-in customizes a way how KonText finds out what language user
     wants for the user interface. E.g. data from cookies/session/local storage can
-    be used for this but it is up to this plug-in how to process it.
+    be used for this, but it is up to this plug-in how to process it.
     """
 
     @abc.abstractmethod
@@ -42,6 +42,9 @@ class AbstractGetLang(abc.ABC):
         underscore-separated ISO 639 language code and ISO 3166 country code
         of the detected language or None in case no value was found
         """
+
+    def get_fallback_language(self) -> str:
+        return 'en_US'
 
     def allow_default_lang_switch_ui(self) -> bool:
         """
