@@ -325,7 +325,9 @@ class Kwic:
                     self.kwiclines(args.copy(leftctx='0', rightctx='0',
                                              attrs='word', ctxattrs=''), al_corpname)
                 )
-
+        # now we reset the main corpus so the provider of the "self.conc" instance
+        # is not confused by a hidden state change.
+        self.conc.switch_aligned(self.conc.orig_corp.get_conffile())
         # It appears that Manatee returns lists of different lengths in case some translations
         # are missing at the end of a concordance. Following block fixes this issue.
         al_lines_fixed = [fix_length(item, len(result.Lines)) for item in al_lines]
