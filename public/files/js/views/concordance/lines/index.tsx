@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { IActionDispatcher, BoundWithProps, ExtractPayload } from 'kombo';
+import { IActionDispatcher, ExtractPayload, BoundWithProps } from 'kombo';
 import { Color, List, pipe, tuple } from 'cnc-tskit';
 
 import * as Kontext from '../../../types/kontext.js';
@@ -30,7 +30,6 @@ import { LineSelectionModel, LineSelectionModelState }
     from '../../../models/concordance/lineSelection/index.js';
 import { ConcDetailModel } from '../../../models/concordance/detail.js';
 import { Actions } from '../../../models/concordance/actions.js';
-import { Actions as MainMenuActions } from '../../../models/mainMenu/actions.js';
 import {
     KWICSection, LineSelectionModes, TextChunk,
     Line as ConcLine,
