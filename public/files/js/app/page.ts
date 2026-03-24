@@ -22,8 +22,8 @@ import * as React from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import { ITranslator, IFullActionControl, StatelessModel } from 'kombo';
 import { catchError, map, tap } from 'rxjs/operators';
-import { Observable, Subject, of as rxOf } from 'rxjs';
-import { List, HTTP, tuple, pipe, URL as CURL } from 'cnc-tskit';
+import { Observable, of as rxOf } from 'rxjs';
+import { List, HTTP, pipe, URL as CURL } from 'cnc-tskit';
 
 import * as PluginInterfaces from '../types/plugins/index.js';
 import * as Kontext from '../types/kontext.js';

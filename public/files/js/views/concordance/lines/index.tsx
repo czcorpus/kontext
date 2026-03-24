@@ -19,18 +19,17 @@
  */
 
 import * as React from 'react';
-import { IActionDispatcher, BoundWithProps, ExtractPayload, useModel } from 'kombo';
+import { IActionDispatcher, ExtractPayload, useModel } from 'kombo';
 import { Color, List, pipe, tuple } from 'cnc-tskit';
 
 import * as Kontext from '../../../types/kontext.js';
 import * as ViewOptions from '../../../types/viewOptions.js';
 import { init as lineExtrasViewsInit, RefsClickHandler } from '../lineExtras/index.js';
-import { ConcordanceModel, ConcordanceModelState } from '../../../models/concordance/main.js';
-import { LineSelectionModel, LineSelectionModelState }
+import { ConcordanceModel } from '../../../models/concordance/main.js';
+import { LineSelectionModel }
     from '../../../models/concordance/lineSelection/index.js';
 import { ConcDetailModel } from '../../../models/concordance/detail.js';
 import { Actions } from '../../../models/concordance/actions.js';
-import { Actions as MainMenuActions } from '../../../models/mainMenu/actions.js';
 import {
     KWICSection, LineSelectionModes, TextChunk,
     Line as ConcLine,
@@ -40,7 +39,6 @@ import * as S from './style.js';
 import { SentenceToken } from '../../../types/plugins/syntaxViewer.js';
 import { Actions as TokensLinkingActions } from '../../../types/plugins/tokensLinking.js';
 import { AudioPlayerModel } from '../../../models/audioPlayer/model.js';
-import { Line } from 'recharts';
 
 
 export interface LinesModuleArgs {
