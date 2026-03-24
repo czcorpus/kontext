@@ -24,7 +24,6 @@ from typing import Any, Callable, Dict, List, Optional, Set, Union
 
 import conclib
 import corplib
-from bgcalc.task import AsyncTaskStatus
 import bgcalc
 import mailing
 import plugins
@@ -44,8 +43,7 @@ from action.argmapping.conc.other import (
 from action.argmapping.conc.sort import SortFormArgs
 from action.control import http_action
 from action.errors import (
-    ImmediateRedirectException, NotFoundException, UnavailableForLegalReasons,
-    UserReadableException)
+    ImmediateRedirectException, NotFoundException, UserReadableException)
 from action.krequest import KRequest
 from action.model.base import BaseActionModel
 from action.model.concordance import ConcActionModel
@@ -1314,7 +1312,6 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
                         amodel.plugin_ctx,
                         corpus_info.tokens_linking.providers,
                         [amodel.args.corpname] + amodel.args.align)
-
                 data = kwic.kwicpage(kwic_args)
 
                 maxcontext = int(amodel.corp.get_conf('MAXCONTEXT'))
