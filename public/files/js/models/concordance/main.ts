@@ -492,10 +492,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                                 }
                             });
                         }
-                        this.emitChange();
                     },
                     error: (err) => {
-                        this.emitChange();
                         this.layoutModel.showMessage('error', err);
                     }
                 });
@@ -525,7 +523,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                                 queryChainSize: List.size(resp.query_overview)
                             }
                         });
-                        this.emitChange();
                     },
                     error: (err) => {
                         this.layoutModel.showMessage('error', err);
@@ -557,11 +554,9 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         this.changePage('customPage', 1).subscribe({
                             next: () => {
                                 this.busyTimer = this.stopBusyTimer(this.busyTimer);
-                                this.emitChange();
                             },
                             error: (err) => {
                                 this.busyTimer = this.stopBusyTimer(this.busyTimer);
-                                this.emitChange();
                                 this.layoutModel.showMessage('error', err);
                             }
                         });
@@ -578,7 +573,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         );
                     }
                 }
-                this.emitChange();
             }
         );
 
@@ -598,13 +592,13 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             Actions.ChangeLangVisibility,
             action => {
                 this.changeColVisibility(action.payload.corpusId, action.payload.value);
-                this.emitChange();
             }
         );
 
         this.addActionHandler(
             Actions.SwitchKwicSentMode,
             action => {
+                const scrollY = window.scrollY;
                 this.waitForAction({}, (action, syncData) => {
                     return Actions.isPublishStoredLineSelections(action) ?
                         null : syncData;
@@ -619,13 +613,9 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         }
                     )
                 ).subscribe({
-                    next: () => {
-                        this.emitChange();
-                    },
                     error: (err) => {
                         console.error(err);
                         this.layoutModel.showMessage('error', err);
-                        this.emitChange();
                     },
                     complete: () => {
                         Dict.forEach(
@@ -634,6 +624,9 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                             },
                             this.state.highlightWordsStore
                         );
+                        this.changeState(state => {
+                            state.forceScroll = scrollY;
+                        });
                     }
                 });
             }
@@ -703,7 +696,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                                     queryChainSize: List.size(resp.query_overview),
                                 }
                             });
-                            this.emitChange();
                         },
                         error: (err) => {
                             this.layoutModel.showMessage('error', err);
