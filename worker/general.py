@@ -51,6 +51,7 @@ if settings.get('global', 'manatee_path', None):
 import manatee
 
 os.environ['MANATEE_REGISTRY'] = settings.get('corpora', 'manatee_registry')
+initializer.init_plugin('getlang')
 initializer.init_plugin('db')
 initializer.init_plugin('integration_db')
 initializer.init_plugin('auth')
