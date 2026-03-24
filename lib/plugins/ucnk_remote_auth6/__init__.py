@@ -49,6 +49,7 @@ from plugin_types.auth import (
     AbstractRemoteAuth, CorpusAccess, GetUserInfo, UserInfo)
 from plugin_types.corparch.backend import DatabaseBackend
 from plugin_types.integration_db import IntegrationDatabase
+from plugin_types.getlang import AbstractGetLang
 from plugins import inject
 from plugins.ucnk_remote_auth6.backend import UCNKBackend
 
@@ -90,7 +91,7 @@ class CentralAuth(AbstractRemoteAuth):
     A custom authentication class for the Department of Linguistics
     """
 
-    def __init__(self, db: DatabaseBackend, auth_conf: AuthConf):
+    def __init__(self, db: DatabaseBackend, auth_conf: AuthConf, fallback_lang: str):
         """
         arguments:
         db -- a key-value storage plug-in
@@ -99,6 +100,7 @@ class CentralAuth(AbstractRemoteAuth):
         super().__init__(auth_conf.anonymous_user_id)
         self._db = db
         self._auth_conf = auth_conf
+        self._fallback_lang = fallback_lang.split('_')[0] if fallback_lang else 'en'
         try:
             if self._auth_conf.unverified_ssl_cert:
                 self._ssl_context = ssl._create_unverified_context() if self._toolbar_uses_ssl else None
@@ -151,7 +153,7 @@ class CentralAuth(AbstractRemoteAuth):
         cookie_sid = plugin_ctx.cookies.get(self._auth_conf.cookie_sid, '')
         cookie_at = plugin_ctx.cookies.get(self._auth_conf.cookie_at, '')
         cookie_rmme = plugin_ctx.cookies.get(self._auth_conf.cookie_rmme, '0')
-        cookie_lang = plugin_ctx.cookies.get(self._auth_conf.cookie_lang, 'en')
+        cookie_lang = plugin_ctx.cookies.get(self._auth_conf.cookie_lang, self._fallback_lang)
         api_args = [
             ('sid', cookie_sid),
             ('at', cookie_at),
@@ -232,8 +234,8 @@ class CentralAuth(AbstractRemoteAuth):
         return self._auth_conf.logout_url % (urllib.parse.quote(return_url) if return_url is not None else '')
 
 
-@inject(plugins.runtime.INTEGRATION_DB)
-def create_instance(conf, cnc_db: IntegrationDatabase):
+@inject(plugins.runtime.INTEGRATION_DB, plugins.runtime.GETLANG)
+def create_instance(conf, cnc_db: IntegrationDatabase, getlang: AbstractGetLang):
     logging.getLogger(__name__).info(f'ucnk_remote_auth6 uses integration_db[{cnc_db.info}]')
     backend = UCNKBackend(
         cnc_db, user_table='user', user_group_acc_attr='corplist', corp_table='corpora', corp_id_attr='id',
@@ -242,4 +244,4 @@ def create_instance(conf, cnc_db: IntegrationDatabase):
         group_pc_acc_table='corplist_parallel_corpus', group_pc_acc_pc_attr='parallel_corpus_id',
         group_pc_acc_group_attr='corplist_id', user_pc_acc_table='user_parallel_corpus',
         user_pc_acc_pc_attr='parallel_corpus_id', enable_parallel_acc=True)
-    return CentralAuth(db=backend, auth_conf=AuthConf.from_conf(conf))
+    return CentralAuth(db=backend, auth_conf=AuthConf.from_conf(conf), fallback_lang=getlang.get_fallback_language())
