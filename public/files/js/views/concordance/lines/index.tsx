@@ -898,7 +898,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel, audioPlayer
                 tokenLength,
                 tokenRanges: {},
                 lineId,
-                scrollY: window.scrollY
             }
             List.forEach(
                 (lang, langId) => {
@@ -922,9 +921,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel, audioPlayer
             return groupId ? [groupId.bgColor, groupId.fgColor] : [undefined, undefined];
         };
 
-        if (props.forceScroll) {
-            window.scrollTo(null, props.forceScroll);
-        }
         return (<>
             {List.map(
                 (line, i) => {

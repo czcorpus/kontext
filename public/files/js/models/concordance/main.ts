@@ -192,8 +192,6 @@ export interface ConcordanceModelState {
 
     syntaxViewVisible:boolean;
 
-    forceScroll:number|null;
-
     mergedAttrs:Array<[string, number]>;
 
     mergedCtxAttrs:Array<[string, number]>;
@@ -285,7 +283,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 refDetailVisible: false,
                 lineSelOptionsVisible: false,
                 syntaxViewVisible: false,
-                forceScroll: null,
                 mergedAttrs: lineViewProps.mergedAttrs,
                 mergedCtxAttrs: lineViewProps.mergedAttrs,
                 alignCommonPosAttrs: lineViewProps.alignCommonPosAttrs,
@@ -382,7 +379,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         this.hideAudioPlayer(state);
                     }
                     state.playerAttachedLinks = action.payload.linkIds;
-                    state.forceScroll = window.scrollY;
                 });
                 const playChunks = this.findChunks(this.state, ...action.payload.linkIds);
                 if (!List.empty(playChunks)) {
@@ -417,7 +413,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                     case 'play':
                         if (action.payload.activePlayerId === ConcordanceModel.AUDIO_PLAYER_ID) {
                             this.changeState(state => {
-                                state.forceScroll = window.scrollY;
                                 this.showAudioPlayer(state);
                             });
                         }
@@ -426,7 +421,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                     case 'error':
                         if (action.payload.activePlayerId !== ConcordanceModel.AUDIO_PLAYER_ID) {
                             this.changeState(state => {
-                                state.forceScroll = window.scrollY;
                                 this.hideAudioPlayer(state)
                             });
                         }
@@ -598,7 +592,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         this.addActionHandler(
             Actions.SwitchKwicSentMode,
             action => {
-                const scrollY = window.scrollY;
                 this.waitForAction({}, (action, syncData) => {
                     return Actions.isPublishStoredLineSelections(action) ?
                         null : syncData;
@@ -624,9 +617,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                             },
                             this.state.highlightWordsStore
                         );
-                        this.changeState(state => {
-                            state.forceScroll = scrollY;
-                        });
                     }
                 });
             }
@@ -713,19 +703,9 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         );
 
         this.addActionHandler(
-            Actions.SetLineSelectionMode,
-            action => {
-                this.changeState(state => {
-                    state.forceScroll = null;
-                });
-            }
-        );
-
-        this.addActionHandler(
             Actions.LineSelectionReset,
             action => {
                 this.changeState(state => {
-                    state.forceScroll = window.scrollY;
                     state.lines = List.map(
                         v => ({...v, lineGroup: undefined}),
                         state.lines
@@ -740,7 +720,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             action => {
                 if (!action.error) {
                     this.changeState(state => {
-                        state.forceScroll = window.scrollY;
                         state.numItemsInLockedGroups = 0;
                         state.lineGroupIds = [];
                         state.lineSelOptionsVisible = false;
@@ -756,7 +735,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             ],
             action => {
                 this.changeState(state => {
-                    state.forceScroll = window.scrollY;
                     state.saveFormVisible = action.name === MainMenuActions.ShowSaveForm.name
                 });
             }
@@ -768,7 +746,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 this.changeState(state => {
                     state.kwicDetailVisible = true;
                     state.refDetailVisible = false;
-                    state.forceScroll = window.scrollY;
                     this.setLineFocus(state, action.payload.lineIdx, true);
                 });
             }
@@ -780,7 +757,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 this.changeState(state => {
                     state.kwicDetailVisible = true;
                     state.refDetailVisible = false;
-                    state.forceScroll = window.scrollY;
                     this.setLineFocus(state, action.payload.lineIdx, true);
                 });
             }
@@ -791,7 +767,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             action => {
                 this.changeState(state => {
                     state.kwicDetailVisible = false;
-                    state.forceScroll = window.scrollY;
                     this.resetLineFocus(state);
                 });
             }
@@ -803,7 +778,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 this.changeState(state => {
                     state.refDetailVisible = true;
                     state.kwicDetailVisible = false;
-                    state.forceScroll = window.scrollY;
                     this.setLineFocus(state, action.payload.lineIdx, true);
                 });
             }
@@ -814,7 +788,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             action => {
                 this.changeState(state => {
                     state.refDetailVisible = false;
-                    state.forceScroll = window.scrollY;
                     this.resetLineFocus(state);
                 });
             }
@@ -824,7 +797,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             Actions.SelectLine,
             action => {
                 this.changeState(state => {
-                    state.forceScroll = window.scrollY;
                     state.lines = List.map(
                         line => ({
                             ...line,
@@ -848,7 +820,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             Actions.ToggleLineSelOptions,
             action => {
                 this.changeState(state => {
-                    state.forceScroll = window.scrollY;
                     state.lineSelOptionsVisible = !state.lineSelOptionsVisible;
                 });
             }
@@ -917,7 +888,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             Actions.HighlightAttrMatch,
             action => {
                 this.changeState(state => {
-                    state.forceScroll = window.scrollY;
                     state.highlightedMatches = mergeHighlightItems(
                         state.highlightedMatches,
                         action.payload.items,
@@ -935,7 +905,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             Actions.HighlightTokens,
             action => {
                 this.changeState(state => {
-                    state.forceScroll = action.payload.scrollY;
                     List.forEach(
                         h => {
                             const corpusIdx = List.findIndex(
@@ -1155,7 +1124,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
 
     private applyLineSelections(data:PublishLineSelectionPayload):void {
         this.changeState(state => {
-            state.forceScroll = window.scrollY;
             state.lines = List.map(
                 line => {
                     const srch = List.find(
@@ -1614,7 +1582,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         state.lines[activeLine] = fakeChangedLine
         const playChunks = this.findChunks(state, ...state.playerAttachedLinks);
         List.last(playChunks).showAudioPlayer = true;
-        state.forceScroll = window.scrollY;
     }
 
     private hideAudioPlayer(state:ConcordanceModelState):void {
@@ -1629,7 +1596,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             throw new Error(`Failed to find playing chunk "${List.last(state.playerAttachedLinks)}"`);
         }
         state.playerAttachedLinks = null;
-        state.forceScroll = window.scrollY;
     }
 
     isUnfinishedCalculation():boolean {
