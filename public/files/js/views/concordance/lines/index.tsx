@@ -1072,7 +1072,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel, audioPlayer
                 tokenLength,
                 tokenRanges: {},
                 lineId,
-                scrollY: window.scrollY
             }
             List.forEach(
                 (lang, langId) => {
@@ -1095,10 +1094,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel, audioPlayer
             const groupId = List.find(v => v.id === id, state.lineGroupIds);
             return groupId ? [groupId.bgColor, groupId.fgColor] : [undefined, undefined];
         };
-
-        if (state.forceScroll) {
-            window.scrollTo(null, state.forceScroll);
-        }
 
 
         return (<>
