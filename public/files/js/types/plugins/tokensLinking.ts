@@ -49,7 +49,6 @@ export class Actions {
         lineId:number;
         clickedTokenId:number;
         data:{[provider:string]:Array<TokenLink>};
-        scrollY:number;
     }> = {
         name: 'TOKENS_LINKING_FETCH_INFO_DONE'
     };

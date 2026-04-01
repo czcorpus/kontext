@@ -87,7 +87,6 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                             altColors: [],
                             isBusy: true
                         }],
-                        scrollY: action.payload.scrollY
                     }
                 );
                 Rx.zippedWith(
@@ -121,7 +120,6 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                                         )
                                     )
                                 ),
-                                scrollY: action.payload.scrollY
                             }
                         );
                     },
@@ -138,7 +136,6 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                                     altColors: [],
                                     isBusy: false
                                 }],
-                                scrollY: action.payload.scrollY
                             }
                         );
                         this.dispatchSideEffect(
@@ -198,7 +195,6 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                                             ConcActions.HighlightTokens,
                                             {
                                                 highlights: normHighlights,
-                                                scrollY: action.payload.scrollY
                                             }
                                         );
 
@@ -216,7 +212,6 @@ export class TokensLinkingModel extends StatefulModel<TokensLinkingState> {
                                                     altColors: [],
                                                     isBusy: false
                                                 }],
-                                                scrollY: action.payload.scrollY
                                             }
                                         );
                                         this.pluginApi.showMessage(

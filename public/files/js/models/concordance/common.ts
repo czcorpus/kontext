@@ -682,7 +682,6 @@ export interface HighlightRequest {
     tokenId:number;
     tokenLength:number;
     tokenRanges:{[corpusId:string]:[number, number]};
-    scrollY:number;
 }
 
 export interface TokenLink {
