@@ -563,7 +563,6 @@ export class Actions {
      */
     static HighlightTokens:Action<{
         highlights:Array<HighlightInfo>;
-        scrollY:number;
     }> = {
         name: 'CONCORDANCE_HIGHLIGHT_TOKENS'
     };
