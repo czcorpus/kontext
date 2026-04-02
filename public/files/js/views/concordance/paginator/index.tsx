@@ -253,7 +253,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
         _modelChangeListener() {
             const state = this._importPaginationInfo();
-            state.loader = false;
+            if (this.state.loader) {
+                window.scrollTo(0, 0);
+            }
             this.setState(state);
         }
 
