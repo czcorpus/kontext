@@ -110,11 +110,18 @@ class ResultWrapper(AbstractResultWrapper[T]):
             while True:
                 await asyncio.sleep(0.5)
                 if self._job.is_finished:
-                    self.result = self._job.result
+                    # Handle both old (job.result) and new (job.return_value()) RQ API
+                    self.result = self._job.return_value() if callable(getattr(self._job, 'return_value', None)) else self._job.result
                     break
                 elif self._job.is_failed:
                     self._job.refresh()
-                    self.result = self._infer_error(self._job.latest_result(), self._job.id)
+                    # Handle both old (job.exc_info) and new (job.latest_result().exc_string) RQ API
+                    latest_result = getattr(self._job, 'latest_result', None)
+                    if callable(latest_result):
+                        exc_info = self._job.latest_result().exc_string
+                    else:
+                        exc_info = self._job.exc_info
+                    self.result = self._infer_error(exc_info, self._job.id)
                     break
                 elif timeout and total_time > timeout:
                     self.result = Exception(f'Task result timeout: {self._job}')
