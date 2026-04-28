@@ -4,34 +4,35 @@
 concurrent_log_handler >= 0.9.20
 python-json-logger >= 2.0.7
 tzdata >= 2023.3
+# PyICU requires system packages pkg-config libicu-dev
 PyICU >= 1.5
 babel >= 2.9.1
 jinja2 >= 3.1.6
 secure-cookie >= 0.1.0
 setuptools ==78.1.1
-sanic >= 24.12.0
-pyJWT >= 2.6.0
+sanic >= 25.12.0
+pyJWT >= 2.12.1
 # please note that lxml package requires the following system packages:
 # libxml2-dev, libxslt-dev, python-dev
 lxml >= 3.4
 Markdown >= 3.4.1
-openpyxl >= 3.0.10
-redis >= 4.3.4
+openpyxl >= 3.1.5
+redis >= 7.4.0
 async_timeout >= 5.0.1
-uvloop >= 0.16.0
-mysql-connector-python >= 9.5.0
+uvloop >= 0.22.1
+mysql-connector-python >= 9.6.0
 aiofiles >= 0.8.0
 aiocsv >= 1.2.2
-aiohttp >= 3.10.2
-dataclasses-json >= 0.5.7
+aiohttp >= 3.13.5
+dataclasses-json >= 0.6.7
 couchdb >= 1.2
-cairosvg >= 2.5.3
+cairosvg >= 2.9.0
 aiosqlite >= 0.17.0  # just for development purposes
 ujson >= 5.3.1
 setproctitle >= 1.2.2
-markupsafe >= 2.1.1
+markupsafe >= 3.0.3
 
 rq-scheduler >= 0.14.0
-rq >= 2.6.0
+rq >= 2.8.0
 
 sox>=1.4.1,<1.5.0 # install failed with sox>=1.5.0, numpy required error message
