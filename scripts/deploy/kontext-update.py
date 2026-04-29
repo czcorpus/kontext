@@ -65,6 +65,8 @@ KONTEXT_CONF_CUSTOM = 'kontextConfCustom'
 TARGET_SYMLINKS = 'targetSymlinks'
 GLOBAL_CONF_PATH = os.environ.get('GLOBAL_CONF_PATH', '/usr/local/etc/kontext-deploy.json')
 KONTEXT_CONF_FILES = ('config.xml', 'main-menu.json', 'tagsets.xml')
+MANATEE_LIB_FILES = ('_manatee.a',  '_manatee.la', '_manatee.so', 'manatee.py')
+MANATEE_LIB_DIR_ENTRY = 'manateeLibDir'
 
 
 class InvalidatedArchiveException(Exception):
@@ -303,6 +305,10 @@ class Configuration(object):
     def target_symlinks(self) -> Dict[str, str]:
         return self._target_symlinks
 
+    @property
+    def manatee_lib_dir(self) -> str:
+        return self._data[MANATEE_LIB_DIR_ENTRY]
+
 
 class ConfigError(Exception):
     pass
@@ -518,6 +524,7 @@ class Deployer(object):
         self.remove_current_deployment()
         self.deploy_new_version(arch_path)
         self.create_custom_symlinks()
+        self.prepare_venv()
 
     def from_archive(self, archive_id: str):
         """
@@ -529,6 +536,33 @@ class Deployer(object):
         self.deploy_new_version(arch_path)
         with open(os.path.join(arch_path, DEPLOY_MESSAGE_FILE), 'rb') as fr:
             print('\nDeployment information:\n{}'.format(fr.read()))
+
+    @description('Creating Python virtual environment, copying Manatee libs')
+    def prepare_venv(self):
+        """
+        Creates a Python virtual environment in the app directory and copies
+        system-installed Manatee library files into it.
+        """
+        venv_path = os.path.join(self._conf.app_dir, 'venv')
+
+        # Create virtual environment
+        self.shell_cmd('python3', '-m', 'venv', venv_path)
+
+        # Determine the site-packages directory in the venv
+        # Find Python version to construct correct path
+        python_dirs = os.listdir(os.path.join(venv_path, 'lib'))
+        python_dir = [d for d in python_dirs if d.startswith('python')][0]
+        venv_site_packages = os.path.join(venv_path, 'lib', python_dir, 'site-packages')
+
+        # Copy Manatee library files from system installation
+        manatee_lib_dir = self._conf.manatee_lib_dir
+        for lib_file in MANATEE_LIB_FILES:
+            src_path = os.path.join(manatee_lib_dir, lib_file)
+            dst_path = os.path.join(venv_site_packages, lib_file)
+            if os.path.exists(src_path):
+                shutil.copy(src_path, dst_path)
+            else:
+                print(f'Warning: Manatee library file {src_path} not found, skipping')
 
 
 def list_archive(conf: Configuration):
