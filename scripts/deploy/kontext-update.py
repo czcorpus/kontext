@@ -564,6 +564,14 @@ class Deployer(object):
             else:
                 print(f'Warning: Manatee library file {src_path} not found, skipping')
 
+        # Install packages from requirements.txt
+        requirements_path = os.path.join(self._conf.working_dir, 'requirements.txt')
+        pip_path = os.path.join(venv_path, 'bin', 'pip')
+        if os.path.exists(requirements_path):
+            self.shell_cmd(pip_path, 'install', '-r', requirements_path)
+        else:
+            print(f'Warning: requirements.txt not found at {requirements_path}, skipping')
+
 
 def list_archive(conf: Configuration):
     """
