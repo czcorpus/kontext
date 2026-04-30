@@ -10,7 +10,6 @@ services:
     volumes:
       - ${FRODO_PATH}:/opt/frodo
       - ./scripts/install/conf/docker/conf.frodo.json:/opt/frodo/conf.docker.json
-      - ./scripts/install/conf/docker/air.frodo.toml:/opt/frodo/.air.toml
       - corpora-data:/var/lib/manatee
 
 volumes:
