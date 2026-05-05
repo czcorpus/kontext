@@ -78,10 +78,15 @@ class AbstractConcExportMixin(object):
 
                 else:
                     # enumerate from 1, merged_attrs[0] corresponds to item['str']
+                    app_attrs = []
                     for i, posattr in enumerate(posattrs, 1):
                         # display only user set attrs, filter out internals
                         if AttrRole.is_role(merged_attrs[i][1], AttrRole.USER):
-                            ans[-1].append(posattr)
+                            app_attrs.append(posattr)
+                    if all(v == '-' for v in app_attrs):
+                        app_attrs = []
+                    ans[-1] += app_attrs
+
 
         return ' '.join('/'.join(x) for x in ans).strip()
 
