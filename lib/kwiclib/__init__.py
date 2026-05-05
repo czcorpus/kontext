@@ -507,7 +507,13 @@ class Kwic:
                         full_list.append('-')
                 prev['posattrs'] = full_list
             elif has_no_attrs:
-                item["posattrs"] = [
+                item['posattrs'] = [
+                    "--" for _ in self.all_corp_merged_posattrs[corpname][1:]
+                ]
+                ans.append(item)
+            elif item.get('class') == 'col0 coll':  # aligned lang without query
+                item['class'] = ''
+                item['posattrs'] = [
                     "--" for _ in self.all_corp_merged_posattrs[corpname][1:]
                 ]
                 ans.append(item)
