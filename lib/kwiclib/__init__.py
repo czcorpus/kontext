@@ -514,7 +514,7 @@ class Kwic:
             elif item.get('class') == 'col0 coll':  # aligned lang without query
                 item['class'] = ''
                 item['posattrs'] = [
-                    "--" for _ in self.all_corp_merged_posattrs[corpname][1:]
+                    "-" for _ in self.all_corp_merged_posattrs[corpname][1:]
                 ]
                 ans.append(item)
             else:
