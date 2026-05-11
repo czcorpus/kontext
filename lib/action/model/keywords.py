@@ -78,7 +78,7 @@ class KeywordsActionModel(CorpusActionModel):
                     user_id=self.session_get('user', 'id'),
                     query_id=query_id, q_supertype='kwords')
                 for fn in self._on_query_store:
-                    await fn([query_id], ts, resp.result)
+                    await fn([query_id], ts, resp)
 
     def export_form_args(self, result: Dict[str, Any]):
         if self._curr_kwform_args:
