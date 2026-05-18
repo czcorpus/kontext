@@ -83,6 +83,13 @@ export interface KeywordsFormModelArgs {
         wlpat:string;
         score_type:ScoreType;
         include_nonwords:boolean;
+        wlminfreq:number;
+        wlmaxfreq:number;
+        wlnums:string;
+        wltype:string;
+        filter_type:ScoreType;
+        filter_min_value:number;
+        filter_max_value:number;
     };
 }
 
@@ -120,16 +127,16 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
                 attr: initialArgs ? initialArgs.wlattr : List.head(availAttrs).n,
                 pattern: initialArgs ? initialArgs.wlpat : '.*',
                 scoreType: initialArgs ? initialArgs.score_type : 'din',
-                wlMinFreqInput: newFormValue('5', true),
-                wlMaxFreqInput: newFormValue('', true),
+                wlMinFreqInput: newFormValue(initialArgs && initialArgs.wlminfreq ? `${initialArgs.wlminfreq}` : '5', true),
+                wlMaxFreqInput: newFormValue(initialArgs && initialArgs.wlmaxfreq ? `${initialArgs.wlmaxfreq}` : '', true),
                 precalcTasks: [],
                 availAttrs,
                 focusCorpusAttrs,
                 manateeIsCustomCNC: layoutModel.getConf<boolean>('manateeIsCustomCNC'),
                 includeNonWords: initialArgs.include_nonwords,
-                filterType: 'logL',
-                filterMinValue: newFormValue('', true),
-                filterMaxValue: newFormValue('', true),
+                filterType: initialArgs ? initialArgs.filter_type : 'logL',
+                filterMinValue: newFormValue(initialArgs && initialArgs.filter_min_value ? `${initialArgs.filter_min_value}` : '', true),
+                filterMaxValue: newFormValue(initialArgs && initialArgs.filter_max_value ? `${initialArgs.filter_max_value}` : '', true),
                 filterVisible: false
             }
         );
