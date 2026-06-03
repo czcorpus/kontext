@@ -1028,6 +1028,7 @@
         "kwords__min_filter": "Min. skóre",
         "kwords__max_filter": "Max. skóre",
         "kwords__filter_section_header": "Filtr",
-        "kwords__din_warning": "<p>Ve výsledcích se vyskytuje více slov se stejným skóre DIN. Nejedná se o chybu, ale o důsledek toho, že zkoumaný soubor je součástí (subkorpusem) referenčního korpusu a tato slova se vyskytují <strong>výhradně v tomto subkorpusu</strong>.</p><p>Protože jsou jejich absolutní frekvence v obou korpusech totožné, vliv četnosti slova se ve vzorci pro výpočet DIN vyruší. Výsledná hodnota DIN pak závisí pouze na poměru velikostí obou korpusů, nikoliv na frekvenci konkrétního slova. Za této situace doporučujeme pro přesnější seřazení zohlednit i další metriky, jako je <strong>Log-Likelihood</strong> nebo <strong>Chí-kvadrát.</strong></p>"
+        "kwords__din_warning": "<p>Ve výsledcích se vyskytuje více slov se stejným skóre DIN. Nejedná se o chybu, ale o důsledek toho, že zkoumaný soubor je součástí (subkorpusem) referenčního korpusu a tato slova se vyskytují <strong>výhradně v tomto subkorpusu</strong>.</p><p>Protože jsou jejich absolutní frekvence v obou korpusech totožné, vliv četnosti slova se ve vzorci pro výpočet DIN vyruší. Výsledná hodnota DIN pak závisí pouze na poměru velikostí obou korpusů, nikoliv na frekvenci konkrétního slova. Za této situace doporučujeme pro přesnější seřazení zohlednit i další metriky, jako je <strong>Log-Likelihood</strong> nebo <strong>Chí-kvadrát.</strong></p>",
+        "kwords__overview_title": "Klíčová slova"
     }
 }

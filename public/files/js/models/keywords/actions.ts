@@ -178,4 +178,9 @@ export class Actions {
     }> = {
         name: 'KEYWORDS_TOGGLE_FILTER_FIELDSET'
     };
+
+    static ToggleModalForm:Action<{
+    }> = {
+        name: 'KEYWORDS_TOGGLE_MODAL_FORM'
+    };
 }
