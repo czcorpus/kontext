@@ -73,7 +73,7 @@ export class KeywordsFormPage {
         this.layoutModel.init(true, [], () => {
             this.focusCorparchPlugin = createCorparch(this.layoutModel.pluginApi());
             this.refCorparchPlugin = createCorparch(this.layoutModel.pluginApi());
-            // We can not use `Ident.puid()` if we want to use corpus switch restore on widgets
+            // We cannot use `Ident.puid()` if we want to use corpus switch restore on widgets
             // because identificator changes after switching
             const focusCorpWidgetId = '1';
             const refCorpWidgetId = '2';
@@ -85,7 +85,7 @@ export class KeywordsFormPage {
                 initialArgs: kwForm,
                 refWidgetId: refCorpWidgetId,
                 availAttrs: this.layoutModel.getConf<Array<Kontext.AttrItem>>('CommonAttrList'),
-                focusCorpusAttrs: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList')
+                focusCorpusAttrs: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
             });
             const view = viewInit({
                 dispatcher: this.layoutModel.dispatcher,

@@ -55,6 +55,7 @@ export interface KeywordsFormState {
     filterMinValue:FormValue<string>;
     filterMaxValue:FormValue<string>;
     filterVisible:boolean;
+    modalVisible:boolean;
 }
 
 export interface KeywordsFormCorpSwitchPreserve {
@@ -137,7 +138,8 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
                 filterType: initialArgs ? initialArgs.filter_type : 'logL',
                 filterMinValue: newFormValue(initialArgs && initialArgs.filter_min_value ? `${initialArgs.filter_min_value}` : '', true),
                 filterMaxValue: newFormValue(initialArgs && initialArgs.filter_max_value ? `${initialArgs.filter_max_value}` : '', true),
-                filterVisible: false
+                filterVisible: false,
+                modalVisible: false
             }
         );
         this.layoutModel = layoutModel;
@@ -391,6 +393,13 @@ export class KeywordsFormModel extends StatelessModel<KeywordsFormState> impleme
             Actions.KeywordsToggleFilterFieldset,
             (state, action) => {
                 state.filterVisible = !state.filterVisible;
+            }
+        );
+
+        this.addActionHandler(
+            Actions.ToggleModalForm,
+            (state, action) => {
+                state.modalVisible = !state.modalVisible;
             }
         );
     }
