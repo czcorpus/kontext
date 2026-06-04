@@ -173,12 +173,33 @@ async def view_result(amodel: KeywordsActionModel, req: KRequest):
 
     ans = result.to_dict()
     ans['keywords_form'] = amodel.curr_kwform_args.to_dict()
+
+    ref_corp_ident = SubcorpusIdent(
+        amodel.curr_kwform_args.ref_usesubcorp, amodel.curr_kwform_args.ref_corpname) if amodel.curr_kwform_args.ref_usesubcorp else amodel.curr_kwform_args.ref_corpname
+    ref_corp = await amodel.plugin_ctx.corpus_factory.get_corpus(ref_corp_ident)
+    ans['ref_corpus_ident'] = dict(
+        id=ref_corp.corpname,
+        variant='',
+        name=ref_corp.human_readable_corpname,
+        usesubcorp=ref_corp.subcorpus_id,
+        origSubcorpName=ref_corp.subcorpus_name,
+        foreignSubcorp=amodel.session_get('user', 'id') != ref_corp.author_id,
+        size=ref_corp.size,
+        searchSize=ref_corp.search_size,
+    )
+    ans['available_ref_subcorpora'] = await amodel.get_subcorpora_list(ref_corp)
     try:
         ans['wlattr_label'] = (
             amodel.corp.get_conf(amodel.curr_kwform_args.wlattr + '.LABEL') or amodel.curr_kwform_args.wlattr)
     except Exception as e:
         ans['wlattr_label'] = amodel.curr_kwform_args.wlattr
         logging.getLogger(__name__).warning(f'wlattr_label set failed: {e}')
+    cattrs = [attr for attr in amodel.corp.get_posattrs() if attr in ref_corp.get_posattrs()]
+    ans['CommonAttrList'] = [{
+        'label': amodel.corp.get_conf(f'{n}.LABEL') or n,
+        'n': n,
+        'multisep': amodel.corp.get_conf(f'{n}.MULTISEP'),
+    } for n in cattrs]
 
     ans['tasks'] = []
     ans['SubcorpList'] = []

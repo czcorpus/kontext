@@ -32,7 +32,7 @@ class KeywordsFormArgs:
     wltype: str = 'simple'
     include_nonwords: str = '0'
     score_type: Optional[str] = None
-    filter_type: Optional[str] = None
+    filter_type: Optional[str] = 'logL'
     filter_min_value: Optional[str] = None
     filter_max_value: Optional[str] = None
 

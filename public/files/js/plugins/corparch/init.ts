@@ -67,7 +67,6 @@ export class Plugin implements PluginInterfaces.Corparch.IPlugin {
             this.pluginApi,
             10,
         );
-
         this.model = new CorplistWidgetModel({
             dispatcher: this.pluginApi.dispatcher(),
             pluginApi: this.pluginApi,
