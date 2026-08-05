@@ -42,6 +42,43 @@ def col_lemma_log(request: KRequest):
         q=request.args.get('q'))
 
 
+@bp.route('/mwe_lemma')
+@http_action(
+    mutates_result=True, action_log_mapper=col_lemma_log, template='view.html', page_model='view',
+    action_model=ConcActionModel)
+async def col_lemma(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    """
+    """
+    ml = req.args.get('ml')
+    if not ml:
+        raise UserReadableException('Missing parameter "ml"')
+    if amodel.args.corpname not in ('syn_v14',):
+        raise UserReadableException('Function not supported in {}'.format(amodel.args.corpname))
+    pf = req.args.get('p')
+    if not pf:
+        pf = '.*'
+    pw = req.args.get('pw')
+    if not pw:
+        pw = '.*'
+    ml_attr = 'mwe_lemma'
+    amodel.args.q = [f'q(meet [{ml_attr}="{ml}"][{ml_attr}="{ml}" & lemma="{pf}"] 0 15)']
+    amodel.args.q.extend(['Fs', 'f'])
+    amodel.args.q.append(f'p0 15 -1 (meet[{ml_attr}="{ml}"][{ml_attr}="{ml}" & lc="{pw}"] -15 0)')
+    amodel.args.refs = '=doc.title,=doc.pubyear'
+    amodel.args.pagesize = 50
+    amodel.args.attrs = 'word'
+    amodel.args.attr_vmode = 'mouseover'
+    amodel.args.base_viewattr = 'word'
+    amodel.args.structs = ''
+    amodel.args.viewmode = 'sen'
+
+    form_args = await decode_raw_query(
+        amodel.plugin_ctx, [amodel.args.corpname], amodel.args.q)
+    await amodel.store_unbound_query_chain(form_args)
+
+    return await view_conc(amodel, req, resp, 0, req.session_get('user', 'id'), disable_auclp=True)
+
+
 @bp.route('/col_lemma')
 @http_action(
     mutates_result=True, action_log_mapper=col_lemma_log, template='view.html', page_model='view',
