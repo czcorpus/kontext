@@ -46,12 +46,12 @@ def col_lemma_log(request: KRequest):
 @http_action(
     mutates_result=True, action_log_mapper=col_lemma_log, template='view.html', page_model='view',
     action_model=ConcActionModel)
-async def col_lemma(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+async def mwe_lemma(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     """
     """
-    ml = req.args.get('ml')
+    ml = req.args.get('mwel')
     if not ml:
-        raise UserReadableException('Missing parameter "ml"')
+        raise UserReadableException('Missing parameter "mwel"')
     if amodel.args.corpname not in ('syn_v14',):
         raise UserReadableException('Function not supported in {}'.format(amodel.args.corpname))
     pf = req.args.get('p')
