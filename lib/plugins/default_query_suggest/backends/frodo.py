@@ -51,7 +51,7 @@ class FrodoBackend(AbstractBackend[Dict[str, CncSublemmaSuggestion]]):
             query_type, p_attr, struct, s_attr) -> CncSublemmaSuggestion:
         tmp = await self._make_request(plugin_ctx.http_client, corpora[0], value)
         merged = {}
-        data = tmp['matches']
+        data = tmp.get('matches', [])
         for item in data:
             lemma = item['lemma']
             if lemma not in merged:
