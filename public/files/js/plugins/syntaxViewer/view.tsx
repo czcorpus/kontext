@@ -30,8 +30,8 @@ export function init(
 ):React.FC {
 
     const wrapper:React.FC = (props) => (
-        <div>
-
+        <div id="syntax-view-pane" style={{width: '100%', height: '100%'}}>
+            {/* This div will be populated by renderTree() */}
         </div>
     );
 
