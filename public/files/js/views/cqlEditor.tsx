@@ -65,6 +65,7 @@ interface CQLEditorCoreState {
     queries:{[sourceId:string]:AdvancedQuery|SimpleQuery}|unknown; // pquery block -> query
     downArrowTriggersHistory:{[sourceId:string]:boolean};
     cqlEditorMessages:{[sourceId:string]:Array<string>};
+    isMultilineModeTouched:{[sourceId:string]:boolean};
     compositionModeOn:boolean;
 }
 
@@ -308,6 +309,17 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     this.props.downArrowTriggersHistory[this.props.sourceId] &&
                     !this.props.historyIsVisible) {
                 this.props.onReqHistory();
+
+            } else if (evt.key === Keyboard.Value.ENTER && evt.shiftKey) {
+                dispatcher.dispatch(
+                    Actions.QueryInputInsertNewline,
+                    {
+                        formType: this.props.formType,
+                        sourceId: this.props.sourceId,
+                    }
+                );
+
+               evt.preventDefault();
 
             } else if (evt.key === Keyboard.Value.ESC) {
                 this.props.onEsc();

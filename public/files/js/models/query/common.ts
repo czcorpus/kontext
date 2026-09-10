@@ -268,6 +268,8 @@ export interface QueryFormModelState {
 
     suggestionsLoading:{[sourceId:string]:{[position:number]:boolean}};
 
+    isMultilineModeTouched:{[sourceId:string]:boolean};
+
     isBusy:boolean;
 
     isLocalUiLang:boolean;
@@ -918,6 +920,25 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                 });
             }
         );
+
+        this.addActionSubtypeHandler(
+            Actions.QueryInputInsertNewline,
+            action => action.payload.formType === this.formType,
+            action => {
+                const prevTouched = this.state.isMultilineModeTouched[action.payload?.sourceId];
+                this.changeState(state => {
+                    state.isMultilineModeTouched[action.payload?.sourceId] = true;
+                });
+                this.dispatchSideEffect(
+                    Actions.QueryInputInsertAtCursor,
+                    {
+                        formType: action.payload?.formType,
+                        sourceId: action.payload?.sourceId,
+                        chunk: prevTouched ? '\n' : '\n\n'
+                    }
+                );
+            }
+        );
     }
 
     abstract getTagsets(state:T):{[sourceId:string]:Array<PluginInterfaces.TagHelper.TagsetInfo>};
@@ -1261,6 +1282,10 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
 
         } else {
             queryObj.query = query;
+        }
+
+        if (queryObj.query.trim().length === 0) {
+            state.isMultilineModeTouched[sourceId] = false;
         }
 
         state.downArrowTriggersHistory[sourceId] = this.shouldDownArrowTriggerHistory(

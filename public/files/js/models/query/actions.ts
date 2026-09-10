@@ -305,6 +305,13 @@ export class Actions {
         name: 'QUERY_INPUT_SET_FOCUS_INPUT'
     };
 
+    static QueryInputInsertNewline:Action<{
+        formType:QueryFormType;
+        sourceId:string;
+    }> = {
+        name: 'QUERY_INPUT_INSERT_NEWLINE'
+    };
+
     static QueryInputInsertAtCursor: Action<{
         formType:QueryFormType;
         sourceId:string;
