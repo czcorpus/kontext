@@ -22,11 +22,13 @@ from plugins.default_syntax_viewer.manatee_backend import TreexTemplate
 
 class UcnkTreeTemplate(TreexTemplate):
 
-    def __init__(self, tree_id, tree_data, kwic_pos, conf):
+    def __init__(self, tree_id, tree_data, kwic_pos, kwic_len, conf):
         super(UcnkTreeTemplate, self).__init__([tree_id], [tree_data], conf)
         self._kwic_pos = list(range(kwic_pos[0], kwic_pos[0] + kwic_pos[1]))
+        self._kwic_len = kwic_len
 
     async def export(self):
         ans = await super(UcnkTreeTemplate, self).export()
         ans[0]['kwicPosition'] = self._kwic_pos
+        ans[0]['kwicLength'] = self._kwic_len
         return ans

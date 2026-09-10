@@ -96,6 +96,13 @@ export default {
                     type: 'asset/resource'
                 },
                 {
+                    test: /js-treex-view\.js$/,
+                    type: 'asset/resource',
+                    generator: {
+                        filename: 'js-treex-view.js'
+                    }
+                },
+                {
                     test: /\.tsx?$/,
                     exclude: /(node_modules|bower_components)/,
                     use: {
