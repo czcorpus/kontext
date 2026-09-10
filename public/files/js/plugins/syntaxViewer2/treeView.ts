@@ -163,12 +163,16 @@ class TreeGenerator {
 
     private importSentence(data:srcData.Data, nodes:Array<srcData.Node>):Sentence {
         return List.map(
-            ([value, id], i) => ({
-                id,
-                value,
-                isKwic: data.kwicPosition.indexOf(i - 1) > -1, // testing (i - 1) because data.desc[0] == '#' character
-                multivalFlag: nodes[i].multival_flag
-            }),
+            ([value, id], i) => {
+                const kwicPosLft = data.kwicPosition[0];
+                const kwicPosRgt = data.kwicPosition[1] !== undefined ? data.kwicPosition[1] : data.kwicPosition[0];
+                return {
+                    id,
+                    value,
+                    isKwic:  nodes[i].token_idx >= kwicPosLft && nodes[i].token_idx <= kwicPosRgt,
+                    multivalFlag: nodes[i].multival_flag
+                }
+            },
             data.desc
         );
     }

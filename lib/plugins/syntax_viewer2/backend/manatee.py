@@ -66,5 +66,5 @@ class ManateeBackend2(mbk.ManateeBackend):
         self._decode_tree_data(parsed_data, conf.parent_attr, conf.attr_refs, conf.parent_type)
         tb = mbk.TreeBuilder()
         tree_data = tb.process(conf, parsed_data)
-        template = UcnkTreeTemplate(tree_id, tree_data, raw_data['kwic_pos'], tree_configs)
+        template = UcnkTreeTemplate(tree_id, tree_data, raw_data['kwic_pos'], kwic_len, tree_configs)
         return await template.export(), mbk.TreeNodeEncoder
