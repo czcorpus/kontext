@@ -19,15 +19,8 @@
  */
 
 /// <reference path="./external.d.ts" />
-
-// Declare js-treex-view.js as an asset module that webpack will copy
-declare module './js-treex-view.js' {
-    const content: string;
-    export default content;
-}
-
-// Reference the jQuery types from js-treex-view after it loads
-/// <reference path="./js-treex-view.d.ts" />
+/// <reference path="./jquery-treex-view.d.ts" />
+/// <reference path="./assets.d.ts" />
 
 import { StatefulModel, IModel } from 'kombo';
 
