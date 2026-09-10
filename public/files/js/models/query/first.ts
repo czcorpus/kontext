@@ -446,6 +446,11 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                     List.map(item => tuple(item, false)),
                     Dict.fromEntries()
                 ),
+                isMultilineModeTouched: pipe(
+                    props.corpora,
+                    List.map(item => tuple(item, false)),
+                    Dict.fromEntries()
+                ),
                 suggestionsVisible: pipe(
                     props.corpora,
                     List.map(c => tuple(c, null)),

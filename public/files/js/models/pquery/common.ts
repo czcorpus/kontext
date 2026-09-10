@@ -146,6 +146,7 @@ export interface PqueryFormModelState {
     paramsVisible:boolean;
     posRangeNotSupported:boolean;  // for structural attributes pos range makes no sense
     compositionModeOn:boolean;
+    isMultilineModeTouched:{[sourceId:string]:boolean};
 }
 
 /**
@@ -216,6 +217,10 @@ export function newModelState(
         useRichQueryEditor,
         concWait: pipe(
             List.repeat<[string, ConcStatus]>(idx => tuple(createSourceId(idx), 'none'), 2),
+            Dict.fromEntries()
+        ),
+        isMultilineModeTouched: pipe(
+            List.repeat<[string, boolean]>(idx => tuple(createSourceId(idx), false), 2),
             Dict.fromEntries()
         ),
         calcProgress: undefined,
@@ -463,6 +468,11 @@ export function storedQueryToModel(
         cqlEditorMessages: pipe(
             queries,
             List.map((q, i) => tuple(createSourceId(i), [])),
+            Dict.fromEntries()
+        ),
+        isMultilineModeTouched: pipe(
+            queries,
+            List.map((q, i) => tuple(createSourceId(i), false)),
             Dict.fromEntries()
         ),
         useRichQueryEditor,

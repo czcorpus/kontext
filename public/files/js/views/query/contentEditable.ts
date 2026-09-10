@@ -156,21 +156,6 @@ export class ContentEditable<T extends HTMLElement> {
             }
             evt.preventDefault();
 
-        } else if (evt.key === Keyboard.Value.ENTER && evt.shiftKey) {
-            const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection();
-            const query = this.extractText();
-            onSetInput(
-                    // We have to add a single whitespace here because otherwise FF cannot
-                    // handle cursor position properly (normally it inserts its custom br
-                    // type=_moz element which is even worse to handle). This is not ideal but
-                    //  by far the most cheap solution.
-                    rawFocusIdx === query.length ? '\n ' : '\n',
-                    rawFocusIdx === query.length ? rawAnchorIdx + 2 : rawAnchorIdx + 1,
-                    rawFocusIdx === query.length ? rawFocusIdx + 2 : rawFocusIdx + 1,
-                    [rawAnchorIdx, rawFocusIdx]
-            );
-            evt.preventDefault();
-
         } else if (evt.key === Keyboard.Value.END) {
             const [anchorIdx, focusIdx] = this.getRawSelection();
             const query = this.extractText();
