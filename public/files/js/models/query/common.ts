@@ -934,6 +934,14 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                     {
                         formType: action.payload?.formType,
                         sourceId: action.payload?.sourceId,
+                        // The condition below tries to handle otherwise hard to
+                        // solve issue with the contenteditable PRE area adding new lines
+                        // differently when no previous newline was inserted vs. there was
+                        // none.
+                        // Just inserting a single newline char would lead to cursor not
+                        // jumping to the next line when shift+ENTER is first hit.
+                        // So we model the behavior and set it differently for the first
+                        // time (or after when the query was completely deleted).
                         chunk: prevTouched ? '\n' : '\n\n'
                     }
                 );
