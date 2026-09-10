@@ -426,6 +426,12 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                     List.map(k => tuple(k, false)),
                     Dict.fromEntries()
                 ),
+                isMultilineModeTouched: pipe(
+                    queries,
+                    Dict.keys(),
+                    List.map(k => tuple(k, false)),
+                    Dict.fromEntries()
+                ),
                 suggestionsVisible: pipe(
                     queries,
                     Dict.keys(),
@@ -454,7 +460,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 simpleQueryDefaultAttrs: props.simpleQueryDefaultAttrs,
                 isLocalUiLang: props.isLocalUiLang,
                 syncInitialArgs,
-                compositionModeOn: false
+                compositionModeOn: false,
         });
 
         this.addActionHandler<typeof MainMenuActions.ShowFilter>(
