@@ -18,16 +18,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="./js-treex-view.d.ts" />
 /// <reference path="./external.d.ts" />
+
+// Declare js-treex-view.js as an asset module that webpack will copy
+declare module './js-treex-view.js' {
+    const content: string;
+    export default content;
+}
+
+// Reference the jQuery types from js-treex-view after it loads
+/// <reference path="./js-treex-view.d.ts" />
 
 import { StatefulModel, IModel } from 'kombo';
 
 import * as PluginInterfaces from '../../types/plugins/index.js';
 
 
-import $ from 'jquery';
-import './js-treex-view';
 import { IFullActionControl } from 'kombo';
 import { HTTP, List, pipe } from 'cnc-tskit';
 import { Actions } from '../syntaxViewer2/actions.js';
@@ -37,6 +43,54 @@ import { SyntaxTreeViewerState } from './common.js';
 import { init as viewInit } from './view.js';
 import * as React from 'react';
 import './style.css'; // webpack
+
+// Import js-treex-view as an asset (webpack will copy it to dist)
+// This file contains jQuery and treex-view bundled together
+import treexViewUrl from './js-treex-view.js';
+
+// Load js-treex-view.js (which includes jQuery) as a script
+let jqueryLoadPromise: Promise<void> | null = null;
+
+const loadJQueryScript = () => {
+    if (jqueryLoadPromise) {
+        return jqueryLoadPromise;
+    }
+
+    jqueryLoadPromise = new Promise<void>((resolve, reject) => {
+        // Check if already loaded
+        if ((window as any).jQuery) {
+            resolve();
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.src = treexViewUrl;
+        script.async = true;
+        script.onload = () => {
+            if ((window as any).jQuery) {
+                resolve();
+            } else {
+                reject(new Error('jQuery not found after script load'));
+            }
+        };
+        script.onerror = () => reject(new Error('Failed to load js-treex-view.js'));
+        document.head.appendChild(script);
+    });
+
+    return jqueryLoadPromise;
+};
+
+// Start loading immediately
+loadJQueryScript();
+
+// Helper to get jQuery from window (loaded by js-treex-view.js)
+const getJQuery = () => {
+    const $ = (window as any).jQuery;
+    if (!$) {
+        console.error('jQuery not loaded yet from js-treex-view.js');
+    }
+    return $;
+};
 
 
 /**
@@ -116,6 +170,9 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
 
     onPageResize = () => {
         const target = document.getElementById(this.state.targetHTMLElementID);
+        if (!target) {
+            return;
+        }
         if (this.resizeThrottleTimer) {
             window.clearTimeout(this.resizeThrottleTimer);
         }
@@ -133,6 +190,7 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
             state.isBusy = true;
         });
         const activeToken = this.state.sentenceTokens[this.state.activeToken];
+
         this.pluginApi.ajax$(
             HTTP.Method.GET,
             this.pluginApi.createActionUrl('get_syntax_data'),
@@ -148,8 +206,12 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
                 state.data = data;
                 });
                 const target = document.getElementById(this.state.targetHTMLElementID);
-                this.renderTree(target);
-                window.addEventListener('resize', this.onPageResize);
+                if (target) {
+                    this.renderTree(target);
+                    window.addEventListener('resize', this.onPageResize);
+                } else {
+                    console.error('Syntax tree target element not found:', this.state.targetHTMLElementID);
+                }
             },
             error: error => {
                 this.changeState(state => {
@@ -164,9 +226,28 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
         });
     }
 
-    private renderTree(target:HTMLElement):void {
+    private async renderTree(target:HTMLElement):Promise<void> {
+        if (!target) {
+            console.error('renderTree called with null target');
+            return;
+        }
+
+        // Wait for jQuery to load
+        try {
+            await loadJQueryScript();
+        } catch (error) {
+            console.error('Failed to load jQuery:', error);
+            return;
+        }
+
         while (target.firstChild) {
             target.removeChild(target.firstChild);
+        }
+
+        const $ = getJQuery();
+        if (!$) {
+            console.error('jQuery not available after loading');
+            return;
         }
 
         if (this.state.sentenceTokens.length > 1) {
@@ -191,7 +272,12 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
         treexFrame.style['overflow'] = 'auto';
 
         $(target).append(treexFrame);
-        $(treexFrame).treexView(this.state.data);
+
+        if (typeof $(treexFrame).treexView === 'function') {
+            $(treexFrame).treexView(this.state.data);
+        } else {
+            console.error('treexView plugin not available on jQuery');
+        }
     }
 
 }

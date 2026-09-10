@@ -26,9 +26,17 @@ import { DetailValue } from './common.js';
  * library's specification.
  */
 
+export type NodeData =
+    {
+        word: string;
+    } &
+    {
+        [attr:string]:DetailValue
+    };
 
 export interface Node {
     id:string;
+    token_idx:number;
     hint:string;
     labels:Array<string>;
     parent:string;
@@ -37,7 +45,7 @@ export interface Node {
     lbrother:string;
     order:number;
     depth:number;
-    data:{[attr:string]:DetailValue};
+    data:NodeData;
     multival_flag:'start'|'end'|null;
     hidden?:boolean;
 }
@@ -63,4 +71,5 @@ export interface Data {
     zones:{[ident:string]:Zone};
     desc:Desc;
     kwicPosition:Array<number>; // position within desc
+    kwicLength: number;
 }

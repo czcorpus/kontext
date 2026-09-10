@@ -219,7 +219,7 @@ class ManateeBackendConf:
         return self._data[corpus_id].get('multiValueLemmata', {}).get('valueSeparator', None)
 
 
-class TreeNode(object):
+class TreeNode:
     """
     Defines a syntax tree node.
 
@@ -237,11 +237,13 @@ class TreeNode(object):
         multival_flag: specifies start|end in case there are split words (different tokenization for syntax)
     """
 
-    def __init__(self, idx: int, data: Dict[str, Any], node_labels: List[str], word: str, parent: int, hidden: bool,
+    def __init__(self, idx: int, token_idx: int, data: Dict[str, Any], node_labels: List[str], word: str, parent: int, hidden: bool,
                  multival_flag: Optional[str]):
         """
         Args:
             idx: node order in the list (zero based)
+            token_idx: original token order in a respective sentence; note: for multi-value tokens,
+                multiple subsequent values can have the same token_idx
             data: a dict containing detailed information about the node
             node_labels: a list of labels for the nodes
             word (str): a "word" value of the node (i.e. the actual word dthe node represents)
@@ -251,6 +253,7 @@ class TreeNode(object):
         """
         self.id = 'n%d' % idx
         self.idx = idx
+        self.token_idx = token_idx
         self.data = data
         self.parent = parent
         self.children = []
@@ -301,7 +304,7 @@ class TreexTemplate:
         return graph_list
 
 
-class TreeBuilder(object):
+class TreeBuilder:
     """
     Builds a node tree (i.e. a list of mutually connected TreeNode instances)
     """
@@ -346,8 +349,8 @@ class TreeBuilder(object):
         def export_labels(item):
             values = [v[1] for v in self._dict_portion(item, tree_conf.node_attrs)]
             return [k % (v if v is not None else '') for k, v in zip(tree_conf.label_templates, values)]
-
         nodes = [TreeNode(idx=i,
+                          token_idx=d.get('__token_idx'),
                           data=dict(self._dict_portion(d, tree_conf.detail_attrs)),
                           node_labels=export_labels(d),
                           parent=d[tree_conf.parent_attr],
@@ -442,12 +445,14 @@ class ManateeBackend(SearchBackend):
             return [values]
 
         data = []
+        token_idx = 0
         for i in range(0, len(in_data), 4):
             attr_delim = in_data[i + 2][0]
             parsed_m = expand_multivals([import_raw_val(x) for x in in_data[i + 2].split(attr_delim)])
             for j, parsed in enumerate(parsed_m):
                 if len(parsed) > len(tree_attrs):
                     item = dict(list(zip(tree_attrs, len(tree_attrs) * [None])))
+                    item['__token_idx'] = token_idx
                     item['word'] = in_data[i]
                     item['multival_flag'] = None
                     # In case of a parsing error we wrap a partial result into
@@ -456,6 +461,7 @@ class ManateeBackend(SearchBackend):
                     data.append(BackendDataParseException(result=item))
                 else:
                     item = dict(list(zip(tree_attrs, parsed)))
+                    item['__token_idx'] = token_idx
                     item['word'] = in_data[i]
                     if len(parsed_m) > 1:
                         if j == 0:
@@ -465,6 +471,7 @@ class ManateeBackend(SearchBackend):
                         else:
                             item['multival_flag'] = None
                     data.append(item)
+            token_idx += 1
         return data
 
     def _get_ord_reference(self, curr_idx, data, parent_attr, parent_type):
@@ -601,11 +608,12 @@ class TreeNodeEncoder(json.JSONEncoder):
             data.update([('id',  obj.id)])
             data.update(obj.data)
             ans = dict(
+                id=obj.id,
+                token_idx=obj.token_idx,
                 parent=obj.parent.id if obj.parent else None,
                 hint=None,
                 labels=obj.node_labels,
                 firstson=obj.children[0].id if len(obj.children) > 0 else None,
-                id=obj.id,
                 rbrother=obj.rbrother.id if obj.rbrother else None,
                 lbrother=obj.lbrother.id if obj.lbrother else None,
                 depth=obj.depth,
