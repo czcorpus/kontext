@@ -9,7 +9,7 @@ PyICU >= 1.5
 babel >= 2.9.1
 jinja2 >= 3.1.6
 secure-cookie >= 0.1.0
-setuptools ==78.1.1
+setuptools ==83.0.0
 sanic >= 25.12.0
 pyJWT >= 2.12.1
 # please note that lxml package requires the following system packages:
