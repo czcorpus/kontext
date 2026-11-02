@@ -100,6 +100,7 @@ class MySqlIntegrationDb(
         curr = self._db_conn.get()
         if curr:
             await curr.close()
+            self._db_conn.set(None)
 
 
     async def on_aio_task_enter(self):
@@ -109,6 +110,7 @@ class MySqlIntegrationDb(
         curr = self._db_conn.get()
         if curr:
             await curr.close()
+            self._db_conn.set(None)
 
     async def create_connection(self) -> MySQLConnectionAbstract:
         return await connect(

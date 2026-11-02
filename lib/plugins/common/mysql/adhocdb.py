@@ -124,3 +124,4 @@ class AdhocDB(DatabaseAdapter):
         curr = self._db_conn.get()
         if curr:
             await curr.close()
+            self._db_conn.set(None)
