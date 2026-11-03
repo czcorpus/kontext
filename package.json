@@ -16,11 +16,10 @@
     "@types/styled-components": "^5.1.36",
     "@xmldom/xmldom": "~0.9.10",
     "css-loader": "^7.1.4",
-    "cypress": "^13.17.0",
+    "cypress": "^16.2.1",
     "install": "^0.13.0",
     "merge": "~2.1.1",
     "mini-css-extract-plugin": "^2.10.2",
-    "npm": "^11.13.0",
     "peggy": "^4.2.0",
     "progress-bar-webpack-plugin": "^2.1.0",
     "script-launcher": "^1.37.3",
@@ -31,7 +30,7 @@
     "typescript": "^5.8.3",
     "webpack": "^5.106.2",
     "webpack-cli": "^7.0.2",
-    "webpack-dev-server": "^5.2.3",
+    "webpack-dev-server": "^6.1.0",
     "webpack-merge": "^6.0.1"
   },
   "dependencies": {
@@ -58,5 +57,8 @@
   },
   "scripts": {
     "start": "launch"
+  },
+  "overrides": {
+    "undici": ">=6.29.1"
   }
 }
