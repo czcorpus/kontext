@@ -129,23 +129,22 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
         session.clear()
 
     async def corpus_access(self, user_dict, corpus_name) -> CorpusAccess:
-        corpora = self.permitted_corpora(user_dict)
+        corpora = await self.permitted_corpora(user_dict)
         if corpus_name in corpora:
             return False, True, ''
         return False, False, ''
 
     async def permitted_corpora(self, user_dict) -> List[str]:
         """
-        Returns a dictionary containing corpora IDs user can access.
+        Returns a list containing corpora IDs user can access.
 
         :param user_dict -- user info as stored in session
         :return:
-        a dict canonical_corpus_id=>corpus_id
+        a list of corpus IDs
         """
-        # fetch groups based on user_id (manual and shib based) intersect with corplist
-        groups = self.get_groups_for(user_dict)
-        return [corpora['ident'] for corpora in self._corplist
-                if len(set(corpora.get('access', [])).intersection(set(groups))) > 0] + ['susanne', 'syn2015', 'syn2020']
+        # Note: access control via 'access' field was removed when migrating to CorpusInfo dataclass
+        # Now all corpora in corplist are accessible, plus the hardcoded ones below
+        return [corpus.id for corpus in self._corplist if corpus.id] + ['susanne', 'syn2015', 'syn2020']
 
     def on_forbidden_corpus(self, plugin_ctx, corpname, corp_variant):
         if self.is_anonymous(plugin_ctx.user_id):
@@ -300,15 +299,16 @@ def _load_corplist(corptree_path):
     """
     from plugins.tree_corparch import CorptreeParser
     data, metadata = CorptreeParser().parse_xml_tree(corptree_path)
-    flat_corplist = _flatten_corplist(data['corplist'])
+    flat_corplist = _flatten_corplist(data.corplist)
     return flat_corplist
 
 
 def _flatten_corplist(corp_list):
+    from plugins.tree_corparch import TreeNode
     ans = []
     for item in corp_list:
-        if 'corplist' in item:
-            ans += _flatten_corplist(item['corplist'])
+        if isinstance(item, TreeNode):
+            ans += _flatten_corplist(item.corplist)
         else:
             ans.append(item)
     return ans
