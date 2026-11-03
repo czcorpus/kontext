@@ -51,16 +51,19 @@ class FootBar(AbstractFootbar):
 
 def create_instance(settings):
     plugin_conf = settings.get('plugins', 'footer_bar')
-    tpl_langs = {}
     templates = {}
     for k, v in plugin_conf.items():
         if k.startswith('template_'):
-            tpl_langs[k[len('template_'):]] = v
-    for lang in settings.get('global', 'translations'):
-        code = lang.split('-')[0]
-        if code in tpl_langs:
-            templates[lang] = tpl_langs[code]
-        else:
-            logging.getLogger(__name__).warning(
-                f'no configured footer template for "{lang}" language')
+            lang_code = k[len('template_'):]
+            # Convert language code to locale format with underscore (e.g., 'cs' -> 'cs_CZ')
+            locale_map = {
+                'cs': 'cs_CZ',
+                'en': 'en_US',
+                'sl': 'sl_SI'
+            }
+            if lang_code in locale_map:
+                templates[locale_map[lang_code]] = v
+            else:
+                logging.getLogger(__name__).warning(
+                    f'no locale mapping for template language code "{lang_code}"')
     return FootBar(templates=templates)
