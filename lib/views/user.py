@@ -70,7 +70,7 @@ async def login(amodel: UserActionModel, req: KRequest, resp: KResponse):
 @http_action(
     access_level=2, template='user/login.html', page_model='login', action_model=UserActionModel)
 async def logoutx(amodel: UserActionModel, req: KRequest, resp: KResponse):
-    with plugins.runtime.AUTH(AbstractInternalAuth) as auth:
+    with plugins.runtime.AUTH as auth:
         amodel.disabled_menu_items = amodel.USER_ACTIONS_DISABLED_ITEMS
         auth.logout(req.session)
         await amodel.init_session()
