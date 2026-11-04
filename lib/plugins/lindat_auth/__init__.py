@@ -81,7 +81,34 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
     RESERVED_USER = '__user_count'
 
     async def get_user_info(self, plugin_ctx):
-        raise NotImplementedError()
+        user_dict = plugin_ctx.session.get('user', {})
+        user_id = user_dict.get('id')
+
+        if user_id is None or self.is_anonymous(user_id):
+            return {
+                'id': self._anonymous_id,
+                'username': '',
+                'fullname': '',
+                'email': None,
+                'api_key': None
+            }
+
+        username = user_dict.get('username', '')
+        db_user = await self._db.hash_get_all(username) if username else {}
+
+        # Try to get email from headers (Shibboleth) or from stored user data
+        email = _get_non_empty_header(
+            plugin_ctx.request.headers.get, 'mail', 'email')
+        if not email and db_user:
+            email = db_user.get('email')
+
+        return {
+            'id': user_id,
+            'username': username,
+            'fullname': user_dict.get('fullname', ''),
+            'email': email,
+            'api_key': db_user.get('api_key') if db_user else None
+        }
 
     def __init__(self, corplist, db: KeyValueStorage, conf, failover):
         """
