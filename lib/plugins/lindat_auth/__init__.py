@@ -148,6 +148,12 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
             user_d['id'] = int(user_d['id'])
             user_d['user'] = user_d.get("username", "unknown")
             user_d['fullname'] = user_d.get("fullname", "Mr. No Name")
+            # Ensure email field exists (required by UserInfo TypedDict)
+            if 'email' not in user_d:
+                user_d['email'] = None
+            # Ensure api_key field exists
+            if 'api_key' not in user_d:
+                user_d['api_key'] = None
             return user_d
         else:
             return self.anonymous_user(plugin_ctx)
@@ -224,13 +230,18 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
         idp = uni(_get_non_empty_header(
             plugin_ctx.request.headers.get, 'shib-identity-provider') or "")
 
+        # Get email from Shibboleth headers
+        email = uni(_get_non_empty_header(
+            plugin_ctx.request.headers.get, 'mail', 'email') or "")
+
         db_user_d = await self._db.hash_get_all(username)
         if 0 == len(db_user_d):
             user_d = {
                 "id": await self._new_user_id(),
                 "username": username,
                 "idp": idp,
-                "fullname": "%s %s" % (firstname, surname)
+                "fullname": "%s %s" % (firstname, surname),
+                "email": email if email else None
             }
             await self._db.hash_set_map(username, user_d)
         else:
@@ -239,6 +250,9 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
                                 username, idp, db_user_d["idp"])
                 return None
             user_d = db_user_d
+            # Update email from current Shibboleth headers if available
+            if email:
+                user_d["email"] = email
 
         if 'groups' in user_d:
             groups = user_d['groups'].split(';')
