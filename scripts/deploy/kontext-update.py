@@ -306,8 +306,8 @@ class Configuration(object):
         return self._target_symlinks
 
     @property
-    def manatee_lib_dir(self) -> str:
-        return self._data[MANATEE_LIB_DIR_ENTRY]
+    def manatee_lib_dir(self) -> Optional[str]:
+        return self._data.get(MANATEE_LIB_DIR_ENTRY)
 
 
 class ConfigError(Exception):
@@ -551,18 +551,23 @@ class Deployer(object):
         # Determine the site-packages directory in the venv
         # Find Python version to construct correct path
         python_dirs = os.listdir(os.path.join(venv_path, 'lib'))
-        python_dir = [d for d in python_dirs if d.startswith('python')][0]
-        venv_site_packages = os.path.join(venv_path, 'lib', python_dir, 'site-packages')
+        python_dir_matches = [d for d in python_dirs if d.startswith('python')]
+        if not python_dir_matches:
+            raise ShellCommandError(f'No python directory found in {venv_path}/lib')
+        venv_site_packages = os.path.join(venv_path, 'lib', python_dir_matches[0], 'site-packages')
 
         # Copy Manatee library files from system installation
         manatee_lib_dir = self._conf.manatee_lib_dir
-        for lib_file in MANATEE_LIB_FILES:
-            src_path = os.path.join(manatee_lib_dir, lib_file)
-            dst_path = os.path.join(venv_site_packages, lib_file)
-            if os.path.exists(src_path):
-                shutil.copy(src_path, dst_path)
-            else:
-                print(f'Warning: Manatee library file {src_path} not found, skipping')
+        if manatee_lib_dir:
+            for lib_file in MANATEE_LIB_FILES:
+                src_path = os.path.join(manatee_lib_dir, lib_file)
+                dst_path = os.path.join(venv_site_packages, lib_file)
+                if os.path.exists(src_path):
+                    shutil.copy(src_path, dst_path)
+                else:
+                    print(f'Warning: Manatee library file {src_path} not found, skipping')
+        else:
+            print('Info: manateeLibDir not configured, skipping Manatee library installation')
 
         # Install packages from requirements.txt
         requirements_path = os.path.join(self._conf.working_dir, 'requirements.txt')
