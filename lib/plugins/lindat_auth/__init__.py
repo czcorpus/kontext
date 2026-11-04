@@ -250,9 +250,11 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
                                 username, idp, db_user_d["idp"])
                 return None
             user_d = db_user_d
-            # Update email from current Shibboleth headers if available
+            # Update email from current Shibboleth headers if available, or ensure field exists
             if email:
                 user_d["email"] = email
+            elif "email" not in user_d:
+                user_d["email"] = None
 
         if 'groups' in user_d:
             groups = user_d['groups'].split(';')
