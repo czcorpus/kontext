@@ -413,7 +413,14 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
         result['corpus_ident'] = {}
         result['Globals'] = {}
         result['base_attr'] = BaseActionModel.BASE_ATTR
-        result['user_info'] = self._req.ctx.session.get('user', {'fullname': None})
+        user_info = self._req.ctx.session.get('user', {'fullname': None})
+        # Ensure email and api_key fields exist for backwards compatibility with old sessions
+        if isinstance(user_info, dict):
+            if 'email' not in user_info:
+                user_info['email'] = None
+            if 'api_key' not in user_info:
+                user_info['api_key'] = None
+        result['user_info'] = user_info
         result['_anonymous'] = self.user_is_anonymous()
         result['anonymous_user_conc_login_prompt'] = settings.get_bool(
             'global', 'anonymous_user_conc_login_prompt', False)
