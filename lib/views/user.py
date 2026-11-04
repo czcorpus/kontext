@@ -43,7 +43,7 @@ async def loginx(amodel: UserActionModel, req: KRequest, resp: KResponse):
         req.ctx.session['user'] = await auth.validate_user(amodel.plugin_ctx, None, None)
 
     if req.args.get('return_url', None):
-        amodel.redirect(req.args.get('return_url'))
+        resp.redirect(req.args.get('return_url'))
     return {}
 
 
