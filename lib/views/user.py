@@ -39,7 +39,7 @@ async def loginx(amodel: UserActionModel, req: KRequest, resp: KResponse):
     This method is used by some of the installations with Shibboleth-based authentication.
     So for compatibility reasons, let's keep this.
     """
-    with plugins.runtime.AUTH(AbstractInternalAuth) as auth:
+    with plugins.runtime.AUTH as auth:
         req.ctx.session['user'] = await auth.validate_user(amodel.plugin_ctx, None, None)
 
     if req.args.get('return_url', None):
