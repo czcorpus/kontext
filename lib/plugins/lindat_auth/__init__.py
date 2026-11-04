@@ -36,11 +36,17 @@ def uni(s):
     improperly decoded utf-8 characters stored in respective
     HTTP environment variables. E.g. the string
     'Tomáš Machálek' is stored as 'TomÃ¡Å¡ MachÃ¡lek'.
+
+    Also handles Latin-1 encoded headers from some Shibboleth IdPs.
     """
     s_int = [ord(x) for x in s]
     if len(s_int) == 0 or max(s_int) > 255:
         return s
-    return str(bytes(s_int), 'utf-8')
+    try:
+        return str(bytes(s_int), 'utf-8')
+    except UnicodeDecodeError:
+        # Fallback to Latin-1 for headers that aren't UTF-8
+        return str(bytes(s_int), 'latin-1')
 
 
 @bp.route('lindat_login', ['GET', 'POST'])
