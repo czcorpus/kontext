@@ -30,16 +30,63 @@ import shutil
 import sqlite3
 import sys
 from typing import Tuple
+from dataclasses import dataclass
 
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '../../../lib')))
 
 import argparse
 import datetime
+import hashlib
 
 import settings
-from corplib.abstract import SubcorpusIdent
-from util import int2chash
-import hashlib
+
+
+# Inline utilities to avoid circular imports
+_KEY_ALPHABET = (
+    [chr(x) for x in range(ord('a'), ord('z') + 1)] +
+    [chr(x) for x in range(ord('A'), ord('Z') + 1)] +
+    ['%d' % i for i in range(10)])
+
+
+def int2chash(hex_num: int, length: int) -> str:
+    """
+    Generates a slightly compressed alphanum hash (using all the alphabet) out
+    of provided integer.
+    """
+    ans = []
+    while hex_num > 0 and len(ans) < length:
+        p = hex_num % len(_KEY_ALPHABET)
+        ans.append(_KEY_ALPHABET[p])
+        hex_num = int(hex_num / len(_KEY_ALPHABET))
+    return ''.join([str(x) for x in ans])
+
+
+@dataclass
+class SubcorpusIdent:
+    """
+    SubcorpusIdent is a base subcorpus identification dataclass.
+    """
+    id: str
+    corpus_name: str
+
+    @property
+    def data_path(self):
+        """
+        provide a relative (to a globally configured directory for subcorpora) data path of the subcorpus
+        """
+        return SubcorpusIdent.mk_relative_data_path(self.id)
+
+    @property
+    def data_dir(self):
+        """
+        provide a relative path of a directory where all the subcorpus data are stored
+        """
+        return os.path.join(self.id[:2], self.id)
+
+    @staticmethod
+    def mk_relative_data_path(ident: str):
+        return os.path.join(ident[:2], ident, 'data.subc')
+
 
 UNIQ_K = '805a02b7-1676-4a79-9da7-73b293763a2a-clarin-si'
 """
