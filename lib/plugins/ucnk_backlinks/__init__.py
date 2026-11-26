@@ -52,7 +52,7 @@ async def mwe_lemma(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     ml = req.args.get('mwel')
     if not ml:
         raise UserReadableException('Missing parameter "mwel"')
-    if amodel.args.corpname not in ('syn_v14',):
+    if amodel.args.corpname not in ('syn_v14', 'syn_r25',):
         raise UserReadableException('Function not supported in {}'.format(amodel.args.corpname))
     pf = req.args.get('p')
     if not pf:
